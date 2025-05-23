@@ -1,0 +1,75 @@
+# ======================================================================================
+#
+# libchess - a chess engine by Ben Vining
+#
+# ======================================================================================
+
+# config file for bump-my-version
+# see https://callowayproject.github.io/bump-my-version/reference/
+#
+# running the bump-my-version command executes these steps:
+# - increments the version number & replaces it in hard-coded places
+# - generates a changelog
+# - creates a git commit
+# - creates a git tag
+# - pushes the commit & tag to origin
+#
+# for convenience you can use:
+# just bump [major|minor|patch]
+#           (version part defaults to major)
+#
+# note that this command will fail if any files were dirty before running it
+
+[tool.bumpversion]
+
+# general settings
+allow_dirty = false
+current_version = "6.0.0"
+ignore_missing_files = false
+ignore_missing_version = false
+parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
+regex = false
+search = "{current_version}"
+replace = "{new_version}"
+serialize = ["{major}.{minor}.{patch}"]
+
+setup_hooks = []
+
+# commit
+commit = true
+pre_commit_hooks = [
+    "npx conventional-changelog -p conventionalcommits -i CHANGELOG.md --same-file --append",
+    "git add .",
+    "pre-commit run",
+    "git add ."
+]
+commit_args = "--no-verify"
+message = "Bump version: {current_version} → {new_version}"
+
+# tag
+tag = true
+tag_name = "v{new_version}"
+tag_message = "Bump version: {current_version} → {new_version}"
+sign_tags = true
+moving_tags = [
+    "latest",
+    "v{major}"
+]
+
+post_commit_hooks = [
+    "git push",
+    "git push --tags"
+]
+
+# version replacement in hard-coded places in files
+
+[[tool.bumpversion.files]]
+filename = "CMakeLists.txt"
+search = """
+project (
+    mtm-libs
+    VERSION {current_version}"""
+replace = """
+project (
+    mtm-libs
+    VERSION {new_version}"""

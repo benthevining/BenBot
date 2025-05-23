@@ -1,0 +1,82 @@
+# ======================================================================================
+#
+# libchess - a chess engine by Ben Vining
+#
+# ======================================================================================
+
+# clang-tidy is run as a pre-commit hook, but not by default, because it takes a few minutes
+# to run it, use: just clang-tidy
+
+Checks: >
+  -*,
+  bugprone-*,
+  cert-*,
+  -cert-dcl21-cpp,
+  concurrency-*,
+  cppcoreguidelines-*,
+  -cppcoreguidelines-avoid-do-while,
+  -cppcoreguidelines-avoid-magic-numbers,
+  google-*,
+  -google-readability-todo,
+  -google-readability-braces-around-statements,
+  hicpp-*,
+  -hicpp-braces-around-statements,
+  -hicpp-uppercase-literal-suffix,
+  llvm-namespace-comment,
+  misc-*,
+  modernize-*,
+  -modernize-use-trailing-return-type,
+  performance-*,
+  portability-*,
+  readability-*,
+  -readability-braces-around-statements,
+  -readability-magic-numbers,
+  -readability-uppercase-literal-suffix
+
+CheckOptions:
+- key: bugprone-dangling-handle.HandleClasses
+  value: mtm::dsp::BufferView;mtm::dsp::MultichannelView;mtm::midi::BufferView;mtm::dsp::engines::params::EventListView
+- key: bugprone-misplaced-widening-cast.CheckImplicitCasts
+  value: true
+- key: bugprone-narrowing-conversions.WarnWithinTemplateInstantiation
+  value: true
+- key: bugprone-sizeof-expression.WarnOnSizeOfIntegerExpression
+  value: true
+- key: bugprone-suspicious-enum-usage.StrictMode
+  value: 1
+- key: bugprone-suspicious-string-compare.WarnOnLogicalNotComparison
+  value: true
+- key: bugprone-unhandled-self-assignment.WarnOnlyIfThisHasSuspiciousField
+  value: false
+- key: cppcoreguidelines-rvalue-reference-param-not-moved.AllowPartialMove
+  value: true
+- key: cppcoreguidelines-rvalue-reference-param-not-moved.IgnoreUnnamedParams
+  value: true
+- key: misc-include-cleaner.IgnoreHeaders
+  value: DisableAllWarnings.hpp;ReenableAllWarnings.hpp
+- key: misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
+  value: true
+- key: modernize-deprecated-headers.CheckHeaderFile
+  value: true
+- key: performance-inefficient-string-concatenation.StrictMode
+  value: true
+- key: performance-unnecessary-value-param.AllowedTypes
+  value: mtm::midi::BufferView;mtm::dsp::engines::params::EventListView
+- key: readability-identifier-length.MinimumLoopCounterNameLength
+  value: 1
+- key: readability-identifier-length.IgnoredVariableNames
+  value: it
+- key: readability-identifier-length.IgnoredParameterNames
+  value: it
+- key: readability-inconsistent-declaration-parameter-name.Strict
+  value: true
+- key: readability-redundant-access-specifiers.CheckFirstDeclaration
+  value: true
+- key: readability-simplify-boolean-expr.ChainedConditionalReturn
+  value: true
+- key: readability-simplify-boolean-expr.ChainedConditionalAssignment
+  value: true
+- key: readability-uniqueptr-delete-release.PreferResetCall
+  value: true
+
+FormatStyle: file

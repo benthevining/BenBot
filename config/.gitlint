@@ -1,0 +1,37 @@
+# ======================================================================================
+#
+# libchess - a chess engine by Ben Vining
+#
+# ======================================================================================
+
+# configuration file for the gitlint tool, which is run by pre-commit: https://jorisroovers.com/gitlint/
+# The most important part is that commit messages must follow the
+# conventional commits specification: https://www.conventionalcommits.org/en/v1.0.0/
+# Valid commit categories are listed under the contrib-title-conventional-commits key
+# Commit messages are linted by a pre-commit hook
+
+[general]
+
+ignore = title-trailing-punctuation, body-is-missing, body-max-line-length
+
+fail-without-commits = true
+
+contrib = contrib-title-conventional-commits
+
+verbosity = 2
+
+[title-max-length]
+line-length = 200
+
+[title-min-length]
+min-length = 10
+
+[contrib-title-conventional-commits]
+types = fix, feat, chore, docs, style, refactor, test, ci
+
+[ignore-body-lines]
+regex = ^Co-Authored-By
+
+[ignore-by-author-name]
+regex = (.*)dependabot(.*)
+ignore = T1,body-min-length

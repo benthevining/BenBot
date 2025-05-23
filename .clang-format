@@ -1,0 +1,46 @@
+# ======================================================================================
+#
+# libchess - a chess engine by Ben Vining
+#
+# ======================================================================================
+
+# clang-format is run as a pre-commit hook
+
+# we only specify options that differ from the WebKit preset defaults
+BasedOnStyle: WebKit
+
+AlignConsecutiveAssignments: Consecutive
+AlignConsecutiveDeclarations: Consecutive
+AlignConsecutiveShortCaseStatements:
+  Enabled: true
+  AlignCaseColons: true
+AlignEscapedNewlines: LeftWithLastLine
+AlignOperands: AlignAfterOperator
+AlignTrailingComments:
+  Kind: Always
+AllowBreakBeforeNoexceptSpecifier: OnlyWithParen
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortCompoundRequirementOnASingleLine: true
+AllowShortFunctionsOnASingleLine: InlineOnly
+AllowShortLambdasOnASingleLine: All
+BreakBeforeConceptDeclarations: Always
+BreakInheritanceList: BeforeComma
+BreakTemplateDeclarations: Yes
+EmptyLineBeforeAccessModifier: Always
+FixNamespaceComments: true
+IndentCaseLabels: true
+IndentPPDirectives: AfterHash
+IndentRequiresClause: true
+InsertNewlineAtEOF: true
+KeepEmptyLines:
+  AtStartOfBlock: false
+PointerAlignment: Left
+RemoveSemicolon: true
+RequiresClausePosition: OwnLine
+SortIncludes: CaseSensitive
+SortUsingDeclarations: Lexicographic
+SpaceAfterLogicalNot: true
+SpaceBeforeParens: ControlStatements
+SpaceInEmptyBlock: true
+Standard: c++20
+StatementMacros: [BENCHMARK]

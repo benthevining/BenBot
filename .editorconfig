@@ -1,0 +1,30 @@
+# ======================================================================================
+#
+# libchess - a chess engine by Ben Vining
+#
+# ======================================================================================
+
+# configuration file for editorconfig
+# see https://editorconfig.org/
+# editorconfig rules are checked by a pre-commit hook
+
+root = true
+
+[*]
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+tab_width = 4
+end_of_line = lf
+charset = utf-8
+max_line_length = unset
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.{yml,yaml,json,clang*}]
+indent_size = 2
+
+[*.ly]
+indent_style = tab

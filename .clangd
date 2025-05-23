@@ -1,0 +1,13 @@
+# ======================================================================================
+#
+# libchess - a chess engine by Ben Vining
+#
+# ======================================================================================
+
+Style:
+  FullyQualifiedNamespaces: [ std ]
+
+Diagnostics:
+  ClangTidy:
+    FastCheckFilter: Loose
+  MissingIncludes: Strict

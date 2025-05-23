@@ -1,0 +1,220 @@
+# ======================================================================================
+#
+# libchess - a chess engine by Ben Vining
+#
+# ======================================================================================
+
+# config file for pre-commit: https://pre-commit.com/
+#
+# These hooks are run before each git commit, but can also be run on demand using
+# `pre-commit run --all-files` or `just pc`
+#
+# To install the hooks to be automatically run by git when committing, run:
+# `pre-commit install --install-hooks` or `just install`
+#
+# This is the preferred way to run all of these tools -- clang-format, clang-tidy,
+# cppcheck, cmake-format, etc. -- because it is convenient to define configuration
+# for all of them in this single file, and to define the order in which they should
+# be run (we always auto-format *before* linting). In general, any tools that are
+# available as pre-commit hooks are run using pre-commit, and for these tools, any
+# configuration options settable as command-line arguments are specified in this file
+# using the `args:` key. When a tool requires configuration file(s), then if it is
+# possible to specify a custom filepath, we put the config file(s) in the `config/`
+# directory and specify that path as a command-line argument. Only if specifying a
+# custom config file is not possible do we resort to putting it in the repo root.
+#
+# Note that running pre-commit may change files in the source tree. If a hook changes
+# files, the pre-commit run exits with a failure code, and if a git commit was in
+# progress, it is aborted.
+#
+# Note that clang-tidy is not run automatically, because it takes too long; it can be
+# run on-demand using:
+# `pre-commit run --hook-stage manual clang-tidy --all-files`
+#
+# clang-tidy relies on the compile commands database created by the Ninja CMake preset
+# (ie, run `cmake --preset ninja` before running clang-tidy). A log file will be written
+# to `logs/clang-tidy.log`.
+
+default_language_version:
+  python: python3
+
+default_install_hook_types: [pre-commit, pre-push, commit-msg]
+
+default_stages: [pre-commit, pre-push]
+
+fail_fast: false
+
+minimum_pre_commit_version: 4.0.1
+
+repos:
+
+  # pre-commit configuration meta-checks
+- repo: meta
+  hooks:
+  - id: check-hooks-apply
+    always_run: true
+  - id: check-useless-excludes
+    always_run: true
+
+    # local scripts
+- repo: local
+  hooks:
+      # create build directory for cppcheck & logs directory for clang-tidy
+  - id: cppcheck-build-dir
+    name: Create cache dir for cppcheck
+    entry: cmake -E make_directory Builds/cppcheck/ logs/
+    language: system
+    always_run: true
+    pass_filenames: false
+
+    # insert license header
+- repo: https://github.com/Lucas-C/pre-commit-hooks
+  rev: v1.5.5
+  hooks:
+      # we have to run this step once for each different comment style
+  - id: insert-license
+    name: Insert license header in C++ source files
+    args: [--license-filepath=config/license_header.txt, --comment-style=/*| *| */, --detect-license-in-X-top-lines=16]
+    types_or: [c, c++]
+  - id: insert-license
+    name: Insert license header in CMake and shell files
+    args: [--license-filepath=config/license_header.txt, --comment-style=#, --detect-license-in-X-top-lines=16]
+    types_or: [cmake, yaml, toml, ini, python, shell]
+  - id: insert-license
+    name: Insert license header in CMake and shell files
+    args: [--license-filepath=config/license_header.txt, --comment-style=#, --detect-license-in-X-top-lines=16]
+    files: .editorconfig|.git|justfile|.envrc|.cfg|.clang|Brewfile|Gemfile|requirements.txt
+    exclude: .editorconfig-checker.json
+
+    # auto-fix spelling mistakes
+- repo: https://github.com/codespell-project/codespell
+  rev: v2.4.1
+  hooks:
+  - id: codespell
+    args: [--write-changes]
+
+    # C++ formatting & linting
+- repo: https://github.com/pre-commit/mirrors-clang-format
+  rev: v20.1.4
+  hooks:
+  - id: clang-format
+    args: [-style=file, -i]
+    types_or: [c++]
+- repo: https://github.com/pocc/pre-commit-hooks
+  rev: v1.3.5
+  hooks:
+  - id: cppcheck
+    args: [--cppcheck-build-dir=Builds/cppcheck, --quiet, --inline-suppr, --std=c++23, --language=c++, -Ilibs/libutil/include, --check-level=exhaustive, --force, --enable=all, --suppress=unusedFunction, --suppress=unusedStructMember, --suppress=unmatchedSuppression, --suppress=class_X_Y, --suppress=missingIncludeSystem, --suppress=missingInclude]
+    additional_dependencies: [cppcheck>=1.4.7]
+  - id: cpplint
+    args: [--verbose=0, --quiet]
+    additional_dependencies: [cpplint]
+
+    # CMake formatting & linting
+- repo: https://github.com/cheshirekow/cmake-format-precommit
+  rev: v0.6.13
+  hooks:
+  - id: cmake-format
+    args: [--config-files, config/.cmake-format.json, --in-place]
+  - id: cmake-lint
+    args: [--config-files, config/.cmake-format.json]
+
+    # validate CMake presets
+- repo: https://github.com/python-jsonschema/check-jsonschema
+  rev: 0.33.0
+  hooks:
+  - id: check-jsonschema
+    name: Validate CMake presets
+    args: [--schemafile, 'https://cmake.org/cmake/help/latest/_downloads/3e2d73bff478d88a7de0de736ba5e361/schema.json']
+    files: CMakePresets.json
+
+    # format justfile
+- repo: local
+  hooks:
+  - id: format_justfile
+    name: Autoformat justfile
+    entry: just --fmt --unstable
+    language: system
+    files: justfile
+    pass_filenames: false
+
+    # general
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v5.0.0
+  hooks:
+  - id: check-added-large-files
+    args: [--maxkb=64]
+  - id: check-case-conflict
+  - id: check-illegal-windows-names
+  - id: check-json
+  - id: check-merge-conflict
+  - id: check-shebang-scripts-are-executable
+  - id: check-toml
+  - id: check-vcs-permalinks
+  - id: check-yaml
+  - id: destroyed-symlinks
+  - id: detect-private-key
+  - id: end-of-file-fixer
+  - id: fix-byte-order-marker
+  - id: forbid-submodules
+  - id: mixed-line-ending
+    args: [--fix=lf]
+  - id: pretty-format-json
+    args: [--autofix, --indent=2]
+  - id: trailing-whitespace
+    args: [--markdown-linebreak-ext=md]
+
+- repo: https://github.com/sirosen/texthooks
+  rev: 0.6.8
+  hooks:
+  - id: fix-ligatures
+  - id: fix-smartquotes
+  - id: fix-spaces
+  - id: forbid-bidi-controls
+
+- repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks.git
+  rev: v2.14.0
+  hooks:
+  - id: pretty-format-ini
+    args: [--autofix]
+  - id: pretty-format-yaml
+    args: [--autofix, --preserve-quotes]
+
+    # check editorconfig rules
+- repo: https://github.com/editorconfig-checker/editorconfig-checker.python
+  rev: 3.2.1
+  hooks:
+  - id: editorconfig-checker
+    args: [-config, config/.editorconfig-checker.json]
+
+    # lint commit message
+- repo: https://github.com/jorisroovers/gitlint
+  rev: v0.19.1
+  hooks:
+  - id: gitlint
+    args: [--config, config/.gitlint, --msg-filename]
+
+          # sign commit
+          # TODO: doesn't work on Windows
+          # - repo: https://github.com/mattlqx/pre-commit-sign
+          #   rev: v1.2.0
+          #   hooks:
+        #   - id: sign-commit
+
+    # manual-only hooks
+- repo: https://github.com/pocc/pre-commit-hooks
+  rev: v1.3.5
+  hooks:
+  - id: clang-tidy
+    args: [-p=Builds/ninja, --quiet]
+    additional_dependencies: [clang-tidy]
+    log_file: logs/clang-tidy.log
+    verbose: true
+    stages: [manual]
+
+- repo: https://github.com/codingjoe/relint
+  rev: 3.3.1
+  hooks:
+  - id: relint
+    args: [-c, config/.relint.yml]
+    stages: [manual]

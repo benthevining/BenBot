@@ -1,0 +1,20 @@
+# ======================================================================================
+#
+# libchess - a chess engine by Ben Vining
+#
+# ======================================================================================
+
+*.profraw
+
+.env
+.envrc.user
+!.envrc
+.DS_Store
+package-lock.json
+CMakeUserPresets.json
+
+[Bb]uilds/
+[Ll]ogs/
+node_modules/
+.idea/
+.venv/
