@@ -21,6 +21,12 @@ namespace chess {
 
     Each bit represents a square of the chessboard; the bit is 1 if there is a piece there,
     and 0 if the square is empty.
+
+    Mapping ranks/files to indices of bits within a bitboard is handled by the Square class.
+
+    @see BitboardSet
+
+    @todo static constants for ranks, files, diagonals, dark squares, light squares
  */
 struct Bitboard final {
     /** Unsigned integer type used for serialization of bitboards. */
