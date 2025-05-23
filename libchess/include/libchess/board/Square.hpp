@@ -147,6 +147,8 @@ struct Square final {
 
 } // namespace chess
 
+namespace std {
+
 /** A formatter for Square objects.
 
     The formatter accepts the following format specifier arguments:
@@ -158,54 +160,62 @@ struct Square final {
     @see chess::Square
  */
 template <>
-struct std::formatter<chess::Square> final {
+struct formatter<chess::Square> final {
     template <typename ParseContext>
-    constexpr auto parse(ParseContext& ctx)
-    {
-        auto it = ctx.begin();
-
-        if (it == ctx.end() || *it == '}')
-            return it;
-
-        do {
-            switch (*it) {
-                case 'i': [[fallthrough]];
-                case 'I':
-                    asIdx = true;
-                    break;
-
-                case 'a': [[fallthrough]];
-                case 'A':
-                    asIdx = false;
-                    break;
-
-                default:
-                    throw std::format_error { "Unrecognized format argument" };
-            }
-
-            ++it;
-        } while (! (it == ctx.end() || *it == '}'));
-
-        ctx.advance_to(it);
-
-        return it;
-    }
+    constexpr ParseContext::iterator parse(ParseContext& ctx);
 
     template <typename FormatContext>
-    auto format(const chess::Square& square, FormatContext& ctx) const
-    {
-        if (asIdx)
-            return std::format_to(ctx.out(), "{}", square.index());
-
-        return std::format_to(
-            ctx.out(), "{}{}",
-            magic_enum::enum_name(square.file),
-            std::to_underlying(square.rank) + static_cast<chess::BitboardIndex>(1));
-    }
+    FormatContext::iterator format(const chess::Square& square, FormatContext& ctx) const;
 
 private:
     bool asIdx { false };
 };
+
+template <typename ParseContext>
+constexpr ParseContext::iterator formatter<chess::Square>::parse(ParseContext& ctx)
+{
+    auto it = ctx.begin();
+
+    if (it == ctx.end() || *it == '}')
+        return it;
+
+    do {
+        switch (*it) {
+            case 'i': [[fallthrough]];
+            case 'I':
+                asIdx = true;
+                break;
+
+            case 'a': [[fallthrough]];
+            case 'A':
+                asIdx = false;
+                break;
+
+            default:
+                throw std::format_error { "Unrecognized format argument" };
+        }
+
+        ++it;
+    } while (! (it == ctx.end() || *it == '}'));
+
+    ctx.advance_to(it);
+
+    return it;
+}
+
+template <typename FormatContext>
+FormatContext::iterator formatter<chess::Square>::format(const chess::Square& square, FormatContext& ctx) const
+{
+    if (asIdx)
+        return std::format_to(ctx.out(), "{}", square.index());
+
+    return std::format_to(
+        ctx.out(), "{}{}",
+        magic_enum::enum_name(square.file),
+        std::to_underlying(square.rank) + static_cast<chess::BitboardIndex>(1));
+}
+
+} // namespace std
 
 namespace chess {
 
