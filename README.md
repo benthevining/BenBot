@@ -1,0 +1,3 @@
+# libchess
+
+A chess engine
