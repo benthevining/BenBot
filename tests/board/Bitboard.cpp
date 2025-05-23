@@ -8,12 +8,12 @@
 
 #include <algorithm>
 #include <catch2/catch_test_macros.hpp>
-#include <libchess/geometry/Bitboard.hpp>
-#include <libchess/geometry/Square.hpp>
+#include <libchess/board/Bitboard.hpp>
+#include <libchess/board/Square.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <utility>
 
-static constexpr auto TAGS { "[geometry][Bitboard]" };
+static constexpr auto TAGS { "[board][Bitboard]" };
 
 using chess::Bitboard;
 using chess::File;

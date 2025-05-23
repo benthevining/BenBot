@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <libchess/geometry/Bitboard.hpp>
+#include <libchess/board/Bitboard.hpp>
 
 namespace chess {
 

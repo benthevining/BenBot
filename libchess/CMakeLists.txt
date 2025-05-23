@@ -29,7 +29,7 @@ set_target_properties (
 )
 
 set (libchess_headers # cmake-format: sortable
-                      geometry/Bitboard.hpp geometry/BitboardSet.hpp geometry/Square.hpp
+                      board/Bitboard.hpp board/BitboardSet.hpp board/Square.hpp
 )
 
 set (libchess_sources # cmake-format: sortable

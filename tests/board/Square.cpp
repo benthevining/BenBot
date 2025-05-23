@@ -9,10 +9,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators_range.hpp>
 #include <format>
-#include <libchess/geometry/Square.hpp>
+#include <libchess/board/Square.hpp>
 #include <magic_enum/magic_enum.hpp>
 
-static constexpr auto TAGS { "[geometry][Square]" };
+static constexpr auto TAGS { "[board][Square]" };
 
 using chess::File;
 using chess::Rank;
