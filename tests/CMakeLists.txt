@@ -33,7 +33,7 @@ add_executable (libchess_tests)
 target_link_libraries (libchess_tests PRIVATE libchess::libchess Catch2::Catch2WithMain)
 
 set (sources # cmake-format: sortable
-             geometry/Square.cpp
+             geometry/Bitboard.cpp geometry/Square.cpp
 )
 
 target_sources (libchess_tests PRIVATE ${sources})

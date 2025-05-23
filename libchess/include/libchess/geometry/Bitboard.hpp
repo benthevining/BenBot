@@ -11,7 +11,7 @@
 #include <bitset>
 #include <cassert>
 #include <cstddef> // IWYU pragma: keep - for size_t
-#include <cstdint>
+#include <cstdint> // IWYU pragma: keep - for std::uint_least64_t
 #include <libchess/geometry/Square.hpp>
 
 namespace chess {
@@ -25,8 +25,6 @@ namespace chess {
     Mapping ranks/files to indices of bits within a bitboard is handled by the Square class.
 
     @see BitboardSet
-
-    @todo static constants for ranks, files, diagonals, dark squares, light squares
  */
 struct Bitboard final {
     /** Unsigned integer type used for serialization of bitboards. */
@@ -88,5 +86,73 @@ struct Bitboard final {
 private:
     std::bitset<64uz> bits;
 };
+
+namespace masks {
+
+    /** Returns a bitboard with all the dark squares set to 1.
+        @see light_squares()
+     */
+    [[nodiscard]] consteval Bitboard dark_squares() noexcept
+    {
+        return Bitboard { 0xAA55AA55AA55AA55 };
+    }
+
+    /** Returns a bitboard with all the light squares set to 1.
+        @see dark_squares()
+     */
+    [[nodiscard]] consteval Bitboard light_squares() noexcept
+    {
+        return Bitboard { 0x55AA55AA55AA55AA };
+    }
+
+    /** Returns a bitboard with all squares on the A file set to 1.
+        @see h_file()
+     */
+    [[nodiscard]] consteval Bitboard a_file() noexcept
+    {
+        return Bitboard { 0x0101010101010101 };
+    }
+
+    /** Returns a bitboard with all squares on the H file set to 1.
+        @see a_file()
+     */
+    [[nodiscard]] consteval Bitboard h_file() noexcept
+    {
+        return Bitboard { 0x8080808080808080 };
+    }
+
+    /** Returns a bitboard with all squares on the first rank set to 1.
+        @see rank_8()
+     */
+    [[nodiscard]] consteval Bitboard rank_1() noexcept
+    {
+        return Bitboard { 0x00000000000000FF };
+    }
+
+    /** Returns a bitboard with all squares on the eighth rank set to 1.
+        @see rank_1()
+     */
+    [[nodiscard]] consteval Bitboard rank_8() noexcept
+    {
+        return Bitboard { 0xFF00000000000000 };
+    }
+
+    /** Returns a bitboard with all squares on the A1-H8 long diagonal set to 1.
+        @see a8_h1_diagonal()
+     */
+    [[nodiscard]] consteval Bitboard a1_h8_diagonal() noexcept
+    {
+        return Bitboard { 0x8040201008040201 };
+    }
+
+    /** Returns a bitboard with all squares on the A1-H8 long diagonal set to 1.
+        @see a1_h8_diagonal()
+     */
+    [[nodiscard]] consteval Bitboard a8_h1_diagonal() noexcept
+    {
+        return Bitboard { 0x0102040810204080 };
+    }
+
+} // namespace masks
 
 } // namespace chess
