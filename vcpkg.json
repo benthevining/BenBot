@@ -1,0 +1,7 @@
+{
+  "dependencies": [
+    "magic-enum"
+  ],
+  "name": "libchess",
+  "version": "0.0.1"
+}

@@ -4,9 +4,25 @@
 #
 # ======================================================================================
 
+include (FetchContent)
+
+FetchContent_Declare (
+    magic_enum
+    SYSTEM
+    GIT_REPOSITORY "https://github.com/Neargye/magic_enum.git"
+    GIT_TAG v0.9.7
+    GIT_SHALLOW ON
+    GIT_PROGRESS ON
+    FIND_PACKAGE_ARGS 0.9.7
+)
+
+FetchContent_MakeAvailable (magic_enum)
+
 add_library (libchess)
 
 target_compile_features (libchess PUBLIC cxx_std_23)
+
+target_link_libraries (libchess PUBLIC magic_enum::magic_enum)
 
 set_target_properties (
     libchess PROPERTIES CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF DEBUG_POSTFIX -d

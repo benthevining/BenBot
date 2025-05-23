@@ -10,6 +10,10 @@
 
 #include <cassert>
 #include <cstdint>
+#include <format>
+#include <magic_enum/magic_enum.hpp>
+#include <stdexcept>
+#include <string_view>
 #include <utility>
 
 namespace chess {
@@ -64,11 +68,6 @@ enum class File : BitboardIndex {
     2  | 8  | 9  | 10 | 11 | 12 | 13 | 14 | 15 |
     1  | 0  | 1  | 2  | 3  | 4  | 5  | 6  | 7  |
     @endverbatim
-
-    @todo is_dark()/is_light()
-    @todo std::formatter
-    @todo from_string()
-    @todo free functions to iterate ranks, files, diagonals
  */
 struct Square final {
     /** This square's rank. */
@@ -82,13 +81,13 @@ struct Square final {
      */
     [[nodiscard]] constexpr BitboardIndex index() const noexcept
     {
-        return static_cast<BitboardIndex>(8) * static_cast<BitboardIndex>(rank) + static_cast<BitboardIndex>(file);
+        return static_cast<BitboardIndex>(8) * std::to_underlying(rank) + std::to_underlying(file);
     }
 
     /** Calculates the rank and file corresponding to the given bitboard index.
         This function asserts if the passed ``index`` is greater than 63.
      */
-    [[nodiscard]] static constexpr Square from_index(BitboardIndex index) noexcept
+    [[nodiscard, gnu::const]] static constexpr Square from_index(BitboardIndex index) noexcept
     {
         assert(std::cmp_less_equal(index, 63uz));
 
@@ -98,6 +97,15 @@ struct Square final {
         };
     }
 
+    /** Creates a square from a string in algebraic notation, such as "A1", "H4", etc.
+
+        @throws std::invalid_argument An exception will be thrown if a square cannot be
+        parsed correctly from the input string.
+     */
+    [[nodiscard, gnu::const]] static constexpr Square from_string(std::string_view text);
+
+    /// @name Area queries
+    /// @{
     /** Returns true if this square is on the queenside (the A-D files). */
     [[nodiscard]] constexpr bool is_queenside() const noexcept
     {
@@ -125,6 +133,153 @@ struct Square final {
         return std::cmp_greater_equal(
             std::to_underlying(rank), std::to_underlying(Rank::Five));
     }
+    /// @}
+
+    /** Returns true if this is a light square. */
+    [[nodiscard]] constexpr bool is_light() const noexcept;
+
+    /** Returns true if this is a dark square. */
+    [[nodiscard]] constexpr bool is_dark() const noexcept { return ! is_light(); }
 };
+
+} // namespace chess
+
+/** A formatter for Square objects.
+
+    The formatter accepts the following format specifier arguments:
+    @li ``i|I``: Tells the formatter to print the bitboard bit index for this square
+    @li ``a|A``: Tells the formatter to print the algebraic notation of this square
+
+    If no arguments are specified, the formatter prints the square's algebraic notation by default.
+
+    @see chess::Square
+ */
+template <>
+struct std::formatter<chess::Square> final {
+    template <typename ParseContext>
+    constexpr auto parse(ParseContext& ctx)
+    {
+        auto it = ctx.begin();
+
+        if (it == ctx.end() || *it == '}')
+            return it;
+
+        do {
+            switch (*it) {
+                case 'i': [[fallthrough]];
+                case 'I':
+                    asIdx = true;
+                    break;
+
+                case 'a': [[fallthrough]];
+                case 'A':
+                    asIdx = false;
+                    break;
+
+                default:
+                    throw std::format_error { "Unrecognized format argument" };
+            }
+
+            ++it;
+        } while (! (it == ctx.end() || *it == '}'));
+
+        ctx.advance_to(it);
+
+        return it;
+    }
+
+    template <typename FormatContext>
+    auto format(const chess::Square& square, FormatContext& ctx) const
+    {
+        if (asIdx)
+            return std::format_to(ctx.out(), "{}", square.index());
+
+        return std::format_to(
+            ctx.out(), "{}{}",
+            magic_enum::enum_name(square.file),
+            std::to_underlying(square.rank));
+    }
+
+private:
+    bool asIdx { false };
+};
+
+namespace chess {
+
+constexpr bool Square::is_light() const noexcept
+{
+    auto is_even = [](BitboardIndex index) {
+        return (index % static_cast<BitboardIndex>(2)) == static_cast<BitboardIndex>(0);
+    };
+
+    const bool fileEven = is_even(std::to_underlying(file));
+    const bool rankEven = is_even(std::to_underlying(rank));
+
+    if (fileEven)
+        return ! rankEven;
+
+    return rankEven;
+}
+
+constexpr Square Square::from_string(std::string_view text)
+{
+    if (text.length() != 2uz)
+        throw std::invalid_argument {
+            std::format("Cannot parse Square from invalid input string: {}", text)
+        };
+
+    const auto file = [character = text.front()] {
+        switch (character) {
+            case 'a': [[fallthrough]];
+            case 'A': return File::A;
+
+            case 'b': [[fallthrough]];
+            case 'B': return File::B;
+
+            case 'c': [[fallthrough]];
+            case 'C': return File::C;
+
+            case 'd': [[fallthrough]];
+            case 'D': return File::D;
+
+            case 'e': [[fallthrough]];
+            case 'E': return File::E;
+
+            case 'f': [[fallthrough]];
+            case 'F': return File::F;
+
+            case 'g': [[fallthrough]];
+            case 'G': return File::G;
+
+            case 'h': [[fallthrough]];
+            case 'H': return File::H;
+
+            default:
+                throw std::invalid_argument {
+                    std::format("Cannot parse file from character: {}", character)
+                };
+        }
+    }();
+
+    const auto rank = [character = text.back()] {
+        switch (character) {
+            case '1': return Rank::One;
+            case '2': return Rank::Two;
+            case '3': return Rank::Three;
+            case '4': return Rank::Four;
+            case '5': return Rank::Five;
+            case '6': return Rank::Six;
+            case '7': return Rank::Seven;
+            case '8': return Rank::Eight;
+
+            default:
+                throw std::invalid_argument {
+                    std::format("Cannot parse rank from character: {}", character)
+                };
+        }
+    }();
+
+    return { rank, file };
+}
 
 } // namespace chess
