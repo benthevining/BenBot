@@ -18,11 +18,11 @@ FetchContent_Declare (
 
 FetchContent_MakeAvailable (magic_enum)
 
-add_library (libchess)
+add_library (libchess INTERFACE)
 
-target_compile_features (libchess PUBLIC cxx_std_23)
+target_compile_features (libchess INTERFACE cxx_std_23)
 
-target_link_libraries (libchess PUBLIC magic_enum::magic_enum)
+target_link_libraries (libchess INTERFACE magic_enum::magic_enum)
 
 set_target_properties (
     libchess PROPERTIES CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF DEBUG_POSTFIX -d

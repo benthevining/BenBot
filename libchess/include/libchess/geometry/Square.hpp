@@ -8,8 +8,7 @@
 
 #pragma once
 
-#include <cassert>
-#include <cstdint>
+#include <cstdint> // IWYU pragma: keep - for std::uint_fast64_t
 #include <format>
 #include <magic_enum/magic_enum.hpp>
 #include <stdexcept>
@@ -70,39 +69,43 @@ enum class File : BitboardIndex {
     @endverbatim
  */
 struct Square final {
+    /** This square's file. */
+    File file { File::A };
+
     /** This square's rank. */
     Rank rank { Rank::One };
 
-    /** This square's file. */
-    File file { File::A };
+    /** Calculates the rank and file corresponding to the given bitboard index.
+        This function asserts if the passed ``index`` is greater than 63.
+
+        @throws std::invalid_argument An exception will be thrown if the passed
+        ``index`` is greater than 63.
+     */
+    [[nodiscard, gnu::const]] static constexpr Square from_index(BitboardIndex index);
+
+    /** Creates a square from a string in algebraic notation, such as "A1", "H4", etc.
+
+        This method recognizes either upper- or lower-case file letters. This method
+        always throws if the input string is not 2 characters long.
+
+        @throws std::invalid_argument An exception will be thrown if a square cannot be
+        parsed correctly from the input string.
+     */
+    [[nodiscard, gnu::const]] static constexpr Square from_string(std::string_view text);
 
     /** Returns the bitboard bit index for this square.
         The returned index will be in the range ``[0,63]``.
      */
     [[nodiscard]] constexpr BitboardIndex index() const noexcept
     {
-        return static_cast<BitboardIndex>(8) * std::to_underlying(rank) + std::to_underlying(file);
+        return (std::to_underlying(rank) << static_cast<BitboardIndex>(3)) + std::to_underlying(file);
     }
 
-    /** Calculates the rank and file corresponding to the given bitboard index.
-        This function asserts if the passed ``index`` is greater than 63.
-     */
-    [[nodiscard, gnu::const]] static constexpr Square from_index(BitboardIndex index) noexcept
+    /** Returns true if two squares are equivalent. */
+    [[nodiscard]] constexpr bool operator==(const Square& other) const noexcept
     {
-        assert(std::cmp_less_equal(index, 63uz));
-
-        return {
-            .rank = static_cast<Rank>(index >> static_cast<BitboardIndex>(3)),
-            .file = static_cast<File>(index & static_cast<BitboardIndex>(7))
-        };
+        return rank == other.rank && file == other.file;
     }
-
-    /** Creates a square from a string in algebraic notation, such as "A1", "H4", etc.
-
-        @throws std::invalid_argument An exception will be thrown if a square cannot be
-        parsed correctly from the input string.
-     */
-    [[nodiscard, gnu::const]] static constexpr Square from_string(std::string_view text);
 
     /// @name Area queries
     /// @{
@@ -197,7 +200,7 @@ struct std::formatter<chess::Square> final {
         return std::format_to(
             ctx.out(), "{}{}",
             magic_enum::enum_name(square.file),
-            std::to_underlying(square.rank));
+            std::to_underlying(square.rank) + static_cast<chess::BitboardIndex>(1));
     }
 
 private:
@@ -208,12 +211,12 @@ namespace chess {
 
 constexpr bool Square::is_light() const noexcept
 {
-    auto is_even = [](BitboardIndex index) {
-        return (index % static_cast<BitboardIndex>(2)) == static_cast<BitboardIndex>(0);
+    auto is_even = [] [[nodiscard, gnu::const]] (const BitboardIndex index) {
+        return (index & static_cast<BitboardIndex>(1)) == static_cast<BitboardIndex>(0);
     };
 
-    const bool fileEven = is_even(std::to_underlying(file));
-    const bool rankEven = is_even(std::to_underlying(rank));
+    const auto fileEven = is_even(std::to_underlying(file));
+    const auto rankEven = is_even(std::to_underlying(rank));
 
     if (fileEven)
         return ! rankEven;
@@ -221,7 +224,20 @@ constexpr bool Square::is_light() const noexcept
     return rankEven;
 }
 
-constexpr Square Square::from_string(std::string_view text)
+constexpr Square Square::from_index(const BitboardIndex index)
+{
+    if (std::cmp_greater(index, 63uz))
+        throw std::invalid_argument {
+            std::format("Cannot create Square from invalid bitboard index {}", index)
+        };
+
+    return {
+        .file = static_cast<File>(index & static_cast<BitboardIndex>(7)),
+        .rank = static_cast<Rank>(index >> static_cast<BitboardIndex>(3))
+    };
+}
+
+constexpr Square Square::from_string(const std::string_view text)
 {
     if (text.length() != 2uz)
         throw std::invalid_argument {
@@ -279,7 +295,7 @@ constexpr Square Square::from_string(std::string_view text)
         }
     }();
 
-    return { rank, file };
+    return { file, rank };
 }
 
 } // namespace chess

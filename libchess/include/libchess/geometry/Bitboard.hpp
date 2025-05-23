@@ -10,7 +10,7 @@
 
 #include <bitset>
 #include <cassert>
-#include <cstddef>
+#include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdint>
 #include <libchess/geometry/Square.hpp>
 
@@ -38,8 +38,8 @@ struct Bitboard final {
     /** Constructs a bitboard from an integer representation.
         @see to_int()
      */
-    explicit constexpr Bitboard(Integer value) noexcept
-        : bits { static_cast<unsigned long long>(value) } // NOLINT(runtime/int)
+    explicit constexpr Bitboard(const Integer value) noexcept
+        : bits { static_cast<unsigned long long>(value) } // NOLINT
     {
     }
 
@@ -56,24 +56,24 @@ struct Bitboard final {
     [[nodiscard]] constexpr std::size_t count() const noexcept { return bits.count(); }
 
     /** Returns true if there is a piece on the given square. */
-    [[nodiscard]] constexpr bool test(Square square) const noexcept { return test(square.index()); }
+    [[nodiscard]] constexpr bool test(const Square square) const noexcept { return test(square.index()); }
 
     /** Returns true if there is a piece on the given square.
         This method asserts if the given index is greater than 63.
      */
-    [[nodiscard]] constexpr bool test(BitboardIndex index) const noexcept
+    [[nodiscard]] constexpr bool test(const BitboardIndex index) const noexcept
     {
         assert(index <= 63uz);
         return bits[index];
     }
 
     /** Sets the given square's bit to the given value. */
-    constexpr void set(Square square, bool value = true) noexcept { set(square.index(), value); }
+    constexpr void set(const Square square, const bool value = true) noexcept { set(square.index(), value); }
 
     /** Sets the given square's bit to the given value.
         This method asserts if the given index is greater than 63.
      */
-    constexpr void set(BitboardIndex index, bool value = true) noexcept
+    constexpr void set(const BitboardIndex index, const bool value = true) noexcept
     {
         assert(index <= 63uz);
         bits[index] = value;
