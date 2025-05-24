@@ -25,6 +25,8 @@ namespace chess {
     Mapping ranks/files to indices of bits within a bitboard is handled by the Square class.
 
     @see BitboardSet
+
+    @todo Masks for starting positions of each piece type
  */
 struct Bitboard final {
     /** Unsigned integer type used for serialization of bitboards. */
@@ -81,7 +83,7 @@ struct Bitboard final {
     constexpr void clear() noexcept { bits.reset(); }
 
     /** Converts this bitboard to its integer representation. */
-    [[nodiscard]] constexpr Integer to_int() const noexcept { return static_cast<Integer>(bits.to_ullong()); }
+    [[nodiscard]] constexpr Integer to_int() const noexcept { return bits.to_ullong(); }
 
 private:
     std::bitset<64uz> bits;

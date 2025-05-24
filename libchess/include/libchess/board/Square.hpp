@@ -10,6 +10,7 @@
 
 #include <cstdint> // IWYU pragma: keep - for std::uint_fast64_t
 #include <format>
+#include <libchess/util/Math.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <stdexcept>
 #include <string_view>
@@ -17,7 +18,9 @@
 
 namespace chess {
 
-/** Unsigned integer type used for bitboard indices. */
+/** Unsigned integer type used for bitboard indices.
+    @todo Make this an enum?
+ */
 using BitboardIndex = std::uint_fast64_t;
 
 /** This enum describes the ranks of the chessboard.
@@ -221,12 +224,8 @@ namespace chess {
 
 constexpr bool Square::is_light() const noexcept
 {
-    auto is_even = [] [[nodiscard, gnu::const]] (const BitboardIndex index) {
-        return (index & static_cast<BitboardIndex>(1)) == static_cast<BitboardIndex>(0);
-    };
-
-    const auto fileEven = is_even(std::to_underlying(file));
-    const auto rankEven = is_even(std::to_underlying(rank));
+    const auto fileEven = math::is_even(std::to_underlying(file));
+    const auto rankEven = math::is_even(std::to_underlying(rank));
 
     if (fileEven)
         return ! rankEven;
