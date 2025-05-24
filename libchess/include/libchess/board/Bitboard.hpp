@@ -19,7 +19,7 @@
 #include <cstdint> // IWYU pragma: keep - for std::uint_least64_t
 #include <libchess/board/Square.hpp>
 
-namespace chess {
+namespace chess::board {
 
 /** This class is similar to ``std::bitset``, in that it is a simple collection of 64 bits,
     but it includes some convenience methods specific to usage as a bitboard.
@@ -33,6 +33,7 @@ namespace chess {
     @ingroup board
 
     @todo Masks for starting positions of each piece type
+    @todo std::formatter
  */
 struct Bitboard final {
     /** Unsigned integer type used for serialization of bitboards. */
@@ -171,4 +172,4 @@ namespace masks {
 
 } // namespace masks
 
-} // namespace chess
+} // namespace chess::board

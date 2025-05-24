@@ -15,7 +15,7 @@
 
 #include <libchess/board/Bitboard.hpp>
 
-namespace chess {
+namespace chess::board {
 
 /** This class encapsulates a bitboard for each piece type.
     An instance of this class encodes the locations of all pieces for one side.
@@ -44,4 +44,4 @@ struct Pieces final {
     Bitboard king;
 };
 
-} // namespace chess
+} // namespace chess::board

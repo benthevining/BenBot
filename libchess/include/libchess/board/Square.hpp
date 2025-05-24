@@ -13,11 +13,13 @@
 
 /** @file
     This file defines the Square class and related enums.
+
     @ingroup board
  */
 
 #pragma once
 
+#include <cctype>
 #include <cstdint> // IWYU pragma: keep - for std::uint_fast64_t
 #include <format>
 #include <libchess/util/Math.hpp>
@@ -26,16 +28,23 @@
 #include <string_view>
 #include <utility>
 
-namespace chess {
+/** This namespace contains classes related to the engine's internal
+    board representation.
+
+    @ingroup board
+ */
+namespace chess::board {
 
 /** Unsigned integer type used for bitboard indices.
     Valid bitboard indices are in the range ``[0, 63]``.
+
     @ingroup board
     @todo Make this an enum?
  */
 using BitboardIndex = std::uint_fast8_t;
 
 /** This enum describes the ranks of the chessboard.
+
     @see File
     @ingroup board
  */
@@ -51,6 +60,7 @@ enum class Rank : BitboardIndex {
 };
 
 /** This enum describes the files of the chess board.
+
     @see Rank
     @ingroup board
  */
@@ -164,9 +174,57 @@ struct Square final {
     [[nodiscard]] constexpr bool is_dark() const noexcept { return ! is_light(); }
 };
 
-} // namespace chess
+} // namespace chess::board
 
 namespace std {
+
+/** A formatter for chessboard ranks.
+    The formatter accepts no arguments; ranks are always printed as integers, except
+    starting from 1 instead of 0.
+
+    @see chess::board::Rank
+    @ingroup board
+ */
+template <>
+struct formatter<chess::board::Rank> final {
+    template <typename ParseContext>
+    constexpr typename ParseContext::iterator parse(ParseContext& ctx)
+    {
+        return ctx.begin();
+    }
+
+    template <typename FormatContext>
+    typename FormatContext::iterator format(
+        const chess::board::Rank rank, FormatContext& ctx) const
+    {
+        return std::format_to(ctx.out(), "{}",
+            std::to_underlying(rank) + static_cast<chess::board::BitboardIndex>(1));
+    }
+};
+
+/** A formatter for chessboard files.
+
+    The formatter accepts the following format specifier arguments:
+    @li ``u|U``: Tells the formatter to print the file as an uppercase letter
+    @li ``l|L``: Tells the formatter to print the file as a lowercase letter
+
+    If no arguments are specified, the formatter prints the rank as an uppercase letter by default.
+
+    @see chess::board::File
+    @ingroup board
+ */
+template <>
+struct formatter<chess::board::File> final {
+    template <typename ParseContext>
+    constexpr typename ParseContext::iterator parse(ParseContext& ctx);
+
+    template <typename FormatContext>
+    typename FormatContext::iterator format(
+        chess::board::File file, FormatContext& ctx) const;
+
+private:
+    bool uppercase { true };
+};
 
 /** A formatter for Square objects.
 
@@ -176,16 +234,17 @@ namespace std {
 
     If no arguments are specified, the formatter prints the square's algebraic notation by default.
 
-    @see chess::Square
+    @see chess::board::Square
     @ingroup board
  */
 template <>
-struct formatter<chess::Square> final {
+struct formatter<chess::board::Square> final {
     template <typename ParseContext>
     constexpr typename ParseContext::iterator parse(ParseContext& ctx);
 
     template <typename FormatContext>
-    typename FormatContext::iterator format(const chess::Square& square, FormatContext& ctx) const;
+    typename FormatContext::iterator format(
+        const chess::board::Square& square, FormatContext& ctx) const;
 
 private:
     bool asIdx { false };
@@ -208,8 +267,64 @@ private:
 
  */
 
+/*------------------------ file formatter ------------------------*/
+
 template <typename ParseContext>
-constexpr typename ParseContext::iterator formatter<chess::Square>::parse(ParseContext& ctx)
+constexpr typename ParseContext::iterator
+formatter<chess::board::File>::parse(ParseContext& ctx)
+{
+    auto it = ctx.begin();
+
+    if (it == ctx.end() || *it == '}')
+        return it;
+
+    do {
+        switch (*it) {
+            case 'u': [[fallthrough]];
+            case 'U':
+                uppercase = true;
+                break;
+
+            case 'l': [[fallthrough]];
+            case 'L':
+                uppercase = false;
+                break;
+
+            default:
+                throw std::format_error { "Unrecognized format argument" };
+        }
+
+        ++it;
+    } while (! (it == ctx.end() || *it == '}'));
+
+    ctx.advance_to(it);
+
+    return it;
+}
+
+template <typename FormatContext>
+typename FormatContext::iterator
+formatter<chess::board::File>::format(
+    const chess::board::File file, FormatContext& ctx) const
+{
+    const auto character = [file, upper = uppercase] {
+        const auto upperChar = magic_enum::enum_name(file).front();
+
+        if (! upper)
+            return static_cast<char>(
+                std::tolower(static_cast<unsigned char>(upperChar)));
+
+        return upperChar;
+    }();
+
+    return std::format_to(ctx.out(), "{}", character);
+}
+
+/*------------------------ square formatter ------------------------*/
+
+template <typename ParseContext>
+constexpr typename ParseContext::iterator
+formatter<chess::board::Square>::parse(ParseContext& ctx)
 {
     auto it = ctx.begin();
 
@@ -241,20 +356,20 @@ constexpr typename ParseContext::iterator formatter<chess::Square>::parse(ParseC
 }
 
 template <typename FormatContext>
-typename FormatContext::iterator formatter<chess::Square>::format(const chess::Square& square, FormatContext& ctx) const
+typename FormatContext::iterator
+formatter<chess::board::Square>::format(
+    const chess::board::Square& square, FormatContext& ctx) const
 {
     if (asIdx)
         return std::format_to(ctx.out(), "{}", square.index());
 
     return std::format_to(
-        ctx.out(), "{}{}",
-        magic_enum::enum_name(square.file),
-        std::to_underlying(square.rank) + static_cast<chess::BitboardIndex>(1));
+        ctx.out(), "{}{}", square.file, square.rank);
 }
 
 } // namespace std
 
-namespace chess {
+namespace chess::board {
 
 constexpr bool Square::is_light() const noexcept
 {
@@ -341,4 +456,4 @@ constexpr Square Square::from_string(const std::string_view text)
     return { file, rank };
 }
 
-} // namespace chess
+} // namespace chess::board

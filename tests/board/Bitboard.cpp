@@ -15,10 +15,12 @@
 
 static constexpr auto TAGS { "[board][Bitboard]" };
 
-using chess::Bitboard;
-using chess::File;
-using chess::Rank;
-using chess::Square;
+using chess::board::Bitboard;
+using chess::board::File;
+using chess::board::Rank;
+using chess::board::Square;
+
+namespace bitboard_masks = chess::board::masks;
 
 TEST_CASE("Bitboard - empty", TAGS)
 {
@@ -34,7 +36,7 @@ TEST_CASE("Bitboard - dark/light square masks", TAGS)
 {
     SECTION("Dark squares")
     {
-        static constexpr auto darkSquares = chess::masks::dark_squares();
+        static constexpr auto darkSquares = bitboard_masks::dark_squares();
 
         STATIC_REQUIRE(darkSquares.count() == 32uz);
 
@@ -49,7 +51,7 @@ TEST_CASE("Bitboard - dark/light square masks", TAGS)
 
     SECTION("Light squares")
     {
-        static constexpr auto lightSquares = chess::masks::light_squares();
+        static constexpr auto lightSquares = bitboard_masks::light_squares();
 
         STATIC_REQUIRE(lightSquares.count() == 32uz);
 
@@ -67,7 +69,7 @@ TEST_CASE("Bitboard - file masks", TAGS)
 {
     SECTION("A file")
     {
-        static constexpr auto board = chess::masks::a_file();
+        static constexpr auto board = bitboard_masks::a_file();
 
         STATIC_REQUIRE(board.count() == 8uz);
 
@@ -84,7 +86,7 @@ TEST_CASE("Bitboard - file masks", TAGS)
 
     SECTION("H file")
     {
-        static constexpr auto board = chess::masks::h_file();
+        static constexpr auto board = bitboard_masks::h_file();
 
         STATIC_REQUIRE(board.count() == 8uz);
 
@@ -104,7 +106,7 @@ TEST_CASE("Bitboard - rank masks", TAGS)
 {
     SECTION("Rank 1")
     {
-        static constexpr auto board = chess::masks::rank_1();
+        static constexpr auto board = bitboard_masks::rank_1();
 
         STATIC_REQUIRE(board.count() == 8uz);
 
@@ -121,7 +123,7 @@ TEST_CASE("Bitboard - rank masks", TAGS)
 
     SECTION("Rank 8")
     {
-        static constexpr auto board = chess::masks::rank_8();
+        static constexpr auto board = bitboard_masks::rank_8();
 
         STATIC_REQUIRE(board.count() == 8uz);
 
@@ -141,7 +143,7 @@ TEST_CASE("Bitboard - diagonal masks", TAGS)
 {
     SECTION("A1-H8")
     {
-        static constexpr auto diagonal = chess::masks::a1_h8_diagonal();
+        static constexpr auto diagonal = bitboard_masks::a1_h8_diagonal();
 
         STATIC_REQUIRE(diagonal.count() == 8uz);
 
@@ -164,7 +166,7 @@ TEST_CASE("Bitboard - diagonal masks", TAGS)
 
     SECTION("A8-H1")
     {
-        static constexpr auto diagonal = chess::masks::a8_h1_diagonal();
+        static constexpr auto diagonal = bitboard_masks::a8_h1_diagonal();
 
         STATIC_REQUIRE(diagonal.count() == 8uz);
 

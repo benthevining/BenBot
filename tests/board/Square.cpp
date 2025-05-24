@@ -14,9 +14,9 @@
 
 static constexpr auto TAGS { "[board][Square]" };
 
-using chess::File;
-using chess::Rank;
-using chess::Square;
+using chess::board::File;
+using chess::board::Rank;
+using chess::board::Square;
 
 namespace gen = Catch::Generators;
 
