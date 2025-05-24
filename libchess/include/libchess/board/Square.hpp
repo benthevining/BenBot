@@ -19,7 +19,8 @@
 
 #pragma once
 
-#include <cctype>
+#include <algorithm>
+#include <cctype>  // IWYU pragma: keep - for std::tolower()
 #include <cstdint> // IWYU pragma: keep - for std::uint_fast64_t
 #include <format>
 #include <libchess/util/Math.hpp>
@@ -96,6 +97,9 @@ enum class File : BitboardIndex {
     1    | 0  | 1  | 2  | 3  | 4  | 5  | 6  | 7  |
 
     @ingroup board
+
+    @todo Func to get knight distance between two squares
+    @todo distance_to_edge(), distance_to_center()
  */
 struct Square final {
     /** This square's file. */
@@ -173,6 +177,68 @@ struct Square final {
     /** Returns true if this is a dark square. */
     [[nodiscard]] constexpr bool is_dark() const noexcept { return ! is_light(); }
 };
+
+/// @ingroup board
+/// @{
+
+/** Returns as an integer the distance between the file of the first square
+    and the file of the second square.
+
+    @see rank_distance()
+    @relates Square
+ */
+[[nodiscard, gnu::const]] constexpr BitboardIndex file_distance(
+    const Square& first, const Square& second) noexcept
+{
+    const auto firstFile  = std::to_underlying(first.file);
+    const auto secondFile = std::to_underlying(second.file);
+
+    const auto [minFile, maxFile] = std::minmax(firstFile, secondFile);
+
+    return maxFile - minFile;
+}
+
+/** Returns as an integer the distance between the rank of the first square
+    and the rank of the second square.
+
+    @see file_distance()
+    @relates Square
+ */
+[[nodiscard, gnu::const]] constexpr BitboardIndex rank_distance(
+    const Square& first, const Square& second) noexcept
+{
+    const auto firstRank  = std::to_underlying(first.rank);
+    const auto secondRank = std::to_underlying(second.rank);
+
+    const auto [minRank, maxRank] = std::minmax(firstRank, secondRank);
+
+    return maxRank - minRank;
+}
+
+/** Returns the Manhattan distance between the two squares.
+
+    @relates Square
+ */
+[[nodiscard, gnu::const]] constexpr BitboardIndex manhattan_distance(
+    const Square& first, const Square& second) noexcept
+{
+    return file_distance(first, second)
+         + rank_distance(first, second);
+}
+
+/** Returns true if two squares are on the same diagonal of the chessboard.
+
+    @relates Square
+ */
+[[nodiscard, gnu::const]] constexpr bool are_on_same_diagonal(
+    const Square& first, const Square& second) noexcept
+{
+    return std::cmp_equal(
+        file_distance(first, second),
+        rank_distance(first, second));
+}
+
+/// @}
 
 } // namespace chess::board
 

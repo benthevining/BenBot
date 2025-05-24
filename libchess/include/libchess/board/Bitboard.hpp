@@ -29,11 +29,11 @@ namespace chess::board {
 
     Mapping ranks/files to indices of bits within a bitboard is handled by the Square class.
 
-    @see Pieces masks
+    @see Pieces, masks
     @ingroup board
 
-    @todo Masks for starting positions of each piece type
     @todo std::formatter
+    @todo iterate set bits as Square objects
  */
 struct Bitboard final {
     /** Unsigned integer type used for serialization of bitboards. */
@@ -169,6 +169,22 @@ namespace masks {
     }
 
     /// @}
+
+    /** This namespace provides some compile-time bitboard constants for the starting positions
+        of each piece type.
+
+        @ingroup board
+     */
+    namespace starting {
+
+        /// @ingroup board
+        /// @{
+
+        // TODO!!
+
+        /// @}
+
+    } // namespace starting
 
 } // namespace masks
 
