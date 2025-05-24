@@ -6,6 +6,11 @@
  * ======================================================================================
  */
 
+/** @file
+    This file defines the Bitboard class, and some compile-time bitboard constants & masks.
+    @ingroup board
+ */
+
 #pragma once
 
 #include <bitset>
@@ -24,7 +29,8 @@ namespace chess {
 
     Mapping ranks/files to indices of bits within a bitboard is handled by the Square class.
 
-    @see BitboardSet
+    @see Pieces masks
+    @ingroup board
 
     @todo Masks for starting positions of each piece type
  */
@@ -89,7 +95,13 @@ private:
     std::bitset<64uz> bits;
 };
 
+/** This namespace provides some compile-time bitboard constants and masks.
+    @ingroup board
+ */
 namespace masks {
+
+    /// @ingroup board
+    /// @{
 
     /** Returns a bitboard with all the dark squares set to 1.
         @see light_squares()
@@ -154,6 +166,8 @@ namespace masks {
     {
         return Bitboard { 0x0102040810204080 };
     }
+
+    /// @}
 
 } // namespace masks
 

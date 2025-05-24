@@ -6,6 +6,16 @@
  * ======================================================================================
  */
 
+/** @defgroup board Board representation
+    Classes related to the engine's internal board representation.
+    libchess uses bitboards with "Least Significant File" encoding.
+ */
+
+/** @file
+    This file defines the Square class and related enums.
+    @ingroup board
+ */
+
 #pragma once
 
 #include <cstdint> // IWYU pragma: keep - for std::uint_fast64_t
@@ -19,12 +29,15 @@
 namespace chess {
 
 /** Unsigned integer type used for bitboard indices.
+    Valid bitboard indices are in the range ``[0, 63]``.
+    @ingroup board
     @todo Make this an enum?
  */
-using BitboardIndex = std::uint_fast64_t;
+using BitboardIndex = std::uint_fast8_t;
 
 /** This enum describes the ranks of the chessboard.
     @see File
+    @ingroup board
  */
 enum class Rank : BitboardIndex {
     One,   ///< The first rank. This is the rank that white's king starts on.
@@ -39,6 +52,7 @@ enum class Rank : BitboardIndex {
 
 /** This enum describes the files of the chess board.
     @see Rank
+    @ingroup board
  */
 enum class File : BitboardIndex {
     A, ///< The A file.
@@ -59,17 +73,19 @@ enum class File : BitboardIndex {
     to the eight consecutive bytes of a bitboard.
 
     This results in the following mapping of squares to bitboard indices:
-    @verbatim
-          A |  B |  C |  D |  E |  F |  G |  H |
-    8  | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 |
-    7  | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 |
-    6  | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 |
-    5  | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 |
-    4  | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 |
-    3  | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 |
-    2  | 8  | 9  | 10 | 11 | 12 | 13 | 14 | 15 |
-    1  | 0  | 1  | 2  | 3  | 4  | 5  | 6  | 7  |
-    @endverbatim
+
+    Rank |  A |  B |  C |  D |  E |  F |  G |  H |
+    :----| -: | -: | -: | -: | -: | -: | -: | -: |
+    8    | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 |
+    7    | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 |
+    6    | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 |
+    5    | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 |
+    4    | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 |
+    3    | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 |
+    2    | 8  | 9  | 10 | 11 | 12 | 13 | 14 | 15 |
+    1    | 0  | 1  | 2  | 3  | 4  | 5  | 6  | 7  |
+
+    @ingroup board
  */
 struct Square final {
     /** This square's file. */
@@ -161,21 +177,39 @@ namespace std {
     If no arguments are specified, the formatter prints the square's algebraic notation by default.
 
     @see chess::Square
+    @ingroup board
  */
 template <>
 struct formatter<chess::Square> final {
     template <typename ParseContext>
-    constexpr ParseContext::iterator parse(ParseContext& ctx);
+    constexpr typename ParseContext::iterator parse(ParseContext& ctx);
 
     template <typename FormatContext>
-    FormatContext::iterator format(const chess::Square& square, FormatContext& ctx) const;
+    typename FormatContext::iterator format(const chess::Square& square, FormatContext& ctx) const;
 
 private:
     bool asIdx { false };
 };
 
+/*
+                         ___                           ,--,
+      ,---,            ,--.'|_                ,--,   ,--.'|
+    ,---.'|            |  | :,'             ,--.'|   |  | :
+    |   | :            :  : ' :             |  |,    :  : '    .--.--.
+    |   | |   ,---.  .;__,'  /    ,--.--.   `--'_    |  ' |   /  /    '
+  ,--.__| |  /     \ |  |   |    /       \  ,' ,'|   '  | |  |  :  /`./
+ /   ,'   | /    /  |:__,'| :   .--.  .-. | '  | |   |  | :  |  :  ;_
+.   '  /  |.    ' / |  '  : |__  \__\/: . . |  | :   '  : |__ \  \    `.
+'   ; |:  |'   ;   /|  |  | '.'| ," .--.; | '  : |__ |  | '.'| `----.   \
+|   | '/  ''   |  / |  ;  :    ;/  /  ,.  | |  | '.'|;  :    ;/  /`--'  /__  ___  ___
+|   :    :||   :    |  |  ,   /;  :   .'   \;  :    ;|  ,   /'--'.     /  .\/  .\/  .\
+ \   \  /   \   \  /    ---`-' |  ,     .-./|  ,   /  ---`-'   `--'---'\  ; \  ; \  ; |
+  `----'     `----'             `--`---'     ---`-'                     `--" `--" `--"
+
+ */
+
 template <typename ParseContext>
-constexpr ParseContext::iterator formatter<chess::Square>::parse(ParseContext& ctx)
+constexpr typename ParseContext::iterator formatter<chess::Square>::parse(ParseContext& ctx)
 {
     auto it = ctx.begin();
 
@@ -207,7 +241,7 @@ constexpr ParseContext::iterator formatter<chess::Square>::parse(ParseContext& c
 }
 
 template <typename FormatContext>
-FormatContext::iterator formatter<chess::Square>::format(const chess::Square& square, FormatContext& ctx) const
+typename FormatContext::iterator formatter<chess::Square>::format(const chess::Square& square, FormatContext& ctx) const
 {
     if (asIdx)
         return std::format_to(ctx.out(), "{}", square.index());

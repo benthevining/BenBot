@@ -6,6 +6,11 @@
  * ======================================================================================
  */
 
+/** @file
+    This file defines the Pieces class.
+    @ingroup board
+ */
+
 #pragma once
 
 #include <libchess/board/Bitboard.hpp>
@@ -15,9 +20,11 @@ namespace chess {
 /** This class encapsulates a bitboard for each piece type.
     An instance of this class encodes the locations of all pieces for one side.
 
+    @ingroup board
+
     @todo union bitboards for occupied/empty squares
  */
-struct BitboardSet final {
+struct Pieces final {
     /** This bitboard holds the locations of this side's pawns. */
     Bitboard pawns;
 
