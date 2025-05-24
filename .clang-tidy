@@ -4,9 +4,6 @@
 #
 # ======================================================================================
 
-# clang-tidy is run as a pre-commit hook, but not by default, because it takes a few minutes
-# to run it, use: just clang-tidy
-
 Checks: >
   -*,
   bugprone-*,

@@ -202,16 +202,6 @@ repos:
         #   - id: sign-commit
 
     # manual-only hooks
-- repo: https://github.com/pocc/pre-commit-hooks
-  rev: v1.3.5
-  hooks:
-  - id: clang-tidy
-    args: [-p=Builds/ninja, --quiet]
-    additional_dependencies: [clang-tidy]
-    log_file: logs/clang-tidy.log
-    verbose: true
-    stages: [manual]
-
 - repo: https://github.com/codingjoe/relint
   rev: 3.3.1
   hooks:
