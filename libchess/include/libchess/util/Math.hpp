@@ -10,6 +10,7 @@
 
 #include <concepts>
 
+/** This namespace contains general maths utility functions used throughout libchess. */
 namespace chess::math {
 
 /** Returns true if the given integer value is an even number. */
