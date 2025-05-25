@@ -37,8 +37,6 @@ using std::size_t;
 
     @see Pieces, masks
     @ingroup board
-
-    @todo indices() method
  */
 struct Bitboard final {
     /** Unsigned integer type used for serialization of bitboards. */
@@ -97,12 +95,23 @@ struct Bitboard final {
     /** Converts this bitboard to its integer representation. */
     [[nodiscard]] constexpr Integer to_int() const noexcept { return bits.to_ullong(); }
 
+    /** Returns an iterable list of indices representing the 1 bits in this bitboard.
+        The returned indices should be iterated by value, not by reference; i.e.:
+        @code{.cpp}
+        for (auto index : board.indices())
+          ; // ...
+        @endcode
+        @see squares()
+     */
+    [[nodiscard]] constexpr auto indices() const noexcept;
+
     /** Returns an iterable range of Square objects representing the 1 bits in this bitboard.
         The Square objects should be iterated by value, not by reference; i.e.:
         @code{.cpp}
         for (auto square : board.squares())
           ; // ...
         @endcode
+        @see indices()
      */
     [[nodiscard]] constexpr auto squares() const noexcept;
 
@@ -256,12 +265,17 @@ formatter<chess::board::Bitboard>::format(
 
 namespace chess::board {
 
-constexpr auto Bitboard::squares() const noexcept
+constexpr auto Bitboard::indices() const noexcept
 {
     return std::views::iota(
                0uz, static_cast<size_t>(NUM_SQUARES))
          | std::views::filter(
-             [this](const size_t index) { return test(static_cast<BitboardIndex>(index)); })
+             [this](const size_t index) { return test(static_cast<BitboardIndex>(index)); });
+}
+
+constexpr auto Bitboard::squares() const noexcept
+{
+    return indices()
          | std::views::transform(
              [](const size_t index) { return Square::from_index(static_cast<BitboardIndex>(index)); });
 }
