@@ -51,6 +51,7 @@ namespace chess::board {
 using BitboardIndex = std::uint_fast8_t;
 
 /** The number of squares on a chessboard.
+
     @ingroup board
     @see MAX_BITBOARD_IDX
  */
@@ -117,8 +118,6 @@ static_assert(std::cmp_equal(NUM_SQUARES,
     1    | 0  | 1  | 2  | 3  | 4  | 5  | 6  | 7  |
 
     @ingroup board
-
-    @todo distance_to_edge(), distance_to_center()
  */
 struct Square final {
     /** This square's file. */

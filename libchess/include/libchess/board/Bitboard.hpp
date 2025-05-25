@@ -112,8 +112,6 @@ private:
 
 /** This namespace provides some compile-time bitboard constants and masks.
     @ingroup board
-
-    @todo center squares, perimeter squares
  */
 namespace masks {
 
@@ -166,6 +164,18 @@ namespace masks {
     [[nodiscard, gnu::const]] consteval Bitboard a8_h1_diagonal() noexcept
     {
         return Bitboard { 0x0102040810204080 };
+    }
+
+    /** Returns a bitboard with all the center squares (D4, D5, E4, E5) set to 1. */
+    [[nodiscard, gnu::const]] consteval Bitboard center() noexcept
+    {
+        return Bitboard { 0X1818000000 };
+    }
+
+    /** Returns a bitboard with all the perimeter squares set to 1. */
+    [[nodiscard, gnu::const]] consteval Bitboard perimeter() noexcept
+    {
+        return Bitboard { 0XFF818181818181FF };
     }
 
     /// @}

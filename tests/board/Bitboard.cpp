@@ -422,3 +422,32 @@ TEST_CASE("Starting position masks", TAGS)
         }
     }
 }
+
+TEST_CASE("Center mask", TAGS)
+{
+    static constexpr auto center = bitboard_masks::center();
+
+    STATIC_REQUIRE(center.count() == 4uz);
+
+    for (const auto square : center.squares()) {
+        REQUIRE(((square.file == File::D) || (square.file == File::E)));
+        REQUIRE(((square.rank == Rank::Four) || (square.rank == Rank::Five)));
+    }
+}
+
+TEST_CASE("Perimeter mask", TAGS)
+{
+    static constexpr auto perimeter = bitboard_masks::perimeter();
+
+    STATIC_REQUIRE(perimeter.count() == 28uz);
+
+    for (const auto rank : magic_enum::enum_values<Rank>()) {
+        REQUIRE(perimeter.test(Square { File::A, rank }));
+        REQUIRE(perimeter.test(Square { File::H, rank }));
+    }
+
+    for (const auto file : magic_enum::enum_values<File>()) {
+        REQUIRE(perimeter.test(Square { file, Rank::One }));
+        REQUIRE(perimeter.test(Square { file, Rank::Eight }));
+    }
+}
