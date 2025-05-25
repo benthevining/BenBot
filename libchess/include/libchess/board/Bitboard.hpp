@@ -198,6 +198,8 @@ namespace masks {
 
             @ingroup board
             @see black
+
+            @todo pawns, rooks, knights, bishops, king, queen
          */
         namespace white {
 
@@ -215,6 +217,8 @@ namespace masks {
 
             @ingroup board
             @see white
+
+            @todo pawns, rooks, knights, bishops, king, queen
          */
         namespace black {
 
