@@ -13,9 +13,9 @@
 
 #pragma once
 
-#include <cctype>  // IWYU pragma: keep - for std::tolower()
-#include <cstdint> // IWYU pragma: keep - for std::uint_fast8_t
+#include <cctype> // IWYU pragma: keep - for std::tolower()
 #include <format>
+#include <libchess/board/BitboardIndex.hpp>
 #include <magic_enum/magic_enum.hpp>
 
 namespace chess::board {
@@ -25,7 +25,7 @@ namespace chess::board {
     @see Rank
     @ingroup board
  */
-enum class File : std::uint_fast8_t {
+enum class File : BitboardIndex {
     A, ///< The A file.
     B, ///< The B file.
     C, ///< The C file.

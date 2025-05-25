@@ -18,6 +18,7 @@
 #include <array>
 #include <cassert>
 #include <cmath> // IWYU pragma: keep - for std::abs()
+#include <libchess/board/BitboardIndex.hpp>
 #include <libchess/board/Square.hpp>
 #include <utility>
 

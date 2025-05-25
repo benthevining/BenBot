@@ -32,6 +32,7 @@ set (
     libchess_headers
     # cmake-format: sortable
     board/Bitboard.hpp
+    board/BitboardIndex.hpp
     board/BitboardMasks.hpp
     board/Distances.hpp
     board/File.hpp

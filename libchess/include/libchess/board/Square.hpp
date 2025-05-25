@@ -20,8 +20,8 @@
 #pragma once
 
 #include <compare>
-#include <cstdint> // IWYU pragma: keep - for std::uint_fast8_t
 #include <format>
+#include <libchess/board/BitboardIndex.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Rank.hpp>
 #include <libchess/pieces/Colors.hpp>
@@ -39,32 +39,6 @@
 namespace chess::board {
 
 using pieces::Color;
-
-/** Unsigned integer type used for bitboard indices.
-    Valid bitboard indices are in the range ``[0, 63]``.
-
-    @ingroup board
-    @see NUM_SQUARES, MAX_BITBOARD_IDX
- */
-using BitboardIndex = std::uint_fast8_t;
-
-/** The number of squares on a chessboard.
-
-    @ingroup board
-    @see MAX_BITBOARD_IDX
- */
-static constexpr auto NUM_SQUARES = static_cast<BitboardIndex>(64);
-
-/** The maximum valid bitboard bit index.
-
-    @ingroup board
-    @see NUM_SQUARES
- */
-static constexpr auto MAX_BITBOARD_IDX = NUM_SQUARES - static_cast<BitboardIndex>(1);
-
-static_assert(std::cmp_equal(
-    NUM_SQUARES,
-    magic_enum::enum_count<Rank>() * magic_enum::enum_count<File>()));
 
 /** This struct uniquely identifies a square on the chessboard via its rank and file,
     and provides mappings to and from bitboard indices.

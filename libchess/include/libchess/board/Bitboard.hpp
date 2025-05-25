@@ -18,6 +18,7 @@
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdint> // IWYU pragma: keep - for std::uint_least64_t
 #include <format>
+#include <libchess/board/BitboardIndex.hpp>
 #include <libchess/board/Square.hpp>
 #include <ranges>
 #include <string>

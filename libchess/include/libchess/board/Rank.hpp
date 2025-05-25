@@ -13,8 +13,8 @@
 
 #pragma once
 
-#include <cstdint> // IWYU pragma: keep - for std::uint_fast8_t
 #include <format>
+#include <libchess/board/BitboardIndex.hpp>
 
 namespace chess::board {
 
@@ -23,7 +23,7 @@ namespace chess::board {
     @see File
     @ingroup board
  */
-enum class Rank : std::uint_fast8_t {
+enum class Rank : BitboardIndex {
     One,   ///< The first rank. This is the rank that white's king starts on.
     Two,   ///< The second rank. This is the rank that white's pawns start on.
     Three, ///< The third rank.
