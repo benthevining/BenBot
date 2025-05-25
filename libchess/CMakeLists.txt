@@ -31,7 +31,12 @@ set_target_properties (
 set (
     libchess_headers
     # cmake-format: sortable
-    board/Bitboard.hpp board/Pieces.hpp board/Square.hpp pieces/Colors.hpp pieces/PieceTypes.hpp
+    board/Bitboard.hpp
+    board/Pieces.hpp
+    board/Square.hpp
+    pieces/Colors.hpp
+    pieces/PieceTypes.hpp
+    pieces/UTF8.hpp
     util/Math.hpp
 )
 
