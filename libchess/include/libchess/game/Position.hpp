@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Pieces.hpp>
@@ -45,13 +46,14 @@ using pieces::Color;
     @ingroup game
 
     @todo castling rights for each side
-    @todo half-move clock (for 50-move rule)
     @todo Detect threefold reps by keeping array<Position, 6> ?
 
     @todo is_file_half_open()
     @todo Funcs to get passed pawns, backward pawns
     @todo Func to print board as ASCII/UTF8
     @todo Funcs is_stalemate(), is_checkmate(), is_check()
+
+    @todo std::hash
  */
 struct Position final {
     /** The positions of the White pieces. */
@@ -70,7 +72,17 @@ struct Position final {
      */
     std::optional<board::Square> enPassantTargetSquare;
 
-    /** Returns true if the two positions are identical. */
+    /** This is a ply counter that enforces the 50-move rule.
+        The counter s incremented after every move and reset by
+        captures and pawn moves; if the counter reaches 100 and
+        the side to move has at least 1 legal move, then the game
+        is drawn.
+     */
+    std::uint_least8_t halfmoveClock { 0 };
+
+    /** Returns true if the two positions are identical.
+        @todo Exclude halfmove clock?
+     */
     [[nodiscard]] constexpr bool operator==(const Position&) const noexcept = default;
 
     /** Returns a bitboard that is the union of all White and Black
@@ -95,7 +107,7 @@ struct Position final {
         return whitePieces.is_file_half_open(file) && blackPieces.is_file_half_open(file);
     }
 
-    /** Returns an iterable range of File enumerations corresponding
+    /** Returns an iterable range of File enumeration values corresponding
         to all open files in this position.
 
         @see is_file_open()
