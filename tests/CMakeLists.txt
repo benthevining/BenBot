@@ -32,8 +32,9 @@ add_executable (libchess_tests)
 
 target_link_libraries (libchess_tests PRIVATE libchess::libchess Catch2::Catch2WithMain)
 
-set (sources # cmake-format: sortable
-             board/Bitboard.cpp board/Pieces.cpp board/Square.cpp util/Math.cpp
+set (sources
+     # cmake-format: sortable
+     board/Bitboard.cpp board/BitboardMasks.cpp board/Pieces.cpp board/Square.cpp util/Math.cpp
 )
 
 target_sources (libchess_tests PRIVATE ${sources})

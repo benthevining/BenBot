@@ -15,6 +15,7 @@
 
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libchess/board/Bitboard.hpp>
+#include <libchess/board/BitboardMasks.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
 
