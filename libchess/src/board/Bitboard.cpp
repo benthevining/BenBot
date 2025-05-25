@@ -24,6 +24,10 @@ namespace chess::board {
     | | | | | | | | |
     | | | | | | | | |
     | | | | | | | | |
+
+    A1 is bottom left, H8 is top right
+
+    Occupied squares simply get an x inside them
  */
 
 static constexpr std::string_view separator { "|" };

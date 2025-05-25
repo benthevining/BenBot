@@ -104,6 +104,35 @@ struct Bitboard final {
      */
     [[nodiscard]] constexpr auto squares() const noexcept;
 
+    /** Performs binary AND with another bitboard. */
+    constexpr Bitboard& operator&=(const Bitboard& other) noexcept
+    {
+        bits &= other.bits;
+        return *this;
+    }
+
+    /** Performs binary OR with another bitboard. */
+    constexpr Bitboard& operator|=(const Bitboard& other) noexcept
+    {
+        bits |= other.bits;
+        return *this;
+    }
+
+    /** Performs binary XOR with another bitboard. */
+    constexpr Bitboard& operator^=(const Bitboard& other) noexcept
+    {
+        bits ^= other.bits;
+        return *this;
+    }
+
+    /** Returns a copy of this bitboard with all bits flipped (binary NOT). */
+    [[nodiscard]] constexpr Bitboard inverse() const noexcept
+    {
+        auto copy = *this;
+        copy.bits.flip();
+        return copy;
+    }
+
 private:
     std::bitset<NUM_SQUARES> bits;
 };
