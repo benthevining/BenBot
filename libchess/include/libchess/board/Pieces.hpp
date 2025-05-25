@@ -32,8 +32,9 @@ using PieceType = pieces::Type;
 
     @ingroup board
 
-    @todo func to check for doubled pawns
     @todo func to get piece type on square (return optional)
+    @todo pawn front & rear fills
+    @todo func to check for doubled pawns
  */
 struct Pieces final {
     /** Creates a Pieces object encoding the starting position for the given side. */
@@ -58,6 +59,9 @@ struct Pieces final {
         This board will never have more than a single bit set.
      */
     Bitboard king;
+
+    /** Returns true if the two piece sets are identical. */
+    [[nodiscard]] constexpr bool operator==(const Pieces& other) const noexcept = default;
 
     /** Returns the bitboard corresponding to the given piece type. */
     [[nodiscard]] constexpr Bitboard& type(PieceType type) noexcept;

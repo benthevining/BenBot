@@ -39,6 +39,8 @@ using std::size_t;
 
     @ingroup pieces
     @see utf8 values
+
+    @todo Just one enum type for pawns?
  */
 enum class Type : std::uint_fast8_t {
     WhitePawn, ///< A White pawn.

@@ -128,10 +128,7 @@ struct Square final {
     }
 
     /** Returns true if two squares are equivalent. */
-    [[nodiscard]] constexpr bool operator==(const Square& other) const noexcept
-    {
-        return rank == other.rank && file == other.file;
-    }
+    [[nodiscard]] constexpr bool operator==(const Square& other) const noexcept = default;
 
     /// @name Area queries
     /// @{

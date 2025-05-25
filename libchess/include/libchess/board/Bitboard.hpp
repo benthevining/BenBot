@@ -54,7 +54,7 @@ struct Bitboard final {
     }
 
     /** Returns true if the two bitboards have all the same bits set. */
-    [[nodiscard]] constexpr bool operator==(const Bitboard& other) const noexcept { return bits == other.bits; }
+    [[nodiscard]] constexpr bool operator==(const Bitboard& other) const noexcept = default;
 
     /** Returns true if any of the bits are set. */
     [[nodiscard]] constexpr bool any() const noexcept { return bits.any(); }
