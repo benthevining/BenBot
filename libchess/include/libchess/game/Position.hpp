@@ -48,7 +48,6 @@ using pieces::Color;
     @todo castling rights for each side
     @todo Detect threefold reps by keeping array<Position, 6> ?
 
-    @todo is_file_half_open()
     @todo Funcs to get passed pawns, backward pawns
     @todo Func to print board as ASCII/UTF8
     @todo Funcs is_stalemate(), is_checkmate(), is_check()
@@ -112,11 +111,61 @@ struct Position final {
 
         @see is_file_open()
      */
-    [[nodiscard]] constexpr auto get_open_files() const noexcept
-    {
-        return magic_enum::enum_values<File>()
-             | std::views::filter([this](const File file) { return is_file_open(file); });
-    }
+    [[nodiscard]] constexpr auto get_open_files() const noexcept;
+
+    /** Returns true if only one side has a pawn on the given file.
+        @see get_half_open_files
+     */
+    [[nodiscard]] constexpr bool is_file_half_open(File file) const noexcept;
+
+    /** Returns an iterable range of File enumeration values corresponding
+        to all half-open files in this position.
+
+        @see is_file_half_open()
+     */
+    [[nodiscard]] constexpr auto get_half_open_files() const noexcept;
 };
+
+/*
+                         ___                           ,--,
+      ,---,            ,--.'|_                ,--,   ,--.'|
+    ,---.'|            |  | :,'             ,--.'|   |  | :
+    |   | :            :  : ' :             |  |,    :  : '    .--.--.
+    |   | |   ,---.  .;__,'  /    ,--.--.   `--'_    |  ' |   /  /    '
+  ,--.__| |  /     \ |  |   |    /       \  ,' ,'|   '  | |  |  :  /`./
+ /   ,'   | /    /  |:__,'| :   .--.  .-. | '  | |   |  | :  |  :  ;_
+.   '  /  |.    ' / |  '  : |__  \__\/: . . |  | :   '  : |__ \  \    `.
+'   ; |:  |'   ;   /|  |  | '.'| ," .--.; | '  : |__ |  | '.'| `----.   \
+|   | '/  ''   |  / |  ;  :    ;/  /  ,.  | |  | '.'|;  :    ;/  /`--'  /__  ___  ___
+|   :    :||   :    |  |  ,   /;  :   .'   \;  :    ;|  ,   /'--'.     /  .\/  .\/  .\
+ \   \  /   \   \  /    ---`-' |  ,     .-./|  ,   /  ---`-'   `--'---'\  ; \  ; \  ; |
+  `----'     `----'             `--`---'     ---`-'                     `--" `--" `--"
+
+ */
+
+constexpr auto Position::get_open_files() const noexcept
+{
+    return magic_enum::enum_values<File>()
+         | std::views::filter([this](const File file) { return is_file_open(file); });
+}
+
+constexpr bool Position::is_file_half_open(const File file) const noexcept
+{
+    const bool whiteOpen = whitePieces.is_file_half_open(file);
+    const bool blackOpen = blackPieces.is_file_half_open(file);
+
+    // boolean XOR
+
+    if (whiteOpen && blackOpen)
+        return false;
+
+    return whiteOpen || blackOpen;
+}
+
+constexpr auto Position::get_half_open_files() const noexcept
+{
+    return magic_enum::enum_values<File>()
+         | std::views::filter([this](const File file) { return is_file_half_open(file); });
+}
 
 } // namespace chess::game

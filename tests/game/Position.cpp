@@ -71,3 +71,33 @@ TEST_CASE("Position - is_file_open()/get_open_files()", TAGS)
 
     REQUIRE(std::ranges::equal(openFiles, allFiles));
 }
+
+TEST_CASE("Position - is_file_half_open()/get_half_open_files()", TAGS)
+{
+    static constexpr auto allFiles = magic_enum::enum_values<File>();
+
+    Position pos;
+
+    for (const auto file : allFiles)
+        REQUIRE(! pos.is_file_half_open(file));
+
+    REQUIRE(std::ranges::empty(pos.get_half_open_files()));
+
+    // half open files
+    pos.whitePieces.pawns.clear();
+
+    for (const auto file : allFiles)
+        REQUIRE(pos.is_file_half_open(file));
+
+    const auto files = pos.get_half_open_files() | std::ranges::to<std::vector>();
+
+    REQUIRE(std::ranges::equal(files, allFiles));
+
+    // open files
+    pos.blackPieces.pawns.clear();
+
+    for (const auto file : allFiles)
+        REQUIRE(! pos.is_file_half_open(file));
+
+    REQUIRE(std::ranges::empty(pos.get_half_open_files()));
+}
