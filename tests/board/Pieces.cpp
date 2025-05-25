@@ -64,3 +64,25 @@ TEST_CASE("Pieces - is_file_half_open()", TAGS)
 
     REQUIRE(pieces.is_file_half_open(File::A));
 }
+
+TEST_CASE("Pieces - has_bishop_pair()", TAGS)
+{
+    Pieces pieces { Color::White };
+
+    REQUIRE(pieces.has_bishop_pair());
+
+    // remove LSB
+    pieces.bishops.set(Square { File::F, Rank::One }, false);
+
+    REQUIRE(! pieces.has_bishop_pair());
+
+    // add another DSB
+    pieces.bishops.set(Square { File::A, Rank::Five }, true);
+
+    REQUIRE(! pieces.has_bishop_pair());
+
+    // add LSB
+    pieces.bishops.set(Square { File::E, Rank::Four }, true);
+
+    REQUIRE(pieces.has_bishop_pair());
+}

@@ -87,6 +87,9 @@ struct Pieces final {
 
     /** Returns true if there are no pawns of this color anywhere on the given file. */
     [[nodiscard]] constexpr bool is_file_half_open(File file) const noexcept;
+
+    /** Returns true if this side has at least one bishop on each color complex. */
+    [[nodiscard]] constexpr bool has_bishop_pair() const noexcept;
 };
 
 /*
@@ -142,15 +145,7 @@ constexpr Bitboard Pieces::type(const PieceType type) const noexcept
 
 constexpr Bitboard Pieces::occupied() const noexcept
 {
-    auto ret = pawns;
-
-    ret |= knights;
-    ret |= bishops;
-    ret |= rooks;
-    ret |= queens;
-    ret |= king;
-
-    return ret;
+    return pawns | knights | bishops | rooks | queens | king;
 }
 
 constexpr size_t Pieces::material() const noexcept
@@ -166,10 +161,13 @@ constexpr size_t Pieces::material() const noexcept
 
 constexpr bool Pieces::is_file_half_open(const File file) const noexcept
 {
-    auto test = pawns;
-    test &= masks::files::get(file);
+    return (pawns & masks::files::get(file)).none();
+}
 
-    return test.none();
+constexpr bool Pieces::has_bishop_pair() const noexcept
+{
+    return (bishops & masks::light_squares()).any()
+        && (bishops & masks::dark_squares()).any();
 }
 
 } // namespace chess::board

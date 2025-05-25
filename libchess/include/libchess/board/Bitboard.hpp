@@ -149,15 +149,49 @@ private:
     std::bitset<NUM_SQUARES> bits;
 };
 
+/// @ingroup board
+/// @{
+
+/** Returns the binary AND of two bitboards.
+    @relates Bitboard
+ */
+[[nodiscard, gnu::const]] constexpr Bitboard operator&(const Bitboard& lhs, const Bitboard& rhs) noexcept
+{
+    auto ret = lhs;
+    ret &= rhs;
+    return ret;
+}
+
+/** Returns the binary OR of two bitboards.
+    @relates Bitboard
+ */
+[[nodiscard, gnu::const]] constexpr Bitboard operator|(const Bitboard& lhs, const Bitboard& rhs) noexcept
+{
+    auto ret = lhs;
+    ret |= rhs;
+    return ret;
+}
+
+/** Returns the binary XOR of two bitboards.
+    @relates Bitboard
+ */
+[[nodiscard, gnu::const]] constexpr Bitboard operator^(const Bitboard& lhs, const Bitboard& rhs) noexcept
+{
+    auto ret = lhs;
+    ret ^= rhs;
+    return ret;
+}
+
 /** Creates an ASCII representation of the given bitboard.
     The returned string is meant to be interpreted visually by a human, probably for debugging purposes.
     The bitboard is drawn as a simple set of cells separated by ``|`` characters. Occupied squares have an
     ``x`` placed in them.
 
-    @ingroup board
     @relates Bitboard
  */
 [[nodiscard]] std::string print_ascii(const Bitboard& board);
+
+/// @}
 
 } // namespace chess::board
 
