@@ -16,6 +16,7 @@
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/BitboardMasks.hpp>
+#include <libchess/board/File.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
 
@@ -31,7 +32,6 @@ using PieceType = pieces::Type;
 
     @ingroup board
 
-    @todo func to test if a file is half-open
     @todo func to check for doubled pawns
     @todo func to get piece type on square (return optional)
  */
@@ -80,6 +80,9 @@ struct Pieces final {
 
     /** Returns the sum of the material values for all pieces on this side. */
     [[nodiscard]] constexpr size_t material() const noexcept;
+
+    /** Returns true if there are no pawns of this color anywhere on the given file. */
+    [[nodiscard]] constexpr bool is_file_half_open(File file) const noexcept;
 };
 
 /*
@@ -155,6 +158,14 @@ constexpr size_t Pieces::material() const noexcept
          + (bishops.count() * values::bishop())
          + (rooks.count() * values::rook())
          + (queens.count() * values::queen());
+}
+
+constexpr bool Pieces::is_file_half_open(const File file) const noexcept
+{
+    auto test = pawns;
+    test &= masks::files::get(file);
+
+    return test.none();
 }
 
 } // namespace chess::board
