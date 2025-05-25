@@ -37,6 +37,9 @@ using std::size_t;
 
     @ingroup pieces
     @see utf8 values
+
+    @todo from_string()
+    @todo std::formatter
  */
 enum class Type : std::uint_fast8_t {
     WhitePawn, ///< A White pawn.

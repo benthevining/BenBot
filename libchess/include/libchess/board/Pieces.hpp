@@ -31,6 +31,7 @@ using PieceType = pieces::Type;
     @ingroup board
 
     @todo func to test if a file is half-open
+    @todo func to check for doubled pawns
  */
 struct Pieces final {
     /** Creates a Pieces object encoding the starting position for the given side. */
