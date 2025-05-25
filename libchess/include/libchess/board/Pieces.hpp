@@ -35,6 +35,7 @@ using PieceType = pieces::Type;
     @todo func to get piece type on square (return optional)
     @todo pawn front & rear fills
     @todo func to check for doubled pawns
+    @todo std::hash
  */
 struct Pieces final {
     /** Creates a Pieces object encoding the starting position for the given side. */
