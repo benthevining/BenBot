@@ -17,8 +17,10 @@
 #include <cassert>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdint> // IWYU pragma: keep - for std::uint_least64_t
+#include <format>
 #include <libchess/board/Square.hpp>
 #include <ranges>
+#include <string>
 #include <typeindex> // for std::hash
 
 namespace chess::board {
@@ -35,8 +37,6 @@ using std::size_t;
 
     @see Pieces, masks
     @ingroup board
-
-    @todo std::formatter
  */
 struct Bitboard final {
     /** Unsigned integer type used for serialization of bitboards. */
@@ -95,20 +95,26 @@ struct Bitboard final {
     /** Converts this bitboard to its integer representation. */
     [[nodiscard]] constexpr Integer to_int() const noexcept { return bits.to_ullong(); }
 
-    /** Returns an iterable range of Square objects representing the 1 bits in this bitboard. */
-    [[nodiscard]] constexpr auto squares() const noexcept
-    {
-        return std::views::iota(
-                   0uz, static_cast<size_t>(NUM_SQUARES))
-             | std::views::filter(
-                 [this](const size_t index) { return test(static_cast<BitboardIndex>(index)); })
-             | std::views::transform(
-                 [](const size_t index) { return Square::from_index(static_cast<BitboardIndex>(index)); });
-    }
+    /** Returns an iterable range of Square objects representing the 1 bits in this bitboard.
+        The Square objects should be iterated by value, not by reference; i.e.:
+        @code{.cpp}
+        for (auto square : board.squares())
+          ; // ...
+        @endcode
+     */
+    [[nodiscard]] constexpr auto squares() const noexcept;
 
 private:
     std::bitset<NUM_SQUARES> bits;
 };
+
+/** Creates an ASCII representation of the given bitboard.
+    The returned string is meant to be interpreted visually by a human, probably for debugging purposes.
+
+    @ingroup board
+    @relates Bitboard
+ */
+[[nodiscard]] std::string print_ascii(const Bitboard& board);
 
 /** This namespace provides some compile-time bitboard constants and masks.
     @ingroup board
@@ -417,6 +423,30 @@ namespace masks {
 
 namespace std {
 
+/** A formatter specialization for Bitboard objects.
+
+    The formatter accepts the following format specifier arguments:
+    @li ``i|I``: Tells the formatter to print the bitboard as its integer representation. The integer is displayed in hexadecimal.
+    @li ``g|G``: Tells the formatter to print a graphical representation of the bitboard.
+
+    If no arguments are specified, the formatter prints the bitboard's integer representation by default.
+
+    @see chess::board::Bitboard
+    @ingroup board
+ */
+template <>
+struct formatter<chess::board::Bitboard> final {
+    template <typename ParseContext>
+    constexpr typename ParseContext::iterator parse(ParseContext& ctx);
+
+    template <typename FormatContext>
+    typename FormatContext::iterator format(
+        const chess::board::Bitboard& board, FormatContext& ctx) const;
+
+private:
+    bool asInt { true };
+};
+
 /** A hash specialization for Bitboard objects.
     Bitboards are hashed as their integer representations.
 
@@ -431,4 +461,79 @@ struct hash<chess::board::Bitboard> final {
     }
 };
 
+/*
+                         ___                           ,--,
+      ,---,            ,--.'|_                ,--,   ,--.'|
+    ,---.'|            |  | :,'             ,--.'|   |  | :
+    |   | :            :  : ' :             |  |,    :  : '    .--.--.
+    |   | |   ,---.  .;__,'  /    ,--.--.   `--'_    |  ' |   /  /    '
+  ,--.__| |  /     \ |  |   |    /       \  ,' ,'|   '  | |  |  :  /`./
+ /   ,'   | /    /  |:__,'| :   .--.  .-. | '  | |   |  | :  |  :  ;_
+.   '  /  |.    ' / |  '  : |__  \__\/: . . |  | :   '  : |__ \  \    `.
+'   ; |:  |'   ;   /|  |  | '.'| ," .--.; | '  : |__ |  | '.'| `----.   \
+|   | '/  ''   |  / |  ;  :    ;/  /  ,.  | |  | '.'|;  :    ;/  /`--'  /__  ___  ___
+|   :    :||   :    |  |  ,   /;  :   .'   \;  :    ;|  ,   /'--'.     /  .\/  .\/  .\
+ \   \  /   \   \  /    ---`-' |  ,     .-./|  ,   /  ---`-'   `--'---'\  ; \  ; \  ; |
+  `----'     `----'             `--`---'     ---`-'                     `--" `--" `--"
+
+ */
+
+template <typename ParseContext>
+constexpr typename ParseContext::iterator
+formatter<chess::board::Bitboard>::parse(ParseContext& ctx)
+{
+    auto it = ctx.begin();
+
+    if (it == ctx.end() || *it == '}')
+        return it;
+
+    do {
+        switch (*it) {
+            case 'i': [[fallthrough]];
+            case 'I':
+                asInt = true;
+                break;
+
+            case 'g': [[fallthrough]];
+            case 'G':
+                asInt = false;
+                break;
+
+            default:
+                throw std::format_error { "Unrecognized format argument" };
+        }
+
+        ++it;
+    } while (! (it == ctx.end() || *it == '}'));
+
+    ctx.advance_to(it);
+
+    return it;
+}
+
+template <typename FormatContext>
+typename FormatContext::iterator
+formatter<chess::board::Bitboard>::format(
+    const chess::board::Bitboard& board, FormatContext& ctx) const
+{
+    if (asInt)
+        return std::format_to(ctx.out(), "{:#X}", board.to_int());
+
+    return std::format_to(ctx.out(), "{}", print_ascii(board));
+}
+
 } // namespace std
+
+namespace chess::board {
+
+constexpr auto Bitboard::squares() const noexcept
+{
+    return std::views::iota(
+               0uz, static_cast<size_t>(NUM_SQUARES))
+         | std::views::filter(
+             [this](const size_t index) { return test(static_cast<BitboardIndex>(index)); })
+         | std::views::transform(
+             [](const size_t index) { return Square::from_index(static_cast<BitboardIndex>(index)); });
+}
+
+} // namespace chess::board

@@ -18,11 +18,11 @@ FetchContent_Declare (
 
 FetchContent_MakeAvailable (magic_enum)
 
-add_library (libchess INTERFACE)
+add_library (libchess)
 
-target_compile_features (libchess INTERFACE cxx_std_23)
+target_compile_features (libchess PUBLIC cxx_std_23)
 
-target_link_libraries (libchess INTERFACE magic_enum::magic_enum)
+target_link_libraries (libchess PUBLIC magic_enum::magic_enum)
 
 set_target_properties (
     libchess PROPERTIES CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF DEBUG_POSTFIX -d
@@ -33,6 +33,7 @@ set (libchess_headers # cmake-format: sortable
 )
 
 set (libchess_sources # cmake-format: sortable
+                      board/Bitboard.cpp
 )
 
 list (TRANSFORM libchess_headers PREPEND "${CMAKE_CURRENT_LIST_DIR}/include/libchess/")

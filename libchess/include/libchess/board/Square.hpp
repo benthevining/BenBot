@@ -58,7 +58,9 @@ using BitboardIndex = std::uint_fast8_t;
 static constexpr auto NUM_SQUARES = static_cast<BitboardIndex>(64);
 
 /** The maximum valid bitboard bit index.
+
     @ingroup board
+    @see NUM_SQUARES
  */
 static constexpr auto MAX_BITBOARD_IDX = NUM_SQUARES - static_cast<BitboardIndex>(1);
 
@@ -290,7 +292,7 @@ struct Square final {
 
 namespace std {
 
-/** A formatter for chessboard ranks.
+/** A formatter specialization for chessboard ranks.
     The formatter accepts no arguments; ranks are always printed as integers, except
     starting from 1 instead of 0.
 
@@ -314,7 +316,7 @@ struct formatter<chess::board::Rank> final {
     }
 };
 
-/** A formatter for chessboard files.
+/** A formatter specialization for chessboard files.
 
     The formatter accepts the following format specifier arguments:
     @li ``u|U``: Tells the formatter to print the file as an uppercase letter
@@ -338,7 +340,7 @@ private:
     bool uppercase { true };
 };
 
-/** A formatter for Square objects.
+/** A formatter specialization for Square objects.
 
     The formatter accepts the following format specifier arguments:
     @li ``i|I``: Tells the formatter to print the bitboard bit index for this square
