@@ -13,12 +13,16 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/BitboardMasks.hpp>
 #include <libchess/board/File.hpp>
+#include <libchess/board/Square.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
+#include <magic_enum/magic_enum.hpp>
+#include <optional>
 
 namespace chess::board {
 
@@ -32,7 +36,6 @@ using PieceType = pieces::Type;
 
     @ingroup board
 
-    @todo func to get piece type on square (return optional)
     @todo pawn front & rear fills
     @todo func to check for doubled pawns
     @todo std::hash
@@ -65,10 +68,10 @@ struct Pieces final {
     [[nodiscard]] constexpr bool operator==(const Pieces&) const noexcept = default;
 
     /** Returns the bitboard corresponding to the given piece type. */
-    [[nodiscard]] constexpr Bitboard& type(PieceType type) noexcept;
+    [[nodiscard]] constexpr Bitboard& get_type(PieceType type) noexcept;
 
     /** Returns the bitboard corresponding to the given piece type. */
-    [[nodiscard]] constexpr Bitboard type(PieceType type) const noexcept;
+    [[nodiscard]] constexpr Bitboard get_type(PieceType type) const noexcept;
 
     /** Returns a bitboard that is a union of each individual piece-type bitboard.
         The returned bitboard has a bit set if a piece of any type is on that square.
@@ -91,6 +94,12 @@ struct Pieces final {
 
     /** Returns true if this side has at least one bishop on each color complex. */
     [[nodiscard]] constexpr bool has_bishop_pair() const noexcept;
+
+    /** Returns the type of the piece on the given square, or ``nullopt`` if the
+        square is empty. Note that libchess's bitboard board representation is
+        not optimized for this operation.
+     */
+    [[nodiscard]] constexpr std::optional<PieceType> get_piece_on(Square square) const noexcept;
 };
 
 /*
@@ -120,7 +129,7 @@ constexpr Pieces::Pieces(const Color color) noexcept
 {
 }
 
-constexpr Bitboard& Pieces::type(const PieceType type) noexcept
+constexpr Bitboard& Pieces::get_type(const PieceType type) noexcept
 {
     switch (type) {
         case PieceType::Knight: return knights;
@@ -132,7 +141,7 @@ constexpr Bitboard& Pieces::type(const PieceType type) noexcept
     }
 }
 
-constexpr Bitboard Pieces::type(const PieceType type) const noexcept
+constexpr Bitboard Pieces::get_type(const PieceType type) const noexcept
 {
     switch (type) {
         case PieceType::Knight: return knights;
@@ -169,6 +178,22 @@ constexpr bool Pieces::has_bishop_pair() const noexcept
 {
     return (bishops & masks::light_squares()).any()
         && (bishops & masks::dark_squares()).any();
+}
+
+constexpr std::optional<PieceType> Pieces::get_piece_on(const Square square) const noexcept
+{
+    static constexpr auto allTypes = magic_enum::enum_values<PieceType>();
+
+    if (const auto found = std::ranges::find_if(
+            allTypes,
+            [this, index = square.index()](const PieceType type) {
+                return get_type(type).test(index);
+            });
+        found != allTypes.end()) {
+        return *found;
+    }
+
+    return std::nullopt;
 }
 
 } // namespace chess::board

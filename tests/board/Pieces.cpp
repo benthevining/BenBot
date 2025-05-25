@@ -12,6 +12,7 @@
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/pieces/Colors.hpp>
+#include <libchess/pieces/PieceTypes.hpp>
 #include <magic_enum/magic_enum.hpp>
 
 static constexpr auto TAGS { "[board][Pieces]" };
@@ -90,4 +91,32 @@ TEST_CASE("Pieces - has_bishop_pair()", TAGS)
     pieces.bishops.clear();
 
     REQUIRE(! pieces.has_bishop_pair());
+}
+
+TEST_CASE("Pieces - get_piece_on()", TAGS)
+{
+    static constexpr Pieces pieces { Color::White };
+
+    STATIC_REQUIRE(! pieces.get_piece_on(Square { File::A, Rank::Three }).has_value());
+    STATIC_REQUIRE(! pieces.get_piece_on(Square { File::C, Rank::Four }).has_value());
+    STATIC_REQUIRE(! pieces.get_piece_on(Square { File::E, Rank::Eight }).has_value());
+    STATIC_REQUIRE(! pieces.get_piece_on(Square { File::H, Rank::Five }).has_value());
+
+    using PieceType = chess::pieces::Type;
+
+    STATIC_REQUIRE(*pieces.get_piece_on(Square { File::A, Rank::One }) == PieceType::Rook);
+    STATIC_REQUIRE(*pieces.get_piece_on(Square { File::H, Rank::One }) == PieceType::Rook);
+
+    STATIC_REQUIRE(*pieces.get_piece_on(Square { File::B, Rank::One }) == PieceType::Knight);
+    STATIC_REQUIRE(*pieces.get_piece_on(Square { File::G, Rank::One }) == PieceType::Knight);
+
+    STATIC_REQUIRE(*pieces.get_piece_on(Square { File::C, Rank::One }) == PieceType::Bishop);
+    STATIC_REQUIRE(*pieces.get_piece_on(Square { File::F, Rank::One }) == PieceType::Bishop);
+
+    STATIC_REQUIRE(*pieces.get_piece_on(Square { File::D, Rank::One }) == PieceType::Queen);
+
+    STATIC_REQUIRE(*pieces.get_piece_on(Square { File::E, Rank::One }) == PieceType::King);
+
+    for (auto file : magic_enum::enum_values<File>())
+        REQUIRE(*pieces.get_piece_on(Square { file, Rank::Two }) == PieceType::WhitePawn);
 }
