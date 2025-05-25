@@ -112,6 +112,8 @@ private:
 
 /** This namespace provides some compile-time bitboard constants and masks.
     @ingroup board
+
+    @todo center squares, perimeter squares
  */
 namespace masks {
 

@@ -22,6 +22,10 @@ using chess::board::File;
 using chess::board::Rank;
 using chess::board::Square;
 
+using chess::board::are_on_same_diagonal;
+using chess::board::file_distance;
+using chess::board::rank_distance;
+
 namespace bitboard_masks = chess::board::masks;
 
 TEST_CASE("Bitboard - empty", TAGS)
@@ -104,10 +108,10 @@ TEST_CASE("Bitboard - file masks", TAGS)
             REQUIRE(square.file == File::A);
 
             for (const auto sq2 : board.squares()) {
-                REQUIRE(chess::board::file_distance(square, sq2) == 0uz);
+                REQUIRE(file_distance(square, sq2) == 0uz);
 
                 if (square != sq2)
-                    REQUIRE(! chess::board::are_on_same_diagonal(square, sq2));
+                    REQUIRE(! are_on_same_diagonal(square, sq2));
             }
         }
     }
@@ -133,10 +137,10 @@ TEST_CASE("Bitboard - file masks", TAGS)
             REQUIRE(square.file == File::H);
 
             for (const auto sq2 : board.squares()) {
-                REQUIRE(chess::board::file_distance(square, sq2) == 0uz);
+                REQUIRE(file_distance(square, sq2) == 0uz);
 
                 if (square != sq2)
-                    REQUIRE(! chess::board::are_on_same_diagonal(square, sq2));
+                    REQUIRE(! are_on_same_diagonal(square, sq2));
             }
         }
     }
@@ -165,10 +169,10 @@ TEST_CASE("Bitboard - rank masks", TAGS)
             REQUIRE(square.rank == Rank::One);
 
             for (const auto sq2 : board.squares()) {
-                REQUIRE(chess::board::rank_distance(square, sq2) == 0uz);
+                REQUIRE(rank_distance(square, sq2) == 0uz);
 
                 if (square != sq2)
-                    REQUIRE(! chess::board::are_on_same_diagonal(square, sq2));
+                    REQUIRE(! are_on_same_diagonal(square, sq2));
             }
         }
     }
@@ -194,10 +198,10 @@ TEST_CASE("Bitboard - rank masks", TAGS)
             REQUIRE(square.rank == Rank::Eight);
 
             for (const auto sq2 : board.squares()) {
-                REQUIRE(chess::board::rank_distance(square, sq2) == 0uz);
+                REQUIRE(rank_distance(square, sq2) == 0uz);
 
                 if (square != sq2)
-                    REQUIRE(! chess::board::are_on_same_diagonal(square, sq2));
+                    REQUIRE(! are_on_same_diagonal(square, sq2));
             }
         }
     }
@@ -228,7 +232,19 @@ TEST_CASE("Bitboard - diagonal masks", TAGS)
         }
 
         for (const auto [sq1, sq2] : std::views::zip(diagonal.squares(), diagonal.squares()))
-            REQUIRE(chess::board::are_on_same_diagonal(sq1, sq2));
+            REQUIRE(are_on_same_diagonal(sq1, sq2));
+
+        static const auto squares = get_squares(diagonal);
+
+        for (auto idx = 0uz; idx < diagonal.count(); ++idx) {
+            REQUIRE(file_distance(
+                        squares.front(), squares[idx])
+                    == idx);
+
+            REQUIRE(rank_distance(
+                        squares.front(), squares[idx])
+                    == idx);
+        }
     }
 
     SECTION("A8-H1")
@@ -252,6 +268,18 @@ TEST_CASE("Bitboard - diagonal masks", TAGS)
         }
 
         for (const auto [sq1, sq2] : std::views::zip(diagonal.squares(), diagonal.squares()))
-            REQUIRE(chess::board::are_on_same_diagonal(sq1, sq2));
+            REQUIRE(are_on_same_diagonal(sq1, sq2));
+
+        static const auto squares = get_squares(diagonal);
+
+        for (auto idx = 0uz; idx < diagonal.count(); ++idx) {
+            REQUIRE(file_distance(
+                        squares.front(), squares[idx])
+                    == idx);
+
+            REQUIRE(rank_distance(
+                        squares.front(), squares[idx])
+                    == idx);
+        }
     }
 }

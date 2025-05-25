@@ -106,7 +106,7 @@ enum class File : BitboardIndex {
 
     @ingroup board
 
-    @todo Func to get knight distance between two squares
+    @todo knight_distance()
     @todo distance_to_edge(), distance_to_center()
  */
 struct Square final {
