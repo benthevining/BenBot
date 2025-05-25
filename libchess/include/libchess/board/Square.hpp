@@ -43,14 +43,20 @@ namespace chess::board {
     Valid bitboard indices are in the range ``[0, 63]``.
 
     @ingroup board
-    @see MAX_BITBOARD_IDX
+    @see NUM_SQUARES, MAX_BITBOARD_IDX
  */
 using BitboardIndex = std::uint_fast8_t;
+
+/** The number of squares on a chessboard.
+    @ingroup board
+    @see MAX_BITBOARD_IDX
+ */
+static constexpr auto NUM_SQUARES = static_cast<BitboardIndex>(64);
 
 /** The maximum valid bitboard bit index.
     @ingroup board
  */
-static constexpr auto MAX_BITBOARD_IDX = static_cast<BitboardIndex>(63);
+static constexpr auto MAX_BITBOARD_IDX = NUM_SQUARES - static_cast<BitboardIndex>(1);
 
 /** This enum describes the ranks of the chessboard.
 
@@ -83,6 +89,9 @@ enum class File : BitboardIndex {
     G, ///< The G file.
     H  ///< The H file.
 };
+
+static_assert(std::cmp_equal(NUM_SQUARES,
+    magic_enum::enum_count<Rank>() * magic_enum::enum_count<File>()));
 
 /** This struct uniquely identifies a square on the chessboard via its rank and file,
     and provides mappings to and from bitboard indices.

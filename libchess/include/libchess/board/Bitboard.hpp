@@ -99,7 +99,7 @@ struct Bitboard final {
     [[nodiscard]] constexpr auto squares() const noexcept
     {
         return std::views::iota(
-                   0uz, static_cast<size_t>(MAX_BITBOARD_IDX) + 1uz)
+                   0uz, static_cast<size_t>(NUM_SQUARES))
              | std::views::filter(
                  [this](const size_t index) { return test(static_cast<BitboardIndex>(index)); })
              | std::views::transform(
@@ -107,7 +107,7 @@ struct Bitboard final {
     }
 
 private:
-    std::bitset<64uz> bits;
+    std::bitset<NUM_SQUARES> bits;
 };
 
 /** This namespace provides some compile-time bitboard constants and masks.
@@ -237,6 +237,8 @@ namespace masks {
 
 } // namespace chess::board
 
+namespace std {
+
 /** A hash specialization for Bitboard objects.
     Bitboards are hashed as their integer representations.
 
@@ -244,9 +246,11 @@ namespace masks {
     @ingroup board
  */
 template <>
-struct std::hash<chess::board::Bitboard> final {
-    [[nodiscard]] constexpr std::size_t operator()(const chess::board::Bitboard& board) const noexcept
+struct hash<chess::board::Bitboard> final {
+    [[nodiscard]] constexpr size_t operator()(const chess::board::Bitboard& board) const noexcept
     {
-        return std::hash<chess::board::Bitboard::Integer> {}(board.to_int());
+        return hash<chess::board::Bitboard::Integer> {}(board.to_int());
     }
 };
+
+} // namespace std
