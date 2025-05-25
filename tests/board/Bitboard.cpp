@@ -429,9 +429,9 @@ TEST_CASE("Center mask", TAGS)
 
     STATIC_REQUIRE(center.count() == 4uz);
 
-    for (const auto square : center.squares()) {
-        REQUIRE(((square.file == File::D) || (square.file == File::E)));
-        REQUIRE(((square.rank == Rank::Four) || (square.rank == Rank::Five)));
+    for (const auto [file, rank] : center.squares()) {
+        REQUIRE(((file == File::D) || (file == File::E)));
+        REQUIRE(((rank == Rank::Four) || (rank == Rank::Five)));
     }
 }
 
