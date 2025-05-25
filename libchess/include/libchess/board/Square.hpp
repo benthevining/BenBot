@@ -12,7 +12,7 @@
  */
 
 /** @file
-    This file defines the Square class and related enums.
+    This file defines the Square class and related functions.
 
     @ingroup board
  */

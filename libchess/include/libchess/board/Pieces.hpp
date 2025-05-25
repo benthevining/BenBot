@@ -23,10 +23,14 @@ namespace chess::board {
 using pieces::Color;
 using std::size_t;
 
+using PieceType = pieces::Type;
+
 /** This class encapsulates a bitboard for each piece type.
     An instance of this class encodes the locations of all pieces for one side.
 
     @ingroup board
+
+    @todo func to test if a file is half-open
  */
 struct Pieces final {
     /** Creates a Pieces object encoding the starting position for the given side. */
@@ -51,6 +55,12 @@ struct Pieces final {
         This board will never have more than a single bit set.
      */
     Bitboard king;
+
+    /** Returns the bitboard corresponding to the given piece type. */
+    [[nodiscard]] constexpr Bitboard& type(PieceType type) noexcept;
+
+    /** Returns the bitboard corresponding to the given piece type. */
+    [[nodiscard]] constexpr Bitboard type(PieceType type) const noexcept;
 
     /** Returns a bitboard that is a union of each individual piece-type bitboard.
         The returned bitboard has a bit set if a piece of any type is on that square.
@@ -94,6 +104,30 @@ constexpr Pieces::Pieces(const Color color) noexcept
     , queens { masks::starting::queen(color) }
     , king { masks::starting::king(color) }
 {
+}
+
+constexpr Bitboard& Pieces::type(const PieceType type) noexcept
+{
+    switch (type) {
+        case PieceType::Knight: return knights;
+        case PieceType::Bishop: return bishops;
+        case PieceType::Rook  : return rooks;
+        case PieceType::Queen : return queens;
+        case PieceType::King  : return king;
+        default               : return pawns;
+    }
+}
+
+constexpr Bitboard Pieces::type(const PieceType type) const noexcept
+{
+    switch (type) {
+        case PieceType::Knight: return knights;
+        case PieceType::Bishop: return bishops;
+        case PieceType::Rook  : return rooks;
+        case PieceType::Queen : return queens;
+        case PieceType::King  : return king;
+        default               : return pawns;
+    }
 }
 
 constexpr Bitboard Pieces::occupied() const noexcept

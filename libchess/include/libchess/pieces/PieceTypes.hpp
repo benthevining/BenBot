@@ -52,8 +52,6 @@ enum class Type : std::uint_fast8_t {
 /// @{
 
 /** Returns true if ``type`` is ``Knight`` or ``Bishop``.
-
-    @relates Type
     @see is_heavy()
  */
 [[nodiscard, gnu::const]] constexpr bool is_minor(const Type type) noexcept
@@ -62,8 +60,6 @@ enum class Type : std::uint_fast8_t {
 }
 
 /** Returns true if ``type`` is ``Rook`` or ``Queen``.
-
-    @relates Type
     @see is_minor()
  */
 [[nodiscard, gnu::const]] constexpr bool is_heavy(const Type type) noexcept
@@ -71,10 +67,7 @@ enum class Type : std::uint_fast8_t {
     return type == Type::Rook || type == Type::Queen;
 }
 
-/** Returns true if ``type`` is ``Bishop``, ``Rook``, or ``Queen``.
-
-    @relates Type
- */
+/** Returns true if ``type`` is ``Bishop``, ``Rook``, or ``Queen``. */
 [[nodiscard, gnu::const]] constexpr bool is_sliding(const Type type) noexcept
 {
     return type == Type::Bishop || type == Type::Rook || type == Type::Queen;
