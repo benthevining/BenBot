@@ -123,6 +123,7 @@ namespace values {
 
 /** This namespace contains some UTF8 encodings of chess piece symbols.
     @ingroup pieces
+    @todo get(type, color)
  */
 namespace utf8 {
 

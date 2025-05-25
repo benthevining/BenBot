@@ -39,6 +39,8 @@ using std::size_t;
 
     @see Pieces, masks
     @ingroup board
+
+    @todo indices() method
  */
 struct Bitboard final {
     /** Unsigned integer type used for serialization of bitboards. */
