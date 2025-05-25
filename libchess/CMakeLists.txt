@@ -33,7 +33,9 @@ set (
     # cmake-format: sortable
     board/Bitboard.hpp
     board/BitboardMasks.hpp
+    board/File.hpp
     board/Pieces.hpp
+    board/Rank.hpp
     board/Square.hpp
     pieces/Colors.hpp
     pieces/PieceTypes.hpp

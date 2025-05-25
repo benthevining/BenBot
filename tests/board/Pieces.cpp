@@ -8,7 +8,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include <libchess/board/Pieces.hpp>
-#include <libchess/board/Square.hpp>
+#include <libchess/board/Rank.hpp>
 #include <libchess/pieces/Colors.hpp>
 
 static constexpr auto TAGS { "[board][Pieces]" };

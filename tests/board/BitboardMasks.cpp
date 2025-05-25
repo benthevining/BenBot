@@ -10,6 +10,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/BitboardMasks.hpp>
+#include <libchess/board/File.hpp>
+#include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <ranges>
@@ -17,7 +19,6 @@
 
 static constexpr auto TAGS { "[board][Bitboard][masks]" };
 
-using chess::board::Bitboard;
 using chess::board::File;
 using chess::board::Rank;
 using chess::board::Square;
@@ -27,7 +28,7 @@ using chess::board::rank_distance;
 
 namespace bitboard_masks = chess::board::masks;
 
-[[nodiscard]] static constexpr auto get_squares(const Bitboard& board)
+[[nodiscard]] static constexpr auto get_squares(const chess::board::Bitboard& board)
 {
     return board.squares() | std::ranges::to<std::vector>();
 }

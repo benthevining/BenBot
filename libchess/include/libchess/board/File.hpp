@@ -1,0 +1,135 @@
+/*
+ * ======================================================================================
+ *
+ * libchess - a chess engine by Ben Vining
+ *
+ * ======================================================================================
+ */
+
+/** @file
+    This file defines the File enumeration.
+    @ingroup board
+ */
+
+#pragma once
+
+#include <cctype>  // IWYU pragma: keep - for std::tolower()
+#include <cstdint> // IWYU pragma: keep - for std::uint_fast8_t
+#include <format>
+#include <magic_enum/magic_enum.hpp>
+
+namespace chess::board {
+
+/** This enum describes the files of the chess board.
+
+    @see Rank
+    @ingroup board
+ */
+enum class File : std::uint_fast8_t {
+    A, ///< The A file.
+    B, ///< The B file.
+    C, ///< The C file.
+    D, ///< The D file. This is the file that the queens start on.
+    E, ///< The E file. This is the file that the kings start on.
+    F, ///< The F file.
+    G, ///< The G file.
+    H  ///< The H file.
+};
+
+} // namespace chess::board
+
+namespace std {
+
+/** A formatter specialization for chessboard files.
+
+    The formatter accepts the following format specifier arguments:
+    @li ``u|U``: Tells the formatter to print the file as an uppercase letter
+    @li ``l|L``: Tells the formatter to print the file as a lowercase letter
+
+    If no arguments are specified, the formatter prints the rank as an uppercase letter by default.
+
+    @see chess::board::File
+    @ingroup board
+ */
+template <>
+struct formatter<chess::board::File> final {
+    template <typename ParseContext>
+    constexpr typename ParseContext::iterator parse(ParseContext& ctx);
+
+    template <typename FormatContext>
+    typename FormatContext::iterator format(
+        chess::board::File file, FormatContext& ctx) const;
+
+private:
+    bool uppercase { true };
+};
+
+/*
+                         ___                           ,--,
+      ,---,            ,--.'|_                ,--,   ,--.'|
+    ,---.'|            |  | :,'             ,--.'|   |  | :
+    |   | :            :  : ' :             |  |,    :  : '    .--.--.
+    |   | |   ,---.  .;__,'  /    ,--.--.   `--'_    |  ' |   /  /    '
+  ,--.__| |  /     \ |  |   |    /       \  ,' ,'|   '  | |  |  :  /`./
+ /   ,'   | /    /  |:__,'| :   .--.  .-. | '  | |   |  | :  |  :  ;_
+.   '  /  |.    ' / |  '  : |__  \__\/: . . |  | :   '  : |__ \  \    `.
+'   ; |:  |'   ;   /|  |  | '.'| ," .--.; | '  : |__ |  | '.'| `----.   \
+|   | '/  ''   |  / |  ;  :    ;/  /  ,.  | |  | '.'|;  :    ;/  /`--'  /__  ___  ___
+|   :    :||   :    |  |  ,   /;  :   .'   \;  :    ;|  ,   /'--'.     /  .\/  .\/  .\
+ \   \  /   \   \  /    ---`-' |  ,     .-./|  ,   /  ---`-'   `--'---'\  ; \  ; \  ; |
+  `----'     `----'             `--`---'     ---`-'                     `--" `--" `--"
+
+ */
+
+template <typename ParseContext>
+constexpr typename ParseContext::iterator
+formatter<chess::board::File>::parse(ParseContext& ctx)
+{
+    auto it = ctx.begin();
+
+    if (it == ctx.end() || *it == '}')
+        return it;
+
+    do {
+        switch (*it) {
+            case 'u': [[fallthrough]];
+            case 'U':
+                uppercase = true;
+                break;
+
+            case 'l': [[fallthrough]];
+            case 'L':
+                uppercase = false;
+                break;
+
+            default:
+                throw std::format_error { "Unrecognized format argument" };
+        }
+
+        ++it;
+    } while (! (it == ctx.end() || *it == '}'));
+
+    ctx.advance_to(it);
+
+    return it;
+}
+
+template <typename FormatContext>
+typename FormatContext::iterator
+formatter<chess::board::File>::format(
+    const chess::board::File file, FormatContext& ctx) const
+{
+    const auto character = [file, upper = uppercase] {
+        const auto upperChar = magic_enum::enum_name(file).front();
+
+        if (! upper)
+            return static_cast<char>(
+                std::tolower(static_cast<unsigned char>(upperChar)));
+
+        return upperChar;
+    }();
+
+    return std::format_to(ctx.out(), "{}", character);
+}
+
+} // namespace std

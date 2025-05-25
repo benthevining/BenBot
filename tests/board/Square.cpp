@@ -10,8 +10,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators_range.hpp>
 #include <format>
-#include <libchess/board/Bitboard.hpp>
 #include <libchess/board/BitboardMasks.hpp>
+#include <libchess/board/File.hpp>
+#include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
 #include <magic_enum/magic_enum.hpp>
 
