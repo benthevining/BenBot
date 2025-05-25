@@ -19,6 +19,8 @@
 
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdint> // IWYU pragma: keep - for std::uint_fast8_t
+#include <format>
+#include <magic_enum/magic_enum.hpp>
 
 /** This namespace contains classes for encoding information about the various chess piece types.
     @ingroup pieces
@@ -37,7 +39,6 @@ using std::size_t;
     @see utf8 values
 
     @todo from_string()
-    @todo std::formatter
  */
 enum class Type : std::uint_fast8_t {
     WhitePawn, ///< A White pawn.
@@ -120,3 +121,113 @@ namespace values {
 } // namespace values
 
 } // namespace chess::pieces
+
+namespace std {
+
+/** A formatter specialization for chess piece types.
+
+    The formatter accepts the following format specifier arguments:
+    @li ``s|S``: Tells the formatter to print a short (single-letter) version of the piece type
+    @li ``l|L``: Tells the formatter to print a long version of the piece type
+
+    If no arguments are specified, the formatter prints the short version of the piece type by default.
+
+    @see chess::pieces::Type
+    @ingroup pieces
+ */
+template <>
+struct formatter<chess::pieces::Type> final {
+    template <typename ParseContext>
+    constexpr typename ParseContext::iterator parse(ParseContext& ctx);
+
+    template <typename FormatContext>
+    typename FormatContext::iterator format(
+        chess::pieces::Type piece, FormatContext& ctx) const;
+
+private:
+    bool useShort { true };
+};
+
+/*
+                         ___                           ,--,
+      ,---,            ,--.'|_                ,--,   ,--.'|
+    ,---.'|            |  | :,'             ,--.'|   |  | :
+    |   | :            :  : ' :             |  |,    :  : '    .--.--.
+    |   | |   ,---.  .;__,'  /    ,--.--.   `--'_    |  ' |   /  /    '
+  ,--.__| |  /     \ |  |   |    /       \  ,' ,'|   '  | |  |  :  /`./
+ /   ,'   | /    /  |:__,'| :   .--.  .-. | '  | |   |  | :  |  :  ;_
+.   '  /  |.    ' / |  '  : |__  \__\/: . . |  | :   '  : |__ \  \    `.
+'   ; |:  |'   ;   /|  |  | '.'| ," .--.; | '  : |__ |  | '.'| `----.   \
+|   | '/  ''   |  / |  ;  :    ;/  /  ,.  | |  | '.'|;  :    ;/  /`--'  /__  ___  ___
+|   :    :||   :    |  |  ,   /;  :   .'   \;  :    ;|  ,   /'--'.     /  .\/  .\/  .\
+ \   \  /   \   \  /    ---`-' |  ,     .-./|  ,   /  ---`-'   `--'---'\  ; \  ; \  ; |
+  `----'     `----'             `--`---'     ---`-'                     `--" `--" `--"
+
+ */
+
+template <typename ParseContext>
+constexpr typename ParseContext::iterator
+formatter<chess::pieces::Type>::parse(ParseContext& ctx)
+{
+    auto it = ctx.begin();
+
+    if (it == ctx.end() || *it == '}')
+        return it;
+
+    do {
+        switch (*it) {
+            case 's': [[fallthrough]];
+            case 'S':
+                useShort = true;
+                break;
+
+            case 'l': [[fallthrough]];
+            case 'L':
+                useShort = false;
+                break;
+
+            default:
+                throw std::format_error { "Unrecognized format argument" };
+        }
+
+        ++it;
+    } while (! (it == ctx.end() || *it == '}'));
+
+    ctx.advance_to(it);
+
+    return it;
+}
+
+template <typename FormatContext>
+typename FormatContext::iterator
+formatter<chess::pieces::Type>::format(
+    const chess::pieces::Type piece, FormatContext& ctx) const
+{
+    using PieceType = chess::pieces::Type;
+
+    if (useShort) {
+        const auto character = [piece] {
+            switch (piece) {
+                case PieceType::Knight: return 'N';
+                case PieceType::Bishop: return 'B';
+                case PieceType::Rook  : return 'R';
+                case PieceType::Queen : return 'Q';
+                case PieceType::King  : return 'K';
+                default               : return 'P';
+            }
+        }();
+
+        return std::format_to(ctx.out(), "{}", character);
+    }
+
+    switch (piece) {
+        case PieceType::WhitePawn: [[fallthrough]];
+        case PieceType::BlackPawn:
+            return std::format_to(ctx.out(), "{}", "Pawn");
+
+        default:
+            return std::format_to(ctx.out(), "{}", magic_enum::enum_name(piece));
+    }
+}
+
+} // namespace std
