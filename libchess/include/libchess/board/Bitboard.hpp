@@ -302,15 +302,47 @@ namespace masks {
 
             @ingroup board
             @see black
-
-            @todo pawns, rooks, knights, bishops, king, queen
          */
         namespace white {
 
             /// @ingroup board
             /// @{
 
-            // TODO!!
+            /** Returns a bitboard mask for the starting position of White's pawns. */
+            [[nodiscard, gnu::const]] consteval Bitboard pawns() noexcept
+            {
+                return ranks::two();
+            }
+
+            /** Returns a bitboard mask for the starting position of White's rooks. */
+            [[nodiscard, gnu::const]] consteval Bitboard rooks() noexcept
+            {
+                return Bitboard { 0X81 };
+            }
+
+            /** Returns a bitboard mask for the starting position of White's knights. */
+            [[nodiscard, gnu::const]] consteval Bitboard knights() noexcept
+            {
+                return Bitboard { 0X42 };
+            }
+
+            /** Returns a bitboard mask for the starting position of White's bishops. */
+            [[nodiscard, gnu::const]] consteval Bitboard bishops() noexcept
+            {
+                return Bitboard { 0X24 };
+            }
+
+            /** Returns a bitboard mask for the starting position of White's queen. */
+            [[nodiscard, gnu::const]] consteval Bitboard queen() noexcept
+            {
+                return Bitboard { 0X8 };
+            }
+
+            /** Returns a bitboard mask for the starting position of White's king. */
+            [[nodiscard, gnu::const]] consteval Bitboard king() noexcept
+            {
+                return Bitboard { 0X10 };
+            }
 
             /// @}
 
@@ -321,15 +353,47 @@ namespace masks {
 
             @ingroup board
             @see white
-
-            @todo pawns, rooks, knights, bishops, king, queen
          */
         namespace black {
 
             /// @ingroup board
             /// @{
 
-            // TODO!!
+            /** Returns a bitboard mask for the starting position of Black's pawns. */
+            [[nodiscard, gnu::const]] consteval Bitboard pawns() noexcept
+            {
+                return ranks::seven();
+            }
+
+            /** Returns a bitboard mask for the starting position of Black's rooks. */
+            [[nodiscard, gnu::const]] consteval Bitboard rooks() noexcept
+            {
+                return Bitboard { 0X8100000000000000 };
+            }
+
+            /** Returns a bitboard mask for the starting position of Black's knights. */
+            [[nodiscard, gnu::const]] consteval Bitboard knights() noexcept
+            {
+                return Bitboard { 0X4200000000000000 };
+            }
+
+            /** Returns a bitboard mask for the starting position of Black's bishops. */
+            [[nodiscard, gnu::const]] consteval Bitboard bishops() noexcept
+            {
+                return Bitboard { 0X2400000000000000 };
+            }
+
+            /** Returns a bitboard mask for the starting position of Black's queen. */
+            [[nodiscard, gnu::const]] consteval Bitboard queen() noexcept
+            {
+                return Bitboard { 0X800000000000000 };
+            }
+
+            /** Returns a bitboard mask for the starting position of Black's king. */
+            [[nodiscard, gnu::const]] consteval Bitboard king() noexcept
+            {
+                return Bitboard { 0X1000000000000000 };
+            }
 
             /// @}
 

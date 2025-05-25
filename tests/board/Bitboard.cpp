@@ -259,3 +259,166 @@ TEST_CASE("Bitboard - diagonal masks", TAGS)
         }
     }
 }
+
+TEST_CASE("Starting position masks", TAGS)
+{
+    SECTION("White")
+    {
+        SECTION("Pawns")
+        {
+            static constexpr auto pos = bitboard_masks::starting::white::pawns();
+
+            STATIC_REQUIRE(pos.count() == 8uz);
+
+            for (const auto square : pos.squares()) {
+                REQUIRE(square.is_white_territory());
+                REQUIRE(square.rank == Rank::Two);
+            }
+        }
+
+        SECTION("Rooks")
+        {
+            static constexpr auto pos = bitboard_masks::starting::white::rooks();
+
+            STATIC_REQUIRE(pos.count() == 2uz);
+
+            for (const auto square : pos.squares()) {
+                REQUIRE(square.is_white_territory());
+                REQUIRE(square.rank == Rank::One);
+                REQUIRE(((square.file == File::A) || (square.file == File::H)));
+            }
+        }
+
+        SECTION("Knights")
+        {
+            static constexpr auto pos = bitboard_masks::starting::white::knights();
+
+            STATIC_REQUIRE(pos.count() == 2uz);
+
+            for (const auto square : pos.squares()) {
+                REQUIRE(square.is_white_territory());
+                REQUIRE(square.rank == Rank::One);
+                REQUIRE(((square.file == File::B) || (square.file == File::G)));
+            }
+        }
+
+        SECTION("Bishops")
+        {
+            static constexpr auto pos = bitboard_masks::starting::white::bishops();
+
+            STATIC_REQUIRE(pos.count() == 2uz);
+
+            for (const auto square : pos.squares()) {
+                REQUIRE(square.is_white_territory());
+                REQUIRE(square.rank == Rank::One);
+                REQUIRE(((square.file == File::C) || (square.file == File::F)));
+            }
+        }
+
+        SECTION("Queen")
+        {
+            static constexpr auto pos = bitboard_masks::starting::white::queen();
+
+            STATIC_REQUIRE(pos.count() == 1uz);
+
+            for (const auto square : pos.squares()) {
+                REQUIRE(square.is_white_territory());
+                REQUIRE(square.rank == Rank::One);
+                REQUIRE(square.file == File::D);
+            }
+        }
+
+        SECTION("King")
+        {
+            static constexpr auto pos = bitboard_masks::starting::white::king();
+
+            STATIC_REQUIRE(pos.count() == 1uz);
+
+            for (const auto square : pos.squares()) {
+                REQUIRE(square.is_white_territory());
+                REQUIRE(square.rank == Rank::One);
+                REQUIRE(square.file == File::E);
+            }
+        }
+    }
+
+    SECTION("Black")
+    {
+        SECTION("Pawns")
+        {
+            static constexpr auto pos = bitboard_masks::starting::black::pawns();
+
+            STATIC_REQUIRE(pos.count() == 8uz);
+
+            for (const auto square : pos.squares()) {
+                REQUIRE(square.is_black_territory());
+                REQUIRE(square.rank == Rank::Seven);
+            }
+        }
+
+        SECTION("Rooks")
+        {
+            static constexpr auto pos = bitboard_masks::starting::black::rooks();
+
+            STATIC_REQUIRE(pos.count() == 2uz);
+
+            for (const auto square : pos.squares()) {
+                REQUIRE(square.is_black_territory());
+                REQUIRE(square.rank == Rank::Eight);
+                REQUIRE(((square.file == File::A) || (square.file == File::H)));
+            }
+        }
+
+        SECTION("Knights")
+        {
+            static constexpr auto pos = bitboard_masks::starting::black::knights();
+
+            STATIC_REQUIRE(pos.count() == 2uz);
+
+            for (const auto square : pos.squares()) {
+                REQUIRE(square.is_black_territory());
+                REQUIRE(square.rank == Rank::Eight);
+                REQUIRE(((square.file == File::B) || (square.file == File::G)));
+            }
+        }
+
+        SECTION("Bishops")
+        {
+            static constexpr auto pos = bitboard_masks::starting::black::bishops();
+
+            STATIC_REQUIRE(pos.count() == 2uz);
+
+            for (const auto square : pos.squares()) {
+                REQUIRE(square.is_black_territory());
+                REQUIRE(square.rank == Rank::Eight);
+                REQUIRE(((square.file == File::C) || (square.file == File::F)));
+            }
+        }
+
+        SECTION("Queen")
+        {
+            static constexpr auto pos = bitboard_masks::starting::black::queen();
+
+            STATIC_REQUIRE(pos.count() == 1uz);
+
+            for (const auto square : pos.squares()) {
+                REQUIRE(square.is_black_territory());
+                REQUIRE(square.rank == Rank::Eight);
+                REQUIRE(square.file == File::D);
+            }
+        }
+
+        SECTION("King")
+        {
+            static constexpr auto pos = bitboard_masks::starting::black::king();
+
+            STATIC_REQUIRE(pos.count() == 1uz);
+
+            for (const auto square : pos.squares()) {
+                REQUIRE(square.is_black_territory());
+                REQUIRE(square.rank == Rank::Eight);
+                REQUIRE(square.file == File::E);
+            }
+        }
+    }
+}
