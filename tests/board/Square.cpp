@@ -490,9 +490,77 @@ TEST_CASE("Knight distance", TAGS)
         };
         // clang-format on
 
+        for (const auto square : bitboard_masks::all().squares())
+            REQUIRE(knight_distance(starting, square) == distances[square.index()]);
+    }
+
+    SECTION("From G1")
+    {
+        static constexpr Square starting { File::G, Rank::One };
+
+        // clang-format off
+        static constexpr std::array distances {
+        //  A1
+            4, 3, 2, 3, 2, 3, 0, 3,
+            3, 4, 3, 2, 1, 2, 3, 2,
+            4, 3, 2, 3, 4, 1, 2, 1,
+            3, 4, 3, 2, 3, 2, 3, 2,
+            4, 3, 4, 3, 2, 3, 2, 3,
+            5, 4, 3, 4, 3, 4, 3, 4,
+            4, 5, 4, 3, 4, 3, 4, 3,
+            5, 4, 5, 4, 5, 4, 5, 4
+        //                       H8
+        };
+        // clang-format on
+
+        for (const auto square : bitboard_masks::all().squares())
+            REQUIRE(knight_distance(starting, square) == distances[square.index()]);
+    }
+
+    SECTION("From E6")
+    {
+        static constexpr Square starting { File::E, Rank::Six };
+
+        // clang-format off
+        static constexpr std::array distances {
+        //  A1
+            3, 4, 3, 4, 3, 4, 3, 4,
+            4, 3, 2, 3, 2, 3, 2, 3,
+            3, 2, 3, 2, 3, 2, 3, 2,
+            2, 3, 4, 1, 2, 1, 4, 3,
+            3, 2, 1, 2, 3, 2, 1, 2,
+            2, 3, 2, 3, 0, 3, 2, 3,
+            3, 2, 1, 2, 3, 2, 1, 2,
+            2, 3, 4, 1, 2, 1, 4, 3
+        //                       H8
+        };
+        // clang-format on
+
+        for (const auto square : bitboard_masks::all().squares())
+            REQUIRE(knight_distance(starting, square) == distances[square.index()]);
+    }
+
+    SECTION("From D4")
+    {
+        static constexpr Square starting { File::D, Rank::Four };
+
+        // clang-format off
+        static constexpr std::array distances {
+        //  A1
+            2, 3, 2, 3, 2, 3, 2, 3,
+            3, 4, 1, 2, 1, 4, 3, 2,
+            2, 1, 2, 3, 2, 1, 2, 3,
+            3, 2, 3, 0, 3, 2, 3, 2,
+            2, 1, 2, 3, 2, 1, 2, 3,
+            3, 4, 1, 2, 1, 4, 3, 2,
+            2, 3, 2, 3, 2, 3, 2, 3,
+            3, 2, 3, 2, 3, 2, 3, 4
+        //                       H8
+        };
+        // clang-format on
+
         for (const auto square : bitboard_masks::all().squares()) {
             INFO(std::format("Square: {} (index {})", square, square.index()));
-
             REQUIRE(knight_distance(starting, square) == distances[square.index()]);
         }
     }
