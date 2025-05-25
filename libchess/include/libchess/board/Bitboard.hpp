@@ -142,21 +142,70 @@ namespace masks {
         return Bitboard { 0x55AA55AA55AA55AA };
     }
 
-    /** Returns a bitboard with all squares on the A file set to 1.
-        @see h_file()
-     */
-    [[nodiscard, gnu::const]] consteval Bitboard a_file() noexcept
-    {
-        return Bitboard { 0x0101010101010101 };
-    }
+    /// @}
 
-    /** Returns a bitboard with all squares on the H file set to 1.
-        @see a_file()
+    /** This namespace provides some compile-time bitboard masks for files.
+        @ingroup board
      */
-    [[nodiscard, gnu::const]] consteval Bitboard h_file() noexcept
-    {
-        return Bitboard { 0x8080808080808080 };
-    }
+    namespace files {
+
+        /// @ingroup board
+        /// @{
+
+        /** Returns a bitboard with all squares on the A file set to 1. */
+        [[nodiscard, gnu::const]] consteval Bitboard a() noexcept
+        {
+            return Bitboard { 0x0101010101010101 };
+        }
+
+        /** Returns a bitboard with all squares on the B file set to 1. */
+        [[nodiscard, gnu::const]] consteval Bitboard b() noexcept
+        {
+            return Bitboard { 0X202020202020202 };
+        }
+
+        /** Returns a bitboard with all squares on the C file set to 1. */
+        [[nodiscard, gnu::const]] consteval Bitboard c() noexcept
+        {
+            return Bitboard { 0X404040404040404 };
+        }
+
+        /** Returns a bitboard with all squares on the D file set to 1. */
+        [[nodiscard, gnu::const]] consteval Bitboard d() noexcept
+        {
+            return Bitboard { 0X808080808080808 };
+        }
+
+        /** Returns a bitboard with all squares on the E file set to 1. */
+        [[nodiscard, gnu::const]] consteval Bitboard e() noexcept
+        {
+            return Bitboard { 0X1010101010101010 };
+        }
+
+        /** Returns a bitboard with all squares on the F file set to 1. */
+        [[nodiscard, gnu::const]] consteval Bitboard f() noexcept
+        {
+            return Bitboard { 0X2020202020202020 };
+        }
+
+        /** Returns a bitboard with all squares on the G file set to 1. */
+        [[nodiscard, gnu::const]] consteval Bitboard g() noexcept
+        {
+            return Bitboard { 0X4040404040404040 };
+        }
+
+        /** Returns a bitboard with all squares on the H file set to 1. */
+        [[nodiscard, gnu::const]] consteval Bitboard h() noexcept
+        {
+            return Bitboard { 0x8080808080808080 };
+        }
+
+        /// @}
+
+    } // namespace files
+
+    /// @ingroup board
+    /// @{
 
     /** Returns a bitboard with all squares on the first rank set to 1.
         @see rank_8()

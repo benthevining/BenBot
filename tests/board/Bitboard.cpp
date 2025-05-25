@@ -96,63 +96,46 @@ TEST_CASE("Bitboard - dark/light square masks", TAGS)
 
 TEST_CASE("Bitboard - file masks", TAGS)
 {
-    SECTION("A file")
-    {
-        static constexpr auto board = bitboard_masks::a_file();
-
-        STATIC_REQUIRE(board.count() == 8uz);
-        STATIC_REQUIRE(get_squares(board).size() == board.count());
-
-        for (const auto rank : magic_enum::enum_values<Rank>()) {
-            for (const auto file : magic_enum::enum_values<File>()) {
-                const Square square { file, rank };
-
-                const bool isAFile = file == File::A;
-
-                REQUIRE(board.test(square) == isAFile);
-            }
-        }
-
-        for (const auto square : board.squares()) {
-            REQUIRE(square.file == File::A);
-
-            for (const auto sq2 : board.squares()) {
-                REQUIRE(file_distance(square, sq2) == 0uz);
-
-                if (square != sq2)
-                    REQUIRE(! are_on_same_diagonal(square, sq2));
-            }
-        }
+#define TEST_FILE_MASK(str, correctFile, mask)                        \
+    SECTION(str)                                                      \
+    {                                                                 \
+        static constexpr auto board = mask;                           \
+                                                                      \
+        STATIC_REQUIRE(board.count() == 8uz);                         \
+        STATIC_REQUIRE(get_squares(board).size() == board.count());   \
+                                                                      \
+        for (const auto rank : magic_enum::enum_values<Rank>()) {     \
+            for (const auto file : magic_enum::enum_values<File>()) { \
+                const Square square { file, rank };                   \
+                                                                      \
+                const bool isCorrectFile = file == correctFile;       \
+                                                                      \
+                REQUIRE(board.test(square) == isCorrectFile);         \
+            }                                                         \
+        }                                                             \
+                                                                      \
+        for (const auto square : board.squares()) {                   \
+            REQUIRE(square.file == correctFile);                      \
+                                                                      \
+            for (const auto sq2 : board.squares()) {                  \
+                REQUIRE(file_distance(square, sq2) == 0uz);           \
+                                                                      \
+                if (square != sq2)                                    \
+                    REQUIRE(! are_on_same_diagonal(square, sq2));     \
+            }                                                         \
+        }                                                             \
     }
 
-    SECTION("H file")
-    {
-        static constexpr auto board = bitboard_masks::h_file();
+    TEST_FILE_MASK("A file", File::A, bitboard_masks::files::a());
+    TEST_FILE_MASK("B file", File::B, bitboard_masks::files::b());
+    TEST_FILE_MASK("C file", File::C, bitboard_masks::files::c());
+    TEST_FILE_MASK("D file", File::D, bitboard_masks::files::d());
+    TEST_FILE_MASK("E file", File::E, bitboard_masks::files::e());
+    TEST_FILE_MASK("F file", File::F, bitboard_masks::files::f());
+    TEST_FILE_MASK("G file", File::G, bitboard_masks::files::g());
+    TEST_FILE_MASK("H file", File::H, bitboard_masks::files::h());
 
-        STATIC_REQUIRE(board.count() == 8uz);
-        STATIC_REQUIRE(get_squares(board).size() == board.count());
-
-        for (const auto rank : magic_enum::enum_values<Rank>()) {
-            for (const auto file : magic_enum::enum_values<File>()) {
-                const Square square { file, rank };
-
-                const bool isHFile = file == File::H;
-
-                REQUIRE(board.test(square) == isHFile);
-            }
-        }
-
-        for (const auto square : board.squares()) {
-            REQUIRE(square.file == File::H);
-
-            for (const auto sq2 : board.squares()) {
-                REQUIRE(file_distance(square, sq2) == 0uz);
-
-                if (square != sq2)
-                    REQUIRE(! are_on_same_diagonal(square, sq2));
-            }
-        }
-    }
+#undef TEST_FILE_MASK
 }
 
 TEST_CASE("Bitboard - rank masks", TAGS)

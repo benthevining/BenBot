@@ -219,15 +219,7 @@ struct Square final {
     @relates Square
  */
 [[nodiscard, gnu::const]] constexpr BitboardIndex file_distance(
-    const Square& first, const Square& second) noexcept
-{
-    const auto firstFile  = std::to_underlying(first.file);
-    const auto secondFile = std::to_underlying(second.file);
-
-    const auto [minFile, maxFile] = std::minmax(firstFile, secondFile);
-
-    return maxFile - minFile;
-}
+    const Square& first, const Square& second) noexcept;
 
 /** Returns as an integer the distance between the rank of the first square
     and the rank of the second square.
@@ -238,15 +230,7 @@ struct Square final {
     @relates Square
  */
 [[nodiscard, gnu::const]] constexpr BitboardIndex rank_distance(
-    const Square& first, const Square& second) noexcept
-{
-    const auto firstRank  = std::to_underlying(first.rank);
-    const auto secondRank = std::to_underlying(second.rank);
-
-    const auto [minRank, maxRank] = std::minmax(firstRank, secondRank);
-
-    return maxRank - minRank;
-}
+    const Square& first, const Square& second) noexcept;
 
 /** Returns the Manhattan distance between the two squares.
 
@@ -597,6 +581,28 @@ constexpr Square Square::from_string(const std::string_view text)
     }();
 
     return { file, rank };
+}
+
+constexpr BitboardIndex file_distance(
+    const Square& first, const Square& second) noexcept
+{
+    const auto firstFile  = std::to_underlying(first.file);
+    const auto secondFile = std::to_underlying(second.file);
+
+    const auto [minFile, maxFile] = std::minmax(firstFile, secondFile);
+
+    return maxFile - minFile;
+}
+
+constexpr BitboardIndex rank_distance(
+    const Square& first, const Square& second) noexcept
+{
+    const auto firstRank  = std::to_underlying(first.rank);
+    const auto secondRank = std::to_underlying(second.rank);
+
+    const auto [minRank, maxRank] = std::minmax(firstRank, secondRank);
+
+    return maxRank - minRank;
 }
 
 constexpr BitboardIndex knight_distance(
