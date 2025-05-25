@@ -18,8 +18,12 @@
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdint> // IWYU pragma: keep - for std::uint_least64_t
 #include <libchess/board/Square.hpp>
+#include <ranges>
+#include <typeindex> // for std::hash
 
 namespace chess::board {
+
+using std::size_t;
 
 /** This class is similar to ``std::bitset``, in that it is a simple collection of 64 bits,
     but it includes some convenience methods specific to usage as a bitboard.
@@ -33,7 +37,6 @@ namespace chess::board {
     @ingroup board
 
     @todo std::formatter
-    @todo iterate set bits as Square objects
  */
 struct Bitboard final {
     /** Unsigned integer type used for serialization of bitboards. */
@@ -60,7 +63,7 @@ struct Bitboard final {
     [[nodiscard]] constexpr bool none() const noexcept { return bits.none(); }
 
     /** Returns the number of bits that are set. */
-    [[nodiscard]] constexpr std::size_t count() const noexcept { return bits.count(); }
+    [[nodiscard]] constexpr size_t count() const noexcept { return bits.count(); }
 
     /** Returns true if there is a piece on the given square. */
     [[nodiscard]] constexpr bool test(const Square square) const noexcept { return test(square.index()); }
@@ -70,7 +73,7 @@ struct Bitboard final {
      */
     [[nodiscard]] constexpr bool test(const BitboardIndex index) const noexcept
     {
-        assert(index <= 63uz);
+        assert(index <= MAX_BITBOARD_IDX);
         return bits[index];
     }
 
@@ -82,7 +85,7 @@ struct Bitboard final {
      */
     constexpr void set(const BitboardIndex index, const bool value = true) noexcept
     {
-        assert(index <= 63uz);
+        assert(index <= MAX_BITBOARD_IDX);
         bits[index] = value;
     }
 
@@ -91,6 +94,17 @@ struct Bitboard final {
 
     /** Converts this bitboard to its integer representation. */
     [[nodiscard]] constexpr Integer to_int() const noexcept { return bits.to_ullong(); }
+
+    /** Returns an iterable range of Square objects representing the 1 bits in this bitboard. */
+    [[nodiscard]] constexpr auto squares() const noexcept
+    {
+        return std::views::iota(
+                   0uz, static_cast<size_t>(MAX_BITBOARD_IDX) + 1uz)
+             | std::views::filter(
+                 [this](const size_t index) { return test(static_cast<BitboardIndex>(index)); })
+             | std::views::transform(
+                 [](const size_t index) { return Square::from_index(static_cast<BitboardIndex>(index)); });
+    }
 
 private:
     std::bitset<64uz> bits;
@@ -177,15 +191,56 @@ namespace masks {
      */
     namespace starting {
 
-        /// @ingroup board
-        /// @{
+        /** This namespace provides compile-time bitboard constants for the starting locations of
+            the white pieces.
 
-        // TODO!!
+            @ingroup board
+            @see black
+         */
+        namespace white {
 
-        /// @}
+            /// @ingroup board
+            /// @{
+
+            // TODO!!
+
+            /// @}
+
+        } // namespace white
+
+        /** This namespace provides compile-time bitboard constants for the starting locations of
+            the black pieces.
+
+            @ingroup board
+            @see white
+         */
+        namespace black {
+
+            /// @ingroup board
+            /// @{
+
+            // TODO!!
+
+            /// @}
+
+        } // namespace black
 
     } // namespace starting
 
 } // namespace masks
 
 } // namespace chess::board
+
+/** A hash specialization for Bitboard objects.
+    Bitboards are hashed as their integer representations.
+
+    @see chess::board::Bitboard
+    @ingroup board
+ */
+template <>
+struct std::hash<chess::board::Bitboard> final {
+    [[nodiscard]] constexpr std::size_t operator()(const chess::board::Bitboard& board) const noexcept
+    {
+        return std::hash<chess::board::Bitboard::Integer> {}(board.to_int());
+    }
+};

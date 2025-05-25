@@ -11,7 +11,9 @@
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/Square.hpp>
 #include <magic_enum/magic_enum.hpp>
+#include <ranges>
 #include <utility>
+#include <vector>
 
 static constexpr auto TAGS { "[board][Bitboard]" };
 
@@ -30,6 +32,12 @@ TEST_CASE("Bitboard - empty", TAGS)
     STATIC_REQUIRE(empty.none());
     STATIC_REQUIRE(empty.count() == 0uz);
     STATIC_REQUIRE(std::cmp_equal(empty.to_int(), 0));
+    STATIC_REQUIRE(std::ranges::empty(empty.squares()));
+}
+
+[[nodiscard]] static constexpr auto get_squares(const Bitboard& board)
+{
+    return board.squares() | std::ranges::to<std::vector>();
 }
 
 TEST_CASE("Bitboard - dark/light square masks", TAGS)
@@ -39,6 +47,7 @@ TEST_CASE("Bitboard - dark/light square masks", TAGS)
         static constexpr auto darkSquares = bitboard_masks::dark_squares();
 
         STATIC_REQUIRE(darkSquares.count() == 32uz);
+        STATIC_REQUIRE(get_squares(darkSquares).size() == darkSquares.count());
 
         for (const auto rank : magic_enum::enum_values<Rank>()) {
             for (const auto file : magic_enum::enum_values<File>()) {
@@ -47,6 +56,9 @@ TEST_CASE("Bitboard - dark/light square masks", TAGS)
                 REQUIRE(darkSquares.test(square) == square.is_dark());
             }
         }
+
+        for (const auto square : darkSquares.squares())
+            REQUIRE(square.is_dark());
     }
 
     SECTION("Light squares")
@@ -54,6 +66,7 @@ TEST_CASE("Bitboard - dark/light square masks", TAGS)
         static constexpr auto lightSquares = bitboard_masks::light_squares();
 
         STATIC_REQUIRE(lightSquares.count() == 32uz);
+        STATIC_REQUIRE(get_squares(lightSquares).size() == lightSquares.count());
 
         for (const auto rank : magic_enum::enum_values<Rank>()) {
             for (const auto file : magic_enum::enum_values<File>()) {
@@ -62,6 +75,9 @@ TEST_CASE("Bitboard - dark/light square masks", TAGS)
                 REQUIRE(lightSquares.test(square) == square.is_light());
             }
         }
+
+        for (const auto square : lightSquares.squares())
+            REQUIRE(square.is_light());
     }
 }
 
@@ -72,6 +88,7 @@ TEST_CASE("Bitboard - file masks", TAGS)
         static constexpr auto board = bitboard_masks::a_file();
 
         STATIC_REQUIRE(board.count() == 8uz);
+        STATIC_REQUIRE(get_squares(board).size() == board.count());
 
         for (const auto rank : magic_enum::enum_values<Rank>()) {
             for (const auto file : magic_enum::enum_values<File>()) {
@@ -82,6 +99,17 @@ TEST_CASE("Bitboard - file masks", TAGS)
                 REQUIRE(board.test(square) == isAFile);
             }
         }
+
+        for (const auto square : board.squares()) {
+            REQUIRE(square.file == File::A);
+
+            for (const auto sq2 : board.squares()) {
+                REQUIRE(chess::board::file_distance(square, sq2) == 0uz);
+
+                if (square != sq2)
+                    REQUIRE(! chess::board::are_on_same_diagonal(square, sq2));
+            }
+        }
     }
 
     SECTION("H file")
@@ -89,6 +117,7 @@ TEST_CASE("Bitboard - file masks", TAGS)
         static constexpr auto board = bitboard_masks::h_file();
 
         STATIC_REQUIRE(board.count() == 8uz);
+        STATIC_REQUIRE(get_squares(board).size() == board.count());
 
         for (const auto rank : magic_enum::enum_values<Rank>()) {
             for (const auto file : magic_enum::enum_values<File>()) {
@@ -97,6 +126,17 @@ TEST_CASE("Bitboard - file masks", TAGS)
                 const bool isHFile = file == File::H;
 
                 REQUIRE(board.test(square) == isHFile);
+            }
+        }
+
+        for (const auto square : board.squares()) {
+            REQUIRE(square.file == File::H);
+
+            for (const auto sq2 : board.squares()) {
+                REQUIRE(chess::board::file_distance(square, sq2) == 0uz);
+
+                if (square != sq2)
+                    REQUIRE(! chess::board::are_on_same_diagonal(square, sq2));
             }
         }
     }
@@ -109,6 +149,7 @@ TEST_CASE("Bitboard - rank masks", TAGS)
         static constexpr auto board = bitboard_masks::rank_1();
 
         STATIC_REQUIRE(board.count() == 8uz);
+        STATIC_REQUIRE(get_squares(board).size() == board.count());
 
         for (const auto rank : magic_enum::enum_values<Rank>()) {
             for (const auto file : magic_enum::enum_values<File>()) {
@@ -119,6 +160,17 @@ TEST_CASE("Bitboard - rank masks", TAGS)
                 REQUIRE(board.test(square) == isRank1);
             }
         }
+
+        for (const auto square : board.squares()) {
+            REQUIRE(square.rank == Rank::One);
+
+            for (const auto sq2 : board.squares()) {
+                REQUIRE(chess::board::rank_distance(square, sq2) == 0uz);
+
+                if (square != sq2)
+                    REQUIRE(! chess::board::are_on_same_diagonal(square, sq2));
+            }
+        }
     }
 
     SECTION("Rank 8")
@@ -126,6 +178,7 @@ TEST_CASE("Bitboard - rank masks", TAGS)
         static constexpr auto board = bitboard_masks::rank_8();
 
         STATIC_REQUIRE(board.count() == 8uz);
+        STATIC_REQUIRE(get_squares(board).size() == board.count());
 
         for (const auto rank : magic_enum::enum_values<Rank>()) {
             for (const auto file : magic_enum::enum_values<File>()) {
@@ -134,6 +187,17 @@ TEST_CASE("Bitboard - rank masks", TAGS)
                 const bool isRank8 = rank == Rank::Eight;
 
                 REQUIRE(board.test(square) == isRank8);
+            }
+        }
+
+        for (const auto square : board.squares()) {
+            REQUIRE(square.rank == Rank::Eight);
+
+            for (const auto sq2 : board.squares()) {
+                REQUIRE(chess::board::rank_distance(square, sq2) == 0uz);
+
+                if (square != sq2)
+                    REQUIRE(! chess::board::are_on_same_diagonal(square, sq2));
             }
         }
     }
@@ -162,6 +226,9 @@ TEST_CASE("Bitboard - diagonal masks", TAGS)
                         [file](Rank rank) { return diagonal.test(Square { file, rank }); })
                     == 1uz);
         }
+
+        for (const auto [sq1, sq2] : std::views::zip(diagonal.squares(), diagonal.squares()))
+            REQUIRE(chess::board::are_on_same_diagonal(sq1, sq2));
     }
 
     SECTION("A8-H1")
@@ -183,5 +250,8 @@ TEST_CASE("Bitboard - diagonal masks", TAGS)
                         [file](Rank rank) { return diagonal.test(Square { file, rank }); })
                     == 1uz);
         }
+
+        for (const auto [sq1, sq2] : std::views::zip(diagonal.squares(), diagonal.squares()))
+            REQUIRE(chess::board::are_on_same_diagonal(sq1, sq2));
     }
 }

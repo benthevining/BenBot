@@ -20,13 +20,16 @@
 #pragma once
 
 #include <algorithm>
-#include <cctype>  // IWYU pragma: keep - for std::tolower()
+#include <cctype> // IWYU pragma: keep - for std::tolower()
+#include <compare>
+#include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdint> // IWYU pragma: keep - for std::uint_fast64_t
 #include <format>
 #include <libchess/util/Math.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <stdexcept>
 #include <string_view>
+#include <typeindex> // for std::hash
 #include <utility>
 
 /** This namespace contains classes related to the engine's internal
@@ -40,9 +43,14 @@ namespace chess::board {
     Valid bitboard indices are in the range ``[0, 63]``.
 
     @ingroup board
-    @todo Make this an enum?
+    @see MAX_BITBOARD_IDX
  */
 using BitboardIndex = std::uint_fast8_t;
+
+/** The maximum valid bitboard bit index.
+    @ingroup board
+ */
+static constexpr auto MAX_BITBOARD_IDX = static_cast<BitboardIndex>(63);
 
 /** This enum describes the ranks of the chessboard.
 
@@ -181,6 +189,16 @@ struct Square final {
 /// @ingroup board
 /// @{
 
+/** Orders the two squares based on their bitboard indices.
+
+    @relates Square
+ */
+[[nodiscard, gnu::const]] constexpr std::strong_ordering operator<=>(
+    const Square& first, const Square& second) noexcept
+{
+    return first.index() <=> second.index();
+}
+
 /** Returns as an integer the distance between the file of the first square
     and the file of the second square.
 
@@ -216,14 +234,14 @@ struct Square final {
 }
 
 /** Returns the Manhattan distance between the two squares.
+    Manhattan distance is the sum of the rank distance and file distance between the two squares.
 
     @relates Square
  */
 [[nodiscard, gnu::const]] constexpr BitboardIndex manhattan_distance(
     const Square& first, const Square& second) noexcept
 {
-    return file_distance(first, second)
-         + rank_distance(first, second);
+    return file_distance(first, second) + rank_distance(first, second);
 }
 
 /** Returns true if two squares are on the same diagonal of the chessboard.
@@ -233,9 +251,7 @@ struct Square final {
 [[nodiscard, gnu::const]] constexpr bool are_on_same_diagonal(
     const Square& first, const Square& second) noexcept
 {
-    return std::cmp_equal(
-        file_distance(first, second),
-        rank_distance(first, second));
+    return std::cmp_equal(file_distance(first, second), rank_distance(first, second));
 }
 
 /// @}
@@ -314,6 +330,20 @@ struct formatter<chess::board::Square> final {
 
 private:
     bool asIdx { false };
+};
+
+/** A hash specialization for Square objects.
+    A square's hash is simply its bitboard index.
+
+    @see chess::board::Square
+    @ingroup board
+ */
+template <>
+struct hash<chess::board::Square> final {
+    [[nodiscard]] constexpr size_t operator()(const chess::board::Square& square) const noexcept
+    {
+        return hash<chess::board::BitboardIndex> {}(square.index());
+    }
 };
 
 /*
@@ -450,7 +480,7 @@ constexpr bool Square::is_light() const noexcept
 
 constexpr Square Square::from_index(const BitboardIndex index)
 {
-    if (std::cmp_greater(index, 63uz))
+    if (std::cmp_greater(index, MAX_BITBOARD_IDX))
         throw std::invalid_argument {
             std::format("Cannot create Square from invalid bitboard index {}", index)
         };
