@@ -35,8 +35,13 @@ target_link_libraries (libchess_tests PRIVATE libchess::libchess Catch2::Catch2W
 set (
     sources
     # cmake-format: sortable
-    board/Bitboard.cpp board/BitboardMasks.cpp board/Distances.cpp board/Pieces.cpp
-    board/Square.cpp util/Math.cpp
+    board/Bitboard.cpp
+    board/BitboardMasks.cpp
+    board/Distances.cpp
+    board/Pieces.cpp
+    board/Square.cpp
+    game/Position.cpp
+    util/Math.cpp
 )
 
 target_sources (libchess_tests PRIVATE ${sources})

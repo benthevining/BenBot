@@ -85,4 +85,9 @@ TEST_CASE("Pieces - has_bishop_pair()", TAGS)
     pieces.bishops.set(Square { File::E, Rank::Four }, true);
 
     REQUIRE(pieces.has_bishop_pair());
+
+    // remove all
+    pieces.bishops.clear();
+
+    REQUIRE(! pieces.has_bishop_pair());
 }

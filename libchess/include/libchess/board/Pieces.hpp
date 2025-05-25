@@ -61,7 +61,7 @@ struct Pieces final {
     Bitboard king;
 
     /** Returns true if the two piece sets are identical. */
-    [[nodiscard]] constexpr bool operator==(const Pieces& other) const noexcept = default;
+    [[nodiscard]] constexpr bool operator==(const Pieces&) const noexcept = default;
 
     /** Returns the bitboard corresponding to the given piece type. */
     [[nodiscard]] constexpr Bitboard& type(PieceType type) noexcept;

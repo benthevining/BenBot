@@ -55,7 +55,7 @@ struct Bitboard final {
     }
 
     /** Returns true if the two bitboards have all the same bits set. */
-    [[nodiscard]] constexpr bool operator==(const Bitboard& other) const noexcept = default;
+    [[nodiscard]] constexpr bool operator==(const Bitboard&) const noexcept = default;
 
     /** Returns true if any of the bits are set. */
     [[nodiscard]] constexpr bool any() const noexcept { return bits.any(); }
@@ -96,7 +96,7 @@ struct Bitboard final {
     /** Converts this bitboard to its integer representation. */
     [[nodiscard]] constexpr Integer to_int() const noexcept { return bits.to_ullong(); }
 
-    /** Returns an iterable list of indices representing the 1 bits in this bitboard.
+    /** Returns an iterable range of indices representing the 1 bits in this bitboard.
         The returned indices should be iterated by value, not by reference; i.e.:
         @code{.cpp}
         for (auto index : board.indices())

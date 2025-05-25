@@ -96,7 +96,7 @@ struct Square final {
     }
 
     /** Returns true if two squares are equivalent. */
-    [[nodiscard]] constexpr bool operator==(const Square& other) const noexcept = default;
+    [[nodiscard]] constexpr bool operator==(const Square&) const noexcept = default;
 
     /// @name Area queries
     /// @{
