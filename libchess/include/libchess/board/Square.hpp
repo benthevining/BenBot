@@ -20,7 +20,10 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
+#include <cassert>
 #include <cctype> // IWYU pragma: keep - for std::tolower()
+#include <cmath>  // IWYU pragma: keep - for std::abs()
 #include <compare>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdint> // IWYU pragma: keep - for std::uint_fast64_t
@@ -115,7 +118,6 @@ static_assert(std::cmp_equal(NUM_SQUARES,
 
     @ingroup board
 
-    @todo knight_distance()
     @todo distance_to_edge(), distance_to_center()
  */
 struct Square final {
@@ -211,6 +213,8 @@ struct Square final {
 /** Returns as an integer the distance between the file of the first square
     and the file of the second square.
 
+    The maximum file distance is 7.
+
     @see rank_distance()
     @relates Square
  */
@@ -228,6 +232,8 @@ struct Square final {
 /** Returns as an integer the distance between the rank of the first square
     and the rank of the second square.
 
+    The maximum rank distance is 7.
+
     @see file_distance()
     @relates Square
  */
@@ -243,8 +249,15 @@ struct Square final {
 }
 
 /** Returns the Manhattan distance between the two squares.
-    Manhattan distance is the sum of the rank distance and file distance between the two squares.
 
+    Manhattan distance is the sum of the rank distance and file distance between the two squares.
+    Therefore, this gives the number of non-diagonal king moves required to travel between the two squares.
+
+    The maximum Manhattan distance (between the ends of the long diagonals) is 14.
+
+    This may also be known as "taxicab" distance.
+
+    @see chebyshev_distance()
     @relates Square
  */
 [[nodiscard, gnu::const]] constexpr BitboardIndex manhattan_distance(
@@ -252,6 +265,31 @@ struct Square final {
 {
     return file_distance(first, second) + rank_distance(first, second);
 }
+
+/** Returns the Chebyshev distance between the two squares.
+
+    Chebyshev distance is the number of king moves required to travel between the squares on an
+    otherwise-empty board. The difference with Manhattan distance is that diagonal king moves
+    are considered.
+
+    The maximum Chebyshev distance is 7.
+
+    @see manhattan_distance()
+    @relates Square
+ */
+[[nodiscard, gnu::const]] constexpr BitboardIndex chebyshev_distance(
+    const Square& first, const Square& second) noexcept
+{
+    return std::max(file_distance(first, second), rank_distance(first, second));
+}
+
+/** Returns the knight distance between the two squares; that is, the number of moves a knight
+    requires to maneuver from ``first`` to ``second``.
+
+    @relates Square
+ */
+[[nodiscard, gnu::const]] constexpr BitboardIndex knight_distance(
+    const Square& first, const Square& second);
 
 /** Returns true if two squares are on the same diagonal of the chessboard.
 
@@ -559,6 +597,53 @@ constexpr Square Square::from_string(const std::string_view text)
     }();
 
     return { file, rank };
+}
+
+constexpr BitboardIndex knight_distance(
+    const Square& first, const Square& second)
+{
+    static constexpr std::array ndis {
+        0, 3, 2, 3, 2, 3, 4, 5,
+        3, 2, 1, 2, 3, 4, 3, 4,
+        2, 1, 4, 3, 2, 3, 4, 5,
+        3, 2, 3, 2, 3, 4, 3, 4,
+        2, 3, 2, 3, 4, 3, 4, 5,
+        3, 4, 3, 4, 3, 4, 5, 4,
+        4, 3, 4, 3, 4, 5, 4, 5,
+        5, 4, 5, 4, 5, 4, 5, 6
+    };
+
+    static constexpr std::array corner {
+        1, 0, 0, 0, 0, 0, 0, 1,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        1, 0, 0, 0, 0, 0, 0, 1
+    };
+
+    const auto firstIdx  = static_cast<int>(first.index());
+    const auto secondIdx = static_cast<int>(second.index());
+
+    // NB. this isn't the same as manhattan_distance()
+    const auto absDist = [firstIdx, secondIdx] {
+        const auto rankDist = (firstIdx | 7) - (secondIdx | 7);
+        const auto fileDist = (firstIdx & 7) - (secondIdx & 7);
+
+        return std::abs(rankDist) + std::abs(fileDist);
+    }();
+
+    auto dist = ndis.at(static_cast<size_t>(absDist));
+
+    if (std::cmp_equal(absDist, 9))
+        dist += 2 * (corner.at(static_cast<size_t>(firstIdx)) ^ corner.at(static_cast<size_t>(secondIdx)));
+
+    assert(dist >= 0);
+    assert(dist <= 6);
+
+    return static_cast<BitboardIndex>(dist);
 }
 
 } // namespace chess::board

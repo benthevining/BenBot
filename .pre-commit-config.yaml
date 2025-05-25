@@ -91,7 +91,7 @@ repos:
   rev: v2.4.1
   hooks:
   - id: codespell
-    args: [--write-changes]
+    args: [--write-changes, --ignore-words=config/codespell_ignore.txt]
 
     # C++ formatting & linting
 - repo: https://github.com/pre-commit/mirrors-clang-format

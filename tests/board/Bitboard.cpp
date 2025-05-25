@@ -39,6 +39,15 @@ TEST_CASE("Bitboard - empty", TAGS)
     STATIC_REQUIRE(std::ranges::empty(empty.squares()));
 }
 
+TEST_CASE("Bitboard - all", TAGS)
+{
+    static constexpr auto all = bitboard_masks::all();
+
+    STATIC_REQUIRE(all.any());
+    STATIC_REQUIRE(! all.none());
+    STATIC_REQUIRE(all.count() == chess::board::NUM_SQUARES);
+}
+
 [[nodiscard]] static constexpr auto get_squares(const Bitboard& board)
 {
     return board.squares() | std::ranges::to<std::vector>();

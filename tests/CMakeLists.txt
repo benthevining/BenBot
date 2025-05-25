@@ -53,3 +53,13 @@ catch_discover_tests (
         SKIP_REGULAR_EXPRESSION "SKIPPED:"
 )
 # cmake-format: on
+
+#
+
+add_executable (bitboard_printer)
+
+target_compile_features (bitboard_printer PRIVATE cxx_std_23)
+
+# target_link_libraries(bitboard_printer PRIVATE libchess::libchess)
+
+target_sources (bitboard_printer PRIVATE printer.cpp)
