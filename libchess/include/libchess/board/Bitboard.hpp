@@ -19,12 +19,14 @@
 #include <cstdint> // IWYU pragma: keep - for std::uint_least64_t
 #include <format>
 #include <libchess/board/Square.hpp>
+#include <libchess/pieces/Colors.hpp>
 #include <ranges>
 #include <string>
 #include <typeindex> // for std::hash
 
 namespace chess::board {
 
+using pieces::Color;
 using std::size_t;
 
 /** This class is similar to ``std::bitset``, in that it is a simple collection of 64 bits,
@@ -443,6 +445,65 @@ namespace masks {
             /// @}
 
         } // namespace black
+
+        /// @ingroup board
+        /// @{
+
+        /** Returns a bitboard mask for the starting position of the pawns for the given side. */
+        [[nodiscard, gnu::const]] constexpr Bitboard pawns(const Color color) noexcept
+        {
+            if (color == Color::White)
+                return white::pawns();
+
+            return black::pawns();
+        }
+
+        /** Returns a bitboard mask for the starting position of the rooks for the given side. */
+        [[nodiscard, gnu::const]] constexpr Bitboard rooks(const Color color) noexcept
+        {
+            if (color == Color::White)
+                return white::rooks();
+
+            return black::rooks();
+        }
+
+        /** Returns a bitboard mask for the starting position of the knights for the given side. */
+        [[nodiscard, gnu::const]] constexpr Bitboard knights(const Color color) noexcept
+        {
+            if (color == Color::White)
+                return white::knights();
+
+            return black::knights();
+        }
+
+        /** Returns a bitboard mask for the starting position of the bishops for the given side. */
+        [[nodiscard, gnu::const]] constexpr Bitboard bishops(const Color color) noexcept
+        {
+            if (color == Color::White)
+                return white::bishops();
+
+            return black::bishops();
+        }
+
+        /** Returns a bitboard mask for the starting position of the queen for the given side. */
+        [[nodiscard, gnu::const]] constexpr Bitboard queen(const Color color) noexcept
+        {
+            if (color == Color::White)
+                return white::queen();
+
+            return black::queen();
+        }
+
+        /** Returns a bitboard mask for the starting position of the king for the given side. */
+        [[nodiscard, gnu::const]] constexpr Bitboard king(const Color color) noexcept
+        {
+            if (color == Color::White)
+                return white::king();
+
+            return black::king();
+        }
+
+        /// @}
 
     } // namespace starting
 

@@ -28,6 +28,7 @@
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdint> // IWYU pragma: keep - for std::uint_fast64_t
 #include <format>
+#include <libchess/pieces/Colors.hpp>
 #include <libchess/util/Math.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <stdexcept>
@@ -41,6 +42,8 @@
     @ingroup board
  */
 namespace chess::board {
+
+using pieces::Color;
 
 /** Unsigned integer type used for bitboard indices.
     Valid bitboard indices are in the range ``[0, 63]``.
@@ -188,6 +191,15 @@ struct Square final {
     {
         return std::cmp_greater_equal(
             std::to_underlying(rank), std::to_underlying(Rank::Five));
+    }
+
+    /** Returns true if this square is within the territory for the given color. */
+    [[nodiscard]] constexpr bool is_territory_for(const Color color) const noexcept
+    {
+        if (color == Color::White)
+            return is_white_territory();
+
+        return is_black_territory();
     }
     /// @}
 

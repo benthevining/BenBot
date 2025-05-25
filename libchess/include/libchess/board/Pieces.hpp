@@ -15,20 +15,23 @@
 
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libchess/board/Bitboard.hpp>
+#include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
 
 namespace chess::board {
 
+using pieces::Color;
 using std::size_t;
 
 /** This class encapsulates a bitboard for each piece type.
     An instance of this class encodes the locations of all pieces for one side.
 
     @ingroup board
-
-    @todo constructors to init to starting pos
  */
 struct Pieces final {
+    /** Creates a Pieces object encoding the starting position for the given side. */
+    explicit constexpr Pieces(Color color) noexcept;
+
     /** This bitboard holds the locations of this side's pawns. */
     Bitboard pawns;
 
@@ -44,7 +47,9 @@ struct Pieces final {
     /** This bitboard holds the locations of this side's queens. */
     Bitboard queens;
 
-    /** This bitboard holds the locations of this side's king. */
+    /** This bitboard holds the locations of this side's king.
+        This board will never have more than a single bit set.
+     */
     Bitboard king;
 
     /** Returns a bitboard that is a union of each individual piece-type bitboard.
@@ -80,6 +85,16 @@ struct Pieces final {
   `----'     `----'             `--`---'     ---`-'                     `--" `--" `--"
 
  */
+
+constexpr Pieces::Pieces(const Color color) noexcept
+    : pawns { masks::starting::pawns(color) }
+    , knights { masks::starting::knights(color) }
+    , bishops { masks::starting::bishops(color) }
+    , rooks { masks::starting::rooks(color) }
+    , queens { masks::starting::queen(color) }
+    , king { masks::starting::king(color) }
+{
+}
 
 constexpr Bitboard Pieces::occupied() const noexcept
 {

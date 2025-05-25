@@ -28,9 +28,11 @@ set_target_properties (
     libchess PROPERTIES CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF DEBUG_POSTFIX -d
 )
 
-set (libchess_headers
-     # cmake-format: sortable
-     board/Bitboard.hpp board/Pieces.hpp board/Square.hpp pieces/PieceTypes.hpp util/Math.hpp
+set (
+    libchess_headers
+    # cmake-format: sortable
+    board/Bitboard.hpp board/Pieces.hpp board/Square.hpp pieces/Colors.hpp pieces/PieceTypes.hpp
+    util/Math.hpp
 )
 
 set (libchess_sources # cmake-format: sortable
