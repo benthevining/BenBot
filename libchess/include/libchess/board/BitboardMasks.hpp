@@ -19,6 +19,8 @@
 #pragma once
 
 #include <libchess/board/Bitboard.hpp>
+#include <libchess/board/File.hpp>
+#include <libchess/board/Rank.hpp>
 #include <libchess/pieces/Colors.hpp>
 
 /** This namespace provides some compile-time bitboard constants and masks.
@@ -93,7 +95,6 @@ namespace chess::board::masks {
 
 /** This namespace provides some compile-time bitboard masks for files.
     @ingroup bitboard_masks
-    @todo get(File)
  */
 namespace files {
 
@@ -148,13 +149,27 @@ namespace files {
         return Bitboard { 0x8080808080808080 };
     }
 
+    /** Returns a bitboard with all squares on the requested file set to 1. */
+    [[nodiscard, gnu::const]] constexpr Bitboard get(const File file) noexcept
+    {
+        switch (file) {
+            case File::B: return b();
+            case File::C: return c();
+            case File::D: return d();
+            case File::E: return e();
+            case File::F: return f();
+            case File::G: return g();
+            case File::H: return h();
+            default     : return a();
+        }
+    }
+
     /// @}
 
 } // namespace files
 
 /** This namespace provides some compile-time bitboard masks for ranks.
     @ingroup bitboard_masks
-    @todo get(Rank)
  */
 namespace ranks {
 
@@ -207,6 +222,21 @@ namespace ranks {
     [[nodiscard, gnu::const]] consteval Bitboard eight() noexcept
     {
         return Bitboard { 0xFF00000000000000 };
+    }
+
+    /** Returns a bitboard with all squares on the requested rank set to 1. */
+    [[nodiscard, gnu::const]] constexpr Bitboard get(const Rank rank) noexcept
+    {
+        switch (rank) {
+            case Rank::Two  : return two();
+            case Rank::Three: return three();
+            case Rank::Four : return four();
+            case Rank::Five : return five();
+            case Rank::Six  : return six();
+            case Rank::Seven: return seven();
+            case Rank::Eight: return eight();
+            default         : return one();
+        }
     }
 
     /// @}
