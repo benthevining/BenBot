@@ -21,6 +21,8 @@
 #include <cstdint> // IWYU pragma: keep - for std::uint_fast8_t
 #include <format>
 #include <magic_enum/magic_enum.hpp>
+#include <stdexcept>
+#include <string_view>
 
 /** This namespace contains classes for encoding information about the various chess piece types.
     @ingroup pieces
@@ -37,8 +39,6 @@ using std::size_t;
 
     @ingroup pieces
     @see utf8 values
-
-    @todo from_string()
  */
 enum class Type : std::uint_fast8_t {
     WhitePawn, ///< A White pawn.
@@ -74,6 +74,17 @@ enum class Type : std::uint_fast8_t {
 {
     return type == Type::Bishop || type == Type::Rook || type == Type::Queen;
 }
+
+/** Parses a piece type from a string.
+    This function recognizes single-letter abbreviations (such as ``N`` for knight, etc.),
+    or full piece names.
+
+    @throws std::invalid_argument An exception will be thrown if the input string cannot
+    be parsed correctly.
+
+    Note that this function always returns ``WhitePawn`` for pawns.
+ */
+[[nodiscard, gnu::const]] constexpr Type from_string(std::string_view text);
 
 /// @}
 
@@ -231,3 +242,47 @@ formatter<chess::pieces::Type>::format(
 }
 
 } // namespace std
+
+namespace chess::pieces {
+
+constexpr Type from_string(const std::string_view text)
+{
+    if (text.length() == 1uz) {
+        switch (text.front()) {
+            case 'p': [[fallthrough]];
+            case 'P': return Type::WhitePawn;
+
+            case 'n': [[fallthrough]];
+            case 'N': return Type::Knight;
+
+            case 'b': [[fallthrough]];
+            case 'B': return Type::Bishop;
+
+            case 'r': [[fallthrough]];
+            case 'R': return Type::Rook;
+
+            case 'q': [[fallthrough]];
+            case 'Q': return Type::Queen;
+
+            case 'k': [[fallthrough]];
+            case 'K': return Type::King;
+
+            default:
+                throw std::invalid_argument {
+                    std::format("Cannot parse piece type from invalid input string: {}", text)
+                };
+        }
+    }
+
+    if (const auto value = magic_enum::enum_cast<Type>(text))
+        return *value;
+
+    if (text == "Pawn")
+        return Type::WhitePawn;
+
+    throw std::invalid_argument {
+        std::format("Cannot parse piece type from invalid input string: {}", text)
+    };
+}
+
+} // namespace chess::pieces
