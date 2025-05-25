@@ -120,10 +120,20 @@ namespace masks {
     /// @ingroup board
     /// @{
 
-    /** Returns a bitboard with all bits set to 1. */
+    /** Returns a bitboard with all bits set to 1.
+        @see none()
+     */
     [[nodiscard, gnu::const]] consteval Bitboard all() noexcept
     {
         return Bitboard { 0XFFFFFFFFFFFFFFFF };
+    }
+
+    /** Returns a bitboard with all bits set to 0.
+        @see all()
+     */
+    [[nodiscard, gnu::const]] consteval Bitboard none() noexcept
+    {
+        return {};
     }
 
     /** Returns a bitboard with all the dark squares set to 1.
@@ -140,6 +150,22 @@ namespace masks {
     [[nodiscard, gnu::const]] consteval Bitboard light_squares() noexcept
     {
         return Bitboard { 0x55AA55AA55AA55AA };
+    }
+
+    /** Returns a bitboard with all squares on the A1-H8 long diagonal set to 1.
+        @see a8_h1_diagonal()
+     */
+    [[nodiscard, gnu::const]] consteval Bitboard a1_h8_diagonal() noexcept
+    {
+        return Bitboard { 0x8040201008040201 };
+    }
+
+    /** Returns a bitboard with all squares on the A1-H8 long diagonal set to 1.
+        @see a1_h8_diagonal()
+     */
+    [[nodiscard, gnu::const]] consteval Bitboard a8_h1_diagonal() noexcept
+    {
+        return Bitboard { 0x0102040810204080 };
     }
 
     /// @}
@@ -204,42 +230,65 @@ namespace masks {
 
     } // namespace files
 
-    /// @ingroup board
-    /// @{
-
-    /** Returns a bitboard with all squares on the first rank set to 1.
-        @see rank_8()
+    /** This namespace provides some compile-time bitboard masks for ranks.
+        @ingroup board
      */
-    [[nodiscard, gnu::const]] consteval Bitboard rank_1() noexcept
-    {
-        return Bitboard { 0x00000000000000FF };
-    }
+    namespace ranks {
 
-    /** Returns a bitboard with all squares on the eighth rank set to 1.
-        @see rank_1()
-     */
-    [[nodiscard, gnu::const]] consteval Bitboard rank_8() noexcept
-    {
-        return Bitboard { 0xFF00000000000000 };
-    }
+        /// @ingroup board
+        /// @{
 
-    /** Returns a bitboard with all squares on the A1-H8 long diagonal set to 1.
-        @see a8_h1_diagonal()
-     */
-    [[nodiscard, gnu::const]] consteval Bitboard a1_h8_diagonal() noexcept
-    {
-        return Bitboard { 0x8040201008040201 };
-    }
+        /** Returns a bitboard with all squares on the first rank set to 1. */
+        [[nodiscard, gnu::const]] consteval Bitboard one() noexcept
+        {
+            return Bitboard { 0x00000000000000FF };
+        }
 
-    /** Returns a bitboard with all squares on the A1-H8 long diagonal set to 1.
-        @see a1_h8_diagonal()
-     */
-    [[nodiscard, gnu::const]] consteval Bitboard a8_h1_diagonal() noexcept
-    {
-        return Bitboard { 0x0102040810204080 };
-    }
+        /** Returns a bitboard with all squares on the second rank set to 1. */
+        [[nodiscard, gnu::const]] consteval Bitboard two() noexcept
+        {
+            return Bitboard { 0XFF00 };
+        }
 
-    /// @}
+        /** Returns a bitboard with all squares on the third rank set to 1. */
+        [[nodiscard, gnu::const]] consteval Bitboard three() noexcept
+        {
+            return Bitboard { 0XFF0000 };
+        }
+
+        /** Returns a bitboard with all squares on the fourth rank set to 1. */
+        [[nodiscard, gnu::const]] consteval Bitboard four() noexcept
+        {
+            return Bitboard { 0XFF000000 };
+        }
+
+        /** Returns a bitboard with all squares on the fifth rank set to 1. */
+        [[nodiscard, gnu::const]] consteval Bitboard five() noexcept
+        {
+            return Bitboard { 0XFF00000000 };
+        }
+
+        /** Returns a bitboard with all squares on the sixth rank set to 1. */
+        [[nodiscard, gnu::const]] consteval Bitboard six() noexcept
+        {
+            return Bitboard { 0XFF0000000000 };
+        }
+
+        /** Returns a bitboard with all squares on the seventh rank set to 1. */
+        [[nodiscard, gnu::const]] consteval Bitboard seven() noexcept
+        {
+            return Bitboard { 0XFF000000000000 };
+        }
+
+        /** Returns a bitboard with all squares on the eighth rank set to 1. */
+        [[nodiscard, gnu::const]] consteval Bitboard eight() noexcept
+        {
+            return Bitboard { 0xFF00000000000000 };
+        }
+
+        /// @}
+
+    } // namespace ranks
 
     /** This namespace provides some compile-time bitboard constants for the starting positions
         of each piece type.
