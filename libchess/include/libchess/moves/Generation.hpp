@@ -12,6 +12,11 @@
     or blocking pieces, they deal purely with the piece's movement mechanics.
 
     @ingroup moves
+
+    @todo pawns
+    @todo bishops
+    @todo rooks
+    @todo queens
  */
 
 #pragma once
@@ -47,13 +52,10 @@ soWeWe -10   |     |   -6  soEaEa
  */
 [[nodiscard, gnu::const]] constexpr Bitboard knight(const Square& starting) noexcept;
 
-/// @}
+/** Calculates all possible king moves from the given starting square. */
+[[nodiscard, gnu::const]] constexpr Bitboard king(const Square& starting) noexcept;
 
-// pawns
-// bishops
-// rooks
-// queens
-// king
+/// @}
 
 /*
                          ___                           ,--,
@@ -78,8 +80,8 @@ constexpr Bitboard knight(const Square& starting) noexcept
 
     static constexpr auto notAFile  = file_masks::a().inverse();
     static constexpr auto notHFile  = file_masks::h().inverse();
-    static constexpr auto notGHFile = (file_masks::h() | file_masks::g()).inverse();
     static constexpr auto notABFile = (file_masks::a() | file_masks::b()).inverse();
+    static constexpr auto notGHFile = (file_masks::g() | file_masks::h()).inverse();
 
     const Bitboard startPos { starting };
 
@@ -93,6 +95,41 @@ constexpr Bitboard knight(const Square& starting) noexcept
     moves |= (startPos & notABFile) << 6uz;  // noWeWe
     moves |= (startPos & notABFile) >> 10uz; // soWeWe
     moves |= (startPos & notAFile) >> 17uz;  // soSoWe
+
+    return moves;
+}
+
+constexpr Bitboard king(const Square& starting) noexcept
+{
+    namespace file_masks = board::masks::files;
+
+    auto shift_east = [](const Bitboard& board) {
+        static constexpr auto notHFile = file_masks::h().inverse();
+
+        return (board & notHFile) << 1uz;
+    };
+
+    auto shift_west = [](const Bitboard& board) {
+        static constexpr auto notAFile = file_masks::a().inverse();
+
+        return (board & notAFile) >> 1uz;
+    };
+
+    auto shift_north = [](const Bitboard& board) {
+        return board << 8uz;
+    };
+
+    auto shift_south = [](const Bitboard& board) {
+        return board >> 8uz;
+    };
+
+    Bitboard startPos { starting };
+
+    auto moves = shift_east(startPos) | shift_west(startPos);
+
+    startPos |= moves;
+
+    moves |= shift_north(startPos) | shift_south(startPos);
 
     return moves;
 }
