@@ -33,10 +33,6 @@ using std::size_t;
 
 /** This enum identifies the different types of pieces.
 
-    Black & white pawns have different enums to encode the differing movement direction;
-    therefore, a Type enum on its own completely encodes the movement mechanics
-    (except for castling or en passant).
-
     @ingroup pieces
     @see utf8 values
  */
