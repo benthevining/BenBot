@@ -61,7 +61,7 @@ TEST_CASE("Pieces - is_file_half_open()", TAGS)
     for (const auto file : magic_enum::enum_values<File>())
         REQUIRE(! pieces.is_file_half_open(file));
 
-    pieces.pawns.set(Square { File::A, Rank::Two }, false);
+    pieces.pawns.unset(Square { File::A, Rank::Two });
 
     REQUIRE(pieces.is_file_half_open(File::A));
 }
@@ -73,17 +73,17 @@ TEST_CASE("Pieces - has_bishop_pair()", TAGS)
     REQUIRE(pieces.has_bishop_pair());
 
     // remove LSB
-    pieces.bishops.set(Square { File::F, Rank::One }, false);
+    pieces.bishops.unset(Square { File::F, Rank::One });
 
     REQUIRE(! pieces.has_bishop_pair());
 
     // add another DSB
-    pieces.bishops.set(Square { File::A, Rank::Five }, true);
+    pieces.bishops.set(Square { File::A, Rank::Five });
 
     REQUIRE(! pieces.has_bishop_pair());
 
     // add LSB
-    pieces.bishops.set(Square { File::E, Rank::Four }, true);
+    pieces.bishops.set(Square { File::E, Rank::Four });
 
     REQUIRE(pieces.has_bishop_pair());
 

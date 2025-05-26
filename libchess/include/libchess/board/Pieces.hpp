@@ -212,11 +212,11 @@ constexpr void Pieces::capture_at(const Square square) noexcept
 
     assert(! king.test(idx));
 
-    pawns.set(idx, false);
-    knights.set(idx, false);
-    bishops.set(idx, false);
-    rooks.set(idx, false);
-    queens.set(idx, false);
+    pawns.unset(idx);
+    knights.unset(idx);
+    bishops.unset(idx);
+    rooks.unset(idx);
+    queens.unset(idx);
 }
 
 } // namespace chess::board

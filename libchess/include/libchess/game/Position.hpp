@@ -228,12 +228,12 @@ constexpr void Position::make_move(const Move& move) noexcept
         auto& ourPieces = isWhite ? whitePieces : blackPieces;
         auto& bitboard  = ourPieces.get_type(move.piece);
 
-        bitboard.set(move.from, false);
+        bitboard.unset(move.from);
 
         if (move.is_promotion())
-            ourPieces.get_type(*move.promotedType).set(move.to, true);
+            ourPieces.get_type(*move.promotedType).set(move.to);
         else
-            bitboard.set(move.to, true);
+            bitboard.set(move.to);
 
         if (move.is_castling()) { // update rook position
             const bool castledQueenside = move.to.is_queenside();
@@ -241,11 +241,11 @@ constexpr void Position::make_move(const Move& move) noexcept
             auto& rooks = ourPieces.rooks;
 
             if (castledQueenside) {
-                rooks.set(Square { File::A, move.to.rank }, false);
-                rooks.set(Square { File::D, move.to.rank }, true);
+                rooks.unset(Square { File::A, move.to.rank });
+                rooks.set(Square { File::D, move.to.rank });
             } else {
-                rooks.set(Square { File::H, move.to.rank }, false);
-                rooks.set(Square { File::F, move.to.rank }, true);
+                rooks.unset(Square { File::H, move.to.rank });
+                rooks.set(Square { File::F, move.to.rank });
             }
         }
     }

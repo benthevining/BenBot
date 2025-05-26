@@ -275,7 +275,7 @@ constexpr Move Move::from_string(
     // string is of the form Nc6
     return {
         .from  = Square {}, // TODO: cannot tell the starting square
-        .to    = Square::from_string(text.substr(1uz)),
+        .to    = Square::from_string(text.substr(text.length() - 2uz)),
         .piece = pieces::from_string(text.substr(0uz, 1uz))
     };
 

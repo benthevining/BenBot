@@ -38,8 +38,6 @@ using std::size_t;
 
     @see Pieces, masks
     @ingroup board
-
-    @todo set() don't take an argument; add an unset() method instead
  */
 struct Bitboard final {
     /** Unsigned integer type used for serialization of bitboards. */
@@ -80,16 +78,28 @@ struct Bitboard final {
         return bits[index];
     }
 
-    /** Sets the given square's bit to the given value. */
-    constexpr void set(const Square square, const bool value = true) noexcept { set(square.index(), value); }
+    /** Sets the given square's bit to 1. */
+    constexpr void set(const Square square) noexcept { set(square.index()); }
 
-    /** Sets the given square's bit to the given value.
+    /** Sets the given square's bit to 1.
         This method asserts if the given index is greater than 63.
      */
-    constexpr void set(const BitboardIndex index, const bool value = true) noexcept
+    constexpr void set(const BitboardIndex index) noexcept
     {
         assert(index <= MAX_BITBOARD_IDX);
-        bits[index] = value;
+        bits[index] = true;
+    }
+
+    /** Sets the given square's bit to 0. */
+    constexpr void unset(const Square square) noexcept { unset(square.index()); }
+
+    /** Sets the given square's bit to 0.
+        This method asserts if the given index is greater than 63.
+     */
+    constexpr void unset(const BitboardIndex index) noexcept
+    {
+        assert(index <= MAX_BITBOARD_IDX);
+        bits[index] = false;
     }
 
     /** Resets all bits to 0. */
