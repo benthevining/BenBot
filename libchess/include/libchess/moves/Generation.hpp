@@ -13,8 +13,6 @@
     "attacks on an otherwise empty board".
 
     @ingroup moves
-
-    @todo queens
  */
 
 #pragma once
@@ -57,6 +55,9 @@ soWeWe -10   |     |   -6  soEaEa
 
 /** Calculates all possible rook moves from the given starting square. */
 [[nodiscard, gnu::const]] constexpr Bitboard rook(const Square& starting) noexcept;
+
+/** Calculates all possible queen moves from the given starting square. */
+[[nodiscard, gnu::const]] constexpr Bitboard queen(const Square& starting) noexcept;
 
 /** Calculates all possible king moves from the given starting square. */
 [[nodiscard, gnu::const]] constexpr Bitboard king(const Square& starting) noexcept;
@@ -142,6 +143,11 @@ constexpr Bitboard bishop(const Square& starting) noexcept
     const auto notStartingSquare = Bitboard { starting }.inverse();
 
     return (diagMask | antiDiagMask) & notStartingSquare;
+}
+
+constexpr Bitboard queen(const Square& starting) noexcept
+{
+    return rook(starting) | bishop(starting);
 }
 
 namespace detail {

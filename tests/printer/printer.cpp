@@ -12,7 +12,7 @@
 
 int main()
 {
-    static constexpr auto moves = chess::moves::bishop({ chess::board::File::A,
+    static constexpr auto moves = chess::moves::queen({ chess::board::File::A,
         chess::board::Rank::One });
 
     std::println("{}", chess::board::print_ascii(moves));
