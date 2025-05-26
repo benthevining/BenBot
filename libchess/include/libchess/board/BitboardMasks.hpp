@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <cstddef> // IWYU pragma: keep - for size_t
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Rank.hpp>
@@ -27,6 +28,8 @@
     @ingroup bitboard_masks
  */
 namespace chess::board::masks {
+
+using std::size_t;
 
 /// @ingroup bitboard_masks
 /// @{
@@ -152,16 +155,7 @@ namespace files {
     /** Returns a bitboard with all squares on the requested file set to 1. */
     [[nodiscard, gnu::const]] constexpr Bitboard get(const File file) noexcept
     {
-        switch (file) {
-            case File::B: return b();
-            case File::C: return c();
-            case File::D: return d();
-            case File::E: return e();
-            case File::F: return f();
-            case File::G: return g();
-            case File::H: return h();
-            default     : return a();
-        }
+        return a() << static_cast<size_t>(file);
     }
 
     /// @}
@@ -227,6 +221,9 @@ namespace ranks {
     /** Returns a bitboard with all squares on the requested rank set to 1. */
     [[nodiscard, gnu::const]] constexpr Bitboard get(const Rank rank) noexcept
     {
+        // TODO - could be branchless:
+        // Bitboard{0xff} << (index & 56)
+
         switch (rank) {
             case Rank::Two  : return two();
             case Rank::Three: return three();

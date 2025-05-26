@@ -9,12 +9,12 @@
 /** @file
     This file provides functions for generating possible moves for each piece type
     from a given starting square. These functions are not concerned with captures
-    or blocking pieces, they deal purely with the piece's movement mechanics.
+    or blocking pieces, they deal purely with the piece's movement mechanics - i.e.,
+    "attacks on an otherwise empty board".
 
     @ingroup moves
 
     @todo bishops
-    @todo rooks
     @todo queens
  */
 
@@ -52,6 +52,9 @@ soWeWe -10   |     |   -6  soEaEa
     @endverbatim
  */
 [[nodiscard, gnu::const]] constexpr Bitboard knight(const Square& starting) noexcept;
+
+/** Calculates all possible rook moves from the given starting square. */
+[[nodiscard, gnu::const]] constexpr Bitboard rook(const Square& starting) noexcept;
 
 /** Calculates all possible king moves from the given starting square. */
 [[nodiscard, gnu::const]] constexpr Bitboard king(const Square& starting) noexcept;
@@ -98,6 +101,16 @@ constexpr Bitboard knight(const Square& starting) noexcept
     moves |= (startPos & notAFile) >> 17uz;  // soSoWe
 
     return moves;
+}
+
+constexpr Bitboard rook(const Square& starting) noexcept
+{
+    const auto rankMask = board::masks::ranks::get(starting.rank);
+    const auto fileMask = board::masks::files::get(starting.file);
+
+    const auto notStartingSquare = Bitboard { starting }.inverse();
+
+    return (rankMask | fileMask) & notStartingSquare;
 }
 
 namespace detail {
