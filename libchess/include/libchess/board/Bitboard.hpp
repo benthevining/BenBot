@@ -54,6 +54,12 @@ struct Bitboard final {
     {
     }
 
+    /** Constructs a bitboard with only a single square set to 1. */
+    explicit constexpr Bitboard(const Square& square) noexcept
+    {
+        set(square);
+    }
+
     /** Returns true if the two bitboards have all the same bits set. */
     [[nodiscard]] constexpr bool operator==(const Bitboard&) const noexcept = default;
 
@@ -128,6 +134,14 @@ struct Bitboard final {
      */
     [[nodiscard]] constexpr auto squares() const noexcept;
 
+    /** Returns a copy of this bitboard with all bits flipped (binary NOT). */
+    [[nodiscard]] constexpr Bitboard inverse() const noexcept
+    {
+        auto copy = *this;
+        copy.bits.flip();
+        return copy;
+    }
+
     /** Performs binary AND with another bitboard. */
     constexpr Bitboard& operator&=(const Bitboard& other) noexcept
     {
@@ -149,12 +163,22 @@ struct Bitboard final {
         return *this;
     }
 
-    /** Returns a copy of this bitboard with all bits flipped (binary NOT). */
-    [[nodiscard]] constexpr Bitboard inverse() const noexcept
+    /** Performs binary shift left (towards higher index positions).
+        Zeroes are shifted in, and bits that would go to an index out of range are dropped.
+     */
+    constexpr Bitboard& operator<<=(const size_t num) noexcept
     {
-        auto copy = *this;
-        copy.bits.flip();
-        return copy;
+        bits <<= num;
+        return *this;
+    }
+
+    /** Performs binary shift right (towards lower index positions).
+        Zeroes are shifted in, and bits that would go to an index out of range are dropped.
+     */
+    constexpr Bitboard& operator>>=(const size_t num) noexcept
+    {
+        bits >>= num;
+        return *this;
     }
 
 private:
@@ -191,6 +215,26 @@ private:
 {
     auto ret = lhs;
     ret ^= rhs;
+    return ret;
+}
+
+/** Returns a copy of the bitboard with a binary shift left applied.
+    @relates Bitboard
+ */
+[[nodiscard, gnu::const]] constexpr Bitboard operator<<(const Bitboard& board, const size_t num) noexcept
+{
+    auto ret = board;
+    ret <<= num;
+    return ret;
+}
+
+/** Returns a copy of the bitboard with a binary shift right applied.
+    @relates Bitboard
+ */
+[[nodiscard, gnu::const]] constexpr Bitboard operator>>(const Bitboard& board, const size_t num) noexcept
+{
+    auto ret = board;
+    ret >>= num;
     return ret;
 }
 

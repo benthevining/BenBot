@@ -41,6 +41,7 @@ set (
     board/Square.hpp
     game/CastlingRights.hpp
     game/Position.hpp
+    moves/Generation.hpp
     moves/Move.hpp
     pieces/Colors.hpp
     pieces/PieceTypes.hpp
