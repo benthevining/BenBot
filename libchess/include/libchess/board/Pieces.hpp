@@ -34,6 +34,9 @@ using PieceType = pieces::Type;
 /** This class encapsulates a bitboard for each piece type.
     An instance of this class encodes the locations of all pieces for one side.
 
+    @invariant No more than one piece type may occupy a given square; that is, each
+    bitboard index will only have its bit set in at most one of the piece type bitboards.
+
     @ingroup board
 
     @todo pawn front & rear fills
@@ -60,7 +63,8 @@ struct Pieces final {
     Bitboard queens;
 
     /** This bitboard holds the locations of this side's king.
-        This board will never have more than a single bit set.
+
+        @invariant This board will never have more than a single bit set.
      */
     Bitboard king;
 

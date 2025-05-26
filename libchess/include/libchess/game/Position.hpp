@@ -47,6 +47,9 @@ using pieces::Color;
 
     @ingroup game
 
+    @todo make_move()
+    @todo unmake_move()
+
     @todo Detect threefold reps by keeping array<Position, 6> ?
 
     @todo Funcs to get passed pawns, backward pawns
@@ -55,10 +58,20 @@ using pieces::Color;
     @todo std::hash
  */
 struct Position final {
-    /** The positions of the White pieces. */
+    /** The positions of the White pieces.
+
+        @invariant The bitboard indices of the bits set in ``whitePieces``
+        must not overlap with any of the indices of the bits set in
+        ``blackPieces``.
+     */
     board::Pieces whitePieces { Color::White };
 
-    /** The positions of the Black pieces. */
+    /** The positions of the Black pieces.
+
+        @invariant The bitboard indices of the bits set in ``blackPieces``
+        must not overlap with any of the indices of the bits set in
+        ``whitePieces``.
+     */
     board::Pieces blackPieces { Color::Black };
 
     /** Indicates whose move it is in this position. */
@@ -82,6 +95,8 @@ struct Position final {
         captures and pawn moves; if the counter reaches 100 and
         the side to move has at least 1 legal move, then the game
         is drawn.
+
+        @invariant This value will never be greater than 100.
      */
     std::uint_least8_t halfmoveClock { 0 };
 
