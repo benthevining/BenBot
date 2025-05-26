@@ -22,6 +22,7 @@
 #include <libchess/board/File.hpp>
 #include <libchess/board/Pieces.hpp>
 #include <libchess/board/Square.hpp>
+#include <libchess/game/CastlingRights.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <optional>
@@ -45,7 +46,6 @@ using pieces::Color;
 
     @ingroup game
 
-    @todo castling rights for each side
     @todo Detect threefold reps by keeping array<Position, 6> ?
 
     @todo Funcs to get passed pawns, backward pawns
@@ -63,6 +63,12 @@ struct Position final {
 
     /** Indicates whose move it is in this position. */
     Color sideToMove { Color::White };
+
+    /** Castling rights for the White player. */
+    CastlingRights whiteCastlingRights;
+
+    /** Castling rights for the Black player. */
+    CastlingRights blackCastlingRights;
 
     /** If en passant is possible in this position, this holds
         the square that the pawn would land on after capturing

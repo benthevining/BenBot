@@ -39,6 +39,7 @@ set (
     board/Pieces.hpp
     board/Rank.hpp
     board/Square.hpp
+    game/CastlingRights.hpp
     game/Position.hpp
     pieces/Colors.hpp
     pieces/PieceTypes.hpp
