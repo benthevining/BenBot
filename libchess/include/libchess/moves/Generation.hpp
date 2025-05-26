@@ -13,7 +13,6 @@
 
     @ingroup moves
 
-    @todo pawns
     @todo bishops
     @todo rooks
     @todo queens
@@ -24,11 +23,13 @@
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/BitboardMasks.hpp>
 #include <libchess/board/Square.hpp>
+#include <libchess/pieces/Colors.hpp>
 
 namespace chess::moves {
 
 using board::Bitboard;
 using board::Square;
+using pieces::Color;
 
 /// @ingroup moves
 /// @{
@@ -99,37 +100,95 @@ constexpr Bitboard knight(const Square& starting) noexcept
     return moves;
 }
 
+namespace detail {
+
+    [[nodiscard, gnu::const]] constexpr Bitboard shift_north(const Bitboard& board) noexcept
+    {
+        return board << 8uz;
+    }
+
+    [[nodiscard, gnu::const]] constexpr Bitboard shift_south(const Bitboard& board) noexcept
+    {
+        return board >> 8uz;
+    }
+
+    namespace file_masks = board::masks::files;
+    namespace rank_masks = board::masks::ranks;
+
+    static constexpr auto notAFile = file_masks::a().inverse();
+    static constexpr auto notHFile = file_masks::h().inverse();
+
+    [[nodiscard, gnu::const]] constexpr Bitboard shift_east(const Bitboard& board) noexcept
+    {
+        return (board & notHFile) << 1uz;
+    }
+
+    [[nodiscard, gnu::const]] constexpr Bitboard shift_west(const Bitboard& board) noexcept
+    {
+        return (board & notAFile) >> 1uz;
+    }
+
+    [[nodiscard, gnu::const]] constexpr Bitboard shift_northeast(const Bitboard& board) noexcept
+    {
+        return (board & notHFile) << 9uz;
+    }
+
+    [[nodiscard, gnu::const]] constexpr Bitboard shift_northwest(const Bitboard& board) noexcept
+    {
+        return (board & notAFile) << 7uz;
+    }
+
+    [[nodiscard, gnu::const]] constexpr Bitboard shift_southeast(const Bitboard& board) noexcept
+    {
+        return (board & notHFile) >> 7uz;
+    }
+
+    [[nodiscard, gnu::const]] constexpr Bitboard shift_southwest(const Bitboard& board) noexcept
+    {
+        return (board & notAFile) >> 9uz;
+    }
+
+    // TODO: top-level interface for pawn moves? Or query each subtype individually?
+
+    [[nodiscard, gnu::const]] constexpr Bitboard pawn_pushes(
+        const Bitboard& starting, const Color color) noexcept
+    {
+        if (color == Color::White)
+            return shift_north(starting);
+
+        return shift_south(starting);
+    }
+
+    [[nodiscard, gnu::const]] constexpr Bitboard pawn_double_pushes(
+        const Bitboard& starting, const Color color) noexcept
+    {
+        if (color == Color::White)
+            return (starting << 16uz) & rank_masks::four();
+
+        return (starting >> 16uz) & rank_masks::five();
+    }
+
+    // calculates all squares attacked by a pawn
+    [[nodiscard, gnu::const]] constexpr Bitboard pawn_attacks(
+        const Bitboard& starting, const Color color) noexcept
+    {
+        if (color == Color::White)
+            return shift_northeast(starting) | shift_northwest(starting);
+
+        return shift_southeast(starting) | shift_southwest(starting);
+    }
+
+} // namespace detail
+
 constexpr Bitboard king(const Square& starting) noexcept
 {
-    namespace file_masks = board::masks::files;
-
-    auto shift_east = [](const Bitboard& board) {
-        static constexpr auto notHFile = file_masks::h().inverse();
-
-        return (board & notHFile) << 1uz;
-    };
-
-    auto shift_west = [](const Bitboard& board) {
-        static constexpr auto notAFile = file_masks::a().inverse();
-
-        return (board & notAFile) >> 1uz;
-    };
-
-    auto shift_north = [](const Bitboard& board) {
-        return board << 8uz;
-    };
-
-    auto shift_south = [](const Bitboard& board) {
-        return board >> 8uz;
-    };
-
     Bitboard startPos { starting };
 
-    auto moves = shift_east(startPos) | shift_west(startPos);
+    auto moves = detail::shift_east(startPos) | detail::shift_west(startPos);
 
     startPos |= moves;
 
-    moves |= shift_north(startPos) | shift_south(startPos);
+    moves |= detail::shift_north(startPos) | detail::shift_south(startPos);
 
     return moves;
 }
