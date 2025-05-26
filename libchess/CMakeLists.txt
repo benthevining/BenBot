@@ -48,7 +48,7 @@ set (
 )
 
 set (libchess_sources # cmake-format: sortable
-                      board/Bitboard.cpp
+                      board/Bitboard.cpp game/Position.cpp
 )
 
 list (TRANSFORM libchess_headers PREPEND "${CMAKE_CURRENT_LIST_DIR}/include/libchess/")

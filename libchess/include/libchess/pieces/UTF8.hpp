@@ -19,6 +19,7 @@
 #pragma once
 
 #include <libchess/pieces/Colors.hpp>
+#include <libchess/pieces/PieceTypes.hpp>
 #include <string_view>
 
 /** This namespace contains some UTF8 encodings of chess piece symbols.
@@ -72,6 +73,19 @@ namespace white {
         return "\xE2\x99\x94";
     }
 
+    /** Returns a UTF8-encoded symbol for a White piece of the given type. */
+    [[nodiscard, gnu::const]] constexpr std::string_view get(const Type type) noexcept
+    {
+        switch (type) {
+            case Type::Knight: return knight();
+            case Type::Bishop: return bishop();
+            case Type::Rook  : return rook();
+            case Type::Queen : return queen();
+            case Type::King  : return king();
+            default          : return pawn();
+        }
+    }
+
     /// @}
 
 } // namespace white
@@ -120,6 +134,19 @@ namespace black {
     [[nodiscard, gnu::const]] consteval std::string_view king() noexcept
     {
         return "\xE2\x99\x9A";
+    }
+
+    /** Returns a UTF8-encoded symbol for a Black piece of the given type. */
+    [[nodiscard, gnu::const]] constexpr std::string_view get(const Type type) noexcept
+    {
+        switch (type) {
+            case Type::Knight: return knight();
+            case Type::Bishop: return bishop();
+            case Type::Rook  : return rook();
+            case Type::Queen : return queen();
+            case Type::King  : return king();
+            default          : return pawn();
+        }
     }
 
     /// @}
