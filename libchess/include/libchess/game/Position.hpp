@@ -157,6 +157,13 @@ struct Position final {
 
     /** Makes a move to alter the position. */
     constexpr void make_move(const Move& move) noexcept;
+
+    /** Converts a move to a string in algebraic notation.
+        The current state of the position is used to determine whether the move is
+        a capture, and the pieces of the side to move are used for disambiguation
+        if necessary.
+     */
+    [[nodiscard]] std::string move_to_string(const Move& move) const;
 };
 
 /** Creates a UTF8 representation of the given position.

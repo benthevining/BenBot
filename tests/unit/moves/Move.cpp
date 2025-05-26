@@ -7,7 +7,6 @@
  */
 
 #include <catch2/catch_test_macros.hpp>
-#include <format>
 #include <libchess/board/BitboardMasks.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Rank.hpp>
@@ -40,8 +39,6 @@ TEST_CASE("Move - castle_kingside()", TAGS)
         STATIC_REQUIRE(move.piece == PieceType::King);
         STATIC_REQUIRE(! move.is_promotion());
         STATIC_REQUIRE(move.is_castling());
-
-        REQUIRE(std::format("{}", move) == "O-O");
     }
 
     SECTION("Black")
@@ -53,8 +50,6 @@ TEST_CASE("Move - castle_kingside()", TAGS)
         STATIC_REQUIRE(move.piece == PieceType::King);
         STATIC_REQUIRE(! move.is_promotion());
         STATIC_REQUIRE(move.is_castling());
-
-        REQUIRE(std::format("{}", move) == "O-O");
     }
 }
 
@@ -69,8 +64,6 @@ TEST_CASE("Move - castle_queenside()", TAGS)
         STATIC_REQUIRE(move.piece == PieceType::King);
         STATIC_REQUIRE(! move.is_promotion());
         STATIC_REQUIRE(move.is_castling());
-
-        REQUIRE(std::format("{}", move) == "O-O-O");
     }
 
     SECTION("Black")
@@ -82,8 +75,6 @@ TEST_CASE("Move - castle_queenside()", TAGS)
         STATIC_REQUIRE(move.piece == PieceType::King);
         STATIC_REQUIRE(! move.is_promotion());
         STATIC_REQUIRE(move.is_castling());
-
-        REQUIRE(std::format("{}", move) == "O-O-O");
     }
 }
 

@@ -6,6 +6,7 @@
  * ======================================================================================
  */
 
+#include <format>
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
@@ -16,6 +17,42 @@
 #include <string_view>
 
 namespace chess::game {
+
+std::string Position::move_to_string(const Move& move) const
+{
+    if (move.is_castling()) {
+        if (move.to.is_kingside())
+            return "O-O";
+
+        return "O-O-O";
+    }
+
+    const bool isWhite = sideToMove == Color::White;
+
+    const auto& ourPieces      = isWhite ? whitePieces : blackPieces;
+    const auto& opponentPieces = isWhite ? blackPieces : whitePieces;
+
+    const bool isCapture = opponentPieces.occupied().test(move.to);
+
+    if (move.is_promotion()) {
+        if (isCapture)
+            return std::format("{}x{}={}", move.from.file, move.to, *move.promotedType);
+
+        return std::format("{}={}", move.to, *move.promotedType);
+    }
+
+    if (move.piece == PieceType::Pawn) {
+        if (isCapture)
+            return std::format("{}x{}", move.from.file, move.to);
+
+        return std::format("{}", move.to);
+    }
+
+    const auto captureStr  = isCapture ? "x" : "";
+    const auto disambigStr = ""; // TODO
+
+    return std::format("{}{}{}{}", move.piece, disambigStr, captureStr, move.to);
+}
 
 namespace utf8_pieces = pieces::utf8;
 
