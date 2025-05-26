@@ -35,6 +35,7 @@
     @ingroup moves
  */
 namespace chess::moves {
+
 using board::File;
 using board::Rank;
 using board::Square;
@@ -104,6 +105,9 @@ struct Move final {
 
         @throws std::invalid_argument An exception will be thrown if a move cannot be
         parsed correctly from the input string.
+
+        @todo Move into Position class so that we can tell the starting square?
+        @todo Deal with abbreviated pawn moves
      */
     [[nodiscard, gnu::const]] static constexpr Move from_string(
         std::string_view text, Color color);
@@ -144,7 +148,7 @@ namespace std {
     The formatter accepts no arguments; moves are formatted in algebraic notation
     such as "Nd4", "e8=Q" etc.
 
-    This formatter does not handle move disambiguation or notating checks or captures.
+    This formatter does not handle move disambiguation or notating checks.
 
     @ingroup moves
     @see chess::moves::Move
@@ -190,10 +194,25 @@ formatter<chess::moves::Move>::format(
         return std::format_to(ctx.out(), "{}", str);
     }
 
-    if (move.is_promotion())
-        return std::format_to(ctx.out(), "{:a}={:s}", move.to, *move.promotedType);
+    const bool is_capture = false; // TODO
 
-    return std::format_to(ctx.out(), "{:s}{:a}", move.piece, move.to);
+    if (move.is_promotion()) {
+        if (is_capture)
+            return std::format_to(ctx.out(), "{}x{:a}={:s}", move.from.file, move.to, *move.promotedType);
+
+        return std::format_to(ctx.out(), "{:a}={:s}", move.to, *move.promotedType);
+    }
+
+    if (move.piece == chess::pieces::Type::Pawn) {
+        if (is_capture)
+            return std::format_to(ctx.out(), "{}x{:a}", move.from.file, move.to);
+
+        return std::format_to(ctx.out(), "{:a}", move.to);
+    }
+
+    const auto captureStr = is_capture ? "x" : "";
+
+    return std::format_to(ctx.out(), "{:s}{}{:a}", move.piece, captureStr, move.to);
 }
 
 } // namespace std
@@ -261,16 +280,30 @@ constexpr Move Move::from_string(
     if (text == "O-O-O" || text == "0-0-0")
         return castle_queenside(color);
 
-    // promotion: string is of form e8=Q
+    // promotion
     if (const auto eqSgnPos = text.find('=');
         eqSgnPos != std::string_view::npos) {
+        const auto promotedType = pieces::from_string(text.substr(eqSgnPos + 1uz, 1uz));
+
+        if (const auto xPos = text.find('x');
+            xPos != std::string_view::npos) {
+            // string is of form dxe8=Q
+            return {
+                .from         = board::file_from_char(text.at(xPos - 1uz)),
+                .to           = Square::from_string(text.substr(eqSgnPos - 2uz, 2uz)),
+                .piece        = PieceType::Pawn,
+                .promotedType = promotedType
+            };
+        }
+
+        // string is of form e8=Q
         return promotion(
             board::file_from_char(text.front()),
-            color,
-            pieces::from_string(text.substr(eqSgnPos + 1uz, 1uz)));
+            color, promotedType);
     }
 
-    // string is of the form Nc6
+    // string is of the form Nc6 or Nxc6
+
     return {
         .from  = Square {}, // TODO: cannot tell the starting square
         .to    = Square::from_string(text.substr(text.length() - 2uz)),
