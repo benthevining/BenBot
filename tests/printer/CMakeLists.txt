@@ -4,5 +4,6 @@
 #
 # ======================================================================================
 
-add_subdirectory (unit)
-add_subdirectory (printer)
+add_executable (printer printer.cpp)
+
+target_link_libraries (printer PRIVATE libchess::libchess)
