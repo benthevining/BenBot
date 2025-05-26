@@ -8,27 +8,289 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include <libchess/board/Bitboard.hpp>
+#include <libchess/board/BitboardMasks.hpp>
 #include <libchess/board/Distances.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/moves/PseudoLegal.hpp>
+#include <libchess/pieces/Colors.hpp>
 
-static constexpr auto TAGS { "[moves][Generation]" };
+static constexpr auto TAGS { "[moves][Generation][pseudo-legal]" };
 
 using chess::board::Bitboard;
 using chess::board::File;
 using chess::board::Rank;
 using chess::board::Square;
+using chess::pieces::Color;
 
-namespace move_gen = chess::moves::pseudo_legal;
+namespace board_masks = chess::board::masks;
+namespace move_gen    = chess::moves::pseudo_legal;
 
-// pawn pushes
-// pawn double pushes
-// pawn attacks
 // bishop
 // rook
 // queen
+
+TEST_CASE("Pawn push generation", TAGS)
+{
+    SECTION("White")
+    {
+        SECTION("From starting position")
+        {
+            static constexpr auto startingPos = board_masks::starting::white::pawns();
+
+            static constexpr auto pushes = move_gen::pawn_pushes(startingPos, Color::White);
+
+            STATIC_REQUIRE(pushes == board_masks::ranks::three());
+        }
+
+        SECTION("From H7")
+        {
+            static constexpr Bitboard board { Square { File::H, Rank::Seven } };
+
+            static constexpr auto pushes = move_gen::pawn_pushes(board, Color::White);
+
+            STATIC_REQUIRE(pushes.count() == 1uz);
+
+            STATIC_REQUIRE(pushes.test({ File::H, Rank::Eight }));
+        }
+
+        SECTION("Empty")
+        {
+            static constexpr Bitboard empty;
+
+            static constexpr auto pushes = move_gen::pawn_pushes(empty, Color::White);
+
+            STATIC_REQUIRE(pushes.none());
+        }
+    }
+
+    SECTION("Black")
+    {
+        SECTION("From starting position")
+        {
+            static constexpr auto startingPos = board_masks::starting::black::pawns();
+
+            static constexpr auto pushes = move_gen::pawn_pushes(startingPos, Color::Black);
+
+            STATIC_REQUIRE(pushes == board_masks::ranks::six());
+        }
+
+        SECTION("From E2")
+        {
+            static constexpr Bitboard board { Square { File::E, Rank::Two } };
+
+            static constexpr auto pushes = move_gen::pawn_pushes(board, Color::Black);
+
+            STATIC_REQUIRE(pushes.count() == 1uz);
+
+            STATIC_REQUIRE(pushes.test({ File::E, Rank::One }));
+        }
+
+        SECTION("Empty")
+        {
+            static constexpr Bitboard empty;
+
+            static constexpr auto pushes = move_gen::pawn_pushes(empty, Color::Black);
+
+            STATIC_REQUIRE(pushes.none());
+        }
+    }
+}
+
+TEST_CASE("Pawn double push generation", TAGS)
+{
+    SECTION("White")
+    {
+        SECTION("From starting position")
+        {
+            static constexpr auto startingPos = board_masks::starting::white::pawns();
+
+            static constexpr auto pushes = move_gen::pawn_double_pushes(startingPos, Color::White);
+
+            STATIC_REQUIRE(pushes == board_masks::ranks::four());
+        }
+
+        SECTION("Pawns not on starting rank")
+        {
+            static constexpr auto pawns = board_masks::ranks::one() | board_masks::ranks::three();
+
+            static constexpr auto pushes = move_gen::pawn_double_pushes(pawns, Color::White);
+
+            STATIC_REQUIRE(pushes.none());
+        }
+
+        SECTION("Empty")
+        {
+            static constexpr Bitboard empty;
+
+            static constexpr auto pushes = move_gen::pawn_double_pushes(empty, Color::White);
+
+            STATIC_REQUIRE(pushes.none());
+        }
+    }
+
+    SECTION("Black")
+    {
+        SECTION("From starting position")
+        {
+            static constexpr auto startingPos = board_masks::starting::black::pawns();
+
+            static constexpr auto pushes = move_gen::pawn_double_pushes(startingPos, Color::Black);
+
+            STATIC_REQUIRE(pushes == board_masks::ranks::five());
+        }
+
+        SECTION("Pawns not on starting rank")
+        {
+            static constexpr auto pawns = board_masks::ranks::eight() | board_masks::ranks::six();
+
+            static constexpr auto pushes = move_gen::pawn_double_pushes(pawns, Color::Black);
+
+            STATIC_REQUIRE(pushes.none());
+        }
+
+        SECTION("Empty")
+        {
+            static constexpr Bitboard empty;
+
+            static constexpr auto pushes = move_gen::pawn_double_pushes(empty, Color::Black);
+
+            STATIC_REQUIRE(pushes.none());
+        }
+    }
+}
+
+TEST_CASE("Pawn attack generation", TAGS)
+{
+    SECTION("White")
+    {
+        SECTION("From D4")
+        {
+            static constexpr Bitboard starting { Square { File::D, Rank::Four } };
+
+            static constexpr auto attacks = move_gen::pawn_attacks(starting, Color::White);
+
+            STATIC_REQUIRE(attacks.count() == 2uz);
+
+            STATIC_REQUIRE(attacks.test({ File::C, Rank::Five }));
+            STATIC_REQUIRE(attacks.test({ File::E, Rank::Five }));
+        }
+
+        SECTION("From A2")
+        {
+            static constexpr Bitboard starting { Square { File::A, Rank::Two } };
+
+            static constexpr auto attacks = move_gen::pawn_attacks(starting, Color::White);
+
+            STATIC_REQUIRE(attacks.count() == 1uz);
+
+            STATIC_REQUIRE(attacks.test({ File::B, Rank::Three }));
+        }
+
+        SECTION("From H5")
+        {
+            static constexpr Bitboard starting { Square { File::H, Rank::Five } };
+
+            static constexpr auto attacks = move_gen::pawn_attacks(starting, Color::White);
+
+            STATIC_REQUIRE(attacks.count() == 1uz);
+
+            STATIC_REQUIRE(attacks.test({ File::G, Rank::Six }));
+        }
+
+        SECTION("From A1, H3, and E7")
+        {
+            Bitboard board;
+
+            board.set(Square { File::A, Rank::One });
+            board.set(Square { File::H, Rank::Three });
+            board.set(Square { File::E, Rank::Seven });
+
+            const auto attacks = move_gen::pawn_attacks(board, Color::White);
+
+            REQUIRE(attacks.count() == 4uz);
+
+            REQUIRE(attacks.test({ File::B, Rank::Two }));
+            REQUIRE(attacks.test({ File::G, Rank::Four }));
+            REQUIRE(attacks.test({ File::D, Rank::Eight }));
+            REQUIRE(attacks.test({ File::F, Rank::Eight }));
+        }
+
+        SECTION("Empty")
+        {
+            static constexpr Bitboard empty;
+
+            static constexpr auto attacks = move_gen::pawn_attacks(empty, Color::White);
+
+            STATIC_REQUIRE(attacks.none());
+        }
+    }
+
+    SECTION("Black")
+    {
+        SECTION("From E3")
+        {
+            static constexpr Bitboard starting { Square { File::E, Rank::Three } };
+
+            static constexpr auto attacks = move_gen::pawn_attacks(starting, Color::Black);
+
+            STATIC_REQUIRE(attacks.count() == 2uz);
+
+            STATIC_REQUIRE(attacks.test({ File::D, Rank::Two }));
+            STATIC_REQUIRE(attacks.test({ File::F, Rank::Two }));
+        }
+
+        SECTION("From A5")
+        {
+            static constexpr Bitboard starting { Square { File::A, Rank::Five } };
+
+            static constexpr auto attacks = move_gen::pawn_attacks(starting, Color::Black);
+
+            STATIC_REQUIRE(attacks.count() == 1uz);
+
+            STATIC_REQUIRE(attacks.test({ File::B, Rank::Four }));
+        }
+
+        SECTION("From H6")
+        {
+            static constexpr Bitboard starting { Square { File::H, Rank::Six } };
+
+            static constexpr auto attacks = move_gen::pawn_attacks(starting, Color::Black);
+
+            STATIC_REQUIRE(attacks.count() == 1uz);
+
+            STATIC_REQUIRE(attacks.test({ File::G, Rank::Five }));
+        }
+
+        SECTION("From A4, H8, and F3")
+        {
+            Bitboard board;
+
+            board.set(Square { File::A, Rank::Four });
+            board.set(Square { File::H, Rank::Eight });
+            board.set(Square { File::F, Rank::Three });
+
+            const auto attacks = move_gen::pawn_attacks(board, Color::Black);
+
+            REQUIRE(attacks.count() == 4uz);
+
+            REQUIRE(attacks.test({ File::B, Rank::Three }));
+            REQUIRE(attacks.test({ File::G, Rank::Seven }));
+            REQUIRE(attacks.test({ File::E, Rank::Two }));
+            REQUIRE(attacks.test({ File::G, Rank::Two }));
+        }
+
+        SECTION("Empty")
+        {
+            static constexpr Bitboard empty;
+
+            static constexpr auto attacks = move_gen::pawn_attacks(empty, Color::Black);
+
+            STATIC_REQUIRE(attacks.none());
+        }
+    }
+}
 
 TEST_CASE("Knight move generation", TAGS)
 {
@@ -130,6 +392,15 @@ TEST_CASE("Knight move generation", TAGS)
         REQUIRE(moves.test(Square { File::C, Rank::Two }));
         REQUIRE(moves.test(Square { File::F, Rank::Two }));
         REQUIRE(moves.test(Square { File::G, Rank::Three }));
+    }
+
+    SECTION("Empty")
+    {
+        static constexpr Bitboard empty;
+
+        static constexpr auto moves = move_gen::knight(empty);
+
+        STATIC_REQUIRE(moves.none());
     }
 }
 
@@ -237,5 +508,14 @@ TEST_CASE("King move generation", TAGS)
         REQUIRE(moves.test(Square { File::H, Rank::Seven }));
         REQUIRE(moves.test(Square { File::G, Rank::Seven }));
         REQUIRE(moves.test(Square { File::G, Rank::Eight }));
+    }
+
+    SECTION("Empty")
+    {
+        static constexpr Bitboard empty;
+
+        static constexpr auto moves = move_gen::king(empty);
+
+        STATIC_REQUIRE(moves.none());
     }
 }
