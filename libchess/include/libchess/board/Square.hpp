@@ -299,39 +299,6 @@ constexpr Square Square::from_string(const std::string_view text)
             std::format("Cannot parse Square from invalid input string: {}", text)
         };
 
-    const auto file = [character = text.front()] {
-        switch (character) {
-            case 'a': [[fallthrough]];
-            case 'A': return File::A;
-
-            case 'b': [[fallthrough]];
-            case 'B': return File::B;
-
-            case 'c': [[fallthrough]];
-            case 'C': return File::C;
-
-            case 'd': [[fallthrough]];
-            case 'D': return File::D;
-
-            case 'e': [[fallthrough]];
-            case 'E': return File::E;
-
-            case 'f': [[fallthrough]];
-            case 'F': return File::F;
-
-            case 'g': [[fallthrough]];
-            case 'G': return File::G;
-
-            case 'h': [[fallthrough]];
-            case 'H': return File::H;
-
-            default:
-                throw std::invalid_argument {
-                    std::format("Cannot parse file from character: {}", character)
-                };
-        }
-    }();
-
     const auto rank = [character = text.back()] {
         switch (character) {
             case '1': return Rank::One;
@@ -350,7 +317,10 @@ constexpr Square Square::from_string(const std::string_view text)
         }
     }();
 
-    return { file, rank };
+    return {
+        .file = file_from_char(text.front()),
+        .rank = rank
+    };
 }
 
 } // namespace chess::board

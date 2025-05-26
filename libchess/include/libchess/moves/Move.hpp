@@ -27,6 +27,8 @@
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
 #include <optional>
+#include <stdexcept>
+#include <string_view>
 #include <utility>
 
 /** This namespace contains classes for modeling moves.
@@ -55,7 +57,6 @@ using PieceType = pieces::Type;
     @ingroup moves
 
     @todo std::hash
-    @todo from_string()
  */
 struct Move final {
     /** The starting square of the moving piece.
@@ -98,6 +99,15 @@ struct Move final {
 
     /** Returns true if this move is castling (in either direction). */
     [[nodiscard]] constexpr bool is_castling() const noexcept;
+
+    /** Creates a move from a string in algebraic notation, such as "Nd4", "e8=Q",
+        "O-O-O", etc.
+
+        @throws std::invalid_argument An exception will be thrown if a move cannot be
+        parsed correctly from the input string.
+     */
+    [[nodiscard, gnu::const]] static constexpr Move from_string(
+        std::string_view text, Color color);
 };
 
 /// @ingroup moves
@@ -133,7 +143,7 @@ namespace std {
 /** A formatter specialization for Move objects.
 
     The formatter accepts no arguments; moves are formatted in algebraic notation
-    such as "ND4", etc.
+    such as "Nd4", "e8=Q" etc.
 
     This formatter does not handle move disambiguation or notating checks or captures.
 
@@ -176,10 +186,9 @@ formatter<chess::moves::Move>::format(
     const chess::moves::Move& move, FormatContext& ctx) const
 {
     if (move.is_castling()) {
-        if (move.to.is_kingside())
-            return std::format_to(ctx.out(), "{}", "O-O");
+        const auto str = move.to.is_kingside() ? "O-O" : "O-O-O";
 
-        return std::format_to(ctx.out(), "{}", "O-O-O");
+        return std::format_to(ctx.out(), "{}", str);
     }
 
     if (move.is_promotion())
@@ -242,6 +251,36 @@ constexpr Move promotion(
         .to           = Square { file, isWhite ? Rank::Eight : Rank::One },
         .piece        = isWhite ? PieceType::WhitePawn : PieceType::BlackPawn,
         .promotedType = promotedType
+    };
+}
+
+constexpr Move Move::from_string(
+    const std::string_view text, const Color color)
+{
+    if (text == "O-O" || text == "0-0")
+        return castle_kingside(color);
+
+    if (text == "O-O-O" || text == "0-0-0")
+        return castle_queenside(color);
+
+    // promotion: string is of form e8=Q
+    if (const auto eqSgnPos = text.find('=');
+        eqSgnPos != std::string_view::npos) {
+        return promotion(
+            board::file_from_char(text.front()),
+            color,
+            pieces::from_string(text.substr(eqSgnPos + 1uz, 1uz)));
+    }
+
+    // string is of the form Nc6
+    return {
+        .from  = Square {}, // TODO: cannot tell the starting square
+        .to    = Square::from_string(text.substr(1uz)),
+        .piece = pieces::from_string(text.substr(0uz, 1uz))
+    };
+
+    throw std::invalid_argument {
+        std::format("Cannot parse Move from invalid input string: {}", text)
     };
 }
 

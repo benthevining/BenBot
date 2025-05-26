@@ -17,6 +17,7 @@
 #include <format>
 #include <libchess/board/BitboardIndex.hpp>
 #include <magic_enum/magic_enum.hpp>
+#include <stdexcept>
 
 namespace chess::board {
 
@@ -35,6 +36,14 @@ enum class File : BitboardIndex {
     G, ///< The G file.
     H  ///< The H file.
 };
+
+/** Interprets the given character as a file.
+    This function recognizes upper- or lowercase file letters.
+
+    @throws std::invalid_argument An exception will be thrown if a file
+    cannot be parsed correctly from the input character.
+ */
+[[nodiscard, gnu::const]] constexpr File file_from_char(char character);
 
 } // namespace chess::board
 
@@ -133,3 +142,41 @@ formatter<chess::board::File>::format(
 }
 
 } // namespace std
+
+namespace chess::board {
+
+constexpr File file_from_char(char character)
+{
+    switch (character) {
+        case 'a': [[fallthrough]];
+        case 'A': return File::A;
+
+        case 'b': [[fallthrough]];
+        case 'B': return File::B;
+
+        case 'c': [[fallthrough]];
+        case 'C': return File::C;
+
+        case 'd': [[fallthrough]];
+        case 'D': return File::D;
+
+        case 'e': [[fallthrough]];
+        case 'E': return File::E;
+
+        case 'f': [[fallthrough]];
+        case 'F': return File::F;
+
+        case 'g': [[fallthrough]];
+        case 'G': return File::G;
+
+        case 'h': [[fallthrough]];
+        case 'H': return File::H;
+
+        default:
+            throw std::invalid_argument {
+                std::format("Cannot parse File from character: {}", character)
+            };
+    }
+}
+
+} // namespace chess::board
