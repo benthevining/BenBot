@@ -15,8 +15,11 @@
 
 #include <format>
 #include <libchess/board/BitboardIndex.hpp>
+#include <libchess/pieces/Colors.hpp>
 
 namespace chess::board {
+
+using pieces::Color;
 
 /** This enum describes the ranks of the chessboard.
 
@@ -33,6 +36,19 @@ enum class Rank : BitboardIndex {
     Seven, ///< The seventh rank. This is the rank that black's pawns start on.
     Eight  ///< The back rank. This is the rank that black's king starts on.
 };
+
+/** Returns the back rank for the given side.
+    A player's back rank is the rank their king starts on.
+
+    @ingroup board
+ */
+[[nodiscard, gnu::const]] constexpr Rank back_rank_for(const Color color) noexcept
+{
+    if (color == Color::White)
+        return Rank::One;
+
+    return Rank::Eight;
+}
 
 } // namespace chess::board
 
@@ -56,6 +72,6 @@ struct std::formatter<chess::board::Rank> final {
         const chess::board::Rank rank, FormatContext& ctx) const
     {
         return std::format_to(ctx.out(), "{}",
-            std::to_underlying(rank) + static_cast<std::uint_fast8_t>(1));
+            std::to_underlying(rank) + static_cast<chess::board::BitboardIndex>(1));
     }
 };

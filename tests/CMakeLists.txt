@@ -41,6 +41,7 @@ set (
     board/Pieces.cpp
     board/Square.cpp
     game/Position.cpp
+    moves/Move.cpp
     util/Math.cpp
 )
 

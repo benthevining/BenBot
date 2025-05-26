@@ -18,16 +18,24 @@
 
 #pragma once
 
+#include <libchess/board/Distances.hpp>
+#include <libchess/board/File.hpp>
+#include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
+#include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
 #include <optional>
+#include <utility>
 
 /** This namespace contains classes for modeling moves.
     @ingroup moves
  */
 namespace chess::moves {
 
+using board::File;
+using board::Rank;
 using board::Square;
+using pieces::Color;
 
 using PieceType = pieces::Type;
 
@@ -38,9 +46,13 @@ using PieceType = pieces::Type;
 
     @ingroup moves
 
-    @todo is_castling()
+    @todo static creation func promotion()
     @todo is_en_passant()
-    @todo static creation funcs castle_queenside(), castle_kingside(), en_passant()
+    @todo static creation func en_passant()
+
+    @todo std::formatter
+    @todo std::hash
+    @todo from_string()
  */
 struct Move final {
     /** The starting square of the moving piece.
@@ -76,6 +88,77 @@ struct Move final {
     {
         return promotedType.has_value();
     }
+
+    /** Returns true if this move is castling (in either direction). */
+    [[nodiscard]] constexpr bool is_castling() const noexcept;
 };
+
+/// @ingroup moves
+/// @{
+
+/** Creates a move encoding kingside ("short") castling for the given color.
+
+    @see castle_queenside()
+    @relates Move
+ */
+[[nodiscard]] constexpr Move castle_kingside(Color color) noexcept;
+
+/** Creates a move encoding queenside ("long") castling for the given color.
+
+    @see castle_kingside()
+    @relates Move
+ */
+[[nodiscard]] constexpr Move castle_queenside(Color color) noexcept;
+
+/// @}
+
+/*
+                         ___                           ,--,
+      ,---,            ,--.'|_                ,--,   ,--.'|
+    ,---.'|            |  | :,'             ,--.'|   |  | :
+    |   | :            :  : ' :             |  |,    :  : '    .--.--.
+    |   | |   ,---.  .;__,'  /    ,--.--.   `--'_    |  ' |   /  /    '
+  ,--.__| |  /     \ |  |   |    /       \  ,' ,'|   '  | |  |  :  /`./
+ /   ,'   | /    /  |:__,'| :   .--.  .-. | '  | |   |  | :  |  :  ;_
+.   '  /  |.    ' / |  '  : |__  \__\/: . . |  | :   '  : |__ \  \    `.
+'   ; |:  |'   ;   /|  |  | '.'| ," .--.; | '  : |__ |  | '.'| `----.   \
+|   | '/  ''   |  / |  ;  :    ;/  /  ,.  | |  | '.'|;  :    ;/  /`--'  /__  ___  ___
+|   :    :||   :    |  |  ,   /;  :   .'   \;  :    ;|  ,   /'--'.     /  .\/  .\/  .\
+ \   \  /   \   \  /    ---`-' |  ,     .-./|  ,   /  ---`-'   `--'---'\  ; \  ; \  ; |
+  `----'     `----'             `--`---'     ---`-'                     `--" `--" `--"
+
+ */
+
+constexpr bool Move::is_castling() const noexcept
+{
+    if (piece != PieceType::King)
+        return false;
+
+    return std::cmp_greater(
+        board::file_distance(from, to),
+        1uz);
+}
+
+constexpr Move castle_kingside(const Color color) noexcept
+{
+    const auto rank = board::back_rank_for(color);
+
+    return {
+        .from  = Square { File::E, rank },
+        .to    = Square { File::G, rank },
+        .piece = PieceType::King
+    };
+}
+
+constexpr Move castle_queenside(const Color color) noexcept
+{
+    const auto rank = board::back_rank_for(color);
+
+    return {
+        .from  = Square { File::E, rank },
+        .to    = Square { File::C, rank },
+        .piece = PieceType::King
+    };
+}
 
 } // namespace chess::moves
