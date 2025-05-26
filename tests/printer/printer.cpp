@@ -12,8 +12,8 @@
 
 int main()
 {
-    static constexpr auto moves = chess::moves::rook({ chess::board::File::H,
-        chess::board::Rank::Two });
+    static constexpr auto moves = chess::moves::bishop({ chess::board::File::A,
+        chess::board::Rank::One });
 
     std::println("{}", chess::board::print_ascii(moves));
 

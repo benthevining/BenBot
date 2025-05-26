@@ -14,7 +14,6 @@
 
     @ingroup moves
 
-    @todo bishops
     @todo queens
  */
 
@@ -52,6 +51,9 @@ soWeWe -10   |     |   -6  soEaEa
     @endverbatim
  */
 [[nodiscard, gnu::const]] constexpr Bitboard knight(const Square& starting) noexcept;
+
+/** Calculates all possible bishop moves from the given starting square. */
+[[nodiscard, gnu::const]] constexpr Bitboard bishop(const Square& starting) noexcept;
 
 /** Calculates all possible rook moves from the given starting square. */
 [[nodiscard, gnu::const]] constexpr Bitboard rook(const Square& starting) noexcept;
@@ -111,6 +113,35 @@ constexpr Bitboard rook(const Square& starting) noexcept
     const auto notStartingSquare = Bitboard { starting }.inverse();
 
     return (rankMask | fileMask) & notStartingSquare;
+}
+
+constexpr Bitboard bishop(const Square& starting) noexcept
+{
+    const auto diagMask = [starting] {
+        static constexpr Bitboard mainDiagonal { 0x8040201008040201 };
+
+        const auto diag = static_cast<int>(starting.file) - static_cast<int>(starting.rank);
+
+        if (diag >= 0)
+            return mainDiagonal >> diag * 8;
+
+        return mainDiagonal << -diag * 8;
+    }();
+
+    const auto antiDiagMask = [starting] {
+        static constexpr Bitboard mainDiagonal { 0x0102040810204080 };
+
+        const auto diag = 7 - static_cast<int>(starting.file) - static_cast<int>(starting.rank);
+
+        if (diag >= 0)
+            return mainDiagonal >> diag * 8;
+
+        return mainDiagonal << -diag * 8;
+    }();
+
+    const auto notStartingSquare = Bitboard { starting }.inverse();
+
+    return (diagMask | antiDiagMask) & notStartingSquare;
 }
 
 namespace detail {
