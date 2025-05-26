@@ -27,6 +27,7 @@
 #include <magic_enum/magic_enum.hpp>
 #include <optional>
 #include <ranges>
+#include <string>
 
 /** This namespace contains classes for modeling the state
     of a game of chess.
@@ -49,7 +50,6 @@ using pieces::Color;
     @todo Detect threefold reps by keeping array<Position, 6> ?
 
     @todo Funcs to get passed pawns, backward pawns
-    @todo Func to print board as ASCII/UTF8
     @todo Funcs is_stalemate(), is_checkmate(), is_check()
 
     @todo std::hash
@@ -131,6 +131,16 @@ struct Position final {
      */
     [[nodiscard]] constexpr auto get_half_open_files() const noexcept;
 };
+
+/** Creates a UTF8 representation of the given position.
+    The returned string is meant to be interpreted visually by a human, probably for debugging purposes.
+    The board is drawn as a simple set of cells separated by ``|`` characters. Pieces are drawn using
+    their UTF8-encoded symbols.
+
+    @relates Position
+    @ingroup game
+ */
+[[nodiscard]] std::string print_utf8(const Position& position);
 
 /*
                          ___                           ,--,
