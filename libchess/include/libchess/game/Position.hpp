@@ -32,6 +32,7 @@
 #include <optional>
 #include <ranges>
 #include <string>
+#include <string_view>
 #include <utility>
 
 /** This namespace contains classes for modeling the state
@@ -164,6 +165,14 @@ struct Position final {
         if necessary.
      */
     [[nodiscard]] std::string move_to_string(const Move& move) const;
+
+    /** Creates a move from a string in algebraic notation, such as "Nd4", "e8=Q",
+        "O-O-O", etc.
+
+        @throws std::invalid_argument An exception will be thrown if a move cannot be
+        parsed correctly from the input string.
+     */
+    [[nodiscard]] Move move_from_string(std::string_view text) const;
 };
 
 /** Creates a UTF8 representation of the given position.

@@ -7,17 +7,22 @@
  */
 
 #include <format>
+#include <libchess/board/File.hpp>
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
+#include <libchess/moves/Move.hpp>
+#include <libchess/pieces/PieceTypes.hpp>
 #include <libchess/pieces/UTF8.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <ranges>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 
 namespace chess::game {
 
+// TODO: annotate check, checkmate
 std::string Position::move_to_string(const Move& move) const
 {
     if (move.is_castling()) {
@@ -48,10 +53,57 @@ std::string Position::move_to_string(const Move& move) const
         return std::format("{}", move.to);
     }
 
-    const auto captureStr  = isCapture ? "x" : "";
-    const auto disambigStr = ""; // TODO
+    const auto captureStr = isCapture ? "x" : "";
+
+    // TODO: disambiguate between pieces of same type that can reach the target square, if needed
+    const auto disambigStr = "";
 
     return std::format("{}{}{}{}", move.piece, disambigStr, captureStr, move.to);
+}
+
+Move Position::move_from_string(std::string_view text) const
+{
+    if (text == "O-O" || text == "0-0")
+        return moves::castle_kingside(sideToMove);
+
+    if (text == "O-O-O" || text == "0-0-0")
+        return moves::castle_queenside(sideToMove);
+
+    // promotion
+    if (const auto eqSgnPos = text.find('=');
+        eqSgnPos != std::string_view::npos) {
+        const auto promotedType = pieces::from_string(text.substr(eqSgnPos + 1uz, 1uz));
+
+        if (const auto xPos = text.find('x');
+            xPos != std::string_view::npos) {
+            // string is of form dxe8=Q
+            return {
+                .from         = board::file_from_char(text.at(xPos - 1uz)),
+                .to           = Square::from_string(text.substr(eqSgnPos - 2uz, 2uz)),
+                .piece        = PieceType::Pawn,
+                .promotedType = promotedType
+            };
+        }
+
+        // string is of form e8=Q
+        return moves::promotion(
+            board::file_from_char(text.front()),
+            sideToMove, promotedType);
+    }
+
+    // TODO: Deal with abbreviated pawn moves
+
+    // string is of the form Nc6 or Nxc6
+
+    return {
+        .from  = Square {}, // TODO: figure out starting square
+        .to    = Square::from_string(text.substr(text.length() - 2uz)),
+        .piece = pieces::from_string(text.substr(0uz, 1uz))
+    };
+
+    throw std::invalid_argument {
+        std::format("Cannot parse Move from invalid input string: {}", text)
+    };
 }
 
 namespace utf8_pieces = pieces::utf8;

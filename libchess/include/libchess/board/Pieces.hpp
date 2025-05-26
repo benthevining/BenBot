@@ -40,6 +40,7 @@ using PieceType = pieces::Type;
 
     @ingroup board
 
+    @todo func to get attack mask for all pieces
     @todo pawn front & rear fills
     @todo func to check for doubled pawns
     @todo std::hash

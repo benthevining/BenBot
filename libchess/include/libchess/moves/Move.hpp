@@ -26,8 +26,6 @@
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
 #include <optional>
-#include <stdexcept>
-#include <string_view>
 #include <utility>
 
 /** This namespace contains classes for modeling moves.
@@ -98,18 +96,6 @@ struct Move final {
 
     /** Returns true if this move is castling (in either direction). */
     [[nodiscard]] constexpr bool is_castling() const noexcept;
-
-    /** Creates a move from a string in algebraic notation, such as "Nd4", "e8=Q",
-        "O-O-O", etc.
-
-        @throws std::invalid_argument An exception will be thrown if a move cannot be
-        parsed correctly from the input string.
-
-        @todo Move into Position class so that we can tell the starting square?
-        @todo Deal with abbreviated pawn moves
-     */
-    [[nodiscard, gnu::const]] static constexpr Move from_string(
-        std::string_view text, Color color);
 };
 
 /// @ingroup moves
@@ -130,6 +116,7 @@ struct Move final {
 [[nodiscard, gnu::const]] constexpr Move castle_queenside(Color color) noexcept;
 
 /** Creates a move encoding a pawn promotion.
+    This function creates simple promotions that don't involve captures.
 
     @relates Move
  */
@@ -204,50 +191,6 @@ constexpr Move promotion(
         .to           = Square { file, isWhite ? Rank::Eight : Rank::One },
         .piece        = PieceType::Pawn,
         .promotedType = promotedType
-    };
-}
-
-constexpr Move Move::from_string(
-    const std::string_view text, const Color color)
-{
-    if (text == "O-O" || text == "0-0")
-        return castle_kingside(color);
-
-    if (text == "O-O-O" || text == "0-0-0")
-        return castle_queenside(color);
-
-    // promotion
-    if (const auto eqSgnPos = text.find('=');
-        eqSgnPos != std::string_view::npos) {
-        const auto promotedType = pieces::from_string(text.substr(eqSgnPos + 1uz, 1uz));
-
-        if (const auto xPos = text.find('x');
-            xPos != std::string_view::npos) {
-            // string is of form dxe8=Q
-            return {
-                .from         = board::file_from_char(text.at(xPos - 1uz)),
-                .to           = Square::from_string(text.substr(eqSgnPos - 2uz, 2uz)),
-                .piece        = PieceType::Pawn,
-                .promotedType = promotedType
-            };
-        }
-
-        // string is of form e8=Q
-        return promotion(
-            board::file_from_char(text.front()),
-            color, promotedType);
-    }
-
-    // string is of the form Nc6 or Nxc6
-
-    return {
-        .from  = Square {}, // TODO: cannot tell the starting square
-        .to    = Square::from_string(text.substr(text.length() - 2uz)),
-        .piece = pieces::from_string(text.substr(0uz, 1uz))
-    };
-
-    throw std::invalid_argument {
-        std::format("Cannot parse Move from invalid input string: {}", text)
     };
 }
 
