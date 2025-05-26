@@ -39,17 +39,14 @@ using std::size_t;
 
     @ingroup pieces
     @see utf8 values
-
-    @todo Just one enum type for pawns?
  */
 enum class Type : std::uint_fast8_t {
-    WhitePawn, ///< A White pawn.
-    BlackPawn, ///< A Black pawn.
-    Knight,    ///< A knight.
-    Bishop,    ///< A bishop.
-    Rook,      ///< A rook.
-    Queen,     ///< A queen.
-    King       ///< A king.
+    Pawn,   ///< A White pawn.
+    Knight, ///< A knight.
+    Bishop, ///< A bishop.
+    Rook,   ///< A rook.
+    Queen,  ///< A queen.
+    King    ///< A king.
 };
 
 /// @ingroup pieces
@@ -83,8 +80,6 @@ enum class Type : std::uint_fast8_t {
 
     @throws std::invalid_argument An exception will be thrown if the input string cannot
     be parsed correctly.
-
-    Note that this function always returns ``WhitePawn`` for pawns.
  */
 [[nodiscard, gnu::const]] constexpr Type from_string(std::string_view text);
 
@@ -233,14 +228,7 @@ formatter<chess::pieces::Type>::format(
         return std::format_to(ctx.out(), "{}", character);
     }
 
-    switch (piece) {
-        case PieceType::WhitePawn: [[fallthrough]];
-        case PieceType::BlackPawn:
-            return std::format_to(ctx.out(), "{}", "Pawn");
-
-        default:
-            return std::format_to(ctx.out(), "{}", magic_enum::enum_name(piece));
-    }
+    return std::format_to(ctx.out(), "{}", magic_enum::enum_name(piece));
 }
 
 } // namespace std
@@ -252,7 +240,7 @@ constexpr Type from_string(const std::string_view text)
     if (text.length() == 1uz) {
         switch (text.front()) {
             case 'p': [[fallthrough]];
-            case 'P': return Type::WhitePawn;
+            case 'P': return Type::Pawn;
 
             case 'n': [[fallthrough]];
             case 'N': return Type::Knight;
@@ -280,7 +268,7 @@ constexpr Type from_string(const std::string_view text)
         return *value;
 
     if (text == "Pawn")
-        return Type::WhitePawn;
+        return Type::Pawn;
 
     throw std::invalid_argument {
         std::format("Cannot parse piece type from invalid input string: {}", text)

@@ -83,8 +83,7 @@ struct Move final {
     /** If this move is a promotion, this is the type of the promoted piece.
         If this move is not a promotion, this will be ``nullopt``.
 
-        @invariant This will never be PieceType::King, PieceType::WhitePawn,
-        or PieceType::BlackPawn.
+        @invariant This will never be PieceType::King or PieceType::Pawn.
      */
     std::optional<PieceType> promotedType;
 
@@ -241,15 +240,14 @@ constexpr Move promotion(
     const File file, const Color color, const PieceType promotedType) noexcept
 {
     assert(promotedType != PieceType::King);
-    assert(promotedType != PieceType::WhitePawn);
-    assert(promotedType != PieceType::BlackPawn);
+    assert(promotedType != PieceType::Pawn);
 
     const bool isWhite = color == Color::White;
 
     return {
         .from         = Square { file, isWhite ? Rank::Seven : Rank::Two },
         .to           = Square { file, isWhite ? Rank::Eight : Rank::One },
-        .piece        = isWhite ? PieceType::WhitePawn : PieceType::BlackPawn,
+        .piece        = PieceType::Pawn,
         .promotedType = promotedType
     };
 }

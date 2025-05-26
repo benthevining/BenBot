@@ -21,7 +21,7 @@ int main()
 
     position.make_move({ .from = { chess::board::File::E, chess::board::Rank::Two },
         .to                    = { chess::board::File::E, chess::board::Rank::Four },
-        .piece                 = chess::pieces::Type::WhitePawn });
+        .piece                 = chess::pieces::Type::Pawn });
 
     std::println("{}", print_utf8(position));
 }

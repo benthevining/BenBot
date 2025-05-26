@@ -118,5 +118,5 @@ TEST_CASE("Pieces - get_piece_on()", TAGS)
     STATIC_REQUIRE(*pieces.get_piece_on(Square { File::E, Rank::One }) == PieceType::King);
 
     for (auto file : magic_enum::enum_values<File>())
-        REQUIRE(*pieces.get_piece_on(Square { file, Rank::Two }) == PieceType::WhitePawn);
+        REQUIRE(*pieces.get_piece_on(Square { file, Rank::Two }) == PieceType::Pawn);
 }

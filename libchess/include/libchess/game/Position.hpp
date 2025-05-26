@@ -215,7 +215,7 @@ constexpr void Position::make_move(const Move& move) noexcept
 {
     const bool isWhite = sideToMove == Color::White;
 
-    const bool isPawnMove = move.piece == PieceType::WhitePawn || move.piece == PieceType::BlackPawn;
+    const bool isPawnMove = move.piece == PieceType::Pawn;
 
     auto& opponentPieces = isWhite ? blackPieces : whitePieces;
 

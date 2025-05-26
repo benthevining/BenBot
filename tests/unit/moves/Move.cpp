@@ -102,7 +102,7 @@ TEST_CASE("Move - promotion()", TAGS)
                 REQUIRE(move.from.rank == Rank::Seven);
                 REQUIRE(move.to.rank == Rank::Eight);
 
-                REQUIRE(move.piece == PieceType::WhitePawn);
+                REQUIRE(move.piece == PieceType::Pawn);
                 REQUIRE(move.promotedType.has_value());
                 REQUIRE(*move.promotedType == PieceType::Queen);
 
@@ -123,7 +123,7 @@ TEST_CASE("Move - promotion()", TAGS)
                 REQUIRE(move.from.rank == Rank::Two);
                 REQUIRE(move.to.rank == Rank::One);
 
-                REQUIRE(move.piece == PieceType::BlackPawn);
+                REQUIRE(move.piece == PieceType::Pawn);
                 REQUIRE(move.promotedType.has_value());
                 REQUIRE(*move.promotedType == PieceType::Queen);
 
@@ -144,7 +144,7 @@ TEST_CASE("Move - promotion()", TAGS)
                     REQUIRE(move.from.file == file);
                     REQUIRE(move.to.file == file);
 
-                    // REQUIRE(move.piece == PieceType::WhitePawn);
+                    REQUIRE(move.piece == PieceType::Pawn);
                     REQUIRE(move.promotedType.has_value());
                     REQUIRE(*move.promotedType == promotedType);
 
