@@ -46,7 +46,7 @@ namespace std {
     @li ``u|U``: Tells the formatter to print the file as an uppercase letter
     @li ``l|L``: Tells the formatter to print the file as a lowercase letter
 
-    If no arguments are specified, the formatter prints the rank as an uppercase letter by default.
+    If no arguments are specified, the formatter prints the rank as a lowercase letter by default.
 
     @see chess::board::File
     @ingroup board
@@ -61,7 +61,7 @@ struct formatter<chess::board::File> final {
         chess::board::File file, FormatContext& ctx) const;
 
 private:
-    bool uppercase { true };
+    bool uppercase { false };
 };
 
 /*

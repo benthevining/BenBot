@@ -7,8 +7,10 @@
  */
 
 #include <catch2/catch_test_macros.hpp>
+#include <format>
 #include <libchess/board/BitboardMasks.hpp>
 #include <libchess/board/File.hpp>
+#include <libchess/board/Rank.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <magic_enum/magic_enum.hpp>
@@ -16,6 +18,7 @@
 static constexpr auto TAGS { "[moves][Move]" };
 
 using chess::board::File;
+using chess::board::Rank;
 using chess::pieces::Color;
 
 namespace moves          = chess::moves;
@@ -37,6 +40,8 @@ TEST_CASE("Move - castle_kingside()", TAGS)
         STATIC_REQUIRE(move.piece == PieceType::King);
         STATIC_REQUIRE(! move.is_promotion());
         STATIC_REQUIRE(move.is_castling());
+
+        REQUIRE(std::format("{}", move) == "O-O");
     }
 
     SECTION("Black")
@@ -48,6 +53,8 @@ TEST_CASE("Move - castle_kingside()", TAGS)
         STATIC_REQUIRE(move.piece == PieceType::King);
         STATIC_REQUIRE(! move.is_promotion());
         STATIC_REQUIRE(move.is_castling());
+
+        REQUIRE(std::format("{}", move) == "O-O");
     }
 }
 
@@ -62,6 +69,8 @@ TEST_CASE("Move - castle_queenside()", TAGS)
         STATIC_REQUIRE(move.piece == PieceType::King);
         STATIC_REQUIRE(! move.is_promotion());
         STATIC_REQUIRE(move.is_castling());
+
+        REQUIRE(std::format("{}", move) == "O-O-O");
     }
 
     SECTION("Black")
@@ -73,6 +82,8 @@ TEST_CASE("Move - castle_queenside()", TAGS)
         STATIC_REQUIRE(move.piece == PieceType::King);
         STATIC_REQUIRE(! move.is_promotion());
         STATIC_REQUIRE(move.is_castling());
+
+        REQUIRE(std::format("{}", move) == "O-O-O");
     }
 }
 
@@ -80,14 +91,39 @@ TEST_CASE("Move - promotion()", TAGS)
 {
     SECTION("Queen promotion")
     {
-        for (const auto color : magic_enum::enum_values<Color>()) {
+        SECTION("White")
+        {
             for (const auto file : magic_enum::enum_values<File>()) {
-                const auto move = moves::promotion(file, color);
+                const auto move = moves::promotion(file, Color::White);
 
                 REQUIRE(move.from.file == file);
                 REQUIRE(move.to.file == file);
 
-                // REQUIRE(move.piece == PieceType::WhitePawn);
+                REQUIRE(move.from.rank == Rank::Seven);
+                REQUIRE(move.to.rank == Rank::Eight);
+
+                REQUIRE(move.piece == PieceType::WhitePawn);
+                REQUIRE(move.promotedType.has_value());
+                REQUIRE(*move.promotedType == PieceType::Queen);
+
+                REQUIRE(move.is_promotion());
+                REQUIRE(! move.is_under_promotion());
+                REQUIRE(! move.is_castling());
+            }
+        }
+
+        SECTION("Black")
+        {
+            for (const auto file : magic_enum::enum_values<File>()) {
+                const auto move = moves::promotion(file, Color::Black);
+
+                REQUIRE(move.from.file == file);
+                REQUIRE(move.to.file == file);
+
+                REQUIRE(move.from.rank == Rank::Two);
+                REQUIRE(move.to.rank == Rank::One);
+
+                REQUIRE(move.piece == PieceType::BlackPawn);
                 REQUIRE(move.promotedType.has_value());
                 REQUIRE(*move.promotedType == PieceType::Queen);
 

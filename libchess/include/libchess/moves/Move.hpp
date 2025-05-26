@@ -19,6 +19,7 @@
 #pragma once
 
 #include <cassert>
+#include <format>
 #include <libchess/board/Distances.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Rank.hpp>
@@ -32,7 +33,6 @@
     @ingroup moves
  */
 namespace chess::moves {
-
 using board::File;
 using board::Rank;
 using board::Square;
@@ -43,14 +43,17 @@ using PieceType = pieces::Type;
 /** This struct encodes information about a move.
 
     Moves are encoded as a starting and ending square, as well as a piece type.
+
     Castling is considered a king move.
+
+    En passant cannot be identified solely using the information in this struct;
+    based on the starting and ending squares of the capturing pawn, an en passant
+    capture appears just like any other pawn capture.
+
+    This struct also does not identify if the move is a capture.
 
     @ingroup moves
 
-    @todo is_en_passant()
-    @todo static creation func en_passant()
-
-    @todo std::formatter
     @todo std::hash
     @todo from_string()
  */
@@ -123,6 +126,33 @@ struct Move final {
 
 /// @}
 
+} // namespace chess::moves
+
+namespace std {
+
+/** A formatter specialization for Move objects.
+
+    The formatter accepts no arguments; moves are formatted in algebraic notation
+    such as "ND4", etc.
+
+    This formatter does not handle move disambiguation or notating checks or captures.
+
+    @ingroup moves
+    @see chess::moves::Move
+ */
+template <>
+struct formatter<chess::moves::Move> final {
+    template <typename ParseContext>
+    constexpr typename ParseContext::iterator parse(ParseContext& ctx)
+    {
+        return ctx.begin();
+    }
+
+    template <typename FormatContext>
+    typename FormatContext::iterator format(
+        const chess::moves::Move& move, FormatContext& ctx) const;
+};
+
 /*
                          ___                           ,--,
       ,---,            ,--.'|_                ,--,   ,--.'|
@@ -139,6 +169,28 @@ struct Move final {
   `----'     `----'             `--`---'     ---`-'                     `--" `--" `--"
 
  */
+
+template <typename FormatContext>
+typename FormatContext::iterator
+formatter<chess::moves::Move>::format(
+    const chess::moves::Move& move, FormatContext& ctx) const
+{
+    if (move.is_castling()) {
+        if (move.to.is_kingside())
+            return std::format_to(ctx.out(), "{}", "O-O");
+
+        return std::format_to(ctx.out(), "{}", "O-O-O");
+    }
+
+    if (move.is_promotion())
+        return std::format_to(ctx.out(), "{:a}={:s}", move.to, *move.promotedType);
+
+    return std::format_to(ctx.out(), "{:s}{:a}", move.piece, move.to);
+}
+
+} // namespace std
+
+namespace chess::moves {
 
 constexpr bool Move::is_under_promotion() const noexcept
 {

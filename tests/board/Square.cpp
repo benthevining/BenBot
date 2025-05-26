@@ -190,7 +190,7 @@ TEST_CASE("Square - to/from string", TAGS)
         static constexpr Square square { file, rank };           \
         STATIC_REQUIRE(square == Square::from_string(str));      \
         STATIC_REQUIRE(square == Square::from_string(strLower)); \
-        REQUIRE(std::format("{}", square) == str);               \
+        REQUIRE(std::format("{}", square) == strLower);          \
     }
 
     SQUARE_TO_FROM_STRING("A1", "a1", File::A, Rank::One);
