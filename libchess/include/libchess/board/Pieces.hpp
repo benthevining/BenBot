@@ -14,6 +14,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cassert>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/BitboardMasks.hpp>
@@ -104,6 +105,11 @@ struct Pieces final {
         not optimized for this operation.
      */
     [[nodiscard]] constexpr std::optional<PieceType> get_piece_on(Square square) const noexcept;
+
+    /** Removes the piece on the given square, if any.
+        This method asserts if the ``square`` is the location of the king.
+     */
+    constexpr void capture_at(Square square) noexcept;
 };
 
 /*
@@ -198,6 +204,19 @@ constexpr std::optional<PieceType> Pieces::get_piece_on(const Square square) con
     }
 
     return std::nullopt;
+}
+
+constexpr void Pieces::capture_at(const Square square) noexcept
+{
+    const auto idx = square.index();
+
+    assert(! king.test(idx));
+
+    pawns.set(idx, false);
+    knights.set(idx, false);
+    bishops.set(idx, false);
+    rooks.set(idx, false);
+    queens.set(idx, false);
 }
 
 } // namespace chess::board

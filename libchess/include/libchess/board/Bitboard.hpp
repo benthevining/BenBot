@@ -38,6 +38,8 @@ using std::size_t;
 
     @see Pieces, masks
     @ingroup board
+
+    @todo set() don't take an argument; add an unset() method instead
  */
 struct Bitboard final {
     /** Unsigned integer type used for serialization of bitboards. */

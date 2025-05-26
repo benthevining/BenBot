@@ -36,6 +36,13 @@ struct CastlingRights final {
         queenside = false;
     }
 
+    /** Called when a rook moves. */
+    constexpr void rook_moved(const bool isKingside) noexcept
+    {
+        kingside  = kingside && ! isKingside;
+        queenside = queenside && isKingside;
+    }
+
     /** Returns true if castling either direction is possible. */
     [[nodiscard]] constexpr bool either() const noexcept
     {

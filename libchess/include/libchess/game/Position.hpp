@@ -19,15 +19,20 @@
 
 #include <cstdint>
 #include <libchess/board/Bitboard.hpp>
+#include <libchess/board/Distances.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Pieces.hpp>
+#include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/CastlingRights.hpp>
+#include <libchess/moves/Move.hpp>
 #include <libchess/pieces/Colors.hpp>
+#include <libchess/pieces/PieceTypes.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <optional>
 #include <ranges>
 #include <string>
+#include <utility>
 
 /** This namespace contains classes for modeling the state
     of a game of chess.
@@ -37,7 +42,12 @@
 namespace chess::game {
 
 using board::File;
+using board::Rank;
+using board::Square;
+using moves::Move;
 using pieces::Color;
+
+using PieceType = pieces::Type;
 
 /** This class models an instant in a game of chess.
 
@@ -47,7 +57,6 @@ using pieces::Color;
 
     @ingroup game
 
-    @todo make_move()
     @todo unmake_move()
 
     @todo Detect threefold reps by keeping array<Position, 6> ?
@@ -88,10 +97,10 @@ struct Position final {
         en passant. If en passant is not possible, this will
         be ``nullopt``.
      */
-    std::optional<board::Square> enPassantTargetSquare;
+    std::optional<Square> enPassantTargetSquare;
 
     /** This is a ply counter that enforces the 50-move rule.
-        The counter s incremented after every move and reset by
+        The counter is incremented after every move and reset by
         captures and pawn moves; if the counter reaches 100 and
         the side to move has at least 1 legal move, then the game
         is drawn.
@@ -145,6 +154,9 @@ struct Position final {
         @see is_file_half_open()
      */
     [[nodiscard]] constexpr auto get_half_open_files() const noexcept;
+
+    /** Makes a move to alter the position. */
+    constexpr void make_move(const Move& move) noexcept;
 };
 
 /** Creates a UTF8 representation of the given position.
@@ -197,6 +209,78 @@ constexpr auto Position::get_half_open_files() const noexcept
 {
     return magic_enum::enum_values<File>()
          | std::views::filter([this](const File file) { return is_file_half_open(file); });
+}
+
+constexpr void Position::make_move(const Move& move) noexcept
+{
+    const bool isWhite = sideToMove == Color::White;
+
+    const bool isPawnMove = move.piece == PieceType::WhitePawn || move.piece == PieceType::BlackPawn;
+
+    auto& opponentPieces = isWhite ? blackPieces : whitePieces;
+
+    const bool isCapture = opponentPieces.occupied().test(move.to);
+
+    // update bitboards
+    {
+        opponentPieces.capture_at(move.to);
+
+        auto& ourPieces = isWhite ? whitePieces : blackPieces;
+        auto& bitboard  = ourPieces.get_type(move.piece);
+
+        bitboard.set(move.from, false);
+
+        if (move.is_promotion())
+            ourPieces.get_type(*move.promotedType).set(move.to, true);
+        else
+            bitboard.set(move.to, true);
+
+        if (move.is_castling()) { // update rook position
+            const bool castledQueenside = move.to.is_queenside();
+
+            auto& rooks = ourPieces.rooks;
+
+            if (castledQueenside) {
+                rooks.set(Square { File::A, move.to.rank }, false);
+                rooks.set(Square { File::D, move.to.rank }, true);
+            } else {
+                rooks.set(Square { File::H, move.to.rank }, false);
+                rooks.set(Square { File::F, move.to.rank }, true);
+            }
+        }
+    }
+
+    enPassantTargetSquare = [move, isWhite, isPawnMove]() -> std::optional<Square> {
+        if (! isPawnMove)
+            return std::nullopt;
+
+        if (std::cmp_equal(board::rank_distance(move.from, move.to), 2uz))
+            return Square {
+                .file = move.to.file,
+                .rank = isWhite ? Rank::Three : Rank::Six
+            };
+
+        return std::nullopt;
+    }();
+
+    // update castling rights
+    auto& castlingRights = isWhite ? whiteCastlingRights : blackCastlingRights;
+
+    if (move.piece == PieceType::King)
+        castlingRights.king_moved();
+    else if (move.piece == PieceType::Rook)
+        castlingRights.rook_moved(move.from.is_kingside());
+
+    // update halfmoveClock
+    if (isPawnMove || isCapture)
+        halfmoveClock = 0;
+    else if (std::cmp_greater_equal(halfmoveClock, 100))
+        ; // TODO: game ends in draw
+    else
+        ++halfmoveClock;
+
+    // flip side to move
+    sideToMove = isWhite ? Color::Black : Color::White;
 }
 
 } // namespace chess::game
