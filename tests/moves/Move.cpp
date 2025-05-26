@@ -8,11 +8,14 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include <libchess/board/BitboardMasks.hpp>
+#include <libchess/board/File.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/pieces/Colors.hpp>
+#include <magic_enum/magic_enum.hpp>
 
 static constexpr auto TAGS { "[moves][Move]" };
 
+using chess::board::File;
 using chess::pieces::Color;
 
 namespace moves          = chess::moves;
@@ -70,5 +73,50 @@ TEST_CASE("Move - castle_queenside()", TAGS)
         STATIC_REQUIRE(move.piece == PieceType::King);
         STATIC_REQUIRE(! move.is_promotion());
         STATIC_REQUIRE(move.is_castling());
+    }
+}
+
+TEST_CASE("Move - promotion()", TAGS)
+{
+    SECTION("Queen promotion")
+    {
+        for (const auto color : magic_enum::enum_values<Color>()) {
+            for (const auto file : magic_enum::enum_values<File>()) {
+                const auto move = moves::promotion(file, color);
+
+                REQUIRE(move.from.file == file);
+                REQUIRE(move.to.file == file);
+
+                // REQUIRE(move.piece == PieceType::WhitePawn);
+                REQUIRE(move.promotedType.has_value());
+                REQUIRE(*move.promotedType == PieceType::Queen);
+
+                REQUIRE(move.is_promotion());
+                REQUIRE(! move.is_under_promotion());
+                REQUIRE(! move.is_castling());
+            }
+        }
+    }
+
+    SECTION("Under promotion")
+    {
+        for (const auto color : magic_enum::enum_values<Color>()) {
+            for (const auto file : magic_enum::enum_values<File>()) {
+                for (const auto promotedType : { PieceType::Knight, PieceType::Bishop, PieceType::Rook }) {
+                    const auto move = moves::promotion(file, color, promotedType);
+
+                    REQUIRE(move.from.file == file);
+                    REQUIRE(move.to.file == file);
+
+                    // REQUIRE(move.piece == PieceType::WhitePawn);
+                    REQUIRE(move.promotedType.has_value());
+                    REQUIRE(*move.promotedType == promotedType);
+
+                    REQUIRE(move.is_promotion());
+                    REQUIRE(move.is_under_promotion());
+                    REQUIRE(! move.is_castling());
+                }
+            }
+        }
     }
 }

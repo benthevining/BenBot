@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <libchess/board/Distances.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Rank.hpp>
@@ -46,7 +47,6 @@ using PieceType = pieces::Type;
 
     @ingroup moves
 
-    @todo static creation func promotion()
     @todo is_en_passant()
     @todo static creation func en_passant()
 
@@ -79,7 +79,8 @@ struct Move final {
     /** If this move is a promotion, this is the type of the promoted piece.
         If this move is not a promotion, this will be ``nullopt``.
 
-        @invariant This will never be PieceType::King.
+        @invariant This will never be PieceType::King, PieceType::WhitePawn,
+        or PieceType::BlackPawn.
      */
     std::optional<PieceType> promotedType;
 
@@ -88,6 +89,9 @@ struct Move final {
     {
         return promotedType.has_value();
     }
+
+    /** Returns true if this move is a promotion to a piece other than a queen. */
+    [[nodiscard]] constexpr bool is_under_promotion() const noexcept;
 
     /** Returns true if this move is castling (in either direction). */
     [[nodiscard]] constexpr bool is_castling() const noexcept;
@@ -101,14 +105,21 @@ struct Move final {
     @see castle_queenside()
     @relates Move
  */
-[[nodiscard]] constexpr Move castle_kingside(Color color) noexcept;
+[[nodiscard, gnu::const]] constexpr Move castle_kingside(Color color) noexcept;
 
 /** Creates a move encoding queenside ("long") castling for the given color.
 
     @see castle_kingside()
     @relates Move
  */
-[[nodiscard]] constexpr Move castle_queenside(Color color) noexcept;
+[[nodiscard, gnu::const]] constexpr Move castle_queenside(Color color) noexcept;
+
+/** Creates a move encoding a pawn promotion.
+
+    @relates Move
+ */
+[[nodiscard, gnu::const]] constexpr Move promotion(
+    File file, Color color, PieceType promotedType = PieceType::Queen) noexcept;
 
 /// @}
 
@@ -129,14 +140,18 @@ struct Move final {
 
  */
 
+constexpr bool Move::is_under_promotion() const noexcept
+{
+    return is_promotion()
+        && *promotedType != PieceType::Queen;
+}
+
 constexpr bool Move::is_castling() const noexcept
 {
-    if (piece != PieceType::King)
-        return false;
-
-    return std::cmp_greater(
-        board::file_distance(from, to),
-        1uz);
+    return piece == PieceType::King
+        && std::cmp_greater(
+            board::file_distance(from, to),
+            1uz);
 }
 
 constexpr Move castle_kingside(const Color color) noexcept
@@ -158,6 +173,23 @@ constexpr Move castle_queenside(const Color color) noexcept
         .from  = Square { File::E, rank },
         .to    = Square { File::C, rank },
         .piece = PieceType::King
+    };
+}
+
+constexpr Move promotion(
+    const File file, const Color color, const PieceType promotedType) noexcept
+{
+    assert(promotedType != PieceType::King);
+    assert(promotedType != PieceType::WhitePawn);
+    assert(promotedType != PieceType::BlackPawn);
+
+    const bool isWhite = color == Color::White;
+
+    return {
+        .from         = Square { file, isWhite ? Rank::Seven : Rank::Two },
+        .to           = Square { file, isWhite ? Rank::Eight : Rank::One },
+        .piece        = isWhite ? PieceType::WhitePawn : PieceType::BlackPawn,
+        .promotedType = promotedType
     };
 }
 
