@@ -235,7 +235,7 @@ constexpr void Position::make_move(const Move& move) noexcept
 
     auto& opponentPieces = isWhite ? blackPieces : whitePieces;
 
-    const bool isCapture = opponentPieces.occupied().test(move.to);
+    const bool isCapture = opponentPieces.occupied().test(move.to); // TODO: broken for en passant
 
     // update bitboards
     {

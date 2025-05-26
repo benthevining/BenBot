@@ -7,19 +7,28 @@
  */
 
 #include <catch2/catch_test_macros.hpp>
+#include <libchess/board/Bitboard.hpp>
 #include <libchess/board/Distances.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
-#include <libchess/moves/Generation.hpp>
+#include <libchess/moves/PseudoLegal.hpp>
 
 static constexpr auto TAGS { "[moves][Generation]" };
 
+using chess::board::Bitboard;
 using chess::board::File;
 using chess::board::Rank;
 using chess::board::Square;
 
-namespace move_gen = chess::moves;
+namespace move_gen = chess::moves::pseudo_legal;
+
+// pawn pushes
+// pawn double pushes
+// pawn attacks
+// bishop
+// rook
+// queen
 
 TEST_CASE("Knight move generation", TAGS)
 {
@@ -29,7 +38,7 @@ TEST_CASE("Knight move generation", TAGS)
     {
         static constexpr Square starting { File::D, Rank::Four };
 
-        static constexpr auto moves = move_gen::knight(starting);
+        static constexpr auto moves = move_gen::knight(Bitboard { starting });
 
         STATIC_REQUIRE(moves.count() == 8uz);
 
@@ -50,7 +59,7 @@ TEST_CASE("Knight move generation", TAGS)
     {
         static constexpr Square starting { File::A, Rank::One };
 
-        static constexpr auto moves = move_gen::knight(starting);
+        static constexpr auto moves = move_gen::knight(Bitboard { starting });
 
         STATIC_REQUIRE(moves.count() == 2u);
 
@@ -65,7 +74,7 @@ TEST_CASE("Knight move generation", TAGS)
     {
         static constexpr Square starting { File::A, Rank::Eight };
 
-        static constexpr auto moves = move_gen::knight(starting);
+        static constexpr auto moves = move_gen::knight(Bitboard { starting });
 
         STATIC_REQUIRE(moves.count() == 2u);
 
@@ -80,7 +89,7 @@ TEST_CASE("Knight move generation", TAGS)
     {
         static constexpr Square starting { File::H, Rank::One };
 
-        static constexpr auto moves = move_gen::knight(starting);
+        static constexpr auto moves = move_gen::knight(Bitboard { starting });
 
         STATIC_REQUIRE(moves.count() == 2u);
 
@@ -95,7 +104,7 @@ TEST_CASE("Knight move generation", TAGS)
     {
         static constexpr Square starting { File::H, Rank::Eight };
 
-        static constexpr auto moves = move_gen::knight(starting);
+        static constexpr auto moves = move_gen::knight(Bitboard { starting });
 
         STATIC_REQUIRE(moves.count() == 2u);
 
@@ -105,6 +114,23 @@ TEST_CASE("Knight move generation", TAGS)
         for (const auto square : moves.squares())
             REQUIRE(knight_distance(starting, square) == 1uz);
     }
+
+    SECTION("From A1 and H1")
+    {
+        Bitboard starting;
+
+        starting.set({ File::A, Rank::One });
+        starting.set({ File::H, Rank::One });
+
+        const auto moves = move_gen::knight(starting);
+
+        REQUIRE(moves.count() == 4uz);
+
+        REQUIRE(moves.test(Square { File::B, Rank::Three }));
+        REQUIRE(moves.test(Square { File::C, Rank::Two }));
+        REQUIRE(moves.test(Square { File::F, Rank::Two }));
+        REQUIRE(moves.test(Square { File::G, Rank::Three }));
+    }
 }
 
 TEST_CASE("King move generation", TAGS)
@@ -113,7 +139,7 @@ TEST_CASE("King move generation", TAGS)
     {
         static constexpr Square starting { File::G, Rank::Two };
 
-        static constexpr auto moves = move_gen::king(starting);
+        static constexpr auto moves = move_gen::king(Bitboard { starting });
 
         STATIC_REQUIRE(moves.count() == 8u);
 
@@ -131,7 +157,7 @@ TEST_CASE("King move generation", TAGS)
     {
         static constexpr Square starting { File::A, Rank::One };
 
-        static constexpr auto moves = move_gen::king(starting);
+        static constexpr auto moves = move_gen::king(Bitboard { starting });
 
         STATIC_REQUIRE(moves.count() == 3u);
 
@@ -144,7 +170,7 @@ TEST_CASE("King move generation", TAGS)
     {
         static constexpr Square starting { File::A, Rank::Eight };
 
-        static constexpr auto moves = move_gen::king(starting);
+        static constexpr auto moves = move_gen::king(Bitboard { starting });
 
         STATIC_REQUIRE(moves.count() == 3u);
 
@@ -157,7 +183,7 @@ TEST_CASE("King move generation", TAGS)
     {
         static constexpr Square starting { File::H, Rank::One };
 
-        static constexpr auto moves = move_gen::king(starting);
+        static constexpr auto moves = move_gen::king(Bitboard { starting });
 
         STATIC_REQUIRE(moves.count() == 3u);
 
@@ -170,7 +196,7 @@ TEST_CASE("King move generation", TAGS)
     {
         static constexpr Square starting { File::H, Rank::Eight };
 
-        static constexpr auto moves = move_gen::king(starting);
+        static constexpr auto moves = move_gen::king(Bitboard { starting });
 
         STATIC_REQUIRE(moves.count() == 3u);
 
@@ -183,7 +209,7 @@ TEST_CASE("King move generation", TAGS)
     {
         static constexpr Square starting { File::C, Rank::One };
 
-        static constexpr auto moves = move_gen::king(starting);
+        static constexpr auto moves = move_gen::king(Bitboard { starting });
 
         STATIC_REQUIRE(moves.count() == 5u);
 
@@ -192,5 +218,24 @@ TEST_CASE("King move generation", TAGS)
         STATIC_REQUIRE(moves.test(Square { File::C, Rank::Two }));
         STATIC_REQUIRE(moves.test(Square { File::D, Rank::Two }));
         STATIC_REQUIRE(moves.test(Square { File::D, Rank::One }));
+    }
+
+    SECTION("From A1 and H8")
+    {
+        Bitboard starting;
+
+        starting.set({ File::A, Rank::One });
+        starting.set({ File::H, Rank::Eight });
+
+        const auto moves = move_gen::king(starting);
+
+        REQUIRE(moves.count() == 6uz);
+
+        REQUIRE(moves.test(Square { File::A, Rank::Two }));
+        REQUIRE(moves.test(Square { File::B, Rank::One }));
+        REQUIRE(moves.test(Square { File::B, Rank::Two }));
+        REQUIRE(moves.test(Square { File::H, Rank::Seven }));
+        REQUIRE(moves.test(Square { File::G, Rank::Seven }));
+        REQUIRE(moves.test(Square { File::G, Rank::Eight }));
     }
 }

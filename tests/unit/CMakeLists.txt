@@ -42,8 +42,8 @@ set (
     board/Square.cpp
     game/CastlingRights.cpp
     game/Position.cpp
-    moves/Generation.cpp
     moves/Move.cpp
+    moves/PseudoLegal.cpp
     util/Math.cpp
 )
 

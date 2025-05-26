@@ -7,18 +7,10 @@
  */
 
 #include <libchess/game/Position.hpp>
-#include <libchess/moves/Generation.hpp>
 #include <print>
 
 int main()
 {
-    static constexpr auto moves = chess::moves::queen({ chess::board::File::A,
-        chess::board::Rank::One });
-
-    std::println("{}", chess::board::print_ascii(moves));
-
-    return 1;
-
     using chess::game::print_utf8;
 
     chess::game::Position position;
