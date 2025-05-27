@@ -23,7 +23,6 @@
 #include <libchess/board/Square.hpp>
 #include <libchess/moves/Patterns.hpp>
 #include <libchess/pieces/Colors.hpp>
-#include <utility>
 
 /** This namespace provides functions for generating pseudo-legal moves for each piece
     type from a given starting position. These functions rely on other board state,
@@ -129,9 +128,7 @@ constexpr Bitboard pawn_double_pushes(
 
     // Need to filter out any pushes that would jump over a piece on the third/sixth rank
     const auto rankMask = color == Color::White ? rank_masks::three() : rank_masks::six();
-
-    const auto blockers = occupiedSquares & rankMask;
-    const auto fileMask = board::fills::file(blockers);
+    const auto fileMask = board::fills::file(occupiedSquares & rankMask);
 
     return moves & fileMask.inverse();
 }
@@ -186,78 +183,64 @@ namespace detail {
         SouthWest
     };
 
-    [[nodiscard, gnu::const]] constexpr bool is_negative(const RayDirection direction) noexcept
+    template <RayDirection Direction>
+    [[nodiscard, gnu::const]] consteval bool is_negative() noexcept
     {
-        return std::cmp_greater_equal(
-            std::to_underlying(direction),
-            std::to_underlying(RayDirection::South));
+        return Direction == RayDirection::South
+            || Direction == RayDirection::West
+            || Direction == RayDirection::SouthEast
+            || Direction == RayDirection::SouthWest;
     }
 
     // Generates all squares on the given ray starting from the given square,
     // traveling in the given direction. The starting square is not included
     // in the ray.
-    [[nodiscard, gnu::const]] constexpr Bitboard make_ray(
-        const Square& startPos, const RayDirection direction) noexcept
+    template <RayDirection Direction>
+    [[nodiscard, gnu::const]] constexpr Bitboard make_ray(const Square& startPos) noexcept
     {
         namespace rank_masks = board::masks::ranks;
 
         static constexpr Bitboard::Integer ONE { 1 };
 
-        switch (direction) {
-            case RayDirection::North: {
-                static constexpr Bitboard mask { 0x0101010101010100 };
+        if constexpr (Direction == RayDirection::North) {
+            static constexpr Bitboard mask { 0x0101010101010100 };
 
-                return mask << startPos.index();
-            }
+            return mask << startPos.index();
+        } else if constexpr (Direction == RayDirection::South) {
+            static constexpr Bitboard mask { 0x0080808080808080 };
 
-            case RayDirection::South: {
-                static constexpr Bitboard mask { 0x0080808080808080 };
+            return mask >> (startPos.index() ^ 63);
+        } else if constexpr (Direction == RayDirection::East) {
+            const auto index = startPos.index();
 
-                return mask >> (startPos.index() ^ 63);
-            }
+            return Bitboard { 2 * ((ONE << (index | 7)) - (ONE << index)) };
+        } else if constexpr (Direction == RayDirection::West) {
+            const auto index = startPos.index();
 
-            case RayDirection::East: {
-                const auto index = startPos.index();
+            return Bitboard { (ONE << index) - (ONE << (index & 56)) };
+        } else if constexpr (Direction == RayDirection::NorthEast) {
+            const auto diag = board::masks::diagonal(startPos);
+            const auto mask = board::fills::south(rank_masks::get(startPos.rank));
 
-                return Bitboard { 2 * ((ONE << (index | 7)) - (ONE << index)) };
-            }
+            return diag & mask.inverse();
+        } else if constexpr (Direction == RayDirection::NorthWest) {
+            const auto diag = board::masks::antidiagonal(startPos);
+            const auto mask = board::fills::south(rank_masks::get(startPos.rank));
 
-            case RayDirection::West: {
-                const auto index = startPos.index();
+            return diag & mask.inverse();
+        } else if constexpr (Direction == RayDirection::SouthEast) {
+            const auto diag = board::masks::antidiagonal(startPos);
+            const auto mask = board::fills::north(rank_masks::get(startPos.rank));
 
-                return Bitboard { (ONE << index) - (ONE << (index & 56)) };
-            }
+            return diag & mask.inverse();
+        } else if constexpr (Direction == RayDirection::SouthWest) {
+            const auto diag = board::masks::diagonal(startPos);
+            const auto mask = board::fills::north(rank_masks::get(startPos.rank));
 
-            case RayDirection::NorthEast: {
-                const auto diag = board::masks::diagonal(startPos);
-                const auto mask = board::fills::south(rank_masks::get(startPos.rank));
-
-                return diag & mask.inverse();
-            }
-
-            case RayDirection::NorthWest: {
-                const auto diag = board::masks::antidiagonal(startPos);
-                const auto mask = board::fills::south(rank_masks::get(startPos.rank));
-
-                return diag & mask.inverse();
-            }
-
-            case RayDirection::SouthEast: {
-                const auto diag = board::masks::antidiagonal(startPos);
-                const auto mask = board::fills::north(rank_masks::get(startPos.rank));
-
-                return diag & mask.inverse();
-            }
-
-            case RayDirection::SouthWest: {
-                const auto diag = board::masks::diagonal(startPos);
-                const auto mask = board::fills::north(rank_masks::get(startPos.rank));
-
-                return diag & mask.inverse();
-            }
-
-            default:
-                std::unreachable();
+            return diag & mask.inverse();
+        } else {
+            static_assert(false);
+            return {};
         }
     }
 
@@ -265,17 +248,18 @@ namespace detail {
     // stopping at the first blocking piece as indicated by the occupied bitboard.
     // This function does not prune squares occupied by friendly pieces (it considers
     // them possible captures), so those squares still need to be pruned.
+    template <RayDirection Direction>
     [[nodiscard, gnu::const]] constexpr Bitboard ray_attacks(
-        const Square& startPos, const RayDirection direction, const Bitboard occupied) noexcept
+        const Square& startPos, const Bitboard occupied) noexcept
     {
-        auto attacks = make_ray(startPos, direction);
+        auto attacks = make_ray<Direction>(startPos);
 
         const auto blocker = attacks & occupied;
 
         if (blocker.any()) {
-            const auto idx = is_negative(direction) ? blocker.last() : blocker.first();
+            const auto idx = is_negative<Direction>() ? blocker.last() : blocker.first();
 
-            attacks ^= make_ray(Square::from_index(idx), direction);
+            attacks ^= make_ray<Direction>(Square::from_index(idx));
         }
 
         return attacks;
@@ -284,19 +268,23 @@ namespace detail {
     [[nodiscard, gnu::const]] constexpr Bitboard rook_attacks(
         const Square& startPos, const Bitboard occupiedSquares) noexcept
     {
-        return ray_attacks(startPos, RayDirection::North, occupiedSquares)
-             | ray_attacks(startPos, RayDirection::East, occupiedSquares)
-             | ray_attacks(startPos, RayDirection::South, occupiedSquares)
-             | ray_attacks(startPos, RayDirection::West, occupiedSquares);
+        using enum RayDirection;
+
+        return ray_attacks<North>(startPos, occupiedSquares)
+             | ray_attacks<East>(startPos, occupiedSquares)
+             | ray_attacks<South>(startPos, occupiedSquares)
+             | ray_attacks<West>(startPos, occupiedSquares);
     }
 
     [[nodiscard, gnu::const]] constexpr Bitboard bishop_attacks(
         const Square& startPos, const Bitboard occupiedSquares) noexcept
     {
-        return ray_attacks(startPos, RayDirection::NorthEast, occupiedSquares)
-             | ray_attacks(startPos, RayDirection::NorthWest, occupiedSquares)
-             | ray_attacks(startPos, RayDirection::SouthEast, occupiedSquares)
-             | ray_attacks(startPos, RayDirection::SouthWest, occupiedSquares);
+        using enum RayDirection;
+
+        return ray_attacks<NorthEast>(startPos, occupiedSquares)
+             | ray_attacks<NorthWest>(startPos, occupiedSquares)
+             | ray_attacks<SouthEast>(startPos, occupiedSquares)
+             | ray_attacks<SouthWest>(startPos, occupiedSquares);
     }
 
 } // namespace detail
