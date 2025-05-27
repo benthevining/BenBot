@@ -325,3 +325,52 @@ TEST_CASE("Pseudo legal - knights", TAGS)
         REQUIRE(moves == Bitboard { 0x342600641C00 });
     }
 }
+
+TEST_CASE("Pseudo legal - bishops", TAGS)
+{
+    SECTION("From D4")
+    {
+        static constexpr Square starting { File::D, Rank::Four };
+
+        static constexpr Bitboard enemyPieces { Square { File::G, Rank::Seven } };
+
+        Bitboard friendlyPieces;
+
+        friendlyPieces.set(Square { File::B, Rank::Two });
+        friendlyPieces.set(Square { File::G, Rank::One });
+
+        const auto moves = move_gen::bishop(
+            starting, friendlyPieces | enemyPieces, friendlyPieces);
+
+        REQUIRE(moves.count() == 9uz);
+
+        REQUIRE(moves.test(Square { File::G, Rank::Seven }));
+        REQUIRE(! moves.test(Square { File::B, Rank::Two }));
+        REQUIRE(! moves.test(Square { File::G, Rank::One }));
+
+        REQUIRE(moves == Bitboard { 0X41221400142000 });
+    }
+
+    SECTION("From G6")
+    {
+        static constexpr Square starting { File::G, Rank::Six };
+
+        static constexpr Bitboard friendlyPieces { Square { File::B, Rank::One } };
+
+        Bitboard enemyPieces;
+
+        enemyPieces.set(Square { File::C, Rank::Two });
+        enemyPieces.set(Square { File::D, Rank::Three });
+
+        const auto moves = move_gen::bishop(
+            starting, friendlyPieces | enemyPieces, friendlyPieces);
+
+        REQUIRE(moves.count() == 7uz);
+
+        REQUIRE(moves.test(Square { File::D, Rank::Three }));
+        REQUIRE(! moves.test(Square { File::C, Rank::Two }));
+        REQUIRE(! moves.test(Square { File::B, Rank::One }));
+
+        REQUIRE(moves == Bitboard { 0X10A000A010080000 });
+    }
+}

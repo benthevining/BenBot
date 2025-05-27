@@ -17,21 +17,19 @@ int main()
     using chess::board::Rank;
     using chess::board::Square;
 
-    Bitboard starting;
-
-    starting.set(Square { File::E, Rank::Four });
-    starting.set(Square { File::D, Rank::Four });
+    static constexpr Square starting { File::G, Rank::Six };
 
     Bitboard friendlyPieces;
 
-    friendlyPieces.set(Square { File::E, Rank::Four });
-    friendlyPieces.set(Square { File::D, Rank::Four });
-    friendlyPieces.set(Square { File::B, Rank::Three });
-    friendlyPieces.set(Square { File::G, Rank::Five });
-    friendlyPieces.set(Square { File::D, Rank::Six });
-    friendlyPieces.set(Square { File::F, Rank::Two });
+    friendlyPieces.set(Square { File::B, Rank::One });
 
-    const auto moves = chess::moves::pseudo_legal::knight(starting, friendlyPieces);
+    Bitboard enemyPieces;
+
+    enemyPieces.set(Square { File::C, Rank::Two });
+    enemyPieces.set(Square { File::D, Rank::Three });
+
+    const auto moves = chess::moves::pseudo_legal::bishop(
+        starting, friendlyPieces | enemyPieces, friendlyPieces);
 
     std::println("{}", chess::board::print_ascii(moves));
 
