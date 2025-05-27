@@ -101,7 +101,7 @@ TEST_CASE("Pseudo-legal - pawn pushes", TAGS)
     }
 }
 
-TEST_CASE("Pseudo legal - pawn captures", TAGS)
+TEST_CASE("Pseudo-legal - pawn captures", TAGS)
 {
     SECTION("White")
     {
@@ -268,7 +268,7 @@ TEST_CASE("Pseudo legal - pawn captures", TAGS)
     }
 }
 
-TEST_CASE("Pseudo legal - knights", TAGS)
+TEST_CASE("Pseudo-legal - knights", TAGS)
 {
     SECTION("From D1")
     {
@@ -326,7 +326,7 @@ TEST_CASE("Pseudo legal - knights", TAGS)
     }
 }
 
-TEST_CASE("Pseudo legal - bishops", TAGS)
+TEST_CASE("Pseudo-legal - bishops", TAGS)
 {
     SECTION("From D4")
     {
@@ -375,7 +375,7 @@ TEST_CASE("Pseudo legal - bishops", TAGS)
     }
 }
 
-TEST_CASE("Pseudo legal - rooks", TAGS)
+TEST_CASE("Pseudo-legal - rooks", TAGS)
 {
     SECTION("From C3")
     {
@@ -415,7 +415,7 @@ TEST_CASE("Pseudo legal - rooks", TAGS)
     }
 }
 
-TEST_CASE("Pseudo legal - queens", TAGS)
+TEST_CASE("Pseudo-legal - queens", TAGS)
 {
     SECTION("From E5")
     {
@@ -457,5 +457,46 @@ TEST_CASE("Pseudo legal - queens", TAGS)
             starting, friendlyPieces | enemyPieces, friendlyPieces);
 
         REQUIRE(moves == Bitboard { 0X20120A071D });
+    }
+}
+
+TEST_CASE("Pseudo-legal - kings", TAGS)
+{
+    SECTION("From G4")
+    {
+        static constexpr Bitboard starting { Square { File::G, Rank::Four } };
+
+        Bitboard friendlyPieces;
+
+        friendlyPieces.set(Square { File::H, Rank::Five });
+        friendlyPieces.set(Square { File::G, Rank::Three });
+
+        const auto moves = move_gen::king(starting, friendlyPieces);
+
+        REQUIRE(moves.count() == 6uz);
+
+        REQUIRE(moves.test(Square { File::F, Rank::Five }));
+        REQUIRE(moves.test(Square { File::G, Rank::Five }));
+        REQUIRE(moves.test(Square { File::F, Rank::Four }));
+        REQUIRE(moves.test(Square { File::H, Rank::Four }));
+        REQUIRE(moves.test(Square { File::F, Rank::Three }));
+        REQUIRE(moves.test(Square { File::H, Rank::Three }));
+    }
+
+    SECTION("From A8")
+    {
+        static constexpr Bitboard starting { Square { File::A, Rank::Eight } };
+
+        Bitboard friendlyPieces;
+
+        friendlyPieces.set(Square { File::A, Rank::Seven });
+        friendlyPieces.set(Square { File::B, Rank::Seven });
+        friendlyPieces.set(Square { File::C, Rank::Seven });
+
+        const auto moves = move_gen::king(starting, friendlyPieces);
+
+        REQUIRE(moves.count() == 1uz);
+
+        REQUIRE(moves.test(Square { File::B, Rank::Eight }));
     }
 }
