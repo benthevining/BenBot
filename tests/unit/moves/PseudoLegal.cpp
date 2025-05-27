@@ -27,7 +27,6 @@ using chess::pieces::Color;
 namespace board_masks = chess::board::masks;
 namespace move_gen    = chess::moves::pseudo_legal;
 
-// bishop
 // rook
 // queen
 
@@ -401,6 +400,141 @@ TEST_CASE("Knight move generation", TAGS)
         static constexpr auto moves = move_gen::knight(empty);
 
         STATIC_REQUIRE(moves.none());
+    }
+}
+
+TEST_CASE("Bishop move generation", TAGS)
+{
+    using chess::board::are_on_same_diagonal;
+
+    SECTION("From C5")
+    {
+        static constexpr Square starting { File::C, Rank::Five };
+
+        static constexpr auto moves = move_gen::bishop(starting);
+
+        STATIC_REQUIRE(moves.count() == 11uz);
+
+        STATIC_REQUIRE(moves.test(Square { File::A, Rank::Seven }));
+        STATIC_REQUIRE(moves.test(Square { File::B, Rank::Six }));
+        STATIC_REQUIRE(moves.test(Square { File::D, Rank::Four }));
+        STATIC_REQUIRE(moves.test(Square { File::E, Rank::Three }));
+        STATIC_REQUIRE(moves.test(Square { File::F, Rank::Two }));
+        STATIC_REQUIRE(moves.test(Square { File::G, Rank::One }));
+
+        STATIC_REQUIRE(moves.test(Square { File::A, Rank::Three }));
+        STATIC_REQUIRE(moves.test(Square { File::B, Rank::Four }));
+        STATIC_REQUIRE(moves.test(Square { File::D, Rank::Six }));
+        STATIC_REQUIRE(moves.test(Square { File::E, Rank::Seven }));
+        STATIC_REQUIRE(moves.test(Square { File::F, Rank::Eight }));
+
+        for (const auto square : moves.squares())
+            REQUIRE(are_on_same_diagonal(starting, square));
+    }
+
+    SECTION("From F3")
+    {
+        static constexpr Square starting { File::F, Rank::Three };
+
+        static constexpr auto moves = move_gen::bishop(starting);
+
+        STATIC_REQUIRE(moves.count() == 11uz);
+
+        STATIC_REQUIRE(moves.test(Square { File::A, Rank::Eight }));
+        STATIC_REQUIRE(moves.test(Square { File::B, Rank::Seven }));
+        STATIC_REQUIRE(moves.test(Square { File::C, Rank::Six }));
+        STATIC_REQUIRE(moves.test(Square { File::D, Rank::Five }));
+        STATIC_REQUIRE(moves.test(Square { File::E, Rank::Four }));
+        STATIC_REQUIRE(moves.test(Square { File::G, Rank::Two }));
+        STATIC_REQUIRE(moves.test(Square { File::H, Rank::One }));
+
+        STATIC_REQUIRE(moves.test(Square { File::D, Rank::One }));
+        STATIC_REQUIRE(moves.test(Square { File::E, Rank::Two }));
+        STATIC_REQUIRE(moves.test(Square { File::G, Rank::Four }));
+        STATIC_REQUIRE(moves.test(Square { File::H, Rank::Five }));
+
+        for (const auto square : moves.squares())
+            REQUIRE(are_on_same_diagonal(starting, square));
+    }
+
+    SECTION("From A1")
+    {
+        static constexpr Square starting { File::A, Rank::One };
+
+        static constexpr auto moves = move_gen::bishop(starting);
+
+        STATIC_REQUIRE(moves.count() == 7uz);
+
+        STATIC_REQUIRE(moves.test(Square { File::B, Rank::Two }));
+        STATIC_REQUIRE(moves.test(Square { File::C, Rank::Three }));
+        STATIC_REQUIRE(moves.test(Square { File::D, Rank::Four }));
+        STATIC_REQUIRE(moves.test(Square { File::E, Rank::Five }));
+        STATIC_REQUIRE(moves.test(Square { File::F, Rank::Six }));
+        STATIC_REQUIRE(moves.test(Square { File::G, Rank::Seven }));
+        STATIC_REQUIRE(moves.test(Square { File::H, Rank::Eight }));
+
+        for (const auto square : moves.squares())
+            REQUIRE(are_on_same_diagonal(starting, square));
+    }
+
+    SECTION("From A8")
+    {
+        static constexpr Square starting { File::A, Rank::Eight };
+
+        static constexpr auto moves = move_gen::bishop(starting);
+
+        STATIC_REQUIRE(moves.count() == 7uz);
+
+        STATIC_REQUIRE(moves.test(Square { File::B, Rank::Seven }));
+        STATIC_REQUIRE(moves.test(Square { File::C, Rank::Six }));
+        STATIC_REQUIRE(moves.test(Square { File::D, Rank::Five }));
+        STATIC_REQUIRE(moves.test(Square { File::E, Rank::Four }));
+        STATIC_REQUIRE(moves.test(Square { File::F, Rank::Three }));
+        STATIC_REQUIRE(moves.test(Square { File::G, Rank::Two }));
+        STATIC_REQUIRE(moves.test(Square { File::H, Rank::One }));
+
+        for (const auto square : moves.squares())
+            REQUIRE(are_on_same_diagonal(starting, square));
+    }
+
+    SECTION("From H1")
+    {
+        static constexpr Square starting { File::H, Rank::One };
+
+        static constexpr auto moves = move_gen::bishop(starting);
+
+        STATIC_REQUIRE(moves.count() == 7uz);
+
+        STATIC_REQUIRE(moves.test(Square { File::A, Rank::Eight }));
+        STATIC_REQUIRE(moves.test(Square { File::B, Rank::Seven }));
+        STATIC_REQUIRE(moves.test(Square { File::C, Rank::Six }));
+        STATIC_REQUIRE(moves.test(Square { File::D, Rank::Five }));
+        STATIC_REQUIRE(moves.test(Square { File::E, Rank::Four }));
+        STATIC_REQUIRE(moves.test(Square { File::F, Rank::Three }));
+        STATIC_REQUIRE(moves.test(Square { File::G, Rank::Two }));
+
+        for (const auto square : moves.squares())
+            REQUIRE(are_on_same_diagonal(starting, square));
+    }
+
+    SECTION("From H8")
+    {
+        static constexpr Square starting { File::H, Rank::Eight };
+
+        static constexpr auto moves = move_gen::bishop(starting);
+
+        STATIC_REQUIRE(moves.count() == 7uz);
+
+        STATIC_REQUIRE(moves.test(Square { File::A, Rank::One }));
+        STATIC_REQUIRE(moves.test(Square { File::B, Rank::Two }));
+        STATIC_REQUIRE(moves.test(Square { File::C, Rank::Three }));
+        STATIC_REQUIRE(moves.test(Square { File::D, Rank::Four }));
+        STATIC_REQUIRE(moves.test(Square { File::E, Rank::Five }));
+        STATIC_REQUIRE(moves.test(Square { File::F, Rank::Six }));
+        STATIC_REQUIRE(moves.test(Square { File::G, Rank::Seven }));
+
+        for (const auto square : moves.squares())
+            REQUIRE(are_on_same_diagonal(starting, square));
     }
 }
 

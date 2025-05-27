@@ -7,10 +7,19 @@
  */
 
 #include <libchess/game/Position.hpp>
+#include <libchess/moves/PseudoLegal.hpp>
 #include <print>
 
 int main()
 {
+    static constexpr chess::board::Square starting { chess::board::File::H, chess::board::Rank::Eight };
+
+    static constexpr auto moves = chess::moves::pseudo_legal::bishop(starting);
+
+    std::println("{}", chess::board::print_ascii(moves));
+
+    return 0;
+
     using chess::game::print_utf8;
 
     chess::game::Position position;
