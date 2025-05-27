@@ -27,7 +27,6 @@ namespace board_masks = chess::board::masks;
 namespace move_gen    = chess::moves::pseudo_legal;
 
 // pawn double pushes
-// knights
 // bishops
 // rooks
 // queens
@@ -272,5 +271,63 @@ TEST_CASE("Pseudo legal - pawn captures", TAGS)
             REQUIRE(captures.test(Square { File::G, Rank::Three }));
             REQUIRE(captures.test(Square { File::A, Rank::Two }));
         }
+    }
+}
+
+TEST_CASE("Pseudo legal - knights", TAGS)
+{
+    SECTION("From D1")
+    {
+        static constexpr Bitboard starting { Square { File::D, Rank::One } };
+
+        static constexpr auto allMoves = move_gen::knight(starting, {});
+
+        STATIC_REQUIRE(allMoves.count() == 4uz);
+
+        STATIC_REQUIRE(allMoves.test(Square { File::B, Rank::Two }));
+        STATIC_REQUIRE(allMoves.test(Square { File::C, Rank::Three }));
+        STATIC_REQUIRE(allMoves.test(Square { File::E, Rank::Three }));
+        STATIC_REQUIRE(allMoves.test(Square { File::F, Rank::Two }));
+
+        Bitboard friendlyPieces;
+
+        friendlyPieces.set(Square { File::C, Rank::Three });
+        friendlyPieces.set(Square { File::F, Rank::Two });
+
+        const auto moves = move_gen::knight(starting, friendlyPieces);
+
+        REQUIRE(moves.count() == 2uz);
+
+        REQUIRE(moves.test(Square { File::B, Rank::Two }));
+        REQUIRE(moves.test(Square { File::E, Rank::Three }));
+    }
+
+    SECTION("From E4 and D4")
+    {
+        Bitboard starting;
+
+        starting.set(Square { File::E, Rank::Four });
+        starting.set(Square { File::D, Rank::Four });
+
+        const auto allMoves = move_gen::knight(starting, {});
+
+        REQUIRE(allMoves.count() == 16uz);
+
+        REQUIRE(allMoves == Bitboard { 0x3C6600663C00 });
+
+        Bitboard friendlyPieces;
+
+        friendlyPieces.set(Square { File::E, Rank::Four });
+        friendlyPieces.set(Square { File::D, Rank::Four });
+        friendlyPieces.set(Square { File::B, Rank::Three });
+        friendlyPieces.set(Square { File::G, Rank::Five });
+        friendlyPieces.set(Square { File::D, Rank::Six });
+        friendlyPieces.set(Square { File::F, Rank::Two });
+
+        const auto moves = move_gen::knight(starting, friendlyPieces);
+
+        REQUIRE(moves.count() == 12uz);
+
+        REQUIRE(moves == Bitboard { 0x342600641C00 });
     }
 }
