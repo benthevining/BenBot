@@ -219,64 +219,41 @@ namespace detail {
             case RayDirection::East: {
                 const auto index = startPos.index();
 
-                return Bitboard {
-                    2 * ((ONE << (index | 7)) - (ONE << index))
-                };
+                return Bitboard { 2 * ((ONE << (index | 7)) - (ONE << index)) };
             }
 
             case RayDirection::West: {
                 const auto index = startPos.index();
 
-                return Bitboard {
-                    (ONE << index) - (ONE << (index & 56))
-                };
+                return Bitboard { (ONE << index) - (ONE << (index & 56)) };
             }
-
-                // TODO: perhaps these ray calculations can be optimized, but for now I just take
-                // the diagonal mask and remove the files we don't want
 
             case RayDirection::NorthEast: {
                 const auto diag = board::masks::diagonal(startPos);
+                const auto mask = board::fills::south(rank_masks::get(startPos.rank));
 
-                auto rankMask = rank_masks::one();
-
-                for (auto rank = 1; rank <= std::to_underlying(startPos.rank); ++rank)
-                    rankMask |= rank_masks::get(static_cast<Rank>(rank));
-
-                return diag & rankMask.inverse();
+                return diag & mask.inverse();
             }
 
             case RayDirection::NorthWest: {
                 const auto diag = board::masks::antidiagonal(startPos);
+                const auto mask = board::fills::south(rank_masks::get(startPos.rank));
 
-                auto rankMask = rank_masks::one();
-
-                for (auto rank = 1; rank <= std::to_underlying(startPos.rank); ++rank)
-                    rankMask |= rank_masks::get(static_cast<Rank>(rank));
-
-                return diag & rankMask.inverse();
+                return diag & mask.inverse();
             }
 
             case RayDirection::SouthEast: {
                 const auto diag = board::masks::antidiagonal(startPos);
+                const auto mask = board::fills::north(rank_masks::get(startPos.rank));
 
-                auto rankMask = rank_masks::eight();
-
-                for (auto rank = 7; rank >= std::to_underlying(startPos.rank); --rank)
-                    rankMask |= rank_masks::get(static_cast<Rank>(rank));
-
-                return diag & rankMask.inverse();
+                return diag & mask.inverse();
             }
 
             case RayDirection::SouthWest: {
                 const auto diag = board::masks::diagonal(startPos);
+                const auto mask = board::fills::north(rank_masks::get(startPos.rank));
 
-                auto rankMask = rank_masks::eight();
-
-                for (auto rank = 7; rank >= std::to_underlying(startPos.rank); --rank)
-                    rankMask |= rank_masks::get(static_cast<Rank>(rank));
-
-                return diag & rankMask.inverse();
+                return diag & mask.inverse();
             }
 
             default:
