@@ -8,17 +8,26 @@
 
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Legal.hpp>
-#include <libchess/moves/PseudoLegal.hpp>
 #include <print>
 
 int main()
 {
-    static constexpr chess::board::Square starting { chess::board::File::F, chess::board::Rank::Seven };
+    using chess::board::Bitboard;
+    using chess::board::File;
+    using chess::board::Rank;
+    using chess::board::Square;
 
-    static constexpr auto north = chess::moves::legal::detail::west_ray_attacks(starting,
-        chess::board::Bitboard { chess::board::Square { chess::board::File::C, chess::board::Rank::Seven } });
+    static constexpr Square starting { File::D, Rank::Four };
 
-    std::println("{}", chess::board::print_ascii(north));
+    Bitboard occupied;
+
+    occupied.set(Square { File::B, Rank::Four });
+    occupied.set(Square { File::D, Rank::Five });
+    occupied.set(Square { File::H, Rank::Four });
+
+    const auto moves = chess::moves::legal::rook(starting, occupied);
+
+    std::println("{}", chess::board::print_ascii(moves));
 
     return 0;
 

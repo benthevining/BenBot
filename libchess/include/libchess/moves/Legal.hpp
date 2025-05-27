@@ -16,6 +16,19 @@ namespace chess::moves::legal {
 using board::Bitboard;
 using board::Square;
 
+// pawn pushes
+// pawn double pushes
+// pawn captures
+// knight
+// bishop
+// queen
+// king
+
+/** Calculates all legal rook moves, taking blocking pieces into consideration.
+    @todo prune squares occupied by own pieces
+ */
+[[nodiscard, gnu::const]] constexpr Bitboard rook(const Square& starting, Bitboard occupied) noexcept;
+
 /*
                          ___                           ,--,
       ,---,            ,--.'|_                ,--,   ,--.'|
@@ -35,98 +48,87 @@ using board::Square;
 
 namespace detail {
 
-    [[nodiscard, gnu::const]] constexpr Bitboard ray_north(const Square& starting) noexcept
-    {
-        static constexpr Bitboard mask { 0x0101010101010100 };
+    enum class RayDirection {
+        North,
+        East,
+        South,
+        West
+    };
 
-        return mask << starting.index();
+    [[nodiscard, gnu::const]] constexpr bool is_negative(const RayDirection direction) noexcept
+    {
+        return std::cmp_greater_equal(
+            std::to_underlying(direction),
+            std::to_underlying(RayDirection::South));
     }
 
-    [[nodiscard, gnu::const]] constexpr Bitboard ray_south(const Square& starting) noexcept
+    [[nodiscard, gnu::const]] constexpr Bitboard make_ray(
+        const board::BitboardIndex startPos, const RayDirection direction) noexcept
     {
-        static constexpr Bitboard mask { 0x0080808080808080 };
+        static constexpr Bitboard::Integer ONE { 1 };
 
-        return mask >> (starting.index() ^ 63);
-    }
+        switch (direction) {
+            case RayDirection::North: {
+                static constexpr Bitboard mask { 0x0101010101010100 };
 
-    [[nodiscard, gnu::const]] constexpr Bitboard ray_east(const Square& starting) noexcept
-    {
-        static constexpr Bitboard::Integer one { 1 };
+                return mask << startPos;
+            }
 
-        const auto index = starting.index();
+            case RayDirection::South: {
+                static constexpr Bitboard mask { 0x0080808080808080 };
 
-        return Bitboard {
-            2 * ((one << (index | 7)) - (one << index))
-        };
-    }
+                return mask >> (startPos ^ 63);
+            }
 
-    [[nodiscard, gnu::const]] constexpr Bitboard ray_west(const Square& starting) noexcept
-    {
-        static constexpr Bitboard::Integer one { 1 };
+            case RayDirection::East: {
+                return Bitboard {
+                    2 * ((ONE << (startPos | 7)) - (ONE << startPos))
+                };
+            }
 
-        const auto index = starting.index();
+            case RayDirection::West: {
+                return Bitboard {
+                    (ONE << startPos) - (ONE << (startPos & 56))
+                };
+            }
 
-        return Bitboard {
-            (one << index) - (one << (index & 56))
-        };
-    }
-
-    [[nodiscard, gnu::const]] constexpr Bitboard north_ray_attacks(const Square& starting, const Bitboard occupied) noexcept
-    {
-        auto attacks = ray_north(starting);
-
-        const auto blocker = attacks & occupied;
-
-        if (blocker.any()) {
-            const auto idx = blocker.first();
-            attacks ^= ray_north(Square::from_index(idx));
+            default:
+                std::unreachable();
         }
-
-        return attacks;
     }
 
-    [[nodiscard, gnu::const]] constexpr Bitboard east_ray_attacks(const Square& starting, const Bitboard occupied) noexcept
+    // returns all squares accessible by a ray attacker in the given direction,
+    // stopping at the first blocking piece as indicated by the occupied bitboard
+    [[nodiscard, gnu::const]] constexpr Bitboard ray_attacks(
+        const board::BitboardIndex startPos, const RayDirection direction, const Bitboard occupied) noexcept
     {
-        auto attacks = ray_east(starting);
+        auto attacks = make_ray(startPos, direction);
 
         const auto blocker = attacks & occupied;
 
         if (blocker.any()) {
-            const auto idx = blocker.first();
-            attacks ^= ray_east(Square::from_index(idx));
-        }
+            const auto idx = is_negative(direction) ? blocker.last() : blocker.first();
 
-        return attacks;
-    }
-
-    [[nodiscard, gnu::const]] constexpr Bitboard south_ray_attacks(const Square& starting, const Bitboard occupied) noexcept
-    {
-        auto attacks = ray_south(starting);
-
-        const auto blocker = attacks & occupied;
-
-        if (blocker.any()) {
-            const auto idx = blocker.last();
-            attacks ^= ray_south(Square::from_index(idx));
-        }
-
-        return attacks;
-    }
-
-    [[nodiscard, gnu::const]] constexpr Bitboard west_ray_attacks(const Square& starting, const Bitboard occupied) noexcept
-    {
-        auto attacks = ray_west(starting);
-
-        const auto blocker = attacks & occupied;
-
-        if (blocker.any()) {
-            const auto idx = blocker.last();
-            attacks ^= ray_west(Square::from_index(idx));
+            attacks ^= make_ray(idx, direction);
         }
 
         return attacks;
     }
 
 } // namespace detail
+
+constexpr Bitboard rook(
+    const Square& starting, const Bitboard occupied) noexcept
+{
+    using detail::ray_attacks;
+    using detail::RayDirection;
+
+    const auto startPos = starting.index();
+
+    return ray_attacks(startPos, RayDirection::North, occupied)
+         | ray_attacks(startPos, RayDirection::East, occupied)
+         | ray_attacks(startPos, RayDirection::South, occupied)
+         | ray_attacks(startPos, RayDirection::West, occupied);
+}
 
 } // namespace chess::moves::legal
