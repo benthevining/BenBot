@@ -13,6 +13,7 @@
 
 #pragma once
 
+#include <bit>
 #include <bitset>
 #include <cassert>
 #include <cstddef> // IWYU pragma: keep - for size_t
@@ -106,6 +107,44 @@ struct Bitboard final {
     {
         assert(index <= MAX_BITBOARD_IDX);
         bits[index] = false;
+    }
+
+    /** Returns the number of 0 bits before the first set bit.
+        @see first()
+     */
+    [[nodiscard]] constexpr BitboardIndex leading_zeroes() const noexcept
+    {
+        return static_cast<BitboardIndex>(std::countr_zero(bits.to_ullong()));
+    }
+
+    /** Returns the number of 0 bits after the last set bit.
+        @see last()
+     */
+    [[nodiscard]] constexpr BitboardIndex trailing_zeroes() const noexcept
+    {
+        return static_cast<BitboardIndex>(std::countl_zero(bits.to_ullong()));
+    }
+
+    /** Returns the index of the first set bit.
+        This operation may also be known as "bitscan forward".
+        Returns 64 if all bits are 0.
+
+        @see leading_zeroes()
+     */
+    [[nodiscard]] constexpr BitboardIndex first() const noexcept { return leading_zeroes(); }
+
+    /** Returns the index of the last set bit.
+        This operation may also be known as "bitscan reverse".
+        Returns 64 if all bits are 0.
+
+        @see trailing_zeroes()
+     */
+    [[nodiscard]] constexpr BitboardIndex last() const noexcept
+    {
+        if (bits.none())
+            return NUM_SQUARES;
+
+        return NUM_SQUARES - trailing_zeroes() - 1uz;
     }
 
     /** Resets all bits to 0. */

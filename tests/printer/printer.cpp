@@ -7,16 +7,18 @@
  */
 
 #include <libchess/game/Position.hpp>
+#include <libchess/moves/Legal.hpp>
 #include <libchess/moves/PseudoLegal.hpp>
 #include <print>
 
 int main()
 {
-    static constexpr chess::board::Square starting { chess::board::File::D, chess::board::Rank::Four };
+    static constexpr chess::board::Square starting { chess::board::File::F, chess::board::Rank::Seven };
 
-    static constexpr auto moves = chess::moves::pseudo_legal::queen(starting);
+    static constexpr auto north = chess::moves::legal::detail::west_ray_attacks(starting,
+        chess::board::Bitboard { chess::board::Square { chess::board::File::C, chess::board::Rank::Seven } });
 
-    std::println("{}", chess::board::print_ascii(moves));
+    std::println("{}", chess::board::print_ascii(north));
 
     return 0;
 
