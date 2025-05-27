@@ -414,3 +414,48 @@ TEST_CASE("Pseudo legal - rooks", TAGS)
         REQUIRE(moves == Bitboard { 0X10EC101000000000 });
     }
 }
+
+TEST_CASE("Pseudo legal - queens", TAGS)
+{
+    SECTION("From E5")
+    {
+        static constexpr Square starting { File::E, Rank::Five };
+
+        Bitboard friendlyPieces;
+
+        friendlyPieces.set(Square { File::B, Rank::Eight });
+        friendlyPieces.set(Square { File::F, Rank::Six });
+        friendlyPieces.set(Square { File::A, Rank::One });
+
+        Bitboard enemyPieces;
+
+        enemyPieces.set(Square { File::C, Rank::Five });
+        enemyPieces.set(Square { File::E, Rank::Three });
+
+        const auto moves = move_gen::queen(
+            starting, friendlyPieces | enemyPieces, friendlyPieces);
+
+        REQUIRE(moves == Bitboard { 0X101418EC38548200 });
+    }
+
+    SECTION("From B1")
+    {
+        static constexpr Square starting { File::B, Rank::One };
+
+        Bitboard friendlyPieces;
+
+        friendlyPieces.set(Square { File::F, Rank::One });
+        friendlyPieces.set(Square { File::G, Rank::Six });
+
+        Bitboard enemyPieces;
+
+        enemyPieces.set(Square { File::A, Rank::One });
+        enemyPieces.set(Square { File::A, Rank::Two });
+        enemyPieces.set(Square { File::B, Rank::Four });
+
+        const auto moves = move_gen::queen(
+            starting, friendlyPieces | enemyPieces, friendlyPieces);
+
+        REQUIRE(moves == Bitboard { 0X20120A071D });
+    }
+}
