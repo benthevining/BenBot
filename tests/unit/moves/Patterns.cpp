@@ -13,7 +13,7 @@
 #include <libchess/board/File.hpp>
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
-#include <libchess/moves/PseudoLegal.hpp>
+#include <libchess/moves/Patterns.hpp>
 #include <libchess/pieces/Colors.hpp>
 
 static constexpr auto TAGS { "[moves][Generation][pseudo-legal]" };
@@ -25,7 +25,7 @@ using chess::board::Square;
 using chess::pieces::Color;
 
 namespace board_masks = chess::board::masks;
-namespace move_gen    = chess::moves::pseudo_legal;
+namespace move_gen    = chess::moves::patterns;
 
 TEST_CASE("Pawn push generation", TAGS)
 {

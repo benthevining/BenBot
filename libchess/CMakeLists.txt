@@ -43,7 +43,7 @@ set (
     game/Position.hpp
     moves/Legal.hpp
     moves/Move.hpp
-    moves/PseudoLegal.hpp
+    moves/Patterns.hpp
     pieces/Colors.hpp
     pieces/PieceTypes.hpp
     pieces/UTF8.hpp

@@ -43,7 +43,7 @@ set (
     game/CastlingRights.cpp
     game/Position.cpp
     moves/Move.cpp
-    moves/PseudoLegal.cpp
+    moves/Patterns.cpp
 )
 
 target_sources (libchess_tests PRIVATE ${sources})

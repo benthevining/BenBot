@@ -19,7 +19,7 @@
 #include <libchess/board/BitboardIndex.hpp>
 #include <libchess/board/BitboardMasks.hpp>
 #include <libchess/board/Square.hpp>
-#include <libchess/moves/PseudoLegal.hpp>
+#include <libchess/moves/Patterns.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <utility>
 
@@ -102,31 +102,31 @@ using pieces::Color;
 constexpr Bitboard pawn_pushes(
     const Bitboard startingPawns, const Color color, const Bitboard occupiedSquares) noexcept
 {
-    return pseudo_legal::pawn_pushes(startingPawns, color) & occupiedSquares.inverse();
+    return patterns::pawn_pushes(startingPawns, color) & occupiedSquares.inverse();
 }
 
 constexpr Bitboard pawn_double_pushes(
     const Bitboard startingPawns, const Color color, const Bitboard occupiedSquares) noexcept
 {
-    return pseudo_legal::pawn_double_pushes(startingPawns, color) & occupiedSquares.inverse();
+    return patterns::pawn_double_pushes(startingPawns, color) & occupiedSquares.inverse();
 }
 
 constexpr Bitboard pawn_captures(
     const Bitboard startingPawns, const Color color, const Bitboard enemyPieces) noexcept
 {
-    return pseudo_legal::pawn_attacks(startingPawns, color) & enemyPieces;
+    return patterns::pawn_attacks(startingPawns, color) & enemyPieces;
 }
 
 constexpr Bitboard knight(
     const Bitboard startingKnights, const Bitboard friendlyPieces) noexcept
 {
-    return pseudo_legal::knight(startingKnights) & friendlyPieces.inverse();
+    return patterns::knight(startingKnights) & friendlyPieces.inverse();
 }
 
 constexpr Bitboard king(
     const Bitboard startingKing, const Bitboard friendlyPieces) noexcept
 {
-    return pseudo_legal::king(startingKing) & friendlyPieces.inverse();
+    return patterns::king(startingKing) & friendlyPieces.inverse();
 }
 
 namespace detail {

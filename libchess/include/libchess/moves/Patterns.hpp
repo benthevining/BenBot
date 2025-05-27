@@ -7,7 +7,7 @@
  */
 
 /** @file
-    This file provides functions for generating pseudo-legal moves.
+    This file provides functions for generating move patterns.
 
     @ingroup moves
  */
@@ -27,7 +27,7 @@
 
     @ingroup moves
  */
-namespace chess::moves::pseudo_legal {
+namespace chess::moves::patterns {
 
 using board::Bitboard;
 using board::Square;
@@ -120,6 +120,16 @@ constexpr Bitboard knight(const Bitboard starting) noexcept
     return moves;
 }
 
+constexpr Bitboard bishop(const Square& starting) noexcept
+{
+    const auto diagMask     = board::masks::diagonal(starting);
+    const auto antiDiagMask = board::masks::antidiagonal(starting);
+
+    const auto notStartingSquare = Bitboard { starting }.inverse();
+
+    return (diagMask | antiDiagMask) & notStartingSquare;
+}
+
 constexpr Bitboard rook(const Square& starting) noexcept
 {
     const auto rankMask = board::masks::ranks::get(starting.rank);
@@ -128,6 +138,18 @@ constexpr Bitboard rook(const Square& starting) noexcept
     const auto notStartingSquare = Bitboard { starting }.inverse();
 
     return (rankMask | fileMask) & notStartingSquare;
+}
+
+constexpr Bitboard queen(const Square& starting) noexcept
+{
+    const auto rankMask     = board::masks::ranks::get(starting.rank);
+    const auto fileMask     = board::masks::files::get(starting.file);
+    const auto diagMask     = board::masks::diagonal(starting);
+    const auto antiDiagMask = board::masks::antidiagonal(starting);
+
+    const auto notStartingSquare = Bitboard { starting }.inverse();
+
+    return (rankMask | fileMask | diagMask | antiDiagMask) & notStartingSquare;
 }
 
 namespace detail {
@@ -196,28 +218,6 @@ constexpr Bitboard pawn_attacks(const Bitboard starting, const Color color) noex
     return detail::shift_southeast(starting) | detail::shift_southwest(starting);
 }
 
-constexpr Bitboard bishop(const Square& starting) noexcept
-{
-    const auto diagMask     = board::masks::diagonal(starting);
-    const auto antiDiagMask = board::masks::antidiagonal(starting);
-
-    const auto notStartingSquare = Bitboard { starting }.inverse();
-
-    return (diagMask | antiDiagMask) & notStartingSquare;
-}
-
-constexpr Bitboard queen(const Square& starting) noexcept
-{
-    const auto rankMask     = board::masks::ranks::get(starting.rank);
-    const auto fileMask     = board::masks::files::get(starting.file);
-    const auto diagMask     = board::masks::diagonal(starting);
-    const auto antiDiagMask = board::masks::antidiagonal(starting);
-
-    const auto notStartingSquare = Bitboard { starting }.inverse();
-
-    return (rankMask | fileMask | diagMask | antiDiagMask) & notStartingSquare;
-}
-
 constexpr Bitboard king(Bitboard starting) noexcept
 {
     auto moves = detail::shift_east(starting) | detail::shift_west(starting);
@@ -229,4 +229,4 @@ constexpr Bitboard king(Bitboard starting) noexcept
     return moves;
 }
 
-} // namespace chess::moves::pseudo_legal
+} // namespace chess::moves::patterns
