@@ -12,9 +12,9 @@
 
 int main()
 {
-    static constexpr chess::board::Square starting { chess::board::File::H, chess::board::Rank::Eight };
+    static constexpr chess::board::Square starting { chess::board::File::D, chess::board::Rank::Four };
 
-    static constexpr auto moves = chess::moves::pseudo_legal::bishop(starting);
+    static constexpr auto moves = chess::moves::pseudo_legal::queen(starting);
 
     std::println("{}", chess::board::print_ascii(moves));
 
