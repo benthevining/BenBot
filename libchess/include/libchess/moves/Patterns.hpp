@@ -92,9 +92,11 @@ constexpr Bitboard pawn_double_pushes(const Bitboard starting, const Color color
     namespace rank_masks = board::masks::ranks;
 
     if (color == Color::White)
-        return (starting << 16uz) & rank_masks::four(); // north 2 ranks
+        return (starting << 16uz) // north 2 ranks
+             & rank_masks::four();
 
-    return (starting >> 16uz) & rank_masks::five(); // south 2 ranks
+    return (starting >> 16uz) // south 2 ranks
+         & rank_masks::five();
 }
 
 constexpr Bitboard knight(const Bitboard starting) noexcept

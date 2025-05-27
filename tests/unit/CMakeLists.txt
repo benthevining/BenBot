@@ -38,6 +38,7 @@ set (
     board/Bitboard.cpp
     board/BitboardMasks.cpp
     board/Distances.cpp
+    board/Fills.cpp
     board/Pieces.cpp
     board/Square.cpp
     game/CastlingRights.cpp

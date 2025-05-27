@@ -101,6 +101,10 @@ TEST_CASE("Pseudo-legal - pawn pushes", TAGS)
     }
 }
 
+TEST_CASE("Pseudo-legal - pawn double pushes", TAGS)
+{
+}
+
 TEST_CASE("Pseudo-legal - pawn captures", TAGS)
 {
     SECTION("White")
