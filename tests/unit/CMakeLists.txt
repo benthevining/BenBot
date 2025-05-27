@@ -44,7 +44,6 @@ set (
     game/Position.cpp
     moves/Move.cpp
     moves/PseudoLegal.cpp
-    util/Math.cpp
 )
 
 target_sources (libchess_tests PRIVATE ${sources})

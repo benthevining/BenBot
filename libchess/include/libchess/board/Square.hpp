@@ -25,7 +25,6 @@
 #include <libchess/board/File.hpp>
 #include <libchess/board/Rank.hpp>
 #include <libchess/pieces/Colors.hpp>
-#include <libchess/util/Math.hpp>
 #include <stdexcept>
 #include <string_view>
 #include <typeindex> // for std::hash
@@ -139,7 +138,10 @@ struct Square final {
     /// @}
 
     /** Returns true if this is a light square. */
-    [[nodiscard]] constexpr bool is_light() const noexcept;
+    [[nodiscard]] constexpr bool is_light() const noexcept
+    {
+        return (std::to_underlying(rank) + std::to_underlying(file)) % 2 != 0;
+    }
 
     /** Returns true if this is a dark square. */
     [[nodiscard]] constexpr bool is_dark() const noexcept { return ! is_light(); }
@@ -267,17 +269,6 @@ formatter<chess::board::Square>::format(
 } // namespace std
 
 namespace chess::board {
-
-constexpr bool Square::is_light() const noexcept
-{
-    const auto fileEven = math::is_even(std::to_underlying(file));
-    const auto rankEven = math::is_even(std::to_underlying(rank));
-
-    if (fileEven)
-        return ! rankEven;
-
-    return rankEven;
-}
 
 constexpr Square Square::from_index(const BitboardIndex index)
 {
