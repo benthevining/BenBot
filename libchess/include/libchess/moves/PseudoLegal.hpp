@@ -87,6 +87,16 @@ using pieces::Color;
 
  */
 
+constexpr Bitboard pawn_double_pushes(const Bitboard starting, const Color color) noexcept
+{
+    namespace rank_masks = board::masks::ranks;
+
+    if (color == Color::White)
+        return (starting << 16uz) & rank_masks::four();
+
+    return (starting >> 16uz) & rank_masks::five();
+}
+
 constexpr Bitboard knight(const Bitboard starting) noexcept
 {
     namespace file_masks = board::masks::files;
@@ -200,16 +210,6 @@ constexpr Bitboard pawn_pushes(const Bitboard starting, const Color color) noexc
         return detail::shift_north(starting);
 
     return detail::shift_south(starting);
-}
-
-constexpr Bitboard pawn_double_pushes(const Bitboard starting, const Color color) noexcept
-{
-    namespace rank_masks = board::masks::ranks;
-
-    if (color == Color::White)
-        return (starting << 16uz) & rank_masks::four();
-
-    return (starting >> 16uz) & rank_masks::five();
 }
 
 constexpr Bitboard pawn_attacks(const Bitboard starting, const Color color) noexcept

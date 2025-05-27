@@ -25,7 +25,11 @@ int main()
     occupied.set(Square { File::D, Rank::Five });
     occupied.set(Square { File::H, Rank::Four });
 
-    const auto moves = chess::moves::legal::rook(starting, occupied);
+    Bitboard friendly;
+
+    // friendly.set(Square{File::B, Rank::Four});
+
+    const auto moves = chess::moves::legal::rook(starting, occupied, friendly);
 
     std::println("{}", chess::board::print_ascii(moves));
 
