@@ -17,18 +17,16 @@ int main()
     using chess::board::Rank;
     using chess::board::Square;
 
-    static constexpr Square starting { File::G, Rank::Six };
+    static constexpr Square starting { File::E, Rank::Seven };
 
     Bitboard friendlyPieces;
 
-    friendlyPieces.set(Square { File::B, Rank::One });
+    friendlyPieces.set(Square { File::B, Rank::Seven });
+    friendlyPieces.set(Square { File::E, Rank::Four });
 
-    Bitboard enemyPieces;
+    static constexpr Bitboard enemyPieces { Square { File::E, Rank::Eight } };
 
-    enemyPieces.set(Square { File::C, Rank::Two });
-    enemyPieces.set(Square { File::D, Rank::Three });
-
-    const auto moves = chess::moves::pseudo_legal::bishop(
+    const auto moves = chess::moves::pseudo_legal::rook(
         starting, friendlyPieces | enemyPieces, friendlyPieces);
 
     std::println("{}", chess::board::print_ascii(moves));

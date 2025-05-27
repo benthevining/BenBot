@@ -374,3 +374,43 @@ TEST_CASE("Pseudo legal - bishops", TAGS)
         REQUIRE(moves == Bitboard { 0X10A000A010080000 });
     }
 }
+
+TEST_CASE("Pseudo legal - rooks", TAGS)
+{
+    SECTION("From C3")
+    {
+        static constexpr Square starting { File::C, Rank::Three };
+
+        static constexpr Bitboard friendlyPieces { Square { File::B, Rank::Three } };
+
+        Bitboard enemyPieces;
+
+        enemyPieces.set(Square { File::F, Rank::Three });
+        enemyPieces.set(Square { File::G, Rank::Three });
+        enemyPieces.set(Square { File::H, Rank::Three });
+        enemyPieces.set(Square { File::C, Rank::Eight });
+        enemyPieces.set(Square { File::C, Rank::Six });
+
+        const auto moves = move_gen::rook(
+            starting, friendlyPieces | enemyPieces, friendlyPieces);
+
+        REQUIRE(moves == Bitboard { 0X40404380404 });
+    }
+
+    SECTION("From E7")
+    {
+        static constexpr Square starting { File::E, Rank::Seven };
+
+        Bitboard friendlyPieces;
+
+        friendlyPieces.set(Square { File::B, Rank::Seven });
+        friendlyPieces.set(Square { File::E, Rank::Four });
+
+        static constexpr Bitboard enemyPieces { Square { File::E, Rank::Eight } };
+
+        const auto moves = move_gen::rook(
+            starting, friendlyPieces | enemyPieces, friendlyPieces);
+
+        REQUIRE(moves == Bitboard { 0X10EC101000000000 });
+    }
+}
