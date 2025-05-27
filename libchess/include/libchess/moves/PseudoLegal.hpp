@@ -14,10 +14,11 @@
 
 #pragma once
 
-#include <cstdint>
+#include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/BitboardIndex.hpp>
 #include <libchess/board/BitboardMasks.hpp>
+#include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/moves/Patterns.hpp>
 #include <libchess/pieces/Colors.hpp>
@@ -121,6 +122,7 @@ constexpr Bitboard pawn_pushes(
 constexpr Bitboard pawn_double_pushes(
     const Bitboard startingPawns, const Color color, const Bitboard occupiedSquares) noexcept
 {
+    // TODO: blocking pieces on first rank?
     return patterns::pawn_double_pushes(startingPawns, color) & occupiedSquares.inverse();
 }
 
@@ -145,6 +147,7 @@ constexpr Bitboard king(
 namespace detail {
 
     using board::BitboardIndex;
+    using board::Rank;
 
     /* Ray directions are as follows:
 
