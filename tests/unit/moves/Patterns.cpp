@@ -16,7 +16,7 @@
 #include <libchess/moves/Patterns.hpp>
 #include <libchess/pieces/Colors.hpp>
 
-static constexpr auto TAGS { "[moves][Generation][pseudo-legal]" };
+static constexpr auto TAGS { "[moves][Generation][patterns]" };
 
 using chess::board::Bitboard;
 using chess::board::File;
@@ -27,7 +27,7 @@ using chess::pieces::Color;
 namespace board_masks = chess::board::masks;
 namespace move_gen    = chess::moves::patterns;
 
-TEST_CASE("Pawn push generation", TAGS)
+TEST_CASE("Patterns - pawn pushes", TAGS)
 {
     SECTION("White")
     {
@@ -94,7 +94,7 @@ TEST_CASE("Pawn push generation", TAGS)
     }
 }
 
-TEST_CASE("Pawn double push generation", TAGS)
+TEST_CASE("Patterns - pawn double pushes", TAGS)
 {
     SECTION("White")
     {
@@ -157,7 +157,7 @@ TEST_CASE("Pawn double push generation", TAGS)
     }
 }
 
-TEST_CASE("Pawn attack generation", TAGS)
+TEST_CASE("Patterns - pawn attacks", TAGS)
 {
     SECTION("White")
     {
@@ -288,7 +288,7 @@ TEST_CASE("Pawn attack generation", TAGS)
     }
 }
 
-TEST_CASE("Knight move generation", TAGS)
+TEST_CASE("Patterns - knight moves", TAGS)
 {
     using chess::board::knight_distance;
 
@@ -400,7 +400,7 @@ TEST_CASE("Knight move generation", TAGS)
     }
 }
 
-TEST_CASE("Bishop move generation", TAGS)
+TEST_CASE("Patterns - bishop moves", TAGS)
 {
     using chess::board::are_on_same_diagonal;
 
@@ -535,7 +535,7 @@ TEST_CASE("Bishop move generation", TAGS)
     }
 }
 
-TEST_CASE("Rook move generation", TAGS)
+TEST_CASE("Patterns - rook moves", TAGS)
 {
     SECTION("From D3")
     {
@@ -588,7 +588,7 @@ TEST_CASE("Rook move generation", TAGS)
     }
 }
 
-TEST_CASE("Queen move generation", TAGS)
+TEST_CASE("Patterns - queen moves", TAGS)
 {
     SECTION("From D4")
     {
@@ -628,7 +628,7 @@ TEST_CASE("Queen move generation", TAGS)
     }
 }
 
-TEST_CASE("King move generation", TAGS)
+TEST_CASE("Patterns - king moves", TAGS)
 {
     SECTION("From G2")
     {

@@ -7,7 +7,7 @@
  */
 
 #include <libchess/game/Position.hpp>
-#include <libchess/moves/Legal.hpp>
+#include <libchess/moves/PseudoLegal.hpp>
 #include <print>
 
 int main()
@@ -28,7 +28,7 @@ int main()
 
     friendly.set(Square { File::F, Rank::Six });
 
-    std::println("{}", chess::board::print_ascii(chess::moves::legal::bishop(starting, occupied, friendly)));
+    std::println("{}", chess::board::print_ascii(chess::moves::pseudo_legal::bishop(starting, occupied, friendly)));
 
     return 0;
 

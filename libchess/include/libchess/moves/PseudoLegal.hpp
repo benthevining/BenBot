@@ -7,7 +7,7 @@
  */
 
 /** @file
-    This file provides functions for generating legal moves.
+    This file provides functions for generating pseudo-legal moves.
 
     @ingroup moves
  */
@@ -23,13 +23,15 @@
 #include <libchess/pieces/Colors.hpp>
 #include <utility>
 
-/** This namespace provides functions for generating legal moves for each piece type
-    from a given starting position. These functions rely on other board state, such
-    as sets of empty or occupied squares, etc.
+/** This namespace provides functions for generating pseudo-legal moves for each piece
+    type from a given starting position. These functions rely on other board state,
+    such as sets of empty or occupied squares, etc. The generated moves are pseudo-legal,
+    not strictly legal, because they do not consider whether the king would be left in check.
+    The returned move sets do not include the starting square.
 
     @ingroup moves
  */
-namespace chess::moves::legal {
+namespace chess::moves::pseudo_legal {
 
 using board::Bitboard;
 using board::Square;
@@ -38,45 +40,56 @@ using pieces::Color;
 /// @ingroup moves
 /// @{
 
-/** Calculates all legal pawn pushes.
+/** Calculates all pseudo-legal pawn pushes.
     ``occupiedSquares`` should be the union of all squares occupied by pieces of either color.
  */
 [[nodiscard, gnu::const]] constexpr Bitboard pawn_pushes(
     Bitboard startingPawns, Color color, Bitboard occupiedSquares) noexcept;
 
-/** Calculates all legal pawn double pushes.
+/** Calculates all pseudo-legal pawn double pushes.
     ``occupiedSquares`` should be the union of all squares occupied by pieces of either color.
  */
 [[nodiscard, gnu::const]] constexpr Bitboard pawn_double_pushes(
     Bitboard startingPawns, Color color, Bitboard occupiedSquares) noexcept;
 
-/** Calculates all legal pawn captures. */
+/** Calculates all pseudo-legal pawn captures.
+    The returned bitboard has 1 bits set where each pawn would land after making a capture.
+ */
 [[nodiscard, gnu::const]] constexpr Bitboard pawn_captures(
     Bitboard startingPawns, Color color, Bitboard enemyPieces) noexcept;
 
-/** Calculates all legal knight moves. */
+/** Calculates all pseudo-legal knight moves. */
 [[nodiscard, gnu::const]] constexpr Bitboard knight(
     Bitboard startingKnights, Bitboard friendlyPieces) noexcept;
 
-/** Calculates all legal bishop moves.
+/** Calculates all pseudo-legal bishop moves.
     ``occupiedSquares`` should be the union of all squares occupied by pieces of either color.
+
+    The returned move set includes possible captures (i.e., rays ending where an enemy piece
+    is located), and also considers blocking friendly pieces.
  */
 [[nodiscard, gnu::const]] constexpr Bitboard bishop(
     const Square& starting, Bitboard occupiedSquares, Bitboard friendlyPieces) noexcept;
 
-/** Calculates all legal rook moves, taking blocking pieces into consideration.
+/** Calculates all pseudo-legal rook moves, taking blocking pieces into consideration.
     ``occupiedSquares`` should be the union of all squares occupied by pieces of either color.
+
+    The returned move set includes possible captures (i.e., rays ending where an enemy piece
+    is located), and also considers blocking friendly pieces.
  */
 [[nodiscard, gnu::const]] constexpr Bitboard rook(
     const Square& starting, Bitboard occupiedSquares, Bitboard friendlyPieces) noexcept;
 
-/** Calculates all legal queen moves, taking blocking pieces into consideration.
+/** Calculates all pseudo-legal queen moves, taking blocking pieces into consideration.
     ``occupiedSquares`` should be the union of all squares occupied by pieces of either color.
+
+    The returned move set includes possible captures (i.e., rays ending where an enemy piece
+    is located), and also considers blocking friendly pieces.
  */
 [[nodiscard, gnu::const]] constexpr Bitboard queen(
     const Square& starting, Bitboard occupiedSquares, Bitboard friendlyPieces) noexcept;
 
-/** Calculates all legal king moves. */
+/** Calculates all pseudo-legal king moves. */
 [[nodiscard, gnu::const]] constexpr Bitboard king(
     Bitboard startingKing, Bitboard friendlyPieces) noexcept;
 
@@ -133,6 +146,19 @@ namespace detail {
 
     using board::BitboardIndex;
 
+    /* Ray directions are as follows:
+
+      northwest    north   northeast
+              +7    +8    +9
+                  \  |  /
+      west    -1 <-  0 -> +1    east
+                  /  |  \
+              -9    -8    -7
+      southwest    south   southeast
+
+      Positive & negative rays are handled individually to determine blockers along that ray.
+     */
+
     enum class RayDirection : std::uint_least8_t {
         // positive rays
         North,
@@ -154,6 +180,9 @@ namespace detail {
             std::to_underlying(RayDirection::South));
     }
 
+    // Generates all squares on the given ray starting from the given square,
+    // traveling in the given direction. The starting square is not included
+    // in the ray.
     [[nodiscard, gnu::const]] constexpr Bitboard make_ray(
         const Square& startPos, const RayDirection direction) noexcept
     {
@@ -242,8 +271,10 @@ namespace detail {
         }
     }
 
-    // returns all squares accessible by a ray attacker in the given direction,
-    // stopping at the first blocking piece as indicated by the occupied bitboard
+    // Returns all squares accessible by a ray attacker in the given direction,
+    // stopping at the first blocking piece as indicated by the occupied bitboard.
+    // This function does not prune squares occupied by friendly pieces (it considers
+    // them possible captures), so those squares still need to be pruned.
     [[nodiscard, gnu::const]] constexpr Bitboard ray_attacks(
         const Square& startPos, const RayDirection direction, const Bitboard occupied) noexcept
     {
@@ -302,4 +333,4 @@ constexpr Bitboard queen(
     return attacks & friendlyPieces.inverse();
 }
 
-} // namespace chess::moves::legal
+} // namespace chess::moves::pseudo_legal

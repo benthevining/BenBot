@@ -41,9 +41,9 @@ set (
     board/Square.hpp
     game/CastlingRights.hpp
     game/Position.hpp
-    moves/Legal.hpp
     moves/Move.hpp
     moves/Patterns.hpp
+    moves/PseudoLegal.hpp
     pieces/Colors.hpp
     pieces/PieceTypes.hpp
     pieces/UTF8.hpp
