@@ -14,11 +14,14 @@
 
 #pragma once
 
+#include <cstdint>
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/BitboardIndex.hpp>
+#include <libchess/board/BitboardMasks.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/moves/PseudoLegal.hpp>
 #include <libchess/pieces/Colors.hpp>
+#include <utility>
 
 /** This namespace provides functions for generating legal moves for each piece type
     from a given starting position. These functions rely on other board state, such
@@ -31,9 +34,6 @@ namespace chess::moves::legal {
 using board::Bitboard;
 using board::Square;
 using pieces::Color;
-
-// bishop
-// queen
 
 /// @ingroup moves
 /// @{
@@ -58,10 +58,22 @@ using pieces::Color;
 [[nodiscard, gnu::const]] constexpr Bitboard knight(
     Bitboard startingKnights, Bitboard friendlyPieces) noexcept;
 
+/** Calculates all legal bishop moves.
+    ``occupiedSquares`` should be the union of all squares occupied by pieces of either color.
+ */
+[[nodiscard, gnu::const]] constexpr Bitboard bishop(
+    const Square& starting, Bitboard occupiedSquares, Bitboard friendlyPieces) noexcept;
+
 /** Calculates all legal rook moves, taking blocking pieces into consideration.
     ``occupiedSquares`` should be the union of all squares occupied by pieces of either color.
  */
 [[nodiscard, gnu::const]] constexpr Bitboard rook(
+    const Square& starting, Bitboard occupiedSquares, Bitboard friendlyPieces) noexcept;
+
+/** Calculates all legal queen moves, taking blocking pieces into consideration.
+    ``occupiedSquares`` should be the union of all squares occupied by pieces of either color.
+ */
+[[nodiscard, gnu::const]] constexpr Bitboard queen(
     const Square& starting, Bitboard occupiedSquares, Bitboard friendlyPieces) noexcept;
 
 /** Calculates all legal king moves. */
@@ -121,11 +133,18 @@ namespace detail {
 
     using board::BitboardIndex;
 
-    enum class RayDirection {
+    enum class RayDirection : std::uint_least8_t {
+        // positive rays
         North,
         East,
+        NorthEast,
+        NorthWest,
+
+        // negative rays
         South,
-        West
+        West,
+        SouthEast,
+        SouthWest
     };
 
     [[nodiscard, gnu::const]] constexpr bool is_negative(const RayDirection direction) noexcept
@@ -136,33 +155,86 @@ namespace detail {
     }
 
     [[nodiscard, gnu::const]] constexpr Bitboard make_ray(
-        const BitboardIndex startPos, const RayDirection direction) noexcept
+        const Square& startPos, const RayDirection direction) noexcept
     {
+        namespace rank_masks = board::masks::ranks;
+
         static constexpr Bitboard::Integer ONE { 1 };
 
         switch (direction) {
             case RayDirection::North: {
                 static constexpr Bitboard mask { 0x0101010101010100 };
 
-                return mask << startPos;
+                return mask << startPos.index();
             }
 
             case RayDirection::South: {
                 static constexpr Bitboard mask { 0x0080808080808080 };
 
-                return mask >> (startPos ^ 63);
+                return mask >> (startPos.index() ^ 63);
             }
 
             case RayDirection::East: {
+                const auto index = startPos.index();
+
                 return Bitboard {
-                    2 * ((ONE << (startPos | 7)) - (ONE << startPos))
+                    2 * ((ONE << (index | 7)) - (ONE << index))
                 };
             }
 
             case RayDirection::West: {
+                const auto index = startPos.index();
+
                 return Bitboard {
-                    (ONE << startPos) - (ONE << (startPos & 56))
+                    (ONE << index) - (ONE << (index & 56))
                 };
+            }
+
+                // TODO: perhaps these ray calculations can be optimized, but for now I just take
+                // the diagonal mask and remove the files we don't want
+
+            case RayDirection::NorthEast: {
+                const auto diag = board::masks::diagonal(startPos);
+
+                auto rankMask = rank_masks::one();
+
+                for (auto rank = 1; rank <= std::to_underlying(startPos.rank); ++rank)
+                    rankMask |= rank_masks::get(static_cast<Rank>(rank));
+
+                return diag & rankMask.inverse();
+            }
+
+            case RayDirection::NorthWest: {
+                const auto diag = board::masks::antidiagonal(startPos);
+
+                auto rankMask = rank_masks::one();
+
+                for (auto rank = 1; rank <= std::to_underlying(startPos.rank); ++rank)
+                    rankMask |= rank_masks::get(static_cast<Rank>(rank));
+
+                return diag & rankMask.inverse();
+            }
+
+            case RayDirection::SouthEast: {
+                const auto diag = board::masks::antidiagonal(startPos);
+
+                auto rankMask = rank_masks::eight();
+
+                for (auto rank = 7; rank >= std::to_underlying(startPos.rank); --rank)
+                    rankMask |= rank_masks::get(static_cast<Rank>(rank));
+
+                return diag & rankMask.inverse();
+            }
+
+            case RayDirection::SouthWest: {
+                const auto diag = board::masks::diagonal(startPos);
+
+                auto rankMask = rank_masks::eight();
+
+                for (auto rank = 7; rank >= std::to_underlying(startPos.rank); --rank)
+                    rankMask |= rank_masks::get(static_cast<Rank>(rank));
+
+                return diag & rankMask.inverse();
             }
 
             default:
@@ -173,7 +245,7 @@ namespace detail {
     // returns all squares accessible by a ray attacker in the given direction,
     // stopping at the first blocking piece as indicated by the occupied bitboard
     [[nodiscard, gnu::const]] constexpr Bitboard ray_attacks(
-        const BitboardIndex startPos, const RayDirection direction, const Bitboard occupied) noexcept
+        const Square& startPos, const RayDirection direction, const Bitboard occupied) noexcept
     {
         auto attacks = make_ray(startPos, direction);
 
@@ -182,14 +254,14 @@ namespace detail {
         if (blocker.any()) {
             const auto idx = is_negative(direction) ? blocker.last() : blocker.first();
 
-            attacks ^= make_ray(idx, direction);
+            attacks ^= make_ray(Square::from_index(idx), direction);
         }
 
         return attacks;
     }
 
     [[nodiscard, gnu::const]] constexpr Bitboard rook_attacks(
-        const BitboardIndex startPos, const Bitboard occupiedSquares) noexcept
+        const Square& startPos, const Bitboard occupiedSquares) noexcept
     {
         return ray_attacks(startPos, RayDirection::North, occupiedSquares)
              | ray_attacks(startPos, RayDirection::East, occupiedSquares)
@@ -197,12 +269,37 @@ namespace detail {
              | ray_attacks(startPos, RayDirection::West, occupiedSquares);
     }
 
+    [[nodiscard, gnu::const]] constexpr Bitboard bishop_attacks(
+        const Square& startPos, const Bitboard occupiedSquares) noexcept
+    {
+        return ray_attacks(startPos, RayDirection::NorthEast, occupiedSquares)
+             | ray_attacks(startPos, RayDirection::NorthWest, occupiedSquares)
+             | ray_attacks(startPos, RayDirection::SouthEast, occupiedSquares)
+             | ray_attacks(startPos, RayDirection::SouthWest, occupiedSquares);
+    }
+
 } // namespace detail
 
 constexpr Bitboard rook(
     const Square& starting, const Bitboard occupiedSquares, const Bitboard friendlyPieces) noexcept
 {
-    return detail::rook_attacks(starting.index(), occupiedSquares) & friendlyPieces.inverse();
+    return detail::rook_attacks(starting, occupiedSquares) & friendlyPieces.inverse();
+}
+
+constexpr Bitboard bishop(
+    const Square& starting, const Bitboard occupiedSquares, const Bitboard friendlyPieces) noexcept
+{
+    return detail::bishop_attacks(starting, occupiedSquares) & friendlyPieces.inverse();
+}
+
+constexpr Bitboard queen(
+    const Square& starting, const Bitboard occupiedSquares, const Bitboard friendlyPieces) noexcept
+{
+    const auto attacks
+        = detail::rook_attacks(starting, occupiedSquares)
+        | detail::bishop_attacks(starting, friendlyPieces);
+
+    return attacks & friendlyPieces.inverse();
 }
 
 } // namespace chess::moves::legal

@@ -178,30 +178,6 @@ namespace detail {
         return (board & notAFile) >> 9uz;
     }
 
-    [[nodiscard, gnu::const]] constexpr Bitboard diagonal_mask(const Square& starting) noexcept
-    {
-        static constexpr Bitboard mainDiagonal { 0x8040201008040201 };
-
-        const auto diag = static_cast<int>(starting.file) - static_cast<int>(starting.rank);
-
-        if (diag >= 0)
-            return mainDiagonal >> diag * 8;
-
-        return mainDiagonal << -diag * 8;
-    }
-
-    [[nodiscard, gnu::const]] constexpr Bitboard antidiagonal_mask(const Square& starting) noexcept
-    {
-        static constexpr Bitboard mainDiagonal { 0x0102040810204080 };
-
-        const auto diag = 7 - static_cast<int>(starting.file) - static_cast<int>(starting.rank);
-
-        if (diag >= 0)
-            return mainDiagonal >> diag * 8;
-
-        return mainDiagonal << -diag * 8;
-    }
-
 } // namespace detail
 
 constexpr Bitboard pawn_pushes(const Bitboard starting, const Color color) noexcept
@@ -222,8 +198,8 @@ constexpr Bitboard pawn_attacks(const Bitboard starting, const Color color) noex
 
 constexpr Bitboard bishop(const Square& starting) noexcept
 {
-    const auto diagMask     = detail::diagonal_mask(starting);
-    const auto antiDiagMask = detail::antidiagonal_mask(starting);
+    const auto diagMask     = board::masks::diagonal(starting);
+    const auto antiDiagMask = board::masks::antidiagonal(starting);
 
     const auto notStartingSquare = Bitboard { starting }.inverse();
 
@@ -234,8 +210,8 @@ constexpr Bitboard queen(const Square& starting) noexcept
 {
     const auto rankMask     = board::masks::ranks::get(starting.rank);
     const auto fileMask     = board::masks::files::get(starting.file);
-    const auto diagMask     = detail::diagonal_mask(starting);
-    const auto antiDiagMask = detail::antidiagonal_mask(starting);
+    const auto diagMask     = board::masks::diagonal(starting);
+    const auto antiDiagMask = board::masks::antidiagonal(starting);
 
     const auto notStartingSquare = Bitboard { starting }.inverse();
 

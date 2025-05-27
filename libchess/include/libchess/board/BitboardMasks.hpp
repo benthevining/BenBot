@@ -22,6 +22,7 @@
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Rank.hpp>
+#include <libchess/board/Square.hpp>
 #include <libchess/pieces/Colors.hpp>
 
 /** This namespace provides some compile-time bitboard constants and masks.
@@ -92,6 +93,28 @@ using std::size_t;
 [[nodiscard, gnu::const]] consteval Bitboard perimeter() noexcept
 {
     return Bitboard { 0XFF818181818181FF };
+}
+
+/** Returns a bitboard with all squares on the same diagonal as the given square set to 1. */
+[[nodiscard, gnu::const]] constexpr Bitboard diagonal(const Square& square) noexcept
+{
+    const auto diag = static_cast<int>(square.file) - static_cast<int>(square.rank);
+
+    if (diag >= 0)
+        return a1_h8_diagonal() >> diag * 8;
+
+    return a1_h8_diagonal() << -diag * 8;
+}
+
+/** Returns a bitboard with all squares on the same antidiagonal as the given square set to 1. */
+[[nodiscard, gnu::const]] constexpr Bitboard antidiagonal(const Square& square) noexcept
+{
+    const auto diag = 7 - static_cast<int>(square.file) - static_cast<int>(square.rank);
+
+    if (diag >= 0)
+        return a8_h1_diagonal() >> diag * 8;
+
+    return a8_h1_diagonal() << -diag * 8;
 }
 
 /// @}

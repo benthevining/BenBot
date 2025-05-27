@@ -21,17 +21,14 @@ int main()
 
     Bitboard occupied;
 
-    occupied.set(Square { File::B, Rank::Four });
-    occupied.set(Square { File::D, Rank::Five });
-    occupied.set(Square { File::H, Rank::Four });
+    occupied.set(Square { File::C, Rank::Three });
+    occupied.set(Square { File::F, Rank::Six });
 
     Bitboard friendly;
 
-    // friendly.set(Square{File::B, Rank::Four});
+    friendly.set(Square { File::F, Rank::Six });
 
-    const auto moves = chess::moves::legal::rook(starting, occupied, friendly);
-
-    std::println("{}", chess::board::print_ascii(moves));
+    std::println("{}", chess::board::print_ascii(chess::moves::legal::bishop(starting, occupied, friendly)));
 
     return 0;
 
