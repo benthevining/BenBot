@@ -27,7 +27,6 @@ namespace board_masks = chess::board::masks;
 namespace move_gen    = chess::moves::pseudo_legal;
 
 // pawn double pushes
-// pawn captures
 // knights
 // bishops
 // rooks
@@ -105,6 +104,173 @@ TEST_CASE("Pseudo-legal - pawn pushes", TAGS)
                 starting, Color::Black, Bitboard { Square { File::E, Rank::One } });
 
             STATIC_REQUIRE(pushes.none());
+        }
+    }
+}
+
+TEST_CASE("Pseudo legal - pawn captures", TAGS)
+{
+    SECTION("White")
+    {
+        SECTION("D4 -> C5")
+        {
+            static constexpr Bitboard startingPawns { Square { File::D, Rank::Four } };
+
+            Bitboard enemyPieces;
+
+            enemyPieces.set(Square { File::A, Rank::Two });
+            enemyPieces.set(Square { File::B, Rank::Eight });
+            enemyPieces.set(Square { File::C, Rank::Five });
+
+            const auto captures = move_gen::pawn_captures(startingPawns, Color::White, enemyPieces);
+
+            REQUIRE(captures.count() == 1uz);
+
+            REQUIRE(captures.test(Square { File::C, Rank::Five }));
+        }
+
+        SECTION("From C2, none available")
+        {
+            static constexpr Bitboard startingPawns { Square { File::C, Rank::Two } };
+
+            Bitboard enemyPieces;
+
+            enemyPieces.set(Square { File::A, Rank::Seven });
+            enemyPieces.set(Square { File::F, Rank::Four });
+            enemyPieces.set(Square { File::G, Rank::Six });
+
+            const auto captures = move_gen::pawn_captures(startingPawns, Color::White, enemyPieces);
+
+            REQUIRE(captures.none());
+        }
+
+        SECTION("F7 -> E8/G8")
+        {
+            static constexpr Bitboard startingPawns { Square { File::F, Rank::Seven } };
+
+            Bitboard enemyPieces;
+
+            enemyPieces.set(Square { File::E, Rank::Eight });
+            enemyPieces.set(Square { File::G, Rank::Eight });
+            enemyPieces.set(Square { File::C, Rank::Two });
+            enemyPieces.set(Square { File::F, Rank::Six });
+            enemyPieces.set(Square { File::E, Rank::Seven });
+            enemyPieces.set(Square { File::A, Rank::Four });
+
+            const auto captures = move_gen::pawn_captures(startingPawns, Color::White, enemyPieces);
+
+            REQUIRE(captures.count() == 2uz);
+
+            REQUIRE(captures.test(Square { File::E, Rank::Eight }));
+            REQUIRE(captures.test(Square { File::G, Rank::Eight }));
+        }
+
+        SECTION("E4 -> D5/F5 and F6 -> G7")
+        {
+            Bitboard startingPawns;
+
+            startingPawns.set(Square { File::E, Rank::Four });
+            startingPawns.set(Square { File::F, Rank::Six });
+
+            Bitboard enemyPieces;
+
+            enemyPieces.set(Square { File::D, Rank::Five });
+            enemyPieces.set(Square { File::F, Rank::Five });
+            enemyPieces.set(Square { File::G, Rank::Seven });
+            enemyPieces.set(Square { File::A, Rank::Two });
+            enemyPieces.set(Square { File::B, Rank::Eight });
+            enemyPieces.set(Square { File::H, Rank::Three });
+
+            const auto captures = move_gen::pawn_captures(startingPawns, Color::White, enemyPieces);
+
+            REQUIRE(captures.count() == 3uz);
+
+            REQUIRE(captures.test(Square { File::D, Rank::Five }));
+            REQUIRE(captures.test(Square { File::F, Rank::Five }));
+            REQUIRE(captures.test(Square { File::G, Rank::Seven }));
+        }
+    }
+
+    SECTION("Black")
+    {
+        SECTION("E5 -> D4")
+        {
+            static constexpr Bitboard startingPawns { Square { File::E, Rank::Five } };
+
+            Bitboard enemyPieces;
+
+            enemyPieces.set(Square { File::D, Rank::Four });
+            enemyPieces.set(Square { File::F, Rank::Six });
+            enemyPieces.set(Square { File::G, Rank::One });
+            enemyPieces.set(Square { File::A, Rank::Seven });
+
+            const auto captures = move_gen::pawn_captures(startingPawns, Color::Black, enemyPieces);
+
+            REQUIRE(captures.count() == 1uz);
+
+            REQUIRE(captures.test(Square { File::D, Rank::Four }));
+        }
+
+        SECTION("From F6, none available")
+        {
+            static constexpr Bitboard startingPawns { Square { File::F, Rank::Six } };
+
+            Bitboard enemyPieces;
+
+            enemyPieces.set(Square { File::G, Rank::Seven });
+            enemyPieces.set(Square { File::E, Rank::Seven });
+            enemyPieces.set(Square { File::A, Rank::Two });
+            enemyPieces.set(Square { File::H, Rank::Eight });
+            enemyPieces.set(Square { File::C, Rank::One });
+
+            const auto captures = move_gen::pawn_captures(startingPawns, Color::Black, enemyPieces);
+
+            REQUIRE(captures.none());
+        }
+
+        SECTION("G2 -> F1/H1")
+        {
+            static constexpr Bitboard startingPawns { Square { File::G, Rank::Two } };
+
+            Bitboard enemyPieces;
+
+            enemyPieces.set(Square { File::F, Rank::One });
+            enemyPieces.set(Square { File::H, Rank::One });
+            enemyPieces.set(Square { File::A, Rank::Six });
+            enemyPieces.set(Square { File::G, Rank::One });
+            enemyPieces.set(Square { File::H, Rank::One });
+
+            const auto captures = move_gen::pawn_captures(startingPawns, Color::Black, enemyPieces);
+
+            REQUIRE(captures.count() == 2uz);
+
+            REQUIRE(captures.test(Square { File::F, Rank::One }));
+            REQUIRE(captures.test(Square { File::H, Rank::One }));
+        }
+
+        SECTION("F4 -> E3/G3 and B3 -> A2")
+        {
+            Bitboard startingPawns;
+
+            startingPawns.set(Square { File::F, Rank::Four });
+            startingPawns.set(Square { File::B, Rank::Three });
+
+            Bitboard enemyPieces;
+
+            enemyPieces.set(Square { File::E, Rank::Three });
+            enemyPieces.set(Square { File::G, Rank::Three });
+            enemyPieces.set(Square { File::A, Rank::Two });
+            enemyPieces.set(Square { File::F, Rank::Eight });
+            enemyPieces.set(Square { File::E, Rank::Six });
+            enemyPieces.set(Square { File::A, Rank::Eight });
+
+            const auto captures = move_gen::pawn_captures(startingPawns, Color::Black, enemyPieces);
+
+            REQUIRE(captures.count() == 3uz);
+
+            REQUIRE(captures.test(Square { File::E, Rank::Three }));
+            REQUIRE(captures.test(Square { File::G, Rank::Three }));
+            REQUIRE(captures.test(Square { File::A, Rank::Two }));
         }
     }
 }
