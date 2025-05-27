@@ -18,6 +18,7 @@
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/BitboardIndex.hpp>
 #include <libchess/board/BitboardMasks.hpp>
+#include <libchess/board/Fills.hpp>
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/moves/Patterns.hpp>
@@ -122,8 +123,17 @@ constexpr Bitboard pawn_pushes(
 constexpr Bitboard pawn_double_pushes(
     const Bitboard startingPawns, const Color color, const Bitboard occupiedSquares) noexcept
 {
-    // TODO: blocking pieces on first rank?
-    return patterns::pawn_double_pushes(startingPawns, color) & occupiedSquares.inverse();
+    namespace rank_masks = board::masks::ranks;
+
+    const auto moves = patterns::pawn_double_pushes(startingPawns, color) & occupiedSquares.inverse();
+
+    // Need to filter out any pushes that would jump over a piece on the third/sixth rank
+    const auto rankMask = color == Color::White ? rank_masks::three() : rank_masks::six();
+
+    const auto blockers = occupiedSquares & rankMask;
+    const auto fileMask = board::fills::file(blockers);
+
+    return moves & fileMask.inverse();
 }
 
 constexpr Bitboard pawn_captures(

@@ -103,6 +103,55 @@ TEST_CASE("Pseudo-legal - pawn pushes", TAGS)
 
 TEST_CASE("Pseudo-legal - pawn double pushes", TAGS)
 {
+    SECTION("White")
+    {
+        static constexpr auto starting = board_masks::starting::white::pawns();
+
+        static constexpr auto allPushes = move_gen::pawn_double_pushes(starting, Color::White, {});
+
+        STATIC_REQUIRE(allPushes == board_masks::ranks::four());
+
+        Bitboard occupied;
+
+        occupied.set(Square { File::A, Rank::Three });
+        occupied.set(Square { File::F, Rank::Three });
+
+        const auto pushes = move_gen::pawn_double_pushes(starting, Color::White, occupied);
+
+        REQUIRE(pushes.count() == 6uz);
+
+        REQUIRE(pushes.test(Square { File::B, Rank::Four }));
+        REQUIRE(pushes.test(Square { File::C, Rank::Four }));
+        REQUIRE(pushes.test(Square { File::D, Rank::Four }));
+        REQUIRE(pushes.test(Square { File::E, Rank::Four }));
+        REQUIRE(pushes.test(Square { File::G, Rank::Four }));
+        REQUIRE(pushes.test(Square { File::H, Rank::Four }));
+    }
+
+    SECTION("Black")
+    {
+        static constexpr auto starting = board_masks::starting::black::pawns();
+
+        static constexpr auto allPushes = move_gen::pawn_double_pushes(starting, Color::Black, {});
+
+        STATIC_REQUIRE(allPushes == board_masks::ranks::five());
+
+        Bitboard occupied;
+
+        occupied.set(Square { File::B, Rank::Six });
+        occupied.set(Square { File::D, Rank::Six });
+        occupied.set(Square { File::H, Rank::Six });
+
+        const auto pushes = move_gen::pawn_double_pushes(starting, Color::Black, occupied);
+
+        REQUIRE(pushes.count() == 5uz);
+
+        REQUIRE(pushes.test(Square { File::A, Rank::Five }));
+        REQUIRE(pushes.test(Square { File::C, Rank::Five }));
+        REQUIRE(pushes.test(Square { File::E, Rank::Five }));
+        REQUIRE(pushes.test(Square { File::F, Rank::Five }));
+        REQUIRE(pushes.test(Square { File::G, Rank::Five }));
+    }
 }
 
 TEST_CASE("Pseudo-legal - pawn captures", TAGS)
