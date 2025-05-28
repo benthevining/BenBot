@@ -45,6 +45,7 @@ set (
     game/Position.cpp
     moves/Move.cpp
     moves/Patterns.cpp
+    moves/Perft.cpp
     moves/PseudoLegal.cpp
 )
 

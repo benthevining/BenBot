@@ -15,6 +15,7 @@
 
 #include <array>
 #include <cassert>
+#include <cstddef> // IWYU pragma: keep - for size_t
 #include <iterator>
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/BitboardMasks.hpp>
@@ -33,10 +34,18 @@
 
 namespace chess::moves {
 
-/** Generates a list of all legal moves for the side to move in the given position.
-    @ingroup moves
- */
+using std::size_t;
+
+/// @ingroup moves
+/// @{
+
+/** Generates a list of all legal moves for the side to move in the given position. */
 [[nodiscard]] constexpr std::vector<Move> generate_legal_moves(const game::Position& position);
+
+/** A debugging function that walks the entire move tree and returns the number of visited leaf nodes. */
+[[nodiscard]] constexpr size_t perft(size_t depth);
+
+/// @}
 
 /*
                          ___                           ,--,
@@ -151,6 +160,9 @@ namespace detail {
             const auto capture = isWhite
                                    ? pseudo_legal::pawn_captures<Color::White>(startingBoard, enemyPieces)
                                    : pseudo_legal::pawn_captures<Color::Black>(startingBoard, enemyPieces);
+
+            if (capture.none())
+                continue;
 
             const bool isPromotion = (capture & promotionMask).any();
 
@@ -409,6 +421,38 @@ constexpr std::vector<Move> generate_legal_moves(const game::Position& position)
         [position](const Move& move) { return ! position.is_legal(move); });
 
     return moves;
+}
+
+namespace detail {
+
+    [[nodiscard]] constexpr size_t perft_internal(
+        const game::Position& position, const size_t depth)
+    {
+        if (depth == 0uz)
+            return 1uz;
+
+        auto nodes = 0uz;
+
+        const auto moves = generate_legal_moves(position);
+
+        for (const auto& move : moves) {
+            game::Position newPosition { position };
+
+            newPosition.make_move(move);
+
+            nodes += perft_internal(newPosition, depth - 1uz);
+        }
+
+        return nodes;
+    }
+
+} // namespace detail
+
+constexpr size_t perft(const size_t depth)
+{
+    static constexpr game::Position position;
+
+    return detail::perft_internal(position, depth);
 }
 
 } // namespace chess::moves
