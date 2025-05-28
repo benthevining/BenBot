@@ -47,6 +47,7 @@ set (
     moves/Patterns.cpp
     moves/Perft.cpp
     moves/PseudoLegal.cpp
+    notation/FEN.cpp
 )
 
 target_sources (libchess_tests PRIVATE ${sources})

@@ -23,6 +23,7 @@
 #include <magic_enum/magic_enum.hpp>
 #include <stdexcept>
 #include <string_view>
+#include <utility>
 
 /** This namespace contains classes for encoding information about the various chess piece types.
     @ingroup pieces
@@ -55,6 +56,12 @@ enum class Type : std::uint_fast8_t {
     @ingroup pieces
  */
 [[nodiscard, gnu::const]] constexpr Type from_string(std::string_view text);
+
+/** Converts the given piece type to its single-character representation.
+
+    @ingroup pieces
+ */
+[[nodiscard, gnu::const]] constexpr char to_char(Type type, bool uppercase = true) noexcept;
 
 /** This namespace contains constants encoding the material values of the various piece types.
     The king is not assigned a material value, as it can never be legally captured in a non-checkmated position.
@@ -182,22 +189,8 @@ typename FormatContext::iterator
 formatter<chess::pieces::Type>::format(
     const chess::pieces::Type piece, FormatContext& ctx) const
 {
-    using PieceType = chess::pieces::Type;
-
-    if (useShort) {
-        const auto character = [piece] {
-            switch (piece) {
-                case PieceType::Knight: return 'N';
-                case PieceType::Bishop: return 'B';
-                case PieceType::Rook  : return 'R';
-                case PieceType::Queen : return 'Q';
-                case PieceType::King  : return 'K';
-                default               : return 'P';
-            }
-        }();
-
-        return std::format_to(ctx.out(), "{}", character);
-    }
+    if (useShort)
+        return std::format_to(ctx.out(), "{}", chess::pieces::to_char(piece));
 
     return std::format_to(ctx.out(), "{}", magic_enum::enum_name(piece));
 }
@@ -205,6 +198,19 @@ formatter<chess::pieces::Type>::format(
 } // namespace std
 
 namespace chess::pieces {
+
+constexpr char to_char(const Type type, const bool uppercase) noexcept
+{
+    if (uppercase) {
+        static constexpr std::string_view upperChars { "PNBRQK" };
+
+        return upperChars[std::to_underlying(type)];
+    }
+
+    static constexpr std::string_view lowerChars { "pnbrqk" };
+
+    return lowerChars[std::to_underlying(type)];
+}
 
 constexpr Type from_string(const std::string_view text)
 {

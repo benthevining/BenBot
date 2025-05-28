@@ -16,6 +16,8 @@
 #include <format>
 #include <libchess/board/BitboardIndex.hpp>
 #include <libchess/pieces/Colors.hpp>
+#include <string_view>
+#include <utility>
 
 namespace chess::board {
 
@@ -50,6 +52,18 @@ enum class Rank : BitboardIndex {
     return Rank::Eight;
 }
 
+/** Converts the rank to its single-character representation (as an integer).
+
+    @ingroup board
+    @see Rank
+ */
+[[nodiscard, gnu::const]] constexpr char rank_to_char(const Rank rank) noexcept
+{
+    static constexpr std::string_view ranks { "12345678" };
+
+    return ranks[std::to_underlying(rank)];
+}
+
 } // namespace chess::board
 
 /** A formatter specialization for chessboard ranks.
@@ -72,6 +86,6 @@ struct std::formatter<chess::board::Rank> final {
         const chess::board::Rank rank, FormatContext& ctx) const
     {
         return std::format_to(ctx.out(), "{}",
-            std::to_underlying(rank) + static_cast<chess::board::BitboardIndex>(1));
+            chess::board::rank_to_char(rank));
     }
 };

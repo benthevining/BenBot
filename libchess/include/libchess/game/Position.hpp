@@ -105,6 +105,12 @@ struct Position final {
      */
     std::uint_least8_t halfmoveClock { 0 };
 
+    /** The number of full moves in the game.
+        This value is monotonically increasing throughout the game,
+        and is incremented after every Black move.
+     */
+    std::uint_least64_t fullMoveCounter { 1 };
+
     /** Returns true if the two positions are identical.
         @todo Exclude halfmove clock?
      */
@@ -344,6 +350,9 @@ constexpr void Position::make_move(const Move& move) noexcept
         ; // TODO: game ends in draw
     else
         ++halfmoveClock;
+
+    if (! isWhite)
+        ++fullMoveCounter;
 
     // flip side to move
     sideToMove = isWhite ? Color::Black : Color::White;

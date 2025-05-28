@@ -42,8 +42,18 @@ enum class File : BitboardIndex {
 
     @throws std::invalid_argument An exception will be thrown if a file
     cannot be parsed correctly from the input character.
+
+    @ingroup board
+    @see File
  */
 [[nodiscard, gnu::const]] constexpr File file_from_char(char character);
+
+/** Converts the file enumeration to its single-character representation.
+
+    @ingroup board
+    @see File
+ */
+[[nodiscard]] constexpr char file_to_char(File file, bool uppercase = false);
 
 } // namespace chess::board
 
@@ -128,17 +138,7 @@ typename FormatContext::iterator
 formatter<chess::board::File>::format(
     const chess::board::File file, FormatContext& ctx) const
 {
-    const auto character = [file, upper = uppercase] {
-        const auto upperChar = magic_enum::enum_name(file).front();
-
-        if (! upper)
-            return static_cast<char>(
-                std::tolower(static_cast<unsigned char>(upperChar)));
-
-        return upperChar;
-    }();
-
-    return std::format_to(ctx.out(), "{}", character);
+    return std::format_to(ctx.out(), "{}", chess::board::file_to_char(file, uppercase));
 }
 
 } // namespace std
@@ -177,6 +177,17 @@ constexpr File file_from_char(char character)
                 std::format("Cannot parse File from character: {}", character)
             };
     }
+}
+
+constexpr char file_to_char(const File file, const bool uppercase)
+{
+    const auto upperChar = magic_enum::enum_name(file).front();
+
+    if (uppercase)
+        return upperChar;
+
+    return static_cast<char>(
+        std::tolower(static_cast<unsigned char>(upperChar)));
 }
 
 } // namespace chess::board

@@ -46,10 +46,10 @@ struct CastlingRights final {
     }
 
     /** Returns true if castling either direction is possible. */
-    [[nodiscard]] constexpr bool either() const noexcept
-    {
-        return kingside || queenside;
-    }
+    [[nodiscard]] constexpr bool either() const noexcept { return kingside || queenside; }
+
+    /** Returns true if neither castling direction is available. */
+    [[nodiscard]] constexpr bool neither() const noexcept { return ! either(); }
 };
 
 } // namespace chess::game
