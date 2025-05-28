@@ -37,15 +37,18 @@ using pieces::Color;
 /// @{
 
 /** Calculates all possible pawn pushes for the given starting position and color. */
-[[nodiscard, gnu::const]] constexpr Bitboard pawn_pushes(Bitboard starting, Color color) noexcept;
+template <Color Side>
+[[nodiscard, gnu::const]] constexpr Bitboard pawn_pushes(Bitboard starting) noexcept;
 
 /** Calculates all possible pawn double pushes for the given starting position and color. */
-[[nodiscard, gnu::const]] constexpr Bitboard pawn_double_pushes(Bitboard starting, Color color) noexcept;
+template <Color Side>
+[[nodiscard, gnu::const]] constexpr Bitboard pawn_double_pushes(Bitboard starting) noexcept;
 
 /** Calculates all squares that are attacked by pawns from the given starting position and color.
     This can be used to calculate possible pawn captures.
  */
-[[nodiscard, gnu::const]] constexpr Bitboard pawn_attacks(Bitboard starting, Color color) noexcept;
+template <Color Side>
+[[nodiscard, gnu::const]] constexpr Bitboard pawn_attacks(Bitboard starting) noexcept;
 
 /** Calculates all possible knight moves from the given starting position.
     This function can calculate moves for any number of knights.
@@ -87,16 +90,18 @@ using pieces::Color;
 
  */
 
-constexpr Bitboard pawn_double_pushes(const Bitboard starting, const Color color) noexcept
+template <Color Side>
+constexpr Bitboard pawn_double_pushes(const Bitboard starting) noexcept
 {
     namespace rank_masks = board::masks::ranks;
 
-    if (color == Color::White)
+    if constexpr (Side == Color::White) {
         return (starting << 16uz) // north 2 ranks
              & rank_masks::four();
-
-    return (starting >> 16uz) // south 2 ranks
-         & rank_masks::five();
+    } else {
+        return (starting >> 16uz) // south 2 ranks
+             & rank_masks::five();
+    }
 }
 
 constexpr Bitboard knight(const Bitboard starting) noexcept
@@ -204,20 +209,22 @@ namespace detail {
 
 } // namespace detail
 
-constexpr Bitboard pawn_pushes(const Bitboard starting, const Color color) noexcept
+template <Color Side>
+constexpr Bitboard pawn_pushes(const Bitboard starting) noexcept
 {
-    if (color == Color::White)
+    if constexpr (Side == Color::White)
         return detail::shift_north(starting);
-
-    return detail::shift_south(starting);
+    else
+        return detail::shift_south(starting);
 }
 
-constexpr Bitboard pawn_attacks(const Bitboard starting, const Color color) noexcept
+template <Color Side>
+constexpr Bitboard pawn_attacks(const Bitboard starting) noexcept
 {
-    if (color == Color::White)
+    if constexpr (Side == Color::White)
         return detail::shift_northeast(starting) | detail::shift_northwest(starting);
-
-    return detail::shift_southeast(starting) | detail::shift_southwest(starting);
+    else
+        return detail::shift_southeast(starting) | detail::shift_southwest(starting);
 }
 
 constexpr Bitboard king(Bitboard starting) noexcept

@@ -34,13 +34,13 @@ TEST_CASE("Pseudo-legal - pawn pushes", TAGS)
         {
             static constexpr auto startingPos = board_masks::starting::white::pawns();
 
-            static constexpr auto allPushes = move_gen::pawn_pushes(
-                startingPos, Color::White, {});
+            static constexpr auto allPushes = move_gen::pawn_pushes<Color::White>(
+                startingPos, {});
 
             STATIC_REQUIRE(allPushes == board_masks::ranks::three());
 
-            static constexpr auto pushes = move_gen::pawn_pushes(
-                startingPos, Color::White, Bitboard { Square { File::A, Rank::Three } });
+            static constexpr auto pushes = move_gen::pawn_pushes<Color::White>(
+                startingPos, Bitboard { Square { File::A, Rank::Three } });
 
             STATIC_REQUIRE(pushes.count() == 7uz);
 
@@ -51,14 +51,14 @@ TEST_CASE("Pseudo-legal - pawn pushes", TAGS)
         {
             static constexpr Bitboard starting { Square { File::D, Rank::Seven } };
 
-            static constexpr auto allPushes = move_gen::pawn_pushes(
-                starting, Color::White, {});
+            static constexpr auto allPushes = move_gen::pawn_pushes<Color::White>(
+                starting, {});
 
             STATIC_REQUIRE(allPushes.count() == 1uz);
             STATIC_REQUIRE(allPushes.test(Square { File::D, Rank::Eight }));
 
-            static constexpr auto pushes = move_gen::pawn_pushes(
-                starting, Color::White, Bitboard { Square { File::D, Rank::Eight } });
+            static constexpr auto pushes = move_gen::pawn_pushes<Color::White>(
+                starting, Bitboard { Square { File::D, Rank::Eight } });
 
             STATIC_REQUIRE(pushes.none());
         }
@@ -70,13 +70,13 @@ TEST_CASE("Pseudo-legal - pawn pushes", TAGS)
         {
             static constexpr auto startingPos = board_masks::starting::black::pawns();
 
-            static constexpr auto allPushes = move_gen::pawn_pushes(
-                startingPos, Color::Black, {});
+            static constexpr auto allPushes = move_gen::pawn_pushes<Color::Black>(
+                startingPos, {});
 
             STATIC_REQUIRE(allPushes == board_masks::ranks::six());
 
-            static constexpr auto pushes = move_gen::pawn_pushes(
-                startingPos, Color::Black, Bitboard { Square { File::C, Rank::Six } });
+            static constexpr auto pushes = move_gen::pawn_pushes<Color::Black>(
+                startingPos, Bitboard { Square { File::C, Rank::Six } });
 
             STATIC_REQUIRE(pushes.count() == 7uz);
 
@@ -87,14 +87,14 @@ TEST_CASE("Pseudo-legal - pawn pushes", TAGS)
         {
             static constexpr Bitboard starting { Square { File::E, Rank::Two } };
 
-            static constexpr auto allPushes = move_gen::pawn_pushes(
-                starting, Color::Black, {});
+            static constexpr auto allPushes = move_gen::pawn_pushes<Color::Black>(
+                starting, {});
 
             STATIC_REQUIRE(allPushes.count() == 1uz);
             STATIC_REQUIRE(allPushes.test(Square { File::E, Rank::One }));
 
-            static constexpr auto pushes = move_gen::pawn_pushes(
-                starting, Color::Black, Bitboard { Square { File::E, Rank::One } });
+            static constexpr auto pushes = move_gen::pawn_pushes<Color::Black>(
+                starting, Bitboard { Square { File::E, Rank::One } });
 
             STATIC_REQUIRE(pushes.none());
         }
@@ -107,7 +107,8 @@ TEST_CASE("Pseudo-legal - pawn double pushes", TAGS)
     {
         static constexpr auto starting = board_masks::starting::white::pawns();
 
-        static constexpr auto allPushes = move_gen::pawn_double_pushes(starting, Color::White, {});
+        static constexpr auto allPushes = move_gen::pawn_double_pushes<Color::White>(
+            starting, {});
 
         STATIC_REQUIRE(allPushes == board_masks::ranks::four());
 
@@ -116,7 +117,8 @@ TEST_CASE("Pseudo-legal - pawn double pushes", TAGS)
         occupied.set(Square { File::A, Rank::Three });
         occupied.set(Square { File::F, Rank::Three });
 
-        const auto pushes = move_gen::pawn_double_pushes(starting, Color::White, occupied);
+        const auto pushes = move_gen::pawn_double_pushes<Color::White>(
+            starting, occupied);
 
         REQUIRE(pushes.count() == 6uz);
 
@@ -132,7 +134,8 @@ TEST_CASE("Pseudo-legal - pawn double pushes", TAGS)
     {
         static constexpr auto starting = board_masks::starting::black::pawns();
 
-        static constexpr auto allPushes = move_gen::pawn_double_pushes(starting, Color::Black, {});
+        static constexpr auto allPushes = move_gen::pawn_double_pushes<Color::Black>(
+            starting, {});
 
         STATIC_REQUIRE(allPushes == board_masks::ranks::five());
 
@@ -142,7 +145,8 @@ TEST_CASE("Pseudo-legal - pawn double pushes", TAGS)
         occupied.set(Square { File::D, Rank::Six });
         occupied.set(Square { File::H, Rank::Six });
 
-        const auto pushes = move_gen::pawn_double_pushes(starting, Color::Black, occupied);
+        const auto pushes = move_gen::pawn_double_pushes<Color::Black>(
+            starting, occupied);
 
         REQUIRE(pushes.count() == 5uz);
 
@@ -168,7 +172,8 @@ TEST_CASE("Pseudo-legal - pawn captures", TAGS)
             enemyPieces.set(Square { File::B, Rank::Eight });
             enemyPieces.set(Square { File::C, Rank::Five });
 
-            const auto captures = move_gen::pawn_captures(startingPawns, Color::White, enemyPieces);
+            const auto captures = move_gen::pawn_captures<Color::White>(
+                startingPawns, enemyPieces);
 
             REQUIRE(captures.count() == 1uz);
 
@@ -185,7 +190,8 @@ TEST_CASE("Pseudo-legal - pawn captures", TAGS)
             enemyPieces.set(Square { File::F, Rank::Four });
             enemyPieces.set(Square { File::G, Rank::Six });
 
-            const auto captures = move_gen::pawn_captures(startingPawns, Color::White, enemyPieces);
+            const auto captures = move_gen::pawn_captures<Color::White>(
+                startingPawns, enemyPieces);
 
             REQUIRE(captures.none());
         }
@@ -203,7 +209,8 @@ TEST_CASE("Pseudo-legal - pawn captures", TAGS)
             enemyPieces.set(Square { File::E, Rank::Seven });
             enemyPieces.set(Square { File::A, Rank::Four });
 
-            const auto captures = move_gen::pawn_captures(startingPawns, Color::White, enemyPieces);
+            const auto captures = move_gen::pawn_captures<Color::White>(
+                startingPawns, enemyPieces);
 
             REQUIRE(captures.count() == 2uz);
 
@@ -227,7 +234,8 @@ TEST_CASE("Pseudo-legal - pawn captures", TAGS)
             enemyPieces.set(Square { File::B, Rank::Eight });
             enemyPieces.set(Square { File::H, Rank::Three });
 
-            const auto captures = move_gen::pawn_captures(startingPawns, Color::White, enemyPieces);
+            const auto captures = move_gen::pawn_captures<Color::White>(
+                startingPawns, enemyPieces);
 
             REQUIRE(captures.count() == 3uz);
 
@@ -250,7 +258,8 @@ TEST_CASE("Pseudo-legal - pawn captures", TAGS)
             enemyPieces.set(Square { File::G, Rank::One });
             enemyPieces.set(Square { File::A, Rank::Seven });
 
-            const auto captures = move_gen::pawn_captures(startingPawns, Color::Black, enemyPieces);
+            const auto captures = move_gen::pawn_captures<Color::Black>(
+                startingPawns, enemyPieces);
 
             REQUIRE(captures.count() == 1uz);
 
@@ -269,7 +278,8 @@ TEST_CASE("Pseudo-legal - pawn captures", TAGS)
             enemyPieces.set(Square { File::H, Rank::Eight });
             enemyPieces.set(Square { File::C, Rank::One });
 
-            const auto captures = move_gen::pawn_captures(startingPawns, Color::Black, enemyPieces);
+            const auto captures = move_gen::pawn_captures<Color::Black>(
+                startingPawns, enemyPieces);
 
             REQUIRE(captures.none());
         }
@@ -286,7 +296,8 @@ TEST_CASE("Pseudo-legal - pawn captures", TAGS)
             enemyPieces.set(Square { File::G, Rank::One });
             enemyPieces.set(Square { File::H, Rank::One });
 
-            const auto captures = move_gen::pawn_captures(startingPawns, Color::Black, enemyPieces);
+            const auto captures = move_gen::pawn_captures<Color::Black>(
+                startingPawns, enemyPieces);
 
             REQUIRE(captures.count() == 2uz);
 
@@ -310,7 +321,8 @@ TEST_CASE("Pseudo-legal - pawn captures", TAGS)
             enemyPieces.set(Square { File::E, Rank::Six });
             enemyPieces.set(Square { File::A, Rank::Eight });
 
-            const auto captures = move_gen::pawn_captures(startingPawns, Color::Black, enemyPieces);
+            const auto captures = move_gen::pawn_captures<Color::Black>(
+                startingPawns, enemyPieces);
 
             REQUIRE(captures.count() == 3uz);
 

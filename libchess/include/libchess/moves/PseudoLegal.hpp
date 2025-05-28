@@ -44,20 +44,23 @@ using pieces::Color;
 /** Calculates all pseudo-legal pawn pushes.
     ``occupiedSquares`` should be the union of all squares occupied by pieces of either color.
  */
+template <Color Side>
 [[nodiscard, gnu::const]] constexpr Bitboard pawn_pushes(
-    Bitboard startingPawns, Color color, Bitboard occupiedSquares) noexcept;
+    Bitboard startingPawns, Bitboard occupiedSquares) noexcept;
 
 /** Calculates all pseudo-legal pawn double pushes.
     ``occupiedSquares`` should be the union of all squares occupied by pieces of either color.
  */
+template <Color Side>
 [[nodiscard, gnu::const]] constexpr Bitboard pawn_double_pushes(
-    Bitboard startingPawns, Color color, Bitboard occupiedSquares) noexcept;
+    Bitboard startingPawns, Bitboard occupiedSquares) noexcept;
 
 /** Calculates all pseudo-legal pawn captures.
     The returned bitboard has 1 bits set where each pawn would land after making a capture.
  */
+template <Color Side>
 [[nodiscard, gnu::const]] constexpr Bitboard pawn_captures(
-    Bitboard startingPawns, Color color, Bitboard enemyPieces) noexcept;
+    Bitboard startingPawns, Bitboard enemyPieces) noexcept;
 
 /** Calculates all pseudo-legal knight moves. */
 [[nodiscard, gnu::const]] constexpr Bitboard knight(
@@ -113,30 +116,33 @@ using pieces::Color;
 
  */
 
+template <Color Side>
 constexpr Bitboard pawn_pushes(
-    const Bitboard startingPawns, const Color color, const Bitboard occupiedSquares) noexcept
+    const Bitboard startingPawns, const Bitboard occupiedSquares) noexcept
 {
-    return patterns::pawn_pushes(startingPawns, color) & occupiedSquares.inverse();
+    return patterns::pawn_pushes<Side>(startingPawns) & occupiedSquares.inverse();
 }
 
+template <Color Side>
 constexpr Bitboard pawn_double_pushes(
-    const Bitboard startingPawns, const Color color, const Bitboard occupiedSquares) noexcept
+    const Bitboard startingPawns, const Bitboard occupiedSquares) noexcept
 {
     namespace rank_masks = board::masks::ranks;
 
-    const auto moves = patterns::pawn_double_pushes(startingPawns, color) & occupiedSquares.inverse();
+    const auto moves = patterns::pawn_double_pushes<Side>(startingPawns) & occupiedSquares.inverse();
 
     // Need to filter out any pushes that would jump over a piece on the third/sixth rank
-    const auto rankMask = color == Color::White ? rank_masks::three() : rank_masks::six();
+    const auto rankMask = Side == Color::White ? rank_masks::three() : rank_masks::six();
     const auto fileMask = board::fills::file(occupiedSquares & rankMask);
 
     return moves & fileMask.inverse();
 }
 
+template <Color Side>
 constexpr Bitboard pawn_captures(
-    const Bitboard startingPawns, const Color color, const Bitboard enemyPieces) noexcept
+    const Bitboard startingPawns, const Bitboard enemyPieces) noexcept
 {
-    return patterns::pawn_attacks(startingPawns, color) & enemyPieces;
+    return patterns::pawn_attacks<Side>(startingPawns) & enemyPieces;
 }
 
 constexpr Bitboard knight(

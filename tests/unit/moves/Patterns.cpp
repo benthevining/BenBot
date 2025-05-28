@@ -35,7 +35,7 @@ TEST_CASE("Patterns - pawn pushes", TAGS)
         {
             static constexpr auto startingPos = board_masks::starting::white::pawns();
 
-            static constexpr auto pushes = move_gen::pawn_pushes(startingPos, Color::White);
+            static constexpr auto pushes = move_gen::pawn_pushes<Color::White>(startingPos);
 
             STATIC_REQUIRE(pushes == board_masks::ranks::three());
         }
@@ -44,7 +44,7 @@ TEST_CASE("Patterns - pawn pushes", TAGS)
         {
             static constexpr Bitboard board { Square { File::H, Rank::Seven } };
 
-            static constexpr auto pushes = move_gen::pawn_pushes(board, Color::White);
+            static constexpr auto pushes = move_gen::pawn_pushes<Color::White>(board);
 
             STATIC_REQUIRE(pushes.count() == 1uz);
 
@@ -55,7 +55,7 @@ TEST_CASE("Patterns - pawn pushes", TAGS)
         {
             static constexpr Bitboard empty;
 
-            static constexpr auto pushes = move_gen::pawn_pushes(empty, Color::White);
+            static constexpr auto pushes = move_gen::pawn_pushes<Color::White>(empty);
 
             STATIC_REQUIRE(pushes.none());
         }
@@ -67,7 +67,7 @@ TEST_CASE("Patterns - pawn pushes", TAGS)
         {
             static constexpr auto startingPos = board_masks::starting::black::pawns();
 
-            static constexpr auto pushes = move_gen::pawn_pushes(startingPos, Color::Black);
+            static constexpr auto pushes = move_gen::pawn_pushes<Color::Black>(startingPos);
 
             STATIC_REQUIRE(pushes == board_masks::ranks::six());
         }
@@ -76,7 +76,7 @@ TEST_CASE("Patterns - pawn pushes", TAGS)
         {
             static constexpr Bitboard board { Square { File::E, Rank::Two } };
 
-            static constexpr auto pushes = move_gen::pawn_pushes(board, Color::Black);
+            static constexpr auto pushes = move_gen::pawn_pushes<Color::Black>(board);
 
             STATIC_REQUIRE(pushes.count() == 1uz);
 
@@ -87,7 +87,7 @@ TEST_CASE("Patterns - pawn pushes", TAGS)
         {
             static constexpr Bitboard empty;
 
-            static constexpr auto pushes = move_gen::pawn_pushes(empty, Color::Black);
+            static constexpr auto pushes = move_gen::pawn_pushes<Color::Black>(empty);
 
             STATIC_REQUIRE(pushes.none());
         }
@@ -102,7 +102,7 @@ TEST_CASE("Patterns - pawn double pushes", TAGS)
         {
             static constexpr auto startingPos = board_masks::starting::white::pawns();
 
-            static constexpr auto pushes = move_gen::pawn_double_pushes(startingPos, Color::White);
+            static constexpr auto pushes = move_gen::pawn_double_pushes<Color::White>(startingPos);
 
             STATIC_REQUIRE(pushes == board_masks::ranks::four());
         }
@@ -111,7 +111,7 @@ TEST_CASE("Patterns - pawn double pushes", TAGS)
         {
             static constexpr auto pawns = board_masks::ranks::one() | board_masks::ranks::three();
 
-            static constexpr auto pushes = move_gen::pawn_double_pushes(pawns, Color::White);
+            static constexpr auto pushes = move_gen::pawn_double_pushes<Color::White>(pawns);
 
             STATIC_REQUIRE(pushes.none());
         }
@@ -120,7 +120,7 @@ TEST_CASE("Patterns - pawn double pushes", TAGS)
         {
             static constexpr Bitboard empty;
 
-            static constexpr auto pushes = move_gen::pawn_double_pushes(empty, Color::White);
+            static constexpr auto pushes = move_gen::pawn_double_pushes<Color::White>(empty);
 
             STATIC_REQUIRE(pushes.none());
         }
@@ -132,7 +132,7 @@ TEST_CASE("Patterns - pawn double pushes", TAGS)
         {
             static constexpr auto startingPos = board_masks::starting::black::pawns();
 
-            static constexpr auto pushes = move_gen::pawn_double_pushes(startingPos, Color::Black);
+            static constexpr auto pushes = move_gen::pawn_double_pushes<Color::Black>(startingPos);
 
             STATIC_REQUIRE(pushes == board_masks::ranks::five());
         }
@@ -141,7 +141,7 @@ TEST_CASE("Patterns - pawn double pushes", TAGS)
         {
             static constexpr auto pawns = board_masks::ranks::eight() | board_masks::ranks::six();
 
-            static constexpr auto pushes = move_gen::pawn_double_pushes(pawns, Color::Black);
+            static constexpr auto pushes = move_gen::pawn_double_pushes<Color::Black>(pawns);
 
             STATIC_REQUIRE(pushes.none());
         }
@@ -150,7 +150,7 @@ TEST_CASE("Patterns - pawn double pushes", TAGS)
         {
             static constexpr Bitboard empty;
 
-            static constexpr auto pushes = move_gen::pawn_double_pushes(empty, Color::Black);
+            static constexpr auto pushes = move_gen::pawn_double_pushes<Color::Black>(empty);
 
             STATIC_REQUIRE(pushes.none());
         }
@@ -165,7 +165,7 @@ TEST_CASE("Patterns - pawn attacks", TAGS)
         {
             static constexpr Bitboard starting { Square { File::D, Rank::Four } };
 
-            static constexpr auto attacks = move_gen::pawn_attacks(starting, Color::White);
+            static constexpr auto attacks = move_gen::pawn_attacks<Color::White>(starting);
 
             STATIC_REQUIRE(attacks.count() == 2uz);
 
@@ -177,7 +177,7 @@ TEST_CASE("Patterns - pawn attacks", TAGS)
         {
             static constexpr Bitboard starting { Square { File::A, Rank::Two } };
 
-            static constexpr auto attacks = move_gen::pawn_attacks(starting, Color::White);
+            static constexpr auto attacks = move_gen::pawn_attacks<Color::White>(starting);
 
             STATIC_REQUIRE(attacks.count() == 1uz);
 
@@ -188,7 +188,7 @@ TEST_CASE("Patterns - pawn attacks", TAGS)
         {
             static constexpr Bitboard starting { Square { File::H, Rank::Five } };
 
-            static constexpr auto attacks = move_gen::pawn_attacks(starting, Color::White);
+            static constexpr auto attacks = move_gen::pawn_attacks<Color::White>(starting);
 
             STATIC_REQUIRE(attacks.count() == 1uz);
 
@@ -203,7 +203,7 @@ TEST_CASE("Patterns - pawn attacks", TAGS)
             board.set(Square { File::H, Rank::Three });
             board.set(Square { File::E, Rank::Seven });
 
-            const auto attacks = move_gen::pawn_attacks(board, Color::White);
+            const auto attacks = move_gen::pawn_attacks<Color::White>(board);
 
             REQUIRE(attacks.count() == 4uz);
 
@@ -217,7 +217,7 @@ TEST_CASE("Patterns - pawn attacks", TAGS)
         {
             static constexpr Bitboard empty;
 
-            static constexpr auto attacks = move_gen::pawn_attacks(empty, Color::White);
+            static constexpr auto attacks = move_gen::pawn_attacks<Color::White>(empty);
 
             STATIC_REQUIRE(attacks.none());
         }
@@ -229,7 +229,7 @@ TEST_CASE("Patterns - pawn attacks", TAGS)
         {
             static constexpr Bitboard starting { Square { File::E, Rank::Three } };
 
-            static constexpr auto attacks = move_gen::pawn_attacks(starting, Color::Black);
+            static constexpr auto attacks = move_gen::pawn_attacks<Color::Black>(starting);
 
             STATIC_REQUIRE(attacks.count() == 2uz);
 
@@ -241,7 +241,7 @@ TEST_CASE("Patterns - pawn attacks", TAGS)
         {
             static constexpr Bitboard starting { Square { File::A, Rank::Five } };
 
-            static constexpr auto attacks = move_gen::pawn_attacks(starting, Color::Black);
+            static constexpr auto attacks = move_gen::pawn_attacks<Color::Black>(starting);
 
             STATIC_REQUIRE(attacks.count() == 1uz);
 
@@ -252,7 +252,7 @@ TEST_CASE("Patterns - pawn attacks", TAGS)
         {
             static constexpr Bitboard starting { Square { File::H, Rank::Six } };
 
-            static constexpr auto attacks = move_gen::pawn_attacks(starting, Color::Black);
+            static constexpr auto attacks = move_gen::pawn_attacks<Color::Black>(starting);
 
             STATIC_REQUIRE(attacks.count() == 1uz);
 
@@ -267,7 +267,7 @@ TEST_CASE("Patterns - pawn attacks", TAGS)
             board.set(Square { File::H, Rank::Eight });
             board.set(Square { File::F, Rank::Three });
 
-            const auto attacks = move_gen::pawn_attacks(board, Color::Black);
+            const auto attacks = move_gen::pawn_attacks<Color::Black>(board);
 
             REQUIRE(attacks.count() == 4uz);
 
@@ -281,7 +281,7 @@ TEST_CASE("Patterns - pawn attacks", TAGS)
         {
             static constexpr Bitboard empty;
 
-            static constexpr auto attacks = move_gen::pawn_attacks(empty, Color::Black);
+            static constexpr auto attacks = move_gen::pawn_attacks<Color::Black>(empty);
 
             STATIC_REQUIRE(attacks.none());
         }
