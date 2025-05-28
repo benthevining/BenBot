@@ -93,9 +93,9 @@ namespace {
     }
 
     void write_castling_rights(
-        const game::CastlingRights& whiteRights,
-        const game::CastlingRights& blackRights,
-        auto                        outputIt)
+        const game::CastlingRights&     whiteRights,
+        const game::CastlingRights&     blackRights,
+        std::output_iterator<char> auto outputIt)
     {
         if (whiteRights.neither() && blackRights.neither()) {
             *outputIt = '-';
@@ -116,8 +116,8 @@ namespace {
     }
 
     void write_en_passant_target_square(
-        const std::optional<board::Square> targetSquare,
-        auto                               outputIt)
+        const std::optional<Square>     targetSquare,
+        std::output_iterator<char> auto outputIt)
     {
         if (! targetSquare.has_value()) {
             *outputIt = '-';
@@ -132,14 +132,14 @@ namespace {
 
     template <size_t MaxLen>
     void write_integer(
-        const std::integral auto value,
-        auto                     outputIt)
+        const std::integral auto        value,
+        std::output_iterator<char> auto outputIt)
     {
         std::array<char, MaxLen> buffer {};
 
         const auto result = std::to_chars(buffer.begin(), buffer.end(), value);
 
-        for (const auto* ptr = buffer.begin(); ptr != result.ptr; ++ptr)
+        for (const auto* ptr = buffer.begin(); ptr != result.ptr; ++ptr) // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
             *outputIt = *ptr;
     }
 

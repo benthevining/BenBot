@@ -88,7 +88,7 @@ namespace detail {
 
     constexpr void add_pawn_pushes(
         const Pieces& ourPieces, const bool isWhite, const Bitboard allOccupied,
-        auto outputIt)
+        std::output_iterator<Move> auto outputIt)
     {
         const auto allPushes = isWhite
                                  ? pseudo_legal::pawn_pushes<Color::White>(ourPieces.pawns, allOccupied)
@@ -124,7 +124,7 @@ namespace detail {
 
     constexpr void add_pawn_double_pushes(
         const Pieces& ourPieces, const bool isWhite, const Bitboard allOccupied,
-        auto outputIt)
+        std::output_iterator<Move> auto outputIt)
     {
         const auto pawnStartingRank = isWhite ? Rank::Two : Rank::Seven;
 
@@ -144,7 +144,7 @@ namespace detail {
 
     constexpr void add_pawn_captures(
         const Pieces& ourPieces, const bool isWhite, const Bitboard enemyPieces,
-        auto outputIt)
+        std::output_iterator<Move> auto outputIt)
     {
         // TODO: do these set-wise?
         for (const auto starting : ourPieces.pawns.squares()) {
@@ -185,7 +185,7 @@ namespace detail {
 
     constexpr void add_knight_moves(
         const Pieces& ourPieces, const Bitboard friendlyPieces,
-        auto outputIt)
+        std::output_iterator<Move> auto outputIt)
     {
         // TODO: parallelize for all knights at once?
         for (const auto knightSquare : ourPieces.knights.squares()) {
@@ -202,7 +202,7 @@ namespace detail {
 
     constexpr void add_bishop_moves(
         const Pieces& ourPieces, const Bitboard friendlyPieces, const Bitboard allOccupied,
-        auto outputIt)
+        std::output_iterator<Move> auto outputIt)
     {
         for (const auto bishopSquare : ourPieces.bishops.squares()) {
             const auto bishopMoves = pseudo_legal::bishop(bishopSquare, allOccupied, friendlyPieces);
@@ -218,7 +218,7 @@ namespace detail {
 
     constexpr void add_rook_moves(
         const Pieces& ourPieces, const Bitboard friendlyPieces, const Bitboard allOccupied,
-        auto outputIt)
+        std::output_iterator<Move> auto outputIt)
     {
         for (const auto rookSquare : ourPieces.rooks.squares()) {
             const auto rookMoves = pseudo_legal::rook(rookSquare, allOccupied, friendlyPieces);
@@ -234,7 +234,7 @@ namespace detail {
 
     constexpr void add_queen_moves(
         const Pieces& ourPieces, const Bitboard friendlyPieces, const Bitboard allOccupied,
-        auto outputIt)
+        std::output_iterator<Move> auto outputIt)
     {
         for (const auto queenSquare : ourPieces.queens.squares()) {
             const auto queenMoves = pseudo_legal::queen(queenSquare, allOccupied, friendlyPieces);
@@ -250,7 +250,7 @@ namespace detail {
 
     constexpr void add_king_moves(
         const Pieces& ourPieces, const Bitboard friendlyPieces,
-        auto outputIt)
+        std::output_iterator<Move> auto outputIt)
     {
         const auto kingMoves = pseudo_legal::king(ourPieces.king, friendlyPieces);
 
@@ -266,7 +266,7 @@ namespace detail {
 
     constexpr void add_en_passant(
         const Square& targetSquare, const bool isWhite, const Bitboard ourPawns,
-        auto outputIt)
+        std::output_iterator<Move> auto outputIt)
     {
         const Bitboard targetSquareBoard { targetSquare };
 
@@ -328,7 +328,7 @@ namespace detail {
 
     constexpr void add_castling(
         const game::Position& position, const bool isWhite, const Bitboard allOccupied,
-        auto outputIt)
+        std::output_iterator<Move> auto outputIt)
     {
         const auto& rights = isWhite ? position.whiteCastlingRights : position.blackCastlingRights;
 
