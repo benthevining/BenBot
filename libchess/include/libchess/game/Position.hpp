@@ -198,6 +198,9 @@ struct Position final {
         This is useful for tasks like parsing a FEN string, for example.
      */
     [[nodiscard]] static constexpr Position empty() noexcept;
+
+private:
+    [[nodiscard]] constexpr bool is_side_in_check(Color side) const noexcept;
 };
 
 /** Creates a UTF8 representation of the given position.
@@ -237,7 +240,12 @@ constexpr Position Position::empty() noexcept
 
 constexpr bool Position::is_check() const noexcept
 {
-    if (sideToMove == Color::White) {
+    return is_side_in_check(sideToMove);
+}
+
+constexpr bool Position::is_side_in_check(const Color side) const noexcept
+{
+    if (side == Color::White) {
         const auto blackAttacks = board::attacked_squares<Color::Black>(
             blackPieces, whitePieces.occupied());
 
@@ -256,7 +264,7 @@ constexpr bool Position::is_legal(const Move& move) const noexcept
 
     copy.make_move(move);
 
-    return ! copy.is_check();
+    return ! copy.is_side_in_check(sideToMove);
 }
 
 constexpr bool Position::is_capture(const Move& move) const noexcept

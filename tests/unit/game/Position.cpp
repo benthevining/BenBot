@@ -12,6 +12,7 @@
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
+#include <libchess/notation/FEN.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <ranges>
@@ -100,4 +101,29 @@ TEST_CASE("Position - is_file_half_open()/get_half_open_files()", TAGS)
         REQUIRE(! pos.is_file_half_open(file));
 
     REQUIRE(std::ranges::empty(pos.get_half_open_files()));
+}
+
+TEST_CASE("Position - is_check()", TAGS)
+{
+    using chess::notation::from_fen;
+
+    STATIC_REQUIRE(! Position {}.is_check());
+
+    REQUIRE(! from_fen("r1bqkb1r/pppppppp/2n4n/8/2B1P3/5Q2/PPPP1PPP/RNB1K1NR b KQkq - 4 3")
+            .is_check());
+
+    {
+        const auto check = from_fen("r1bqkb1r/pppppB1p/2n4n/6p1/4P3/5Q2/PPPP1PPP/RNB1K1NR b KQkq - 0 4");
+
+        REQUIRE(check.is_check());
+        REQUIRE(! check.is_checkmate());
+    }
+
+    {
+        const auto mate = from_fen("1rbqkbnr/p1pppQpp/1pn5/8/2B1P3/8/PPPP1PPP/RNB1K1NR b KQk - 0 4");
+
+        REQUIRE(mate.is_check());
+
+        REQUIRE(mate.is_checkmate());
+    }
 }

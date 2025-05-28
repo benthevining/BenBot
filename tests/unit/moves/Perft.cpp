@@ -18,6 +18,5 @@ TEST_CASE("Move gen - perft", "[moves][Generation][perft]")
 
     // on Clang this already hits the constexpr recursion limits but works at runtime
     REQUIRE(perft(2uz) == 400uz);
-
-    // REQUIRE(perft(3uz) == 8902uz);
+    REQUIRE(perft(3uz) == 8902uz);
 }
