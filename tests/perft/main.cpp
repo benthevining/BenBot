@@ -24,6 +24,8 @@
 // TODO:
 // print detailed results
 // print timing info
+// print number of nodes from each starting move
+// option to output JSON?
 
 struct PerftOptions final {
     chess::game::Position startingPosition {};
