@@ -49,7 +49,6 @@ namespace {
     {
         const auto whitePieces = position.whitePieces.occupied();
         const auto blackPieces = position.blackPieces.occupied();
-
         const auto allOccupied = whitePieces | blackPieces;
 
         for (const auto rank : std::views::reverse(magic_enum::enum_values<board::Rank>())) {
@@ -207,6 +206,7 @@ namespace {
         };
     }
 
+    // returns the rest of the piece positions fragment that was left after parsing this rank
     [[nodiscard]] std::string_view parse_rank(
         const board::Rank rank, std::string_view fenFragment, Position& position)
     {
@@ -245,7 +245,7 @@ namespace {
                 case '8': index += 8uz; break;
 
                 case '/':
-                    return fenFragment;
+                    return fenFragment; // NOLINT
 
                 default:
                     throw std::invalid_argument {
@@ -257,7 +257,7 @@ namespace {
             fenFragment = fenFragment.substr(1uz);
         } while (index < rankEnd);
 
-        return fenFragment;
+        return fenFragment; // NOLINT
     }
 
     void parse_piece_positions(
