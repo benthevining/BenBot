@@ -38,9 +38,15 @@ using game::Position;
 /** Generates a list of all legal moves for the side to move in the given position.
     If the side to move is in checkmate or stalemate, this returns an empty list.
 
+    @tparam PruneIllegal If true (the default), this function will return only strictly
+    legal moves. If false, all pseudo-legal moves will be returned; that is, moves
+    that obey the piece's movement mechanics, but may leave the side to move's king
+    in check.
+
     @ingroup moves
  */
-[[nodiscard]] constexpr std::vector<Move> generate_legal_moves(const Position& position);
+template <bool PruneIllegal = true>
+[[nodiscard]] constexpr std::vector<Move> generate(const Position& position);
 
 /*
                          ___                           ,--,
@@ -368,7 +374,8 @@ namespace detail {
 
 } // namespace detail
 
-constexpr std::vector<Move> generate_legal_moves(const Position& position)
+template <bool PruneIllegal>
+constexpr std::vector<Move> generate(const Position& position)
 {
     using pieces::Color;
 
@@ -420,8 +427,10 @@ constexpr std::vector<Move> generate_legal_moves(const Position& position)
             *position.enPassantTargetSquare, isWhite, ourPieces.pawns, std::back_inserter(moves));
     }
 
-    std::erase_if(moves,
-        [position](const Move& move) { return ! position.is_legal(move); });
+    if constexpr (PruneIllegal) {
+        std::erase_if(moves,
+            [position](const Move& move) { return ! position.is_legal(move); });
+    }
 
     return moves;
 }

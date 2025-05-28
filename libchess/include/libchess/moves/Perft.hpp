@@ -99,7 +99,7 @@ constexpr PerftResult perft(const size_t depth, const Position& startingPosition
 
     PerftResult result;
 
-    for (const auto& move : generate_legal_moves(startingPosition)) {
+    for (const auto& move : generate(startingPosition)) {
         if (startingPosition.is_capture(move)) {
             ++result.captures;
 
@@ -123,7 +123,7 @@ constexpr PerftResult perft(const size_t depth, const Position& startingPosition
         if (isCheck)
             ++result.checks;
 
-        if (generate_legal_moves(newPosition).empty()) {
+        if (generate(newPosition).empty()) {
             // no legal moves
             if (isCheck)
                 ++result.checkmates;

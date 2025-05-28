@@ -26,13 +26,13 @@ namespace chess::game {
 bool Position::is_checkmate() const
 {
     return is_check()
-        && moves::generate_legal_moves(*this).empty();
+        && moves::generate(*this).empty();
 }
 
 bool Position::is_stalemate() const
 {
     return ! is_check()
-        && moves::generate_legal_moves(*this).empty();
+        && moves::generate(*this).empty();
 }
 
 // TODO: annotate check, checkmate
