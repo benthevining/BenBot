@@ -107,23 +107,48 @@ TEST_CASE("Position - is_check()", TAGS)
 {
     using chess::notation::from_fen;
 
-    STATIC_REQUIRE(! Position {}.is_check());
-
-    REQUIRE(! from_fen("r1bqkb1r/pppppppp/2n4n/8/2B1P3/5Q2/PPPP1PPP/RNB1K1NR b KQkq - 4 3")
-            .is_check());
-
+    SECTION("Starting position")
     {
-        const auto check = from_fen("r1bqkb1r/pppppB1p/2n4n/6p1/4P3/5Q2/PPPP1PPP/RNB1K1NR b KQkq - 0 4");
+        static constexpr Position startingPosition {};
 
-        REQUIRE(check.is_check());
-        REQUIRE(! check.is_checkmate());
+        STATIC_REQUIRE(! startingPosition.is_check());
+        REQUIRE(! startingPosition.is_checkmate());
+        REQUIRE(! startingPosition.is_stalemate());
     }
 
+    SECTION("Blocked ray attack")
     {
-        const auto mate = from_fen("1rbqkbnr/p1pppQpp/1pn5/8/2B1P3/8/PPPP1PPP/RNB1K1NR b KQk - 0 4");
+        const auto pos = from_fen("r1bqkb1r/pppppppp/2n4n/8/2B1P3/5Q2/PPPP1PPP/RNB1K1NR b KQkq - 4 3");
 
-        REQUIRE(mate.is_check());
+        REQUIRE(! pos.is_check());
+        REQUIRE(! pos.is_checkmate());
+        REQUIRE(! pos.is_stalemate());
+    }
 
-        REQUIRE(mate.is_checkmate());
+    SECTION("Check")
+    {
+        const auto pos = from_fen("r1bqkb1r/pppppB1p/2n4n/6p1/4P3/5Q2/PPPP1PPP/RNB1K1NR b KQkq - 0 4");
+
+        REQUIRE(pos.is_check());
+        REQUIRE(! pos.is_checkmate());
+        REQUIRE(! pos.is_stalemate());
+    }
+
+    SECTION("Checkmate")
+    {
+        const auto pos = from_fen("1rbqkbnr/p1pppQpp/1pn5/8/2B1P3/8/PPPP1PPP/RNB1K1NR b KQk - 0 4");
+
+        REQUIRE(pos.is_check());
+        REQUIRE(pos.is_checkmate());
+        REQUIRE(! pos.is_stalemate());
+    }
+
+    SECTION("Stalemate")
+    {
+        const auto pos = from_fen("7K/5k2/6q1/8/8/8/8/8 w - - 0 1");
+
+        REQUIRE(! pos.is_check());
+        REQUIRE(! pos.is_checkmate());
+        REQUIRE(pos.is_stalemate());
     }
 }

@@ -47,6 +47,7 @@ set (
     moves/Patterns.hpp
     moves/Perft.hpp
     moves/PseudoLegal.hpp
+    notation/Algebraic.hpp
     notation/FEN.hpp
     pieces/Colors.hpp
     pieces/PieceTypes.hpp
@@ -54,7 +55,7 @@ set (
 )
 
 set (libchess_sources # cmake-format: sortable
-                      board/Bitboard.cpp game/Position.cpp notation/FEN.cpp
+                      board/Bitboard.cpp game/Position.cpp notation/Algebraic.cpp notation/FEN.cpp
 )
 
 list (TRANSFORM libchess_headers PREPEND "${CMAKE_CURRENT_LIST_DIR}/include/libchess/")

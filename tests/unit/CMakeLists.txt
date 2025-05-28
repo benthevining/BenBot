@@ -47,6 +47,7 @@ set (
     moves/Patterns.cpp
     moves/Perft.cpp
     moves/PseudoLegal.cpp
+    notation/Algebraic.cpp
     notation/FEN.cpp
 )
 
