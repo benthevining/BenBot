@@ -34,6 +34,7 @@
 namespace chess::moves {
 
 using game::Position;
+using PieceType = pieces::Type;
 
 /** Generates a list of all legal moves for the side to move in the given position.
     If the side to move is in checkmate or stalemate, this returns an empty list.
@@ -44,9 +45,26 @@ using game::Position;
     in check.
 
     @ingroup moves
+    @see generate_for()
  */
 template <bool PruneIllegal = true>
 [[nodiscard]] constexpr std::vector<Move> generate(const Position& position);
+
+/** Generates a list of all legal moves for only the given piece type in the given position.
+
+    Generating King moves will include castling. Generating pawn moves will include all
+    pushes, double pushes, captures, promotions, and en passant captures.
+
+    @tparam PruneIllegal If true (the default), this function will return only strictly
+    legal moves. If false, all pseudo-legal moves will be returned; that is, moves
+    that obey the piece's movement mechanics, but may leave the side to move's king
+    in check.
+
+    @ingroup moves
+    @see generate()
+ */
+template <bool PruneIllegal = true>
+[[nodiscard]] constexpr std::vector<Move> generate_for(const Position& position, PieceType piece);
 
 /*
                          ___                           ,--,
@@ -72,8 +90,6 @@ namespace detail {
     using board::Rank;
     using board::Square;
     using pieces::Color;
-
-    using PieceType = pieces::Type;
 
     namespace rank_masks = board::masks::ranks;
 
@@ -189,6 +205,48 @@ namespace detail {
         }
     }
 
+    template <Color Side>
+    constexpr void add_en_passant(
+        const Position&                 position,
+        std::output_iterator<Move> auto outputIt)
+    {
+        if (! position.enPassantTargetSquare.has_value())
+            return;
+
+        const auto targetSquare = *position.enPassantTargetSquare;
+
+        const Bitboard targetSquareBoard { targetSquare };
+
+        const auto ourPawns = position.pieces_for<Side>().pawns;
+
+        // TODO: do this set-wise?
+        for (const auto pawnSquare : ourPawns.squares()) {
+            const Bitboard pawnBoard { pawnSquare };
+
+            const auto captures = patterns::pawn_attacks<Side>(pawnBoard);
+
+            if ((captures & targetSquareBoard).any())
+                *outputIt = Move {
+                    .from  = pawnSquare,
+                    .to    = targetSquare,
+                    .piece = PieceType::Pawn
+                };
+        }
+    }
+
+    template <Color Side>
+    constexpr void add_all_pawn_moves(
+        const Position& position, const Bitboard enemyPieces, const Bitboard allOccupied,
+        std::output_iterator<Move> auto outputIt)
+    {
+        const auto& ourPieces = position.pieces_for<Side>();
+
+        add_pawn_pushes<Side>(ourPieces, allOccupied, outputIt);
+        add_pawn_double_pushes<Side>(ourPieces, allOccupied, outputIt);
+        add_pawn_captures<Side>(ourPieces, enemyPieces, outputIt);
+        add_en_passant<Side>(position, outputIt);
+    }
+
     constexpr void add_knight_moves(
         const Pieces& ourPieces, const Bitboard friendlyPieces,
         std::output_iterator<Move> auto outputIt)
@@ -268,28 +326,6 @@ namespace detail {
                 .to    = targetSquare,
                 .piece = PieceType::King
             };
-    }
-
-    template <Color Side>
-    constexpr void add_en_passant(
-        const Square& targetSquare, const Bitboard ourPawns,
-        std::output_iterator<Move> auto outputIt)
-    {
-        const Bitboard targetSquareBoard { targetSquare };
-
-        // TODO: do this set-wise?
-        for (const auto pawnSquare : ourPawns.squares()) {
-            const Bitboard pawnBoard { pawnSquare };
-
-            const auto captures = patterns::pawn_attacks<Side>(pawnBoard);
-
-            if ((captures & targetSquareBoard).any())
-                *outputIt = Move {
-                    .from  = pawnSquare,
-                    .to    = targetSquare,
-                    .piece = PieceType::Pawn
-                };
-        }
     }
 
     template <Color Side>
@@ -386,11 +422,7 @@ namespace detail {
 
         const auto allOccupied = friendlyPieces | enemyPieces;
 
-        add_pawn_pushes<Side>(ourPieces, allOccupied, outputIt);
-
-        add_pawn_double_pushes<Side>(ourPieces, allOccupied, outputIt);
-
-        add_pawn_captures<Side>(ourPieces, enemyPieces, outputIt);
+        add_all_pawn_moves<Side>(position, enemyPieces, allOccupied, outputIt);
 
         add_knight_moves(ourPieces, friendlyPieces, outputIt);
 
@@ -403,10 +435,54 @@ namespace detail {
         add_king_moves(ourPieces, friendlyPieces, outputIt);
 
         add_castling<Side>(position, allOccupied, outputIt);
+    }
 
-        if (position.enPassantTargetSquare.has_value()) {
-            add_en_passant<Side>(
-                *position.enPassantTargetSquare, ourPieces.pawns, outputIt);
+    template <Color Side>
+    constexpr void generate_for_internal(
+        const Position& position, const PieceType piece,
+        std::output_iterator<Move> auto outputIt)
+    {
+        static constexpr auto OppositeSide = Side == Color::White ? Color::Black : Color::White;
+
+        const auto& ourPieces   = position.pieces_for<Side>();
+        const auto& theirPieces = position.pieces_for<OppositeSide>();
+
+        const auto friendlyPieces = ourPieces.occupied();
+        const auto enemyPieces    = theirPieces.occupied();
+
+        const auto allOccupied = friendlyPieces | enemyPieces;
+
+        switch (piece) {
+            case PieceType::Pawn: {
+                add_all_pawn_moves<Side>(position, enemyPieces, allOccupied, outputIt);
+                return;
+            }
+
+            case PieceType::Knight: {
+                add_knight_moves(ourPieces, friendlyPieces, outputIt);
+                return;
+            }
+
+            case PieceType::Bishop: {
+                add_bishop_moves(ourPieces, friendlyPieces, allOccupied, outputIt);
+                return;
+            }
+
+            case PieceType::Rook: {
+                add_rook_moves(ourPieces, friendlyPieces, allOccupied, outputIt);
+                return;
+            }
+
+            case PieceType::Queen: {
+                add_queen_moves(ourPieces, friendlyPieces, allOccupied, outputIt);
+                return;
+            }
+
+            default: // King
+                add_king_moves(ourPieces, friendlyPieces, outputIt);
+
+                // castling is considered a King move
+                add_castling<Side>(position, allOccupied, outputIt);
         }
     }
 
@@ -425,6 +501,25 @@ constexpr std::vector<Move> generate(const Position& position)
         detail::generate_internal<Color::White>(position, std::back_inserter(moves));
     else
         detail::generate_internal<Color::Black>(position, std::back_inserter(moves));
+
+    if constexpr (PruneIllegal) {
+        std::erase_if(moves,
+            [position](const Move& move) { return ! position.is_legal(move); });
+    }
+
+    return moves;
+}
+
+template <bool PruneIllegal>
+constexpr std::vector<Move> generate_for(
+    const Position& position, const PieceType piece)
+{
+    std::vector<Move> moves;
+
+    if (position.sideToMove == Color::White)
+        detail::generate_for_internal<Color::White>(position, piece, std::back_inserter(moves));
+    else
+        detail::generate_for_internal<Color::Black>(position, piece, std::back_inserter(moves));
 
     if constexpr (PruneIllegal) {
         std::erase_if(moves,
