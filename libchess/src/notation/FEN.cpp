@@ -40,56 +40,65 @@ namespace {
     {
         assert(value <= 9uz);
 
-        return '0' + value;
+        return '0' + static_cast<char>(value);
+    }
+
+    void write_rank(
+        const Position&       position,
+        const board::Rank     rank,
+        const board::Bitboard allOccupied, const board::Bitboard whitePieces,
+        std::output_iterator<char> auto outputIt)
+    {
+        size_t consecutiveEmpty { 0uz };
+
+        for (const auto file : magic_enum::enum_values<board::File>()) {
+            const Square square { file, rank };
+
+            if (! allOccupied.test(square)) {
+                ++consecutiveEmpty;
+                continue;
+            }
+
+            if (consecutiveEmpty > 0uz) {
+                *outputIt        = int_to_char(consecutiveEmpty);
+                consecutiveEmpty = 0uz;
+            }
+
+            if (whitePieces.test(square)) {
+                const auto type = position.whitePieces.get_piece_on(square);
+
+                assert(type.has_value());
+
+                *outputIt = pieces::to_char(*type, true);
+
+                continue;
+            }
+
+            const auto type = position.blackPieces.get_piece_on(square);
+
+            assert(type.has_value());
+
+            *outputIt = pieces::to_char(*type, false);
+        }
+
+        if (consecutiveEmpty > 0uz)
+            *outputIt = int_to_char(consecutiveEmpty);
+
+        if (rank != board::Rank::One)
+            *outputIt = '/';
     }
 
     void write_piece_positions(
-        const Position& position,
-        auto            outputIt)
+        const Position&                 position,
+        std::output_iterator<char> auto outputIt)
     {
         const auto whitePieces = position.whitePieces.occupied();
         const auto blackPieces = position.blackPieces.occupied();
         const auto allOccupied = whitePieces | blackPieces;
 
-        for (const auto rank : std::views::reverse(magic_enum::enum_values<board::Rank>())) {
-            size_t consecutiveEmpty { 0uz };
-
-            for (const auto file : magic_enum::enum_values<board::File>()) {
-                const Square square { file, rank };
-
-                if (! allOccupied.test(square)) {
-                    ++consecutiveEmpty;
-                    continue;
-                }
-
-                if (consecutiveEmpty > 0uz) {
-                    *outputIt        = int_to_char(consecutiveEmpty);
-                    consecutiveEmpty = 0uz;
-                }
-
-                if (whitePieces.test(square)) {
-                    const auto type = position.whitePieces.get_piece_on(square);
-
-                    assert(type.has_value());
-
-                    *outputIt = pieces::to_char(*type, true);
-                } else {
-                    assert(blackPieces.test(square));
-
-                    const auto type = position.blackPieces.get_piece_on(square);
-
-                    assert(type.has_value());
-
-                    *outputIt = pieces::to_char(*type, false);
-                }
-            }
-
-            if (consecutiveEmpty > 0uz)
-                *outputIt = int_to_char(consecutiveEmpty);
-
-            if (rank != board::Rank::One)
-                *outputIt = '/';
-        }
+        for (const auto rank : std::views::reverse(magic_enum::enum_values<board::Rank>()))
+            write_rank(
+                position, rank, allOccupied, whitePieces, outputIt);
     }
 
     void write_castling_rights(
