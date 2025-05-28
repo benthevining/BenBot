@@ -20,7 +20,6 @@
 #include <libchess/board/BitboardMasks.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Square.hpp>
-#include <libchess/moves/Patterns.hpp>
 #include <libchess/moves/PseudoLegal.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
@@ -204,6 +203,8 @@ constexpr bool Pieces::has_bishop_pair() const noexcept
 
 constexpr Square Pieces::get_king_location() const noexcept
 {
+    assert(king.count() == 1uz);
+
     return Square::from_index(king.first());
 }
 
@@ -239,18 +240,16 @@ constexpr void Pieces::capture_at(const Square square) noexcept
 template <Color Side>
 constexpr Bitboard attacked_squares(const Pieces& pieces, const Bitboard enemyPieces) noexcept
 {
-    namespace move_patterns = moves::patterns;
-    namespace move_gen      = moves::pseudo_legal;
-
-    // NB. for knight/king, the move_gen functions just prune squares occupied by
-    // friendly pieces, which we don't care about here, so avoid the extra operations
-    auto attacks
-        = move_patterns::pawn_attacks<Side>(pieces.pawns)
-        | move_patterns::knight(pieces.knights)
-        | move_patterns::king(pieces.king);
+    namespace move_gen = moves::pseudo_legal;
 
     const auto friendlyPieces = pieces.occupied();
-    const auto allOccupied    = friendlyPieces | enemyPieces;
+
+    auto attacks
+        = move_gen::pawn_captures<Side>(pieces.pawns, enemyPieces) // TODO: should this use the pattern function?
+        | move_gen::knight(pieces.knights, friendlyPieces)
+        | move_gen::king(pieces.king, friendlyPieces);
+
+    const auto allOccupied = friendlyPieces | enemyPieces;
 
     for (const auto square : pieces.bishops.squares())
         attacks |= move_gen::bishop(square, allOccupied, friendlyPieces); // cppcheck-suppress useStlAlgorithm

@@ -349,17 +349,19 @@ namespace detail {
         if (rights.kingside) {
             const auto requiredSquares = kingside_castle_mask(isWhite);
 
-            if (! ((requiredSquares & allOccupied).any()
-                    || (requiredSquares & opponentAttacks).any())) {
+            const bool castlingBlocked = (requiredSquares & allOccupied).any()
+                                      || (requiredSquares & opponentAttacks).any();
+
+            if (! castlingBlocked)
                 *outputIt = castle_kingside(isWhite ? Color::White : Color::Black);
-            }
         }
 
         if (rights.queenside) {
-            if (! ((allOccupied & queenside_castle_mask_occupied(isWhite)).any()
-                    || (opponentAttacks & queenside_castle_mask_attacked(isWhite)).any())) {
+            const bool castlingBlocked = (allOccupied & queenside_castle_mask_occupied(isWhite)).any()
+                                      || (opponentAttacks & queenside_castle_mask_attacked(isWhite)).any();
+
+            if (! castlingBlocked)
                 *outputIt = castle_queenside(isWhite ? Color::White : Color::Black);
-            }
         }
     }
 
@@ -433,9 +435,7 @@ namespace detail {
 
         auto nodes = 0uz;
 
-        const auto moves = generate_legal_moves(position);
-
-        for (const auto& move : moves) {
+        for (const auto& move : generate_legal_moves(position)) {
             game::Position newPosition { position };
 
             newPosition.make_move(move);
