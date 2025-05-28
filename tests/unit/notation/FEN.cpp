@@ -36,3 +36,17 @@ TEST_CASE("Position to FEN", TAGS)
             match::Matches(startingFEN.data(), Catch::CaseSensitive::Yes));
     }
 }
+
+TEST_CASE("Position from FEN", TAGS)
+{
+    using chess::notation::from_fen;
+
+    SECTION("Starting position")
+    {
+        static constexpr Position startingPos;
+
+        const auto position = from_fen(startingFEN);
+
+        REQUIRE(position == startingPos);
+    }
+}

@@ -111,9 +111,7 @@ struct Position final {
      */
     std::uint_least64_t fullMoveCounter { 1 };
 
-    /** Returns true if the two positions are identical.
-        @todo Exclude halfmove clock?
-     */
+    /** Returns true if the two positions are identical. */
     [[nodiscard]] constexpr bool operator==(const Position&) const noexcept = default;
 
     /** Returns a bitboard that is the union of all White and Black

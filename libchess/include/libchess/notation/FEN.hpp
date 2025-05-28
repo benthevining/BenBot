@@ -35,6 +35,7 @@ using game::Position;
 /** Returns the FEN representation of the given position.
 
     @ingroup notation
+    @see from_fen()
  */
 [[nodiscard]] std::string to_fen(const Position& position);
 
@@ -44,8 +45,7 @@ using game::Position;
     FEN string cannot be parsed correctly.
 
     @ingroup notation
-
-    @todo Implement!
+    @see to_fen()
  */
 [[nodiscard]] Position from_fen(std::string_view fenString);
 
