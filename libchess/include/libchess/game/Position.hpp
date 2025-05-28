@@ -362,6 +362,11 @@ constexpr void Position::make_move(const Move& move) noexcept
         castlingRights.king_moved();
     else if (move.piece == PieceType::Rook)
         castlingRights.rook_moved(move.from.is_kingside());
+    else if (isCapture && move.to.rank == board::back_rank_for(sideToMove)) {
+        // special case: need to remove castling rights when a rook is captured
+        castlingRights.kingside  = castlingRights.kingside && move.to.file != File::H;
+        castlingRights.queenside = castlingRights.queenside && move.to.file != File::A;
+    }
 
     // update halfmoveClock
     if (isPawnMove || isCapture)
