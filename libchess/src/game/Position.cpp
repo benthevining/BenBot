@@ -50,7 +50,7 @@ std::string Position::move_to_string(const Move& move) const
     const auto& ourPieces      = isWhite ? whitePieces : blackPieces;
     const auto& opponentPieces = isWhite ? blackPieces : whitePieces;
 
-    const bool isCapture = opponentPieces.occupied().test(move.to);
+    const bool isCapture = is_capture(move);
 
     if (move.is_promotion()) {
         if (isCapture)

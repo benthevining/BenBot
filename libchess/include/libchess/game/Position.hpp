@@ -168,6 +168,9 @@ struct Position final {
      */
     [[nodiscard]] constexpr bool is_legal(const Move& move) const noexcept;
 
+    /** Returns true if the given move is a capture, including en passant. */
+    [[nodiscard]] constexpr bool is_capture(const Move& move) const noexcept;
+
     /** Makes a move to alter the position. */
     constexpr void make_move(const Move& move) noexcept;
 
@@ -238,6 +241,16 @@ constexpr bool Position::is_legal(const Move& move) const noexcept
     return ! copy.is_check();
 }
 
+constexpr bool Position::is_capture(const Move& move) const noexcept
+{
+    if (enPassantTargetSquare.has_value() && move.to == *enPassantTargetSquare)
+        return true;
+
+    const auto& opponentPieces = sideToMove == Color::White ? blackPieces : whitePieces;
+
+    return opponentPieces.occupied().test(move.to);
+}
+
 constexpr bool Position::is_file_open(const File file) const noexcept
 {
     return whitePieces.is_file_half_open(file) && blackPieces.is_file_half_open(file);
@@ -270,12 +283,12 @@ constexpr void Position::make_move(const Move& move) noexcept
 
     const bool isPawnMove = move.piece == PieceType::Pawn;
 
-    auto& opponentPieces = isWhite ? blackPieces : whitePieces;
-
-    const bool isCapture = opponentPieces.occupied().test(move.to); // TODO: broken for en passant
+    const bool isCapture = is_capture(move);
 
     // update bitboards
     {
+        auto& opponentPieces = isWhite ? blackPieces : whitePieces;
+
         opponentPieces.capture_at(move.to);
 
         auto& ourPieces = isWhite ? whitePieces : blackPieces;
