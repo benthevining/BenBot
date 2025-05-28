@@ -118,24 +118,18 @@ struct Position final {
     /** Returns a bitboard that is the union of all White and Black
         piece positions.
      */
-    [[nodiscard]] constexpr board::Bitboard occupied() const noexcept
-    {
-        return whitePieces.occupied() | blackPieces.occupied();
-    }
+    [[nodiscard]] constexpr board::Bitboard occupied() const noexcept { return whitePieces.occupied() | blackPieces.occupied(); }
 
     /** Returns a bitboard that is the inverse of the ``occupied()`` board. */
-    [[nodiscard]] constexpr board::Bitboard free() const noexcept
-    {
-        return occupied().inverse();
-    }
+    [[nodiscard]] constexpr board::Bitboard free() const noexcept { return occupied().inverse(); }
+
+    /// @name File queries
+    /// @{
 
     /** Returns true if there are no pawns of either color on the given file.
         @see get_open_files()
      */
-    [[nodiscard]] constexpr bool is_file_open(const File file) const noexcept
-    {
-        return whitePieces.is_file_half_open(file) && blackPieces.is_file_half_open(file);
-    }
+    [[nodiscard]] constexpr bool is_file_open(File file) const noexcept;
 
     /** Returns an iterable range of File enumeration values corresponding
         to all open files in this position.
@@ -155,6 +149,8 @@ struct Position final {
         @see is_file_half_open()
      */
     [[nodiscard]] constexpr auto get_half_open_files() const noexcept;
+
+    /// @}
 
     /** Makes a move to alter the position. */
     constexpr void make_move(const Move& move) noexcept;
@@ -202,6 +198,11 @@ struct Position final {
 
  */
 
+constexpr bool Position::is_file_open(const File file) const noexcept
+{
+    return whitePieces.is_file_half_open(file) && blackPieces.is_file_half_open(file);
+}
+
 constexpr auto Position::get_open_files() const noexcept
 {
     return magic_enum::enum_values<File>()
@@ -214,11 +215,7 @@ constexpr bool Position::is_file_half_open(const File file) const noexcept
     const bool blackOpen = blackPieces.is_file_half_open(file);
 
     // boolean XOR
-
-    if (whiteOpen && blackOpen)
-        return false;
-
-    return whiteOpen || blackOpen;
+    return whiteOpen != blackOpen;
 }
 
 constexpr auto Position::get_half_open_files() const noexcept

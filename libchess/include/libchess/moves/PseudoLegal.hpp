@@ -62,7 +62,9 @@ template <Color Side>
 [[nodiscard, gnu::const]] constexpr Bitboard pawn_captures(
     Bitboard startingPawns, Bitboard enemyPieces) noexcept;
 
-/** Calculates all pseudo-legal knight moves. */
+/** Calculates all pseudo-legal knight moves.
+    This function can calculate moves for any number of knights.
+ */
 [[nodiscard, gnu::const]] constexpr Bitboard knight(
     Bitboard startingKnights, Bitboard friendlyPieces) noexcept;
 
@@ -127,12 +129,13 @@ template <Color Side>
 constexpr Bitboard pawn_double_pushes(
     const Bitboard startingPawns, const Bitboard occupiedSquares) noexcept
 {
-    namespace rank_masks = board::masks::ranks;
-
     const auto moves = patterns::pawn_double_pushes<Side>(startingPawns) & occupiedSquares.inverse();
 
     // Need to filter out any pushes that would jump over a piece on the third/sixth rank
-    const auto rankMask = Side == Color::White ? rank_masks::three() : rank_masks::six();
+    static constexpr auto rankMask = Side == Color::White
+                                       ? board::masks::ranks::three()
+                                       : board::masks::ranks::six();
+
     const auto fileMask = board::fills::file(occupiedSquares & rankMask);
 
     return moves & fileMask.inverse();
@@ -258,17 +261,19 @@ namespace detail {
     [[nodiscard, gnu::const]] constexpr Bitboard ray_attacks(
         const Square& startPos, const Bitboard occupied) noexcept
     {
-        auto attacks = make_ray<Direction>(startPos);
+        const auto attacks = make_ray<Direction>(startPos);
 
-        const auto blocker = attacks & occupied;
+        auto blocker = attacks & occupied;
 
-        if (blocker.any()) {
-            const auto idx = is_negative<Direction>() ? blocker.last() : blocker.first();
+        static constexpr auto mask = is_negative<Direction>()
+                                       ? Bitboard { 1 }
+                                       : Bitboard { 0x8000000000000000 };
 
-            attacks ^= make_ray<Direction>(Square::from_index(idx));
-        }
+        blocker |= mask;
 
-        return attacks;
+        const auto idx = is_negative<Direction>() ? blocker.last() : blocker.first();
+
+        return attacks ^ make_ray<Direction>(Square::from_index(idx));
     }
 
     [[nodiscard, gnu::const]] constexpr Bitboard rook_attacks(

@@ -86,10 +86,7 @@ struct Move final {
     std::optional<PieceType> promotedType;
 
     /** Returns true if this move is a promotion. */
-    [[nodiscard]] constexpr bool is_promotion() const noexcept
-    {
-        return promotedType.has_value();
-    }
+    [[nodiscard]] constexpr bool is_promotion() const noexcept { return promotedType.has_value(); }
 
     /** Returns true if this move is a promotion to a piece other than a queen. */
     [[nodiscard]] constexpr bool is_under_promotion() const noexcept;

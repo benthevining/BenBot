@@ -87,10 +87,7 @@ struct Pieces final {
     /** Returns a bitboard that is the inverse of the bitboard returned by ``occupied()``.
         The returned bitboard has a bit set if no piece of any type is on that square.
      */
-    [[nodiscard]] constexpr Bitboard free() const noexcept
-    {
-        return occupied().inverse();
-    }
+    [[nodiscard]] constexpr Bitboard free() const noexcept { return occupied().inverse(); }
 
     /** Returns the sum of the material values for all pieces on this side. */
     [[nodiscard]] constexpr size_t material() const noexcept;

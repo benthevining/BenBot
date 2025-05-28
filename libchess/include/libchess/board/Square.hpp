@@ -20,11 +20,11 @@
 #pragma once
 
 #include <compare>
+#include <cstddef> // IWYU pragma: keep - for size_t
 #include <format>
 #include <libchess/board/BitboardIndex.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Rank.hpp>
-#include <libchess/pieces/Colors.hpp>
 #include <stdexcept>
 #include <string_view>
 #include <typeindex> // for std::hash
@@ -36,8 +36,6 @@
     @ingroup board
  */
 namespace chess::board {
-
-using pieces::Color;
 
 /** This struct uniquely identifies a square on the chessboard via its rank and file,
     and provides mappings to and from bitboard indices.
@@ -89,59 +87,30 @@ struct Square final {
     /** Returns the bitboard bit index for this square.
         The returned index will be in the range ``[0,63]``.
      */
-    [[nodiscard]] constexpr BitboardIndex index() const noexcept
-    {
-        return (std::to_underlying(rank) << static_cast<BitboardIndex>(3)) + std::to_underlying(file);
-    }
+    [[nodiscard]] constexpr BitboardIndex index() const noexcept;
 
     /** Returns true if two squares are equivalent. */
     [[nodiscard]] constexpr bool operator==(const Square&) const noexcept = default;
 
     /// @name Area queries
     /// @{
+
     /** Returns true if this square is on the queenside (the A-D files). */
-    [[nodiscard]] constexpr bool is_queenside() const noexcept
-    {
-        return std::cmp_less_equal(
-            std::to_underlying(file), std::to_underlying(File::D));
-    }
+    [[nodiscard]] constexpr bool is_queenside() const noexcept;
 
     /** Returns true if this square is on the kingside (the E-H files). */
-    [[nodiscard]] constexpr bool is_kingside() const noexcept
-    {
-        return std::cmp_greater_equal(
-            std::to_underlying(file), std::to_underlying(File::E));
-    }
+    [[nodiscard]] constexpr bool is_kingside() const noexcept;
 
     /** Returns true if this square is within White's territory (the first through fourth ranks). */
-    [[nodiscard]] constexpr bool is_white_territory() const noexcept
-    {
-        return std::cmp_less_equal(
-            std::to_underlying(rank), std::to_underlying(Rank::Four));
-    }
+    [[nodiscard]] constexpr bool is_white_territory() const noexcept;
 
     /** Returns true if this square is within Black's territory (the fifth through eighth ranks). */
-    [[nodiscard]] constexpr bool is_black_territory() const noexcept
-    {
-        return std::cmp_greater_equal(
-            std::to_underlying(rank), std::to_underlying(Rank::Five));
-    }
+    [[nodiscard]] constexpr bool is_black_territory() const noexcept;
 
-    /** Returns true if this square is within the territory for the given color. */
-    [[nodiscard]] constexpr bool is_territory_for(const Color color) const noexcept
-    {
-        if (color == Color::White)
-            return is_white_territory();
-
-        return is_black_territory();
-    }
     /// @}
 
     /** Returns true if this is a light square. */
-    [[nodiscard]] constexpr bool is_light() const noexcept
-    {
-        return (std::to_underlying(rank) + std::to_underlying(file)) % 2 != 0;
-    }
+    [[nodiscard]] constexpr bool is_light() const noexcept;
 
     /** Returns true if this is a dark square. */
     [[nodiscard]] constexpr bool is_dark() const noexcept { return ! is_light(); }
@@ -151,7 +120,6 @@ struct Square final {
 /// @{
 
 /** Orders the two squares based on their bitboard indices.
-
     @relates Square
  */
 [[nodiscard, gnu::const]] constexpr std::strong_ordering operator<=>(
@@ -198,10 +166,9 @@ private:
  */
 template <>
 struct hash<chess::board::Square> final {
-    [[nodiscard]] constexpr size_t operator()(const chess::board::Square& square) const noexcept
-    {
-        return hash<chess::board::BitboardIndex> {}(square.index());
-    }
+    using Square = chess::board::Square;
+
+    [[nodiscard, gnu::const]] constexpr size_t operator()(const Square& square) const noexcept;
 };
 
 /*
@@ -266,6 +233,11 @@ formatter<chess::board::Square>::format(
         ctx.out(), "{}{}", square.file, square.rank);
 }
 
+constexpr size_t hash<chess::board::Square>::operator()(const Square& square) const noexcept
+{
+    return hash<chess::board::BitboardIndex> {}(square.index());
+}
+
 } // namespace std
 
 namespace chess::board {
@@ -281,6 +253,40 @@ constexpr Square Square::from_index(const BitboardIndex index)
         .file = static_cast<File>(index & static_cast<BitboardIndex>(7)),
         .rank = static_cast<Rank>(index >> static_cast<BitboardIndex>(3))
     };
+}
+
+constexpr BitboardIndex Square::index() const noexcept
+{
+    return (std::to_underlying(rank) << static_cast<BitboardIndex>(3)) + std::to_underlying(file);
+}
+
+constexpr bool Square::is_queenside() const noexcept
+{
+    return std::cmp_less_equal(
+        std::to_underlying(file), std::to_underlying(File::D));
+}
+
+constexpr bool Square::is_kingside() const noexcept
+{
+    return std::cmp_greater_equal(
+        std::to_underlying(file), std::to_underlying(File::E));
+}
+
+constexpr bool Square::is_white_territory() const noexcept
+{
+    return std::cmp_less_equal(
+        std::to_underlying(rank), std::to_underlying(Rank::Four));
+}
+
+constexpr bool Square::is_black_territory() const noexcept
+{
+    return std::cmp_greater_equal(
+        std::to_underlying(rank), std::to_underlying(Rank::Five));
+}
+
+constexpr bool Square::is_light() const noexcept
+{
+    return (std::to_underlying(rank) + std::to_underlying(file)) % 2 != 0;
 }
 
 constexpr Square Square::from_string(const std::string_view text)

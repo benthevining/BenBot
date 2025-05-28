@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <array>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/File.hpp>
@@ -244,19 +245,11 @@ namespace ranks {
     /** Returns a bitboard with all squares on the requested rank set to 1. */
     [[nodiscard, gnu::const]] constexpr Bitboard get(const Rank rank) noexcept
     {
-        // TODO - could be branchless:
-        // Bitboard{0xff} << (index & 56)
+        static constexpr std::array rankMasks {
+            one(), two(), three(), four(), five(), six(), seven(), eight()
+        };
 
-        switch (rank) {
-            case Rank::Two  : return two();
-            case Rank::Three: return three();
-            case Rank::Four : return four();
-            case Rank::Five : return five();
-            case Rank::Six  : return six();
-            case Rank::Seven: return seven();
-            case Rank::Eight: return eight();
-            default         : return one();
-        }
+        return rankMasks[static_cast<size_t>(rank)];
     }
 
     /// @}

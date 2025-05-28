@@ -18,6 +18,8 @@ namespace chess::game {
 /** This struct encapsulates one side's castling rights.
 
     @ingroup game
+
+    @todo std::hash
  */
 struct CastlingRights final {
     /** True if kingside (or "short") castling is available. */

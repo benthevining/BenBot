@@ -17,7 +17,8 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
-#include <cmath> // IWYU pragma: keep - for std::abs()
+#include <cmath>   // IWYU pragma: keep - for std::abs()
+#include <cstddef> // IWYU pragma: keep - for size_t
 #include <libchess/board/BitboardIndex.hpp>
 #include <libchess/board/Square.hpp>
 #include <utility>
@@ -55,10 +56,7 @@ namespace chess::board {
     @relates Square
  */
 [[nodiscard, gnu::const]] constexpr bool are_on_same_diagonal(
-    const Square& first, const Square& second) noexcept
-{
-    return std::cmp_equal(file_distance(first, second), rank_distance(first, second));
-}
+    const Square& first, const Square& second) noexcept;
 
 /** Returns the Manhattan distance between the two squares.
 
@@ -73,10 +71,7 @@ namespace chess::board {
     @relates Square
  */
 [[nodiscard, gnu::const]] constexpr BitboardIndex manhattan_distance(
-    const Square& first, const Square& second) noexcept
-{
-    return file_distance(first, second) + rank_distance(first, second);
-}
+    const Square& first, const Square& second) noexcept;
 
 /** Returns the Chebyshev distance between the two squares.
 
@@ -90,10 +85,7 @@ namespace chess::board {
     @relates Square
  */
 [[nodiscard, gnu::const]] constexpr BitboardIndex chebyshev_distance(
-    const Square& first, const Square& second) noexcept
-{
-    return std::max(file_distance(first, second), rank_distance(first, second));
-}
+    const Square& first, const Square& second) noexcept;
 
 /** Returns the knight distance between the two squares; that is, the number of moves a knight
     requires to maneuver from ``first`` to ``second``.
@@ -144,9 +136,29 @@ constexpr BitboardIndex rank_distance(
     return maxRank - minRank;
 }
 
+constexpr bool are_on_same_diagonal(
+    const Square& first, const Square& second) noexcept
+{
+    return std::cmp_equal(file_distance(first, second), rank_distance(first, second));
+}
+
+constexpr BitboardIndex manhattan_distance(
+    const Square& first, const Square& second) noexcept
+{
+    return file_distance(first, second) + rank_distance(first, second);
+}
+
+constexpr BitboardIndex chebyshev_distance(
+    const Square& first, const Square& second) noexcept
+{
+    return std::max(file_distance(first, second), rank_distance(first, second));
+}
+
 constexpr BitboardIndex knight_distance(
     const Square& first, const Square& second)
 {
+    using std::size_t;
+
     static constexpr std::array ndis {
         0, 3, 2, 3, 2, 3, 4, 5,
         3, 2, 1, 2, 3, 4, 3, 4,
@@ -182,8 +194,14 @@ constexpr BitboardIndex knight_distance(
 
     auto dist = ndis.at(static_cast<size_t>(absDist));
 
-    if (std::cmp_equal(absDist, 9))
-        dist += 2 * (corner.at(static_cast<size_t>(firstIdx)) ^ corner.at(static_cast<size_t>(secondIdx)));
+    if (std::cmp_equal(absDist, 9)) {
+        [[unlikely]];
+
+        const auto cornerMask = corner.at(static_cast<size_t>(firstIdx))
+                              ^ corner.at(static_cast<size_t>(secondIdx));
+
+        dist += 2 * cornerMask;
+    }
 
     assert(dist >= 0);
     assert(dist <= 6);

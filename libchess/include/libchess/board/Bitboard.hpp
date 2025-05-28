@@ -50,19 +50,16 @@ struct Bitboard final {
     /** Constructs a bitboard from an integer representation.
         @see to_int()
      */
-    explicit constexpr Bitboard(const Integer value) noexcept
-        : bits { static_cast<unsigned long long>(value) } // NOLINT
-    {
-    }
+    explicit constexpr Bitboard(Integer value) noexcept;
 
     /** Constructs a bitboard with only a single square set to 1. */
-    explicit constexpr Bitboard(const Square& square) noexcept
-    {
-        set(square);
-    }
+    explicit constexpr Bitboard(const Square& square) noexcept { set(square); }
 
     /** Returns true if the two bitboards have all the same bits set. */
     [[nodiscard]] constexpr bool operator==(const Bitboard&) const noexcept = default;
+
+    /// @name Observers
+    /// @{
 
     /** Returns true if any of the bits are set. */
     [[nodiscard]] constexpr bool any() const noexcept { return bits.any(); }
@@ -79,11 +76,24 @@ struct Bitboard final {
     /** Returns true if there is a piece on the given square.
         This method asserts if the given index is greater than 63.
      */
-    [[nodiscard]] constexpr bool test(const BitboardIndex index) const noexcept
-    {
-        assert(index <= MAX_BITBOARD_IDX);
-        return bits[index];
-    }
+    [[nodiscard]] constexpr bool test(BitboardIndex index) const noexcept;
+
+    /** Returns the index of the first set bit.
+        This operation may also be known as "bitscan forward".
+        Returns 64 if all bits are 0.
+     */
+    [[nodiscard]] constexpr BitboardIndex first() const noexcept;
+
+    /** Returns the index of the last set bit.
+        This operation may also be known as "bitscan reverse".
+        Returns 64 if all bits are 0.
+     */
+    [[nodiscard]] constexpr BitboardIndex last() const noexcept;
+
+    /// @}
+
+    /// @name Modifiers
+    /// @{
 
     /** Sets the given square's bit to 1. */
     constexpr void set(const Square square) noexcept { set(square.index()); }
@@ -91,11 +101,7 @@ struct Bitboard final {
     /** Sets the given square's bit to 1.
         This method asserts if the given index is greater than 63.
      */
-    constexpr void set(const BitboardIndex index) noexcept
-    {
-        assert(index <= MAX_BITBOARD_IDX);
-        bits[index] = true;
-    }
+    constexpr void set(BitboardIndex index) noexcept;
 
     /** Sets the given square's bit to 0. */
     constexpr void unset(const Square square) noexcept { unset(square.index()); }
@@ -103,55 +109,18 @@ struct Bitboard final {
     /** Sets the given square's bit to 0.
         This method asserts if the given index is greater than 63.
      */
-    constexpr void unset(const BitboardIndex index) noexcept
-    {
-        assert(index <= MAX_BITBOARD_IDX);
-        bits[index] = false;
-    }
-
-    /** Returns the number of 0 bits before the first set bit.
-        @see first()
-     */
-    [[nodiscard]] constexpr BitboardIndex leading_zeroes() const noexcept
-    {
-        return static_cast<BitboardIndex>(std::countr_zero(bits.to_ullong()));
-    }
-
-    /** Returns the number of 0 bits after the last set bit.
-        @see last()
-     */
-    [[nodiscard]] constexpr BitboardIndex trailing_zeroes() const noexcept
-    {
-        return static_cast<BitboardIndex>(std::countl_zero(bits.to_ullong()));
-    }
-
-    /** Returns the index of the first set bit.
-        This operation may also be known as "bitscan forward".
-        Returns 64 if all bits are 0.
-
-        @see leading_zeroes()
-     */
-    [[nodiscard]] constexpr BitboardIndex first() const noexcept { return leading_zeroes(); }
-
-    /** Returns the index of the last set bit.
-        This operation may also be known as "bitscan reverse".
-        Returns 64 if all bits are 0.
-
-        @see trailing_zeroes()
-     */
-    [[nodiscard]] constexpr BitboardIndex last() const noexcept
-    {
-        if (bits.none())
-            return NUM_SQUARES;
-
-        return NUM_SQUARES - trailing_zeroes() - 1uz;
-    }
+    constexpr void unset(BitboardIndex index) noexcept;
 
     /** Resets all bits to 0. */
     constexpr void clear() noexcept { bits.reset(); }
 
+    /// @}
+
     /** Converts this bitboard to its integer representation. */
     [[nodiscard]] constexpr Integer to_int() const noexcept { return bits.to_ullong(); }
+
+    /// @name Iteration
+    /// @{
 
     /** Returns an iterable range of indices representing the 1 bits in this bitboard.
         The returned indices should be iterated by value, not by reference; i.e.:
@@ -173,52 +142,34 @@ struct Bitboard final {
      */
     [[nodiscard]] constexpr auto squares() const noexcept;
 
+    /// @}
+
+    /// @name Binary operations
+    /// @{
+
     /** Returns a copy of this bitboard with all bits flipped (binary NOT). */
-    [[nodiscard]] constexpr Bitboard inverse() const noexcept
-    {
-        auto copy = *this;
-        copy.bits.flip();
-        return copy;
-    }
+    [[nodiscard]] constexpr Bitboard inverse() const noexcept;
 
     /** Performs binary AND with another bitboard. */
-    constexpr Bitboard& operator&=(const Bitboard& other) noexcept
-    {
-        bits &= other.bits;
-        return *this;
-    }
+    constexpr Bitboard& operator&=(const Bitboard& other) noexcept;
 
     /** Performs binary OR with another bitboard. */
-    constexpr Bitboard& operator|=(const Bitboard& other) noexcept
-    {
-        bits |= other.bits;
-        return *this;
-    }
+    constexpr Bitboard& operator|=(const Bitboard& other) noexcept;
 
     /** Performs binary XOR with another bitboard. */
-    constexpr Bitboard& operator^=(const Bitboard& other) noexcept
-    {
-        bits ^= other.bits;
-        return *this;
-    }
+    constexpr Bitboard& operator^=(const Bitboard& other) noexcept;
 
     /** Performs binary shift left (towards higher index positions).
         Zeroes are shifted in, and bits that would go to an index out of range are dropped.
      */
-    constexpr Bitboard& operator<<=(const size_t num) noexcept
-    {
-        bits <<= num;
-        return *this;
-    }
+    constexpr Bitboard& operator<<=(size_t num) noexcept;
 
     /** Performs binary shift right (towards lower index positions).
         Zeroes are shifted in, and bits that would go to an index out of range are dropped.
      */
-    constexpr Bitboard& operator>>=(const size_t num) noexcept
-    {
-        bits >>= num;
-        return *this;
-    }
+    constexpr Bitboard& operator>>=(size_t num) noexcept;
+
+    /// @}
 
 private:
     std::bitset<NUM_SQUARES> bits;
@@ -230,52 +181,27 @@ private:
 /** Returns the binary AND of two bitboards.
     @relates Bitboard
  */
-[[nodiscard, gnu::const]] constexpr Bitboard operator&(const Bitboard& lhs, const Bitboard& rhs) noexcept
-{
-    auto ret = lhs;
-    ret &= rhs;
-    return ret;
-}
+[[nodiscard, gnu::const]] constexpr Bitboard operator&(const Bitboard& lhs, const Bitboard& rhs) noexcept;
 
 /** Returns the binary OR of two bitboards.
     @relates Bitboard
  */
-[[nodiscard, gnu::const]] constexpr Bitboard operator|(const Bitboard& lhs, const Bitboard& rhs) noexcept
-{
-    auto ret = lhs;
-    ret |= rhs;
-    return ret;
-}
+[[nodiscard, gnu::const]] constexpr Bitboard operator|(const Bitboard& lhs, const Bitboard& rhs) noexcept;
 
 /** Returns the binary XOR of two bitboards.
     @relates Bitboard
  */
-[[nodiscard, gnu::const]] constexpr Bitboard operator^(const Bitboard& lhs, const Bitboard& rhs) noexcept
-{
-    auto ret = lhs;
-    ret ^= rhs;
-    return ret;
-}
+[[nodiscard, gnu::const]] constexpr Bitboard operator^(const Bitboard& lhs, const Bitboard& rhs) noexcept;
 
 /** Returns a copy of the bitboard with a binary shift left applied.
     @relates Bitboard
  */
-[[nodiscard, gnu::const]] constexpr Bitboard operator<<(const Bitboard& board, const size_t num) noexcept
-{
-    auto ret = board;
-    ret <<= num;
-    return ret;
-}
+[[nodiscard, gnu::const]] constexpr Bitboard operator<<(const Bitboard& board, size_t num) noexcept;
 
 /** Returns a copy of the bitboard with a binary shift right applied.
     @relates Bitboard
  */
-[[nodiscard, gnu::const]] constexpr Bitboard operator>>(const Bitboard& board, const size_t num) noexcept
-{
-    auto ret = board;
-    ret >>= num;
-    return ret;
-}
+[[nodiscard, gnu::const]] constexpr Bitboard operator>>(const Bitboard& board, size_t num) noexcept;
 
 /** Creates an ASCII representation of the given bitboard.
     The returned string is meant to be interpreted visually by a human, probably for debugging purposes.
@@ -324,10 +250,9 @@ private:
  */
 template <>
 struct hash<chess::board::Bitboard> final {
-    [[nodiscard]] constexpr size_t operator()(const chess::board::Bitboard& board) const noexcept
-    {
-        return hash<chess::board::Bitboard::Integer> {}(board.to_int());
-    }
+    using Bitboard = chess::board::Bitboard;
+
+    [[nodiscard, gnu::const]] constexpr size_t operator()(const Bitboard& board) const noexcept;
 };
 
 /*
@@ -391,9 +316,57 @@ formatter<chess::board::Bitboard>::format(
     return std::format_to(ctx.out(), "{}", print_ascii(board));
 }
 
+constexpr size_t hash<chess::board::Bitboard>::operator()(const Bitboard& board) const noexcept
+{
+    return hash<Bitboard::Integer> {}(board.to_int());
+}
+
 } // namespace std
 
 namespace chess::board {
+
+constexpr Bitboard::Bitboard(const Integer value) noexcept
+    : bits { static_cast<unsigned long long>(value) } // NOLINT
+{
+}
+
+constexpr bool Bitboard::test(const BitboardIndex index) const noexcept
+{
+    assert(index <= MAX_BITBOARD_IDX);
+    return bits[index];
+}
+
+constexpr void Bitboard::set(const BitboardIndex index) noexcept
+{
+    assert(index <= MAX_BITBOARD_IDX);
+    bits[index] = true;
+}
+
+constexpr void Bitboard::unset(const BitboardIndex index) noexcept
+{
+    assert(index <= MAX_BITBOARD_IDX);
+    bits[index] = false;
+}
+
+constexpr BitboardIndex Bitboard::first() const noexcept
+{
+    // same as number of leading zeroes
+    return static_cast<BitboardIndex>(std::countr_zero(bits.to_ullong()));
+}
+
+constexpr BitboardIndex Bitboard::last() const noexcept
+{
+    if (bits.none()) {
+        [[unlikely]];
+        return NUM_SQUARES;
+    }
+
+    const auto trailingZeroes = [integer = bits.to_ullong()] {
+        return static_cast<BitboardIndex>(std::countl_zero(integer));
+    }();
+
+    return NUM_SQUARES - trailingZeroes - static_cast<BitboardIndex>(1);
+}
 
 constexpr auto Bitboard::indices() const noexcept
 {
@@ -408,6 +381,78 @@ constexpr auto Bitboard::squares() const noexcept
     return indices()
          | std::views::transform(
              [](const size_t index) { return Square::from_index(static_cast<BitboardIndex>(index)); });
+}
+
+constexpr Bitboard& Bitboard::operator&=(const Bitboard& other) noexcept
+{
+    bits &= other.bits;
+    return *this;
+}
+
+constexpr Bitboard& Bitboard::operator|=(const Bitboard& other) noexcept
+{
+    bits |= other.bits;
+    return *this;
+}
+
+constexpr Bitboard& Bitboard::operator^=(const Bitboard& other) noexcept
+{
+    bits ^= other.bits;
+    return *this;
+}
+
+constexpr Bitboard& Bitboard::operator<<=(const size_t num) noexcept
+{
+    bits <<= num;
+    return *this;
+}
+
+constexpr Bitboard& Bitboard::operator>>=(const size_t num) noexcept
+{
+    bits >>= num;
+    return *this;
+}
+
+constexpr Bitboard Bitboard::inverse() const noexcept
+{
+    auto copy = *this;
+    copy.bits.flip();
+    return copy;
+}
+
+constexpr Bitboard operator&(const Bitboard& lhs, const Bitboard& rhs) noexcept
+{
+    auto ret = lhs;
+    ret &= rhs;
+    return ret;
+}
+
+constexpr Bitboard operator|(const Bitboard& lhs, const Bitboard& rhs) noexcept
+{
+    auto ret = lhs;
+    ret |= rhs;
+    return ret;
+}
+
+constexpr Bitboard operator^(const Bitboard& lhs, const Bitboard& rhs) noexcept
+{
+    auto ret = lhs;
+    ret ^= rhs;
+    return ret;
+}
+
+constexpr Bitboard operator<<(const Bitboard& board, const size_t num) noexcept
+{
+    auto ret = board;
+    ret <<= num;
+    return ret;
+}
+
+constexpr Bitboard operator>>(const Bitboard& board, const size_t num) noexcept
+{
+    auto ret = board;
+    ret >>= num;
+    return ret;
 }
 
 } // namespace chess::board

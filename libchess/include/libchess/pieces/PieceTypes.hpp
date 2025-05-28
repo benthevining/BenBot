@@ -45,41 +45,16 @@ enum class Type : std::uint_fast8_t {
     King    ///< A king.
 };
 
-/// @ingroup pieces
-/// @{
-
-/** Returns true if ``type`` is ``Knight`` or ``Bishop``.
-    @see is_heavy()
- */
-[[nodiscard, gnu::const]] constexpr bool is_minor(const Type type) noexcept
-{
-    return type == Type::Knight || type == Type::Bishop;
-}
-
-/** Returns true if ``type`` is ``Rook`` or ``Queen``.
-    @see is_minor()
- */
-[[nodiscard, gnu::const]] constexpr bool is_heavy(const Type type) noexcept
-{
-    return type == Type::Rook || type == Type::Queen;
-}
-
-/** Returns true if ``type`` is ``Bishop``, ``Rook``, or ``Queen``. */
-[[nodiscard, gnu::const]] constexpr bool is_sliding(const Type type) noexcept
-{
-    return type == Type::Bishop || type == Type::Rook || type == Type::Queen;
-}
-
 /** Parses a piece type from a string.
     This function recognizes single-letter abbreviations (such as ``N`` for knight, etc.),
     or full piece names.
 
     @throws std::invalid_argument An exception will be thrown if the input string cannot
     be parsed correctly.
+
+    @ingroup pieces
  */
 [[nodiscard, gnu::const]] constexpr Type from_string(std::string_view text);
-
-/// @}
 
 /** This namespace contains constants encoding the material values of the various piece types.
     The king is not assigned a material value, as it can never be legally captured in a non-checkmated position.
@@ -259,6 +234,8 @@ constexpr Type from_string(const std::string_view text)
                 };
         }
     }
+
+    // TODO: handle case conversion
 
     if (const auto value = magic_enum::enum_cast<Type>(text))
         return *value;

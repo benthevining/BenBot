@@ -35,10 +35,7 @@ TEST_CASE("Bitboard - empty", TAGS)
     STATIC_REQUIRE(std::ranges::empty(empty.squares()));
     STATIC_REQUIRE(empty == bitboard_masks::none());
 
-    STATIC_REQUIRE(empty.leading_zeroes() == chess::board::NUM_SQUARES);
     STATIC_REQUIRE(empty.first() == chess::board::NUM_SQUARES);
-
-    STATIC_REQUIRE(empty.trailing_zeroes() == chess::board::NUM_SQUARES);
     STATIC_REQUIRE(empty.last() == chess::board::NUM_SQUARES);
 }
 
@@ -50,21 +47,18 @@ TEST_CASE("Bitboard - all", TAGS)
     STATIC_REQUIRE(! all.none());
     STATIC_REQUIRE(all.count() == chess::board::NUM_SQUARES);
 
-    STATIC_REQUIRE(all.leading_zeroes() == 0uz);
     STATIC_REQUIRE(all.first() == 0uz);
-
-    STATIC_REQUIRE(all.trailing_zeroes() == 0uz);
     STATIC_REQUIRE(all.last() == 63uz);
 }
 
-TEST_CASE("Bitboard - leading zeroes", TAGS)
+TEST_CASE("Bitboard - first()", TAGS)
 {
     SECTION("A1")
     {
         static constexpr Bitboard board { Square { File::A, Rank::One } };
 
         STATIC_REQUIRE(board.count() == 1uz);
-        STATIC_REQUIRE(board.leading_zeroes() == 0uz);
+        STATIC_REQUIRE(board.first() == 0uz);
     }
 
     SECTION("B1")
@@ -72,7 +66,7 @@ TEST_CASE("Bitboard - leading zeroes", TAGS)
         static constexpr Bitboard board { Square { File::B, Rank::One } };
 
         STATIC_REQUIRE(board.count() == 1uz);
-        STATIC_REQUIRE(board.leading_zeroes() == 1uz);
+        STATIC_REQUIRE(board.first() == 1uz);
     }
 
     SECTION("A2")
@@ -80,7 +74,7 @@ TEST_CASE("Bitboard - leading zeroes", TAGS)
         static constexpr Bitboard board { Square { File::A, Rank::Two } };
 
         STATIC_REQUIRE(board.count() == 1uz);
-        STATIC_REQUIRE(board.leading_zeroes() == 8uz);
+        STATIC_REQUIRE(board.first() == 8uz);
     }
 
     SECTION("H8")
@@ -88,19 +82,17 @@ TEST_CASE("Bitboard - leading zeroes", TAGS)
         static constexpr Bitboard board { Square { File::H, Rank::Eight } };
 
         STATIC_REQUIRE(board.count() == 1uz);
-        STATIC_REQUIRE(board.leading_zeroes() == 63uz);
+        STATIC_REQUIRE(board.first() == 63uz);
     }
 }
 
-TEST_CASE("Bitboard - trailing zeroes", TAGS)
+TEST_CASE("Bitboard - last()", TAGS)
 {
     SECTION("H8")
     {
         static constexpr Bitboard board { Square { File::H, Rank::Eight } };
 
         STATIC_REQUIRE(board.count() == 1uz);
-        STATIC_REQUIRE(board.trailing_zeroes() == 0uz);
-
         STATIC_REQUIRE(board.last() == 63uz);
     }
 
@@ -109,8 +101,6 @@ TEST_CASE("Bitboard - trailing zeroes", TAGS)
         static constexpr Bitboard board { Square { File::G, Rank::Eight } };
 
         STATIC_REQUIRE(board.count() == 1uz);
-        STATIC_REQUIRE(board.trailing_zeroes() == 1uz);
-
         STATIC_REQUIRE(board.last() == 62uz);
     }
 
@@ -119,7 +109,7 @@ TEST_CASE("Bitboard - trailing zeroes", TAGS)
         static constexpr Bitboard board { Square { File::H, Rank::Seven } };
 
         STATIC_REQUIRE(board.count() == 1uz);
-        STATIC_REQUIRE(board.trailing_zeroes() == 8uz);
+        STATIC_REQUIRE(board.last() == 55uz);
     }
 
     SECTION("A1")
@@ -127,8 +117,6 @@ TEST_CASE("Bitboard - trailing zeroes", TAGS)
         static constexpr Bitboard board { Square { File::A, Rank::One } };
 
         STATIC_REQUIRE(board.count() == 1uz);
-        STATIC_REQUIRE(board.trailing_zeroes() == 63uz);
-
         STATIC_REQUIRE(board.last() == 0uz);
     }
 }
