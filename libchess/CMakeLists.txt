@@ -45,6 +45,7 @@ set (
     moves/Move.hpp
     moves/MoveGen.hpp
     moves/Patterns.hpp
+    moves/Perft.hpp
     moves/PseudoLegal.hpp
     notation/FEN.hpp
     pieces/Colors.hpp

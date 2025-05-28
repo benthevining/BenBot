@@ -7,7 +7,7 @@
  */
 
 #include <catch2/catch_test_macros.hpp>
-#include <libchess/moves/MoveGen.hpp>
+#include <libchess/moves/Perft.hpp>
 
 using chess::moves::perft;
 
@@ -19,4 +19,5 @@ TEST_CASE("Move gen - perft", "[moves][Generation][perft]")
     // on Clang this already hits the constexpr recursion limits but works at runtime
     REQUIRE(perft(2uz) == 400uz);
     REQUIRE(perft(3uz) == 8902uz);
+    // REQUIRE(perft(4uz) == 197281uz);
 }
