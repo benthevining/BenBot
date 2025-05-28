@@ -22,11 +22,44 @@ namespace chess::moves {
 using game::Position;
 using std::size_t;
 
+/** This struct contains information calculated by the ``perft()`` debugging function.
+
+    @ingroup moves
+    @see perft()
+ */
+struct PerftResult final {
+    /** The total number of nodes visited by this perft() run. */
+    size_t nodes { 0uz };
+
+    /** The number of child nodes that resulted in captures. */
+    size_t captures { 0uz };
+
+    /** The number of child nodes that resulted in en passant captures. */
+    size_t enPassantCaptures { 0uz };
+
+    /** The number of child nodes that resulted in castling. */
+    size_t castles { 0uz };
+
+    /** The number of child nodes that resulted in promotions. */
+    size_t promotions { 0uz };
+
+    /** The number of child nodes that resulted in checks. */
+    size_t checks { 0uz };
+
+    /** The number of child nodes that resulted in checkmates. */
+    size_t checkmates { 0uz };
+
+    /** The number of child nodes that resulted in stalemates. */
+    size_t stalemates { 0uz };
+
+    constexpr PerftResult& operator+=(const PerftResult& rhs) noexcept;
+};
+
 /** A debugging function that walks the entire move tree and returns the number of visited leaf nodes.
 
     @ingroup moves
  */
-[[nodiscard]] constexpr size_t perft(size_t depth, const Position& startingPosition = {});
+[[nodiscard]] constexpr PerftResult perft(size_t depth, const Position& startingPosition = {});
 
 /*
                          ___                           ,--,
@@ -45,22 +78,63 @@ using std::size_t;
 
  */
 
-constexpr size_t perft(const size_t depth, const Position& startingPosition) // NOLINT(misc-no-recursion)
+constexpr PerftResult& PerftResult::operator+=(const PerftResult& rhs) noexcept
+{
+    nodes += rhs.nodes;
+    captures += rhs.captures;
+    enPassantCaptures += rhs.enPassantCaptures;
+    castles += rhs.castles;
+    promotions += rhs.promotions;
+    checks += rhs.checks;
+    checkmates += rhs.checkmates;
+    stalemates += rhs.stalemates;
+
+    return *this;
+}
+
+constexpr PerftResult perft(const size_t depth, const Position& startingPosition) // NOLINT(misc-no-recursion)
 {
     if (depth == 0uz)
-        return 1uz;
+        return { .nodes = 1uz };
 
-    auto nodes = 0uz;
+    PerftResult result;
 
     for (const auto& move : generate_legal_moves(startingPosition)) {
+        if (startingPosition.is_capture(move)) {
+            ++result.captures;
+
+            if (startingPosition.enPassantTargetSquare.has_value()
+                && move.to == *startingPosition.enPassantTargetSquare)
+                ++result.enPassantCaptures;
+        }
+
+        if (move.is_castling())
+            ++result.castles;
+
+        if (move.promotedType.has_value())
+            ++result.promotions;
+
         Position newPosition { startingPosition };
 
         newPosition.make_move(move);
 
-        nodes += perft(depth - 1uz, newPosition);
+        const bool isCheck = newPosition.is_check();
+
+        if (isCheck)
+            ++result.checks;
+
+        if (generate_legal_moves(newPosition).empty()) {
+            // no legal moves
+            if (isCheck)
+                ++result.checkmates;
+            else
+                ++result.stalemates;
+        }
+
+        result += perft(depth - 1uz, newPosition);
     }
 
-    return nodes;
+    return result;
 }
 
 } // namespace chess::moves
