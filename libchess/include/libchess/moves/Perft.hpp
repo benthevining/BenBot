@@ -19,13 +19,14 @@
 
 namespace chess::moves {
 
+using game::Position;
 using std::size_t;
 
 /** A debugging function that walks the entire move tree and returns the number of visited leaf nodes.
 
     @ingroup moves
  */
-[[nodiscard]] constexpr size_t perft(size_t depth);
+[[nodiscard]] constexpr size_t perft(size_t depth, const Position& startingPosition = {});
 
 /*
                          ___                           ,--,
@@ -44,34 +45,22 @@ using std::size_t;
 
  */
 
-namespace detail {
+constexpr size_t perft(const size_t depth, const Position& startingPosition) // NOLINT(misc-no-recursion)
+{
+    if (depth == 0uz)
+        return 1uz;
 
-    [[nodiscard]] constexpr size_t perft_internal( // NOLINT(misc-no-recursion)
-        const game::Position& position, const size_t depth)
-    {
-        if (depth == 0uz)
-            return 1uz;
+    auto nodes = 0uz;
 
-        auto nodes = 0uz;
+    for (const auto& move : generate_legal_moves(startingPosition)) {
+        Position newPosition { startingPosition };
 
-        for (const auto& move : generate_legal_moves(position)) {
-            game::Position newPosition { position };
+        newPosition.make_move(move);
 
-            newPosition.make_move(move);
-
-            nodes += perft_internal(newPosition, depth - 1uz);
-        }
-
-        return nodes;
+        nodes += perft(depth - 1uz, newPosition);
     }
 
-} // namespace detail
-
-constexpr size_t perft(const size_t depth)
-{
-    static constexpr game::Position position;
-
-    return detail::perft_internal(position, depth);
+    return nodes;
 }
 
 } // namespace chess::moves

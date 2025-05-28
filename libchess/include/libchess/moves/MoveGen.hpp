@@ -33,12 +33,14 @@
 
 namespace chess::moves {
 
+using game::Position;
+
 /** Generates a list of all legal moves for the side to move in the given position.
     If the side to move is in checkmate or stalemate, this returns an empty list.
 
     @ingroup moves
  */
-[[nodiscard]] constexpr std::vector<Move> generate_legal_moves(const game::Position& position);
+[[nodiscard]] constexpr std::vector<Move> generate_legal_moves(const Position& position);
 
 /*
                          ___                           ,--,
@@ -327,7 +329,7 @@ namespace detail {
     }
 
     constexpr void add_castling(
-        const game::Position& position, const bool isWhite, const Bitboard allOccupied,
+        const Position& position, const bool isWhite, const Bitboard allOccupied,
         std::output_iterator<Move> auto outputIt)
     {
         const auto& rights = isWhite ? position.whiteCastlingRights : position.blackCastlingRights;
@@ -366,7 +368,7 @@ namespace detail {
 
 } // namespace detail
 
-constexpr std::vector<Move> generate_legal_moves(const game::Position& position)
+constexpr std::vector<Move> generate_legal_moves(const Position& position)
 {
     using pieces::Color;
 
