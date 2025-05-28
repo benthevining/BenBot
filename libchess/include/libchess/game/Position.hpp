@@ -58,8 +58,6 @@ using PieceType = pieces::Type;
 
     @ingroup game
 
-    @todo Functions is_checkmate(), is_stalemate()
-    @todo unmake_move()
     @todo Detect threefold reps by keeping array<Position, 6> ?
     @todo Funcs to get passed pawns, backward pawns
     @todo std::hash
@@ -149,8 +147,19 @@ struct Position final {
 
     /// @}
 
+    /// @name King attack queries
+    /// @{
+
     /** Returns true if the king of the side to move is in check. */
     [[nodiscard]] constexpr bool is_check() const noexcept;
+
+    /** Returns true if the king is attacked and the side to move has no legal moves. */
+    [[nodiscard]] bool is_checkmate() const;
+
+    /** Returns true if the side to move has no legal moves, but their king is not attacked. */
+    [[nodiscard]] bool is_stalemate() const;
+
+    /// @}
 
     /** Returns true if the given move is legal (that is, the king is not left in check).
         This function does not verify piece movement mechanics or that a piece of the

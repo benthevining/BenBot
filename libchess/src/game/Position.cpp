@@ -12,6 +12,7 @@
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
+#include <libchess/moves/MoveGen.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
 #include <libchess/pieces/UTF8.hpp>
 #include <magic_enum/magic_enum.hpp>
@@ -21,6 +22,18 @@
 #include <string_view>
 
 namespace chess::game {
+
+bool Position::is_checkmate() const
+{
+    return is_check()
+        && moves::generate_legal_moves(*this).empty();
+}
+
+bool Position::is_stalemate() const
+{
+    return ! is_check()
+        && moves::generate_legal_moves(*this).empty();
+}
 
 // TODO: annotate check, checkmate
 std::string Position::move_to_string(const Move& move) const
