@@ -12,25 +12,15 @@
 
 int main()
 {
-    using chess::board::Bitboard;
-    using chess::board::File;
-    using chess::board::Rank;
-    using chess::board::Square;
+    using chess::board::Pieces;
+    using chess::pieces::Color;
 
-    static constexpr auto starting = chess::board::masks::starting::black::pawns();
+    static constexpr Pieces whitePieces { Color::White };
+    static constexpr Pieces blackPieces { Color::Black };
 
-    Bitboard occupied;
+    static constexpr auto blackAttacks = attacked_squares<Color::Black>(blackPieces, whitePieces.occupied());
 
-    occupied.set(Square { File::B, Rank::Six });
-    occupied.set(Square { File::D, Rank::Six });
-    occupied.set(Square { File::H, Rank::Six });
-
-    const auto moves = chess::moves::pseudo_legal::pawn_double_pushes(
-        starting, chess::pieces::Color::Black, occupied);
-
-    std::println("{}", chess::board::print_ascii(moves));
-
-    std::println("{:0X}", moves.to_int());
+    std::println("{}", chess::board::print_ascii(blackAttacks));
 
     return 0;
 

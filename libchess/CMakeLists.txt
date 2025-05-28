@@ -43,6 +43,7 @@ set (
     game/CastlingRights.hpp
     game/Position.hpp
     moves/Move.hpp
+    moves/MoveGen.hpp
     moves/Patterns.hpp
     moves/PseudoLegal.hpp
     pieces/Colors.hpp

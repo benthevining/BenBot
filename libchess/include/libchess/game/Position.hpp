@@ -152,6 +152,13 @@ struct Position final {
     /** Returns true if the king of the side to move is in check. */
     [[nodiscard]] constexpr bool is_check() const noexcept;
 
+    /** Returns true if the given move is legal (that is, the king is not left in check).
+        This function does not verify piece movement mechanics or that a piece of the
+        given type exists on the starting square; this function only verifies that making
+        the move does not leave the side's king in check.
+     */
+    [[nodiscard]] constexpr bool is_legal(const Move& move) const noexcept;
+
     /** Makes a move to alter the position. */
     constexpr void make_move(const Move& move) noexcept;
 
@@ -211,6 +218,15 @@ constexpr bool Position::is_check() const noexcept
         whitePieces, blackPieces.occupied());
 
     return (whiteAttacks & blackPieces.king).any();
+}
+
+constexpr bool Position::is_legal(const Move& move) const noexcept
+{
+    auto copy { *this };
+
+    copy.make_move(move);
+
+    return ! copy.is_check();
 }
 
 constexpr bool Position::is_file_open(const File file) const noexcept

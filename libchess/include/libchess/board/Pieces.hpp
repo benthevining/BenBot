@@ -98,6 +98,9 @@ struct Pieces final {
     /** Returns true if this side has at least one bishop on each color complex. */
     [[nodiscard]] constexpr bool has_bishop_pair() const noexcept;
 
+    /** Returns the location of the king. */
+    [[nodiscard]] constexpr Square get_king_location() const noexcept;
+
     /** Returns the type of the piece on the given square, or ``nullopt`` if the
         square is empty. Note that libchess's bitboard board representation is
         not optimized for this operation.
@@ -197,6 +200,11 @@ constexpr bool Pieces::has_bishop_pair() const noexcept
 {
     return (bishops & masks::light_squares()).any()
         && (bishops & masks::dark_squares()).any();
+}
+
+constexpr Square Pieces::get_king_location() const noexcept
+{
+    return Square::from_index(king.first());
 }
 
 constexpr std::optional<PieceType> Pieces::get_piece_on(const Square square) const noexcept
