@@ -28,7 +28,7 @@
 struct PerftOptions final {
     chess::game::Position startingPosition {};
 
-    std::size_t depth { 0uz };
+    std::size_t depth { 1uz };
 };
 
 namespace {
@@ -59,6 +59,8 @@ void print_help(const std::string_view programName)
             args = args.subspan(1uz);
 
             options.startingPosition = chess::notation::from_fen(fen);
+
+            continue;
         }
 
         // assume arg is depth
