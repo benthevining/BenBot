@@ -335,11 +335,15 @@ namespace detail {
         if (! rights.either())
             return;
 
+        [[maybe_unused]] const auto& rooks = isWhite ? position.whitePieces.rooks : position.blackPieces.rooks;
+
         const auto opponentAttacks = isWhite
                                        ? board::attacked_squares<Color::Black>(position.blackPieces, position.whitePieces.occupied())
                                        : board::attacked_squares<Color::White>(position.whitePieces, position.blackPieces.occupied());
 
         if (rights.kingside) {
+            assert(rooks.test(Square { File::H, board::back_rank_for(position.sideToMove) }));
+
             const auto requiredSquares = kingside_castle_mask(isWhite);
 
             const bool castlingBlocked = (requiredSquares & allOccupied).any()
@@ -350,6 +354,8 @@ namespace detail {
         }
 
         if (rights.queenside) {
+            assert(rooks.test(Square { File::A, board::back_rank_for(position.sideToMove) }));
+
             const bool castlingBlocked = (allOccupied & queenside_castle_mask_occupied(isWhite)).any()
                                       || (opponentAttacks & queenside_castle_mask_attacked(isWhite)).any();
 
