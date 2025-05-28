@@ -88,10 +88,11 @@ struct Position final {
     /** Castling rights for the Black player. */
     CastlingRights blackCastlingRights;
 
-    /** If en passant is possible in this position, this holds
-        the square that the pawn would land on after capturing
-        en passant. If en passant is not possible, this will
-        be ``nullopt``.
+    /** If the last move was a pawn double-push, then this holds
+        the square that a pawn would land on after capturing
+        en passant. This is always set to a non-null value if
+        the last move was a pawn double-push, even if no enemy
+        pawns are actually in position to perform the capture.
      */
     std::optional<Square> enPassantTargetSquare;
 
@@ -192,6 +193,11 @@ struct Position final {
         parsed correctly from the input string.
      */
     [[nodiscard]] Move move_from_string(std::string_view text) const;
+
+    /** Returns an empty position with none of the piece bitboards initialized.
+        This is useful for tasks like parsing a FEN string, for example.
+     */
+    [[nodiscard]] static constexpr Position empty() noexcept;
 };
 
 /** Creates a UTF8 representation of the given position.
@@ -220,6 +226,14 @@ struct Position final {
   `----'     `----'             `--`---'     ---`-'                     `--" `--" `--"
 
  */
+
+constexpr Position Position::empty() noexcept
+{
+    return Position {
+        .whitePieces = {},
+        .blackPieces = {}
+    };
+}
 
 constexpr bool Position::is_check() const noexcept
 {

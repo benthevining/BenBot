@@ -62,10 +62,10 @@ namespace {
                     continue;
                 }
 
-                if (consecutiveEmpty != 0uz)
-                    *outputIt = int_to_char(consecutiveEmpty);
-
-                consecutiveEmpty = 0uz;
+                if (consecutiveEmpty > 0uz) {
+                    *outputIt        = int_to_char(consecutiveEmpty);
+                    consecutiveEmpty = 0uz;
+                }
 
                 if (whitePieces.test(square)) {
                     const auto type = position.whitePieces.get_piece_on(square);
@@ -73,20 +73,18 @@ namespace {
                     assert(type.has_value());
 
                     *outputIt = pieces::to_char(*type, true);
+                } else {
+                    assert(blackPieces.test(square));
 
-                    continue;
+                    const auto type = position.blackPieces.get_piece_on(square);
+
+                    assert(type.has_value());
+
+                    *outputIt = pieces::to_char(*type, false);
                 }
-
-                assert(blackPieces.test(square));
-
-                const auto type = position.blackPieces.get_piece_on(square);
-
-                assert(type.has_value());
-
-                *outputIt = pieces::to_char(*type, false);
             }
 
-            if (consecutiveEmpty != 0uz)
+            if (consecutiveEmpty > 0uz)
                 *outputIt = int_to_char(consecutiveEmpty);
 
             if (rank != board::Rank::One)
@@ -233,19 +231,22 @@ namespace {
                 case 'q': position.blackPieces.queens.set(index); break;
                 case 'Q': position.whitePieces.queens.set(index); break;
                 case 'k': position.blackPieces.king.set(index); break;
-                case 'K': position.whitePieces.king.set(index); break;
+                case 'K':
+                    position.whitePieces.king.set(index);
+                    break;
 
-                case '1': ++index; break;
-                case '2': index += 2uz; break;
-                case '3': index += 3uz; break;
-                case '4': index += 4uz; break;
-                case '5': index += 5uz; break;
-                case '6': index += 6uz; break;
-                case '7': index += 7uz; break;
-                case '8': index += 8uz; break;
+                    // NB. these are all 1 less because index is incremented down below
+                case '1': break;
+                case '2': ++index; break;
+                case '3': index += 2uz; break;
+                case '4': index += 3uz; break;
+                case '5': index += 4uz; break;
+                case '6': index += 5uz; break;
+                case '7': index += 6uz; break;
+                case '8': index += 7uz; break;
 
                 case '/':
-                    return fenFragment; // NOLINT
+                    return fenFragment.substr(1uz);
 
                 default:
                     throw std::invalid_argument {
@@ -256,6 +257,9 @@ namespace {
             ++index;
             fenFragment = fenFragment.substr(1uz);
         } while (index < rankEnd);
+
+        if (! fenFragment.empty() && fenFragment.front() == '/')
+            return fenFragment.substr(1uz);
 
         return fenFragment; // NOLINT
     }
@@ -310,7 +314,7 @@ namespace {
 
 Position from_fen(const std::string_view fenString)
 {
-    Position position;
+    auto position = Position::empty();
 
     const auto [piecePositions, rest1] = split_at_first_space(fenString);
 

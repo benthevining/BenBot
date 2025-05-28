@@ -141,6 +141,9 @@ static constexpr std::string_view emptySquare { " |" };
 
 std::string print_utf8(const Position& position)
 {
+    using board::Rank;
+    using board::Square;
+
     const auto& whitePieces = position.whitePieces;
     const auto& blackPieces = position.blackPieces;
 
@@ -148,11 +151,11 @@ std::string print_utf8(const Position& position)
 
     result.reserve(208uz);
 
-    for (const auto rank : std::views::reverse(magic_enum::enum_values<board::Rank>())) {
+    for (const auto rank : std::views::reverse(magic_enum::enum_values<Rank>())) {
         result.append(separator);
 
         for (const auto file : magic_enum::enum_values<File>()) {
-            const board::Square square { file, rank };
+            const Square square { file, rank };
 
             if (const auto piece = whitePieces.get_piece_on(square)) {
                 result.append(utf8_pieces::white::get(*piece));
@@ -163,10 +166,9 @@ std::string print_utf8(const Position& position)
             if (const auto piece = blackPieces.get_piece_on(square)) {
                 result.append(utf8_pieces::black::get(*piece));
                 result.append(separator);
-                continue;
+            } else {
+                result.append(emptySquare);
             }
-
-            result.append(emptySquare);
         }
 
         result.append("\n");
