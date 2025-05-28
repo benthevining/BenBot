@@ -58,13 +58,10 @@ using PieceType = pieces::Type;
 
     @ingroup game
 
+    @todo Functions is_checkmate(), is_stalemate()
     @todo unmake_move()
-
     @todo Detect threefold reps by keeping array<Position, 6> ?
-
     @todo Funcs to get passed pawns, backward pawns
-    @todo Funcs is_stalemate(), is_checkmate(), is_check()
-
     @todo std::hash
  */
 struct Position final {
@@ -152,6 +149,9 @@ struct Position final {
 
     /// @}
 
+    /** Returns true if the king of the side to move is in check. */
+    [[nodiscard]] constexpr bool is_check() const noexcept;
+
     /** Makes a move to alter the position. */
     constexpr void make_move(const Move& move) noexcept;
 
@@ -197,6 +197,21 @@ struct Position final {
   `----'     `----'             `--`---'     ---`-'                     `--" `--" `--"
 
  */
+
+constexpr bool Position::is_check() const noexcept
+{
+    if (sideToMove == Color::White) {
+        const auto blackAttacks = board::attacked_squares<Color::Black>(
+            blackPieces, whitePieces.occupied());
+
+        return (blackAttacks & whitePieces.king).any();
+    }
+
+    const auto whiteAttacks = board::attacked_squares<Color::White>(
+        whitePieces, blackPieces.occupied());
+
+    return (whiteAttacks & blackPieces.king).any();
+}
 
 constexpr bool Position::is_file_open(const File file) const noexcept
 {

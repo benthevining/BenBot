@@ -20,6 +20,8 @@
 #include <libchess/board/BitboardMasks.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Square.hpp>
+#include <libchess/moves/Patterns.hpp>
+#include <libchess/moves/PseudoLegal.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
 #include <magic_enum/magic_enum.hpp>
@@ -40,8 +42,6 @@ using PieceType = pieces::Type;
 
     @ingroup board
 
-    @todo func to get attack mask for all pieces
-    @todo pawn front & rear fills
     @todo func to check for doubled pawns
     @todo std::hash
  */
@@ -109,6 +109,17 @@ struct Pieces final {
      */
     constexpr void capture_at(Square square) noexcept;
 };
+
+/** Returns a bitboard with a 1 bit set on all squares that any piece attacks.
+
+    @tparam Side The color of the side whose pieces are represented by ``pieces``.
+
+    @relates Pieces
+    @ingroup board
+ */
+template <Color Side>
+[[nodiscard, gnu::const]] constexpr Bitboard attacked_squares(
+    const Pieces& pieces, Bitboard enemyPieces) noexcept;
 
 /*
                          ___                           ,--,
@@ -215,6 +226,34 @@ constexpr void Pieces::capture_at(const Square square) noexcept
     bishops.unset(idx);
     rooks.unset(idx);
     queens.unset(idx);
+}
+
+template <Color Side>
+constexpr Bitboard attacked_squares(const Pieces& pieces, const Bitboard enemyPieces) noexcept
+{
+    namespace move_patterns = moves::patterns;
+    namespace move_gen      = moves::pseudo_legal;
+
+    // NB. for knight/king, the move_gen functions just prune squares occupied by
+    // friendly pieces, which we don't care about here, so avoid the extra operations
+    auto attacks
+        = move_patterns::pawn_attacks<Side>(pieces.pawns)
+        | move_patterns::knight(pieces.knights)
+        | move_patterns::king(pieces.king);
+
+    const auto friendlyPieces = pieces.occupied();
+    const auto allOccupied    = friendlyPieces | enemyPieces;
+
+    for (const auto square : pieces.bishops.squares())
+        attacks |= move_gen::bishop(square, allOccupied, friendlyPieces); // cppcheck-suppress useStlAlgorithm
+
+    for (const auto square : pieces.rooks.squares())
+        attacks |= move_gen::rook(square, allOccupied, friendlyPieces); // cppcheck-suppress useStlAlgorithm
+
+    for (const auto square : pieces.queens.squares())
+        attacks |= move_gen::queen(square, allOccupied, friendlyPieces); // cppcheck-suppress useStlAlgorithm
+
+    return attacks;
 }
 
 } // namespace chess::board
