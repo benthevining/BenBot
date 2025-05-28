@@ -71,6 +71,7 @@ namespace detail {
     using board::Pieces;
     using board::Rank;
     using board::Square;
+    using pieces::Color;
 
     using PieceType = pieces::Type;
 
@@ -82,25 +83,24 @@ namespace detail {
         PieceType::Knight, PieceType::Bishop, PieceType::Rook, PieceType::Queen
     };
 
-    [[nodiscard, gnu::const]] constexpr Rank prev_pawn_rank(
-        const Rank rank, const bool isWhite) noexcept
+    template <Color Side>
+    [[nodiscard, gnu::const]] constexpr Rank prev_pawn_rank(const Rank rank) noexcept
     {
-        if (isWhite) {
+        if constexpr (Side == Color::White) {
             assert(rank != Rank::One);
             return static_cast<Rank>(std::to_underlying(rank) - 1uz);
+        } else {
+            assert(rank != Rank::Eight);
+            return static_cast<Rank>(std::to_underlying(rank) + 1uz);
         }
-
-        assert(rank != Rank::Eight);
-        return static_cast<Rank>(std::to_underlying(rank) + 1uz);
     }
 
+    template <Color Side>
     constexpr void add_pawn_pushes(
-        const Pieces& ourPieces, const bool isWhite, const Bitboard allOccupied,
+        const Pieces& ourPieces, const Bitboard allOccupied,
         std::output_iterator<Move> auto outputIt)
     {
-        const auto allPushes = isWhite
-                                 ? pseudo_legal::pawn_pushes<Color::White>(ourPieces.pawns, allOccupied)
-                                 : pseudo_legal::pawn_pushes<Color::Black>(ourPieces.pawns, allOccupied);
+        const auto allPushes = pseudo_legal::pawn_pushes<Side>(ourPieces.pawns, allOccupied);
 
         // non-promoting pushes
         {
@@ -110,7 +110,7 @@ namespace detail {
                 *outputIt = Move {
                     .from = {
                         .file = target.file,
-                        .rank = prev_pawn_rank(target.rank, isWhite) },
+                        .rank = prev_pawn_rank<Side>(target.rank) },
                     .to    = target,
                     .piece = PieceType::Pawn
                 };
@@ -123,22 +123,21 @@ namespace detail {
                 *outputIt = Move {
                     .from = {
                         .file = target.file,
-                        .rank = prev_pawn_rank(target.rank, isWhite) },
+                        .rank = prev_pawn_rank<Side>(target.rank) },
                     .to           = target,
                     .piece        = PieceType::Pawn,
                     .promotedType = promotedType
                 };
     }
 
+    template <Color Side>
     constexpr void add_pawn_double_pushes(
-        const Pieces& ourPieces, const bool isWhite, const Bitboard allOccupied,
+        const Pieces& ourPieces, const Bitboard allOccupied,
         std::output_iterator<Move> auto outputIt)
     {
-        const auto pawnStartingRank = isWhite ? Rank::Two : Rank::Seven;
+        static constexpr auto pawnStartingRank = Side == Color::White ? Rank::Two : Rank::Seven;
 
-        const auto pushes = isWhite
-                              ? pseudo_legal::pawn_double_pushes<Color::White>(ourPieces.pawns, allOccupied)
-                              : pseudo_legal::pawn_double_pushes<Color::Black>(ourPieces.pawns, allOccupied);
+        const auto pushes = pseudo_legal::pawn_double_pushes<Side>(ourPieces.pawns, allOccupied);
 
         for (const auto targetSquare : pushes.squares())
             *outputIt = Move {
@@ -150,17 +149,16 @@ namespace detail {
             };
     }
 
+    template <Color Side>
     constexpr void add_pawn_captures(
-        const Pieces& ourPieces, const bool isWhite, const Bitboard enemyPieces,
+        const Pieces& ourPieces, const Bitboard enemyPieces,
         std::output_iterator<Move> auto outputIt)
     {
         // TODO: do these set-wise?
         for (const auto starting : ourPieces.pawns.squares()) {
             const Bitboard startingBoard { starting };
 
-            const auto capture = isWhite
-                                   ? pseudo_legal::pawn_captures<Color::White>(startingBoard, enemyPieces)
-                                   : pseudo_legal::pawn_captures<Color::Black>(startingBoard, enemyPieces);
+            const auto capture = pseudo_legal::pawn_captures<Side>(startingBoard, enemyPieces);
 
             if (capture.none())
                 continue;
@@ -272,8 +270,9 @@ namespace detail {
             };
     }
 
+    template <Color Side>
     constexpr void add_en_passant(
-        const Square& targetSquare, const bool isWhite, const Bitboard ourPawns,
+        const Square& targetSquare, const Bitboard ourPawns,
         std::output_iterator<Move> auto outputIt)
     {
         const Bitboard targetSquareBoard { targetSquare };
@@ -282,9 +281,7 @@ namespace detail {
         for (const auto pawnSquare : ourPawns.squares()) {
             const Bitboard pawnBoard { pawnSquare };
 
-            const auto captures = isWhite
-                                    ? patterns::pawn_attacks<Color::White>(pawnBoard)
-                                    : patterns::pawn_attacks<Color::Black>(pawnBoard);
+            const auto captures = patterns::pawn_attacks<Side>(pawnBoard);
 
             if ((captures & targetSquareBoard).any())
                 *outputIt = Move {
@@ -295,9 +292,10 @@ namespace detail {
         }
     }
 
-    [[nodiscard, gnu::const]] constexpr Bitboard kingside_castle_mask(const bool isWhite) noexcept
+    template <Color Side>
+    [[nodiscard, gnu::const]] consteval Bitboard kingside_castle_mask() noexcept
     {
-        const auto rank = isWhite ? Rank::One : Rank::Eight;
+        static constexpr auto rank = Side == Color::White ? Rank::One : Rank::Eight;
 
         Bitboard board;
 
@@ -309,24 +307,16 @@ namespace detail {
 
     // NB. with queenside castling, the set of squares that must be free/not attacked differ,
     // since castling is possible if the B1/B8 squares are attacked, but not if they are occupied
-    [[nodiscard, gnu::const]] constexpr Bitboard queenside_castle_mask_occupied(const bool isWhite) noexcept
+    template <Color Side, bool AllowAttacked>
+    [[nodiscard, gnu::const]] consteval Bitboard queenside_castle_mask() noexcept
     {
-        const auto rank = isWhite ? Rank::One : Rank::Eight;
+        static constexpr auto rank = Side == Color::White ? Rank::One : Rank::Eight;
 
         Bitboard board;
 
-        board.set(Square { File::B, rank });
-        board.set(Square { File::C, rank });
-        board.set(Square { File::D, rank });
-
-        return board;
-    }
-
-    [[nodiscard, gnu::const]] constexpr Bitboard queenside_castle_mask_attacked(const bool isWhite) noexcept
-    {
-        const auto rank = isWhite ? Rank::One : Rank::Eight;
-
-        Bitboard board;
+        if constexpr (AllowAttacked) {
+            board.set(Square { File::B, rank });
+        }
 
         board.set(Square { File::C, rank });
         board.set(Square { File::D, rank });
@@ -334,25 +324,31 @@ namespace detail {
         return board;
     }
 
+    template <Color Side>
     constexpr void add_castling(
-        const Position& position, const bool isWhite, const Bitboard allOccupied,
+        const Position& position, const Bitboard allOccupied,
         std::output_iterator<Move> auto outputIt)
     {
+        static constexpr bool isWhite = Side == Color::White;
+
         const auto& rights = isWhite ? position.whiteCastlingRights : position.blackCastlingRights;
 
         if (! rights.either())
             return;
 
-        [[maybe_unused]] const auto& rooks = isWhite ? position.whitePieces.rooks : position.blackPieces.rooks;
+        const auto& ourPieces = position.pieces_for<Side>();
 
-        const auto opponentAttacks = isWhite
-                                       ? board::attacked_squares<Color::Black>(position.blackPieces, position.whitePieces.occupied())
-                                       : board::attacked_squares<Color::White>(position.whitePieces, position.blackPieces.occupied());
+        [[maybe_unused]] const auto& rooks = ourPieces.rooks;
+
+        static constexpr auto OppositeColor = isWhite ? Color::Black : Color::White;
+
+        const auto opponentAttacks = board::attacked_squares<OppositeColor>(
+            position.pieces_for<OppositeColor>(), ourPieces.occupied());
 
         if (rights.kingside) {
             assert(rooks.test(Square { File::H, board::back_rank_for(position.sideToMove) }));
 
-            const auto requiredSquares = kingside_castle_mask(isWhite);
+            static constexpr auto requiredSquares = kingside_castle_mask<Side>();
 
             const bool castlingBlocked = (requiredSquares & allOccupied).any()
                                       || (requiredSquares & opponentAttacks).any();
@@ -364,11 +360,53 @@ namespace detail {
         if (rights.queenside) {
             assert(rooks.test(Square { File::A, board::back_rank_for(position.sideToMove) }));
 
-            const bool castlingBlocked = (allOccupied & queenside_castle_mask_occupied(isWhite)).any()
-                                      || (opponentAttacks & queenside_castle_mask_attacked(isWhite)).any();
+            static constexpr auto occupiedMask = queenside_castle_mask<Side, true>();
+            static constexpr auto attackedMask = queenside_castle_mask<Side, false>();
+
+            const bool castlingBlocked = (allOccupied & occupiedMask).any()
+                                      || (opponentAttacks & attackedMask).any();
 
             if (! castlingBlocked)
                 *outputIt = castle_queenside(isWhite ? Color::White : Color::Black);
+        }
+    }
+
+    template <Color Side>
+    constexpr void generate_internal(
+        const Position&                 position,
+        std::output_iterator<Move> auto outputIt)
+    {
+        static constexpr auto OppositeSide = Side == Color::White ? Color::Black : Color::White;
+
+        const auto& ourPieces   = position.pieces_for<Side>();
+        const auto& theirPieces = position.pieces_for<OppositeSide>();
+
+        const auto friendlyPieces = ourPieces.occupied();
+        const auto enemyPieces    = theirPieces.occupied();
+
+        const auto allOccupied = friendlyPieces | enemyPieces;
+
+        add_pawn_pushes<Side>(ourPieces, allOccupied, outputIt);
+
+        add_pawn_double_pushes<Side>(ourPieces, allOccupied, outputIt);
+
+        add_pawn_captures<Side>(ourPieces, enemyPieces, outputIt);
+
+        add_knight_moves(ourPieces, friendlyPieces, outputIt);
+
+        add_bishop_moves(ourPieces, friendlyPieces, allOccupied, outputIt);
+
+        add_rook_moves(ourPieces, friendlyPieces, allOccupied, outputIt);
+
+        add_queen_moves(ourPieces, friendlyPieces, allOccupied, outputIt);
+
+        add_king_moves(ourPieces, friendlyPieces, outputIt);
+
+        add_castling<Side>(position, allOccupied, outputIt);
+
+        if (position.enPassantTargetSquare.has_value()) {
+            add_en_passant<Side>(
+                *position.enPassantTargetSquare, ourPieces.pawns, outputIt);
         }
     }
 
@@ -377,55 +415,16 @@ namespace detail {
 template <bool PruneIllegal>
 constexpr std::vector<Move> generate(const Position& position)
 {
-    using pieces::Color;
-
-    const bool isWhite = position.sideToMove == Color::White;
-
-    const auto& ourPieces   = isWhite ? position.whitePieces : position.blackPieces;
-    const auto& theirPieces = isWhite ? position.blackPieces : position.whitePieces;
-
-    const auto friendlyPieces = ourPieces.occupied();
-    const auto enemyPieces    = theirPieces.occupied();
-
-    const auto allOccupied = friendlyPieces | enemyPieces;
-
     std::vector<Move> moves;
 
     // NB. the maximum number of possible legal moves in a position seems to be 218
     // reserve some extra memory to allow non-legal moves to be generated & pruned
     moves.reserve(300uz);
 
-    detail::add_pawn_pushes(
-        ourPieces, isWhite, allOccupied, std::back_inserter(moves));
-
-    detail::add_pawn_double_pushes(
-        ourPieces, isWhite, allOccupied, std::back_inserter(moves));
-
-    detail::add_pawn_captures(
-        ourPieces, isWhite, enemyPieces, std::back_inserter(moves));
-
-    detail::add_knight_moves(
-        ourPieces, friendlyPieces, std::back_inserter(moves));
-
-    detail::add_bishop_moves(
-        ourPieces, friendlyPieces, allOccupied, std::back_inserter(moves));
-
-    detail::add_rook_moves(
-        ourPieces, friendlyPieces, allOccupied, std::back_inserter(moves));
-
-    detail::add_queen_moves(
-        ourPieces, friendlyPieces, allOccupied, std::back_inserter(moves));
-
-    detail::add_king_moves(
-        ourPieces, friendlyPieces, std::back_inserter(moves));
-
-    detail::add_castling(
-        position, isWhite, allOccupied, std::back_inserter(moves));
-
-    if (position.enPassantTargetSquare.has_value()) {
-        detail::add_en_passant(
-            *position.enPassantTargetSquare, isWhite, ourPieces.pawns, std::back_inserter(moves));
-    }
+    if (position.sideToMove == Color::White)
+        detail::generate_internal<Color::White>(position, std::back_inserter(moves));
+    else
+        detail::generate_internal<Color::Black>(position, std::back_inserter(moves));
 
     if constexpr (PruneIllegal) {
         std::erase_if(moves,

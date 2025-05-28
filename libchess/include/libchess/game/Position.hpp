@@ -115,6 +115,26 @@ struct Position final {
     /** Returns true if the two positions are identical. */
     [[nodiscard]] constexpr bool operator==(const Position&) const noexcept = default;
 
+    /** Returns the piece set representing the given color. */
+    template <Color Side>
+    [[nodiscard]] constexpr board::Pieces& pieces_for() noexcept
+    {
+        if constexpr (Side == Color::White)
+            return whitePieces;
+        else
+            return blackPieces;
+    }
+
+    /** Returns the piece set representing the given color. */
+    template <Color Side>
+    [[nodiscard]] constexpr const board::Pieces& pieces_for() const noexcept
+    {
+        if constexpr (Side == Color::White)
+            return whitePieces;
+        else
+            return blackPieces;
+    }
+
     /** Returns a bitboard that is the union of all White and Black
         piece positions.
      */
