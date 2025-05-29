@@ -60,11 +60,11 @@ TEST_CASE("Perft - depth 3", TAGS)
     const auto result = perft(3uz);
 
     REQUIRE(result.nodes == 8902uz);
-    // CHECK(result.captures == 34uz);
-    // CHECK(result.enPassantCaptures == 0uz);
+    REQUIRE(result.captures == 34uz);
+    REQUIRE(result.enPassantCaptures == 0uz);
     REQUIRE(result.castles == 0uz);
     REQUIRE(result.promotions == 0uz);
-    // CHECK(result.checks == 12uz);
-    // CHECK(result.checkmates == 0uz);
+    CHECK(result.checks == 12uz);
+    CHECK(result.checkmates == 0uz);
     REQUIRE(result.stalemates == 0uz);
 }

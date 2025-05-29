@@ -193,6 +193,9 @@ struct Position final {
      */
     [[nodiscard]] constexpr bool is_legal(const Move& move) const noexcept;
 
+    /** Returns true if the given move is an en passant capture in the current position. */
+    [[nodiscard]] constexpr bool is_en_passant(const Move& move) const noexcept;
+
     /** Returns true if the given move is a capture, including en passant. */
     [[nodiscard]] constexpr bool is_capture(const Move& move) const noexcept;
 
@@ -272,14 +275,18 @@ constexpr bool Position::is_legal(const Move& move) const noexcept
     return ! copy.is_side_in_check(sideToMove);
 }
 
+constexpr bool Position::is_en_passant(const Move& move) const noexcept
+{
+    return move.piece == PieceType::Pawn
+        && enPassantTargetSquare.has_value()
+        && move.to == *enPassantTargetSquare;
+}
+
 constexpr bool Position::is_capture(const Move& move) const noexcept
 {
-    if (enPassantTargetSquare.has_value() && move.to == *enPassantTargetSquare)
-        return true;
-
     const auto& opponentPieces = sideToMove == Color::White ? blackPieces : whitePieces;
 
-    return opponentPieces.occupied().test(move.to);
+    return is_en_passant(move) || opponentPieces.occupied().test(move.to);
 }
 
 constexpr bool Position::is_file_open(const File file) const noexcept

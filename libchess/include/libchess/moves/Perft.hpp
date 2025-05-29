@@ -103,8 +103,7 @@ constexpr PerftResult perft(const size_t depth, const Position& startingPosition
         if (startingPosition.is_capture(move)) {
             ++result.captures;
 
-            if (startingPosition.enPassantTargetSquare.has_value()
-                && move.to == *startingPosition.enPassantTargetSquare)
+            if (startingPosition.is_en_passant(move))
                 ++result.enPassantCaptures;
         }
 
