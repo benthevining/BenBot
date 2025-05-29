@@ -28,7 +28,6 @@ using chess::notation::from_alg;
 using chess::notation::from_fen;
 using chess::notation::to_alg;
 
-// pawn capture (with check, mate)
 // push promotion (with check, mate)
 // capture promotion (with check, mate)
 // castle kingside (with check, mate)
@@ -516,5 +515,39 @@ TEST_CASE("Algebraic notation - pawn captures", TAGS)
         REQUIRE(move.from == Square { File::E, Rank::Four });
 
         REQUIRE(to_alg(position, move) == "exd5");
+    }
+
+    SECTION("With check")
+    {
+        auto position = from_fen("r2qkbnr/p2ppppp/npp1P3/1b6/6N1/2Q5/PPPP1PPP/RNB1KB1R w KQkq - 0 1");
+
+        const auto move = from_alg(position, "exd7+");
+
+        REQUIRE(move.piece == PieceType::Pawn);
+        REQUIRE(move.to == Square { File::D, Rank::Seven });
+        REQUIRE(move.from == Square { File::E, Rank::Six });
+
+        REQUIRE(to_alg(position, move) == "exd7+");
+
+        position.make_move(move);
+
+        REQUIRE(position.is_check());
+    }
+
+    SECTION("With checkmate")
+    {
+        auto position = from_fen("r1b1kb1r/ppp1p1pp/5p2/6Q1/5q1N/1Pn3p1/P1PPPPPP/R1BnKB1R b KQkq - 0 1");
+
+        const auto move = from_alg(position, "gxf2#");
+
+        REQUIRE(move.piece == PieceType::Pawn);
+        REQUIRE(move.to == Square { File::F, Rank::Two });
+        REQUIRE(move.from == Square { File::G, Rank::Three });
+
+        REQUIRE(to_alg(position, move) == "gxf2#");
+
+        position.make_move(move);
+
+        REQUIRE(position.is_checkmate());
     }
 }

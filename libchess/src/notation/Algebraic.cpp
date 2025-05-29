@@ -373,14 +373,16 @@ Move from_alg(const Position& position, std::string_view text)
     // trim target square
     text.remove_suffix(2uz);
 
-    if (text.back() == 'x')
+    const bool isCapture = text.back() == 'x';
+
+    if (isCapture)
         text.remove_suffix(1uz);
 
     // at this point, if text is empty, this an abbreviated pawn move such as "e4", etc.
     // if text is not empty, the first char is either piece type, or in the case of a
     // pawn capture, it's the file letter of the starting square
 
-    if (! text.empty())
+    if (isCapture && ! text.empty())
         if (const auto move = parse_pawn_capture(targetSquare, text, position.sideToMove))
             return *move;
 
