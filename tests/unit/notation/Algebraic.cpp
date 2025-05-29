@@ -28,12 +28,11 @@ using chess::notation::from_alg;
 using chess::notation::from_fen;
 using chess::notation::to_alg;
 
-// pawn double push (with check, mate)
 // pawn capture (with check, mate)
-// castle kingside (with check, mate)
-// castle queenside (with check, mate)
 // push promotion (with check, mate)
 // capture promotion (with check, mate)
+// castle kingside (with check, mate)
+// castle queenside (with check, mate)
 
 TEST_CASE("Algebraic notation - piece moves", TAGS)
 {
@@ -437,5 +436,85 @@ TEST_CASE("Algebraic notation - pawn pushes", TAGS)
         position.make_move(move);
 
         REQUIRE(position.is_checkmate());
+    }
+}
+
+TEST_CASE("Algebraic notation - pawn double pushes", TAGS)
+{
+    SECTION("Normal")
+    {
+        Position startingPosition {};
+
+        const auto move = from_alg(startingPosition, "e4");
+
+        REQUIRE(move.piece == PieceType::Pawn);
+        REQUIRE(move.to == Square { File::E, Rank::Four });
+        REQUIRE(move.from == Square { File::E, Rank::Two });
+
+        REQUIRE(to_alg(startingPosition, move) == "e4");
+
+        startingPosition.make_move(move);
+
+        REQUIRE(startingPosition.enPassantTargetSquare.has_value());
+
+        REQUIRE(*startingPosition.enPassantTargetSquare == Square { File::E, Rank::Three });
+    }
+
+    SECTION("With check")
+    {
+        auto position = from_fen("8/8/8/4k3/8/8/2KP4/8 w - - 0 1");
+
+        const auto move = from_alg(position, "d4+");
+
+        REQUIRE(move.piece == PieceType::Pawn);
+        REQUIRE(move.to == Square { File::D, Rank::Four });
+        REQUIRE(move.from == Square { File::D, Rank::Two });
+
+        REQUIRE(to_alg(position, move) == "d4+");
+
+        position.make_move(move);
+
+        REQUIRE(position.is_check());
+
+        REQUIRE(position.enPassantTargetSquare.has_value());
+
+        REQUIRE(*position.enPassantTargetSquare == Square { File::D, Rank::Three });
+    }
+
+    SECTION("With checkmate")
+    {
+        auto position = from_fen("4q3/6p1/8/2r5/5k1K/7P/8/6r1 b - - 0 1");
+
+        const auto move = from_alg(position, "g5#");
+
+        REQUIRE(move.piece == PieceType::Pawn);
+        REQUIRE(move.to == Square { File::G, Rank::Five });
+        REQUIRE(move.from == Square { File::G, Rank::Seven });
+
+        REQUIRE(to_alg(position, move) == "g5#");
+
+        position.make_move(move);
+
+        REQUIRE(position.is_checkmate());
+
+        REQUIRE(position.enPassantTargetSquare.has_value());
+
+        REQUIRE(*position.enPassantTargetSquare == Square { File::G, Rank::Six });
+    }
+}
+
+TEST_CASE("Algebraic notation - pawn captures", TAGS)
+{
+    SECTION("Normal")
+    {
+        const auto position = from_fen("rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1");
+
+        const auto move = from_alg(position, "exd5");
+
+        REQUIRE(move.piece == PieceType::Pawn);
+        REQUIRE(move.to == Square { File::D, Rank::Five });
+        REQUIRE(move.from == Square { File::E, Rank::Four });
+
+        REQUIRE(to_alg(position, move) == "exd5");
     }
 }

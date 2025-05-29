@@ -7,6 +7,7 @@
  */
 
 #include <algorithm>
+#include <cassert>
 #include <format>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Rank.hpp>
@@ -17,10 +18,12 @@
 #include <libchess/notation/Algebraic.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
+#include <optional>
 #include <span>
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace chess::notation {
@@ -134,6 +137,7 @@ namespace {
 
     using board::File;
     using board::Rank;
+    using pieces::Color;
 
     [[nodiscard]] Square get_starting_square_from_file(
         const std::span<const Move> possibleOrigins, const File file)
@@ -261,6 +265,74 @@ namespace {
         }
     }
 
+    [[nodiscard]] Rank prev_pawn_rank(
+        const Rank rank, const Color color)
+    {
+        if (color == Color::White) {
+            assert(rank != Rank::One);
+            return static_cast<Rank>(std::to_underlying(rank) - 1uz);
+        }
+
+        assert(rank != Rank::Eight);
+        return static_cast<Rank>(std::to_underlying(rank) + 1uz);
+    }
+
+    [[nodiscard]] Move create_pawn_capture(
+        const Square& targetSquare, const File startingFile, const Color color)
+    {
+        return {
+            .from = Square {
+                .file = startingFile,
+                .rank = prev_pawn_rank(targetSquare.rank, color) },
+            .to    = targetSquare,
+            .piece = PieceType::Pawn
+        };
+    }
+
+    [[nodiscard]] std::optional<Move> parse_pawn_capture(
+        const Square& targetSquare, const std::string_view startingFileText, const Color color)
+    {
+        assert(! startingFileText.empty());
+
+        switch (startingFileText.front()) {
+            case 'a': [[fallthrough]];
+            case 'A':
+                return create_pawn_capture(targetSquare, File::A, color);
+
+                // NB. upper-case B is reserved for signifying the bishop piece type,
+                // otherwise bxc4 is undecidable between pawn capture or bishop capture
+            case 'b':
+                return create_pawn_capture(targetSquare, File::B, color);
+
+            case 'c': [[fallthrough]];
+            case 'C':
+                return create_pawn_capture(targetSquare, File::C, color);
+
+            case 'd': [[fallthrough]];
+            case 'D':
+                return create_pawn_capture(targetSquare, File::D, color);
+
+            case 'e': [[fallthrough]];
+            case 'E':
+                return create_pawn_capture(targetSquare, File::E, color);
+
+            case 'f': [[fallthrough]];
+            case 'F':
+                return create_pawn_capture(targetSquare, File::F, color);
+
+            case 'g': [[fallthrough]];
+            case 'G':
+                return create_pawn_capture(targetSquare, File::G, color);
+
+            case 'h': [[fallthrough]];
+            case 'H':
+                return create_pawn_capture(targetSquare, File::H, color);
+
+            default:
+                return std::nullopt;
+        }
+    }
+
 } // namespace
 
 Move from_alg(const Position& position, std::string_view text)
@@ -304,7 +376,14 @@ Move from_alg(const Position& position, std::string_view text)
     if (text.back() == 'x')
         text.remove_suffix(1uz);
 
-    // if text is empty, this an abbreviated pawn move such as "e4", etc
+    // at this point, if text is empty, this an abbreviated pawn move such as "e4", etc.
+    // if text is not empty, the first char is either piece type, or in the case of a
+    // pawn capture, it's the file letter of the starting square
+
+    if (! text.empty())
+        if (const auto move = parse_pawn_capture(targetSquare, text, position.sideToMove))
+            return *move;
+
     const auto pieceType = text.empty()
                              ? PieceType::Pawn
                              : pieces::from_string(text.substr(0uz, 1uz));
