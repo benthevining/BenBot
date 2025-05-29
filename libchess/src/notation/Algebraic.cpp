@@ -101,16 +101,15 @@ namespace {
 
 std::string to_alg(const Position& position, const Move& move)
 {
-    if (move.is_castling()) {
-        if (move.to.is_kingside())
-            return "O-O";
+    const auto checkStr = get_check_string(position, move);
 
-        return "O-O-O";
+    if (move.is_castling()) {
+        const auto* castleStr = move.to.is_kingside() ? "O-O" : "O-O-O";
+
+        return std::format("{}{}", castleStr, checkStr);
     }
 
     const bool isCapture = position.is_capture(move);
-
-    const auto checkStr = get_check_string(position, move);
 
     if (move.is_promotion()) {
         if (isCapture)
@@ -337,11 +336,11 @@ namespace {
 
 Move from_alg(const Position& position, std::string_view text)
 {
-    if (text == "O-O" || text == "0-0")
-        return moves::castle_kingside(position.sideToMove);
-
-    if (text == "O-O-O" || text == "0-0-0")
+    if (text.contains("O-O-O") || text.contains("0-0-0"))
         return moves::castle_queenside(position.sideToMove);
+
+    if (text.contains("O-O") || text.contains("0-0"))
+        return moves::castle_kingside(position.sideToMove);
 
     // promotion
     if (const auto eqSgnPos = text.find('=');
@@ -352,7 +351,9 @@ Move from_alg(const Position& position, std::string_view text)
             xPos != std::string_view::npos) {
             // string is of form dxe8=Q
             return {
-                .from         = board::file_from_char(text.at(xPos - 1uz)),
+                .from = {
+                    .file = board::file_from_char(text.at(xPos - 1uz)),
+                    .rank = position.sideToMove == Color::White ? Rank::Seven : Rank::Two },
                 .to           = Square::from_string(text.substr(eqSgnPos - 2uz, 2uz)),
                 .piece        = PieceType::Pawn,
                 .promotedType = promotedType

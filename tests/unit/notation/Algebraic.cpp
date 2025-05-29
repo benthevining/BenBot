@@ -27,11 +27,7 @@ using PieceType = chess::pieces::Type;
 using chess::notation::from_alg;
 using chess::notation::from_fen;
 using chess::notation::to_alg;
-
-// push promotion (with check, mate)
-// capture promotion (with check, mate)
-// castle kingside (with check, mate)
-// castle queenside (with check, mate)
+using chess::notation::to_fen;
 
 TEST_CASE("Algebraic notation - piece moves", TAGS)
 {
@@ -547,6 +543,354 @@ TEST_CASE("Algebraic notation - pawn captures", TAGS)
         REQUIRE(to_alg(position, move) == "gxf2#");
 
         position.make_move(move);
+
+        REQUIRE(position.is_checkmate());
+    }
+}
+
+TEST_CASE("Algebraic notation - promotion (push)", TAGS)
+{
+    SECTION("Normal")
+    {
+        auto position = from_fen("8/1k1P4/8/2r5/8/8/4K3/8 w - - 0 1");
+
+        const auto move = from_alg(position, "d8=Q");
+
+        REQUIRE(move.piece == PieceType::Pawn);
+        REQUIRE(move.to == Square { File::D, Rank::Eight });
+        REQUIRE(move.from == Square { File::D, Rank::Seven });
+
+        REQUIRE(move.is_promotion());
+        REQUIRE(*move.promotedType == PieceType::Queen);
+
+        REQUIRE(to_alg(position, move) == "d8=Q");
+
+        position.make_move(move);
+
+        REQUIRE(! position.whitePieces.pawns.test(Square { File::D, Rank::Seven }));
+        REQUIRE(! position.whitePieces.pawns.test(Square { File::D, Rank::Eight }));
+
+        REQUIRE(position.whitePieces.queens.test(Square { File::D, Rank::Eight }));
+    }
+
+    SECTION("With check")
+    {
+        auto position = from_fen("8/1k1P4/8/2r5/8/8/4K3/8 w - - 0 1");
+
+        const auto move = from_alg(position, "d8=N+");
+
+        REQUIRE(move.piece == PieceType::Pawn);
+        REQUIRE(move.to == Square { File::D, Rank::Eight });
+        REQUIRE(move.from == Square { File::D, Rank::Seven });
+
+        REQUIRE(move.is_promotion());
+        REQUIRE(*move.promotedType == PieceType::Knight);
+
+        REQUIRE(to_alg(position, move) == "d8=N+");
+
+        position.make_move(move);
+
+        REQUIRE(! position.whitePieces.pawns.test(Square { File::D, Rank::Seven }));
+        REQUIRE(! position.whitePieces.pawns.test(Square { File::D, Rank::Eight }));
+
+        REQUIRE(position.whitePieces.knights.test(Square { File::D, Rank::Eight }));
+
+        REQUIRE(position.is_check());
+    }
+
+    SECTION("With checkmate")
+    {
+        auto position = from_fen("k7/ppP5/8/5K2/8/8/8/8 w - - 0 1");
+
+        const auto move = from_alg(position, "c8=R#");
+
+        REQUIRE(move.piece == PieceType::Pawn);
+        REQUIRE(move.to == Square { File::C, Rank::Eight });
+        REQUIRE(move.from == Square { File::C, Rank::Seven });
+
+        REQUIRE(move.is_promotion());
+        REQUIRE(*move.promotedType == PieceType::Rook);
+
+        REQUIRE(to_alg(position, move) == "c8=R#");
+
+        position.make_move(move);
+
+        REQUIRE(position.is_checkmate());
+    }
+}
+
+TEST_CASE("Algebraic notation - promotion (capture)", TAGS)
+{
+    SECTION("Normal")
+    {
+        auto position = from_fen("3r4/2K1Pk2/8/8/8/8/8/8 w - - 0 1");
+
+        const auto move = from_alg(position, "exd8=B");
+
+        REQUIRE(move.piece == PieceType::Pawn);
+        REQUIRE(move.to == Square { File::D, Rank::Eight });
+        REQUIRE(move.from == Square { File::E, Rank::Seven });
+
+        REQUIRE(move.is_promotion());
+        REQUIRE(*move.promotedType == PieceType::Bishop);
+
+        REQUIRE(to_alg(position, move) == "exd8=B");
+
+        position.make_move(move);
+
+        REQUIRE(! position.whitePieces.pawns.test(Square { File::E, Rank::Seven }));
+        REQUIRE(! position.whitePieces.pawns.test(Square { File::E, Rank::Eight }));
+        REQUIRE(! position.whitePieces.pawns.test(Square { File::D, Rank::Eight }));
+
+        REQUIRE(position.whitePieces.bishops.test(Square { File::D, Rank::Eight }));
+    }
+
+    SECTION("With check")
+    {
+        auto position = from_fen("8/8/8/8/8/2k5/4p3/2KQ4 b - - 0 1");
+
+        const auto move = from_alg(position, "exd1=Q+");
+
+        REQUIRE(move.piece == PieceType::Pawn);
+        REQUIRE(move.to == Square { File::D, Rank::One });
+        REQUIRE(move.from == Square { File::E, Rank::Two });
+
+        REQUIRE(move.is_promotion());
+        REQUIRE(*move.promotedType == PieceType::Queen);
+
+        REQUIRE(to_alg(position, move) == "exd1=Q+");
+
+        position.make_move(move);
+
+        REQUIRE(position.is_check());
+    }
+
+    SECTION("With checkmate")
+    {
+        auto position = from_fen("b2r4/1k1NP3/8/K7/1r6/8/2R5/6B1 w - - 0 1");
+
+        const auto move = from_alg(position, "exd8=N#");
+
+        REQUIRE(move.piece == PieceType::Pawn);
+        REQUIRE(move.to == Square { File::D, Rank::Eight });
+        REQUIRE(move.from == Square { File::E, Rank::Seven });
+
+        REQUIRE(move.is_promotion());
+        REQUIRE(*move.promotedType == PieceType::Knight);
+
+        REQUIRE(to_alg(position, move) == "exd8=N#");
+
+        position.make_move(move);
+
+        REQUIRE(position.is_checkmate());
+    }
+}
+
+TEST_CASE("Algebraic notation - kingside castling", TAGS)
+{
+    SECTION("Normal")
+    {
+        SECTION("White")
+        {
+            auto position = from_fen("rnbqkb1r/ppp1pppp/3p1n2/8/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 1");
+
+            const auto move = from_alg(position, "O-O");
+
+            REQUIRE(move.is_castling());
+            REQUIRE(move.piece == PieceType::King);
+            REQUIRE(move.to == Square { File::G, Rank::One });
+            REQUIRE(move.from == Square { File::E, Rank::One });
+
+            REQUIRE(to_alg(position, move) == "O-O");
+
+            position.make_move(move);
+
+            REQUIRE(to_fen(position) == "rnbqkb1r/ppp1pppp/3p1n2/8/2B1P3/5N2/PPPP1PPP/RNBQ1RK1 b kq - 1 1");
+        }
+
+        SECTION("Black")
+        {
+            auto position = from_fen("rnbqk2r/pp1ppppp/2p5/1b3n2/8/1B1P1Q2/PPP1PPPP/RN2KBNR b KQkq - 0 1");
+
+            const auto move = from_alg(position, "O-O");
+
+            REQUIRE(move.is_castling());
+            REQUIRE(move.piece == PieceType::King);
+            REQUIRE(move.to == Square { File::G, Rank::Eight });
+            REQUIRE(move.from == Square { File::E, Rank::Eight });
+
+            REQUIRE(to_alg(position, move) == "O-O");
+
+            position.make_move(move);
+
+            REQUIRE(to_fen(position) == "rnbq1rk1/pp1ppppp/2p5/1b3n2/8/1B1P1Q2/PPP1PPPP/RN2KBNR w KQ - 1 2");
+        }
+    }
+
+    SECTION("With check")
+    {
+        SECTION("White")
+        {
+            auto position = from_fen("rnbq1knr/ppppp1pp/2b5/8/8/1QNBP3/PPPP2PP/RNB1K2R w KQkq - 0 1");
+
+            const auto move = from_alg(position, "O-O+");
+
+            REQUIRE(move.is_castling());
+            REQUIRE(move.piece == PieceType::King);
+            REQUIRE(move.to == Square { File::G, Rank::One });
+            REQUIRE(move.from == Square { File::E, Rank::One });
+
+            REQUIRE(to_alg(position, move) == "O-O+");
+
+            position.make_move(move);
+
+            REQUIRE(to_fen(position) == "rnbq1knr/ppppp1pp/2b5/8/8/1QNBP3/PPPP2PP/RNB2RK1 b kq - 1 1");
+
+            REQUIRE(position.is_check());
+        }
+
+        SECTION("Black")
+        {
+            auto position = from_fen("rnbqk2r/ppp1p1pp/7b/3p4/2B1N3/4nK2/PPPPP1PP/RNBQ1R2 b kq - 0 1");
+
+            const auto move = from_alg(position, "O-O+");
+
+            REQUIRE(move.is_castling());
+            REQUIRE(move.piece == PieceType::King);
+            REQUIRE(move.to == Square { File::G, Rank::Eight });
+            REQUIRE(move.from == Square { File::E, Rank::Eight });
+
+            REQUIRE(to_alg(position, move) == "O-O+");
+
+            position.make_move(move);
+
+            REQUIRE(to_fen(position) == "rnbq1rk1/ppp1p1pp/7b/3p4/2B1N3/4nK2/PPPPP1PP/RNBQ1R2 w - - 1 2");
+
+            REQUIRE(position.is_check());
+        }
+    }
+
+    SECTION("With checkmate")
+    {
+        SECTION("White")
+        {
+            auto position = from_fen("8/8/8/7N/2BQ4/5k2/8/4K2R w K - 0 1");
+
+            const auto move = from_alg(position, "O-O#");
+
+            REQUIRE(move.is_castling());
+            REQUIRE(move.piece == PieceType::King);
+            REQUIRE(move.to == Square { File::G, Rank::One });
+            REQUIRE(move.from == Square { File::E, Rank::One });
+
+            REQUIRE(to_alg(position, move) == "O-O#");
+
+            position.make_move(move);
+
+            REQUIRE(to_fen(position) == "8/8/8/7N/2BQ4/5k2/8/5RK1 b - - 1 1");
+
+            REQUIRE(position.is_checkmate());
+        }
+
+        SECTION("Black")
+        {
+            auto position = from_fen("4k2r/8/8/8/8/3n2r1/7r/5K2 b k - 0 1");
+
+            const auto move = from_alg(position, "O-O#");
+
+            REQUIRE(move.is_castling());
+            REQUIRE(move.piece == PieceType::King);
+            REQUIRE(move.to == Square { File::G, Rank::Eight });
+            REQUIRE(move.from == Square { File::E, Rank::Eight });
+
+            REQUIRE(to_alg(position, move) == "O-O#");
+
+            position.make_move(move);
+
+            REQUIRE(to_fen(position) == "5rk1/8/8/8/8/3n2r1/7r/5K2 w - - 1 2");
+
+            REQUIRE(position.is_checkmate());
+        }
+    }
+}
+
+TEST_CASE("Algebraic notation - queenside castling", TAGS)
+{
+    SECTION("Normal")
+    {
+        SECTION("White")
+        {
+            auto position = from_fen("rn1qkbnr/pppp1ppp/3b4/4p3/8/2NP1Q2/PPPBPPPP/R3KBNR w KQkq - 0 1");
+
+            const auto move = from_alg(position, "O-O-O");
+
+            REQUIRE(move.is_castling());
+            REQUIRE(move.piece == PieceType::King);
+            REQUIRE(move.to == Square { File::C, Rank::One });
+            REQUIRE(move.from == Square { File::E, Rank::One });
+
+            REQUIRE(to_alg(position, move) == "O-O-O");
+
+            position.make_move(move);
+
+            REQUIRE(to_fen(position) == "rn1qkbnr/pppp1ppp/3b4/4p3/8/2NP1Q2/PPPBPPPP/2KR1BNR b kq - 1 1");
+        }
+
+        SECTION("Black")
+        {
+            auto position = from_fen("r3kbnr/ppp1pppp/n7/2qp1b2/8/3PB3/PPPQPPPP/RN2KBNR b KQkq - 0 1");
+
+            const auto move = from_alg(position, "O-O-O");
+
+            REQUIRE(move.is_castling());
+            REQUIRE(move.piece == PieceType::King);
+            REQUIRE(move.to == Square { File::C, Rank::Eight });
+            REQUIRE(move.from == Square { File::E, Rank::Eight });
+
+            REQUIRE(to_alg(position, move) == "O-O-O");
+
+            position.make_move(move);
+
+            REQUIRE(to_fen(position) == "2kr1bnr/ppp1pppp/n7/2qp1b2/8/3PB3/PPPQPPPP/RN2KBNR w KQ - 1 2");
+        }
+    }
+
+    SECTION("With check")
+    {
+        auto position = from_fen("rn1k1bnr/ppp1pppp/4b3/5q2/4N3/2B2Q2/PPP1PPPP/R3KBNR w KQkq - 0 1");
+
+        const auto move = from_alg(position, "O-O-O+");
+
+        REQUIRE(move.is_castling());
+        REQUIRE(move.piece == PieceType::King);
+        REQUIRE(move.to == Square { File::C, Rank::One });
+        REQUIRE(move.from == Square { File::E, Rank::One });
+
+        REQUIRE(to_alg(position, move) == "O-O-O+");
+
+        position.make_move(move);
+
+        REQUIRE(to_fen(position) == "rn1k1bnr/ppp1pppp/4b3/5q2/4N3/2B2Q2/PPP1PPPP/2KR1BNR b kq - 1 1");
+
+        REQUIRE(position.is_check());
+    }
+
+    SECTION("With checkmate")
+    {
+        auto position = from_fen("r3kb2/ppp1pppp/8/8/6b1/8/1PP1PPnP/r1NKnBNR b Kq - 0 1");
+
+        const auto move = from_alg(position, "O-O-O#");
+
+        REQUIRE(move.is_castling());
+        REQUIRE(move.piece == PieceType::King);
+        REQUIRE(move.to == Square { File::C, Rank::Eight });
+        REQUIRE(move.from == Square { File::E, Rank::Eight });
+
+        REQUIRE(to_alg(position, move) == "O-O-O#");
+
+        position.make_move(move);
+
+        REQUIRE(to_fen(position) == "2kr1b2/ppp1pppp/8/8/6b1/8/1PP1PPnP/r1NKnBNR w K - 1 2");
 
         REQUIRE(position.is_checkmate());
     }
