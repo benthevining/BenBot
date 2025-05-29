@@ -45,12 +45,16 @@ namespace {
         return pieceMoves;
     }
 
-    [[nodiscard]] std::string_view get_check_string(const Position& position)
+    [[nodiscard]] std::string_view get_check_string(const Position& position, const Move& move)
     {
-        if (! position.is_check())
+        Position copy { position };
+
+        copy.make_move(move);
+
+        if (! copy.is_check())
             return {};
 
-        if (moves::generate(position).empty())
+        if (moves::generate(copy).empty())
             return "#"; // checkmate
 
         return "+"; // check
@@ -121,7 +125,7 @@ std::string to_alg(const Position& position, const Move& move)
 
     // with every field: Ngxf4+
     return std::format("{}{}{}{}{}",
-        move.piece, get_disambig_string(position, move), captureStr, move.to, get_check_string(position));
+        move.piece, get_disambig_string(position, move), captureStr, move.to, get_check_string(position, move));
 }
 
 namespace {
@@ -287,6 +291,9 @@ Move from_alg(const Position& position, std::string_view text)
             position.sideToMove, promotedType);
     }
 
+    if (text.back() == '+' || text.back() == '#')
+        text.remove_suffix(1uz);
+
     // string is of the form Nc6 or Nxc6
 
     // TODO: Deal with abbreviated pawn moves
@@ -296,7 +303,6 @@ Move from_alg(const Position& position, std::string_view text)
     // trim target square
     text.remove_suffix(2uz);
 
-    // trim trailing x
     if (text.back() == 'x')
         text.remove_suffix(1uz);
 
