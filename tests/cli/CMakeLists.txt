@@ -4,7 +4,8 @@
 #
 # ======================================================================================
 
-add_subdirectory (unit)
-add_subdirectory (perft)
-add_subdirectory (cli)
-add_subdirectory (printer)
+add_executable (play_chess)
+
+target_link_libraries (play_chess PRIVATE libchess::libchess)
+
+target_sources (play_chess PRIVATE main.cpp)
