@@ -16,6 +16,7 @@
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/Algebraic.hpp>
 #include <libchess/notation/FEN.hpp>
+#include <libchess/notation/UCI.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <print>
 #include <span>
@@ -28,6 +29,8 @@ using chess::game::Position;
 
 struct GameOptions final {
     Position startingPosition {};
+
+    bool uciMoveFormat { false };
 };
 
 namespace {
@@ -35,12 +38,13 @@ namespace {
 void print_help(const std::string_view programName)
 {
     std::println("Usage:");
-    std::println("{} [--fen \"<fenString>\"]", programName);
+    std::println("{} [--fen \"<fenString>\"] [--uci]", programName);
+    std::println("The --uci flag tells the program to parse input moves in the UCI format. If this flag is not given, SAN format is the default.");
 }
 
 [[nodiscard]] GameOptions parse_options(std::span<const std::string_view> args)
 {
-    GameOptions options;
+    GameOptions options {};
 
     while (! args.empty()) {
         const auto arg = args.front();
@@ -61,6 +65,10 @@ void print_help(const std::string_view programName)
 
             continue;
         }
+
+        if (arg == "--uci") {
+            options.uciMoveFormat = true;
+        }
     };
 
     return options;
@@ -68,7 +76,7 @@ void print_help(const std::string_view programName)
 
 using chess::game::print_utf8;
 
-void game_loop(Position position)
+void game_loop(Position position, const bool uciMoveFormat)
 {
     std::string nextMove;
 
@@ -85,11 +93,19 @@ void game_loop(Position position)
         std::cin >> nextMove;
 
         try {
-            const auto move = chess::notation::from_alg(position, nextMove);
+            if (uciMoveFormat) {
+                const auto move = chess::notation::from_uci(position, nextMove);
 
-            std::println("{}", chess::notation::to_alg(position, move));
+                std::println("{}", chess::notation::to_uci(move));
 
-            position.make_move(move);
+                position.make_move(move);
+            } else {
+                const auto move = chess::notation::from_alg(position, nextMove);
+
+                std::println("{}", chess::notation::to_alg(position, move));
+
+                position.make_move(move);
+            }
         } catch (const std::invalid_argument& exception) {
             std::println("{}", exception.what());
             goto read_next_move;
@@ -135,7 +151,7 @@ try {
 
     const auto options = parse_options(args);
 
-    game_loop(options.startingPosition);
+    game_loop(options.startingPosition, options.uciMoveFormat);
 
     return EXIT_SUCCESS;
 } catch (const std::exception& exception) {
