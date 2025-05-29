@@ -7,8 +7,7 @@
  */
 
 /** @file
-    This file provides functions for converting Move objects
-    to/from algebraic notation.
+    This file provides functions for converting Move objects to/from algebraic notation.
 
     @ingroup notation
  */
@@ -26,6 +25,7 @@ using game::Position;
 using moves::Move;
 
 /** Returns the algebraic notation for the given Move object.
+    This function creates Standard Algebraic Notation (SAN) strings.
     The current state of the position is used to determine whether the move is
     a capture, and the pieces of the side to move are used for disambiguation
     if necessary.
@@ -37,6 +37,8 @@ using moves::Move;
 
 /** Creates a move from a string in algebraic notation, such as "Nd4", "e8=Q",
     "O-O-O", etc.
+
+    This function expects Standard Algebraic Notation (SAN) strings.
 
     @throws std::invalid_argument An exception will be thrown if a move cannot
     be parsed correctly from the input string.

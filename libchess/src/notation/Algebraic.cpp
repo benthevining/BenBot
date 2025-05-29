@@ -332,6 +332,35 @@ namespace {
         }
     }
 
+    [[nodiscard]] std::optional<Move> parse_promotion(
+        const std::string_view text, const Color color)
+    {
+        const auto eqSgnPos = text.find('=');
+
+        if (eqSgnPos == std::string_view::npos)
+            return std::nullopt;
+
+        const auto promotedType = pieces::from_string(text.substr(eqSgnPos + 1uz, 1uz));
+
+        if (const auto xPos = text.find('x');
+            xPos != std::string_view::npos) {
+            // string is of form dxe8=Q
+            return Move {
+                .from = {
+                    .file = board::file_from_char(text.at(xPos - 1uz)),
+                    .rank = color == Color::White ? Rank::Seven : Rank::Two },
+                .to           = Square::from_string(text.substr(eqSgnPos - 2uz, 2uz)),
+                .piece        = PieceType::Pawn,
+                .promotedType = promotedType
+            };
+        }
+
+        // string is of form e8=Q
+        return moves::promotion(
+            board::file_from_char(text.front()),
+            color, promotedType);
+    }
+
 } // namespace
 
 Move from_alg(const Position& position, std::string_view text)
@@ -342,29 +371,8 @@ Move from_alg(const Position& position, std::string_view text)
     if (text.contains("O-O") || text.contains("0-0"))
         return moves::castle_kingside(position.sideToMove);
 
-    // promotion
-    if (const auto eqSgnPos = text.find('=');
-        eqSgnPos != std::string_view::npos) {
-        const auto promotedType = pieces::from_string(text.substr(eqSgnPos + 1uz, 1uz));
-
-        if (const auto xPos = text.find('x');
-            xPos != std::string_view::npos) {
-            // string is of form dxe8=Q
-            return {
-                .from = {
-                    .file = board::file_from_char(text.at(xPos - 1uz)),
-                    .rank = position.sideToMove == Color::White ? Rank::Seven : Rank::Two },
-                .to           = Square::from_string(text.substr(eqSgnPos - 2uz, 2uz)),
-                .piece        = PieceType::Pawn,
-                .promotedType = promotedType
-            };
-        }
-
-        // string is of form e8=Q
-        return moves::promotion(
-            board::file_from_char(text.front()),
-            position.sideToMove, promotedType);
-    }
+    if (const auto move = parse_promotion(text, position.sideToMove))
+        return *move;
 
     if (text.back() == '+' || text.back() == '#')
         text.remove_suffix(1uz);
