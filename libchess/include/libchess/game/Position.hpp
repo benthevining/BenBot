@@ -41,6 +41,7 @@
  */
 namespace chess::game {
 
+using board::Bitboard;
 using board::File;
 using board::Rank;
 using board::Square;
@@ -137,10 +138,10 @@ struct Position final {
     /** Returns a bitboard that is the union of all White and Black
         piece positions.
      */
-    [[nodiscard]] constexpr board::Bitboard occupied() const noexcept { return whitePieces.occupied() | blackPieces.occupied(); }
+    [[nodiscard]] constexpr Bitboard occupied() const noexcept { return whitePieces.occupied() | blackPieces.occupied(); }
 
     /** Returns a bitboard that is the inverse of the ``occupied()`` board. */
-    [[nodiscard]] constexpr board::Bitboard free() const noexcept { return occupied().inverse(); }
+    [[nodiscard]] constexpr Bitboard free() const noexcept { return occupied().inverse(); }
 
     /// @name File queries
     /// @{
@@ -307,81 +308,136 @@ constexpr auto Position::get_half_open_files() const noexcept
          | std::views::filter([this](const File file) { return is_file_half_open(file); });
 }
 
-constexpr void Position::make_move(const Move& move) noexcept
-{
-    const bool isWhite = sideToMove == Color::White;
+namespace detail {
 
-    const bool isPawnMove = move.piece == PieceType::Pawn;
-
-    const bool isCapture = is_capture(move);
-
-    // update bitboards
+    template <Color Side>
+    [[nodiscard, gnu::const]] consteval Bitboard queenside_castle_rook_pos_mask() noexcept
     {
-        auto& opponentPieces = isWhite ? blackPieces : whitePieces;
+        static constexpr auto rank = Side == Color::White ? Rank::One : Rank::Eight;
+
+        Bitboard mask;
+
+        mask.set(Square { File::A, rank });
+        mask.set(Square { File::D, rank });
+
+        return mask;
+    }
+
+    template <Color Side>
+    [[nodiscard, gnu::const]] consteval Bitboard kingside_castle_rook_pos_mask() noexcept
+    {
+        static constexpr auto rank = Side == Color::White ? Rank::One : Rank::Eight;
+
+        Bitboard mask;
+
+        mask.set(Square { File::H, rank });
+        mask.set(Square { File::F, rank });
+
+        return mask;
+    }
+
+    template <Color Side>
+    constexpr void castled_set_rook_position(
+        board::Pieces& ourPieces, const Move& move) noexcept
+    {
+        auto& rooks = ourPieces.rooks;
+
+        if (move.to.is_queenside()) {
+            [[unlikely]];
+            rooks ^= queenside_castle_rook_pos_mask<Side>();
+            return;
+        }
+
+        rooks ^= kingside_castle_rook_pos_mask<Side>();
+    }
+
+    constexpr void update_bitboards(
+        Position& position, const Move& move) noexcept
+    {
+        const bool isWhite = position.sideToMove == Color::White;
+
+        auto& ourPieces      = isWhite ? position.whitePieces : position.blackPieces;
+        auto& opponentPieces = isWhite ? position.blackPieces : position.whitePieces;
 
         opponentPieces.capture_at(move.to);
 
-        auto& ourPieces = isWhite ? whitePieces : blackPieces;
-        auto& bitboard  = ourPieces.get_type(move.piece);
+        auto& pieceBB = ourPieces.get_type(move.piece);
 
-        bitboard.unset(move.from);
-
-        if (move.is_promotion())
+        if (move.is_promotion()) {
+            [[unlikely]];
+            pieceBB.unset(move.from);
             ourPieces.get_type(*move.promotedType).set(move.to);
-        else
-            bitboard.set(move.to);
+        } else {
+            [[likely]];
+            pieceBB ^= (Bitboard { move.from } | Bitboard { move.to });
+        }
 
-        if (move.is_castling()) { // update rook position
-            const bool castledQueenside = move.to.is_queenside();
-
-            auto& rooks = ourPieces.rooks;
-
-            if (castledQueenside) {
-                rooks.unset(Square { File::A, move.to.rank });
-                rooks.set(Square { File::D, move.to.rank });
-            } else {
-                rooks.unset(Square { File::H, move.to.rank });
-                rooks.set(Square { File::F, move.to.rank });
-            }
+        if (move.is_castling()) {
+            [[unlikely]];
+            if (isWhite)
+                castled_set_rook_position<Color::White>(ourPieces, move);
+            else
+                castled_set_rook_position<Color::Black>(ourPieces, move);
         }
     }
 
-    enPassantTargetSquare = [move, isWhite, isPawnMove]() -> std::optional<Square> {
-        if (! isPawnMove)
+    [[nodiscard, gnu::const]] constexpr std::optional<Square> get_en_passant_target_square(
+        const Move& move, const bool isWhite) noexcept
+    {
+        if (move.piece != PieceType::Pawn
+            || std::cmp_not_equal(board::rank_distance(move.from, move.to), 2uz)) {
             return std::nullopt;
+        }
 
-        if (std::cmp_equal(board::rank_distance(move.from, move.to), 2uz))
-            return Square {
-                .file = move.to.file,
-                .rank = isWhite ? Rank::Three : Rank::Six
-            };
-
-        return std::nullopt;
-    }();
-
-    // update castling rights
-    auto& castlingRights = isWhite ? whiteCastlingRights : blackCastlingRights;
-
-    if (move.piece == PieceType::King)
-        castlingRights.king_moved();
-    else if (move.piece == PieceType::Rook)
-        castlingRights.rook_moved(move.from.is_kingside());
-    else if (isCapture && move.to.rank == board::back_rank_for(isWhite ? Color::Black : Color::White)) {
-        // special case: need to remove castling rights when a rook is captured
-        auto& otherSideRights = isWhite ? blackCastlingRights : whiteCastlingRights;
-
-        otherSideRights.kingside  = castlingRights.kingside && move.to.file != File::H;
-        otherSideRights.queenside = castlingRights.queenside && move.to.file != File::A;
+        return Square {
+            .file = move.to.file,
+            .rank = isWhite ? Rank::Three : Rank::Six
+        };
     }
 
-    // update halfmoveClock
-    if (isPawnMove || isCapture)
-        halfmoveClock = 0;
-    else if (std::cmp_greater_equal(halfmoveClock, 100))
-        ; // TODO: game ends in draw
-    else
-        ++halfmoveClock;
+    [[nodiscard, gnu::const]] constexpr std::uint_least8_t tick_halfmove_clock(
+        const Move& move, const bool isCapture, const std::uint_least8_t prevValue) noexcept
+    {
+        if ((move.piece == PieceType::Pawn) || isCapture)
+            return 0;
 
+        static constexpr auto MAX_VALUE = static_cast<std::uint_least8_t>(100);
+
+        if (std::cmp_greater_equal(prevValue, MAX_VALUE)) {
+            [[unlikely]];
+            return MAX_VALUE;
+        }
+
+        return prevValue + 1;
+    }
+
+} // namespace detail
+
+constexpr void Position::make_move(const Move& move) noexcept
+{
+    // NB. must query this before updating bitboards!
+    const bool isCapture = is_capture(move);
+
+    detail::update_bitboards(*this, move);
+
+    const bool isWhite = sideToMove == Color::White;
+
+    enPassantTargetSquare = detail::get_en_passant_target_square(move, isWhite);
+
+    // update castling rights
+    auto& ourRights   = isWhite ? whiteCastlingRights : blackCastlingRights;
+    auto& theirRights = isWhite ? whiteCastlingRights : blackCastlingRights;
+
+    ourRights.our_move(move);
+
+    if (isWhite)
+        theirRights.their_move<Color::Black>(move, isCapture);
+    else
+        theirRights.their_move<Color::White>(move, isCapture);
+
+    halfmoveClock = detail::tick_halfmove_clock(move, isCapture, halfmoveClock);
+
+    // increment full move counter after every Black move
     if (! isWhite)
         ++fullMoveCounter;
 
