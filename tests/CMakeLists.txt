@@ -7,4 +7,3 @@
 add_subdirectory (unit)
 add_subdirectory (perft)
 add_subdirectory (cli)
-add_subdirectory (printer)
