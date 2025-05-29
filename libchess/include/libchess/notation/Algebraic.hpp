@@ -38,6 +38,9 @@ using moves::Move;
 /** Creates a move from a string in algebraic notation, such as "Nd4", "e8=Q",
     "O-O-O", etc.
 
+    @throws std::invalid_argument An exception will be thrown if a move cannot
+    be parsed correctly from the input string.
+
     @ingroup notation
     @see to_alg()
  */
