@@ -107,25 +107,27 @@ std::string to_alg(const Position& position, const Move& move)
 
     const bool isCapture = position.is_capture(move);
 
+    const auto checkStr = get_check_string(position, move);
+
     if (move.is_promotion()) {
         if (isCapture)
-            return std::format("{}x{}={}", move.from.file, move.to, *move.promotedType);
+            return std::format("{}x{}={}{}", move.from.file, move.to, *move.promotedType, checkStr);
 
-        return std::format("{}={}", move.to, *move.promotedType);
+        return std::format("{}={}{}", move.to, *move.promotedType, checkStr);
     }
 
     if (move.piece == PieceType::Pawn) {
         if (isCapture)
-            return std::format("{}x{}", move.from.file, move.to);
+            return std::format("{}x{}{}", move.from.file, move.to, checkStr);
 
-        return std::format("{}", move.to);
+        return std::format("{}{}", move.to, checkStr);
     }
 
     const auto* captureStr = isCapture ? "x" : "";
 
     // with every field: Ngxf4+
     return std::format("{}{}{}{}{}",
-        move.piece, get_disambig_string(position, move), captureStr, move.to, get_check_string(position, move));
+        move.piece, get_disambig_string(position, move), captureStr, move.to, checkStr);
 }
 
 namespace {
@@ -294,10 +296,6 @@ Move from_alg(const Position& position, std::string_view text)
     if (text.back() == '+' || text.back() == '#')
         text.remove_suffix(1uz);
 
-    // string is of the form Nc6 or Nxc6
-
-    // TODO: Deal with abbreviated pawn moves
-
     const auto targetSquare = Square::from_string(text.substr(text.length() - 2uz));
 
     // trim target square
@@ -306,10 +304,14 @@ Move from_alg(const Position& position, std::string_view text)
     if (text.back() == 'x')
         text.remove_suffix(1uz);
 
-    const auto pieceType = pieces::from_string(text.substr(0uz, 1uz));
+    // if text is empty, this an abbreviated pawn move such as "e4", etc
+    const auto pieceType = text.empty()
+                             ? PieceType::Pawn
+                             : pieces::from_string(text.substr(0uz, 1uz));
 
     // trim piece type
-    text = text.substr(1uz);
+    if (! text.empty())
+        text = text.substr(1uz);
 
     return {
         .from  = get_starting_square(position, targetSquare, pieceType, text),

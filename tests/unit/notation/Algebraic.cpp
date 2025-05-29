@@ -28,13 +28,12 @@ using chess::notation::from_alg;
 using chess::notation::from_fen;
 using chess::notation::to_alg;
 
+// pawn double push (with check, mate)
+// pawn capture (with check, mate)
 // castle kingside (with check, mate)
 // castle queenside (with check, mate)
 // push promotion (with check, mate)
 // capture promotion (with check, mate)
-// pawn push (with check, mate)
-// pawn double push (with check, mate)
-// pawn capture (with check, mate)
 
 TEST_CASE("Algebraic notation - piece moves", TAGS)
 {
@@ -226,4 +225,217 @@ TEST_CASE("Algebraic notation - piece moves", TAGS)
 
 TEST_CASE("Algebraic notation - piece moves with disambiguation", TAGS)
 {
+    SECTION("Knights")
+    {
+        SECTION("Disambig required (by file)")
+        {
+            const auto position = from_fen("1kr2b1r/ppp1pppp/3q1n2/2np1b2/2B1P3/1NB2N2/PPPPQPPP/R4RK1 w Qk - 0 1");
+
+            { // F knight
+                const auto move = from_alg(position, "Nfd4");
+
+                REQUIRE(move.piece == PieceType::Knight);
+                REQUIRE(move.to == Square { File::D, Rank::Four });
+                REQUIRE(move.from == Square { File::F, Rank::Three });
+
+                REQUIRE(to_alg(position, move) == "Nfd4");
+            }
+            { // B knight
+                const auto move = from_alg(position, "Nbd4");
+
+                REQUIRE(move.piece == PieceType::Knight);
+                REQUIRE(move.to == Square { File::D, Rank::Four });
+                REQUIRE(move.from == Square { File::B, Rank::Three });
+
+                REQUIRE(to_alg(position, move) == "Nbd4");
+            }
+        }
+
+        SECTION("Disambig required (by rank)")
+        {
+            const auto position = from_fen("6r1/2k5/1p1pq1p1/p7/R2QP3/1N3P1P/8/KN6 w - - 0 1");
+
+            { // 3 knight
+                const auto move = from_alg(position, "N3d2");
+
+                REQUIRE(move.piece == PieceType::Knight);
+                REQUIRE(move.to == Square { File::D, Rank::Two });
+                REQUIRE(move.from == Square { File::B, Rank::Three });
+
+                REQUIRE(to_alg(position, move) == "N3d2");
+            }
+            { // 1 knight
+                const auto move = from_alg(position, "N1d2");
+
+                REQUIRE(move.piece == PieceType::Knight);
+                REQUIRE(move.to == Square { File::D, Rank::Two });
+                REQUIRE(move.from == Square { File::B, Rank::One });
+
+                REQUIRE(to_alg(position, move) == "N1d2");
+            }
+        }
+
+        SECTION("Disambig not required")
+        {
+            const auto position = from_fen("rn1qkbnr/ppp1pppp/3p4/8/4P1b1/1NQ2N2/PPPP1PPP/R1BK1B1R w KQkq - 0 1");
+
+            const auto move = from_alg(position, "Nd4");
+
+            REQUIRE(move.piece == PieceType::Knight);
+            REQUIRE(move.to == Square { File::D, Rank::Four });
+            REQUIRE(move.from == Square { File::B, Rank::Three });
+
+            REQUIRE(to_alg(position, move) == "Nd4");
+        }
+    }
+
+    SECTION("Rooks")
+    {
+        SECTION("Disambig required (by file)")
+        {
+            const auto position = from_fen("r7/8/8/5k2/2R1R3/6n1/1K6/8 w - - 0 1");
+
+            { // E rook
+                const auto move = from_alg(position, "Red4");
+
+                REQUIRE(move.piece == PieceType::Rook);
+                REQUIRE(move.to == Square { File::D, Rank::Four });
+                REQUIRE(move.from == Square { File::E, Rank::Four });
+
+                REQUIRE(to_alg(position, move) == "Red4");
+            }
+            { // C rook
+                const auto move = from_alg(position, "Rcd4");
+
+                REQUIRE(move.piece == PieceType::Rook);
+                REQUIRE(move.to == Square { File::D, Rank::Four });
+                REQUIRE(move.from == Square { File::C, Rank::Four });
+
+                REQUIRE(to_alg(position, move) == "Rcd4");
+            }
+            {
+                const auto move = from_alg(position, "Ra4");
+
+                REQUIRE(move.piece == PieceType::Rook);
+                REQUIRE(move.to == Square { File::A, Rank::Four });
+                REQUIRE(move.from == Square { File::C, Rank::Four });
+
+                REQUIRE(to_alg(position, move) == "Ra4");
+            }
+            {
+                const auto move = from_alg(position, "Ra4");
+
+                REQUIRE(move.piece == PieceType::Rook);
+                REQUIRE(move.to == Square { File::A, Rank::Four });
+                REQUIRE(move.from == Square { File::C, Rank::Four });
+
+                REQUIRE(to_alg(position, move) == "Ra4");
+            }
+            {
+                const auto move = from_alg(position, "Rf4+");
+
+                REQUIRE(move.piece == PieceType::Rook);
+                REQUIRE(move.to == Square { File::F, Rank::Four });
+                REQUIRE(move.from == Square { File::E, Rank::Four });
+
+                REQUIRE(to_alg(position, move) == "Rf4+");
+            }
+        }
+
+        SECTION("Disambig required (by rank)")
+        {
+            const auto position = from_fen("kr6/p7/1r2q3/8/3B4/2Q3N1/3K1P1P/8 b - - 0 1");
+
+            { // 8 rook
+                const auto move = from_alg(position, "R8b7");
+
+                REQUIRE(move.piece == PieceType::Rook);
+                REQUIRE(move.to == Square { File::B, Rank::Seven });
+                REQUIRE(move.from == Square { File::B, Rank::Eight });
+
+                REQUIRE(to_alg(position, move) == "R8b7");
+            }
+            { // 6 rook
+                const auto move = from_alg(position, "R6b7");
+
+                REQUIRE(move.piece == PieceType::Rook);
+                REQUIRE(move.to == Square { File::B, Rank::Seven });
+                REQUIRE(move.from == Square { File::B, Rank::Six });
+
+                REQUIRE(to_alg(position, move) == "R6b7");
+            }
+            {
+                const auto move = from_alg(position, "Rb3");
+
+                REQUIRE(move.piece == PieceType::Rook);
+                REQUIRE(move.to == Square { File::B, Rank::Three });
+                REQUIRE(move.from == Square { File::B, Rank::Six });
+
+                REQUIRE(to_alg(position, move) == "Rb3");
+            }
+        }
+
+        SECTION("Disambig not required")
+        {
+            const auto position = from_fen("5k2/8/8/q7/6b1/8/1R2R3/3K4 w - - 0 1");
+
+            const auto move = from_alg(position, "Rc2");
+
+            REQUIRE(move.piece == PieceType::Rook);
+            REQUIRE(move.to == Square { File::C, Rank::Two });
+            REQUIRE(move.from == Square { File::B, Rank::Two });
+
+            REQUIRE(to_alg(position, move) == "Rc2");
+        }
+    }
+}
+
+TEST_CASE("Algebraic notation - pawn pushes", TAGS)
+{
+    SECTION("Normal")
+    {
+        static constexpr Position startingPosition {};
+
+        const auto move = from_alg(startingPosition, "e3");
+
+        REQUIRE(move.piece == PieceType::Pawn);
+        REQUIRE(move.to == Square { File::E, Rank::Three });
+        REQUIRE(move.from == Square { File::E, Rank::Two });
+
+        REQUIRE(to_alg(startingPosition, move) == "e3");
+    }
+
+    SECTION("With check")
+    {
+        auto position = from_fen("rnbqkb1r/p1p1pppp/3P4/1pp4n/2Q2B2/5N2/PPP1PPPP/RN2KB1R w KQkq - 0 1");
+
+        const auto move = from_alg(position, "d7+");
+
+        REQUIRE(move.piece == PieceType::Pawn);
+        REQUIRE(move.to == Square { File::D, Rank::Seven });
+        REQUIRE(move.from == Square { File::D, Rank::Six });
+
+        REQUIRE(to_alg(position, move) == "d7+");
+
+        position.make_move(move);
+
+        REQUIRE(position.is_check());
+    }
+
+    SECTION("With checkmate")
+    {
+        auto position = from_fen("8/2N5/1B6/8/k7/P7/KP6/8 w - - 0 1");
+
+        const auto move = from_alg(position, "b3#");
+
+        REQUIRE(move.piece == PieceType::Pawn);
+        REQUIRE(move.to == Square { File::B, Rank::Three });
+        REQUIRE(move.from == Square { File::B, Rank::Two });
+
+        REQUIRE(to_alg(position, move) == "b3#");
+
+        position.make_move(move);
+
+        REQUIRE(position.is_checkmate());
+    }
 }
