@@ -50,6 +50,7 @@ set (
     moves/PseudoLegal.cpp
     notation/Algebraic.cpp
     notation/FEN.cpp
+    notation/UCI.cpp
 )
 
 target_sources (libchess_tests PRIVATE ${sources})
