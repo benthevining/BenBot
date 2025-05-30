@@ -33,11 +33,11 @@ TEST_CASE("Patterns - pawn pushes", TAGS)
     {
         SECTION("From starting position")
         {
-            static constexpr auto startingPos = board_masks::starting::white::pawns();
+            static constexpr auto startingPos = board_masks::starting::white::PAWNS;
 
             static constexpr auto pushes = move_gen::pawn_pushes<Color::White>(startingPos);
 
-            STATIC_REQUIRE(pushes == board_masks::ranks::three());
+            STATIC_REQUIRE(pushes == board_masks::ranks::THREE);
         }
 
         SECTION("From H7")
@@ -65,11 +65,11 @@ TEST_CASE("Patterns - pawn pushes", TAGS)
     {
         SECTION("From starting position")
         {
-            static constexpr auto startingPos = board_masks::starting::black::pawns();
+            static constexpr auto startingPos = board_masks::starting::black::PAWNS;
 
             static constexpr auto pushes = move_gen::pawn_pushes<Color::Black>(startingPos);
 
-            STATIC_REQUIRE(pushes == board_masks::ranks::six());
+            STATIC_REQUIRE(pushes == board_masks::ranks::SIX);
         }
 
         SECTION("From E2")
@@ -100,16 +100,16 @@ TEST_CASE("Patterns - pawn double pushes", TAGS)
     {
         SECTION("From starting position")
         {
-            static constexpr auto startingPos = board_masks::starting::white::pawns();
+            static constexpr auto startingPos = board_masks::starting::white::PAWNS;
 
             static constexpr auto pushes = move_gen::pawn_double_pushes<Color::White>(startingPos);
 
-            STATIC_REQUIRE(pushes == board_masks::ranks::four());
+            STATIC_REQUIRE(pushes == board_masks::ranks::FOUR);
         }
 
         SECTION("Pawns not on starting rank")
         {
-            static constexpr auto pawns = board_masks::ranks::one() | board_masks::ranks::three();
+            static constexpr auto pawns = board_masks::ranks::ONE | board_masks::ranks::THREE;
 
             static constexpr auto pushes = move_gen::pawn_double_pushes<Color::White>(pawns);
 
@@ -130,16 +130,16 @@ TEST_CASE("Patterns - pawn double pushes", TAGS)
     {
         SECTION("From starting position")
         {
-            static constexpr auto startingPos = board_masks::starting::black::pawns();
+            static constexpr auto startingPos = board_masks::starting::black::PAWNS;
 
             static constexpr auto pushes = move_gen::pawn_double_pushes<Color::Black>(startingPos);
 
-            STATIC_REQUIRE(pushes == board_masks::ranks::five());
+            STATIC_REQUIRE(pushes == board_masks::ranks::FIVE);
         }
 
         SECTION("Pawns not on starting rank")
         {
-            static constexpr auto pawns = board_masks::ranks::eight() | board_masks::ranks::six();
+            static constexpr auto pawns = board_masks::ranks::EIGHT | board_masks::ranks::SIX;
 
             static constexpr auto pushes = move_gen::pawn_double_pushes<Color::Black>(pawns);
 

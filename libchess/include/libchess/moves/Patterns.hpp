@@ -97,10 +97,10 @@ constexpr Bitboard pawn_double_pushes(const Bitboard starting) noexcept
 
     if constexpr (Side == Color::White) {
         return (starting << 16uz) // north 2 ranks
-             & rank_masks::four();
+             & rank_masks::FOUR;
     } else {
         return (starting >> 16uz) // south 2 ranks
-             & rank_masks::five();
+             & rank_masks::FIVE;
     }
 }
 
@@ -108,10 +108,10 @@ constexpr Bitboard knight(const Bitboard starting) noexcept
 {
     namespace file_masks = board::masks::files;
 
-    static constexpr auto notAFile  = file_masks::a().inverse();
-    static constexpr auto notHFile  = file_masks::h().inverse();
-    static constexpr auto notABFile = (file_masks::a() | file_masks::b()).inverse();
-    static constexpr auto notGHFile = (file_masks::g() | file_masks::h()).inverse();
+    static constexpr auto notAFile  = file_masks::A.inverse();
+    static constexpr auto notHFile  = file_masks::H.inverse();
+    static constexpr auto notABFile = (file_masks::A | file_masks::B).inverse();
+    static constexpr auto notGHFile = (file_masks::G | file_masks::H).inverse();
 
     Bitboard moves;
 
@@ -174,8 +174,8 @@ namespace detail {
     namespace file_masks = board::masks::files;
     namespace rank_masks = board::masks::ranks;
 
-    static constexpr auto notAFile = file_masks::a().inverse();
-    static constexpr auto notHFile = file_masks::h().inverse();
+    static constexpr auto notAFile = file_masks::A.inverse();
+    static constexpr auto notHFile = file_masks::H.inverse();
 
     [[nodiscard, gnu::const]] constexpr Bitboard shift_east(const Bitboard board) noexcept
     {

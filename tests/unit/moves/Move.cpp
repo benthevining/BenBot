@@ -25,8 +25,8 @@ namespace bitboard_masks = chess::board::masks;
 
 using PieceType = chess::pieces::Type;
 
-static constexpr auto whiteKingStartSquare = bitboard_masks::starting::white::king().squares().front();
-static constexpr auto blackKingStartSquare = bitboard_masks::starting::black::king().squares().front();
+static constexpr auto whiteKingStartSquare = bitboard_masks::starting::white::KING.squares().front();
+static constexpr auto blackKingStartSquare = bitboard_masks::starting::black::KING.squares().front();
 
 TEST_CASE("Move - castle_kingside()", TAGS)
 {

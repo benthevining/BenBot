@@ -36,65 +36,29 @@ using std::size_t;
 /// @ingroup bitboard_masks
 /// @{
 
-/** Returns a bitboard with all bits set to 1.
-    @see none()
- */
-[[nodiscard, gnu::const]] consteval Bitboard all() noexcept
-{
-    return Bitboard { 0XFFFFFFFFFFFFFFFF };
-}
+/** A bitboard with all bits set to 1. */
+static constexpr Bitboard ALL { 0XFFFFFFFFFFFFFFFF };
 
-/** Returns a bitboard with all bits set to 0.
-    @see all()
- */
-[[nodiscard, gnu::const]] consteval Bitboard none() noexcept
-{
-    return {};
-}
+/** A bitboard with all bits set to 0. */
+static constexpr Bitboard NONE {};
 
-/** Returns a bitboard with all the dark squares set to 1.
-    @see light_squares()
- */
-[[nodiscard, gnu::const]] consteval Bitboard dark_squares() noexcept
-{
-    return Bitboard { 0xAA55AA55AA55AA55 };
-}
+/** A bitboard with all the dark squares set to 1. */
+static constexpr Bitboard DARK_SQUARES { 0xAA55AA55AA55AA55 };
 
-/** Returns a bitboard with all the light squares set to 1.
-    @see dark_squares()
- */
-[[nodiscard, gnu::const]] consteval Bitboard light_squares() noexcept
-{
-    return Bitboard { 0x55AA55AA55AA55AA };
-}
+/** A bitboard with all the light squares set to 1. */
+static constexpr Bitboard LIGHT_SQUARES { 0x55AA55AA55AA55AA };
 
-/** Returns a bitboard with all squares on the A1-H8 long diagonal set to 1.
-    @see a8_h1_diagonal()
- */
-[[nodiscard, gnu::const]] consteval Bitboard a1_h8_diagonal() noexcept
-{
-    return Bitboard { 0x8040201008040201 };
-}
+/** A bitboard with all squares on the A1-H8 long diagonal set to 1. */
+static constexpr Bitboard MAIN_DIAGONAL { 0x8040201008040201 };
 
-/** Returns a bitboard with all squares on the A1-H8 long diagonal set to 1.
-    @see a1_h8_diagonal()
- */
-[[nodiscard, gnu::const]] consteval Bitboard a8_h1_diagonal() noexcept
-{
-    return Bitboard { 0x0102040810204080 };
-}
+/** A bitboard with all squares on the A1-H8 long anti-diagonal set to 1. */
+static constexpr Bitboard MAIN_ANTIDIAGONAL { 0x0102040810204080 };
 
-/** Returns a bitboard with all the center squares (D4, D5, E4, E5) set to 1. */
-[[nodiscard, gnu::const]] consteval Bitboard center() noexcept
-{
-    return Bitboard { 0X1818000000 };
-}
+/** A bitboard with the 4 center squares (D4, D5, E4, E5) set to 1. */
+static constexpr Bitboard CENTER { 0X1818000000 };
 
-/** Returns a bitboard with all the perimeter squares set to 1. */
-[[nodiscard, gnu::const]] consteval Bitboard perimeter() noexcept
-{
-    return Bitboard { 0XFF818181818181FF };
-}
+/** A bitboard with all the perimeter squares set to 1. */
+static constexpr Bitboard PERIMETER { 0XFF818181818181FF };
 
 /** Returns a bitboard with all squares on the same diagonal as the given square set to 1. */
 [[nodiscard, gnu::const]] constexpr Bitboard diagonal(const Square& square) noexcept
@@ -102,9 +66,9 @@ using std::size_t;
     const auto diag = static_cast<int>(square.file) - static_cast<int>(square.rank);
 
     if (diag >= 0)
-        return a1_h8_diagonal() >> diag * 8;
+        return MAIN_DIAGONAL >> diag * 8;
 
-    return a1_h8_diagonal() << -diag * 8;
+    return MAIN_DIAGONAL << -diag * 8;
 }
 
 /** Returns a bitboard with all squares on the same antidiagonal as the given square set to 1. */
@@ -113,9 +77,9 @@ using std::size_t;
     const auto diag = 7 - static_cast<int>(square.file) - static_cast<int>(square.rank);
 
     if (diag >= 0)
-        return a8_h1_diagonal() >> diag * 8;
+        return MAIN_ANTIDIAGONAL >> diag * 8;
 
-    return a8_h1_diagonal() << -diag * 8;
+    return MAIN_ANTIDIAGONAL << -diag * 8;
 }
 
 /// @}
@@ -128,58 +92,34 @@ namespace files {
     /// @ingroup bitboard_masks
     /// @{
 
-    /** Returns a bitboard with all squares on the A file set to 1. */
-    [[nodiscard, gnu::const]] consteval Bitboard a() noexcept
-    {
-        return Bitboard { 0x0101010101010101 };
-    }
+    /** A bitboard with all squares on the A file set to 1. */
+    static constexpr Bitboard A { 0x0101010101010101 };
 
-    /** Returns a bitboard with all squares on the B file set to 1. */
-    [[nodiscard, gnu::const]] consteval Bitboard b() noexcept
-    {
-        return Bitboard { 0X202020202020202 };
-    }
+    /** A bitboard with all squares on the B file set to 1. */
+    static constexpr Bitboard B { 0X202020202020202 };
 
-    /** Returns a bitboard with all squares on the C file set to 1. */
-    [[nodiscard, gnu::const]] consteval Bitboard c() noexcept
-    {
-        return Bitboard { 0X404040404040404 };
-    }
+    /** A bitboard with all squares on the C file set to 1. */
+    static constexpr Bitboard C { 0X404040404040404 };
 
-    /** Returns a bitboard with all squares on the D file set to 1. */
-    [[nodiscard, gnu::const]] consteval Bitboard d() noexcept
-    {
-        return Bitboard { 0X808080808080808 };
-    }
+    /** A bitboard with all squares on the D file set to 1. */
+    static constexpr Bitboard D { 0X808080808080808 };
 
-    /** Returns a bitboard with all squares on the E file set to 1. */
-    [[nodiscard, gnu::const]] consteval Bitboard e() noexcept
-    {
-        return Bitboard { 0X1010101010101010 };
-    }
+    /** A bitboard with all squares on the E file set to 1. */
+    static constexpr Bitboard E { 0X1010101010101010 };
 
-    /** Returns a bitboard with all squares on the F file set to 1. */
-    [[nodiscard, gnu::const]] consteval Bitboard f() noexcept
-    {
-        return Bitboard { 0X2020202020202020 };
-    }
+    /** A bitboard with all squares on the F file set to 1. */
+    static constexpr Bitboard F { 0X2020202020202020 };
 
-    /** Returns a bitboard with all squares on the G file set to 1. */
-    [[nodiscard, gnu::const]] consteval Bitboard g() noexcept
-    {
-        return Bitboard { 0X4040404040404040 };
-    }
+    /** A bitboard with all squares on the G file set to 1. */
+    static constexpr Bitboard G { 0X4040404040404040 };
 
-    /** Returns a bitboard with all squares on the H file set to 1. */
-    [[nodiscard, gnu::const]] consteval Bitboard h() noexcept
-    {
-        return Bitboard { 0x8080808080808080 };
-    }
+    /** A bitboard with all squares on the H file set to 1. */
+    static constexpr Bitboard H { 0x8080808080808080 };
 
     /** Returns a bitboard with all squares on the requested file set to 1. */
     [[nodiscard, gnu::const]] constexpr Bitboard get(const File file) noexcept
     {
-        return a() << static_cast<size_t>(file);
+        return A << static_cast<size_t>(file);
     }
 
     /// @}
@@ -194,59 +134,35 @@ namespace ranks {
     /// @ingroup bitboard_masks
     /// @{
 
-    /** Returns a bitboard with all squares on the first rank set to 1. */
-    [[nodiscard, gnu::const]] consteval Bitboard one() noexcept
-    {
-        return Bitboard { 0x00000000000000FF };
-    }
+    /** A bitboard with all squares on the first rank set to 1. */
+    static constexpr Bitboard ONE { 0x00000000000000FF };
 
-    /** Returns a bitboard with all squares on the second rank set to 1. */
-    [[nodiscard, gnu::const]] consteval Bitboard two() noexcept
-    {
-        return Bitboard { 0XFF00 };
-    }
+    /** A bitboard with all squares on the second rank set to 1. */
+    static constexpr Bitboard TWO { 0XFF00 };
 
-    /** Returns a bitboard with all squares on the third rank set to 1. */
-    [[nodiscard, gnu::const]] consteval Bitboard three() noexcept
-    {
-        return Bitboard { 0XFF0000 };
-    }
+    /** A bitboard with all squares on the third rank set to 1. */
+    static constexpr Bitboard THREE { 0XFF0000 };
 
-    /** Returns a bitboard with all squares on the fourth rank set to 1. */
-    [[nodiscard, gnu::const]] consteval Bitboard four() noexcept
-    {
-        return Bitboard { 0XFF000000 };
-    }
+    /** A bitboard with all squares on the fourth rank set to 1. */
+    static constexpr Bitboard FOUR { 0XFF000000 };
 
-    /** Returns a bitboard with all squares on the fifth rank set to 1. */
-    [[nodiscard, gnu::const]] consteval Bitboard five() noexcept
-    {
-        return Bitboard { 0XFF00000000 };
-    }
+    /** A bitboard with all squares on the fifth rank set to 1. */
+    static constexpr Bitboard FIVE { 0XFF00000000 };
 
-    /** Returns a bitboard with all squares on the sixth rank set to 1. */
-    [[nodiscard, gnu::const]] consteval Bitboard six() noexcept
-    {
-        return Bitboard { 0XFF0000000000 };
-    }
+    /** A bitboard with all squares on the sixth rank set to 1. */
+    static constexpr Bitboard SIX { 0XFF0000000000 };
 
-    /** Returns a bitboard with all squares on the seventh rank set to 1. */
-    [[nodiscard, gnu::const]] consteval Bitboard seven() noexcept
-    {
-        return Bitboard { 0XFF000000000000 };
-    }
+    /** A bitboard with all squares on the seventh rank set to 1. */
+    static constexpr Bitboard SEVEN { 0XFF000000000000 };
 
-    /** Returns a bitboard with all squares on the eighth rank set to 1. */
-    [[nodiscard, gnu::const]] consteval Bitboard eight() noexcept
-    {
-        return Bitboard { 0xFF00000000000000 };
-    }
+    /** A bitboard with all squares on the eighth rank set to 1. */
+    static constexpr Bitboard EIGHT { 0xFF00000000000000 };
 
     /** Returns a bitboard with all squares on the requested rank set to 1. */
     [[nodiscard, gnu::const]] constexpr Bitboard get(const Rank rank) noexcept
     {
         static constexpr std::array rankMasks {
-            one(), two(), three(), four(), five(), six(), seven(), eight()
+            ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT
         };
 
         return rankMasks[static_cast<size_t>(rank)];
@@ -274,41 +190,23 @@ namespace starting {
         /// @ingroup bitboard_masks
         /// @{
 
-        /** Returns a bitboard mask for the starting position of White's pawns. */
-        [[nodiscard, gnu::const]] consteval Bitboard pawns() noexcept
-        {
-            return ranks::two();
-        }
+        /** A bitboard mask for the starting position of White's pawns. */
+        static constexpr Bitboard PAWNS { ranks::TWO };
 
-        /** Returns a bitboard mask for the starting position of White's rooks. */
-        [[nodiscard, gnu::const]] consteval Bitboard rooks() noexcept
-        {
-            return Bitboard { 0X81 };
-        }
+        /** A bitboard mask for the starting position of White's rooks. */
+        static constexpr Bitboard ROOKS { 0X81 };
 
-        /** Returns a bitboard mask for the starting position of White's knights. */
-        [[nodiscard, gnu::const]] consteval Bitboard knights() noexcept
-        {
-            return Bitboard { 0X42 };
-        }
+        /** A bitboard mask for the starting position of White's knights. */
+        static constexpr Bitboard KNIGHTS { 0X42 };
 
-        /** Returns a bitboard mask for the starting position of White's bishops. */
-        [[nodiscard, gnu::const]] consteval Bitboard bishops() noexcept
-        {
-            return Bitboard { 0X24 };
-        }
+        /** A bitboard mask for the starting position of White's bishops. */
+        static constexpr Bitboard BISHOPS { 0X24 };
 
-        /** Returns a bitboard mask for the starting position of White's queen. */
-        [[nodiscard, gnu::const]] consteval Bitboard queen() noexcept
-        {
-            return Bitboard { 0X8 };
-        }
+        /** A bitboard mask for the starting position of White's queen. */
+        static constexpr Bitboard QUEEN { 0X8 };
 
-        /** Returns a bitboard mask for the starting position of White's king. */
-        [[nodiscard, gnu::const]] consteval Bitboard king() noexcept
-        {
-            return Bitboard { 0X10 };
-        }
+        /** A bitboard mask for the starting position of White's king. */
+        static constexpr Bitboard KING { 0X10 };
 
         /// @}
 
@@ -325,41 +223,23 @@ namespace starting {
         /// @ingroup bitboard_masks
         /// @{
 
-        /** Returns a bitboard mask for the starting position of Black's pawns. */
-        [[nodiscard, gnu::const]] consteval Bitboard pawns() noexcept
-        {
-            return ranks::seven();
-        }
+        /** A bitboard mask for the starting position of Black's pawns. */
+        static constexpr Bitboard PAWNS { ranks::SEVEN };
 
-        /** Returns a bitboard mask for the starting position of Black's rooks. */
-        [[nodiscard, gnu::const]] consteval Bitboard rooks() noexcept
-        {
-            return Bitboard { 0X8100000000000000 };
-        }
+        /** A bitboard mask for the starting position of Black's rooks. */
+        static constexpr Bitboard ROOKS { 0X8100000000000000 };
 
-        /** Returns a bitboard mask for the starting position of Black's knights. */
-        [[nodiscard, gnu::const]] consteval Bitboard knights() noexcept
-        {
-            return Bitboard { 0X4200000000000000 };
-        }
+        /** A bitboard mask for the starting position of Black's knights. */
+        static constexpr Bitboard KNIGHTS { 0X4200000000000000 };
 
-        /** Returns a bitboard mask for the starting position of Black's bishops. */
-        [[nodiscard, gnu::const]] consteval Bitboard bishops() noexcept
-        {
-            return Bitboard { 0X2400000000000000 };
-        }
+        /** A bitboard mask for the starting position of Black's bishops. */
+        static constexpr Bitboard BISHOPS { 0X2400000000000000 };
 
-        /** Returns a bitboard mask for the starting position of Black's queen. */
-        [[nodiscard, gnu::const]] consteval Bitboard queen() noexcept
-        {
-            return Bitboard { 0X800000000000000 };
-        }
+        /** A bitboard mask for the starting position of Black's queen. */
+        static constexpr Bitboard QUEEN { 0X800000000000000 };
 
-        /** Returns a bitboard mask for the starting position of Black's king. */
-        [[nodiscard, gnu::const]] consteval Bitboard king() noexcept
-        {
-            return Bitboard { 0X1000000000000000 };
-        }
+        /** A bitboard mask for the starting position of Black's king. */
+        static constexpr Bitboard KING { 0X1000000000000000 };
 
         /// @}
 
@@ -372,54 +252,54 @@ namespace starting {
     [[nodiscard, gnu::const]] constexpr Bitboard pawns(const Color color) noexcept
     {
         if (color == Color::White)
-            return white::pawns();
+            return white::PAWNS;
 
-        return black::pawns();
+        return black::PAWNS;
     }
 
     /** Returns a bitboard mask for the starting position of the rooks for the given side. */
     [[nodiscard, gnu::const]] constexpr Bitboard rooks(const Color color) noexcept
     {
         if (color == Color::White)
-            return white::rooks();
+            return white::ROOKS;
 
-        return black::rooks();
+        return black::ROOKS;
     }
 
     /** Returns a bitboard mask for the starting position of the knights for the given side. */
     [[nodiscard, gnu::const]] constexpr Bitboard knights(const Color color) noexcept
     {
         if (color == Color::White)
-            return white::knights();
+            return white::KNIGHTS;
 
-        return black::knights();
+        return black::KNIGHTS;
     }
 
     /** Returns a bitboard mask for the starting position of the bishops for the given side. */
     [[nodiscard, gnu::const]] constexpr Bitboard bishops(const Color color) noexcept
     {
         if (color == Color::White)
-            return white::bishops();
+            return white::BISHOPS;
 
-        return black::bishops();
+        return black::BISHOPS;
     }
 
     /** Returns a bitboard mask for the starting position of the queen for the given side. */
     [[nodiscard, gnu::const]] constexpr Bitboard queen(const Color color) noexcept
     {
         if (color == Color::White)
-            return white::queen();
+            return white::QUEEN;
 
-        return black::queen();
+        return black::QUEEN;
     }
 
     /** Returns a bitboard mask for the starting position of the king for the given side. */
     [[nodiscard, gnu::const]] constexpr Bitboard king(const Color color) noexcept
     {
         if (color == Color::White)
-            return white::king();
+            return white::KING;
 
-        return black::king();
+        return black::KING;
     }
 
     /// @}

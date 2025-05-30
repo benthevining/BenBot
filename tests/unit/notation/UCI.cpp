@@ -200,7 +200,7 @@ TEST_CASE("UCI notation - promotions", TAGS)
         REQUIRE(move.is_promotion());
         REQUIRE(*move.promotedType == PieceType::Bishop);
 
-        REQUIRE(to_uci(move) == "c2c1B");
+        REQUIRE(to_uci(move) == "c2c1b");
     }
 
     SECTION("Capture")
@@ -216,6 +216,6 @@ TEST_CASE("UCI notation - promotions", TAGS)
         REQUIRE(move.is_promotion());
         REQUIRE(*move.promotedType == PieceType::Queen);
 
-        REQUIRE(to_uci(move) == "f7g8Q");
+        REQUIRE(to_uci(move) == "f7g8q");
     }
 }

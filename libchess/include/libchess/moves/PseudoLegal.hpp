@@ -133,8 +133,8 @@ constexpr Bitboard pawn_double_pushes(
 
     // Need to filter out any pushes that would jump over a piece on the third/sixth rank
     static constexpr auto rankMask = Side == Color::White
-                                       ? board::masks::ranks::three()
-                                       : board::masks::ranks::six();
+                                       ? board::masks::ranks::THREE
+                                       : board::masks::ranks::SIX;
 
     const auto fileMask = board::fills::file(occupiedSquares & rankMask);
 

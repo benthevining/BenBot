@@ -193,7 +193,7 @@ TEST_CASE("Knight distance", TAGS)
         };
         // clang-format on
 
-        for (const auto square : bitboard_masks::all().squares())
+        for (const auto square : bitboard_masks::ALL.squares())
             REQUIRE(knight_distance(starting, square) == distances[square.index()]);
     }
 
@@ -216,7 +216,7 @@ TEST_CASE("Knight distance", TAGS)
         };
         // clang-format on
 
-        for (const auto square : bitboard_masks::all().squares())
+        for (const auto square : bitboard_masks::ALL.squares())
             REQUIRE(knight_distance(starting, square) == distances[square.index()]);
     }
 
@@ -239,7 +239,7 @@ TEST_CASE("Knight distance", TAGS)
         };
         // clang-format on
 
-        for (const auto square : bitboard_masks::all().squares())
+        for (const auto square : bitboard_masks::ALL.squares())
             REQUIRE(knight_distance(starting, square) == distances[square.index()]);
     }
 
@@ -262,7 +262,7 @@ TEST_CASE("Knight distance", TAGS)
         };
         // clang-format on
 
-        for (const auto square : bitboard_masks::all().squares())
+        for (const auto square : bitboard_masks::ALL.squares())
             REQUIRE(knight_distance(starting, square) == distances[square.index()]);
     }
 }

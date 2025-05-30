@@ -20,8 +20,10 @@ namespace chess::notation {
 
 std::string to_uci(const Move& move)
 {
-    if (move.is_promotion())
-        return std::format("{}{}{}", move.from, move.to, *move.promotedType);
+    if (move.is_promotion()) {
+        return std::format("{}{}{}",
+            move.from, move.to, pieces::to_char(*move.promotedType, false));
+    }
 
     return std::format("{}{}", move.from, move.to);
 }
@@ -29,6 +31,12 @@ std::string to_uci(const Move& move)
 Move from_uci(const Position& position, std::string_view text)
 {
     using board::Square;
+
+    if (text.empty()) {
+        throw std::invalid_argument {
+            "Cannot parse Move from empty string"
+        };
+    }
 
     Move result;
 
@@ -42,12 +50,13 @@ Move from_uci(const Position& position, std::string_view text)
 
     const auto movedType = pieces.get_piece_on(result.from);
 
-    if (! movedType.has_value())
+    if (! movedType.has_value()) {
         throw std::invalid_argument {
             std::format(
                 "No piece for color {} can move from square {}",
                 magic_enum::enum_name(position.sideToMove), result.from)
         };
+    }
 
     result.piece = *movedType;
 

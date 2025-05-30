@@ -36,7 +36,7 @@ static constexpr std::string_view emptySquare { " |" };
 
 static constexpr std::string_view occupiedSquare { "x|" };
 
-std::string print_ascii(const Bitboard& board)
+std::string print_ascii(const Bitboard board)
 {
     std::string result;
 

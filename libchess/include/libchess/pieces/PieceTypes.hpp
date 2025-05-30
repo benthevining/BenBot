@@ -72,35 +72,20 @@ namespace values {
     /// @ingroup pieces
     /// @{
 
-    /** Returns the material value of a pawn (1). */
-    [[nodiscard, gnu::const]] static consteval size_t pawn() noexcept
-    {
-        return 1uz;
-    }
+    /** The material value of a pawn (1). */
+    static constexpr size_t PAWN { 1uz };
 
-    /** Returns the material value of a knight (3). */
-    [[nodiscard, gnu::const]] static consteval size_t knight() noexcept
-    {
-        return 3uz;
-    }
+    /** The material value of a knight (3). */
+    static constexpr size_t KNIGHT { 3uz };
 
-    /** Returns the material value of a bishop (4). */
-    [[nodiscard, gnu::const]] static consteval size_t bishop() noexcept
-    {
-        return 4uz;
-    }
+    /** The material value of a bishop (4). */
+    static constexpr size_t BISHOP { 4uz };
 
-    /** Returns the material value of a rook (5). */
-    [[nodiscard, gnu::const]] static consteval size_t rook() noexcept
-    {
-        return 5uz;
-    }
+    /** The material value of a rook (5). */
+    static constexpr size_t ROOK { 5uz };
 
-    /** Returns the material value of a queen (9). */
-    [[nodiscard, gnu::const]] static consteval size_t queen() noexcept
-    {
-        return 9uz;
-    }
+    /** The material value of a queen (9). */
+    static constexpr size_t QUEEN { 9uz };
 
     /// @}
 

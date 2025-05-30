@@ -405,7 +405,7 @@ namespace detail {
     [[nodiscard, gnu::const]] constexpr std::uint_least8_t tick_halfmove_clock(
         const Move& move, const bool isCapture, const std::uint_least8_t prevValue) noexcept
     {
-        if ((move.piece == PieceType::Pawn) || isCapture)
+        if (isCapture || (move.piece == PieceType::Pawn))
             return 0;
 
         static constexpr auto MAX_VALUE = static_cast<std::uint_least8_t>(100);

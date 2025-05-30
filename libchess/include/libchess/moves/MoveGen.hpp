@@ -93,7 +93,7 @@ namespace detail {
 
     namespace rank_masks = board::masks::ranks;
 
-    static constexpr auto promotionMask = rank_masks::one() | rank_masks::eight();
+    static constexpr auto promotionMask = rank_masks::ONE | rank_masks::EIGHT;
 
     static constexpr std::array possiblePromotedTypes {
         PieceType::Knight, PieceType::Bishop, PieceType::Rook, PieceType::Queen

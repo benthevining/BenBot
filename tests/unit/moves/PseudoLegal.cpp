@@ -32,12 +32,12 @@ TEST_CASE("Pseudo-legal - pawn pushes", TAGS)
     {
         SECTION("From starting position")
         {
-            static constexpr auto startingPos = board_masks::starting::white::pawns();
+            static constexpr auto startingPos = board_masks::starting::white::PAWNS;
 
             static constexpr auto allPushes = move_gen::pawn_pushes<Color::White>(
                 startingPos, {});
 
-            STATIC_REQUIRE(allPushes == board_masks::ranks::three());
+            STATIC_REQUIRE(allPushes == board_masks::ranks::THREE);
 
             static constexpr auto pushes = move_gen::pawn_pushes<Color::White>(
                 startingPos, Bitboard { Square { File::A, Rank::Three } });
@@ -68,12 +68,12 @@ TEST_CASE("Pseudo-legal - pawn pushes", TAGS)
     {
         SECTION("From starting position")
         {
-            static constexpr auto startingPos = board_masks::starting::black::pawns();
+            static constexpr auto startingPos = board_masks::starting::black::PAWNS;
 
             static constexpr auto allPushes = move_gen::pawn_pushes<Color::Black>(
                 startingPos, {});
 
-            STATIC_REQUIRE(allPushes == board_masks::ranks::six());
+            STATIC_REQUIRE(allPushes == board_masks::ranks::SIX);
 
             static constexpr auto pushes = move_gen::pawn_pushes<Color::Black>(
                 startingPos, Bitboard { Square { File::C, Rank::Six } });
@@ -105,12 +105,12 @@ TEST_CASE("Pseudo-legal - pawn double pushes", TAGS)
 {
     SECTION("White")
     {
-        static constexpr auto starting = board_masks::starting::white::pawns();
+        static constexpr auto starting = board_masks::starting::white::PAWNS;
 
         static constexpr auto allPushes = move_gen::pawn_double_pushes<Color::White>(
             starting, {});
 
-        STATIC_REQUIRE(allPushes == board_masks::ranks::four());
+        STATIC_REQUIRE(allPushes == board_masks::ranks::FOUR);
 
         Bitboard occupied;
 
@@ -132,12 +132,12 @@ TEST_CASE("Pseudo-legal - pawn double pushes", TAGS)
 
     SECTION("Black")
     {
-        static constexpr auto starting = board_masks::starting::black::pawns();
+        static constexpr auto starting = board_masks::starting::black::PAWNS;
 
         static constexpr auto allPushes = move_gen::pawn_double_pushes<Color::Black>(
             starting, {});
 
-        STATIC_REQUIRE(allPushes == board_masks::ranks::five());
+        STATIC_REQUIRE(allPushes == board_masks::ranks::FIVE);
 
         Bitboard occupied;
 

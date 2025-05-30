@@ -151,7 +151,10 @@ constexpr BitboardIndex manhattan_distance(
 constexpr BitboardIndex chebyshev_distance(
     const Square& first, const Square& second) noexcept
 {
-    return std::max(file_distance(first, second), rank_distance(first, second));
+    const auto fileDist = file_distance(first, second);
+    const auto rankDist = rank_distance(first, second);
+
+    return std::max(fileDist, rankDist);
 }
 
 constexpr BitboardIndex knight_distance(

@@ -210,7 +210,7 @@ private:
 
     @relates Bitboard
  */
-[[nodiscard]] std::string print_ascii(const Bitboard& board);
+[[nodiscard]] std::string print_ascii(Bitboard board);
 
 /// @}
 

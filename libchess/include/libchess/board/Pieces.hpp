@@ -185,11 +185,11 @@ constexpr size_t Pieces::material() const noexcept
 {
     namespace values = pieces::values;
 
-    return (pawns.count() * values::pawn())
-         + (knights.count() * values::knight())
-         + (bishops.count() * values::bishop())
-         + (rooks.count() * values::rook())
-         + (queens.count() * values::queen());
+    return (pawns.count() * values::PAWN)
+         + (knights.count() * values::KNIGHT)
+         + (bishops.count() * values::BISHOP)
+         + (rooks.count() * values::ROOK)
+         + (queens.count() * values::QUEEN);
 }
 
 constexpr bool Pieces::is_file_half_open(const File file) const noexcept
@@ -199,8 +199,8 @@ constexpr bool Pieces::is_file_half_open(const File file) const noexcept
 
 constexpr bool Pieces::has_bishop_pair() const noexcept
 {
-    return (bishops & masks::light_squares()).any()
-        && (bishops & masks::dark_squares()).any();
+    return (bishops & masks::LIGHT_SQUARES).any()
+        && (bishops & masks::DARK_SQUARES).any();
 }
 
 constexpr Square Pieces::get_king_location() const noexcept
@@ -230,6 +230,7 @@ constexpr void Pieces::capture_at(const Square square) noexcept
 {
     const auto idx = square.index();
 
+    // if we're trying to capture the king, then an illegal move has already been played
     assert(! king.test(idx));
 
     pawns.unset(idx);

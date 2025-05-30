@@ -38,7 +38,7 @@ TEST_CASE("Bitboard - dark/light square masks", TAGS)
 {
     SECTION("Dark squares")
     {
-        static constexpr auto darkSquares = bitboard_masks::dark_squares();
+        static constexpr auto darkSquares = bitboard_masks::DARK_SQUARES;
 
         STATIC_REQUIRE(darkSquares.count() == 32uz);
         STATIC_REQUIRE(get_squares(darkSquares).size() == darkSquares.count());
@@ -57,7 +57,7 @@ TEST_CASE("Bitboard - dark/light square masks", TAGS)
 
     SECTION("Light squares")
     {
-        static constexpr auto lightSquares = bitboard_masks::light_squares();
+        static constexpr auto lightSquares = bitboard_masks::LIGHT_SQUARES;
 
         STATIC_REQUIRE(lightSquares.count() == 32uz);
         STATIC_REQUIRE(get_squares(lightSquares).size() == lightSquares.count());
@@ -107,14 +107,14 @@ TEST_CASE("Bitboard - file masks", TAGS)
         }                                                             \
     }
 
-    TEST_FILE_MASK("A file", File::A, bitboard_masks::files::a());
-    TEST_FILE_MASK("B file", File::B, bitboard_masks::files::b());
-    TEST_FILE_MASK("C file", File::C, bitboard_masks::files::c());
-    TEST_FILE_MASK("D file", File::D, bitboard_masks::files::d());
-    TEST_FILE_MASK("E file", File::E, bitboard_masks::files::e());
-    TEST_FILE_MASK("F file", File::F, bitboard_masks::files::f());
-    TEST_FILE_MASK("G file", File::G, bitboard_masks::files::g());
-    TEST_FILE_MASK("H file", File::H, bitboard_masks::files::h());
+    TEST_FILE_MASK("A file", File::A, bitboard_masks::files::A);
+    TEST_FILE_MASK("B file", File::B, bitboard_masks::files::B);
+    TEST_FILE_MASK("C file", File::C, bitboard_masks::files::C);
+    TEST_FILE_MASK("D file", File::D, bitboard_masks::files::D);
+    TEST_FILE_MASK("E file", File::E, bitboard_masks::files::E);
+    TEST_FILE_MASK("F file", File::F, bitboard_masks::files::F);
+    TEST_FILE_MASK("G file", File::G, bitboard_masks::files::G);
+    TEST_FILE_MASK("H file", File::H, bitboard_masks::files::H);
 
 #undef TEST_FILE_MASK
 }
@@ -151,14 +151,14 @@ TEST_CASE("Bitboard - rank masks", TAGS)
         }                                                             \
     }
 
-    TEST_RANK_MASK("Rank 1", Rank::One, bitboard_masks::ranks::one());
-    TEST_RANK_MASK("Rank 2", Rank::Two, bitboard_masks::ranks::two());
-    TEST_RANK_MASK("Rank 3", Rank::Three, bitboard_masks::ranks::three());
-    TEST_RANK_MASK("Rank 4", Rank::Four, bitboard_masks::ranks::four());
-    TEST_RANK_MASK("Rank 5", Rank::Five, bitboard_masks::ranks::five());
-    TEST_RANK_MASK("Rank 6", Rank::Six, bitboard_masks::ranks::six());
-    TEST_RANK_MASK("Rank 7", Rank::Seven, bitboard_masks::ranks::seven());
-    TEST_RANK_MASK("Rank 8", Rank::Eight, bitboard_masks::ranks::eight());
+    TEST_RANK_MASK("Rank 1", Rank::One, bitboard_masks::ranks::ONE);
+    TEST_RANK_MASK("Rank 2", Rank::Two, bitboard_masks::ranks::TWO);
+    TEST_RANK_MASK("Rank 3", Rank::Three, bitboard_masks::ranks::THREE);
+    TEST_RANK_MASK("Rank 4", Rank::Four, bitboard_masks::ranks::FOUR);
+    TEST_RANK_MASK("Rank 5", Rank::Five, bitboard_masks::ranks::FIVE);
+    TEST_RANK_MASK("Rank 6", Rank::Six, bitboard_masks::ranks::SIX);
+    TEST_RANK_MASK("Rank 7", Rank::Seven, bitboard_masks::ranks::SEVEN);
+    TEST_RANK_MASK("Rank 8", Rank::Eight, bitboard_masks::ranks::EIGHT);
 
 #undef TEST_RANK_MASK
 }
@@ -169,7 +169,7 @@ TEST_CASE("Bitboard - diagonal masks", TAGS)
 
     SECTION("A1-H8")
     {
-        static constexpr auto diagonal = bitboard_masks::a1_h8_diagonal();
+        static constexpr auto diagonal = bitboard_masks::MAIN_DIAGONAL;
 
         STATIC_REQUIRE(diagonal.count() == 8uz);
 
@@ -207,7 +207,7 @@ TEST_CASE("Bitboard - diagonal masks", TAGS)
 
     SECTION("A8-H1")
     {
-        static constexpr auto diagonal = bitboard_masks::a8_h1_diagonal();
+        static constexpr auto diagonal = bitboard_masks::MAIN_ANTIDIAGONAL;
 
         STATIC_REQUIRE(diagonal.count() == 8uz);
 
@@ -248,7 +248,7 @@ TEST_CASE("Starting position masks", TAGS)
     {
         SECTION("Pawns")
         {
-            static constexpr auto pos = bitboard_masks::starting::white::pawns();
+            static constexpr auto pos = bitboard_masks::starting::white::PAWNS;
 
             STATIC_REQUIRE(pos.count() == 8uz);
 
@@ -260,7 +260,7 @@ TEST_CASE("Starting position masks", TAGS)
 
         SECTION("Rooks")
         {
-            static constexpr auto pos = bitboard_masks::starting::white::rooks();
+            static constexpr auto pos = bitboard_masks::starting::white::ROOKS;
 
             STATIC_REQUIRE(pos.count() == 2uz);
 
@@ -273,7 +273,7 @@ TEST_CASE("Starting position masks", TAGS)
 
         SECTION("Knights")
         {
-            static constexpr auto pos = bitboard_masks::starting::white::knights();
+            static constexpr auto pos = bitboard_masks::starting::white::KNIGHTS;
 
             STATIC_REQUIRE(pos.count() == 2uz);
 
@@ -286,7 +286,7 @@ TEST_CASE("Starting position masks", TAGS)
 
         SECTION("Bishops")
         {
-            static constexpr auto pos = bitboard_masks::starting::white::bishops();
+            static constexpr auto pos = bitboard_masks::starting::white::BISHOPS;
 
             STATIC_REQUIRE(pos.count() == 2uz);
 
@@ -299,7 +299,7 @@ TEST_CASE("Starting position masks", TAGS)
 
         SECTION("Queen")
         {
-            static constexpr auto pos = bitboard_masks::starting::white::queen();
+            static constexpr auto pos = bitboard_masks::starting::white::QUEEN;
 
             STATIC_REQUIRE(pos.count() == 1uz);
 
@@ -312,7 +312,7 @@ TEST_CASE("Starting position masks", TAGS)
 
         SECTION("King")
         {
-            static constexpr auto pos = bitboard_masks::starting::white::king();
+            static constexpr auto pos = bitboard_masks::starting::white::KING;
 
             STATIC_REQUIRE(pos.count() == 1uz);
 
@@ -328,7 +328,7 @@ TEST_CASE("Starting position masks", TAGS)
     {
         SECTION("Pawns")
         {
-            static constexpr auto pos = bitboard_masks::starting::black::pawns();
+            static constexpr auto pos = bitboard_masks::starting::black::PAWNS;
 
             STATIC_REQUIRE(pos.count() == 8uz);
 
@@ -340,7 +340,7 @@ TEST_CASE("Starting position masks", TAGS)
 
         SECTION("Rooks")
         {
-            static constexpr auto pos = bitboard_masks::starting::black::rooks();
+            static constexpr auto pos = bitboard_masks::starting::black::ROOKS;
 
             STATIC_REQUIRE(pos.count() == 2uz);
 
@@ -353,7 +353,7 @@ TEST_CASE("Starting position masks", TAGS)
 
         SECTION("Knights")
         {
-            static constexpr auto pos = bitboard_masks::starting::black::knights();
+            static constexpr auto pos = bitboard_masks::starting::black::KNIGHTS;
 
             STATIC_REQUIRE(pos.count() == 2uz);
 
@@ -366,7 +366,7 @@ TEST_CASE("Starting position masks", TAGS)
 
         SECTION("Bishops")
         {
-            static constexpr auto pos = bitboard_masks::starting::black::bishops();
+            static constexpr auto pos = bitboard_masks::starting::black::BISHOPS;
 
             STATIC_REQUIRE(pos.count() == 2uz);
 
@@ -379,7 +379,7 @@ TEST_CASE("Starting position masks", TAGS)
 
         SECTION("Queen")
         {
-            static constexpr auto pos = bitboard_masks::starting::black::queen();
+            static constexpr auto pos = bitboard_masks::starting::black::QUEEN;
 
             STATIC_REQUIRE(pos.count() == 1uz);
 
@@ -392,7 +392,7 @@ TEST_CASE("Starting position masks", TAGS)
 
         SECTION("King")
         {
-            static constexpr auto pos = bitboard_masks::starting::black::king();
+            static constexpr auto pos = bitboard_masks::starting::black::KING;
 
             STATIC_REQUIRE(pos.count() == 1uz);
 
@@ -407,7 +407,7 @@ TEST_CASE("Starting position masks", TAGS)
 
 TEST_CASE("Center mask", TAGS)
 {
-    static constexpr auto center = bitboard_masks::center();
+    static constexpr auto center = bitboard_masks::CENTER;
 
     STATIC_REQUIRE(center.count() == 4uz);
 
@@ -419,7 +419,7 @@ TEST_CASE("Center mask", TAGS)
 
 TEST_CASE("Perimeter mask", TAGS)
 {
-    static constexpr auto perimeter = bitboard_masks::perimeter();
+    static constexpr auto perimeter = bitboard_masks::PERIMETER;
 
     STATIC_REQUIRE(perimeter.count() == 28uz);
 

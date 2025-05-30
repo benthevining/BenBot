@@ -33,7 +33,7 @@ TEST_CASE("Bitboard - empty", TAGS)
     STATIC_REQUIRE(empty.count() == 0uz);
     STATIC_REQUIRE(std::cmp_equal(empty.to_int(), 0));
     STATIC_REQUIRE(std::ranges::empty(empty.squares()));
-    STATIC_REQUIRE(empty == bitboard_masks::none());
+    STATIC_REQUIRE(empty == bitboard_masks::NONE);
 
     STATIC_REQUIRE(empty.first() == chess::board::NUM_SQUARES);
     STATIC_REQUIRE(empty.last() == chess::board::NUM_SQUARES);
@@ -41,7 +41,7 @@ TEST_CASE("Bitboard - empty", TAGS)
 
 TEST_CASE("Bitboard - all", TAGS)
 {
-    static constexpr auto all = bitboard_masks::all();
+    static constexpr auto all = bitboard_masks::ALL;
 
     STATIC_REQUIRE(all.any());
     STATIC_REQUIRE(! all.none());

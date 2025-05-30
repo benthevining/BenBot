@@ -28,7 +28,7 @@ using chess::pieces::Color;
 
 TEST_CASE("Position - starting", TAGS)
 {
-    static constexpr Position pos;
+    static constexpr Position pos {};
 
     STATIC_REQUIRE(pos.sideToMove == Color::White);
     STATIC_REQUIRE(! pos.enPassantTargetSquare.has_value());

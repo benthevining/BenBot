@@ -37,52 +37,34 @@ namespace white {
     /// @ingroup utf8_pieces
     /// @{
 
-    /** Returns a UTF8-encoded symbol for a White pawn. */
-    [[nodiscard, gnu::const]] consteval std::string_view pawn() noexcept
-    {
-        return "\xE2\x99\x99";
-    }
+    /** A UTF8-encoded symbol for a White pawn. */
+    static constexpr std::string_view PAWN { "\xE2\x99\x99" };
 
-    /** Returns a UTF8-encoded symbol for a White knight. */
-    [[nodiscard, gnu::const]] consteval std::string_view knight() noexcept
-    {
-        return "\xE2\x99\x98";
-    }
+    /** A UTF8-encoded symbol for a White knight. */
+    static constexpr std::string_view KNIGHT { "\xE2\x99\x98" };
 
-    /** Returns a UTF8-encoded symbol for a White bishop. */
-    [[nodiscard, gnu::const]] consteval std::string_view bishop() noexcept
-    {
-        return "\xE2\x99\x97";
-    }
+    /** A UTF8-encoded symbol for a White bishop. */
+    static constexpr std::string_view BISHOP { "\xE2\x99\x97" };
 
-    /** Returns a UTF8-encoded symbol for a White rook. */
-    [[nodiscard, gnu::const]] consteval std::string_view rook() noexcept
-    {
-        return "\xE2\x99\x96";
-    }
+    /** A UTF8-encoded symbol for a White rook. */
+    static constexpr std::string_view ROOK { "\xE2\x99\x96" };
 
-    /** Returns a UTF8-encoded symbol for a White queen. */
-    [[nodiscard, gnu::const]] consteval std::string_view queen() noexcept
-    {
-        return "\xE2\x99\x95";
-    }
+    /** A UTF8-encoded symbol for a White queen. */
+    static constexpr std::string_view QUEEN { "\xE2\x99\x95" };
 
-    /** Returns a UTF8-encoded symbol for a White king. */
-    [[nodiscard, gnu::const]] consteval std::string_view king() noexcept
-    {
-        return "\xE2\x99\x94";
-    }
+    /** A UTF8-encoded symbol for a White king. */
+    static constexpr std::string_view KING { "\xE2\x99\x94" };
 
     /** Returns a UTF8-encoded symbol for a White piece of the given type. */
     [[nodiscard, gnu::const]] constexpr std::string_view get(const Type type) noexcept
     {
         switch (type) {
-            case Type::Knight: return knight();
-            case Type::Bishop: return bishop();
-            case Type::Rook  : return rook();
-            case Type::Queen : return queen();
-            case Type::King  : return king();
-            default          : return pawn();
+            case Type::Knight: return KNIGHT;
+            case Type::Bishop: return BISHOP;
+            case Type::Rook  : return ROOK;
+            case Type::Queen : return QUEEN;
+            case Type::King  : return KING;
+            default          : return PAWN;
         }
     }
 
@@ -100,52 +82,34 @@ namespace black {
     /// @ingroup utf8_pieces
     /// @{
 
-    /** Returns a UTF8-encoded symbol for a Black pawn. */
-    [[nodiscard, gnu::const]] consteval std::string_view pawn() noexcept
-    {
-        return "\xE2\x99\x9F";
-    }
+    /** A UTF8-encoded symbol for a Black pawn. */
+    static constexpr std::string_view PAWN { "\xE2\x99\x9F" };
 
-    /** Returns a UTF8-encoded symbol for a Black knight. */
-    [[nodiscard, gnu::const]] consteval std::string_view knight() noexcept
-    {
-        return "\xE2\x99\x9E";
-    }
+    /** A UTF8-encoded symbol for a Black knight. */
+    static constexpr std::string_view KNIGHT { "\xE2\x99\x9E" };
 
-    /** Returns a UTF8-encoded symbol for a Black bishop. */
-    [[nodiscard, gnu::const]] consteval std::string_view bishop() noexcept
-    {
-        return "\xE2\x99\x9D";
-    }
+    /** A UTF8-encoded symbol for a Black bishop. */
+    static constexpr std::string_view BISHOP { "\xE2\x99\x9D" };
 
-    /** Returns a UTF8-encoded symbol for a Black rook. */
-    [[nodiscard, gnu::const]] consteval std::string_view rook() noexcept
-    {
-        return "\xE2\x99\x9C";
-    }
+    /** A UTF8-encoded symbol for a Black rook. */
+    static constexpr std::string_view ROOK { "\xE2\x99\x9C" };
 
-    /** Returns a UTF8-encoded symbol for a Black queen. */
-    [[nodiscard, gnu::const]] consteval std::string_view queen() noexcept
-    {
-        return "\xE2\x99\x9B";
-    }
+    /** A UTF8-encoded symbol for a Black queen. */
+    static constexpr std::string_view QUEEN { "\xE2\x99\x9B" };
 
-    /** Returns a UTF8-encoded symbol for a Black king. */
-    [[nodiscard, gnu::const]] consteval std::string_view king() noexcept
-    {
-        return "\xE2\x99\x9A";
-    }
+    /** A UTF8-encoded symbol for a Black king. */
+    static constexpr std::string_view KING { "\xE2\x99\x9A" };
 
     /** Returns a UTF8-encoded symbol for a Black piece of the given type. */
     [[nodiscard, gnu::const]] constexpr std::string_view get(const Type type) noexcept
     {
         switch (type) {
-            case Type::Knight: return knight();
-            case Type::Bishop: return bishop();
-            case Type::Rook  : return rook();
-            case Type::Queen : return queen();
-            case Type::King  : return king();
-            default          : return pawn();
+            case Type::Knight: return KNIGHT;
+            case Type::Bishop: return BISHOP;
+            case Type::Rook  : return ROOK;
+            case Type::Queen : return QUEEN;
+            case Type::King  : return KING;
+            default          : return PAWN;
         }
     }
 
@@ -160,54 +124,54 @@ namespace black {
 [[nodiscard, gnu::const]] constexpr std::string_view pawn(const Color color) noexcept
 {
     if (color == Color::White)
-        return white::pawn();
+        return white::PAWN;
 
-    return black::pawn();
+    return black::PAWN;
 }
 
 /** Returns a UTF8-encoded symbol for a knight of the desired color. */
 [[nodiscard, gnu::const]] constexpr std::string_view knight(const Color color) noexcept
 {
     if (color == Color::White)
-        return white::knight();
+        return white::KNIGHT;
 
-    return black::knight();
+    return black::KNIGHT;
 }
 
 /** Returns a UTF8-encoded symbol for a bishop of the desired color. */
 [[nodiscard, gnu::const]] constexpr std::string_view bishop(const Color color) noexcept
 {
     if (color == Color::White)
-        return white::bishop();
+        return white::BISHOP;
 
-    return black::bishop();
+    return black::BISHOP;
 }
 
 /** Returns a UTF8-encoded symbol for a rook of the desired color. */
 [[nodiscard, gnu::const]] constexpr std::string_view rook(const Color color) noexcept
 {
     if (color == Color::White)
-        return white::rook();
+        return white::ROOK;
 
-    return black::rook();
+    return black::ROOK;
 }
 
 /** Returns a UTF8-encoded symbol for a queen of the desired color. */
 [[nodiscard, gnu::const]] constexpr std::string_view queen(const Color color) noexcept
 {
     if (color == Color::White)
-        return white::queen();
+        return white::QUEEN;
 
-    return black::queen();
+    return black::QUEEN;
 }
 
 /** Returns a UTF8-encoded symbol for a king of the desired color. */
 [[nodiscard, gnu::const]] constexpr std::string_view king(const Color color) noexcept
 {
     if (color == Color::White)
-        return white::king();
+        return white::KING;
 
-    return black::king();
+    return black::KING;
 }
 
 /// @}

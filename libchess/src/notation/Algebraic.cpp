@@ -198,19 +198,21 @@ namespace {
     {
         const auto possibleOrigins = get_possible_move_origins(position, targetSquare, piece);
 
-        if (possibleOrigins.empty())
+        if (possibleOrigins.empty()) {
             throw std::invalid_argument {
                 std::format("No piece of type {} can legally reach square {}", piece, targetSquare)
             };
+        }
 
         if (possibleOrigins.size() == 1uz)
             return possibleOrigins.front().from;
 
-        if (text.empty())
+        if (text.empty()) {
             throw std::invalid_argument {
                 std::format("Multiple pieces of type {} can legally reach square {}, but no disambiguation string was provided",
                     piece, targetSquare)
             };
+        }
 
         if (text.length() > 1uz)
             return Square::from_string(text);
@@ -365,17 +367,24 @@ namespace {
 
 Move from_alg(const Position& position, std::string_view text)
 {
-    if (text.contains("O-O-O") || text.contains("0-0-0"))
-        return moves::castle_queenside(position.sideToMove);
-
-    if (text.contains("O-O") || text.contains("0-0"))
-        return moves::castle_kingside(position.sideToMove);
-
-    if (const auto move = parse_promotion(text, position.sideToMove))
-        return *move;
+    if (text.empty()) {
+        throw std::invalid_argument {
+            "Cannot parse Move from empty string"
+        };
+    }
 
     if (text.back() == '+' || text.back() == '#')
         text.remove_suffix(1uz);
+
+    if (text.contains("O-O") || text.contains("0-0")) {
+        if (text.contains("-O-") || text.contains("-0-"))
+            return moves::castle_queenside(position.sideToMove);
+
+        return moves::castle_kingside(position.sideToMove);
+    }
+
+    if (const auto move = parse_promotion(text, position.sideToMove))
+        return *move;
 
     const auto targetSquare = Square::from_string(text.substr(text.length() - 2uz));
 
