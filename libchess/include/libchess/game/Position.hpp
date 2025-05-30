@@ -389,6 +389,7 @@ namespace detail {
     {
         if (move.piece != PieceType::Pawn
             || std::cmp_not_equal(board::rank_distance(move.from, move.to), 2uz)) {
+            [[likely]];
             return std::nullopt;
         }
 

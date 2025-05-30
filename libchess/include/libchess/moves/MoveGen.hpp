@@ -265,11 +265,12 @@ namespace detail {
     }
 
     constexpr void add_bishop_moves(
-        const Pieces& ourPieces, const Bitboard friendlyPieces, const Bitboard allOccupied,
+        const Pieces& ourPieces, const Bitboard friendlyPieces, const Bitboard emptySquares,
         std::output_iterator<Move> auto outputIt)
     {
+        // TODO: parallelize for all bishops at once?
         for (const auto bishopSquare : ourPieces.bishops.squares()) {
-            const auto bishopMoves = pseudo_legal::bishop(Bitboard { bishopSquare }, allOccupied.inverse(), friendlyPieces);
+            const auto bishopMoves = pseudo_legal::bishop(Bitboard { bishopSquare }, emptySquares, friendlyPieces);
 
             for (const auto targetSquare : bishopMoves.squares())
                 *outputIt = Move {
@@ -281,11 +282,12 @@ namespace detail {
     }
 
     constexpr void add_rook_moves(
-        const Pieces& ourPieces, const Bitboard friendlyPieces, const Bitboard allOccupied,
+        const Pieces& ourPieces, const Bitboard friendlyPieces, const Bitboard emptySquares,
         std::output_iterator<Move> auto outputIt)
     {
+        // TODO: parallelize for all rooks at once?
         for (const auto rookSquare : ourPieces.rooks.squares()) {
-            const auto rookMoves = pseudo_legal::rook(Bitboard { rookSquare }, allOccupied.inverse(), friendlyPieces);
+            const auto rookMoves = pseudo_legal::rook(Bitboard { rookSquare }, emptySquares, friendlyPieces);
 
             for (const auto targetSquare : rookMoves.squares())
                 *outputIt = Move {
@@ -297,11 +299,12 @@ namespace detail {
     }
 
     constexpr void add_queen_moves(
-        const Pieces& ourPieces, const Bitboard friendlyPieces, const Bitboard allOccupied,
+        const Pieces& ourPieces, const Bitboard friendlyPieces, const Bitboard emptySquares,
         std::output_iterator<Move> auto outputIt)
     {
+        // TODO: parallelize for all queens at once?
         for (const auto queenSquare : ourPieces.queens.squares()) {
-            const auto queenMoves = pseudo_legal::queen(Bitboard { queenSquare }, allOccupied.inverse(), friendlyPieces);
+            const auto queenMoves = pseudo_legal::queen(Bitboard { queenSquare }, emptySquares, friendlyPieces);
 
             for (const auto targetSquare : queenMoves.squares())
                 *outputIt = Move {
@@ -420,17 +423,18 @@ namespace detail {
         const auto friendlyPieces = ourPieces.occupied();
         const auto enemyPieces    = theirPieces.occupied();
 
-        const auto allOccupied = friendlyPieces | enemyPieces;
+        const auto allOccupied  = friendlyPieces | enemyPieces;
+        const auto emptySquares = allOccupied.inverse();
 
         add_all_pawn_moves<Side>(position, enemyPieces, allOccupied, outputIt);
 
         add_knight_moves(ourPieces, friendlyPieces, outputIt);
 
-        add_bishop_moves(ourPieces, friendlyPieces, allOccupied, outputIt);
+        add_bishop_moves(ourPieces, friendlyPieces, emptySquares, outputIt);
 
-        add_rook_moves(ourPieces, friendlyPieces, allOccupied, outputIt);
+        add_rook_moves(ourPieces, friendlyPieces, emptySquares, outputIt);
 
-        add_queen_moves(ourPieces, friendlyPieces, allOccupied, outputIt);
+        add_queen_moves(ourPieces, friendlyPieces, emptySquares, outputIt);
 
         add_king_moves(ourPieces, friendlyPieces, outputIt);
 
@@ -450,7 +454,8 @@ namespace detail {
         const auto friendlyPieces = ourPieces.occupied();
         const auto enemyPieces    = theirPieces.occupied();
 
-        const auto allOccupied = friendlyPieces | enemyPieces;
+        const auto allOccupied  = friendlyPieces | enemyPieces;
+        const auto emptySquares = allOccupied.inverse();
 
         switch (piece) {
             case PieceType::Pawn: {
@@ -464,17 +469,17 @@ namespace detail {
             }
 
             case PieceType::Bishop: {
-                add_bishop_moves(ourPieces, friendlyPieces, allOccupied, outputIt);
+                add_bishop_moves(ourPieces, friendlyPieces, emptySquares, outputIt);
                 return;
             }
 
             case PieceType::Rook: {
-                add_rook_moves(ourPieces, friendlyPieces, allOccupied, outputIt);
+                add_rook_moves(ourPieces, friendlyPieces, emptySquares, outputIt);
                 return;
             }
 
             case PieceType::Queen: {
-                add_queen_moves(ourPieces, friendlyPieces, allOccupied, outputIt);
+                add_queen_moves(ourPieces, friendlyPieces, emptySquares, outputIt);
                 return;
             }
 

@@ -263,8 +263,7 @@ constexpr bool squares_attacked(
     if ((kingAttacks & targetSquares).any())
         return true;
 
-    const auto allOccupied  = friendlyPieces | enemyPieces;
-    const auto emptySquares = allOccupied.inverse();
+    const auto emptySquares = (friendlyPieces | enemyPieces).inverse();
 
     const auto queenAttacks = move_gen::queen(pieces.queens, emptySquares, friendlyPieces);
 

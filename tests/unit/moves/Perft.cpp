@@ -55,7 +55,6 @@ TEST_CASE("Perft - depth 2", TAGS)
     REQUIRE(result.stalemates == 0uz);
 }
 
-#if 0
 TEST_CASE("Perft - depth 3", TAGS)
 {
     const auto result = perft(3uz);
@@ -65,8 +64,7 @@ TEST_CASE("Perft - depth 3", TAGS)
     REQUIRE(result.enPassantCaptures == 0uz);
     REQUIRE(result.castles == 0uz);
     REQUIRE(result.promotions == 0uz);
-    CHECK(result.checks == 12uz);
-    CHECK(result.checkmates == 0uz);
+    REQUIRE(result.checks == 12uz);
+    REQUIRE(result.checkmates == 0uz);
     REQUIRE(result.stalemates == 0uz);
 }
-#endif
