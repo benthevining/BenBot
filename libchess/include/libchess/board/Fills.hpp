@@ -14,6 +14,7 @@
 #pragma once
 
 #include <libchess/board/Bitboard.hpp>
+#include <libchess/board/BitboardMasks.hpp>
 #include <libchess/pieces/Colors.hpp>
 
 /** This namespace contains bitboard fill algorithms.
@@ -32,11 +33,23 @@ using pieces::Color;
 /** Performs a south fill of the starting bitboard. */
 [[nodiscard, gnu::const]] constexpr Bitboard south(Bitboard starting) noexcept;
 
+/** Performs an east fill of the starting bitboard. */
+[[nodiscard, gnu::const]] constexpr Bitboard east(Bitboard starting) noexcept;
+
+/** Performs a west fill of the starting bitboard. */
+[[nodiscard, gnu::const]] constexpr Bitboard west(Bitboard starting) noexcept;
+
 /** Performs a file fill of the starting bitboard.
     For any file in the starting bitboard with at least 1 bit set, the returned
     bitboard will have all bits on that file set to 1.
  */
 [[nodiscard, gnu::const]] constexpr Bitboard file(Bitboard starting) noexcept;
+
+/** Performs a rank fill of the starting bitboard.
+    For any rank in the starting bitboard with at least 1 bit set, the returned
+    bitboard will have all bits on that rank set to 1.
+ */
+[[nodiscard, gnu::const]] constexpr Bitboard rank(Bitboard starting) noexcept;
 
 /** Performs a pawn front-fill from the given starting position. */
 template <Color Side>
@@ -83,9 +96,42 @@ constexpr Bitboard south(Bitboard starting) noexcept
     return starting;
 }
 
+constexpr Bitboard east(Bitboard starting) noexcept
+{
+    static constexpr auto notAFile = masks::files::A.inverse();
+
+    static constexpr auto mask1 = notAFile & (notAFile << 1uz);
+    static constexpr auto mask2 = mask1 & (mask1 << 2uz);
+
+    starting |= notAFile & (starting << 1uz);
+    starting |= mask1 & (starting << 2uz);
+    starting |= mask2 & (starting << 4uz);
+
+    return starting;
+}
+
+constexpr Bitboard west(Bitboard starting) noexcept
+{
+    static constexpr auto notHFile = masks::files::H.inverse();
+
+    static constexpr auto mask1 = notHFile & (notHFile >> 1uz);
+    static constexpr auto mask2 = mask1 & (mask1 >> 2uz);
+
+    starting |= notHFile & (starting >> 1uz);
+    starting |= mask1 & (starting >> 2uz);
+    starting |= mask2 & (starting >> 4uz);
+
+    return starting;
+}
+
 constexpr Bitboard file(const Bitboard starting) noexcept
 {
     return north(starting) | south(starting);
+}
+
+constexpr Bitboard rank(const Bitboard starting) noexcept
+{
+    return east(starting) | west(starting);
 }
 
 template <Color Side>

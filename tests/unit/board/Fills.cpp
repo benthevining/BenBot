@@ -164,3 +164,30 @@ TEST_CASE("Fills - file", TAGS)
         STATIC_REQUIRE(filled == Bitboard { 0Xefefefefefefefef });
     }
 }
+
+TEST_CASE("Fills - east", TAGS)
+{
+    static constexpr Bitboard start { 0X8004001000000240 };
+
+    static constexpr auto filled = fills::east(start);
+
+    STATIC_REQUIRE(filled == Bitboard { 0X80fc00f00000fec0 });
+}
+
+TEST_CASE("Fills - west", TAGS)
+{
+    static constexpr Bitboard start { 0X8000080004400201 };
+
+    static constexpr auto filled = fills::west(start);
+
+    STATIC_REQUIRE(filled == Bitboard { 0Xff000f00077f0301 });
+}
+
+TEST_CASE("Fills - rank", TAGS)
+{
+    static constexpr Bitboard start { 0Xc000181000200002 };
+
+    static constexpr auto filled = fills::rank(start);
+
+    STATIC_REQUIRE(filled == Bitboard { 0Xff00ffff00ff00ff });
+}
