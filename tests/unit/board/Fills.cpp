@@ -12,6 +12,7 @@
 #include <libchess/board/Fills.hpp>
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
+#include <libchess/pieces/Colors.hpp>
 
 static constexpr auto TAGS { "[board][Bitboard][fills]" };
 
@@ -19,6 +20,7 @@ using chess::board::Bitboard;
 using chess::board::File;
 using chess::board::Rank;
 using chess::board::Square;
+using chess::pieces::Color;
 
 namespace fills = chess::board::fills;
 
@@ -56,7 +58,7 @@ white rearfill      black frontfill
 1 1 1 . . 1 1 1     1 1 1 1 . 1 1 1
  */
 
-[[nodiscard, gnu::const]] constexpr Bitboard white_pawns_start() noexcept
+[[nodiscard, gnu::const]] consteval Bitboard white_pawns_start() noexcept
 {
     Bitboard board;
 
@@ -71,7 +73,7 @@ white rearfill      black frontfill
     return board;
 }
 
-[[nodiscard, gnu::const]] constexpr Bitboard black_pawns_start() noexcept
+[[nodiscard, gnu::const]] consteval Bitboard black_pawns_start() noexcept
 {
     Bitboard board;
 
@@ -97,6 +99,8 @@ TEST_CASE("Fills - north", TAGS)
         STATIC_REQUIRE(filled.count() == 38uz);
 
         STATIC_REQUIRE(filled == Bitboard { 0Xe7e7e7e7e7c6c600 });
+
+        STATIC_REQUIRE(filled == fills::pawn_front<Color::White>(start));
     }
 
     SECTION("Black rearfill")
@@ -108,6 +112,8 @@ TEST_CASE("Fills - north", TAGS)
         STATIC_REQUIRE(filled.count() == 19uz);
 
         STATIC_REQUIRE(filled == Bitboard { 0Xefef8d0800000000 });
+
+        STATIC_REQUIRE(filled == fills::pawn_rear<Color::Black>(start));
     }
 }
 
@@ -122,6 +128,8 @@ TEST_CASE("Fills - south", TAGS)
         STATIC_REQUIRE(filled.count() == 17uz);
 
         STATIC_REQUIRE(filled == Bitboard { 0X2125e7e7 });
+
+        STATIC_REQUIRE(filled == fills::pawn_rear<Color::White>(start));
     }
 
     SECTION("Black frontfill")
@@ -131,6 +139,8 @@ TEST_CASE("Fills - south", TAGS)
         static constexpr auto filled = fills::south(start);
 
         STATIC_REQUIRE(filled == Bitboard { 0X62e7efefefefef });
+
+        STATIC_REQUIRE(filled == fills::pawn_front<Color::Black>(start));
     }
 }
 

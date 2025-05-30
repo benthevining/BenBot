@@ -14,11 +14,14 @@
 #pragma once
 
 #include <libchess/board/Bitboard.hpp>
+#include <libchess/pieces/Colors.hpp>
 
 /** This namespace contains bitboard fill algorithms.
     @ingroup board
  */
 namespace chess::board::fills {
+
+using pieces::Color;
 
 /// @ingroup board
 /// @{
@@ -34,6 +37,14 @@ namespace chess::board::fills {
     bitboard will have all bits on that file set to 1.
  */
 [[nodiscard, gnu::const]] constexpr Bitboard file(Bitboard starting) noexcept;
+
+/** Performs a pawn front-fill from the given starting position. */
+template <Color Side>
+[[nodiscard, gnu::const]] constexpr Bitboard pawn_front(Bitboard starting) noexcept;
+
+/** Performs a pawn rear-fill from the given starting position. */
+template <Color Side>
+[[nodiscard, gnu::const]] constexpr Bitboard pawn_rear(Bitboard starting) noexcept;
 
 /// @}
 
@@ -75,6 +86,24 @@ constexpr Bitboard south(Bitboard starting) noexcept
 constexpr Bitboard file(const Bitboard starting) noexcept
 {
     return north(starting) | south(starting);
+}
+
+template <Color Side>
+constexpr Bitboard pawn_front(Bitboard starting) noexcept
+{
+    if constexpr (Side == Color::White)
+        return north(starting);
+    else
+        return south(starting);
+}
+
+template <Color Side>
+constexpr Bitboard pawn_rear(Bitboard starting) noexcept
+{
+    if constexpr (Side == Color::White)
+        return south(starting);
+    else
+        return north(starting);
 }
 
 } // namespace chess::board::fills
