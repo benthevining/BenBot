@@ -191,3 +191,39 @@ TEST_CASE("Fills - rank", TAGS)
 
     STATIC_REQUIRE(filled == Bitboard { 0Xff00ffff00ff00ff });
 }
+
+TEST_CASE("Fills - northeast", TAGS)
+{
+    static constexpr Bitboard start { 0X10000000044000 };
+
+    static constexpr auto filled = fills::northeast(start);
+
+    STATIC_REQUIRE(filled == Bitboard { 0Xa050201008844000 });
+}
+
+TEST_CASE("Fills - southeast", TAGS)
+{
+    static constexpr Bitboard start { 0X41000800000020 };
+
+    static constexpr auto filled = fills::southeast(start);
+
+    STATIC_REQUIRE(filled == Bitboard { 0X41820c183060e0 });
+}
+
+TEST_CASE("Fills - northwest", TAGS)
+{
+    static constexpr Bitboard start { 0X80080040000 };
+
+    static constexpr auto filled = fills::northwest(start);
+
+    STATIC_REQUIRE(filled == Bitboard { 0Xa14284182040000 });
+}
+
+TEST_CASE("Fills - southwest", TAGS)
+{
+    static constexpr Bitboard start { 0X8000002100100 };
+
+    static constexpr auto filled = fills::southwest(start);
+
+    STATIC_REQUIRE(filled == Bitboard { 0X8040203110904 });
+}
