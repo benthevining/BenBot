@@ -23,8 +23,9 @@ using chess::board::Rank;
 using chess::board::Square;
 using chess::pieces::Color;
 
-namespace board_masks = chess::board::masks;
-namespace move_gen    = chess::moves::pseudo_legal;
+namespace board_masks    = chess::board::masks;
+namespace starting_masks = board_masks::starting;
+namespace move_gen       = chess::moves::pseudo_legal;
 
 TEST_CASE("Pseudo-legal - pawn pushes", TAGS)
 {
@@ -32,7 +33,7 @@ TEST_CASE("Pseudo-legal - pawn pushes", TAGS)
     {
         SECTION("From starting position")
         {
-            static constexpr auto startingPos = board_masks::starting::white::PAWNS;
+            static constexpr auto startingPos = starting_masks::white::PAWNS;
 
             static constexpr auto allPushes = move_gen::pawn_pushes<Color::White>(
                 startingPos, {});
@@ -68,7 +69,7 @@ TEST_CASE("Pseudo-legal - pawn pushes", TAGS)
     {
         SECTION("From starting position")
         {
-            static constexpr auto startingPos = board_masks::starting::black::PAWNS;
+            static constexpr auto startingPos = starting_masks::black::PAWNS;
 
             static constexpr auto allPushes = move_gen::pawn_pushes<Color::Black>(
                 startingPos, {});
@@ -105,7 +106,7 @@ TEST_CASE("Pseudo-legal - pawn double pushes", TAGS)
 {
     SECTION("White")
     {
-        static constexpr auto starting = board_masks::starting::white::PAWNS;
+        static constexpr auto starting = starting_masks::white::PAWNS;
 
         static constexpr auto allPushes = move_gen::pawn_double_pushes<Color::White>(
             starting, {});
@@ -132,7 +133,7 @@ TEST_CASE("Pseudo-legal - pawn double pushes", TAGS)
 
     SECTION("Black")
     {
-        static constexpr auto starting = board_masks::starting::black::PAWNS;
+        static constexpr auto starting = starting_masks::black::PAWNS;
 
         static constexpr auto allPushes = move_gen::pawn_double_pushes<Color::Black>(
             starting, {});

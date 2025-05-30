@@ -37,9 +37,9 @@ TEST_CASE("Position - starting", TAGS)
 
     STATIC_REQUIRE(occupied.count() == 32uz);
 
-    for (const auto square : occupied.squares()) {
-        REQUIRE(((square.rank == Rank::One) || (square.rank == Rank::Two)
-                 || (square.rank == Rank::Seven) || (square.rank == Rank::Eight)));
+    for (const auto [file, rank] : occupied.squares()) {
+        REQUIRE(((rank == Rank::One) || (rank == Rank::Two)
+                 || (rank == Rank::Seven) || (rank == Rank::Eight)));
     }
 }
 

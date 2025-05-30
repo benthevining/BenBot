@@ -89,7 +89,7 @@ constexpr Bitboard file(const Bitboard starting) noexcept
 }
 
 template <Color Side>
-constexpr Bitboard pawn_front(Bitboard starting) noexcept
+constexpr Bitboard pawn_front(const Bitboard starting) noexcept
 {
     if constexpr (Side == Color::White)
         return north(starting);
@@ -98,7 +98,7 @@ constexpr Bitboard pawn_front(Bitboard starting) noexcept
 }
 
 template <Color Side>
-constexpr Bitboard pawn_rear(Bitboard starting) noexcept
+constexpr Bitboard pawn_rear(const Bitboard starting) noexcept
 {
     if constexpr (Side == Color::White)
         return south(starting);

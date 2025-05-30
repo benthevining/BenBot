@@ -244,11 +244,13 @@ TEST_CASE("Bitboard - diagonal masks", TAGS)
 
 TEST_CASE("Starting position masks", TAGS)
 {
+    namespace starting_masks = bitboard_masks::starting;
+
     SECTION("White")
     {
         SECTION("Pawns")
         {
-            static constexpr auto pos = bitboard_masks::starting::white::PAWNS;
+            static constexpr auto pos = starting_masks::white::PAWNS;
 
             STATIC_REQUIRE(pos.count() == 8uz);
 
@@ -260,7 +262,7 @@ TEST_CASE("Starting position masks", TAGS)
 
         SECTION("Rooks")
         {
-            static constexpr auto pos = bitboard_masks::starting::white::ROOKS;
+            static constexpr auto pos = starting_masks::white::ROOKS;
 
             STATIC_REQUIRE(pos.count() == 2uz);
 
@@ -273,7 +275,7 @@ TEST_CASE("Starting position masks", TAGS)
 
         SECTION("Knights")
         {
-            static constexpr auto pos = bitboard_masks::starting::white::KNIGHTS;
+            static constexpr auto pos = starting_masks::white::KNIGHTS;
 
             STATIC_REQUIRE(pos.count() == 2uz);
 
@@ -286,7 +288,7 @@ TEST_CASE("Starting position masks", TAGS)
 
         SECTION("Bishops")
         {
-            static constexpr auto pos = bitboard_masks::starting::white::BISHOPS;
+            static constexpr auto pos = starting_masks::white::BISHOPS;
 
             STATIC_REQUIRE(pos.count() == 2uz);
 
@@ -299,7 +301,7 @@ TEST_CASE("Starting position masks", TAGS)
 
         SECTION("Queen")
         {
-            static constexpr auto pos = bitboard_masks::starting::white::QUEEN;
+            static constexpr auto pos = starting_masks::white::QUEEN;
 
             STATIC_REQUIRE(pos.count() == 1uz);
 
@@ -312,7 +314,7 @@ TEST_CASE("Starting position masks", TAGS)
 
         SECTION("King")
         {
-            static constexpr auto pos = bitboard_masks::starting::white::KING;
+            static constexpr auto pos = starting_masks::white::KING;
 
             STATIC_REQUIRE(pos.count() == 1uz);
 
@@ -328,7 +330,7 @@ TEST_CASE("Starting position masks", TAGS)
     {
         SECTION("Pawns")
         {
-            static constexpr auto pos = bitboard_masks::starting::black::PAWNS;
+            static constexpr auto pos = starting_masks::black::PAWNS;
 
             STATIC_REQUIRE(pos.count() == 8uz);
 
@@ -340,7 +342,7 @@ TEST_CASE("Starting position masks", TAGS)
 
         SECTION("Rooks")
         {
-            static constexpr auto pos = bitboard_masks::starting::black::ROOKS;
+            static constexpr auto pos = starting_masks::black::ROOKS;
 
             STATIC_REQUIRE(pos.count() == 2uz);
 
@@ -353,7 +355,7 @@ TEST_CASE("Starting position masks", TAGS)
 
         SECTION("Knights")
         {
-            static constexpr auto pos = bitboard_masks::starting::black::KNIGHTS;
+            static constexpr auto pos = starting_masks::black::KNIGHTS;
 
             STATIC_REQUIRE(pos.count() == 2uz);
 
@@ -366,7 +368,7 @@ TEST_CASE("Starting position masks", TAGS)
 
         SECTION("Bishops")
         {
-            static constexpr auto pos = bitboard_masks::starting::black::BISHOPS;
+            static constexpr auto pos = starting_masks::black::BISHOPS;
 
             STATIC_REQUIRE(pos.count() == 2uz);
 
@@ -379,7 +381,7 @@ TEST_CASE("Starting position masks", TAGS)
 
         SECTION("Queen")
         {
-            static constexpr auto pos = bitboard_masks::starting::black::QUEEN;
+            static constexpr auto pos = starting_masks::black::QUEEN;
 
             STATIC_REQUIRE(pos.count() == 1uz);
 
@@ -392,7 +394,7 @@ TEST_CASE("Starting position masks", TAGS)
 
         SECTION("King")
         {
-            static constexpr auto pos = bitboard_masks::starting::black::KING;
+            static constexpr auto pos = starting_masks::black::KING;
 
             STATIC_REQUIRE(pos.count() == 1uz);
 

@@ -24,6 +24,8 @@ using chess::board::Square;
 
 namespace bitboard_masks = chess::board::masks;
 
+static constexpr auto NUM_SQUARES = chess::board::NUM_SQUARES;
+
 TEST_CASE("Bitboard - empty", TAGS)
 {
     static constexpr Bitboard empty;
@@ -35,8 +37,8 @@ TEST_CASE("Bitboard - empty", TAGS)
     STATIC_REQUIRE(std::ranges::empty(empty.squares()));
     STATIC_REQUIRE(empty == bitboard_masks::NONE);
 
-    STATIC_REQUIRE(empty.first() == chess::board::NUM_SQUARES);
-    STATIC_REQUIRE(empty.last() == chess::board::NUM_SQUARES);
+    STATIC_REQUIRE(empty.first() == NUM_SQUARES);
+    STATIC_REQUIRE(empty.last() == NUM_SQUARES);
 }
 
 TEST_CASE("Bitboard - all", TAGS)
@@ -45,7 +47,7 @@ TEST_CASE("Bitboard - all", TAGS)
 
     STATIC_REQUIRE(all.any());
     STATIC_REQUIRE(! all.none());
-    STATIC_REQUIRE(all.count() == chess::board::NUM_SQUARES);
+    STATIC_REQUIRE(all.count() == NUM_SQUARES);
 
     STATIC_REQUIRE(all.first() == 0uz);
     STATIC_REQUIRE(all.last() == 63uz);

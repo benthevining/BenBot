@@ -35,8 +35,8 @@ TEST_CASE("Pieces - starting position", TAGS)
 
         STATIC_REQUIRE(occupied.count() == 16uz);
 
-        for (const auto square : occupied.squares())
-            REQUIRE(((square.rank == Rank::One) || (square.rank == Rank::Two)));
+        for (const auto [file, rank] : occupied.squares())
+            REQUIRE(((rank == Rank::One) || (rank == Rank::Two)));
     }
 
     SECTION("Black")
@@ -49,8 +49,8 @@ TEST_CASE("Pieces - starting position", TAGS)
 
         STATIC_REQUIRE(occupied.count() == 16uz);
 
-        for (const auto square : occupied.squares())
-            REQUIRE(((square.rank == Rank::Seven) || (square.rank == Rank::Eight)));
+        for (const auto [file, rank] : occupied.squares())
+            REQUIRE(((rank == Rank::Seven) || (rank == Rank::Eight)));
     }
 }
 
