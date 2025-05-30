@@ -318,7 +318,7 @@ formatter<chess::board::Bitboard>::format(
 
 constexpr size_t hash<chess::board::Bitboard>::operator()(const Bitboard& board) const noexcept
 {
-    return hash<Bitboard::Integer> {}(board.to_int());
+    return board.to_int();
 }
 
 } // namespace std

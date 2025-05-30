@@ -65,7 +65,7 @@ void print_help(const std::string_view programName)
         }
 
         // assume arg is depth
-        std::from_chars(arg.begin(), arg.end(), options.depth);
+        std::from_chars(arg.data(), arg.data() + arg.length(), options.depth);
     };
 
     return options;

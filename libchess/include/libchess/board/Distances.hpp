@@ -92,7 +92,7 @@ namespace chess::board {
 
     @relates Square
  */
-[[nodiscard, gnu::const]] constexpr BitboardIndex knight_distance(
+[[nodiscard, gnu::const]] inline BitboardIndex knight_distance(
     const Square& first, const Square& second);
 
 /// @}
@@ -157,7 +157,7 @@ constexpr BitboardIndex chebyshev_distance(
     return std::max(fileDist, rankDist);
 }
 
-constexpr BitboardIndex knight_distance(
+inline BitboardIndex knight_distance(
     const Square& first, const Square& second)
 {
     using std::size_t;

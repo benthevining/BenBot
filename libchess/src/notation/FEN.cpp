@@ -146,9 +146,9 @@ namespace {
     {
         std::array<char, MaxLen> buffer {};
 
-        const auto result = std::to_chars(buffer.begin(), buffer.end(), value);
+        const auto result = std::to_chars(buffer.data(), buffer.data() + buffer.size(), value);
 
-        for (const auto* ptr = buffer.begin(); ptr != result.ptr; ++ptr) // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        for (const auto* ptr = buffer.data(); ptr != result.ptr; ++ptr) // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
             *outputIt = *ptr;
     }
 
@@ -352,10 +352,10 @@ Position from_fen(const std::string_view fenString)
     const auto [halfMoveClock, fullMoveCounter] = split_at_first_space(rest4);
 
     std::from_chars(
-        halfMoveClock.begin(), halfMoveClock.end(), position.halfmoveClock);
+        halfMoveClock.data(), halfMoveClock.data() + halfMoveClock.length(), position.halfmoveClock);
 
     std::from_chars(
-        fullMoveCounter.begin(), fullMoveCounter.end(), position.fullMoveCounter);
+        fullMoveCounter.data(), fullMoveCounter.data() + halfMoveClock.length(), position.fullMoveCounter);
 
     return position;
 }

@@ -235,7 +235,7 @@ formatter<chess::board::Square>::format(
 
 constexpr size_t hash<chess::board::Square>::operator()(const Square& square) const noexcept
 {
-    return hash<chess::board::BitboardIndex> {}(square.index());
+    return square.index();
 }
 
 } // namespace std
