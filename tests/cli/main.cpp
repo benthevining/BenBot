@@ -17,7 +17,7 @@
 #include <libchess/notation/Algebraic.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/UCI.hpp>
-#include <libchess/pieces/Colors.hpp>
+#include <magic_enum/magic_enum.hpp>
 #include <print>
 #include <span>
 #include <stdexcept>
@@ -84,9 +84,8 @@ void game_loop(Position position, const bool uciMoveFormat)
         std::println("{}", print_utf8(position));
 
     read_next_move:
-        const auto* colorString = position.sideToMove == chess::pieces::Color::White ? "White" : "Black";
-
-        std::println("{} to move:", colorString);
+        std::println("{} to move:",
+            magic_enum::enum_name(position.sideToMove));
 
         nextMove.clear();
 
@@ -149,9 +148,9 @@ try {
         return EXIT_FAILURE;
     }
 
-    const auto options = parse_options(args);
+    const auto [startingPosition, uciMoveFormat] = parse_options(args);
 
-    game_loop(options.startingPosition, options.uciMoveFormat);
+    game_loop(startingPosition, uciMoveFormat);
 
     return EXIT_SUCCESS;
 } catch (const std::exception& exception) {
