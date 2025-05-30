@@ -239,6 +239,7 @@ constexpr void Pieces::capture_at(const Square square) noexcept
     rooks.unset(idx);
     queens.unset(idx);
 }
+
 template <Color Side>
 constexpr bool squares_attacked(
     const Pieces& pieces, const Bitboard targetSquares, const Bitboard enemyPieces) noexcept
@@ -264,33 +265,19 @@ constexpr bool squares_attacked(
 
     const auto allOccupied = friendlyPieces | enemyPieces;
 
-    if (std::ranges::any_of(
-            pieces.queens.squares(),
-            [allOccupied, friendlyPieces, targetSquares](const Square& queenSquare) {
-                const auto attacks = move_gen::queen(queenSquare, allOccupied, friendlyPieces);
+    const auto queenAttacks = move_gen::queen(pieces.queens, allOccupied, friendlyPieces);
 
-                return (attacks & targetSquares).any();
-            })) {
+    if ((queenAttacks & targetSquares).any())
         return true;
-    }
 
-    if (std::ranges::any_of(
-            pieces.rooks.squares(),
-            [allOccupied, friendlyPieces, targetSquares](const Square& rookSquare) {
-                const auto attacks = move_gen::rook(rookSquare, allOccupied, friendlyPieces);
+    const auto rookAttacks = move_gen::rook(pieces.rooks, allOccupied, friendlyPieces);
 
-                return (attacks & targetSquares).any();
-            })) {
+    if ((rookAttacks & targetSquares).any())
         return true;
-    }
 
-    return std::ranges::any_of(
-        pieces.bishops.squares(),
-        [allOccupied, friendlyPieces, targetSquares](const Square& bishopSquare) {
-            const auto attacks = move_gen::bishop(bishopSquare, allOccupied, friendlyPieces);
+    const auto bishopAttacks = move_gen::bishop(pieces.bishops, allOccupied, friendlyPieces);
 
-            return (attacks & targetSquares).any();
-        });
+    return (bishopAttacks & targetSquares).any();
 }
 
 } // namespace chess::board

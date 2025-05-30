@@ -406,7 +406,7 @@ TEST_CASE("Pseudo-legal - bishops", TAGS)
         friendlyPieces.set(Square { File::G, Rank::One });
 
         const auto moves = move_gen::bishop(
-            starting, friendlyPieces | enemyPieces, friendlyPieces);
+            Bitboard { starting }, friendlyPieces | enemyPieces, friendlyPieces);
 
         REQUIRE(moves.count() == 9uz);
 
@@ -429,7 +429,7 @@ TEST_CASE("Pseudo-legal - bishops", TAGS)
         enemyPieces.set(Square { File::D, Rank::Three });
 
         const auto moves = move_gen::bishop(
-            starting, friendlyPieces | enemyPieces, friendlyPieces);
+            Bitboard { starting }, friendlyPieces | enemyPieces, friendlyPieces);
 
         REQUIRE(moves.count() == 7uz);
 
@@ -458,7 +458,7 @@ TEST_CASE("Pseudo-legal - rooks", TAGS)
         enemyPieces.set(Square { File::C, Rank::Six });
 
         const auto moves = move_gen::rook(
-            starting, friendlyPieces | enemyPieces, friendlyPieces);
+            Bitboard { starting }, friendlyPieces | enemyPieces, friendlyPieces);
 
         REQUIRE(moves == Bitboard { 0X40404380404 });
     }
@@ -475,7 +475,7 @@ TEST_CASE("Pseudo-legal - rooks", TAGS)
         static constexpr Bitboard enemyPieces { Square { File::E, Rank::Eight } };
 
         const auto moves = move_gen::rook(
-            starting, friendlyPieces | enemyPieces, friendlyPieces);
+            Bitboard { starting }, friendlyPieces | enemyPieces, friendlyPieces);
 
         REQUIRE(moves == Bitboard { 0X10EC101000000000 });
     }
@@ -499,7 +499,7 @@ TEST_CASE("Pseudo-legal - queens", TAGS)
         enemyPieces.set(Square { File::E, Rank::Three });
 
         const auto moves = move_gen::queen(
-            starting, friendlyPieces | enemyPieces, friendlyPieces);
+            Bitboard { starting }, friendlyPieces | enemyPieces, friendlyPieces);
 
         REQUIRE(moves == Bitboard { 0X101418EC38548200 });
     }
@@ -520,7 +520,7 @@ TEST_CASE("Pseudo-legal - queens", TAGS)
         enemyPieces.set(Square { File::B, Rank::Four });
 
         const auto moves = move_gen::queen(
-            starting, friendlyPieces | enemyPieces, friendlyPieces);
+            Bitboard { starting }, friendlyPieces | enemyPieces, friendlyPieces);
 
         REQUIRE(moves == Bitboard { 0X20120A071D });
     }

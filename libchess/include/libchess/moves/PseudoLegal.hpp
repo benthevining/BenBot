@@ -14,12 +14,10 @@
 
 #pragma once
 
-#include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
 #include <libchess/board/Bitboard.hpp>
-#include <libchess/board/BitboardIndex.hpp>
 #include <libchess/board/BitboardMasks.hpp>
 #include <libchess/board/Fills.hpp>
-#include <libchess/board/Rank.hpp>
+#include <libchess/board/Shifts.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/moves/Patterns.hpp>
 #include <libchess/pieces/Colors.hpp>
@@ -75,7 +73,7 @@ template <Color Side>
     is located), and also considers blocking friendly pieces.
  */
 [[nodiscard, gnu::const]] constexpr Bitboard bishop(
-    const Square& starting, Bitboard occupiedSquares, Bitboard friendlyPieces) noexcept;
+    Bitboard startingBishops, Bitboard occupiedSquares, Bitboard friendlyPieces) noexcept;
 
 /** Calculates all pseudo-legal rook moves, taking blocking pieces into consideration.
     ``occupiedSquares`` should be the union of all squares occupied by pieces of either color.
@@ -84,7 +82,7 @@ template <Color Side>
     is located), and also considers blocking friendly pieces.
  */
 [[nodiscard, gnu::const]] constexpr Bitboard rook(
-    const Square& starting, Bitboard occupiedSquares, Bitboard friendlyPieces) noexcept;
+    Bitboard startingRooks, Bitboard occupiedSquares, Bitboard friendlyPieces) noexcept;
 
 /** Calculates all pseudo-legal queen moves, taking blocking pieces into consideration.
     ``occupiedSquares`` should be the union of all squares occupied by pieces of either color.
@@ -93,7 +91,7 @@ template <Color Side>
     is located), and also considers blocking friendly pieces.
  */
 [[nodiscard, gnu::const]] constexpr Bitboard queen(
-    const Square& starting, Bitboard occupiedSquares, Bitboard friendlyPieces) noexcept;
+    Bitboard startingQueens, Bitboard occupiedSquares, Bitboard friendlyPieces) noexcept;
 
 /** Calculates all pseudo-legal king moves. */
 [[nodiscard, gnu::const]] constexpr Bitboard king(
@@ -162,162 +160,169 @@ constexpr Bitboard king(
 
 namespace detail {
 
-    using board::BitboardIndex;
-    using board::Rank;
+    // occluded fills exclude blockers, but include the sliding piece start squares
+    namespace occluded_fills {
 
-    /* Ray directions are as follows:
+        static constexpr auto notAFile = board::masks::files::A.inverse();
+        static constexpr auto notHFile = board::masks::files::H.inverse();
 
-      northwest    north   northeast
-              +7    +8    +9
-                  \  |  /
-      west    -1 <-  0 -> +1    east
-                  /  |  \
-              -9    -8    -7
-      southwest    south   southeast
+        [[nodiscard, gnu::const]] constexpr Bitboard north(
+            Bitboard rooks, Bitboard empty) noexcept
+        {
+            rooks |= empty & (rooks << 8uz);
+            empty &= (empty << 8uz);
+            rooks |= empty & (rooks << 16uz);
+            empty &= (empty << 16uz);
+            rooks |= empty & (rooks << 32uz);
 
-      Positive & negative rays are handled individually to determine blockers along that ray.
-     */
-
-    enum class RayDirection : std::uint_least8_t {
-        // positive rays
-        North,
-        East,
-        NorthEast,
-        NorthWest,
-
-        // negative rays
-        South,
-        West,
-        SouthEast,
-        SouthWest
-    };
-
-    template <RayDirection Direction>
-    [[nodiscard, gnu::const]] consteval bool is_negative() noexcept
-    {
-        return Direction == RayDirection::South
-            || Direction == RayDirection::West
-            || Direction == RayDirection::SouthEast
-            || Direction == RayDirection::SouthWest;
-    }
-
-    // Generates all squares on the given ray starting from the given square,
-    // traveling in the given direction. The starting square is not included
-    // in the ray.
-    template <RayDirection Direction>
-    [[nodiscard, gnu::const]] constexpr Bitboard make_ray(const Square& startPos) noexcept
-    {
-        namespace rank_masks = board::masks::ranks;
-
-        static constexpr Bitboard::Integer ONE { 1 };
-
-        if constexpr (Direction == RayDirection::North) {
-            static constexpr Bitboard mask { 0x0101010101010100 };
-
-            return mask << startPos.index();
-        } else if constexpr (Direction == RayDirection::South) {
-            static constexpr Bitboard mask { 0x0080808080808080 };
-
-            return mask >> (startPos.index() ^ 63);
-        } else if constexpr (Direction == RayDirection::East) {
-            const auto index = startPos.index();
-
-            return Bitboard { 2 * ((ONE << (index | 7)) - (ONE << index)) };
-        } else if constexpr (Direction == RayDirection::West) {
-            const auto index = startPos.index();
-
-            return Bitboard { (ONE << index) - (ONE << (index & 56)) };
-        } else if constexpr (Direction == RayDirection::NorthEast) {
-            const auto diag = board::masks::diagonal(startPos);
-            const auto mask = board::fills::south(rank_masks::get(startPos.rank));
-
-            return diag & mask.inverse();
-        } else if constexpr (Direction == RayDirection::NorthWest) {
-            const auto diag = board::masks::antidiagonal(startPos);
-            const auto mask = board::fills::south(rank_masks::get(startPos.rank));
-
-            return diag & mask.inverse();
-        } else if constexpr (Direction == RayDirection::SouthEast) {
-            const auto diag = board::masks::antidiagonal(startPos);
-            const auto mask = board::fills::north(rank_masks::get(startPos.rank));
-
-            return diag & mask.inverse();
-        } else if constexpr (Direction == RayDirection::SouthWest) {
-            const auto diag = board::masks::diagonal(startPos);
-            const auto mask = board::fills::north(rank_masks::get(startPos.rank));
-
-            return diag & mask.inverse();
-        } else {
-            static_assert(false);
-            return {};
+            return rooks;
         }
-    }
 
-    // Returns all squares accessible by a ray attacker in the given direction,
-    // stopping at the first blocking piece as indicated by the occupied bitboard.
-    // This function does not prune squares occupied by friendly pieces (it considers
-    // them possible captures), so those squares still need to be pruned.
-    template <RayDirection Direction>
-    [[nodiscard, gnu::const]] constexpr Bitboard ray_attacks(
-        const Square& startPos, const Bitboard occupied) noexcept
-    {
-        const auto attacks = make_ray<Direction>(startPos);
+        [[nodiscard, gnu::const]] constexpr Bitboard south(
+            Bitboard rooks, Bitboard empty) noexcept
+        {
+            rooks |= empty & (rooks >> 8uz);
+            empty &= (empty >> 8uz);
+            rooks |= empty & (rooks >> 16uz);
+            empty &= (empty >> 16uz);
+            rooks |= empty & (rooks >> 32uz);
 
-        auto blocker = attacks & occupied;
+            return rooks;
+        }
 
-        static constexpr auto mask = is_negative<Direction>()
-                                       ? Bitboard { 1 }
-                                       : Bitboard { 0x8000000000000000 };
+        [[nodiscard, gnu::const]] constexpr Bitboard east(
+            Bitboard rooks, Bitboard empty) noexcept
+        {
+            empty &= notAFile;
 
-        blocker |= mask;
+            rooks |= empty & (rooks << 1uz);
+            empty &= (empty << 1uz);
+            rooks |= empty & (rooks << 2uz);
+            empty &= (empty << 2uz);
+            rooks |= empty & (rooks << 4uz);
 
-        const auto idx = is_negative<Direction>() ? blocker.last() : blocker.first();
+            return rooks;
+        }
 
-        return attacks ^ make_ray<Direction>(Square::from_index(idx));
-    }
+        [[nodiscard, gnu::const]] constexpr Bitboard west(
+            Bitboard rooks, Bitboard empty) noexcept
+        {
+            empty &= notHFile;
+
+            rooks |= empty & (rooks >> 1uz);
+            empty &= (empty >> 1uz);
+            rooks |= empty & (rooks >> 2uz);
+            empty &= (empty >> 2uz);
+            rooks |= empty & (rooks >> 4uz);
+
+            return rooks;
+        }
+
+        [[nodiscard, gnu::const]] constexpr Bitboard northeast(
+            Bitboard bishops, Bitboard empty) noexcept
+        {
+            empty &= notAFile;
+
+            bishops |= empty & (bishops << 9uz);
+            empty &= (empty << 9uz);
+            bishops |= empty & (bishops << 18uz);
+            empty &= (empty << 18uz);
+            bishops |= empty & (bishops << 36uz);
+
+            return bishops;
+        }
+
+        [[nodiscard, gnu::const]] constexpr Bitboard southeast(
+            Bitboard bishops, Bitboard empty) noexcept
+        {
+            empty &= notAFile;
+
+            bishops |= empty & (bishops >> 7uz);
+            empty &= (empty >> 7uz);
+            bishops |= empty & (bishops >> 14uz);
+            empty &= (empty >> 14uz);
+            bishops |= empty & (bishops >> 28uz);
+
+            return bishops;
+        }
+
+        [[nodiscard, gnu::const]] constexpr Bitboard northwest(
+            Bitboard bishops, Bitboard empty) noexcept
+        {
+            empty &= notHFile;
+
+            bishops |= empty & (bishops << 7uz);
+            empty &= (empty << 7uz);
+            bishops |= empty & (bishops << 14uz);
+            empty &= (empty << 14uz);
+            bishops |= empty & (bishops << 28uz);
+
+            return bishops;
+        }
+
+        [[nodiscard, gnu::const]] constexpr Bitboard southwest(
+            Bitboard bishops, Bitboard empty) noexcept
+        {
+            empty &= notHFile;
+
+            bishops |= empty & (bishops >> 9uz);
+            empty &= (empty >> 9uz);
+            bishops |= empty & (bishops >> 18uz);
+            empty &= (empty >> 18uz);
+            bishops |= empty & (bishops >> 36uz);
+
+            return bishops;
+        }
+
+    } // namespace occluded_fills
+
+    namespace shifts = board::shifts;
 
     [[nodiscard, gnu::const]] constexpr Bitboard rook_attacks(
-        const Square& startPos, const Bitboard occupiedSquares) noexcept
+        const Bitboard rooks, const Bitboard emptySquares) noexcept
     {
-        using enum RayDirection;
+        const auto northAttacks = shifts::north(occluded_fills::north(rooks, emptySquares));
+        const auto southAttacks = shifts::south(occluded_fills::south(rooks, emptySquares));
+        const auto eastAttacks  = shifts::east(occluded_fills::east(rooks, emptySquares));
+        const auto westAttacks  = shifts::west(occluded_fills::west(rooks, emptySquares));
 
-        return ray_attacks<North>(startPos, occupiedSquares)
-             | ray_attacks<East>(startPos, occupiedSquares)
-             | ray_attacks<South>(startPos, occupiedSquares)
-             | ray_attacks<West>(startPos, occupiedSquares);
+        return northAttacks | southAttacks | eastAttacks | westAttacks;
     }
 
     [[nodiscard, gnu::const]] constexpr Bitboard bishop_attacks(
-        const Square& startPos, const Bitboard occupiedSquares) noexcept
+        const Bitboard bishops, const Bitboard emptySquares) noexcept
     {
-        using enum RayDirection;
+        const auto NEattacks = shifts::northeast(occluded_fills::northeast(bishops, emptySquares));
+        const auto SEattacks = shifts::southeast(occluded_fills::southeast(bishops, emptySquares));
+        const auto NWattacks = shifts::northwest(occluded_fills::northwest(bishops, emptySquares));
+        const auto SWattacks = shifts::southwest(occluded_fills::southwest(bishops, emptySquares));
 
-        return ray_attacks<NorthEast>(startPos, occupiedSquares)
-             | ray_attacks<NorthWest>(startPos, occupiedSquares)
-             | ray_attacks<SouthEast>(startPos, occupiedSquares)
-             | ray_attacks<SouthWest>(startPos, occupiedSquares);
+        return NEattacks | SEattacks | NWattacks | SWattacks;
     }
 
 } // namespace detail
 
 constexpr Bitboard rook(
-    const Square& starting, const Bitboard occupiedSquares, const Bitboard friendlyPieces) noexcept
+    const Bitboard startingRooks, const Bitboard occupiedSquares, const Bitboard friendlyPieces) noexcept
 {
-    return detail::rook_attacks(starting, occupiedSquares) & friendlyPieces.inverse();
+    return detail::rook_attacks(startingRooks, occupiedSquares.inverse())
+         & friendlyPieces.inverse();
 }
 
 constexpr Bitboard bishop(
-    const Square& starting, const Bitboard occupiedSquares, const Bitboard friendlyPieces) noexcept
+    const Bitboard startingBishops, const Bitboard occupiedSquares, const Bitboard friendlyPieces) noexcept
 {
-    return detail::bishop_attacks(starting, occupiedSquares) & friendlyPieces.inverse();
+    return detail::bishop_attacks(startingBishops, occupiedSquares.inverse())
+         & friendlyPieces.inverse();
 }
 
 constexpr Bitboard queen(
-    const Square& starting, const Bitboard occupiedSquares, const Bitboard friendlyPieces) noexcept
+    const Bitboard startingQueens, const Bitboard occupiedSquares, const Bitboard friendlyPieces) noexcept
 {
-    const auto attacks
-        = detail::rook_attacks(starting, occupiedSquares)
-        | detail::bishop_attacks(starting, friendlyPieces);
+    const auto emptySquares = occupiedSquares.inverse();
+
+    const auto attacks = detail::rook_attacks(startingQueens, emptySquares)
+                       | detail::bishop_attacks(startingQueens, emptySquares);
 
     return attacks & friendlyPieces.inverse();
 }
