@@ -172,6 +172,10 @@ namespace detail {
         const Bitboard ourPawns, const Bitboard enemyPieces,
         std::output_iterator<Move> auto outputIt)
     {
+        // We handle east & west captures separately to make set-wise operations easier.
+        // This way, there is always a 1-1 relationship between a target square and a
+        // starting square.
+
         const auto eastAttacks = shifts::pawn_capture_east<Side>(ourPawns);
         const auto westAttacks = shifts::pawn_capture_west<Side>(ourPawns);
 
@@ -263,11 +267,11 @@ namespace detail {
         const Position& position, const Bitboard enemyPieces, const Bitboard allOccupied,
         std::output_iterator<Move> auto outputIt)
     {
-        const auto& ourPieces = position.pieces_for<Side>();
+        const auto ourPawns = position.pieces_for<Side>().pawns;
 
-        add_pawn_pushes<Side>(ourPieces.pawns, allOccupied.inverse(), outputIt);
-        add_pawn_double_pushes<Side>(ourPieces.pawns, allOccupied, outputIt);
-        add_pawn_captures<Side>(ourPieces.pawns, enemyPieces, outputIt);
+        add_pawn_pushes<Side>(ourPawns, allOccupied.inverse(), outputIt);
+        add_pawn_double_pushes<Side>(ourPawns, allOccupied, outputIt);
+        add_pawn_captures<Side>(ourPawns, enemyPieces, outputIt);
         add_en_passant<Side>(position, outputIt);
     }
 
