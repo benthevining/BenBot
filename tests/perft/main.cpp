@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <charconv>
+#include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdlib>
 #include <exception>
@@ -22,8 +23,6 @@
 #include <vector>
 
 // TODO:
-// print detailed results
-// print timing info
 // print number of nodes from each starting move
 // option to output JSON?
 
@@ -74,12 +73,19 @@ void print_help(const std::string_view programName)
 
 void run_perft(const PerftOptions& options)
 {
+    using Clock = std::chrono::high_resolution_clock;
+
     std::println("Starting position:");
     std::println("{}", chess::game::print_utf8(options.startingPosition));
 
     std::println("Running perft depth {}...", options.depth);
+    std::println("");
+
+    const auto startTime = Clock::now();
 
     const auto result = chess::moves::perft(options.depth, options.startingPosition);
+
+    const auto endTime = Clock::now();
 
     std::println("Nodes: {}", result.nodes);
     std::println("Captures: {}", result.captures);
@@ -89,6 +95,11 @@ void run_perft(const PerftOptions& options)
     std::println("Checks: {}", result.checks);
     std::println("Checkmates: {}", result.checkmates);
     std::println("Stalemates: {}", result.stalemates);
+
+    const auto wallTime = std::chrono::duration_cast<std::chrono::seconds>(endTime - startTime);
+
+    std::println("");
+    std::println("Search time: {}", wallTime);
 }
 
 } // namespace
