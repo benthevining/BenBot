@@ -42,7 +42,6 @@ using PieceType = pieces::Type;
     @ingroup board
 
     @todo func to check for doubled pawns
-    @todo std::hash
  */
 struct Pieces final {
     /** Creates a Pieces object encoding the starting position for the given side. */

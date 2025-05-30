@@ -60,7 +60,7 @@ using PieceType = pieces::Type;
 
     @todo Detect threefold reps by keeping array<Position, 6> ?
     @todo Funcs to get passed pawns, backward pawns
-    @todo std::hash
+    @todo std::hash (Zobrist hashing)
  */
 struct Position final {
     /** The positions of the White pieces.
@@ -433,7 +433,7 @@ constexpr void Position::make_move(const Move& move) noexcept
 
     // update castling rights
     auto& ourRights   = isWhite ? whiteCastlingRights : blackCastlingRights;
-    auto& theirRights = isWhite ? whiteCastlingRights : blackCastlingRights;
+    auto& theirRights = isWhite ? blackCastlingRights : whiteCastlingRights;
 
     ourRights.our_move(move);
 
