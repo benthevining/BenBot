@@ -39,6 +39,7 @@ set (
     board/Fills.hpp
     board/Pieces.hpp
     board/Rank.hpp
+    board/Shifts.hpp
     board/Square.hpp
     game/CastlingRights.hpp
     game/Position.hpp

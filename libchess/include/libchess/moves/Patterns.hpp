@@ -16,6 +16,7 @@
 
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/BitboardMasks.hpp>
+#include <libchess/board/Shifts.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/pieces/Colors.hpp>
 
@@ -159,81 +160,35 @@ constexpr Bitboard queen(const Square& starting) noexcept
     return (rankMask | fileMask | diagMask | antiDiagMask) & notStartingSquare;
 }
 
-namespace detail {
-
-    [[nodiscard, gnu::const]] constexpr Bitboard shift_north(const Bitboard board) noexcept
-    {
-        return board << 8uz;
-    }
-
-    [[nodiscard, gnu::const]] constexpr Bitboard shift_south(const Bitboard board) noexcept
-    {
-        return board >> 8uz;
-    }
-
-    namespace file_masks = board::masks::files;
-    namespace rank_masks = board::masks::ranks;
-
-    static constexpr auto notAFile = file_masks::A.inverse();
-    static constexpr auto notHFile = file_masks::H.inverse();
-
-    [[nodiscard, gnu::const]] constexpr Bitboard shift_east(const Bitboard board) noexcept
-    {
-        return (board & notHFile) << 1uz;
-    }
-
-    [[nodiscard, gnu::const]] constexpr Bitboard shift_west(const Bitboard board) noexcept
-    {
-        return (board & notAFile) >> 1uz;
-    }
-
-    [[nodiscard, gnu::const]] constexpr Bitboard shift_northeast(const Bitboard board) noexcept
-    {
-        return (board & notHFile) << 9uz;
-    }
-
-    [[nodiscard, gnu::const]] constexpr Bitboard shift_northwest(const Bitboard board) noexcept
-    {
-        return (board & notAFile) << 7uz;
-    }
-
-    [[nodiscard, gnu::const]] constexpr Bitboard shift_southeast(const Bitboard board) noexcept
-    {
-        return (board & notHFile) >> 7uz;
-    }
-
-    [[nodiscard, gnu::const]] constexpr Bitboard shift_southwest(const Bitboard board) noexcept
-    {
-        return (board & notAFile) >> 9uz;
-    }
-
-} // namespace detail
-
 template <Color Side>
 constexpr Bitboard pawn_pushes(const Bitboard starting) noexcept
 {
     if constexpr (Side == Color::White)
-        return detail::shift_north(starting);
+        return board::shifts::north(starting);
     else
-        return detail::shift_south(starting);
+        return board::shifts::south(starting);
 }
 
 template <Color Side>
 constexpr Bitboard pawn_attacks(const Bitboard starting) noexcept
 {
+    namespace shifts = board::shifts;
+
     if constexpr (Side == Color::White)
-        return detail::shift_northeast(starting) | detail::shift_northwest(starting);
+        return shifts::northeast(starting) | shifts::northwest(starting);
     else
-        return detail::shift_southeast(starting) | detail::shift_southwest(starting);
+        return shifts::southeast(starting) | shifts::southwest(starting);
 }
 
 constexpr Bitboard king(Bitboard starting) noexcept
 {
-    auto moves = detail::shift_east(starting) | detail::shift_west(starting);
+    namespace shifts = board::shifts;
+
+    auto moves = shifts::east(starting) | shifts::west(starting);
 
     starting |= moves;
 
-    moves |= detail::shift_north(starting) | detail::shift_south(starting);
+    moves |= shifts::north(starting) | shifts::south(starting);
 
     return moves;
 }

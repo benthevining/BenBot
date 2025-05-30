@@ -118,6 +118,8 @@ struct Pieces final {
     This function considers only pseudo-legal moves, not strictly legal moves.
 
     @tparam Side The color that the ``pieces`` represent.
+
+    @ingroup board
  */
 template <Color Side>
 [[nodiscard, gnu::const]] constexpr bool squares_attacked(
