@@ -409,7 +409,7 @@ TEST_CASE("Patterns - bishop moves", TAGS)
     {
         static constexpr Square starting { File::C, Rank::Five };
 
-        static constexpr auto moves = move_gen::bishop(starting);
+        static constexpr auto moves = move_gen::bishop(Bitboard { starting });
 
         STATIC_REQUIRE(moves.count() == 11uz);
 
@@ -434,7 +434,7 @@ TEST_CASE("Patterns - bishop moves", TAGS)
     {
         static constexpr Square starting { File::F, Rank::Three };
 
-        static constexpr auto moves = move_gen::bishop(starting);
+        static constexpr auto moves = move_gen::bishop(Bitboard { starting });
 
         STATIC_REQUIRE(moves.count() == 11uz);
 
@@ -459,7 +459,7 @@ TEST_CASE("Patterns - bishop moves", TAGS)
     {
         static constexpr Square starting { File::A, Rank::One };
 
-        static constexpr auto moves = move_gen::bishop(starting);
+        static constexpr auto moves = move_gen::bishop(Bitboard { starting });
 
         STATIC_REQUIRE(moves.count() == 7uz);
 
@@ -479,7 +479,7 @@ TEST_CASE("Patterns - bishop moves", TAGS)
     {
         static constexpr Square starting { File::A, Rank::Eight };
 
-        static constexpr auto moves = move_gen::bishop(starting);
+        static constexpr auto moves = move_gen::bishop(Bitboard { starting });
 
         STATIC_REQUIRE(moves.count() == 7uz);
 
@@ -499,7 +499,7 @@ TEST_CASE("Patterns - bishop moves", TAGS)
     {
         static constexpr Square starting { File::H, Rank::One };
 
-        static constexpr auto moves = move_gen::bishop(starting);
+        static constexpr auto moves = move_gen::bishop(Bitboard { starting });
 
         STATIC_REQUIRE(moves.count() == 7uz);
 
@@ -519,7 +519,7 @@ TEST_CASE("Patterns - bishop moves", TAGS)
     {
         static constexpr Square starting { File::H, Rank::Eight };
 
-        static constexpr auto moves = move_gen::bishop(starting);
+        static constexpr auto moves = move_gen::bishop(Bitboard { starting });
 
         STATIC_REQUIRE(moves.count() == 7uz);
 
@@ -533,6 +533,18 @@ TEST_CASE("Patterns - bishop moves", TAGS)
 
         for (const auto square : moves.squares())
             REQUIRE(are_on_same_diagonal(starting, square));
+    }
+
+    SECTION("From C4 and D4")
+    {
+        Bitboard starting;
+
+        starting.set(Square { File::C, Rank::Four });
+        starting.set(Square { File::D, Rank::Four });
+
+        const auto moves = move_gen::bishop(starting);
+
+        REQUIRE(moves == Bitboard { 0Xc061331e001e3361 });
     }
 }
 

@@ -52,17 +52,13 @@ template <Color Side>
 template <Color Side>
 [[nodiscard, gnu::const]] constexpr Bitboard pawn_attacks(Bitboard starting) noexcept;
 
-/** Calculates all possible knight moves from the given starting position.
-    This function can calculate moves for any number of knights.
- */
+/** Calculates all possible knight moves from the given starting position. */
 [[nodiscard, gnu::const]] constexpr Bitboard knight(Bitboard starting) noexcept;
 
 /** Calculates all possible bishop moves from the given starting square. */
-[[nodiscard, gnu::const]] constexpr Bitboard bishop(const Square& starting) noexcept;
+[[nodiscard, gnu::const]] constexpr Bitboard bishop(Bitboard starting) noexcept;
 
-/** Calculates all possible rook moves from the given starting square.
-    This function can calculate moves for any number of rooks.
- */
+/** Calculates all possible rook moves from the given starting square. */
 [[nodiscard, gnu::const]] constexpr Bitboard rook(Bitboard starting) noexcept;
 
 /** Calculates all possible queen moves from the given starting square. */
@@ -131,14 +127,14 @@ constexpr Bitboard knight(const Bitboard starting) noexcept
     return moves;
 }
 
-constexpr Bitboard bishop(const Square& starting) noexcept
+constexpr Bitboard bishop(const Bitboard starting) noexcept
 {
-    const auto diagMask     = board::masks::diagonal(starting);
-    const auto antiDiagMask = board::masks::antidiagonal(starting);
+    const auto diags     = board::fills::diagonal(starting);
+    const auto antiDiags = board::fills::antidiagonal(starting);
 
-    const auto notStartingSquare = Bitboard { starting }.inverse();
+    const auto notStartingSquare = starting.inverse();
 
-    return (diagMask | antiDiagMask) & notStartingSquare;
+    return (diags | antiDiags) & notStartingSquare;
 }
 
 constexpr Bitboard rook(const Bitboard starting) noexcept
