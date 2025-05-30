@@ -39,59 +39,51 @@ using pieces::Color;
 /// @ingroup moves
 /// @{
 
-/** Calculates all pseudo-legal pawn pushes.
-    ``occupiedSquares`` should be the union of all squares occupied by pieces of either color.
- */
+/** Calculates all pseudo-legal pawn pushes. */
 template <Color Side>
 [[nodiscard, gnu::const]] constexpr Bitboard pawn_pushes(
     Bitboard startingPawns, Bitboard occupiedSquares) noexcept;
 
-/** Calculates all pseudo-legal pawn double pushes.
-    ``occupiedSquares`` should be the union of all squares occupied by pieces of either color.
- */
+/** Calculates all pseudo-legal pawn double pushes. */
 template <Color Side>
 [[nodiscard, gnu::const]] constexpr Bitboard pawn_double_pushes(
     Bitboard startingPawns, Bitboard occupiedSquares) noexcept;
 
 /** Calculates all pseudo-legal pawn captures.
     The returned bitboard has 1 bits set where each pawn would land after making a capture.
+    Note that this function does not generate possible en passant captures.
  */
 template <Color Side>
 [[nodiscard, gnu::const]] constexpr Bitboard pawn_captures(
     Bitboard startingPawns, Bitboard enemyPieces) noexcept;
 
-/** Calculates all pseudo-legal knight moves.
-    This function can calculate moves for any number of knights.
- */
+/** Calculates all pseudo-legal knight moves. */
 [[nodiscard, gnu::const]] constexpr Bitboard knight(
     Bitboard startingKnights, Bitboard friendlyPieces) noexcept;
 
 /** Calculates all pseudo-legal bishop moves.
-    ``occupiedSquares`` should be the union of all squares occupied by pieces of either color.
 
     The returned move set includes possible captures (i.e., rays ending where an enemy piece
     is located), and also considers blocking friendly pieces.
  */
 [[nodiscard, gnu::const]] constexpr Bitboard bishop(
-    Bitboard startingBishops, Bitboard occupiedSquares, Bitboard friendlyPieces) noexcept;
+    Bitboard startingBishops, Bitboard emptySquares, Bitboard friendlyPieces) noexcept;
 
 /** Calculates all pseudo-legal rook moves, taking blocking pieces into consideration.
-    ``occupiedSquares`` should be the union of all squares occupied by pieces of either color.
 
     The returned move set includes possible captures (i.e., rays ending where an enemy piece
     is located), and also considers blocking friendly pieces.
  */
 [[nodiscard, gnu::const]] constexpr Bitboard rook(
-    Bitboard startingRooks, Bitboard occupiedSquares, Bitboard friendlyPieces) noexcept;
+    Bitboard startingRooks, Bitboard emptySquares, Bitboard friendlyPieces) noexcept;
 
 /** Calculates all pseudo-legal queen moves, taking blocking pieces into consideration.
-    ``occupiedSquares`` should be the union of all squares occupied by pieces of either color.
 
     The returned move set includes possible captures (i.e., rays ending where an enemy piece
     is located), and also considers blocking friendly pieces.
  */
 [[nodiscard, gnu::const]] constexpr Bitboard queen(
-    Bitboard startingQueens, Bitboard occupiedSquares, Bitboard friendlyPieces) noexcept;
+    Bitboard startingQueens, Bitboard emptySquares, Bitboard friendlyPieces) noexcept;
 
 /** Calculates all pseudo-legal king moves. */
 [[nodiscard, gnu::const]] constexpr Bitboard king(
@@ -303,24 +295,20 @@ namespace detail {
 } // namespace detail
 
 constexpr Bitboard rook(
-    const Bitboard startingRooks, const Bitboard occupiedSquares, const Bitboard friendlyPieces) noexcept
+    const Bitboard startingRooks, const Bitboard emptySquares, const Bitboard friendlyPieces) noexcept
 {
-    return detail::rook_attacks(startingRooks, occupiedSquares.inverse())
-         & friendlyPieces.inverse();
+    return detail::rook_attacks(startingRooks, emptySquares) & friendlyPieces.inverse();
 }
 
 constexpr Bitboard bishop(
-    const Bitboard startingBishops, const Bitboard occupiedSquares, const Bitboard friendlyPieces) noexcept
+    const Bitboard startingBishops, const Bitboard emptySquares, const Bitboard friendlyPieces) noexcept
 {
-    return detail::bishop_attacks(startingBishops, occupiedSquares.inverse())
-         & friendlyPieces.inverse();
+    return detail::bishop_attacks(startingBishops, emptySquares) & friendlyPieces.inverse();
 }
 
 constexpr Bitboard queen(
-    const Bitboard startingQueens, const Bitboard occupiedSquares, const Bitboard friendlyPieces) noexcept
+    const Bitboard startingQueens, const Bitboard emptySquares, const Bitboard friendlyPieces) noexcept
 {
-    const auto emptySquares = occupiedSquares.inverse();
-
     const auto attacks = detail::rook_attacks(startingQueens, emptySquares)
                        | detail::bishop_attacks(startingQueens, emptySquares);
 

@@ -263,19 +263,20 @@ constexpr bool squares_attacked(
     if ((kingAttacks & targetSquares).any())
         return true;
 
-    const auto allOccupied = friendlyPieces | enemyPieces;
+    const auto allOccupied  = friendlyPieces | enemyPieces;
+    const auto emptySquares = allOccupied.inverse();
 
-    const auto queenAttacks = move_gen::queen(pieces.queens, allOccupied, friendlyPieces);
+    const auto queenAttacks = move_gen::queen(pieces.queens, emptySquares, friendlyPieces);
 
     if ((queenAttacks & targetSquares).any())
         return true;
 
-    const auto rookAttacks = move_gen::rook(pieces.rooks, allOccupied, friendlyPieces);
+    const auto rookAttacks = move_gen::rook(pieces.rooks, emptySquares, friendlyPieces);
 
     if ((rookAttacks & targetSquares).any())
         return true;
 
-    const auto bishopAttacks = move_gen::bishop(pieces.bishops, allOccupied, friendlyPieces);
+    const auto bishopAttacks = move_gen::bishop(pieces.bishops, emptySquares, friendlyPieces);
 
     return (bishopAttacks & targetSquares).any();
 }

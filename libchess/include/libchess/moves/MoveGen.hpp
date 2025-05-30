@@ -269,7 +269,7 @@ namespace detail {
         std::output_iterator<Move> auto outputIt)
     {
         for (const auto bishopSquare : ourPieces.bishops.squares()) {
-            const auto bishopMoves = pseudo_legal::bishop(Bitboard { bishopSquare }, allOccupied, friendlyPieces);
+            const auto bishopMoves = pseudo_legal::bishop(Bitboard { bishopSquare }, allOccupied.inverse(), friendlyPieces);
 
             for (const auto targetSquare : bishopMoves.squares())
                 *outputIt = Move {
@@ -285,7 +285,7 @@ namespace detail {
         std::output_iterator<Move> auto outputIt)
     {
         for (const auto rookSquare : ourPieces.rooks.squares()) {
-            const auto rookMoves = pseudo_legal::rook(Bitboard { rookSquare }, allOccupied, friendlyPieces);
+            const auto rookMoves = pseudo_legal::rook(Bitboard { rookSquare }, allOccupied.inverse(), friendlyPieces);
 
             for (const auto targetSquare : rookMoves.squares())
                 *outputIt = Move {
@@ -301,7 +301,7 @@ namespace detail {
         std::output_iterator<Move> auto outputIt)
     {
         for (const auto queenSquare : ourPieces.queens.squares()) {
-            const auto queenMoves = pseudo_legal::queen(Bitboard { queenSquare }, allOccupied, friendlyPieces);
+            const auto queenMoves = pseudo_legal::queen(Bitboard { queenSquare }, allOccupied.inverse(), friendlyPieces);
 
             for (const auto targetSquare : queenMoves.squares())
                 *outputIt = Move {
