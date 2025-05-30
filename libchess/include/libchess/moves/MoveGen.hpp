@@ -372,14 +372,14 @@ namespace detail {
         if (! rights.either())
             return;
 
-        const auto& ourPieces = position.pieces_for<Side>();
-
-        [[maybe_unused]] const auto& rooks = ourPieces.rooks;
-
         static constexpr auto OppositeColor = isWhite ? Color::Black : Color::White;
 
-        const auto opponentAttacks = board::attacked_squares<OppositeColor>(
-            position.pieces_for<OppositeColor>(), ourPieces.occupied());
+        const auto& ourPieces   = position.pieces_for<Side>();
+        const auto& theirPieces = position.pieces_for<OppositeColor>();
+
+        const auto allOurPieces = ourPieces.occupied();
+
+        [[maybe_unused]] const auto& rooks = ourPieces.rooks;
 
         if (rights.kingside) {
             assert(rooks.test(Square { File::H, board::back_rank_for(position.sideToMove) }));
@@ -387,7 +387,7 @@ namespace detail {
             static constexpr auto requiredSquares = kingside_castle_mask<Side>();
 
             const bool castlingBlocked = (requiredSquares & allOccupied).any()
-                                      || (requiredSquares & opponentAttacks).any();
+                                      || squares_attacked<OppositeColor>(theirPieces, requiredSquares, allOurPieces);
 
             if (! castlingBlocked)
                 *outputIt = castle_kingside(isWhite ? Color::White : Color::Black);
@@ -400,7 +400,7 @@ namespace detail {
             static constexpr auto attackedMask = queenside_castle_mask<Side, false>();
 
             const bool castlingBlocked = (allOccupied & occupiedMask).any()
-                                      || (opponentAttacks & attackedMask).any();
+                                      || squares_attacked<OppositeColor>(theirPieces, attackedMask, allOurPieces);
 
             if (! castlingBlocked)
                 *outputIt = castle_queenside(isWhite ? Color::White : Color::Black);

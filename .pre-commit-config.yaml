@@ -104,7 +104,7 @@ repos:
   rev: v1.3.5
   hooks:
   - id: cppcheck
-    args: [--cppcheck-build-dir=Builds/cppcheck, --quiet, --inline-suppr, --std=c++23, --language=c++, -Ilibs/libutil/include, --check-level=exhaustive, --force, --enable=all, --suppress=unusedFunction, --suppress=unusedStructMember, --suppress=unmatchedSuppression, --suppress=class_X_Y, --suppress=missingIncludeSystem, --suppress=missingInclude]
+    args: [--cppcheck-build-dir=Builds/cppcheck, --quiet, --inline-suppr, --std=c++23, --language=c++, --check-level=exhaustive, --force, --enable=all, --suppress=unusedFunction, --suppress=unusedStructMember, --suppress=unmatchedSuppression, --suppress=class_X_Y, --suppress=missingIncludeSystem, --suppress=missingInclude]
     additional_dependencies: [cppcheck>=1.4.7]
   - id: cpplint
     args: [--verbose=0, --quiet]

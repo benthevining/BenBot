@@ -114,16 +114,14 @@ struct Pieces final {
     constexpr void capture_at(Square square) noexcept;
 };
 
-/** Returns a bitboard with a 1 bit set on all squares that any piece attacks.
+/** Returns true if any of the ``pieces`` attacks any of the ``targetSquares``.
+    This function considers only pseudo-legal moves, not strictly legal moves.
 
-    @tparam Side The color of the side whose pieces are represented by ``pieces``.
-
-    @relates Pieces
-    @ingroup board
+    @tparam Side The color that the ``pieces`` represent.
  */
 template <Color Side>
-[[nodiscard, gnu::const]] constexpr Bitboard attacked_squares(
-    const Pieces& pieces, Bitboard enemyPieces) noexcept;
+[[nodiscard, gnu::const]] constexpr bool squares_attacked(
+    const Pieces& pieces, Bitboard targetSquares, Bitboard enemyPieces) noexcept;
 
 /*
                          ___                           ,--,
@@ -239,31 +237,58 @@ constexpr void Pieces::capture_at(const Square square) noexcept
     rooks.unset(idx);
     queens.unset(idx);
 }
-
 template <Color Side>
-constexpr Bitboard attacked_squares(const Pieces& pieces, const Bitboard enemyPieces) noexcept
+constexpr bool squares_attacked(
+    const Pieces& pieces, const Bitboard targetSquares, const Bitboard enemyPieces) noexcept
 {
     namespace move_gen = moves::pseudo_legal;
 
     const auto friendlyPieces = pieces.occupied();
 
-    auto attacks
-        = move_gen::pawn_captures<Side>(pieces.pawns, enemyPieces) // TODO: should this use the pattern function?
-        | move_gen::knight(pieces.knights, friendlyPieces)
-        | move_gen::king(pieces.king, friendlyPieces);
+    const auto pawnAttacks = move_gen::pawn_captures<Side>(pieces.pawns, enemyPieces);
+
+    if ((pawnAttacks & targetSquares).any())
+        return true;
+
+    const auto knightAttacks = move_gen::knight(pieces.knights, friendlyPieces);
+
+    if ((knightAttacks & targetSquares).any())
+        return true;
+
+    const auto kingAttacks = move_gen::king(pieces.king, friendlyPieces);
+
+    if ((kingAttacks & targetSquares).any())
+        return true;
 
     const auto allOccupied = friendlyPieces | enemyPieces;
 
-    for (const auto square : pieces.bishops.squares())
-        attacks |= move_gen::bishop(square, allOccupied, friendlyPieces); // cppcheck-suppress useStlAlgorithm
+    if (std::ranges::any_of(
+            pieces.queens.squares(),
+            [allOccupied, friendlyPieces, targetSquares](const Square& queenSquare) {
+                const auto attacks = move_gen::queen(queenSquare, allOccupied, friendlyPieces);
 
-    for (const auto square : pieces.rooks.squares())
-        attacks |= move_gen::rook(square, allOccupied, friendlyPieces); // cppcheck-suppress useStlAlgorithm
+                return (attacks & targetSquares).any();
+            })) {
+        return true;
+    }
 
-    for (const auto square : pieces.queens.squares())
-        attacks |= move_gen::queen(square, allOccupied, friendlyPieces); // cppcheck-suppress useStlAlgorithm
+    if (std::ranges::any_of(
+            pieces.rooks.squares(),
+            [allOccupied, friendlyPieces, targetSquares](const Square& rookSquare) {
+                const auto attacks = move_gen::rook(rookSquare, allOccupied, friendlyPieces);
 
-    return attacks;
+                return (attacks & targetSquares).any();
+            })) {
+        return true;
+    }
+
+    return std::ranges::any_of(
+        pieces.bishops.squares(),
+        [allOccupied, friendlyPieces, targetSquares](const Square& bishopSquare) {
+            const auto attacks = move_gen::bishop(bishopSquare, allOccupied, friendlyPieces);
+
+            return (attacks & targetSquares).any();
+        });
 }
 
 } // namespace chess::board

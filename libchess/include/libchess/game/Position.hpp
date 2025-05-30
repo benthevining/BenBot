@@ -254,16 +254,12 @@ constexpr bool Position::is_check() const noexcept
 constexpr bool Position::is_side_in_check(const Color side) const noexcept
 {
     if (side == Color::White) {
-        const auto blackAttacks = board::attacked_squares<Color::Black>(
-            blackPieces, whitePieces.occupied());
-
-        return (blackAttacks & whitePieces.king).any();
+        return squares_attacked<Color::Black>(
+            blackPieces, whitePieces.king, whitePieces.occupied());
     }
 
-    const auto whiteAttacks = board::attacked_squares<Color::White>(
-        whitePieces, blackPieces.occupied());
-
-    return (whiteAttacks & blackPieces.king).any();
+    return squares_attacked<Color::White>(
+        whitePieces, blackPieces.king, blackPieces.occupied());
 }
 
 constexpr bool Position::is_legal(const Move& move) const noexcept
