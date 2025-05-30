@@ -619,7 +619,7 @@ TEST_CASE("Patterns - queen moves", TAGS)
     {
         static constexpr Square starting { File::D, Rank::Four };
 
-        static constexpr auto moves = move_gen::queen(starting);
+        static constexpr auto moves = move_gen::queen(Bitboard { starting });
 
         STATIC_REQUIRE(moves.count() == 27uz);
 
@@ -650,6 +650,18 @@ TEST_CASE("Patterns - queen moves", TAGS)
         STATIC_REQUIRE(moves.test(Square { File::G, Rank::Seven }));
         STATIC_REQUIRE(moves.test(Square { File::H, Rank::Four }));
         STATIC_REQUIRE(moves.test(Square { File::H, Rank::Eight }));
+    }
+
+    SECTION("From C4 and F7")
+    {
+        Bitboard starting;
+
+        starting.set(Square { File::C, Rank::Four });
+        starting.set(Square { File::F, Rank::Seven });
+
+        const auto moves = move_gen::queen(starting);
+
+        REQUIRE(moves == Bitboard { 0X74df75aefb2e3524 });
     }
 }
 

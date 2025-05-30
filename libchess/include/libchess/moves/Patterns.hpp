@@ -62,7 +62,7 @@ template <Color Side>
 [[nodiscard, gnu::const]] constexpr Bitboard rook(Bitboard starting) noexcept;
 
 /** Calculates all possible queen moves from the given starting square. */
-[[nodiscard, gnu::const]] constexpr Bitboard queen(const Square& starting) noexcept;
+[[nodiscard, gnu::const]] constexpr Bitboard queen(Bitboard starting) noexcept;
 
 /** Calculates all possible king moves from the given starting position.
     Typically the starting bitboard will have only a single bit set, but this method can
@@ -147,16 +147,16 @@ constexpr Bitboard rook(const Bitboard starting) noexcept
     return (ranks | files) & notStartingSquare;
 }
 
-constexpr Bitboard queen(const Square& starting) noexcept
+constexpr Bitboard queen(const Bitboard starting) noexcept
 {
-    const auto rankMask     = board::masks::ranks::get(starting.rank);
-    const auto fileMask     = board::masks::files::get(starting.file);
-    const auto diagMask     = board::masks::diagonal(starting);
-    const auto antiDiagMask = board::masks::antidiagonal(starting);
+    const auto ranks     = board::fills::rank(starting);
+    const auto files     = board::fills::file(starting);
+    const auto diags     = board::fills::diagonal(starting);
+    const auto antiDiags = board::fills::antidiagonal(starting);
 
-    const auto notStartingSquare = Bitboard { starting }.inverse();
+    const auto notStartingSquare = starting.inverse();
 
-    return (rankMask | fileMask | diagMask | antiDiagMask) & notStartingSquare;
+    return (ranks | files | diags | antiDiags) & notStartingSquare;
 }
 
 template <Color Side>
