@@ -93,6 +93,7 @@ namespace detail {
     using pieces::Color;
 
     namespace rank_masks = board::masks::ranks;
+    namespace shifts     = board::shifts;
 
     static constexpr auto promotionMask = rank_masks::ONE | rank_masks::EIGHT;
 
@@ -171,8 +172,6 @@ namespace detail {
         const Bitboard ourPawns, const Bitboard enemyPieces,
         std::output_iterator<Move> auto outputIt)
     {
-        namespace shifts = board::shifts;
-
         const auto eastAttacks = shifts::pawn_capture_east<Side>(ourPawns);
         const auto westAttacks = shifts::pawn_capture_west<Side>(ourPawns);
 
@@ -243,20 +242,19 @@ namespace detail {
 
         const Bitboard targetSquareBoard { targetSquare };
 
+        const auto startSquares = shifts::pawn_inv_capture_east<Side>(targetSquareBoard)
+                                | shifts::pawn_inv_capture_west<Side>(targetSquareBoard);
+
         const auto ourPawns = position.pieces_for<Side>().pawns;
 
-        // TODO: do this set-wise?
-        for (const auto pawnSquare : ourPawns.squares()) {
-            const Bitboard pawnBoard { pawnSquare };
+        const auto eligiblePawns = ourPawns & startSquares;
 
-            const auto captures = patterns::pawn_attacks<Side>(pawnBoard);
-
-            if ((captures & targetSquareBoard).any())
-                *outputIt = Move {
-                    .from  = pawnSquare,
-                    .to    = targetSquare,
-                    .piece = PieceType::Pawn
-                };
+        for (const auto square : eligiblePawns.squares()) {
+            *outputIt = Move {
+                .from  = square,
+                .to    = targetSquare,
+                .piece = PieceType::Pawn
+            };
         }
     }
 
