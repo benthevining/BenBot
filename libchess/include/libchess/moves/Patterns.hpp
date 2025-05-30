@@ -132,9 +132,7 @@ constexpr Bitboard bishop(const Bitboard starting) noexcept
     const auto diags     = board::fills::diagonal(starting);
     const auto antiDiags = board::fills::antidiagonal(starting);
 
-    const auto notStartingSquare = starting.inverse();
-
-    return (diags | antiDiags) & notStartingSquare;
+    return (diags | antiDiags) & starting.inverse();
 }
 
 constexpr Bitboard rook(const Bitboard starting) noexcept
@@ -142,9 +140,7 @@ constexpr Bitboard rook(const Bitboard starting) noexcept
     const auto ranks = board::fills::rank(starting);
     const auto files = board::fills::file(starting);
 
-    const auto notStartingSquare = starting.inverse();
-
-    return (ranks | files) & notStartingSquare;
+    return (ranks | files) & starting.inverse();
 }
 
 constexpr Bitboard queen(const Bitboard starting) noexcept

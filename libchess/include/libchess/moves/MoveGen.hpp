@@ -113,10 +113,10 @@ namespace detail {
 
     template <Color Side>
     constexpr void add_pawn_pushes(
-        const Pieces& ourPieces, const Bitboard allOccupied,
+        const Pieces& ourPieces, const Bitboard emptySquares,
         std::output_iterator<Move> auto outputIt)
     {
-        const auto allPushes = pseudo_legal::pawn_pushes<Side>(ourPieces.pawns, allOccupied);
+        const auto allPushes = pseudo_legal::pawn_pushes<Side>(ourPieces.pawns, emptySquares);
 
         // non-promoting pushes
         {
@@ -241,7 +241,7 @@ namespace detail {
     {
         const auto& ourPieces = position.pieces_for<Side>();
 
-        add_pawn_pushes<Side>(ourPieces, allOccupied, outputIt);
+        add_pawn_pushes<Side>(ourPieces, allOccupied.inverse(), outputIt);
         add_pawn_double_pushes<Side>(ourPieces, allOccupied, outputIt);
         add_pawn_captures<Side>(ourPieces, enemyPieces, outputIt);
         add_en_passant<Side>(position, outputIt);

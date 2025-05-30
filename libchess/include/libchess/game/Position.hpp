@@ -354,6 +354,7 @@ namespace detail {
         rooks ^= kingside_castle_rook_pos_mask<Side>();
     }
 
+    // TODO: handle unsetting captured pawn in case of en passant
     constexpr void update_bitboards(
         Position& position, const Move& move) noexcept
     {

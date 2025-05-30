@@ -36,12 +36,14 @@ TEST_CASE("Pseudo-legal - pawn pushes", TAGS)
             static constexpr auto startingPos = starting_masks::white::PAWNS;
 
             static constexpr auto allPushes = move_gen::pawn_pushes<Color::White>(
-                startingPos, {});
+                startingPos, board_masks::ALL);
 
             STATIC_REQUIRE(allPushes == board_masks::ranks::THREE);
 
+            static constexpr Bitboard enemyPieces { Square { File::A, Rank::Three } };
+
             static constexpr auto pushes = move_gen::pawn_pushes<Color::White>(
-                startingPos, Bitboard { Square { File::A, Rank::Three } });
+                startingPos, enemyPieces.inverse());
 
             STATIC_REQUIRE(pushes.count() == 7uz);
 
@@ -53,13 +55,15 @@ TEST_CASE("Pseudo-legal - pawn pushes", TAGS)
             static constexpr Bitboard starting { Square { File::D, Rank::Seven } };
 
             static constexpr auto allPushes = move_gen::pawn_pushes<Color::White>(
-                starting, {});
+                starting, board_masks::ALL);
 
             STATIC_REQUIRE(allPushes.count() == 1uz);
             STATIC_REQUIRE(allPushes.test(Square { File::D, Rank::Eight }));
 
+            static constexpr Bitboard enemyPieces { Square { File::D, Rank::Eight } };
+
             static constexpr auto pushes = move_gen::pawn_pushes<Color::White>(
-                starting, Bitboard { Square { File::D, Rank::Eight } });
+                starting, enemyPieces.inverse());
 
             STATIC_REQUIRE(pushes.none());
         }
@@ -72,12 +76,14 @@ TEST_CASE("Pseudo-legal - pawn pushes", TAGS)
             static constexpr auto startingPos = starting_masks::black::PAWNS;
 
             static constexpr auto allPushes = move_gen::pawn_pushes<Color::Black>(
-                startingPos, {});
+                startingPos, board_masks::ALL);
 
             STATIC_REQUIRE(allPushes == board_masks::ranks::SIX);
 
+            static constexpr Bitboard enemyPieces { Square { File::C, Rank::Six } };
+
             static constexpr auto pushes = move_gen::pawn_pushes<Color::Black>(
-                startingPos, Bitboard { Square { File::C, Rank::Six } });
+                startingPos, enemyPieces.inverse());
 
             STATIC_REQUIRE(pushes.count() == 7uz);
 
@@ -89,13 +95,15 @@ TEST_CASE("Pseudo-legal - pawn pushes", TAGS)
             static constexpr Bitboard starting { Square { File::E, Rank::Two } };
 
             static constexpr auto allPushes = move_gen::pawn_pushes<Color::Black>(
-                starting, {});
+                starting, board_masks::ALL);
 
             STATIC_REQUIRE(allPushes.count() == 1uz);
             STATIC_REQUIRE(allPushes.test(Square { File::E, Rank::One }));
 
+            static constexpr Bitboard enemyPieces { Square { File::E, Rank::One } };
+
             static constexpr auto pushes = move_gen::pawn_pushes<Color::Black>(
-                starting, Bitboard { Square { File::E, Rank::One } });
+                starting, enemyPieces.inverse());
 
             STATIC_REQUIRE(pushes.none());
         }

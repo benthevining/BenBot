@@ -42,7 +42,7 @@ using pieces::Color;
 /** Calculates all pseudo-legal pawn pushes. */
 template <Color Side>
 [[nodiscard, gnu::const]] constexpr Bitboard pawn_pushes(
-    Bitboard startingPawns, Bitboard occupiedSquares) noexcept;
+    Bitboard startingPawns, Bitboard emptySquares) noexcept;
 
 /** Calculates all pseudo-legal pawn double pushes. */
 template <Color Side>
@@ -110,9 +110,9 @@ template <Color Side>
 
 template <Color Side>
 constexpr Bitboard pawn_pushes(
-    const Bitboard startingPawns, const Bitboard occupiedSquares) noexcept
+    const Bitboard startingPawns, const Bitboard emptySquares) noexcept
 {
-    return patterns::pawn_pushes<Side>(startingPawns) & occupiedSquares.inverse();
+    return patterns::pawn_pushes<Side>(startingPawns) & emptySquares;
 }
 
 template <Color Side>
