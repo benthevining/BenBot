@@ -72,6 +72,25 @@ void print_help(const std::string_view programName)
     return options;
 }
 
+void run_perft(const PerftOptions& options)
+{
+    std::println("Starting position:");
+    std::println("{}", chess::game::print_utf8(options.startingPosition));
+
+    std::println("Running perft depth {}...", options.depth);
+
+    const auto result = chess::moves::perft(options.depth, options.startingPosition);
+
+    std::println("Nodes: {}", result.nodes);
+    std::println("Captures: {}", result.captures);
+    std::println("En passant captures: {}", result.enPassantCaptures);
+    std::println("Castles: {}", result.castles);
+    std::println("Promotions: {}", result.promotions);
+    std::println("Checks: {}", result.checks);
+    std::println("Checkmates: {}", result.checkmates);
+    std::println("Stalemates: {}", result.stalemates);
+}
+
 } // namespace
 
 int main(const int argc, const char** argv)
@@ -93,16 +112,7 @@ try {
         return EXIT_FAILURE;
     }
 
-    const auto [startingPosition, depth] = parse_options(args);
-
-    std::println("Starting position:");
-    std::println("{}", chess::game::print_utf8(startingPosition));
-
-    std::println("Running perft depth {}...", depth);
-
-    const auto result = chess::moves::perft(depth, startingPosition);
-
-    std::println("Total nodes: {}", result.nodes);
+    run_perft(parse_options(args));
 
     return EXIT_SUCCESS;
 } catch (const std::exception& exception) {
