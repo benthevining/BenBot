@@ -16,6 +16,7 @@
 
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/BitboardMasks.hpp>
+#include <libchess/board/Fills.hpp>
 #include <libchess/board/Shifts.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/pieces/Colors.hpp>
@@ -59,8 +60,10 @@ template <Color Side>
 /** Calculates all possible bishop moves from the given starting square. */
 [[nodiscard, gnu::const]] constexpr Bitboard bishop(const Square& starting) noexcept;
 
-/** Calculates all possible rook moves from the given starting square. */
-[[nodiscard, gnu::const]] constexpr Bitboard rook(const Square& starting) noexcept;
+/** Calculates all possible rook moves from the given starting square.
+    This function can calculate moves for any number of rooks.
+ */
+[[nodiscard, gnu::const]] constexpr Bitboard rook(Bitboard starting) noexcept;
 
 /** Calculates all possible queen moves from the given starting square. */
 [[nodiscard, gnu::const]] constexpr Bitboard queen(const Square& starting) noexcept;
@@ -138,14 +141,14 @@ constexpr Bitboard bishop(const Square& starting) noexcept
     return (diagMask | antiDiagMask) & notStartingSquare;
 }
 
-constexpr Bitboard rook(const Square& starting) noexcept
+constexpr Bitboard rook(const Bitboard starting) noexcept
 {
-    const auto rankMask = board::masks::ranks::get(starting.rank);
-    const auto fileMask = board::masks::files::get(starting.file);
+    const auto ranks = board::fills::rank(starting);
+    const auto files = board::fills::file(starting);
 
-    const auto notStartingSquare = Bitboard { starting }.inverse();
+    const auto notStartingSquare = starting.inverse();
 
-    return (rankMask | fileMask) & notStartingSquare;
+    return (ranks | files) & notStartingSquare;
 }
 
 constexpr Bitboard queen(const Square& starting) noexcept

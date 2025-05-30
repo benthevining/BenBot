@@ -542,7 +542,7 @@ TEST_CASE("Patterns - rook moves", TAGS)
     {
         static constexpr Square starting { File::D, Rank::Three };
 
-        static constexpr auto moves = move_gen::rook(starting);
+        static constexpr auto moves = move_gen::rook(Bitboard { starting });
 
         STATIC_REQUIRE(moves.count() == 14uz);
 
@@ -567,7 +567,7 @@ TEST_CASE("Patterns - rook moves", TAGS)
     {
         static constexpr Square starting { File::A, Rank::One };
 
-        static constexpr auto moves = move_gen::rook(starting);
+        static constexpr auto moves = move_gen::rook(Bitboard { starting });
 
         STATIC_REQUIRE(moves.count() == 14uz);
 
@@ -586,6 +586,18 @@ TEST_CASE("Patterns - rook moves", TAGS)
         STATIC_REQUIRE(moves.test(Square { File::A, Rank::Six }));
         STATIC_REQUIRE(moves.test(Square { File::A, Rank::Seven }));
         STATIC_REQUIRE(moves.test(Square { File::A, Rank::Eight }));
+    }
+
+    SECTION("From B7 and E3")
+    {
+        Bitboard starting;
+
+        starting.set(Square { File::B, Rank::Seven });
+        starting.set(Square { File::E, Rank::Three });
+
+        const auto moves = move_gen::rook(starting);
+
+        REQUIRE(moves == Bitboard { 0X12fd121212ef1212 });
     }
 }
 
