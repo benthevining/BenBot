@@ -15,11 +15,14 @@
 
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/BitboardMasks.hpp>
+#include <libchess/pieces/Colors.hpp>
 
 /** This namespace contains bitboard shifting algorithms.
     @ingroup board
  */
 namespace chess::board::shifts {
+
+using pieces::Color;
 
 /// @ingroup board
 /// @{
@@ -47,6 +50,36 @@ namespace chess::board::shifts {
 
 /** Shifts all bits in the given board southwest. */
 [[nodiscard, gnu::const]] constexpr Bitboard southwest(Bitboard board) noexcept;
+
+/** Shifts all pawn positions in the starting bitboard forward, from the given side's perspective. */
+template <Color Side>
+[[nodiscard, gnu::const]] constexpr Bitboard pawn_forward(Bitboard board) noexcept;
+
+/** Shifts all pawn positions in the starting bitboard backwards, from the given side's perspective. */
+template <Color Side>
+[[nodiscard, gnu::const]] constexpr Bitboard pawn_backward(Bitboard board) noexcept;
+
+/** Shifts all bits in the given bitboard to the east capturing direction for the given side. */
+template <Color Side>
+[[nodiscard, gnu::const]] constexpr Bitboard pawn_capture_east(Bitboard board) noexcept;
+
+/** Shifts all bits in the given bitboard to the west capturing direction for the given side. */
+template <Color Side>
+[[nodiscard, gnu::const]] constexpr Bitboard pawn_capture_west(Bitboard board) noexcept;
+
+/** The inverse operation of ``pawn_capture_east()``.
+    Given a set of target squares, this function returns the set of squares that pawns must
+    start from in order to reach the target squares by capturing east.
+ */
+template <Color Side>
+[[nodiscard, gnu::const]] constexpr Bitboard pawn_inv_capture_east(Bitboard board) noexcept;
+
+/** The inverse operation of ``pawn_capture_west()``.
+    Given a set of target squares, this function returns the set of squares that pawns must
+    start from in order to reach the target squares by capturing west.
+ */
+template <Color Side>
+[[nodiscard, gnu::const]] constexpr Bitboard pawn_inv_capture_west(Bitboard board) noexcept;
 
 /// @}
 
@@ -117,6 +150,60 @@ constexpr Bitboard southwest(const Bitboard board) noexcept
     static constexpr auto notAFile = masks::files::A.inverse();
 
     return (board & notAFile) >> 9uz;
+}
+
+template <Color Side>
+constexpr Bitboard pawn_forward(const Bitboard board) noexcept
+{
+    if constexpr (Side == Color::White)
+        return north(board);
+    else
+        return south(board);
+}
+
+template <Color Side>
+constexpr Bitboard pawn_backward(const Bitboard board) noexcept
+{
+    if constexpr (Side == Color::White)
+        return south(board);
+    else
+        return north(board);
+}
+
+template <Color Side>
+constexpr Bitboard pawn_capture_east(const Bitboard board) noexcept
+{
+    if constexpr (Side == Color::White)
+        return northeast(board);
+    else
+        return southeast(board);
+}
+
+template <Color Side>
+constexpr Bitboard pawn_inv_capture_east(const Bitboard board) noexcept
+{
+    if constexpr (Side == Color::White)
+        return southwest(board);
+    else
+        return northwest(board);
+}
+
+template <Color Side>
+constexpr Bitboard pawn_capture_west(const Bitboard board) noexcept
+{
+    if constexpr (Side == Color::White)
+        return northwest(board);
+    else
+        return southwest(board);
+}
+
+template <Color Side>
+constexpr Bitboard pawn_inv_capture_west(const Bitboard board) noexcept
+{
+    if constexpr (Side == Color::White)
+        return southeast(board);
+    else
+        return northeast(board);
 }
 
 } // namespace chess::board::shifts

@@ -91,6 +91,12 @@ template <Color Side>
  */
 
 template <Color Side>
+constexpr Bitboard pawn_pushes(const Bitboard starting) noexcept
+{
+    return board::shifts::pawn_forward<Side>(starting);
+}
+
+template <Color Side>
 constexpr Bitboard pawn_double_pushes(const Bitboard starting) noexcept
 {
     namespace rank_masks = board::masks::ranks;
@@ -102,6 +108,14 @@ constexpr Bitboard pawn_double_pushes(const Bitboard starting) noexcept
         return (starting >> 16uz) // south 2 ranks
              & rank_masks::FIVE;
     }
+}
+
+template <Color Side>
+constexpr Bitboard pawn_attacks(const Bitboard starting) noexcept
+{
+    namespace shifts = board::shifts;
+
+    return shifts::pawn_capture_east<Side>(starting) | shifts::pawn_capture_west<Side>(starting);
 }
 
 constexpr Bitboard knight(const Bitboard starting) noexcept
@@ -153,26 +167,6 @@ constexpr Bitboard queen(const Bitboard starting) noexcept
     const auto notStartingSquare = starting.inverse();
 
     return (ranks | files | diags | antiDiags) & notStartingSquare;
-}
-
-template <Color Side>
-constexpr Bitboard pawn_pushes(const Bitboard starting) noexcept
-{
-    if constexpr (Side == Color::White)
-        return board::shifts::north(starting);
-    else
-        return board::shifts::south(starting);
-}
-
-template <Color Side>
-constexpr Bitboard pawn_attacks(const Bitboard starting) noexcept
-{
-    namespace shifts = board::shifts;
-
-    if constexpr (Side == Color::White)
-        return shifts::northeast(starting) | shifts::northwest(starting);
-    else
-        return shifts::southeast(starting) | shifts::southwest(starting);
 }
 
 constexpr Bitboard king(Bitboard starting) noexcept

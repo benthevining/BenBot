@@ -20,6 +20,7 @@
 #include <libchess/board/BitboardMasks.hpp>
 #include <libchess/board/Pieces.hpp>
 #include <libchess/board/Rank.hpp>
+#include <libchess/board/Shifts.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
@@ -113,10 +114,10 @@ namespace detail {
 
     template <Color Side>
     constexpr void add_pawn_pushes(
-        const Pieces& ourPieces, const Bitboard emptySquares,
+        const Bitboard ourPawns, const Bitboard emptySquares,
         std::output_iterator<Move> auto outputIt)
     {
-        const auto allPushes = pseudo_legal::pawn_pushes<Side>(ourPieces.pawns, emptySquares);
+        const auto allPushes = pseudo_legal::pawn_pushes<Side>(ourPawns, emptySquares);
 
         // non-promoting pushes
         {
@@ -148,12 +149,12 @@ namespace detail {
 
     template <Color Side>
     constexpr void add_pawn_double_pushes(
-        const Pieces& ourPieces, const Bitboard allOccupied,
+        const Bitboard ourPawns, const Bitboard allOccupied,
         std::output_iterator<Move> auto outputIt)
     {
         static constexpr auto pawnStartingRank = Side == Color::White ? Rank::Two : Rank::Seven;
 
-        const auto pushes = pseudo_legal::pawn_double_pushes<Side>(ourPieces.pawns, allOccupied);
+        const auto pushes = pseudo_legal::pawn_double_pushes<Side>(ourPawns, allOccupied);
 
         for (const auto targetSquare : pushes.squares())
             *outputIt = Move {
@@ -167,41 +168,66 @@ namespace detail {
 
     template <Color Side>
     constexpr void add_pawn_captures(
-        const Pieces& ourPieces, const Bitboard enemyPieces,
+        const Bitboard ourPawns, const Bitboard enemyPieces,
         std::output_iterator<Move> auto outputIt)
     {
-        // TODO: do these set-wise?
-        for (const auto starting : ourPieces.pawns.squares()) {
-            const Bitboard startingBoard { starting };
+        namespace shifts = board::shifts;
 
-            const auto capture = pseudo_legal::pawn_captures<Side>(startingBoard, enemyPieces);
+        const auto eastAttacks = shifts::pawn_capture_east<Side>(ourPawns);
+        const auto westAttacks = shifts::pawn_capture_west<Side>(ourPawns);
 
-            if (capture.none())
-                continue;
+        const auto eastCaptures = eastAttacks & enemyPieces;
+        const auto westCaptures = westAttacks & enemyPieces;
 
-            const bool isPromotion = (capture & promotionMask).any();
+        const auto eastPromotionCaptures = eastCaptures & promotionMask;
+        const auto westPromotionCaptures = westCaptures & promotionMask;
 
-            const auto target = Square::from_index(capture.first());
+        const auto eastRegCaptures = eastCaptures & promotionMask.inverse();
+        const auto westRegCaptures = westCaptures & promotionMask.inverse();
 
-            if (! isPromotion) {
-                [[likely]];
+        // starting positions of pawns that can make captures
+        const auto canCapturePromoteEast = shifts::pawn_inv_capture_east<Side>(eastPromotionCaptures);
+        const auto canCapturePromoteWest = shifts::pawn_inv_capture_west<Side>(westPromotionCaptures);
 
-                *outputIt = Move {
-                    .from  = starting,
-                    .to    = target,
-                    .piece = PieceType::Pawn
-                };
+        const auto canRegCaptureEast = shifts::pawn_inv_capture_east<Side>(eastRegCaptures);
+        const auto canRegCaptureWest = shifts::pawn_inv_capture_west<Side>(westRegCaptures);
 
-                continue;
-            }
+        for (const auto [starting, target] : std::views::zip(canRegCaptureEast.squares(), eastRegCaptures.squares())) {
+            *outputIt = Move {
+                .from  = starting,
+                .to    = target,
+                .piece = PieceType::Pawn
+            };
+        }
 
-            for (const auto promotedType : possiblePromotedTypes)
+        for (const auto [starting, target] : std::views::zip(canRegCaptureWest.squares(), westRegCaptures.squares())) {
+            *outputIt = Move {
+                .from  = starting,
+                .to    = target,
+                .piece = PieceType::Pawn
+            };
+        }
+
+        for (const auto [starting, target] : std::views::zip(canCapturePromoteEast.squares(), eastPromotionCaptures.squares())) {
+            for (const auto promotedType : possiblePromotedTypes) {
                 *outputIt = Move {
                     .from         = starting,
                     .to           = target,
                     .piece        = PieceType::Pawn,
                     .promotedType = promotedType
                 };
+            }
+        }
+
+        for (const auto [starting, target] : std::views::zip(canCapturePromoteWest.squares(), westPromotionCaptures.squares())) {
+            for (const auto promotedType : possiblePromotedTypes) {
+                *outputIt = Move {
+                    .from         = starting,
+                    .to           = target,
+                    .piece        = PieceType::Pawn,
+                    .promotedType = promotedType
+                };
+            }
         }
     }
 
@@ -241,9 +267,9 @@ namespace detail {
     {
         const auto& ourPieces = position.pieces_for<Side>();
 
-        add_pawn_pushes<Side>(ourPieces, allOccupied.inverse(), outputIt);
-        add_pawn_double_pushes<Side>(ourPieces, allOccupied, outputIt);
-        add_pawn_captures<Side>(ourPieces, enemyPieces, outputIt);
+        add_pawn_pushes<Side>(ourPieces.pawns, allOccupied.inverse(), outputIt);
+        add_pawn_double_pushes<Side>(ourPieces.pawns, allOccupied, outputIt);
+        add_pawn_captures<Side>(ourPieces.pawns, enemyPieces, outputIt);
         add_en_passant<Side>(position, outputIt);
     }
 

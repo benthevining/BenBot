@@ -246,6 +246,8 @@ constexpr bool squares_attacked(
 {
     namespace move_gen = moves::pseudo_legal;
 
+    // TODO: could optimize by using the pattern generation functions for pawns, knights, & king
+
     const auto friendlyPieces = pieces.occupied();
 
     const auto pawnAttacks = move_gen::pawn_captures<Side>(pieces.pawns, enemyPieces);
