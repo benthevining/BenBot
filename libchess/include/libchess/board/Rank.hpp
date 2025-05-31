@@ -13,6 +13,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <format>
 #include <libchess/board/BitboardIndex.hpp>
 #include <libchess/pieces/Colors.hpp>
@@ -50,6 +51,32 @@ enum class Rank : BitboardIndex {
         return Rank::One;
 
     return Rank::Eight;
+}
+
+/** Returns the next pawn rank, from the given side's perspective. */
+template <Color Side>
+[[nodiscard, gnu::const]] constexpr Rank next_pawn_rank(const Rank rank) noexcept
+{
+    if constexpr (Side == Color::White) {
+        assert(rank != Rank::Eight);
+        return static_cast<Rank>(std::to_underlying(rank) + 1uz);
+    } else {
+        assert(rank != Rank::One);
+        return static_cast<Rank>(std::to_underlying(rank) - 1uz);
+    }
+}
+
+/** Returns the previous pawn rank, from the given side's perspective. */
+template <Color Side>
+[[nodiscard, gnu::const]] constexpr Rank prev_pawn_rank(const Rank rank) noexcept
+{
+    if constexpr (Side == Color::White) {
+        assert(rank != Rank::One);
+        return static_cast<Rank>(std::to_underlying(rank) - 1uz);
+    } else {
+        assert(rank != Rank::Eight);
+        return static_cast<Rank>(std::to_underlying(rank) + 1uz);
+    }
 }
 
 /** Converts the rank to its single-character representation (as an integer).

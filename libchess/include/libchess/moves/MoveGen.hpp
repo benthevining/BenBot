@@ -28,7 +28,6 @@
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
 #include <ranges>
-#include <utility>
 #include <vector>
 
 namespace chess::moves {
@@ -91,6 +90,8 @@ namespace detail {
     using board::Square;
     using pieces::Color;
 
+    using board::prev_pawn_rank;
+
     namespace rank_masks = board::masks::ranks;
     namespace shifts     = board::shifts;
 
@@ -99,18 +100,6 @@ namespace detail {
     static constexpr std::array possiblePromotedTypes {
         PieceType::Knight, PieceType::Bishop, PieceType::Rook, PieceType::Queen
     };
-
-    template <Color Side>
-    [[nodiscard, gnu::const]] constexpr Rank prev_pawn_rank(const Rank rank) noexcept
-    {
-        if constexpr (Side == Color::White) {
-            assert(rank != Rank::One);
-            return static_cast<Rank>(std::to_underlying(rank) - 1uz);
-        } else {
-            assert(rank != Rank::Eight);
-            return static_cast<Rank>(std::to_underlying(rank) + 1uz);
-        }
-    }
 
     template <Color Side>
     constexpr void add_pawn_pushes(

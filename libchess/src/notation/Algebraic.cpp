@@ -23,7 +23,6 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <utility>
 #include <vector>
 
 namespace chess::notation {
@@ -266,25 +265,17 @@ namespace {
         }
     }
 
-    [[nodiscard]] Rank prev_pawn_rank(
-        const Rank rank, const Color color)
-    {
-        if (color == Color::White) {
-            assert(rank != Rank::One);
-            return static_cast<Rank>(std::to_underlying(rank) - 1uz);
-        }
-
-        assert(rank != Rank::Eight);
-        return static_cast<Rank>(std::to_underlying(rank) + 1uz);
-    }
-
     [[nodiscard]] Move create_pawn_capture(
         const Square& targetSquare, const File startingFile, const Color color)
     {
+        const auto fromRank = color == Color::White
+                                ? board::prev_pawn_rank<Color::White>(targetSquare.rank)
+                                : board::prev_pawn_rank<Color::Black>(targetSquare.rank);
+
         return {
             .from = Square {
                 .file = startingFile,
-                .rank = prev_pawn_rank(targetSquare.rank, color) },
+                .rank = fromRank },
             .to    = targetSquare,
             .piece = PieceType::Pawn
         };
