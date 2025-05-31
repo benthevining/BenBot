@@ -18,6 +18,7 @@
 #include <libchess/notation/Algebraic.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
+#include <libchess/util/Strings.hpp>
 #include <optional>
 #include <span>
 #include <stdexcept>
@@ -358,6 +359,8 @@ namespace {
 
 Move from_alg(const Position& position, std::string_view text)
 {
+    text = util::trim(text);
+
     if (text.empty()) {
         throw std::invalid_argument {
             "Cannot parse Move from empty string"

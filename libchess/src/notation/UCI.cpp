@@ -11,6 +11,7 @@
 #include <libchess/notation/UCI.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
+#include <libchess/util/Strings.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <stdexcept>
 #include <string>
@@ -31,6 +32,8 @@ std::string to_uci(const Move& move)
 Move from_uci(const Position& position, std::string_view text)
 {
     using board::Square;
+
+    text = util::trim(text);
 
     if (text.empty()) {
         throw std::invalid_argument {

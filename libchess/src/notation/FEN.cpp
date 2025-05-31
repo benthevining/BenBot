@@ -21,6 +21,7 @@
 #include <libchess/notation/FEN.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
+#include <libchess/util/Strings.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <optional>
 #include <ranges>
@@ -323,8 +324,10 @@ namespace {
 
 } // namespace
 
-Position from_fen(const std::string_view fenString)
+Position from_fen(std::string_view fenString)
 {
+    fenString = util::trim(fenString);
+
     if (fenString.empty()) {
         throw std::invalid_argument {
             "Cannot parse Position from empty FEN string"
