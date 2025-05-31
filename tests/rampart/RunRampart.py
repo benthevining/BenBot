@@ -86,7 +86,7 @@ for test_case in testcase_data['testCases']:
         else:
             test_cases_passed += 1
 
-        test_idx += 1
+    test_idx += 1
 
 print(f'{test_cases_passed} test cases passed')
 print(f'{test_cases_failed} test cases failed')

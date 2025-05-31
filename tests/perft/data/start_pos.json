@@ -1,0 +1,71 @@
+{
+  "comment": "starting position",
+  "depths": [
+    {
+      "depth": 0,
+      "results": {
+        "captures": 0,
+        "castles": 0,
+        "checkmates": 0,
+        "checks": 0,
+        "en_passants": 0,
+        "promotions": 0,
+        "stalemates": 0,
+        "totalNodes": 1
+      }
+    },
+    {
+      "depth": 1,
+      "results": {
+        "captures": 0,
+        "castles": 0,
+        "checkmates": 0,
+        "checks": 0,
+        "en_passants": 0,
+        "promotions": 0,
+        "stalemates": 0,
+        "totalNodes": 20
+      }
+    },
+    {
+      "depth": 2,
+      "results": {
+        "captures": 0,
+        "castles": 0,
+        "checkmates": 0,
+        "checks": 0,
+        "en_passants": 0,
+        "promotions": 0,
+        "stalemates": 0,
+        "totalNodes": 400
+      }
+    },
+    {
+      "depth": 3,
+      "results": {
+        "captures": 34,
+        "castles": 0,
+        "checkmates": 0,
+        "checks": 12,
+        "en_passants": 0,
+        "promotions": 0,
+        "stalemates": 0,
+        "totalNodes": 8902
+      }
+    },
+    {
+      "depth": 4,
+      "results": {
+        "captures": 1576,
+        "castles": 0,
+        "checkmates": 8,
+        "checks": 469,
+        "en_passants": 0,
+        "promotions": 0,
+        "stalemates": 0,
+        "totalNodes": 197281
+      }
+    }
+  ],
+  "position": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+}

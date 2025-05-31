@@ -1,0 +1,58 @@
+{
+  "comment": "gives the same results when mirrored",
+  "depths": [
+    {
+      "depth": 1,
+      "results": {
+        "captures": 0,
+        "castles": 0,
+        "checkmates": 0,
+        "checks": 0,
+        "en_passants": 0,
+        "promotions": 0,
+        "stalemates": 0,
+        "totalNodes": 6
+      }
+    },
+    {
+      "depth": 2,
+      "results": {
+        "captures": 87,
+        "castles": 6,
+        "checkmates": 0,
+        "checks": 10,
+        "en_passants": 0,
+        "promotions": 48,
+        "stalemates": 0,
+        "totalNodes": 264
+      }
+    },
+    {
+      "depth": 3,
+      "results": {
+        "captures": 1021,
+        "castles": 6,
+        "checkmates": 22,
+        "checks": 38,
+        "en_passants": 4,
+        "promotions": 120,
+        "stalemates": 0,
+        "totalNodes": 9467
+      }
+    },
+    {
+      "depth": 4,
+      "results": {
+        "captures": 131393,
+        "castles": 7795,
+        "checkmates": 5,
+        "checks": 15492,
+        "en_passants": 4,
+        "promotions": 60032,
+        "stalemates": 0,
+        "totalNodes": 422333
+      }
+    }
+  ],
+  "position": "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1"
+}

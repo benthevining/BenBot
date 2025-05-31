@@ -19,7 +19,6 @@ endif ()
 file (READ RunRampart.py python_script_content)
 
 set (TMP_DIR "${CMAKE_CURRENT_BINARY_DIR}/results")
-set (TESTCASES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/data")
 
 string (CONFIGURE "${python_script_content}" python_script_content @ONLY)
 

@@ -10,13 +10,16 @@ target_link_libraries (perft PRIVATE libchess::libchess nlohmann_json::nlohmann_
 
 target_sources (perft PRIVATE main.cpp)
 
+if (NOT TARGET Python::Interpreter)
+    return ()
+endif ()
+
 #
 
 # in the template script, we want to expand both variables and generator expressions
 
 file (READ RunPerft.py python_script_content)
 
-set (CORRECT_RESULTS_FILE "${CMAKE_CURRENT_LIST_DIR}/PerftResults.json")
 set (TMP_DIR "${CMAKE_CURRENT_BINARY_DIR}/results")
 
 string (CONFIGURE "${python_script_content}" python_script_content @ONLY)
@@ -38,21 +41,16 @@ file (
 
 set_property (DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS RunPerft.py)
 
-if (NOT TARGET Python::Interpreter)
-    return ()
-endif ()
-
-add_custom_target (
-    run_perft
-    COMMAND Python::Interpreter "${generated_script}"
-    BYPRODUCTS "${TMP_DIR}"
-    COMMENT "Running perft tests..."
-    USES_TERMINAL COMMAND_EXPAND_LISTS
-    SOURCES RunPerft.py PerftResults.json
+file (GLOB testcase_files LIST_DIRECTORIES false CONFIGURE_DEPENDS
+                                                 "${CMAKE_CURRENT_LIST_DIR}/data/*.json"
 )
 
-add_dependencies (run_perft perft)
+foreach (data_file IN LISTS testcase_files)
+    cmake_path (GET data_file STEM filename)
 
-add_test (NAME libchess.perft COMMAND "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --target
-                                      run_perft --config "$<CONFIG>"
-)
+    set (test_name "libchess.perft.${filename}")
+
+    add_test (NAME "${test_name}" COMMAND Python::Interpreter "${generated_script}" "${data_file}")
+
+    set_tests_properties ("${test_name}" PROPERTIES REQUIRED_FILES "${data_file}")
+endforeach ()

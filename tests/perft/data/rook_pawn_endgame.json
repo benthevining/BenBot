@@ -1,0 +1,70 @@
+{
+  "depths": [
+    {
+      "depth": 1,
+      "results": {
+        "captures": 1,
+        "castles": 0,
+        "checkmates": 0,
+        "checks": 2,
+        "en_passants": 0,
+        "promotions": 0,
+        "stalemates": 0,
+        "totalNodes": 14
+      }
+    },
+    {
+      "depth": 2,
+      "results": {
+        "captures": 14,
+        "castles": 0,
+        "checkmates": 0,
+        "checks": 10,
+        "en_passants": 0,
+        "promotions": 0,
+        "stalemates": 0,
+        "totalNodes": 191
+      }
+    },
+    {
+      "depth": 3,
+      "results": {
+        "captures": 209,
+        "castles": 0,
+        "checkmates": 0,
+        "checks": 267,
+        "en_passants": 2,
+        "promotions": 0,
+        "stalemates": 0,
+        "totalNodes": 2812
+      }
+    },
+    {
+      "depth": 4,
+      "results": {
+        "captures": 3348,
+        "castles": 0,
+        "checkmates": 17,
+        "checks": 1680,
+        "en_passants": 123,
+        "promotions": 0,
+        "stalemates": 0,
+        "totalNodes": 43238
+      }
+    },
+    {
+      "depth": 5,
+      "results": {
+        "captures": 52051,
+        "castles": 0,
+        "checkmates": 17,
+        "checks": 52950,
+        "en_passants": 1165,
+        "promotions": 0,
+        "stalemates": 0,
+        "totalNodes": 674624
+      }
+    }
+  ],
+  "position": "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1 "
+}

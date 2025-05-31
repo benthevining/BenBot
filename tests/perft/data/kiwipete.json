@@ -1,0 +1,45 @@
+{
+  "comment": "Kiwipete by Peter McKenzie",
+  "depths": [
+    {
+      "depth": 1,
+      "results": {
+        "captures": 8,
+        "castles": 2,
+        "checkmates": 0,
+        "checks": 0,
+        "en_passants": 0,
+        "promotions": 0,
+        "stalemates": 0,
+        "totalNodes": 48
+      }
+    },
+    {
+      "depth": 2,
+      "results": {
+        "captures": 351,
+        "castles": 91,
+        "checkmates": 0,
+        "checks": 3,
+        "en_passants": 1,
+        "promotions": 0,
+        "stalemates": 0,
+        "totalNodes": 2039
+      }
+    },
+    {
+      "depth": 3,
+      "results": {
+        "captures": 17102,
+        "castles": 3162,
+        "checkmates": 1,
+        "checks": 993,
+        "en_passants": 45,
+        "promotions": 0,
+        "stalemates": 0,
+        "totalNodes": 97862
+      }
+    }
+  ],
+  "position": "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"
+}
