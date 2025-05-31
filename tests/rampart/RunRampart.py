@@ -18,12 +18,12 @@ CORRECT_FILES_DIR = Path('@TESTCASES_DIR@')
 # TODO: famous, pawns, taxing
 TESTCASE_FILES = ['castling', 'checkmates', 'promotions', 'stalemates', 'standard']
 
-def get_move_from_obj(obj):
-    for key, value in list(obj):
-        if key == 'move':
-            return value
+def get_move_from_obj(listObj, move): # listObj is a JSON list of objects
+    for obj in listObj:
+        if obj['move'] == move:
+            return obj
 
-    raise ValueError(f'\"move\" key not found in object: {obj}')
+    return None
 
 test_cases_passed = 0
 test_cases_failed = 0
@@ -53,20 +53,35 @@ for testcase_file in TESTCASE_FILES:
         with open(output_file, 'r') as file:
             result_data = json.load(file)
 
-        correct_moves   = frozenset(frozenset(d.items()) for d in test_case['expected'])
-        generated_moves = frozenset(frozenset(d.items()) for d in result_data['generated'])
+        correct_moves   = test_case['expected']
+        generated_moves = result_data['generated']
 
         any_errors = False
 
-        # print moves in correct_moves not in generated_moves
-        for missing_move in correct_moves.difference(generated_moves):
-            print(f'ERROR! Move {get_move_from_obj(missing_move)} was not generated (or resulting FEN is wrong)')
-            any_errors = True
+        for correct_move in correct_moves:
+            move = correct_move['move']
+            generated_move = get_move_from_obj(generated_moves, move)
 
-        # print moves in generated_moves not in correct_moves
-        for incorrect_move in generated_moves.difference(correct_moves):
-            print(f'ERROR! Move {get_move_from_obj(incorrect_move)} was incorrectly generated (or resulting FEN is wrong)')
-            any_errors = True
+            if generated_move is None:
+                print(f'ERROR: move {move} was not generated, it should be legal!')
+                any_errors = True
+            else:
+                correctFEN   = correct_move['fen']
+                generatedFEN = generated_move['fen']
+
+                if correctFEN != generatedFEN:
+                    print(f'ERROR: move {move} resulted in incorrect FEN!')
+                    print(f'Expected {correctFEN}, got {generatedFEN}')
+                    any_errors = True
+
+        # check for moves in generated_moves not in correct_moves
+        for generated_move in generated_moves:
+            move = generated_move['move']
+
+            correct_move = get_move_from_obj(correct_moves, move)
+
+            if correct_move is None:
+                print(f'ERROR: move {move} was incorrectly generated, it should not be legal!')
 
         if any_errors:
             test_cases_failed += 1
