@@ -24,7 +24,6 @@
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
-#include <libchess/moves/Patterns.hpp>
 #include <libchess/moves/PseudoLegal.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
@@ -279,7 +278,6 @@ namespace detail {
         const Pieces& ourPieces, const Bitboard friendlyPieces,
         std::output_iterator<Move> auto outputIt)
     {
-        // TODO: parallelize for all knights at once?
         for (const auto knightSquare : ourPieces.knights.squares()) {
             const auto knightMoves = pseudo_legal::knight(Bitboard { knightSquare }, friendlyPieces);
 
@@ -296,7 +294,6 @@ namespace detail {
         const Pieces& ourPieces, const Bitboard friendlyPieces, const Bitboard emptySquares,
         std::output_iterator<Move> auto outputIt)
     {
-        // TODO: parallelize for all bishops at once?
         for (const auto bishopSquare : ourPieces.bishops.squares()) {
             const auto bishopMoves = pseudo_legal::bishop(Bitboard { bishopSquare }, emptySquares, friendlyPieces);
 
@@ -313,7 +310,6 @@ namespace detail {
         const Pieces& ourPieces, const Bitboard friendlyPieces, const Bitboard emptySquares,
         std::output_iterator<Move> auto outputIt)
     {
-        // TODO: parallelize for all rooks at once?
         for (const auto rookSquare : ourPieces.rooks.squares()) {
             const auto rookMoves = pseudo_legal::rook(Bitboard { rookSquare }, emptySquares, friendlyPieces);
 
@@ -330,7 +326,6 @@ namespace detail {
         const Pieces& ourPieces, const Bitboard friendlyPieces, const Bitboard emptySquares,
         std::output_iterator<Move> auto outputIt)
     {
-        // TODO: parallelize for all queens at once?
         for (const auto queenSquare : ourPieces.queens.squares()) {
             const auto queenMoves = pseudo_legal::queen(Bitboard { queenSquare }, emptySquares, friendlyPieces);
 
@@ -396,6 +391,10 @@ namespace detail {
         const Position& position, const Bitboard allOccupied,
         std::output_iterator<Move> auto outputIt)
     {
+        // castling out of check is not allowed
+        if (position.is_check())
+            return;
+
         static constexpr bool isWhite = Side == Color::White;
 
         const auto& rights = isWhite ? position.whiteCastlingRights : position.blackCastlingRights;
