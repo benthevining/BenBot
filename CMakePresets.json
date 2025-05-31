@@ -1,0 +1,76 @@
+{
+  "buildPresets": [
+    {
+      "configuration": "Debug",
+      "configurePreset": "default",
+      "displayName": "Build with Ninja (Debug)",
+      "jobs": 8,
+      "name": "debug"
+    },
+    {
+      "configuration": "Release",
+      "displayName": "Build with Ninja (Release)",
+      "inherits": "debug",
+      "name": "release"
+    }
+  ],
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 30,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "binaryDir": "${fileDir}/Builds/ninja",
+      "cacheVariables": {
+        "BUILD_SHARED_LIBS": {
+          "type": "BOOL",
+          "value": "OFF"
+        },
+        "CMAKE_COLOR_DIAGNOSTICS": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "CMAKE_EXPORT_COMPILE_COMMANDS": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "CMAKE_OPTIMIZE_DEPENDENCIES": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "CTEST_NO_TESTS_ACTION": {
+          "type": "STRING",
+          "value": "error"
+        },
+        "CTEST_OUTPUT_ON_FAILURE": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "CTEST_PROGRESS_OUTPUT": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "DOXYGEN_WARN_LOGFILE": {
+          "type": "FILEPATH",
+          "value": "${sourceDir}/logs/Doxygen.log"
+        },
+        "FETCHCONTENT_QUIET": {
+          "type": "BOOL",
+          "value": "OFF"
+        }
+      },
+      "displayName": "Build with Ninja",
+      "generator": "Ninja Multi-Config",
+      "name": "default",
+      "warnings": {
+        "deprecated": false,
+        "dev": false,
+        "systemVars": false,
+        "uninitialized": false,
+        "unusedCli": false
+      }
+    }
+  ],
+  "version": 6
+}
