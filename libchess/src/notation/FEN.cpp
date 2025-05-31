@@ -358,7 +358,7 @@ Position from_fen(std::string_view fenString)
         halfMoveClock.data(), halfMoveClock.data() + halfMoveClock.length(), position.halfmoveClock);
 
     std::from_chars(
-        fullMoveCounter.data(), fullMoveCounter.data() + halfMoveClock.length(), position.fullMoveCounter);
+        fullMoveCounter.data(), fullMoveCounter.data() + fullMoveCounter.length(), position.fullMoveCounter);
 
     return position;
 }

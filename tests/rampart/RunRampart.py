@@ -15,8 +15,8 @@ from pathlib import Path
 TMP_DIR_PATH = Path('@TMP_DIR@')
 CORRECT_FILES_DIR = Path('@TESTCASES_DIR@')
 
-# TODO: famous, pawns, taxing
-TESTCASE_FILES = ['castling', 'checkmates', 'promotions', 'stalemates', 'standard']
+# TODO: pawns, taxing
+TESTCASE_FILES = ['castling', 'checkmates', 'famous', 'promotions', 'stalemates', 'standard']
 
 def get_move_from_obj(listObj, move): # listObj is a JSON list of objects
     for obj in listObj:
