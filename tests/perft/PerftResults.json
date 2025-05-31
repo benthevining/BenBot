@@ -66,34 +66,194 @@
           "stalemates": 0,
           "totalNodes": 197281
         }
+      }
+    ],
+    "position": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+  },
+  {
+    "comment": "Kiwipete by Peter McKenzie",
+    "depths": [
+      {
+        "depth": 1,
+        "results": {
+          "captures": 8,
+          "castles": 2,
+          "checkmates": 0,
+          "checks": 0,
+          "en_passants": 0,
+          "promotions": 0,
+          "stalemates": 0,
+          "totalNodes": 48
+        }
+      },
+      {
+        "depth": 2,
+        "results": {
+          "captures": 351,
+          "castles": 91,
+          "checkmates": 0,
+          "checks": 3,
+          "en_passants": 1,
+          "promotions": 0,
+          "stalemates": 0,
+          "totalNodes": 2039
+        }
+      },
+      {
+        "depth": 3,
+        "results": {
+          "captures": 17102,
+          "castles": 3162,
+          "checkmates": 1,
+          "checks": 993,
+          "en_passants": 45,
+          "promotions": 0,
+          "stalemates": 0,
+          "totalNodes": 97862
+        }
+      },
+      {
+        "depth": 4,
+        "results": {
+          "captures": 757163,
+          "castles": 128013,
+          "checkmates": 43,
+          "checks": 25523,
+          "en_passants": 1929,
+          "promotions": 15172,
+          "stalemates": 0,
+          "totalNodes": 4085603
+        }
+      }
+    ],
+    "position": "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"
+  },
+  {
+    "depths": [
+      {
+        "depth": 1,
+        "results": {
+          "captures": 1,
+          "castles": 0,
+          "checkmates": 0,
+          "checks": 2,
+          "en_passants": 0,
+          "promotions": 0,
+          "stalemates": 0,
+          "totalNodes": 14
+        }
+      },
+      {
+        "depth": 2,
+        "results": {
+          "captures": 14,
+          "castles": 0,
+          "checkmates": 0,
+          "checks": 10,
+          "en_passants": 0,
+          "promotions": 0,
+          "stalemates": 0,
+          "totalNodes": 191
+        }
+      },
+      {
+        "depth": 3,
+        "results": {
+          "captures": 209,
+          "castles": 0,
+          "checkmates": 0,
+          "checks": 267,
+          "en_passants": 2,
+          "promotions": 0,
+          "stalemates": 0,
+          "totalNodes": 2812
+        }
+      },
+      {
+        "depth": 4,
+        "results": {
+          "captures": 3348,
+          "castles": 0,
+          "checkmates": 17,
+          "checks": 1680,
+          "en_passants": 123,
+          "promotions": 0,
+          "stalemates": 0,
+          "totalNodes": 43238
+        }
       },
       {
         "depth": 5,
         "results": {
-          "captures": 82719,
+          "captures": 52051,
           "castles": 0,
-          "checkmates": 347,
-          "checks": 27351,
-          "en_passants": 258,
+          "checkmates": 17,
+          "checks": 52950,
+          "en_passants": 1165,
           "promotions": 0,
           "stalemates": 0,
-          "totalNodes": 4865609
-        }
-      },
-      {
-        "depth": 6,
-        "results": {
-          "captures": 2812008,
-          "castles": 0,
-          "checkmates": 10828,
-          "checks": 809099,
-          "en_passants": 5248,
-          "promotions": 0,
-          "stalemates": 0,
-          "totalNodes": 119060324
+          "totalNodes": 674624
         }
       }
     ],
-    "position": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+    "position": "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1 "
+  },
+  {
+    "comment": "gives the same results when mirrored",
+    "depths": [
+      {
+        "depth": 1,
+        "results": {
+          "captures": 0,
+          "castles": 0,
+          "checkmates": 0,
+          "checks": 0,
+          "en_passants": 0,
+          "promotions": 0,
+          "stalemates": 0,
+          "totalNodes": 6
+        }
+      },
+      {
+        "depth": 2,
+        "results": {
+          "captures": 87,
+          "castles": 6,
+          "checkmates": 0,
+          "checks": 10,
+          "en_passants": 0,
+          "promotions": 48,
+          "stalemates": 0,
+          "totalNodes": 264
+        }
+      },
+      {
+        "depth": 3,
+        "results": {
+          "captures": 1021,
+          "castles": 6,
+          "checkmates": 22,
+          "checks": 38,
+          "en_passants": 4,
+          "promotions": 120,
+          "stalemates": 0,
+          "totalNodes": 9467
+        }
+      },
+      {
+        "depth": 4,
+        "results": {
+          "captures": 131393,
+          "castles": 7795,
+          "checkmates": 5,
+          "checks": 15492,
+          "en_passants": 4,
+          "promotions": 60032,
+          "stalemates": 0,
+          "totalNodes": 422333
+        }
+      }
+    ],
+    "position": "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1"
   }
 ]
