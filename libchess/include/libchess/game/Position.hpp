@@ -354,7 +354,6 @@ namespace detail {
         rooks ^= kingside_castle_rook_pos_mask<Side>();
     }
 
-    // TODO: handle unsetting captured pawn in case of en passant
     constexpr void update_bitboards(
         Position& position, const Move& move) noexcept
     {
@@ -378,10 +377,23 @@ namespace detail {
 
         if (move.is_castling()) {
             [[unlikely]];
+
             if (isWhite)
                 castled_set_rook_position<Color::White>(ourPieces, move);
             else
                 castled_set_rook_position<Color::Black>(ourPieces, move);
+        }
+
+        if (position.is_en_passant(move)) {
+            [[unlikely]];
+
+            const auto capturedRank = isWhite
+                                        ? board::next_pawn_rank<Color::White>(move.to.rank)
+                                        : board::next_pawn_rank<Color::Black>(move.to.rank);
+
+            opponentPieces.pawns.unset(Square {
+                .file = move.to.file,
+                .rank = capturedRank });
         }
     }
 
