@@ -12,10 +12,14 @@
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdlib>
 #include <exception>
+#include <filesystem>
+#include <fstream>
 #include <iterator>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Perft.hpp>
 #include <libchess/notation/FEN.hpp>
+#include <nlohmann/json.hpp>
+#include <optional>
 #include <print>
 #include <span>
 #include <stdexcept>
@@ -24,12 +28,13 @@
 
 // TODO:
 // print number of nodes from each starting move
-// option to output JSON?
 
 struct PerftOptions final {
     chess::game::Position startingPosition {};
 
     std::size_t depth { 1uz };
+
+    std::optional<std::filesystem::path> jsonOutputPath;
 };
 
 namespace {
@@ -37,7 +42,8 @@ namespace {
 void print_help(const std::string_view programName)
 {
     std::println("Usage:");
-    std::println("{} <depth> [--fen \"<fenString>\"]", programName);
+    std::println("{} <depth> [--fen \"<fenString>\"] [--write-json <path>]", programName);
+    std::println("If the --write-json option is given, a JSON file with results will be written to the given path.");
 }
 
 [[nodiscard]] PerftOptions parse_options(std::span<const std::string_view> args)
@@ -64,6 +70,21 @@ void print_help(const std::string_view programName)
             continue;
         }
 
+        if (arg == "--write-json") {
+            if (args.empty())
+                throw std::invalid_argument {
+                    "Error: expected path following option --write-json"
+                };
+
+            const auto path = args.front();
+
+            args = args.subspan(1uz);
+
+            options.jsonOutputPath = path;
+
+            continue;
+        }
+
         // assume arg is depth
         std::from_chars(arg.data(), arg.data() + arg.length(), options.depth);
     };
@@ -77,7 +98,6 @@ void run_perft(const PerftOptions& options)
 
     std::println("Starting position:");
     std::println("{}", chess::game::print_utf8(options.startingPosition));
-
     std::println("Running perft depth {}...", options.depth);
     std::println("");
 
@@ -87,6 +107,28 @@ void run_perft(const PerftOptions& options)
 
     const auto endTime = Clock::now();
 
+    const auto wallTime = std::chrono::duration_cast<std::chrono::seconds>(endTime - startTime);
+
+    if (options.jsonOutputPath.has_value()) {
+        nlohmann::json json;
+
+        json["starting_fen"]        = chess::notation::to_fen(options.startingPosition);
+        json["depth"]               = options.depth;
+        json["totalNodes"]          = result.nodes;
+        json["captures"]            = result.captures;
+        json["en_passants"]         = result.enPassantCaptures;
+        json["castles"]             = result.castles;
+        json["promotions"]          = result.promotions;
+        json["checks"]              = result.checks;
+        json["checkmates"]          = result.checkmates;
+        json["stalemates"]          = result.stalemates;
+        json["search_time_seconds"] = wallTime.count();
+
+        std::ofstream output { *options.jsonOutputPath };
+
+        output << json.dump();
+    }
+
     std::println("Nodes: {}", result.nodes);
     std::println("Captures: {}", result.captures);
     std::println("En passant captures: {}", result.enPassantCaptures);
@@ -95,8 +137,6 @@ void run_perft(const PerftOptions& options)
     std::println("Checks: {}", result.checks);
     std::println("Checkmates: {}", result.checkmates);
     std::println("Stalemates: {}", result.stalemates);
-
-    const auto wallTime = std::chrono::duration_cast<std::chrono::seconds>(endTime - startTime);
 
     std::println("");
     std::println("Search time: {}", wallTime);
