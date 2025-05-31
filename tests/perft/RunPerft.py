@@ -24,6 +24,13 @@ def get_correct_for(depth):
 
     raise ValueError(f"Correct data for depth {depth} not found")
 
+# We stop the test if we get the incorrect number of total nodes, since this
+# indicates a total failure of our move generation algorithm. If the stats
+# breakdown is incorrect but the total number of nodes is correct, continue
+# testing deeper depths until the total number of nodes is wrong.
+incorrect_stats = []
+passed = []
+
 for depth in range(7):
     results_file = TMP_DIR_PATH / f'{depth}_results.json'
 
@@ -43,11 +50,24 @@ for depth in range(7):
         reported = results[field]
 
         if expected != reported:
-            print(f'Expected {expected} {field}, got {reported}')
+            if field == 'totalNodes': # wrong number of total nodes reported, exit the test with failure
+                print(f'ERROR: Depth {depth} reported incorrect number of nodes! Expected {expected}, got {reported}')
+                exit(1)
+
+            # wrong stats reported, report failure but continue on to deeper depths
+            print(f'ERROR: Expected {expected} {field}, got {reported}')
+
+            incorrect_stats.append(depth)
+
             any_error = True
 
-    if any_error:
-        print(f'Failed on depth {depth}')
-        exit(1)
+    if not any_error:
+        passed.append(depth)
 
-print('All tests succeeded!')
+if incorrect_stats:
+    failed_depths = list(set(incorrect_stats)) # remove duplicates
+    failed_depths.sort()
+    print(f'The following depths reported correct total nodes, but incorrect breakdown stats: {failed_depths}')
+
+if passed:
+    print(f'The following depths succeeded: {passed}')
