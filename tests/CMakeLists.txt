@@ -19,6 +19,9 @@ FetchContent_Declare (
 
 FetchContent_MakeAvailable (nlohmann_json)
 
+# used in both the perft & rampart executables
+find_package (Python COMPONENTS Interpreter)
+
 add_subdirectory (unit)
 add_subdirectory (perft)
 add_subdirectory (rampart)

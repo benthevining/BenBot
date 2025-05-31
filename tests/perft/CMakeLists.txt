@@ -38,8 +38,6 @@ file (
 
 set_property (DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS RunPerft.py)
 
-find_package (Python COMPONENTS Interpreter)
-
 if (TARGET Python::Interpreter)
     add_custom_target (
         run_perft
