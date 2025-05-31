@@ -174,11 +174,11 @@ struct Position final {
 
     /// @}
 
-    /// @name King attack queries
-    /// @{
-
     /** Returns true if the king of the side to move is in check. */
     [[nodiscard]] constexpr bool is_check() const noexcept;
+
+    /// @name Game result queries
+    /// @{
 
     /** Returns true if the king is attacked and the side to move has no legal moves. */
     [[nodiscard]] bool is_checkmate() const;
@@ -186,12 +186,15 @@ struct Position final {
     /** Returns true if the side to move has no legal moves, but their king is not attacked. */
     [[nodiscard]] bool is_stalemate() const;
 
-    /// @}
-
     /** Returns true if this position is a fifty-move draw, based on the ``halfmoveClock``.
         Note that in order for the game to be drawn, the side to move must have at least 1 legal move.
      */
     [[nodiscard]] bool is_fifty_move_draw() const;
+
+    /** Returns true if the game has concluded in a draw. */
+    [[nodiscard]] bool is_draw() const;
+
+    /// @}
 
     /** Returns true if the given move is legal (that is, the king is not left in check).
         This function does not verify piece movement mechanics or that a piece of the

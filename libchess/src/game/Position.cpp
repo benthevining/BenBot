@@ -38,6 +38,17 @@ bool Position::is_fifty_move_draw() const
         && moves::any_legal_moves(*this);
 }
 
+bool Position::is_draw() const
+{
+    if (moves::any_legal_moves(*this)) {
+        // TODO: also need to account for three-fold reps here
+
+        return std::cmp_greater_equal(halfmoveClock, 100); // fifty-move draw
+    }
+
+    return ! is_check(); // stalemate
+}
+
 namespace utf8_pieces = pieces::utf8;
 
 /* Example output of empty board:
