@@ -33,10 +33,12 @@ set (TMP_DIR "${CMAKE_CURRENT_BINARY_DIR}/results")
 
 string (CONFIGURE "${python_script_content}" python_script_content @ONLY)
 
+set (generated_script "${CMAKE_CURRENT_BINARY_DIR}/RunPerft$<CONFIG>.py")
+
 # cmake-format: off
 file (
     GENERATE
-    OUTPUT "${CMAKE_BINARY_DIR}/RunPerft$<CONFIG>.py"
+    OUTPUT "${generated_script}"
     CONTENT "${python_script_content}"
     TARGET perft
     FILE_PERMISSIONS
@@ -45,3 +47,17 @@ file (
         WORLD_READ WORLD_EXECUTE
 )
 # cmake-format: on
+
+find_package (Python COMPONENTS Interpreter)
+
+if (TARGET Python::Interpreter)
+    add_custom_target (
+        run_perft
+        COMMAND Python::Interpreter "${generated_script}"
+        BYPRODUCTS "${TMP_DIR}"
+        COMMENT "Running perft tests..."
+        USES_TERMINAL COMMAND_EXPAND_LISTS
+    )
+
+    add_dependencies (run_perft perft)
+endif ()
