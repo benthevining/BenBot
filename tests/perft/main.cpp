@@ -18,6 +18,7 @@
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Perft.hpp>
 #include <libchess/notation/FEN.hpp>
+#include <libchess/notation/UCI.hpp>
 #include <nlohmann/json.hpp>
 #include <optional>
 #include <print>
@@ -128,6 +129,14 @@ void write_json_file(
     std::println("");
 }
 
+void print_root_nodes(const PerftResult& result)
+{
+    for (const auto [move, numChildren] : result.rootNodes) {
+        std::println("{} {}",
+            chess::notation::to_uci(move), numChildren);
+    }
+}
+
 void print_results(
     const PerftResult& result,
     const auto         wallTime)
@@ -163,6 +172,10 @@ void run_perft(const PerftOptions& options)
     const auto wallTime = std::chrono::duration_cast<std::chrono::seconds>(endTime - startTime);
 
     write_json_file(options, result, wallTime);
+
+    print_root_nodes(result);
+
+    std::println("");
 
     print_results(result, wallTime);
 }

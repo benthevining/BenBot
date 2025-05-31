@@ -508,10 +508,6 @@ constexpr std::vector<Move> generate(const Position& position)
 {
     std::vector<Move> moves;
 
-    // NB. the maximum number of possible legal moves in a position seems to be 218
-    // reserve some extra memory to allow non-legal moves to be generated & pruned
-    moves.reserve(300uz);
-
     if (position.sideToMove == Color::White)
         detail::generate_internal<Color::White>(position, std::back_inserter(moves));
     else
