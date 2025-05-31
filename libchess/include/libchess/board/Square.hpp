@@ -25,6 +25,7 @@
 #include <libchess/board/BitboardIndex.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Rank.hpp>
+#include <libchess/util/Math.hpp>
 #include <stdexcept>
 #include <string_view>
 #include <typeindex> // for std::hash
@@ -286,7 +287,8 @@ constexpr bool Square::is_black_territory() const noexcept
 
 constexpr bool Square::is_light() const noexcept
 {
-    return (std::to_underlying(rank) + std::to_underlying(file)) % 2 != 0;
+    return ! util::is_even(
+        std::to_underlying(rank) + std::to_underlying(file));
 }
 
 constexpr Square Square::from_string(const std::string_view text)

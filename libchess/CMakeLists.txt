@@ -54,6 +54,7 @@ set (
     pieces/Colors.hpp
     pieces/PieceTypes.hpp
     pieces/UTF8.hpp
+    util/Math.hpp
 )
 
 set (
