@@ -56,9 +56,11 @@ set (
     pieces/UTF8.hpp
 )
 
-set (libchess_sources
-     # cmake-format: sortable
-     board/Bitboard.cpp game/Position.cpp notation/Algebraic.cpp notation/FEN.cpp notation/UCI.cpp
+set (
+    libchess_sources
+    # cmake-format: sortable
+    board/Bitboard.cpp board/Distances.cpp game/Position.cpp notation/Algebraic.cpp
+    notation/FEN.cpp notation/UCI.cpp
 )
 
 list (TRANSFORM libchess_headers PREPEND "${CMAKE_CURRENT_LIST_DIR}/include/libchess/")
