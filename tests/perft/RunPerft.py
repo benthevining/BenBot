@@ -5,6 +5,8 @@
 # ======================================================================================
 
 # This file was configured by CMake! Any changes will be overwritten!
+# Note for devs: if you're working on the template script in the source tree,
+# you'll need to rerun CMake to see the effects.
 
 import json
 import subprocess
@@ -36,61 +38,13 @@ for depth in range(7):
 
     any_error = False
 
-    correctNodes = correct['totalNodes']
-    reportedNodes = results['totalNodes']
+    for field in ['totalNodes', 'captures', 'castles', 'checks', 'checkmates', 'stalemates', 'en_passants', 'promotions']:
+        expected = correct[field]
+        reported = results[field]
 
-    if correctNodes != reportedNodes:
-        print(f'Expected {correctNodes} nodes, got {reportedNodes}')
-        any_error = True
-
-    correctCaptures = correct['captures']
-    reportedCaptures = results['captures']
-
-    if correctCaptures != reportedCaptures:
-        print(f'Expected {correctCaptures} captures, got {reportedCaptures}')
-        any_error = True
-
-    correctCastles = correct['castles']
-    reportedCastles = results['castles']
-
-    if correctCastles != reportedCastles:
-        print(f'Expected {correctCastles} castles, got {reportedCastles}')
-        any_error = True
-
-    correctChecks = correct['checks']
-    reportedChecks = results['checks']
-
-    if correctChecks != reportedChecks:
-        print(f'Expected {correctChecks} checks, got {reportedChecks}')
-        any_error = True
-
-    correctMates = correct['checkmates']
-    reportedMates = results['checkmates']
-
-    if correctMates != reportedMates:
-        print(f'Expected {correctMates} checkmates, got {reportedMates}')
-        any_error = True
-
-    correctStalemates = correct['stalemates']
-    reportedStalemates = results['stalemates']
-
-    if correctStalemates != reportedStalemates:
-        print(f'Expected {correctStalemates} stalemates, got {reportedStalemates}')
-        any_error = True
-
-    correctEP = correct['en_passants']
-    reportedEP = results['en_passants']
-
-    if correctEP != reportedEP:
-        print(f'Expected {correctEP} en passant captures, got {reportedEP}')
-        any_error = True
-
-    correctPromotions = correct['promotions']
-    reportedPromotions = results['promotions']
-
-    if correctPromotions != reportedPromotions:
-        print(f'Expected {correctPromotions} promotions, got {reportedPromotions}')
-        any_error = True
+        if expected != reported:
+            print(f'Expected {expected} {field}, got {reported}')
+            any_error = True
 
     if any_error:
         print(f'Failed on depth {depth}')

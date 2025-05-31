@@ -26,6 +26,8 @@ target_sources (perft PRIVATE main.cpp)
 
 #
 
+# in the template script, we want to expand both variables and generator expressions
+
 file (READ RunPerft.py python_script_content)
 
 set (CORRECT_RESULTS_FILE "${CMAKE_CURRENT_LIST_DIR}/PerftResults.json")
