@@ -72,5 +72,38 @@
       }
     }
   ],
+  "testPresets": [
+    {
+      "configuration": "Debug",
+      "configurePreset": "default",
+      "displayName": "Run unit tests with Ninja (Debug)",
+      "execution": {
+        "enableFailover": true,
+        "jobs": 8,
+        "noTestsAction": "error",
+        "scheduleRandom": true
+      },
+      "filter": {
+        "include": {
+          "name": "libchess.unit."
+        }
+      },
+      "name": "unit-debug",
+      "output": {
+        "labelSummary": true,
+        "outputJUnitFile": "${fileDir}/logs/ctest/${presetName}/latest.junit",
+        "outputLogFile": "${fileDir}/logs/ctest/${presetName}/latest.log",
+        "outputOnFailure": true,
+        "shortProgress": true,
+        "testOutputTruncation": "middle"
+      }
+    },
+    {
+      "configuration": "Release",
+      "displayName": "Run unit tests with Ninja (Release)",
+      "inherits": "unit-debug",
+      "name": "unit-release"
+    }
+  ],
   "version": 6
 }
