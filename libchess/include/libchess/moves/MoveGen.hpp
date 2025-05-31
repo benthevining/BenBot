@@ -262,12 +262,12 @@ namespace detail {
         const Pieces& ourPieces, const Bitboard friendlyPieces,
         std::output_iterator<Move> auto outputIt)
     {
-        for (const auto knightSquare : ourPieces.knights.squares()) {
-            const auto knightMoves = pseudo_legal::knight(Bitboard { knightSquare }, friendlyPieces);
+        for (const auto knightPos : ourPieces.knights.subboards()) {
+            const auto knightMoves = pseudo_legal::knight(knightPos, friendlyPieces);
 
             for (const auto targetSquare : knightMoves.squares())
                 *outputIt = Move {
-                    .from  = knightSquare,
+                    .from  = Square::from_index(knightPos.first()),
                     .to    = targetSquare,
                     .piece = PieceType::Knight
                 };
@@ -278,12 +278,12 @@ namespace detail {
         const Pieces& ourPieces, const Bitboard friendlyPieces, const Bitboard emptySquares,
         std::output_iterator<Move> auto outputIt)
     {
-        for (const auto bishopSquare : ourPieces.bishops.squares()) {
-            const auto bishopMoves = pseudo_legal::bishop(Bitboard { bishopSquare }, emptySquares, friendlyPieces);
+        for (const auto bishopPos : ourPieces.bishops.subboards()) {
+            const auto bishopMoves = pseudo_legal::bishop(bishopPos, emptySquares, friendlyPieces);
 
             for (const auto targetSquare : bishopMoves.squares())
                 *outputIt = Move {
-                    .from  = bishopSquare,
+                    .from  = Square::from_index(bishopPos.first()),
                     .to    = targetSquare,
                     .piece = PieceType::Bishop
                 };
@@ -294,12 +294,12 @@ namespace detail {
         const Pieces& ourPieces, const Bitboard friendlyPieces, const Bitboard emptySquares,
         std::output_iterator<Move> auto outputIt)
     {
-        for (const auto rookSquare : ourPieces.rooks.squares()) {
-            const auto rookMoves = pseudo_legal::rook(Bitboard { rookSquare }, emptySquares, friendlyPieces);
+        for (const auto rookPos : ourPieces.rooks.subboards()) {
+            const auto rookMoves = pseudo_legal::rook(rookPos, emptySquares, friendlyPieces);
 
             for (const auto targetSquare : rookMoves.squares())
                 *outputIt = Move {
-                    .from  = rookSquare,
+                    .from  = Square::from_index(rookPos.first()),
                     .to    = targetSquare,
                     .piece = PieceType::Rook
                 };
@@ -310,12 +310,12 @@ namespace detail {
         const Pieces& ourPieces, const Bitboard friendlyPieces, const Bitboard emptySquares,
         std::output_iterator<Move> auto outputIt)
     {
-        for (const auto queenSquare : ourPieces.queens.squares()) {
-            const auto queenMoves = pseudo_legal::queen(Bitboard { queenSquare }, emptySquares, friendlyPieces);
+        for (const auto queenPos : ourPieces.queens.subboards()) {
+            const auto queenMoves = pseudo_legal::queen(queenPos, emptySquares, friendlyPieces);
 
             for (const auto targetSquare : queenMoves.squares())
                 *outputIt = Move {
-                    .from  = queenSquare,
+                    .from  = Square::from_index(queenPos.first()),
                     .to    = targetSquare,
                     .piece = PieceType::Queen
                 };
