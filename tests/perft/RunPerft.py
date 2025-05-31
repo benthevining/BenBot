@@ -11,6 +11,7 @@
 import json
 import subprocess
 from pathlib import Path
+import sys
 
 TMP_DIR_PATH = Path('@TMP_DIR@')
 
@@ -24,6 +25,11 @@ def get_correct_for(depth):
 
     raise ValueError(f"Correct data for depth {depth} not found")
 
+ABS_MAX_DEPTH = 6
+MAX_DEPTH = min(@PERFT_DEPTH@, ABS_MAX_DEPTH)
+
+print(f'Max depth: {MAX_DEPTH}')
+
 # We stop the test if we get the incorrect number of total nodes, since this
 # indicates a total failure of our move generation algorithm. If the stats
 # breakdown is incorrect but the total number of nodes is correct, continue
@@ -31,7 +37,7 @@ def get_correct_for(depth):
 incorrect_stats = []
 passed = []
 
-for depth in range(7):
+for depth in range(MAX_DEPTH + 1):
     results_file = TMP_DIR_PATH / f'{depth}_results.json'
 
     subprocess.run(['$<TARGET_FILE:perft>', f'{depth}', '--write-json', results_file])

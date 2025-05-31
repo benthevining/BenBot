@@ -7,6 +7,7 @@ This directory contains our test suite.
 ### Options
 
 * `LIBCHESS_TESTS`: this directory is not entered by CMake unless this option is on. Defaults to off unless `libchess` is the top-level CMake project.
+* `PERFT_DEPTH`: an integer value that controls the maximum depth that the `run_perft` script will run up to. Larger values exponentially increase running time, but provide better test coverage.
 
 ### Targets
 

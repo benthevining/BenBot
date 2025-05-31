@@ -19,6 +19,11 @@ file (READ RunPerft.py python_script_content)
 set (CORRECT_RESULTS_FILE "${CMAKE_CURRENT_LIST_DIR}/PerftResults.json")
 set (TMP_DIR "${CMAKE_CURRENT_BINARY_DIR}/results")
 
+set (PERFT_DEPTH 5
+     CACHE STRING
+           "Maximum depth to run perft up to. May exponentially increase CTest's running time!"
+)
+
 string (CONFIGURE "${python_script_content}" python_script_content @ONLY)
 
 set (generated_script "${CMAKE_CURRENT_BINARY_DIR}/RunPerft$<CONFIG>.py")
