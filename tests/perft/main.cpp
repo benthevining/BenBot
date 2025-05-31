@@ -114,19 +114,22 @@ void run_perft(const PerftOptions& options)
 
         json["starting_fen"]        = chess::notation::to_fen(options.startingPosition);
         json["depth"]               = options.depth;
-        json["totalNodes"]          = result.nodes;
-        json["captures"]            = result.captures;
-        json["en_passants"]         = result.enPassantCaptures;
-        json["castles"]             = result.castles;
-        json["promotions"]          = result.promotions;
-        json["checks"]              = result.checks;
-        json["checkmates"]          = result.checkmates;
-        json["stalemates"]          = result.stalemates;
         json["search_time_seconds"] = wallTime.count();
+
+        auto& result_json = json["results"];
+
+        result_json["totalNodes"]  = result.nodes;
+        result_json["captures"]    = result.captures;
+        result_json["en_passants"] = result.enPassantCaptures;
+        result_json["castles"]     = result.castles;
+        result_json["promotions"]  = result.promotions;
+        result_json["checks"]      = result.checks;
+        result_json["checkmates"]  = result.checkmates;
+        result_json["stalemates"]  = result.stalemates;
 
         std::ofstream output { *options.jsonOutputPath };
 
-        output << json.dump();
+        output << json.dump(1);
     }
 
     std::println("Nodes: {}", result.nodes);
