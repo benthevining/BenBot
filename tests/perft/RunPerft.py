@@ -49,3 +49,5 @@ for depth in range(7):
     if any_error:
         print(f'Failed on depth {depth}')
         exit(1)
+
+print('All tests succeeded!')

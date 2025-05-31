@@ -17,6 +17,13 @@ CORRECT_FILES_DIR = Path('@TESTCASES_DIR@')
 
 TESTCASE_FILES = ['standard']
 
+def get_move_from_obj(obj):
+    for key, value in list(obj):
+        if key == 'move':
+            return value
+
+    raise ValueError(f'\"move\" key not found in object: {obj}')
+
 for testcase_file in TESTCASE_FILES:
     print(f'Running tests from {testcase_file}.json...')
 
@@ -34,19 +41,25 @@ for testcase_file in TESTCASE_FILES:
 
         output_file = output_dir / f'{test_idx}.json'
 
+        print(f'Running tests on position {startFEN}')
+        print(f'Output file: {output_file}')
+
         subprocess.run(['$<TARGET_FILE:rampart>', startFEN, output_file])
 
         with open(output_file, 'r') as file:
             result_data = json.load(file)
 
-        correct_moves = test_case['expected']
-        generated_moves = result_data['generated']
+        correct_moves   = frozenset(frozenset(d.items()) for d in test_case['expected'])
+        generated_moves = frozenset(frozenset(d.items()) for d in result_data['generated'])
 
         # print moves in correct_moves not in generated_moves
-        # print moves in generated_moves not in correct_moves
-        # for moves in both, print incorrect move FEN strings
+        for missing_move in correct_moves.difference(generated_moves):
+            print(f'ERROR! Move {get_move_from_obj(missing_move)} was not generated (or resulting FEN is wrong)')
 
-        if len(correct_moves) != len(generated_moves):
-            print('Wrong number of moves generated!')
+        # print moves in generated_moves not in correct_moves
+        for incorrect_move in generated_moves.difference(correct_moves):
+            print(f'ERROR! Move {get_move_from_obj(incorrect_move)} was incorrectly generated (or resulting FEN is wrong)')
 
         test_idx += 1
+
+print('All tests succeeded!')
