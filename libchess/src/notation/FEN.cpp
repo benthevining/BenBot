@@ -93,8 +93,8 @@ namespace {
         const Position&                 position,
         std::output_iterator<char> auto outputIt)
     {
-        const auto whitePieces = position.whitePieces.occupied();
-        const auto blackPieces = position.blackPieces.occupied();
+        const auto whitePieces = position.whitePieces.occupied;
+        const auto blackPieces = position.blackPieces.occupied;
         const auto allOccupied = whitePieces | blackPieces;
 
         for (const auto rank : std::views::reverse(magic_enum::enum_values<board::Rank>()))
@@ -281,6 +281,9 @@ namespace {
     {
         for (const auto rank : std::views::reverse(magic_enum::enum_values<board::Rank>()))
             fenFragment = parse_rank(rank, fenFragment, position);
+
+        position.whitePieces.refresh_occupied();
+        position.blackPieces.refresh_occupied();
     }
 
     void parse_side_to_move(

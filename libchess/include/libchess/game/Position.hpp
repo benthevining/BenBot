@@ -138,7 +138,7 @@ struct Position final {
     /** Returns a bitboard that is the union of all White and Black
         piece positions.
      */
-    [[nodiscard]] constexpr Bitboard occupied() const noexcept { return whitePieces.occupied() | blackPieces.occupied(); }
+    [[nodiscard]] constexpr Bitboard occupied() const noexcept { return whitePieces.occupied | blackPieces.occupied; }
 
     /** Returns a bitboard that is the inverse of the ``occupied()`` board. */
     [[nodiscard]] constexpr Bitboard free() const noexcept { return occupied().inverse(); }
@@ -264,11 +264,11 @@ constexpr bool Position::is_side_in_check(const Color side) const noexcept
 {
     if (side == Color::White) {
         return squares_attacked<Color::Black>(
-            blackPieces, whitePieces.king, whitePieces.occupied());
+            blackPieces, whitePieces.king, whitePieces.occupied);
     }
 
     return squares_attacked<Color::White>(
-        whitePieces, blackPieces.king, blackPieces.occupied());
+        whitePieces, blackPieces.king, blackPieces.occupied);
 }
 
 constexpr bool Position::is_legal(const Move& move) const noexcept
@@ -291,7 +291,7 @@ constexpr bool Position::is_capture(const Move& move) const noexcept
 {
     const auto& opponentPieces = sideToMove == Color::White ? blackPieces : whitePieces;
 
-    return is_en_passant(move) || opponentPieces.occupied().test(move.to);
+    return is_en_passant(move) || opponentPieces.occupied.test(move.to);
 }
 
 constexpr bool Position::is_file_open(const File file) const noexcept
@@ -343,9 +343,14 @@ namespace detail {
                                         ? board::prev_pawn_rank<Color::White>(move.to.rank)
                                         : board::prev_pawn_rank<Color::Black>(move.to.rank);
 
-            opponentPieces.pawns.unset(Square {
+            const auto idx = Square {
                 .file = move.to.file,
-                .rank = capturedRank });
+                .rank = capturedRank
+            }
+                                 .index();
+
+            opponentPieces.pawns.unset(idx);
+            opponentPieces.occupied.unset(idx);
         }
     }
 
@@ -416,7 +421,7 @@ constexpr void Position::make_move(const Move& move) noexcept
 
 constexpr Position after_move(const Position& starting, const Move& move) noexcept
 {
-    Position copy { starting };
+    auto copy { starting };
 
     copy.make_move(move);
 

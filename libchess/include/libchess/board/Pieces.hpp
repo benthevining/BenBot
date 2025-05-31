@@ -73,6 +73,15 @@ struct Pieces final {
      */
     Bitboard king;
 
+    /** This bitboard is a composite of all of this side's pieces.
+        This board is kept up to date by the capture_at() and our_move() methods.
+        If you update the individual piece boards manually, you must also update
+        this board, or call refresh_occupied() to flush and repopulate it.
+     */
+    Bitboard occupied {
+        pawns | knights | bishops | rooks | queens | king
+    };
+
     /** Returns true if the two piece sets are identical. */
     [[nodiscard]] constexpr bool operator==(const Pieces&) const noexcept = default;
 
@@ -82,15 +91,10 @@ struct Pieces final {
     /** Returns the bitboard corresponding to the given piece type. */
     [[nodiscard]] constexpr Bitboard get_type(PieceType type) const noexcept;
 
-    /** Returns a bitboard that is a union of each individual piece-type bitboard.
-        The returned bitboard has a bit set if a piece of any type is on that square.
-     */
-    [[nodiscard]] constexpr Bitboard occupied() const noexcept;
-
     /** Returns a bitboard that is the inverse of the bitboard returned by ``occupied()``.
         The returned bitboard has a bit set if no piece of any type is on that square.
      */
-    [[nodiscard]] constexpr Bitboard free() const noexcept { return occupied().inverse(); }
+    [[nodiscard]] constexpr Bitboard free() const noexcept { return occupied.inverse(); }
 
     /** Returns the sum of the material values for all pieces on this side. */
     [[nodiscard]] constexpr size_t material() const noexcept;
@@ -117,6 +121,9 @@ struct Pieces final {
 
     /** Call this when a move is made by this side to update the piece bitboards. */
     constexpr void our_move(const moves::Move& move, Color ourColor) noexcept;
+
+    /** Recalculates the ``occupied`` bitboard from each of the piece bitboards. */
+    constexpr void refresh_occupied() noexcept;
 };
 
 /** Returns true if any of the ``pieces`` attacks any of the ``targetSquares``.
@@ -157,6 +164,11 @@ constexpr Pieces::Pieces(const Color color) noexcept
 {
 }
 
+constexpr void Pieces::refresh_occupied() noexcept
+{
+    occupied = pawns | knights | bishops | rooks | queens | king;
+}
+
 constexpr Bitboard& Pieces::get_type(const PieceType type) noexcept
 {
     switch (type) {
@@ -179,11 +191,6 @@ constexpr Bitboard Pieces::get_type(const PieceType type) const noexcept
         case PieceType::King  : return king;
         default               : return pawns;
     }
-}
-
-constexpr Bitboard Pieces::occupied() const noexcept
-{
-    return pawns | knights | bishops | rooks | queens | king;
 }
 
 constexpr size_t Pieces::material() const noexcept
@@ -217,6 +224,9 @@ constexpr Square Pieces::get_king_location() const noexcept
 
 constexpr std::optional<PieceType> Pieces::get_piece_on(const Square square) const noexcept
 {
+    if (! occupied.test(square))
+        return std::nullopt;
+
     static constexpr auto allTypes = magic_enum::enum_values<PieceType>();
 
     if (const auto found = std::ranges::find_if(
@@ -225,8 +235,11 @@ constexpr std::optional<PieceType> Pieces::get_piece_on(const Square square) con
                 return get_type(type).test(index);
             });
         found != allTypes.end()) {
+        [[likely]];
         return *found;
     }
+
+    assert(false);
 
     return std::nullopt;
 }
@@ -243,6 +256,8 @@ constexpr void Pieces::capture_at(const Square square) noexcept
     bishops.unset(idx);
     rooks.unset(idx);
     queens.unset(idx);
+
+    occupied.unset(idx);
 }
 
 namespace detail {
@@ -277,6 +292,10 @@ namespace detail {
 
 constexpr void Pieces::our_move(const moves::Move& move, const Color ourColor) noexcept
 {
+    const auto movementMask = Bitboard { move.from } | Bitboard { move.to };
+
+    occupied ^= movementMask;
+
     auto& pieceBB = get_type(move.piece);
 
     if (move.is_promotion()) {
@@ -287,15 +306,18 @@ constexpr void Pieces::our_move(const moves::Move& move, const Color ourColor) n
     } else {
         [[likely]];
 
-        pieceBB ^= (Bitboard { move.from } | Bitboard { move.to });
+        pieceBB ^= movementMask;
 
         // NB. we know that if a move is a promotion, it can't be castling
         if (move.is_castling()) {
             [[unlikely]];
-            if (move.to.is_queenside())
-                rooks ^= detail::queenside_castle_rook_pos_mask(ourColor);
-            else
-                rooks ^= detail::kingside_castle_rook_pos_mask(ourColor);
+
+            const auto castleMask = move.to.is_queenside()
+                                      ? detail::queenside_castle_rook_pos_mask(ourColor)
+                                      : detail::kingside_castle_rook_pos_mask(ourColor);
+
+            rooks ^= castleMask;
+            occupied ^= castleMask;
         }
     }
 }
@@ -322,7 +344,7 @@ constexpr bool squares_attacked(
     if ((knightAttacks & targetSquares).any())
         return true;
 
-    const auto friendlyPieces = pieces.occupied();
+    const auto friendlyPieces = pieces.occupied;
     const auto emptySquares   = (friendlyPieces | enemyPieces).inverse();
 
     const auto queenAttacks = move_gen::queen(pieces.queens, emptySquares, friendlyPieces);

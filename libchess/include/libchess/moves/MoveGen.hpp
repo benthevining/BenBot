@@ -391,7 +391,7 @@ namespace detail {
         const auto& ourPieces   = position.pieces_for<Side>();
         const auto& theirPieces = position.pieces_for<OppositeColor>();
 
-        const auto allOurPieces = ourPieces.occupied();
+        const auto allOurPieces = ourPieces.occupied;
 
         [[maybe_unused]] const auto& rooks = ourPieces.rooks;
 
@@ -431,8 +431,8 @@ namespace detail {
         const auto& ourPieces   = position.pieces_for<Side>();
         const auto& theirPieces = position.pieces_for<OppositeSide>();
 
-        const auto friendlyPieces = ourPieces.occupied();
-        const auto enemyPieces    = theirPieces.occupied();
+        const auto friendlyPieces = ourPieces.occupied;
+        const auto enemyPieces    = theirPieces.occupied;
 
         const auto allOccupied  = friendlyPieces | enemyPieces;
         const auto emptySquares = allOccupied.inverse();
@@ -462,8 +462,8 @@ namespace detail {
         const auto& ourPieces   = position.pieces_for<Side>();
         const auto& theirPieces = position.pieces_for<OppositeSide>();
 
-        const auto friendlyPieces = ourPieces.occupied();
-        const auto enemyPieces    = theirPieces.occupied();
+        const auto friendlyPieces = ourPieces.occupied;
+        const auto enemyPieces    = theirPieces.occupied;
 
         const auto allOccupied  = friendlyPieces | enemyPieces;
         const auto emptySquares = allOccupied.inverse();

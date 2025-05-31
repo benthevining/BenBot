@@ -31,7 +31,7 @@ TEST_CASE("Pieces - starting position", TAGS)
 
         STATIC_REQUIRE(pieces.material() == 41uz);
 
-        static constexpr auto occupied = pieces.occupied();
+        static constexpr auto occupied = pieces.occupied;
 
         STATIC_REQUIRE(occupied.count() == 16uz);
 
@@ -45,7 +45,7 @@ TEST_CASE("Pieces - starting position", TAGS)
 
         STATIC_REQUIRE(pieces.material() == 41uz);
 
-        static constexpr auto occupied = pieces.occupied();
+        static constexpr auto occupied = pieces.occupied;
 
         STATIC_REQUIRE(occupied.count() == 16uz);
 
