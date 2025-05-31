@@ -48,6 +48,8 @@ file (
 )
 # cmake-format: on
 
+set_property (DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS RunPerft.py)
+
 find_package (Python COMPONENTS Interpreter)
 
 if (TARGET Python::Interpreter)
@@ -57,6 +59,7 @@ if (TARGET Python::Interpreter)
         BYPRODUCTS "${TMP_DIR}"
         COMMENT "Running perft tests..."
         USES_TERMINAL COMMAND_EXPAND_LISTS
+        SOURCES RunPerft.py PerftResults.json
     )
 
     add_dependencies (run_perft perft)
