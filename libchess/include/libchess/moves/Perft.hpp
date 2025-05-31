@@ -126,9 +126,7 @@ constexpr PerftResult perft(const size_t depth, const Position& startingPosition
         if (move.promotedType.has_value())
             ++result.promotions;
 
-        Position newPosition { startingPosition };
-
-        newPosition.make_move(move);
+        const auto newPosition = game::after_move(startingPosition, move);
 
         const bool isCheck = newPosition.is_check();
 

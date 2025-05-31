@@ -64,11 +64,8 @@ try {
 
         moveJSON["move"] = chess::notation::to_alg(position, move);
 
-        chess::game::Position posCopy { position };
-
-        posCopy.make_move(move);
-
-        moveJSON["fen"] = chess::notation::to_fen(posCopy);
+        moveJSON["fen"] = chess::notation::to_fen(
+            chess::game::after_move(position, move));
 
         movesJSON.push_back(moveJSON);
     }

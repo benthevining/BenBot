@@ -211,6 +211,15 @@ private:
     [[nodiscard]] constexpr bool is_side_in_check(Color side) const noexcept;
 };
 
+/** Returns a copy of the starting position with the given move applied.
+
+    @note This function does not verify that the given move is legal.
+
+    @relates Position
+    @ingroup game
+ */
+[[nodiscard]] constexpr Position after_move(const Position& starting, const Move& move) noexcept;
+
 /** Creates a UTF8 representation of the given position.
     The returned string is meant to be interpreted visually by a human, probably for debugging purposes.
     The board is drawn as a simple set of cells separated by ``|`` characters. Pieces are drawn using
@@ -403,6 +412,15 @@ constexpr void Position::make_move(const Move& move) noexcept
 
     // flip side to move
     sideToMove = isWhite ? Color::Black : Color::White;
+}
+
+constexpr Position after_move(const Position& starting, const Move& move) noexcept
+{
+    Position copy { starting };
+
+    copy.make_move(move);
+
+    return copy;
 }
 
 } // namespace chess::game

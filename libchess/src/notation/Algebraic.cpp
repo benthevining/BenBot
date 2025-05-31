@@ -50,14 +50,12 @@ namespace {
 
     [[nodiscard]] std::string_view get_check_string(const Position& position, const Move& move)
     {
-        Position copy { position };
+        const auto newPos = game::after_move(position, move);
 
-        copy.make_move(move);
-
-        if (! copy.is_check())
+        if (! newPos.is_check())
             return {};
 
-        if (moves::generate(copy).empty())
+        if (! moves::any_legal_moves(newPos))
             return "#"; // checkmate
 
         return "+"; // check
