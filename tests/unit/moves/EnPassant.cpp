@@ -1,0 +1,22 @@
+/*
+ * ======================================================================================
+ *
+ * libchess - a chess engine by Ben Vining
+ *
+ * ======================================================================================
+ */
+
+#include <catch2/catch_test_macros.hpp>
+#include <libchess/notation/Algebraic.hpp>
+#include <libchess/notation/FEN.hpp>
+
+static constexpr auto TAGS { "[moves][EnPassant]" };
+
+TEST_CASE("En passant - illegal if capture reveals check", TAGS)
+{
+    const auto position = chess::notation::from_fen("4k3/8/8/p1K1Pp1r/Pp5p/6pP/6P1/8 w - f6 0 1");
+
+    const auto move = chess::notation::from_alg(position, "exf6");
+
+    REQUIRE(! position.is_legal(move));
+}

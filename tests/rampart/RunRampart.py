@@ -15,8 +15,7 @@ from pathlib import Path
 TMP_DIR_PATH = Path('@TMP_DIR@')
 CORRECT_FILES_DIR = Path('@TESTCASES_DIR@')
 
-# TODO: pawns, taxing
-TESTCASE_FILES = ['castling', 'checkmates', 'famous', 'promotions', 'stalemates', 'standard']
+TESTCASE_FILES = ['castling', 'checkmates', 'famous', 'pawns', 'promotions', 'stalemates', 'standard', 'taxing']
 
 def get_move_from_obj(listObj, move): # listObj is a JSON list of objects
     for obj in listObj:
@@ -82,6 +81,7 @@ for testcase_file in TESTCASE_FILES:
 
             if correct_move is None:
                 print(f'ERROR: move {move} was incorrectly generated, it should not be legal!')
+                any_errors = True
 
         if any_errors:
             test_cases_failed += 1

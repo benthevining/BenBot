@@ -43,6 +43,7 @@ set (
     board/Square.cpp
     game/CastlingRights.cpp
     game/Position.cpp
+    moves/EnPassant.cpp
     moves/Legal.cpp
     moves/Move.cpp
     moves/Patterns.cpp

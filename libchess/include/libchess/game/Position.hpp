@@ -328,9 +328,11 @@ namespace detail {
         if (position.is_en_passant(move)) {
             [[unlikely]];
 
+            // the captured pawn is on the file of the target square, but one file below
+            // (White capture) or one file above (Black capture)
             const auto capturedRank = isWhite
-                                        ? board::next_pawn_rank<Color::White>(move.to.rank)
-                                        : board::next_pawn_rank<Color::Black>(move.to.rank);
+                                        ? board::prev_pawn_rank<Color::White>(move.to.rank)
+                                        : board::prev_pawn_rank<Color::Black>(move.to.rank);
 
             opponentPieces.pawns.unset(Square {
                 .file = move.to.file,
