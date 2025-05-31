@@ -15,7 +15,10 @@
 
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libchess/game/Position.hpp>
+#include <libchess/moves/Move.hpp>
 #include <libchess/moves/MoveGen.hpp>
+#include <utility>
+#include <vector>
 
 namespace chess::moves {
 
@@ -52,14 +55,22 @@ struct PerftResult final {
     /** The number of child nodes that resulted in stalemates. */
     size_t stalemates { 0uz };
 
+    /** For each move possible from the starting position, this gives the number of child
+        nodes below that node in the move tree.
+     */
+    std::vector<std::pair<Move, size_t>> rootNodes;
+
     /** Adds the results from a child node. */
     constexpr PerftResult& operator+=(const PerftResult& rhs) noexcept;
 };
 
 /** A debugging function that walks the entire move tree and returns the number of visited leaf nodes.
 
+    @tparam IsRoot For internal usage. Callers should simply call this as ``perft()``.
+
     @ingroup moves
  */
+template <bool IsRoot = true>
 [[nodiscard]] constexpr PerftResult perft(size_t depth, const Position& startingPosition = {});
 
 /*
@@ -93,6 +104,7 @@ constexpr PerftResult& PerftResult::operator+=(const PerftResult& rhs) noexcept
     return *this;
 }
 
+template <bool IsRoot>
 constexpr PerftResult perft(const size_t depth, const Position& startingPosition) // NOLINT(misc-no-recursion)
 {
     if (depth == 0uz)
@@ -130,7 +142,13 @@ constexpr PerftResult perft(const size_t depth, const Position& startingPosition
                 ++result.stalemates;
         }
 
-        result += perft(depth - 1uz, newPosition);
+        const auto childResult = perft<false>(depth - 1uz, newPosition);
+
+        if constexpr (IsRoot) {
+            result.rootNodes.emplace_back(move, childResult.nodes);
+        }
+
+        result += childResult;
     }
 
     return result;

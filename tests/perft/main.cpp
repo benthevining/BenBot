@@ -26,9 +26,6 @@
 #include <string_view>
 #include <vector>
 
-// TODO:
-// print number of nodes from each starting move
-
 struct PerftOptions final {
     chess::game::Position startingPosition {};
 
@@ -36,6 +33,8 @@ struct PerftOptions final {
 
     std::optional<std::filesystem::path> jsonOutputPath;
 };
+
+using chess::moves::PerftResult;
 
 namespace {
 
@@ -92,6 +91,60 @@ void print_help(const std::string_view programName)
     return options;
 }
 
+void write_json_file(
+    const PerftOptions& options,
+    const PerftResult&  result,
+    const auto          wallTime)
+{
+    if (! options.jsonOutputPath.has_value())
+        return;
+
+    const auto& path = *options.jsonOutputPath;
+
+    nlohmann::json json;
+
+    json["starting_fen"]        = chess::notation::to_fen(options.startingPosition);
+    json["depth"]               = options.depth;
+    json["search_time_seconds"] = wallTime.count();
+
+    auto& result_json = json["results"];
+
+    result_json["totalNodes"]  = result.nodes;
+    result_json["captures"]    = result.captures;
+    result_json["en_passants"] = result.enPassantCaptures;
+    result_json["castles"]     = result.castles;
+    result_json["promotions"]  = result.promotions;
+    result_json["checks"]      = result.checks;
+    result_json["checkmates"]  = result.checkmates;
+    result_json["stalemates"]  = result.stalemates;
+
+    std::filesystem::create_directories(path.parent_path());
+
+    std::ofstream output { path };
+
+    output << json.dump(1);
+
+    std::println("Wrote JSON results to {}", path.string()); // NOLINT(build/include_what_you_use)
+    std::println("");
+}
+
+void print_results(
+    const PerftResult& result,
+    const auto         wallTime)
+{
+    std::println("Nodes: {}", result.nodes);
+    std::println("Captures: {}", result.captures);
+    std::println("En passant captures: {}", result.enPassantCaptures);
+    std::println("Castles: {}", result.castles);
+    std::println("Promotions: {}", result.promotions);
+    std::println("Checks: {}", result.checks);
+    std::println("Checkmates: {}", result.checkmates);
+    std::println("Stalemates: {}", result.stalemates);
+
+    std::println("");
+    std::println("Search time: {}", wallTime);
+}
+
 void run_perft(const PerftOptions& options)
 {
     using Clock = std::chrono::high_resolution_clock;
@@ -109,47 +162,9 @@ void run_perft(const PerftOptions& options)
 
     const auto wallTime = std::chrono::duration_cast<std::chrono::seconds>(endTime - startTime);
 
-    if (options.jsonOutputPath.has_value()) {
-        nlohmann::json json;
+    write_json_file(options, result, wallTime);
 
-        json["starting_fen"]        = chess::notation::to_fen(options.startingPosition);
-        json["depth"]               = options.depth;
-        json["search_time_seconds"] = wallTime.count();
-
-        auto& result_json = json["results"];
-
-        result_json["totalNodes"]  = result.nodes;
-        result_json["captures"]    = result.captures;
-        result_json["en_passants"] = result.enPassantCaptures;
-        result_json["castles"]     = result.castles;
-        result_json["promotions"]  = result.promotions;
-        result_json["checks"]      = result.checks;
-        result_json["checkmates"]  = result.checkmates;
-        result_json["stalemates"]  = result.stalemates;
-
-        const auto& path = *options.jsonOutputPath;
-
-        std::filesystem::create_directories(path.parent_path());
-
-        std::ofstream output { path };
-
-        output << json.dump(1);
-
-        std::println("Wrote JSON results to {}", path.string()); // NOLINT(build/include_what_you_use)
-        std::println("");
-    }
-
-    std::println("Nodes: {}", result.nodes);
-    std::println("Captures: {}", result.captures);
-    std::println("En passant captures: {}", result.enPassantCaptures);
-    std::println("Castles: {}", result.castles);
-    std::println("Promotions: {}", result.promotions);
-    std::println("Checks: {}", result.checks);
-    std::println("Checkmates: {}", result.checkmates);
-    std::println("Stalemates: {}", result.stalemates);
-
-    std::println("");
-    std::println("Search time: {}", wallTime);
+    print_results(result, wallTime);
 }
 
 } // namespace
