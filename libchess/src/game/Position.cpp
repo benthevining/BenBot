@@ -16,6 +16,7 @@
 #include <ranges>
 #include <string>
 #include <string_view>
+#include <utility>
 
 namespace chess::game {
 
@@ -29,6 +30,12 @@ bool Position::is_stalemate() const
 {
     return ! is_check()
         && ! moves::any_legal_moves(*this);
+}
+
+bool Position::is_fifty_move_draw() const
+{
+    return std::cmp_greater_equal(halfmoveClock, 100)
+        && moves::any_legal_moves(*this);
 }
 
 namespace utf8_pieces = pieces::utf8;

@@ -103,6 +103,8 @@ struct Position final {
         is drawn.
 
         @invariant This value will never be greater than 100.
+
+        @see is_fifty_move_draw()
      */
     std::uint_least8_t halfmoveClock { 0 };
 
@@ -185,6 +187,11 @@ struct Position final {
     [[nodiscard]] bool is_stalemate() const;
 
     /// @}
+
+    /** Returns true if this position is a fifty-move draw, based on the ``halfmoveClock``.
+        Note that in order for the game to be drawn, the side to move must have at least 1 legal move.
+     */
+    [[nodiscard]] bool is_fifty_move_draw() const;
 
     /** Returns true if the given move is legal (that is, the king is not left in check).
         This function does not verify piece movement mechanics or that a piece of the
