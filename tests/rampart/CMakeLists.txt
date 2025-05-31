@@ -36,15 +36,21 @@ file (
 
 set_property (DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS RunRampart.py)
 
-if (TARGET Python::Interpreter)
-    add_custom_target (
-        run_rampart
-        COMMAND Python::Interpreter "${generated_script}"
-        BYPRODUCTS "${TMP_DIR}"
-        COMMENT "Running rampart tests..."
-        USES_TERMINAL COMMAND_EXPAND_LISTS
-        SOURCES RunRampart.py
-    )
-
-    add_dependencies (run_rampart rampart)
+if (NOT TARGET Python::Interpreter)
+    return ()
 endif ()
+
+add_custom_target (
+    run_rampart
+    COMMAND Python::Interpreter "${generated_script}"
+    BYPRODUCTS "${TMP_DIR}"
+    COMMENT "Running rampart tests..."
+    USES_TERMINAL COMMAND_EXPAND_LISTS
+    SOURCES RunRampart.py
+)
+
+add_dependencies (run_rampart rampart)
+
+add_test (NAME libchess.rampart COMMAND "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --target
+                                        run_rampart --config "$<CONFIG>"
+)

@@ -38,15 +38,21 @@ file (
 
 set_property (DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS RunPerft.py)
 
-if (TARGET Python::Interpreter)
-    add_custom_target (
-        run_perft
-        COMMAND Python::Interpreter "${generated_script}"
-        BYPRODUCTS "${TMP_DIR}"
-        COMMENT "Running perft tests..."
-        USES_TERMINAL COMMAND_EXPAND_LISTS
-        SOURCES RunPerft.py PerftResults.json
-    )
-
-    add_dependencies (run_perft perft)
+if (NOT TARGET Python::Interpreter)
+    return ()
 endif ()
+
+add_custom_target (
+    run_perft
+    COMMAND Python::Interpreter "${generated_script}"
+    BYPRODUCTS "${TMP_DIR}"
+    COMMENT "Running perft tests..."
+    USES_TERMINAL COMMAND_EXPAND_LISTS
+    SOURCES RunPerft.py PerftResults.json
+)
+
+add_dependencies (run_perft perft)
+
+add_test (NAME libchess.perft COMMAND "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --target
+                                      run_perft --config "$<CONFIG>"
+)

@@ -6,7 +6,6 @@
 
 include (FetchContent)
 
-# used in both the perft & rampart executables
 FetchContent_Declare (
     nlohmann_json
     SYSTEM
@@ -19,7 +18,6 @@ FetchContent_Declare (
 
 FetchContent_MakeAvailable (nlohmann_json)
 
-# used in both the perft & rampart executables
 find_package (Python COMPONENTS Interpreter)
 
 add_subdirectory (unit)
