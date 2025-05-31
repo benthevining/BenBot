@@ -124,7 +124,6 @@ constexpr PerftResult perft(const size_t depth, const Position& startingPosition
             ++result.checks;
 
         if (! any_legal_moves(newPosition)) {
-            // no legal moves
             if (isCheck)
                 ++result.checkmates;
             else

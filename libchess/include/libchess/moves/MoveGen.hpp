@@ -360,7 +360,7 @@ namespace detail {
 
         Bitboard board;
 
-        if constexpr (AllowAttacked) {
+        if constexpr (! AllowAttacked) {
             board.set(Square { File::B, rank });
         }
 
