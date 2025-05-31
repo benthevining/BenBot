@@ -10,6 +10,10 @@ target_link_libraries (rampart PRIVATE libchess::libchess nlohmann_json::nlohman
 
 target_sources (rampart PRIVATE main.cpp)
 
+if (NOT TARGET Python::Interpreter)
+    return ()
+endif ()
+
 # in the template script, we want to expand both variables and generator expressions
 
 file (READ RunRampart.py python_script_content)
@@ -36,21 +40,16 @@ file (
 
 set_property (DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS RunRampart.py)
 
-if (NOT TARGET Python::Interpreter)
-    return ()
-endif ()
-
-add_custom_target (
-    run_rampart
-    COMMAND Python::Interpreter "${generated_script}"
-    BYPRODUCTS "${TMP_DIR}"
-    COMMENT "Running rampart tests..."
-    USES_TERMINAL COMMAND_EXPAND_LISTS
-    SOURCES RunRampart.py
+file (GLOB testcase_files LIST_DIRECTORIES false CONFIGURE_DEPENDS
+                                                 "${CMAKE_CURRENT_LIST_DIR}/data/*.json"
 )
 
-add_dependencies (run_rampart rampart)
+foreach (data_file IN LISTS testcase_files)
+    cmake_path (GET data_file STEM filename)
 
-add_test (NAME libchess.rampart COMMAND "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --target
-                                        run_rampart --config "$<CONFIG>"
-)
+    set (test_name "libchess.rampart.${filename}")
+
+    add_test (NAME "${test_name}" COMMAND Python::Interpreter "${generated_script}" "${data_file}")
+
+    set_tests_properties ("${test_name}" PROPERTIES REQUIRED_FILES "${data_file}")
+endforeach ()

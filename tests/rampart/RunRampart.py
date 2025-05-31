@@ -11,11 +11,7 @@
 import json
 import subprocess
 from pathlib import Path
-
-TMP_DIR_PATH = Path('@TMP_DIR@')
-CORRECT_FILES_DIR = Path('@TESTCASES_DIR@')
-
-TESTCASE_FILES = ['castling', 'checkmates', 'famous', 'pawns', 'promotions', 'stalemates', 'standard', 'taxing']
+import sys
 
 def get_move_from_obj(listObj, move): # listObj is a JSON list of objects
     for obj in listObj:
@@ -24,64 +20,66 @@ def get_move_from_obj(listObj, move): # listObj is a JSON list of objects
 
     return None
 
+TMP_DIR_PATH = Path('@TMP_DIR@')
+TESTCASE_FILE = Path(sys.argv[1])
+
 test_cases_passed = 0
 test_cases_failed = 0
 
-for testcase_file in TESTCASE_FILES:
-    print(f'Running tests from {testcase_file}.json...')
+print(f'Running tests from {TESTCASE_FILE}...')
 
-    correct_file_path = CORRECT_FILES_DIR / f'{testcase_file}.json'
+with open(TESTCASE_FILE, 'r') as file:
+    testcase_data = json.load(file)
 
-    with open(correct_file_path, 'r') as file:
-        testcase_data = json.load(file)
+output_dir = TMP_DIR_PATH / TESTCASE_FILE.stem
 
-    output_dir = TMP_DIR_PATH / testcase_file
+test_idx = 1
 
-    test_idx = 1
+for test_case in testcase_data['testCases']:
+    startFEN = test_case['start']['fen']
 
-    for test_case in testcase_data['testCases']:
-        startFEN = test_case['start']['fen']
+    output_file = output_dir / f'{test_idx}.json'
 
-        output_file = output_dir / f'{test_idx}.json'
+    print(f'Running tests on position {startFEN}')
+    print(f'Output file: {output_file}')
 
-        print(f'Running tests on position {startFEN}')
-        print(f'Output file: {output_file}')
+    subprocess.run(['$<TARGET_FILE:rampart>', startFEN, output_file])
 
-        subprocess.run(['$<TARGET_FILE:rampart>', startFEN, output_file])
+    with open(output_file, 'r') as file:
+        result_data = json.load(file)
 
-        with open(output_file, 'r') as file:
-            result_data = json.load(file)
+    correct_moves   = test_case['expected']
+    generated_moves = result_data['generated']
 
-        correct_moves   = test_case['expected']
-        generated_moves = result_data['generated']
+    any_errors = False
 
-        any_errors = False
+    for correct_move in correct_moves:
+        move = correct_move['move']
+        generated_move = get_move_from_obj(generated_moves, move)
 
-        for correct_move in correct_moves:
-            move = correct_move['move']
-            generated_move = get_move_from_obj(generated_moves, move)
+        if generated_move is None:
+            print(f'ERROR: move {move} was not generated, it should be legal!')
+            any_errors = True
+            continue
 
-            if generated_move is None:
-                print(f'ERROR: move {move} was not generated, it should be legal!')
-                any_errors = True
-            else:
-                correctFEN   = correct_move['fen']
-                generatedFEN = generated_move['fen']
+        correctFEN   = correct_move['fen']
+        generatedFEN = generated_move['fen']
 
-                if correctFEN != generatedFEN:
-                    print(f'ERROR: move {move} resulted in incorrect FEN!')
-                    print(f'Expected {correctFEN}, got {generatedFEN}')
-                    any_errors = True
+        if correctFEN != generatedFEN:
+            print(f'ERROR: move {move} resulted in incorrect FEN!')
+            print(f'Expected {correctFEN}, got {generatedFEN}')
+            any_errors = True
 
         # check for moves in generated_moves not in correct_moves
-        for generated_move in generated_moves:
-            move = generated_move['move']
 
-            correct_move = get_move_from_obj(correct_moves, move)
+    for generated_move in generated_moves:
+        move = generated_move['move']
 
-            if correct_move is None:
-                print(f'ERROR: move {move} was incorrectly generated, it should not be legal!')
-                any_errors = True
+        correct_move = get_move_from_obj(correct_moves, move)
+
+        if correct_move is None:
+            print(f'ERROR: move {move} was incorrectly generated, it should not be legal!')
+            any_errors = True
 
         if any_errors:
             test_cases_failed += 1

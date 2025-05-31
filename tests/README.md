@@ -15,10 +15,9 @@ This directory contains our test suite.
 * `perft`: perft executable (see `perft/` directory)
   * use the `run_perft` custom target to automatically run all test cases
 * `rampart`: detailed move generation test cases (see `rampart/` directory)
-  * use the `run_rampart` custom target to automatically run all test cases
 
 ## Dependencies
 
 * [Catch2](https://github.com/catchorg/Catch2), unit test framework
 * [nlohmann_json](https://json.nlohmann.me/), needed by `perft` and `rampart` for outputting results as JSON
-* Python interpreter, needed for `run_perft` and `run_rampart` wrapper scripts
+* Python interpreter, needed for perft and rampart wrapper scripts
