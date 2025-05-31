@@ -152,6 +152,7 @@ constexpr Bitboard king(
 
 namespace detail {
 
+    // Sliding piece attack generation is implemented using the Kogge-Stone fill algorithms
     // occluded fills exclude blockers, but include the sliding piece start squares
     namespace occluded_fills {
 

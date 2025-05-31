@@ -21,6 +21,7 @@
 #include <libchess/board/File.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/moves/Move.hpp>
+#include <libchess/moves/Patterns.hpp>
 #include <libchess/moves/PseudoLegal.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
@@ -303,28 +304,26 @@ template <Color Side>
 constexpr bool squares_attacked(
     const Pieces& pieces, const Bitboard targetSquares, const Bitboard enemyPieces) noexcept
 {
-    namespace move_gen = moves::pseudo_legal;
+    // For pawns, knights & kings we use the move pattern generator functions, because the only
+    // difference with the pseudo-legal generator functions is excluding squares occupied by
+    // friendly pieces, a consideration that is irrelevant here. For sliding pieces, the pseudo-legal
+    // generator functions are necessary to consider blocking pieces, but we can use them in a
+    // set-wise manner, e.g., to determine if any Queen attacks any of the target squares.
+    namespace move_gen      = moves::pseudo_legal;
+    namespace move_patterns = moves::patterns;
 
-    // TODO: could optimize by using the pattern generation functions for pawns, knights, & king
-
-    const auto friendlyPieces = pieces.occupied();
-
-    const auto pawnAttacks = move_gen::pawn_captures<Side>(pieces.pawns, enemyPieces);
+    const auto pawnAttacks = move_patterns::pawn_attacks<Side>(pieces.pawns);
 
     if ((pawnAttacks & targetSquares).any())
         return true;
 
-    const auto knightAttacks = move_gen::knight(pieces.knights, friendlyPieces);
+    const auto knightAttacks = move_patterns::knight(pieces.knights);
 
     if ((knightAttacks & targetSquares).any())
         return true;
 
-    const auto kingAttacks = move_gen::king(pieces.king, friendlyPieces);
-
-    if ((kingAttacks & targetSquares).any())
-        return true;
-
-    const auto emptySquares = (friendlyPieces | enemyPieces).inverse();
+    const auto friendlyPieces = pieces.occupied();
+    const auto emptySquares   = (friendlyPieces | enemyPieces).inverse();
 
     const auto queenAttacks = move_gen::queen(pieces.queens, emptySquares, friendlyPieces);
 
@@ -338,7 +337,16 @@ constexpr bool squares_attacked(
 
     const auto bishopAttacks = move_gen::bishop(pieces.bishops, emptySquares, friendlyPieces);
 
-    return (bishopAttacks & targetSquares).any();
+    if ((bishopAttacks & targetSquares).any())
+        return true;
+
+    // test king last
+    // this function is used for things like detecting if a position is check,
+    // so it's unlikely that the king would be the only relevant attacker of a square
+
+    const auto kingAttacks = move_patterns::king(pieces.king);
+
+    return (kingAttacks & targetSquares).any();
 }
 
 } // namespace chess::board
