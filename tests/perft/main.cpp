@@ -48,7 +48,7 @@ void print_help(const std::string_view programName)
 
 [[nodiscard]] PerftOptions parse_options(std::span<const std::string_view> args)
 {
-    PerftOptions options;
+    PerftOptions options {};
 
     while (! args.empty()) {
         const auto arg = args.front();
