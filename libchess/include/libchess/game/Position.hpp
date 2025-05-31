@@ -218,7 +218,7 @@ private:
     @relates Position
     @ingroup game
  */
-[[nodiscard]] constexpr Position after_move(const Position& starting, const Move& move) noexcept;
+[[nodiscard, gnu::const]] constexpr Position after_move(const Position& starting, const Move& move) noexcept;
 
 /** Creates a UTF8 representation of the given position.
     The returned string is meant to be interpreted visually by a human, probably for debugging purposes.
