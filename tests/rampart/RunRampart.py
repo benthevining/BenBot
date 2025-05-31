@@ -15,7 +15,8 @@ from pathlib import Path
 TMP_DIR_PATH = Path('@TMP_DIR@')
 CORRECT_FILES_DIR = Path('@TESTCASES_DIR@')
 
-TESTCASE_FILES = ['standard']
+# TODO: famous, pawns, taxing
+TESTCASE_FILES = ['castling', 'checkmates', 'promotions', 'stalemates', 'standard']
 
 def get_move_from_obj(obj):
     for key, value in list(obj):
@@ -23,6 +24,9 @@ def get_move_from_obj(obj):
             return value
 
     raise ValueError(f'\"move\" key not found in object: {obj}')
+
+test_cases_passed = 0
+test_cases_failed = 0
 
 for testcase_file in TESTCASE_FILES:
     print(f'Running tests from {testcase_file}.json...')
@@ -52,14 +56,27 @@ for testcase_file in TESTCASE_FILES:
         correct_moves   = frozenset(frozenset(d.items()) for d in test_case['expected'])
         generated_moves = frozenset(frozenset(d.items()) for d in result_data['generated'])
 
+        any_errors = False
+
         # print moves in correct_moves not in generated_moves
         for missing_move in correct_moves.difference(generated_moves):
             print(f'ERROR! Move {get_move_from_obj(missing_move)} was not generated (or resulting FEN is wrong)')
+            any_errors = True
 
         # print moves in generated_moves not in correct_moves
         for incorrect_move in generated_moves.difference(correct_moves):
             print(f'ERROR! Move {get_move_from_obj(incorrect_move)} was incorrectly generated (or resulting FEN is wrong)')
+            any_errors = True
+
+        if any_errors:
+            test_cases_failed += 1
+        else:
+            test_cases_passed += 1
 
         test_idx += 1
 
-print('All tests succeeded!')
+print(f'{test_cases_passed} test cases passed')
+print(f'{test_cases_failed} test cases failed')
+
+if test_cases_failed > 0:
+    exit(1)
