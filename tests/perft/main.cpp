@@ -127,9 +127,16 @@ void run_perft(const PerftOptions& options)
         result_json["checkmates"]  = result.checkmates;
         result_json["stalemates"]  = result.stalemates;
 
-        std::ofstream output { *options.jsonOutputPath };
+        const auto& path = *options.jsonOutputPath;
+
+        std::filesystem::create_directories(path.parent_path());
+
+        std::ofstream output { path };
 
         output << json.dump(1);
+
+        std::println("Wrote JSON results to {}", path.string()); // NOLINT(build/include_what_you_use)
+        std::println("");
     }
 
     std::println("Nodes: {}", result.nodes);
