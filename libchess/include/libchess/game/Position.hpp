@@ -313,47 +313,6 @@ constexpr auto Position::get_half_open_files() const noexcept
 
 namespace detail {
 
-    template <Color Side>
-    [[nodiscard, gnu::const]] consteval Bitboard queenside_castle_rook_pos_mask() noexcept
-    {
-        static constexpr auto rank = Side == Color::White ? Rank::One : Rank::Eight;
-
-        Bitboard mask;
-
-        mask.set(Square { File::A, rank });
-        mask.set(Square { File::D, rank });
-
-        return mask;
-    }
-
-    template <Color Side>
-    [[nodiscard, gnu::const]] consteval Bitboard kingside_castle_rook_pos_mask() noexcept
-    {
-        static constexpr auto rank = Side == Color::White ? Rank::One : Rank::Eight;
-
-        Bitboard mask;
-
-        mask.set(Square { File::H, rank });
-        mask.set(Square { File::F, rank });
-
-        return mask;
-    }
-
-    template <Color Side>
-    constexpr void castled_set_rook_position(
-        board::Pieces& ourPieces, const Move& move) noexcept
-    {
-        auto& rooks = ourPieces.rooks;
-
-        if (move.to.is_queenside()) {
-            [[unlikely]];
-            rooks ^= queenside_castle_rook_pos_mask<Side>();
-            return;
-        }
-
-        rooks ^= kingside_castle_rook_pos_mask<Side>();
-    }
-
     constexpr void update_bitboards(
         Position& position, const Move& move) noexcept
     {
@@ -364,25 +323,7 @@ namespace detail {
 
         opponentPieces.capture_at(move.to);
 
-        auto& pieceBB = ourPieces.get_type(move.piece);
-
-        if (move.is_promotion()) {
-            [[unlikely]];
-            pieceBB.unset(move.from);
-            ourPieces.get_type(*move.promotedType).set(move.to);
-        } else {
-            [[likely]];
-            pieceBB ^= (Bitboard { move.from } | Bitboard { move.to });
-        }
-
-        if (move.is_castling()) {
-            [[unlikely]];
-
-            if (isWhite)
-                castled_set_rook_position<Color::White>(ourPieces, move);
-            else
-                castled_set_rook_position<Color::Black>(ourPieces, move);
-        }
+        ourPieces.our_move(move, position.sideToMove);
 
         if (position.is_en_passant(move)) {
             [[unlikely]];

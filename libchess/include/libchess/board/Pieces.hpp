@@ -20,6 +20,7 @@
 #include <libchess/board/BitboardMasks.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Square.hpp>
+#include <libchess/moves/Move.hpp>
 #include <libchess/moves/PseudoLegal.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
@@ -112,6 +113,9 @@ struct Pieces final {
         This method asserts if the ``square`` is the location of the king.
      */
     constexpr void capture_at(Square square) noexcept;
+
+    /** Call this when a move is made by this side to update the piece bitboards. */
+    constexpr void our_move(const moves::Move& move, Color ourColor) noexcept;
 };
 
 /** Returns true if any of the ``pieces`` attacks any of the ``targetSquares``.
@@ -238,6 +242,61 @@ constexpr void Pieces::capture_at(const Square square) noexcept
     bishops.unset(idx);
     rooks.unset(idx);
     queens.unset(idx);
+}
+
+namespace detail {
+
+    [[nodiscard, gnu::const]] constexpr Bitboard queenside_castle_rook_pos_mask(
+        const Color side) noexcept
+    {
+        const auto rank = side == Color::White ? Rank::One : Rank::Eight;
+
+        Bitboard mask;
+
+        mask.set(Square { File::A, rank });
+        mask.set(Square { File::D, rank });
+
+        return mask;
+    }
+
+    [[nodiscard, gnu::const]] constexpr Bitboard kingside_castle_rook_pos_mask(
+        const Color side) noexcept
+    {
+        const auto rank = side == Color::White ? Rank::One : Rank::Eight;
+
+        Bitboard mask;
+
+        mask.set(Square { File::H, rank });
+        mask.set(Square { File::F, rank });
+
+        return mask;
+    }
+
+} // namespace detail
+
+constexpr void Pieces::our_move(const moves::Move& move, const Color ourColor) noexcept
+{
+    auto& pieceBB = get_type(move.piece);
+
+    if (move.is_promotion()) {
+        [[unlikely]];
+
+        pieceBB.unset(move.from);
+        get_type(*move.promotedType).set(move.to);
+    } else {
+        [[likely]];
+
+        pieceBB ^= (Bitboard { move.from } | Bitboard { move.to });
+
+        // NB. we know that if a move is a promotion, it can't be castling
+        if (move.is_castling()) {
+            [[unlikely]];
+            if (move.to.is_queenside())
+                rooks ^= detail::queenside_castle_rook_pos_mask(ourColor);
+            else
+                rooks ^= detail::kingside_castle_rook_pos_mask(ourColor);
+        }
+    }
 }
 
 template <Color Side>
