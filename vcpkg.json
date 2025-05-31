@@ -1,7 +1,8 @@
 {
   "dependencies": [
     "magic-enum",
-    "catch2"
+    "catch2",
+    "nlohmann-json"
   ],
   "name": "libchess",
   "version": "0.0.1"
