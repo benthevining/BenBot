@@ -19,6 +19,7 @@
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdint> // IWYU pragma: keep - for std::uint_least64_t
 #include <format>
+#include <iterator>
 #include <libchess/board/BitboardIndex.hpp>
 #include <libchess/board/Square.hpp>
 #include <ranges>
@@ -128,7 +129,7 @@ struct Bitboard final {
         for (auto index : board.indices())
           ; // ...
         @endcode
-        @see squares()
+        @see squares(), subboards()
      */
     [[nodiscard]] constexpr auto indices() const noexcept;
 
@@ -138,9 +139,22 @@ struct Bitboard final {
         for (auto square : board.squares())
           ; // ...
         @endcode
-        @see indices()
+        @see indices(), subboards()
      */
     [[nodiscard]] constexpr auto squares() const noexcept;
+
+    /** Returns an iterable range of Bitboard objects that each have a single bit set, each
+        representing the 1 bits in this bitboard. This is a transformation of a single bitboard
+        with up to 64 bits set into a set of up to 64 bitboards each with a single bit set.
+
+        The Bitboard objects should be iterated by value, not by reference; i.e.:
+        @code{.cpp}
+        for (auto subboard : board.subboards())
+          ; // ...
+        @endcode
+        @see indices(), squares()
+     */
+    [[nodiscard]] constexpr auto subboards() const noexcept;
 
     /// @}
 
@@ -368,21 +382,6 @@ constexpr BitboardIndex Bitboard::last() const noexcept
     return NUM_SQUARES - trailingZeroes - static_cast<BitboardIndex>(1);
 }
 
-constexpr auto Bitboard::indices() const noexcept
-{
-    return std::views::iota(
-               0uz, static_cast<size_t>(NUM_SQUARES))
-         | std::views::filter(
-             [this](const size_t index) { return test(static_cast<BitboardIndex>(index)); });
-}
-
-constexpr auto Bitboard::squares() const noexcept
-{
-    return indices()
-         | std::views::transform(
-             [](const size_t index) { return Square::from_index(static_cast<BitboardIndex>(index)); });
-}
-
 constexpr Bitboard& Bitboard::operator&=(const Bitboard& other) noexcept
 {
     bits &= other.bits;
@@ -453,6 +452,84 @@ constexpr Bitboard operator>>(const Bitboard& board, const size_t num) noexcept
     auto ret = board;
     ret >>= num;
     return ret;
+}
+
+namespace detail {
+
+    // an STL iterator that iterates the set bits in a bitboard, quickly scanning through them using bitscan
+    struct BitboardIterator final {
+        using value_type   = BitboardIndex;
+        using element_type = value_type;
+        using pointer      = value_type;
+        using reference    = value_type;
+
+        using difference_type = std::ptrdiff_t;
+
+        using iterator_category = std::forward_iterator_tag;
+        using iterator_concept  = std::forward_iterator_tag;
+
+        constexpr BitboardIterator() = default;
+
+        explicit constexpr BitboardIterator(const Bitboard& bitboard)
+            : board { bitboard }
+        {
+        }
+
+        constexpr bool operator==(const BitboardIterator& other) const noexcept { return board == other.board; }
+
+        [[nodiscard]] constexpr value_type operator*() const noexcept
+        {
+            assert(board.any());
+            return index;
+        }
+
+        constexpr BitboardIterator& operator++() noexcept
+        {
+            board.unset(index);
+            index = board.first();
+            return *this;
+        }
+
+        [[nodiscard]] constexpr BitboardIterator operator++(int) noexcept
+        {
+            const auto ret { *this };
+            ++*this;
+            return ret;
+        }
+
+    private:
+        Bitboard board;
+
+        value_type index { board.first() };
+    };
+
+} // namespace detail
+
+constexpr auto Bitboard::indices() const noexcept
+{
+    return std::ranges::subrange {
+        detail::BitboardIterator { *this },
+        detail::BitboardIterator {},
+        count()
+    };
+}
+
+constexpr auto Bitboard::squares() const noexcept
+{
+    return indices()
+         | std::views::transform(
+             [](const BitboardIndex index) { return Square::from_index(index); });
+}
+
+constexpr auto Bitboard::subboards() const noexcept
+{
+    return indices()
+         | std::views::transform(
+             [](const BitboardIndex index) {
+                 Bitboard board;
+                 board.set(index);
+                 return board;
+             });
 }
 
 } // namespace chess::board
