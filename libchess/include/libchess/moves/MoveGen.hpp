@@ -35,18 +35,15 @@ namespace chess::moves {
 using game::Position;
 using PieceType = pieces::Type;
 
+/// @ingroup moves
+/// @{
+
 /** Generates a list of all legal moves for the side to move in the given position.
     If the side to move is in checkmate or stalemate, this returns an empty list.
+    The list of moves is not sorted in any particular manner.
 
-    @tparam PruneIllegal If true (the default), this function will return only strictly
-    legal moves. If false, all pseudo-legal moves will be returned; that is, moves
-    that obey the piece's movement mechanics, but may leave the side to move's king
-    in check.
-
-    @ingroup moves
     @see generate_for()
  */
-template <bool PruneIllegal = true>
 [[nodiscard]] constexpr std::vector<Move> generate(const Position& position);
 
 /** Generates a list of all legal moves for only the given piece type in the given position.
@@ -54,16 +51,14 @@ template <bool PruneIllegal = true>
     Generating King moves will include castling. Generating pawn moves will include all
     pushes, double pushes, captures, promotions, and en passant captures.
 
-    @tparam PruneIllegal If true (the default), this function will return only strictly
-    legal moves. If false, all pseudo-legal moves will be returned; that is, moves
-    that obey the piece's movement mechanics, but may leave the side to move's king
-    in check.
-
-    @ingroup moves
     @see generate()
  */
-template <bool PruneIllegal = true>
 [[nodiscard]] constexpr std::vector<Move> generate_for(const Position& position, PieceType piece);
+
+/** Returns true if the side to move has any legal moves in the given position. */
+[[nodiscard]] constexpr bool any_legal_moves(const Position& position);
+
+/// @}
 
 /*
                          ___                           ,--,
@@ -509,7 +504,6 @@ namespace detail {
 
 } // namespace detail
 
-template <bool PruneIllegal>
 constexpr std::vector<Move> generate(const Position& position)
 {
     std::vector<Move> moves;
@@ -523,15 +517,12 @@ constexpr std::vector<Move> generate(const Position& position)
     else
         detail::generate_internal<Color::Black>(position, std::back_inserter(moves));
 
-    if constexpr (PruneIllegal) {
-        std::erase_if(moves,
-            [position](const Move& move) { return ! position.is_legal(move); });
-    }
+    std::erase_if(moves,
+        [position](const Move& move) { return ! position.is_legal(move); });
 
     return moves;
 }
 
-template <bool PruneIllegal>
 constexpr std::vector<Move> generate_for(
     const Position& position, const PieceType piece)
 {
@@ -542,12 +533,35 @@ constexpr std::vector<Move> generate_for(
     else
         detail::generate_for_internal<Color::Black>(position, piece, std::back_inserter(moves));
 
-    if constexpr (PruneIllegal) {
-        std::erase_if(moves,
-            [position](const Move& move) { return ! position.is_legal(move); });
-    }
+    std::erase_if(moves,
+        [position](const Move& move) { return ! position.is_legal(move); });
 
     return moves;
+}
+
+constexpr bool any_legal_moves(const Position& position)
+{
+    std::vector<Move> moves;
+
+    // as an optimization, check for king moves first, because in a double check,
+    // a king move would be the only valid response
+
+    for (const auto piece : { PieceType::King, PieceType::Pawn, PieceType::Knight, PieceType::Queen, PieceType::Rook, PieceType::Bishop }) {
+        if (position.sideToMove == Color::White)
+            detail::generate_for_internal<Color::White>(position, piece, std::back_inserter(moves));
+        else
+            detail::generate_for_internal<Color::Black>(position, piece, std::back_inserter(moves));
+
+        std::erase_if(moves,
+            [position](const Move& move) { return ! position.is_legal(move); });
+
+        if (! moves.empty())
+            return true;
+
+        moves.clear();
+    }
+
+    return false;
 }
 
 } // namespace chess::moves

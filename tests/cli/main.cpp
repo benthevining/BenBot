@@ -110,7 +110,7 @@ void game_loop(Position position, const bool uciMoveFormat)
             goto read_next_move;
         }
 
-        const bool anyLegalMoves = ! chess::moves::generate(position).empty();
+        const bool anyLegalMoves = chess::moves::any_legal_moves(position);
 
         if (position.is_check()) {
             if (anyLegalMoves)

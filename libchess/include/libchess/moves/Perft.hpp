@@ -52,6 +52,7 @@ struct PerftResult final {
     /** The number of child nodes that resulted in stalemates. */
     size_t stalemates { 0uz };
 
+    /** Adds the results from a child node. */
     constexpr PerftResult& operator+=(const PerftResult& rhs) noexcept;
 };
 
@@ -122,7 +123,7 @@ constexpr PerftResult perft(const size_t depth, const Position& startingPosition
         if (isCheck)
             ++result.checks;
 
-        if (generate(newPosition).empty()) {
+        if (! any_legal_moves(newPosition)) {
             // no legal moves
             if (isCheck)
                 ++result.checkmates;

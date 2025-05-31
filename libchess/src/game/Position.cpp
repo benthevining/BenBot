@@ -22,13 +22,13 @@ namespace chess::game {
 bool Position::is_checkmate() const
 {
     return is_check()
-        && moves::generate(*this).empty();
+        && ! moves::any_legal_moves(*this);
 }
 
 bool Position::is_stalemate() const
 {
     return ! is_check()
-        && moves::generate(*this).empty();
+        && ! moves::any_legal_moves(*this);
 }
 
 namespace utf8_pieces = pieces::utf8;
