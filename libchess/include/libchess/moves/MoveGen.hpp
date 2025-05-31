@@ -353,19 +353,19 @@ namespace detail {
 
     // NB. with queenside castling, the set of squares that must be free/not attacked differ,
     // since castling is possible if the B1/B8 squares are attacked, but not if they are occupied
-    template <Color Side, bool AllowAttacked>
+    template <Color Side, bool Occupied>
     [[nodiscard, gnu::const]] consteval Bitboard queenside_castle_mask() noexcept
     {
         static constexpr auto rank = Side == Color::White ? Rank::One : Rank::Eight;
 
         Bitboard board;
 
-        if constexpr (! AllowAttacked) {
-            board.set(Square { File::B, rank });
-        }
-
         board.set(Square { File::C, rank });
         board.set(Square { File::D, rank });
+
+        if constexpr (Occupied) {
+            board.set(Square { File::B, rank });
+        }
 
         return board;
     }
