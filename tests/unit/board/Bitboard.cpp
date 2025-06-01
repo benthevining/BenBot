@@ -57,7 +57,7 @@ TEST_CASE("Bitboard - first()", TAGS)
 {
     SECTION("A1")
     {
-        static constexpr Bitboard board { Square { File::A, Rank::One } };
+        static constexpr auto board = Bitboard::from_square(Square { File::A, Rank::One });
 
         STATIC_REQUIRE(board.count() == 1uz);
         STATIC_REQUIRE(board.first() == 0uz);
@@ -65,7 +65,7 @@ TEST_CASE("Bitboard - first()", TAGS)
 
     SECTION("B1")
     {
-        static constexpr Bitboard board { Square { File::B, Rank::One } };
+        static constexpr auto board = Bitboard::from_square(Square { File::B, Rank::One });
 
         STATIC_REQUIRE(board.count() == 1uz);
         STATIC_REQUIRE(board.first() == 1uz);
@@ -73,7 +73,7 @@ TEST_CASE("Bitboard - first()", TAGS)
 
     SECTION("A2")
     {
-        static constexpr Bitboard board { Square { File::A, Rank::Two } };
+        static constexpr auto board = Bitboard::from_square(Square { File::A, Rank::Two });
 
         STATIC_REQUIRE(board.count() == 1uz);
         STATIC_REQUIRE(board.first() == 8uz);
@@ -81,7 +81,7 @@ TEST_CASE("Bitboard - first()", TAGS)
 
     SECTION("H8")
     {
-        static constexpr Bitboard board { Square { File::H, Rank::Eight } };
+        static constexpr auto board = Bitboard::from_square(Square { File::H, Rank::Eight });
 
         STATIC_REQUIRE(board.count() == 1uz);
         STATIC_REQUIRE(board.first() == 63uz);
@@ -92,7 +92,7 @@ TEST_CASE("Bitboard - last()", TAGS)
 {
     SECTION("H8")
     {
-        static constexpr Bitboard board { Square { File::H, Rank::Eight } };
+        static constexpr auto board = Bitboard::from_square(Square { File::H, Rank::Eight });
 
         STATIC_REQUIRE(board.count() == 1uz);
         STATIC_REQUIRE(board.last() == 63uz);
@@ -100,7 +100,7 @@ TEST_CASE("Bitboard - last()", TAGS)
 
     SECTION("G8")
     {
-        static constexpr Bitboard board { Square { File::G, Rank::Eight } };
+        static constexpr auto board = Bitboard::from_square(Square { File::G, Rank::Eight });
 
         STATIC_REQUIRE(board.count() == 1uz);
         STATIC_REQUIRE(board.last() == 62uz);
@@ -108,7 +108,7 @@ TEST_CASE("Bitboard - last()", TAGS)
 
     SECTION("H7")
     {
-        static constexpr Bitboard board { Square { File::H, Rank::Seven } };
+        static constexpr auto board = Bitboard::from_square(Square { File::H, Rank::Seven });
 
         STATIC_REQUIRE(board.count() == 1uz);
         STATIC_REQUIRE(board.last() == 55uz);
@@ -116,7 +116,7 @@ TEST_CASE("Bitboard - last()", TAGS)
 
     SECTION("A1")
     {
-        static constexpr Bitboard board { Square { File::A, Rank::One } };
+        static constexpr auto board = Bitboard::from_square(Square { File::A, Rank::One });
 
         STATIC_REQUIRE(board.count() == 1uz);
         STATIC_REQUIRE(board.last() == 0uz);

@@ -53,9 +53,6 @@ struct Bitboard final {
      */
     explicit constexpr Bitboard(Integer value) noexcept;
 
-    /** Constructs a bitboard with only a single square set to 1. */
-    explicit constexpr Bitboard(const Square& square) noexcept { set(square); }
-
     /** Returns true if the two bitboards have all the same bits set. */
     [[nodiscard]] constexpr bool operator==(const Bitboard&) const noexcept = default;
 
@@ -184,6 +181,9 @@ struct Bitboard final {
     constexpr Bitboard& operator>>=(size_t num) noexcept;
 
     /// @}
+
+    /** Returns a bitboard with only a single bit set. */
+    [[nodiscard, gnu::const]] static constexpr Bitboard from_square(const Square& square) noexcept;
 
 private:
     std::bitset<NUM_SQUARES> bits;
@@ -342,6 +342,11 @@ namespace chess::board {
 constexpr Bitboard::Bitboard(const Integer value) noexcept
     : bits { static_cast<unsigned long long>(value) } // NOLINT
 {
+}
+
+constexpr Bitboard Bitboard::from_square(const Square& square) noexcept
+{
+    return Bitboard { 1ULL << square.index() };
 }
 
 constexpr bool Bitboard::test(const BitboardIndex index) const noexcept

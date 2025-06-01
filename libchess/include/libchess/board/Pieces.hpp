@@ -292,7 +292,7 @@ namespace detail {
 
 constexpr void Pieces::our_move(const moves::Move& move, const Color ourColor) noexcept
 {
-    const auto movementMask = Bitboard { move.from } | Bitboard { move.to };
+    const auto movementMask = Bitboard::from_square(move.from) | Bitboard::from_square(move.to);
 
     occupied ^= movementMask;
 

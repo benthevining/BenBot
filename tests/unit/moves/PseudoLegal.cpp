@@ -40,7 +40,7 @@ TEST_CASE("Pseudo-legal - pawn pushes", TAGS)
 
             STATIC_REQUIRE(allPushes == board_masks::ranks::THREE);
 
-            static constexpr Bitboard enemyPieces { Square { File::A, Rank::Three } };
+            static constexpr auto enemyPieces = Bitboard::from_square(Square { File::A, Rank::Three });
 
             static constexpr auto pushes = move_gen::pawn_pushes<Color::White>(
                 startingPos, enemyPieces.inverse());
@@ -52,7 +52,7 @@ TEST_CASE("Pseudo-legal - pawn pushes", TAGS)
 
         SECTION("From D7")
         {
-            static constexpr Bitboard starting { Square { File::D, Rank::Seven } };
+            static constexpr auto starting = Bitboard::from_square(Square { File::D, Rank::Seven });
 
             static constexpr auto allPushes = move_gen::pawn_pushes<Color::White>(
                 starting, board_masks::ALL);
@@ -60,7 +60,7 @@ TEST_CASE("Pseudo-legal - pawn pushes", TAGS)
             STATIC_REQUIRE(allPushes.count() == 1uz);
             STATIC_REQUIRE(allPushes.test(Square { File::D, Rank::Eight }));
 
-            static constexpr Bitboard enemyPieces { Square { File::D, Rank::Eight } };
+            static constexpr auto enemyPieces = Bitboard::from_square(Square { File::D, Rank::Eight });
 
             static constexpr auto pushes = move_gen::pawn_pushes<Color::White>(
                 starting, enemyPieces.inverse());
@@ -80,7 +80,7 @@ TEST_CASE("Pseudo-legal - pawn pushes", TAGS)
 
             STATIC_REQUIRE(allPushes == board_masks::ranks::SIX);
 
-            static constexpr Bitboard enemyPieces { Square { File::C, Rank::Six } };
+            static constexpr auto enemyPieces = Bitboard::from_square(Square { File::C, Rank::Six });
 
             static constexpr auto pushes = move_gen::pawn_pushes<Color::Black>(
                 startingPos, enemyPieces.inverse());
@@ -92,7 +92,7 @@ TEST_CASE("Pseudo-legal - pawn pushes", TAGS)
 
         SECTION("From E2")
         {
-            static constexpr Bitboard starting { Square { File::E, Rank::Two } };
+            static constexpr auto starting = Bitboard::from_square(Square { File::E, Rank::Two });
 
             static constexpr auto allPushes = move_gen::pawn_pushes<Color::Black>(
                 starting, board_masks::ALL);
@@ -100,7 +100,7 @@ TEST_CASE("Pseudo-legal - pawn pushes", TAGS)
             STATIC_REQUIRE(allPushes.count() == 1uz);
             STATIC_REQUIRE(allPushes.test(Square { File::E, Rank::One }));
 
-            static constexpr Bitboard enemyPieces { Square { File::E, Rank::One } };
+            static constexpr auto enemyPieces = Bitboard::from_square(Square { File::E, Rank::One });
 
             static constexpr auto pushes = move_gen::pawn_pushes<Color::Black>(
                 starting, enemyPieces.inverse());
@@ -173,7 +173,7 @@ TEST_CASE("Pseudo-legal - pawn captures", TAGS)
     {
         SECTION("D4 -> C5")
         {
-            static constexpr Bitboard startingPawns { Square { File::D, Rank::Four } };
+            static constexpr auto startingPawns = Bitboard::from_square(Square { File::D, Rank::Four });
 
             Bitboard enemyPieces;
 
@@ -191,7 +191,7 @@ TEST_CASE("Pseudo-legal - pawn captures", TAGS)
 
         SECTION("From C2, none available")
         {
-            static constexpr Bitboard startingPawns { Square { File::C, Rank::Two } };
+            static constexpr auto startingPawns = Bitboard::from_square(Square { File::C, Rank::Two });
 
             Bitboard enemyPieces;
 
@@ -207,7 +207,7 @@ TEST_CASE("Pseudo-legal - pawn captures", TAGS)
 
         SECTION("F7 -> E8/G8")
         {
-            static constexpr Bitboard startingPawns { Square { File::F, Rank::Seven } };
+            static constexpr auto startingPawns = Bitboard::from_square(Square { File::F, Rank::Seven });
 
             Bitboard enemyPieces;
 
@@ -258,7 +258,7 @@ TEST_CASE("Pseudo-legal - pawn captures", TAGS)
     {
         SECTION("E5 -> D4")
         {
-            static constexpr Bitboard startingPawns { Square { File::E, Rank::Five } };
+            static constexpr auto startingPawns = Bitboard::from_square(Square { File::E, Rank::Five });
 
             Bitboard enemyPieces;
 
@@ -277,7 +277,7 @@ TEST_CASE("Pseudo-legal - pawn captures", TAGS)
 
         SECTION("From F6, none available")
         {
-            static constexpr Bitboard startingPawns { Square { File::F, Rank::Six } };
+            static constexpr auto startingPawns = Bitboard::from_square(Square { File::F, Rank::Six });
 
             Bitboard enemyPieces;
 
@@ -295,7 +295,7 @@ TEST_CASE("Pseudo-legal - pawn captures", TAGS)
 
         SECTION("G2 -> F1/H1")
         {
-            static constexpr Bitboard startingPawns { Square { File::G, Rank::Two } };
+            static constexpr auto startingPawns = Bitboard::from_square(Square { File::G, Rank::Two });
 
             Bitboard enemyPieces;
 
@@ -346,7 +346,7 @@ TEST_CASE("Pseudo-legal - knights", TAGS)
 {
     SECTION("From D1")
     {
-        static constexpr Bitboard starting { Square { File::D, Rank::One } };
+        static constexpr auto starting = Bitboard::from_square(Square { File::D, Rank::One });
 
         static constexpr auto allMoves = move_gen::knight(starting, {});
 
@@ -406,7 +406,7 @@ TEST_CASE("Pseudo-legal - bishops", TAGS)
     {
         static constexpr Square starting { File::D, Rank::Four };
 
-        static constexpr Bitboard enemyPieces { Square { File::G, Rank::Seven } };
+        static constexpr auto enemyPieces = Bitboard::from_square(Square { File::G, Rank::Seven });
 
         Bitboard friendlyPieces;
 
@@ -416,7 +416,7 @@ TEST_CASE("Pseudo-legal - bishops", TAGS)
         const auto emptySquares = (friendlyPieces | enemyPieces).inverse();
 
         const auto moves = move_gen::bishop(
-            Bitboard { starting }, emptySquares, friendlyPieces);
+            Bitboard::from_square(starting), emptySquares, friendlyPieces);
 
         REQUIRE(moves.count() == 9uz);
 
@@ -431,7 +431,7 @@ TEST_CASE("Pseudo-legal - bishops", TAGS)
     {
         static constexpr Square starting { File::G, Rank::Six };
 
-        static constexpr Bitboard friendlyPieces { Square { File::B, Rank::One } };
+        static constexpr auto friendlyPieces = Bitboard::from_square(Square { File::B, Rank::One });
 
         Bitboard enemyPieces;
 
@@ -441,7 +441,7 @@ TEST_CASE("Pseudo-legal - bishops", TAGS)
         const auto emptySquares = (friendlyPieces | enemyPieces).inverse();
 
         const auto moves = move_gen::bishop(
-            Bitboard { starting }, emptySquares, friendlyPieces);
+            Bitboard::from_square(starting), emptySquares, friendlyPieces);
 
         REQUIRE(moves.count() == 7uz);
 
@@ -459,7 +459,7 @@ TEST_CASE("Pseudo-legal - rooks", TAGS)
     {
         static constexpr Square starting { File::C, Rank::Three };
 
-        static constexpr Bitboard friendlyPieces { Square { File::B, Rank::Three } };
+        static constexpr auto friendlyPieces = Bitboard::from_square(Square { File::B, Rank::Three });
 
         Bitboard enemyPieces;
 
@@ -472,7 +472,7 @@ TEST_CASE("Pseudo-legal - rooks", TAGS)
         const auto emptySquares = (friendlyPieces | enemyPieces).inverse();
 
         const auto moves = move_gen::rook(
-            Bitboard { starting }, emptySquares, friendlyPieces);
+            Bitboard::from_square(starting), emptySquares, friendlyPieces);
 
         REQUIRE(moves == Bitboard { 0X40404380404 });
     }
@@ -486,12 +486,12 @@ TEST_CASE("Pseudo-legal - rooks", TAGS)
         friendlyPieces.set(Square { File::B, Rank::Seven });
         friendlyPieces.set(Square { File::E, Rank::Four });
 
-        static constexpr Bitboard enemyPieces { Square { File::E, Rank::Eight } };
+        static constexpr auto enemyPieces = Bitboard::from_square(Square { File::E, Rank::Eight });
 
         const auto emptySquares = (friendlyPieces | enemyPieces).inverse();
 
         const auto moves = move_gen::rook(
-            Bitboard { starting }, emptySquares, friendlyPieces);
+            Bitboard::from_square(starting), emptySquares, friendlyPieces);
 
         REQUIRE(moves == Bitboard { 0X10EC101000000000 });
     }
@@ -517,7 +517,7 @@ TEST_CASE("Pseudo-legal - queens", TAGS)
         const auto emptySquares = (friendlyPieces | enemyPieces).inverse();
 
         const auto moves = move_gen::queen(
-            Bitboard { starting }, emptySquares, friendlyPieces);
+            Bitboard::from_square(starting), emptySquares, friendlyPieces);
 
         REQUIRE(moves == Bitboard { 0X101418EC38548200 });
     }
@@ -540,7 +540,7 @@ TEST_CASE("Pseudo-legal - queens", TAGS)
         const auto emptySquares = (friendlyPieces | enemyPieces).inverse();
 
         const auto moves = move_gen::queen(
-            Bitboard { starting }, emptySquares, friendlyPieces);
+            Bitboard::from_square(starting), emptySquares, friendlyPieces);
 
         REQUIRE(moves == Bitboard { 0X20120A071D });
     }
@@ -550,7 +550,7 @@ TEST_CASE("Pseudo-legal - kings", TAGS)
 {
     SECTION("From G4")
     {
-        static constexpr Bitboard starting { Square { File::G, Rank::Four } };
+        static constexpr auto starting = Bitboard::from_square(Square { File::G, Rank::Four });
 
         Bitboard friendlyPieces;
 
@@ -571,7 +571,7 @@ TEST_CASE("Pseudo-legal - kings", TAGS)
 
     SECTION("From A8")
     {
-        static constexpr Bitboard starting { Square { File::A, Rank::Eight } };
+        static constexpr Bitboard starting = Bitboard::from_square(Square { File::A, Rank::Eight });
 
         Bitboard friendlyPieces;
 

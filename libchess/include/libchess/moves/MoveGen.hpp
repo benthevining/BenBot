@@ -227,7 +227,7 @@ namespace detail {
 
         const auto targetSquare = *position.enPassantTargetSquare;
 
-        const Bitboard targetSquareBoard { targetSquare };
+        const auto targetSquareBoard = Bitboard::from_square(targetSquare);
 
         const auto startSquares = shifts::pawn_inv_capture_east<Side>(targetSquareBoard)
                                 | shifts::pawn_inv_capture_west<Side>(targetSquareBoard);

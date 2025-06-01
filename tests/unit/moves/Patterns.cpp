@@ -43,7 +43,7 @@ TEST_CASE("Patterns - pawn pushes", TAGS)
 
         SECTION("From H7")
         {
-            static constexpr Bitboard board { Square { File::H, Rank::Seven } };
+            static constexpr auto board = Bitboard::from_square(Square { File::H, Rank::Seven });
 
             static constexpr auto pushes = move_gen::pawn_pushes<Color::White>(board);
 
@@ -75,7 +75,7 @@ TEST_CASE("Patterns - pawn pushes", TAGS)
 
         SECTION("From E2")
         {
-            static constexpr Bitboard board { Square { File::E, Rank::Two } };
+            static constexpr auto board = Bitboard::from_square(Square { File::E, Rank::Two });
 
             static constexpr auto pushes = move_gen::pawn_pushes<Color::Black>(board);
 
@@ -164,7 +164,7 @@ TEST_CASE("Patterns - pawn attacks", TAGS)
     {
         SECTION("From D4")
         {
-            static constexpr Bitboard starting { Square { File::D, Rank::Four } };
+            static constexpr auto starting = Bitboard::from_square(Square { File::D, Rank::Four });
 
             static constexpr auto attacks = move_gen::pawn_attacks<Color::White>(starting);
 
@@ -176,7 +176,7 @@ TEST_CASE("Patterns - pawn attacks", TAGS)
 
         SECTION("From A2")
         {
-            static constexpr Bitboard starting { Square { File::A, Rank::Two } };
+            static constexpr auto starting = Bitboard::from_square(Square { File::A, Rank::Two });
 
             static constexpr auto attacks = move_gen::pawn_attacks<Color::White>(starting);
 
@@ -187,7 +187,7 @@ TEST_CASE("Patterns - pawn attacks", TAGS)
 
         SECTION("From H5")
         {
-            static constexpr Bitboard starting { Square { File::H, Rank::Five } };
+            static constexpr auto starting = Bitboard::from_square(Square { File::H, Rank::Five });
 
             static constexpr auto attacks = move_gen::pawn_attacks<Color::White>(starting);
 
@@ -228,7 +228,7 @@ TEST_CASE("Patterns - pawn attacks", TAGS)
     {
         SECTION("From E3")
         {
-            static constexpr Bitboard starting { Square { File::E, Rank::Three } };
+            static constexpr auto starting = Bitboard::from_square(Square { File::E, Rank::Three });
 
             static constexpr auto attacks = move_gen::pawn_attacks<Color::Black>(starting);
 
@@ -240,7 +240,7 @@ TEST_CASE("Patterns - pawn attacks", TAGS)
 
         SECTION("From A5")
         {
-            static constexpr Bitboard starting { Square { File::A, Rank::Five } };
+            static constexpr auto starting = Bitboard::from_square(Square { File::A, Rank::Five });
 
             static constexpr auto attacks = move_gen::pawn_attacks<Color::Black>(starting);
 
@@ -251,7 +251,7 @@ TEST_CASE("Patterns - pawn attacks", TAGS)
 
         SECTION("From H6")
         {
-            static constexpr Bitboard starting { Square { File::H, Rank::Six } };
+            static constexpr auto starting = Bitboard::from_square(Square { File::H, Rank::Six });
 
             static constexpr auto attacks = move_gen::pawn_attacks<Color::Black>(starting);
 
@@ -297,7 +297,7 @@ TEST_CASE("Patterns - knight moves", TAGS)
     {
         static constexpr Square starting { File::D, Rank::Four };
 
-        static constexpr auto moves = move_gen::knight(Bitboard { starting });
+        static constexpr auto moves = move_gen::knight(Bitboard::from_square(starting));
 
         STATIC_REQUIRE(moves.count() == 8uz);
 
@@ -318,7 +318,7 @@ TEST_CASE("Patterns - knight moves", TAGS)
     {
         static constexpr Square starting { File::A, Rank::One };
 
-        static constexpr auto moves = move_gen::knight(Bitboard { starting });
+        static constexpr auto moves = move_gen::knight(Bitboard::from_square(starting));
 
         STATIC_REQUIRE(moves.count() == 2u);
 
@@ -333,7 +333,7 @@ TEST_CASE("Patterns - knight moves", TAGS)
     {
         static constexpr Square starting { File::A, Rank::Eight };
 
-        static constexpr auto moves = move_gen::knight(Bitboard { starting });
+        static constexpr auto moves = move_gen::knight(Bitboard::from_square(starting));
 
         STATIC_REQUIRE(moves.count() == 2u);
 
@@ -348,7 +348,7 @@ TEST_CASE("Patterns - knight moves", TAGS)
     {
         static constexpr Square starting { File::H, Rank::One };
 
-        static constexpr auto moves = move_gen::knight(Bitboard { starting });
+        static constexpr auto moves = move_gen::knight(Bitboard::from_square(starting));
 
         STATIC_REQUIRE(moves.count() == 2u);
 
@@ -363,7 +363,7 @@ TEST_CASE("Patterns - knight moves", TAGS)
     {
         static constexpr Square starting { File::H, Rank::Eight };
 
-        static constexpr auto moves = move_gen::knight(Bitboard { starting });
+        static constexpr auto moves = move_gen::knight(Bitboard::from_square(starting));
 
         STATIC_REQUIRE(moves.count() == 2u);
 
@@ -409,7 +409,7 @@ TEST_CASE("Patterns - bishop moves", TAGS)
     {
         static constexpr Square starting { File::C, Rank::Five };
 
-        static constexpr auto moves = move_gen::bishop(Bitboard { starting });
+        static constexpr auto moves = move_gen::bishop(Bitboard::from_square(starting));
 
         STATIC_REQUIRE(moves.count() == 11uz);
 
@@ -434,7 +434,7 @@ TEST_CASE("Patterns - bishop moves", TAGS)
     {
         static constexpr Square starting { File::F, Rank::Three };
 
-        static constexpr auto moves = move_gen::bishop(Bitboard { starting });
+        static constexpr auto moves = move_gen::bishop(Bitboard::from_square(starting));
 
         STATIC_REQUIRE(moves.count() == 11uz);
 
@@ -459,7 +459,7 @@ TEST_CASE("Patterns - bishop moves", TAGS)
     {
         static constexpr Square starting { File::A, Rank::One };
 
-        static constexpr auto moves = move_gen::bishop(Bitboard { starting });
+        static constexpr auto moves = move_gen::bishop(Bitboard::from_square(starting));
 
         STATIC_REQUIRE(moves.count() == 7uz);
 
@@ -479,7 +479,7 @@ TEST_CASE("Patterns - bishop moves", TAGS)
     {
         static constexpr Square starting { File::A, Rank::Eight };
 
-        static constexpr auto moves = move_gen::bishop(Bitboard { starting });
+        static constexpr auto moves = move_gen::bishop(Bitboard::from_square(starting));
 
         STATIC_REQUIRE(moves.count() == 7uz);
 
@@ -499,7 +499,7 @@ TEST_CASE("Patterns - bishop moves", TAGS)
     {
         static constexpr Square starting { File::H, Rank::One };
 
-        static constexpr auto moves = move_gen::bishop(Bitboard { starting });
+        static constexpr auto moves = move_gen::bishop(Bitboard::from_square(starting));
 
         STATIC_REQUIRE(moves.count() == 7uz);
 
@@ -519,7 +519,7 @@ TEST_CASE("Patterns - bishop moves", TAGS)
     {
         static constexpr Square starting { File::H, Rank::Eight };
 
-        static constexpr auto moves = move_gen::bishop(Bitboard { starting });
+        static constexpr auto moves = move_gen::bishop(Bitboard::from_square(starting));
 
         STATIC_REQUIRE(moves.count() == 7uz);
 
@@ -554,7 +554,7 @@ TEST_CASE("Patterns - rook moves", TAGS)
     {
         static constexpr Square starting { File::D, Rank::Three };
 
-        static constexpr auto moves = move_gen::rook(Bitboard { starting });
+        static constexpr auto moves = move_gen::rook(Bitboard::from_square(starting));
 
         STATIC_REQUIRE(moves.count() == 14uz);
 
@@ -579,7 +579,7 @@ TEST_CASE("Patterns - rook moves", TAGS)
     {
         static constexpr Square starting { File::A, Rank::One };
 
-        static constexpr auto moves = move_gen::rook(Bitboard { starting });
+        static constexpr auto moves = move_gen::rook(Bitboard::from_square(starting));
 
         STATIC_REQUIRE(moves.count() == 14uz);
 
@@ -619,7 +619,7 @@ TEST_CASE("Patterns - queen moves", TAGS)
     {
         static constexpr Square starting { File::D, Rank::Four };
 
-        static constexpr auto moves = move_gen::queen(Bitboard { starting });
+        static constexpr auto moves = move_gen::queen(Bitboard::from_square(starting));
 
         STATIC_REQUIRE(moves.count() == 27uz);
 
@@ -671,7 +671,7 @@ TEST_CASE("Patterns - king moves", TAGS)
     {
         static constexpr Square starting { File::G, Rank::Two };
 
-        static constexpr auto moves = move_gen::king(Bitboard { starting });
+        static constexpr auto moves = move_gen::king(Bitboard::from_square(starting));
 
         STATIC_REQUIRE(moves.count() == 8u);
 
@@ -689,7 +689,7 @@ TEST_CASE("Patterns - king moves", TAGS)
     {
         static constexpr Square starting { File::A, Rank::One };
 
-        static constexpr auto moves = move_gen::king(Bitboard { starting });
+        static constexpr auto moves = move_gen::king(Bitboard::from_square(starting));
 
         STATIC_REQUIRE(moves.count() == 3u);
 
@@ -702,7 +702,7 @@ TEST_CASE("Patterns - king moves", TAGS)
     {
         static constexpr Square starting { File::A, Rank::Eight };
 
-        static constexpr auto moves = move_gen::king(Bitboard { starting });
+        static constexpr auto moves = move_gen::king(Bitboard::from_square(starting));
 
         STATIC_REQUIRE(moves.count() == 3u);
 
@@ -715,7 +715,7 @@ TEST_CASE("Patterns - king moves", TAGS)
     {
         static constexpr Square starting { File::H, Rank::One };
 
-        static constexpr auto moves = move_gen::king(Bitboard { starting });
+        static constexpr auto moves = move_gen::king(Bitboard::from_square(starting));
 
         STATIC_REQUIRE(moves.count() == 3u);
 
@@ -728,7 +728,7 @@ TEST_CASE("Patterns - king moves", TAGS)
     {
         static constexpr Square starting { File::H, Rank::Eight };
 
-        static constexpr auto moves = move_gen::king(Bitboard { starting });
+        static constexpr auto moves = move_gen::king(Bitboard::from_square(starting));
 
         STATIC_REQUIRE(moves.count() == 3u);
 
@@ -741,7 +741,7 @@ TEST_CASE("Patterns - king moves", TAGS)
     {
         static constexpr Square starting { File::C, Rank::One };
 
-        static constexpr auto moves = move_gen::king(Bitboard { starting });
+        static constexpr auto moves = move_gen::king(Bitboard::from_square(starting));
 
         STATIC_REQUIRE(moves.count() == 5u);
 
