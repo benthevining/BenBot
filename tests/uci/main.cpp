@@ -18,7 +18,6 @@
 #include <algorithm>
 #include <array>
 #include <charconv>
-#include <cstddef> // IWYU pragma: keep - for std::ptrdiff_t
 #include <cstdlib>
 #include <exception>
 #include <iostream>
@@ -33,7 +32,6 @@
 #include <print>
 #include <random>
 #include <ranges>
-#include <span>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -448,17 +446,6 @@ private:
 
 int main(const int argc, const char** argv)
 try {
-    const std::vector<std::string_view> argStorage {
-        argv,
-        std::next(argv, static_cast<std::ptrdiff_t>(argc))
-    };
-
-    std::span args { argStorage };
-
-    const auto programName = args.front();
-
-    args = args.subspan(1uz);
-
     UCIEngine engine;
 
     engine.loop();
