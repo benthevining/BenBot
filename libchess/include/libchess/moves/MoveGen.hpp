@@ -502,6 +502,29 @@ namespace detail {
         }
     }
 
+    template <Color Side>
+    [[nodiscard]] constexpr bool any_legal_moves_internal(const Position& position)
+    {
+        std::vector<Move> moves;
+
+        // as an optimization, check for king moves first, because in a double check,
+        // a king move would be the only valid response
+
+        for (const auto piece : { PieceType::King, PieceType::Pawn, PieceType::Knight, PieceType::Queen, PieceType::Rook, PieceType::Bishop }) {
+            generate_for_internal<Side>(position, piece, std::back_inserter(moves));
+
+            std::erase_if(moves,
+                [position](const Move& move) { return ! position.is_legal(move); });
+
+            if (! moves.empty())
+                return true;
+
+            moves.clear();
+        }
+
+        return false;
+    }
+
 } // namespace detail
 
 constexpr std::vector<Move> generate(const Position& position)
@@ -537,27 +560,10 @@ constexpr std::vector<Move> generate_for(
 
 constexpr bool any_legal_moves(const Position& position)
 {
-    std::vector<Move> moves;
+    if (position.sideToMove == Color::White)
+        return detail::any_legal_moves_internal<Color::White>(position);
 
-    // as an optimization, check for king moves first, because in a double check,
-    // a king move would be the only valid response
-
-    for (const auto piece : { PieceType::King, PieceType::Pawn, PieceType::Knight, PieceType::Queen, PieceType::Rook, PieceType::Bishop }) {
-        if (position.sideToMove == Color::White)
-            detail::generate_for_internal<Color::White>(position, piece, std::back_inserter(moves));
-        else
-            detail::generate_for_internal<Color::Black>(position, piece, std::back_inserter(moves));
-
-        std::erase_if(moves,
-            [position](const Move& move) { return ! position.is_legal(move); });
-
-        if (! moves.empty())
-            return true;
-
-        moves.clear();
-    }
-
-    return false;
+    return detail::any_legal_moves_internal<Color::Black>(position);
 }
 
 } // namespace chess::moves
