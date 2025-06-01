@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include <cstdint>
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/Distances.hpp>
 #include <libchess/board/File.hpp>

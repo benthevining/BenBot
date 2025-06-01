@@ -12,13 +12,16 @@
 #include <exception>
 #include <iostream>
 #include <iterator>
+#include <libchess/eval/Evaluation.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/Algebraic.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/UCI.hpp>
+#include <libchess/pieces/Colors.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <print>
+#include <ranges>
 #include <span>
 #include <stdexcept>
 #include <string>
@@ -26,11 +29,14 @@
 #include <vector>
 
 using chess::game::Position;
+using chess::pieces::Color;
 
 struct GameOptions final {
     Position startingPosition {};
 
     bool uciMoveFormat { false };
+
+    Color computerPlays { Color::Black };
 };
 
 namespace {
@@ -38,8 +44,9 @@ namespace {
 void print_help(const std::string_view programName)
 {
     std::println("Usage:");
-    std::println("{} [--fen \"<fenString>\"] [--uci]", programName);
+    std::println("{} [--fen \"<fenString>\"] [--uci] [--white]", programName);
     std::println("The --uci flag tells the program to parse input moves in the UCI format. If this flag is not given, SAN format is the default.");
+    std::println("The --white flag tells the computer to play the White pieces. If this flag is not given, the computer plays Black by default.");
 }
 
 [[nodiscard]] GameOptions parse_options(std::span<const std::string_view> args)
@@ -68,6 +75,11 @@ void print_help(const std::string_view programName)
 
         if (arg == "--uci") {
             options.uciMoveFormat = true;
+            continue;
+        }
+
+        if (arg == "--white") {
+            options.computerPlays = Color::White;
         }
     };
 
@@ -75,8 +87,27 @@ void print_help(const std::string_view programName)
 }
 
 using chess::game::print_utf8;
+using chess::moves::Move;
 
-void game_loop(Position position, const bool uciMoveFormat)
+[[nodiscard]] Move pick_best_move(const Position& position)
+{
+    const auto moves = chess::moves::generate(position);
+
+    const auto evals = moves
+                     | std::views::transform([position](const Move& move) {
+                           return chess::eval::evaluate(chess::game::after_move(position, move));
+                       })
+                     | std::ranges::to<std::vector>();
+
+    // evals are in range [0, 1], so find worst score for our opponent -> best score for us
+    const auto minScore = std::ranges::min_element(evals);
+
+    const auto minScoreIdx = std::ranges::distance(evals.begin(), minScore);
+
+    return moves.at(minScoreIdx);
+}
+
+void game_loop(Position position, const bool uciMoveFormat, const Color computerColor)
 {
     std::string nextMove;
 
@@ -84,30 +115,44 @@ void game_loop(Position position, const bool uciMoveFormat)
         std::println("{}", print_utf8(position));
 
     read_next_move:
-        std::println("{} to move:",
-            magic_enum::enum_name(position.sideToMove));
+        if (position.sideToMove == computerColor) {
+            std::println("{} to move",
+                magic_enum::enum_name(computerColor));
 
-        nextMove.clear();
+            const auto move = pick_best_move(position);
 
-        std::cin >> nextMove;
-
-        try {
-            if (uciMoveFormat) {
-                const auto move = chess::notation::from_uci(position, nextMove);
-
+            if (uciMoveFormat)
                 std::println("{}", chess::notation::to_uci(move));
-
-                position.make_move(move);
-            } else {
-                const auto move = chess::notation::from_alg(position, nextMove);
-
+            else
                 std::println("{}", chess::notation::to_alg(position, move));
 
-                position.make_move(move);
+            position.make_move(move);
+        } else {
+            std::println("{} to move:",
+                magic_enum::enum_name(position.sideToMove));
+
+            nextMove.clear();
+
+            std::cin >> nextMove;
+
+            try {
+                if (uciMoveFormat) {
+                    const auto move = chess::notation::from_uci(position, nextMove);
+
+                    std::println("{}", chess::notation::to_uci(move));
+
+                    position.make_move(move);
+                } else {
+                    const auto move = chess::notation::from_alg(position, nextMove);
+
+                    std::println("{}", chess::notation::to_alg(position, move));
+
+                    position.make_move(move);
+                }
+            } catch (const std::invalid_argument& exception) {
+                std::println("{}", exception.what());
+                goto read_next_move;
             }
-        } catch (const std::invalid_argument& exception) {
-            std::println("{}", exception.what());
-            goto read_next_move;
         }
 
         const bool anyLegalMoves = chess::moves::any_legal_moves(position);
@@ -148,9 +193,9 @@ try {
         return EXIT_FAILURE;
     }
 
-    const auto [startingPosition, uciMoveFormat] = parse_options(args);
+    const auto [startingPosition, uciMoveFormat, colorToPlay] = parse_options(args);
 
-    game_loop(startingPosition, uciMoveFormat);
+    game_loop(startingPosition, uciMoveFormat, colorToPlay);
 
     return EXIT_SUCCESS;
 } catch (const std::exception& exception) {
