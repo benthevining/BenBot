@@ -74,21 +74,14 @@
   ],
   "testPresets": [
     {
-      "configuration": "Debug",
-      "configurePreset": "default",
-      "displayName": "Run unit tests with Ninja (Debug)",
       "execution": {
         "enableFailover": true,
         "jobs": 8,
         "noTestsAction": "error",
         "scheduleRandom": true
       },
-      "filter": {
-        "include": {
-          "name": "libchess.unit."
-        }
-      },
-      "name": "unit-debug",
+      "hidden": true,
+      "name": "base",
       "output": {
         "labelSummary": true,
         "outputJUnitFile": "${fileDir}/logs/ctest/${presetName}/latest.junit",
@@ -97,6 +90,18 @@
         "shortProgress": true,
         "testOutputTruncation": "middle"
       }
+    },
+    {
+      "configuration": "Debug",
+      "configurePreset": "default",
+      "displayName": "Run unit tests with Ninja (Debug)",
+      "filter": {
+        "include": {
+          "name": "libchess.unit."
+        }
+      },
+      "inherits": "base",
+      "name": "unit-debug"
     },
     {
       "configuration": "Release",
@@ -108,26 +113,13 @@
       "configuration": "Debug",
       "configurePreset": "default",
       "displayName": "Run perft tests with Ninja (Debug)",
-      "execution": {
-        "enableFailover": false,
-        "jobs": 8,
-        "noTestsAction": "error",
-        "scheduleRandom": true
-      },
       "filter": {
         "include": {
           "name": "libchess.perft."
         }
       },
-      "name": "perft-debug",
-      "output": {
-        "labelSummary": true,
-        "outputJUnitFile": "${fileDir}/logs/ctest/${presetName}/latest.junit",
-        "outputLogFile": "${fileDir}/logs/ctest/${presetName}/latest.log",
-        "outputOnFailure": true,
-        "shortProgress": true,
-        "testOutputTruncation": "middle"
-      }
+      "inherits": "base",
+      "name": "perft-debug"
     },
     {
       "configuration": "Release",
@@ -139,26 +131,13 @@
       "configuration": "Debug",
       "configurePreset": "default",
       "displayName": "Run rampart tests with Ninja (Debug)",
-      "execution": {
-        "enableFailover": false,
-        "jobs": 8,
-        "noTestsAction": "error",
-        "scheduleRandom": true
-      },
       "filter": {
         "include": {
           "name": "libchess.rampart."
         }
       },
-      "name": "rampart-debug",
-      "output": {
-        "labelSummary": true,
-        "outputJUnitFile": "${fileDir}/logs/ctest/${presetName}/latest.junit",
-        "outputLogFile": "${fileDir}/logs/ctest/${presetName}/latest.log",
-        "outputOnFailure": true,
-        "shortProgress": true,
-        "testOutputTruncation": "middle"
-      }
+      "inherits": "base",
+      "name": "rampart-debug"
     },
     {
       "configuration": "Release",
