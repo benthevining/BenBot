@@ -261,6 +261,43 @@ struct GoCommandOptions final {
     return options;
 }
 
+[[nodiscard]] Position parse_position_command_options(const std::string_view args)
+{
+    // position [fen <fenstring> | startpos ]  moves <move1> .... <movei>
+    // args doesn't include the "position" token itself
+
+    Position position {};
+
+    auto [secondWord, rest] = split_at_first_space(args);
+
+    secondWord = trim(secondWord);
+
+    if (secondWord == "fen") {
+        const auto [fenString, afterFEN] = split_at_first_space(rest);
+
+        position = chess::notation::from_fen(fenString);
+
+        rest = afterFEN;
+    }
+
+    auto [moveToken, moves] = split_at_first_space(rest);
+
+    moveToken = trim(moveToken);
+
+    if (moveToken != "moves")
+        return position;
+
+    while (! moves.empty()) {
+        const auto [firstMove, rest2] = split_at_first_space(moves);
+
+        position.make_move(from_uci(position, firstMove));
+
+        moves = rest2;
+    }
+
+    return position;
+}
+
 [[nodiscard]] std::random_device& get_rng_seed()
 {
     static std::random_device rngSeed;
@@ -282,7 +319,7 @@ private:
     {
         inputBuf.clear();
 
-        std::cin >> inputBuf;
+        std::getline(std::cin, inputBuf);
 
         handle_command(inputBuf);
     }
@@ -335,7 +372,7 @@ private:
         firstWord = trim(firstWord);
 
         if (firstWord == "position") {
-            handle_position_command(rest);
+            currentPosition = parse_position_command_options(rest);
             return;
         }
 
@@ -352,43 +389,6 @@ private:
         if (firstWord == "debug") {
             rest      = trim(rest);
             debugMode = rest == "on";
-        }
-    }
-
-    void handle_position_command(const std::string_view args)
-    {
-        // position [fen <fenstring> | startpos ]  moves <move1> .... <movei>
-        // args doesn't include the "position" token itself
-
-        auto [secondWord, rest] = split_at_first_space(args);
-
-        secondWord = trim(secondWord);
-
-        if (secondWord == "startpos") {
-            currentPosition = Position {};
-        } else if (secondWord == "fen") {
-            const auto [fenString, afterFEN] = split_at_first_space(rest);
-
-            currentPosition = chess::notation::from_fen(fenString);
-
-            rest = afterFEN;
-        }
-
-        auto [moveToken, moves] = split_at_first_space(rest);
-
-        moveToken = trim(moveToken);
-
-        if (moveToken != "moves")
-            return;
-
-        while (! moves.empty()) {
-            const auto [firstMove, rest2] = split_at_first_space(moves);
-
-            lastMove = from_uci(currentPosition, firstMove);
-
-            currentPosition.make_move(lastMove);
-
-            moves = rest2;
         }
     }
 
@@ -433,8 +433,6 @@ private:
 
     Position currentPosition {};
 
-    Move lastMove {};
-
     std::string inputBuf;
 
     bool shouldExit { false };
@@ -444,7 +442,8 @@ private:
     std::mt19937 rng { get_rng_seed()() };
 };
 
-int main(const int argc, const char** argv)
+int main(
+    [[maybe_unused]] const int argc, [[maybe_unused]] const char** argv)
 try {
     UCIEngine engine;
 
