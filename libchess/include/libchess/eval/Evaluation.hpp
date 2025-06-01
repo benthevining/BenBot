@@ -20,6 +20,7 @@
 #include <libchess/board/Pieces.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/pieces/Colors.hpp>
+#include <libchess/pieces/PieceTypes.hpp>
 
 /** This namespace contains functions for evaluating positions.
     @ingroup eval
@@ -28,12 +29,14 @@ namespace chess::eval {
 
 using game::Position;
 
+using Score = double;
+
 /** Returns a numerical score representing the evaluation of the
     give position from the perspective of the side to move.
 
     @ingroup eval
  */
-[[nodiscard, gnu::const]] constexpr float evaluate(const Position& position) noexcept;
+[[nodiscard, gnu::const]] constexpr Score evaluate(const Position& position) noexcept;
 
 /*
                          ___                           ,--,
@@ -56,15 +59,19 @@ namespace detail {
 
     using board::Pieces;
 
-    [[nodiscard, gnu::const]] constexpr float material_score(
+    // Returns a 0-1 score where 0 is lone king vs 9 queens, 2 rooks, 2 bishops & 2 knights,
+    // and 1 is all those pieces vs lone king
+    [[nodiscard, gnu::const]] constexpr Score material_score(
         const Pieces& ourPieces, const Pieces& theirPieces) noexcept
     {
-        return static_cast<float>(ourPieces.material()) - static_cast<float>(theirPieces.material())
+        const auto diff = static_cast<Score>(ourPieces.material()) - static_cast<Score>(theirPieces.material());
+
+        return diff / static_cast<Score>(pieces::values::MAX_POSSIBLE_MATERIAL);
     }
 
 } // namespace detail
 
-constexpr float evaluate(const Position& position) noexcept
+constexpr Score evaluate(const Position& position) noexcept
 {
     using pieces::Color;
 

@@ -87,6 +87,12 @@ namespace values {
     /** The material value of a queen (9). */
     static constexpr size_t QUEEN { 9uz };
 
+    /** The maximum possible number of material points that a side can have. */
+    static constexpr size_t MAX_POSSIBLE_MATERIAL = QUEEN * 9uz // 8 promotions
+                                                  + KNIGHT * 2uz
+                                                  + BISHOP * 2uz
+                                                  + ROOK * 5uz;
+
     /// @}
 
 } // namespace values
