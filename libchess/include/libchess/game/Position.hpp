@@ -58,7 +58,7 @@ using PieceType = pieces::Type;
 
     @ingroup game
 
-    @todo Detect threefold reps by keeping array<Position, 6> ?
+    @todo Detect threefold reps
     @todo Funcs to get passed pawns, backward pawns
     @todo std::hash (Zobrist hashing)
  */
