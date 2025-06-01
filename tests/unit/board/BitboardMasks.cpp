@@ -9,9 +9,9 @@
 #include <algorithm>
 #include <catch2/catch_test_macros.hpp>
 #include <libchess/board/Bitboard.hpp>
-#include <libchess/board/BitboardMasks.hpp>
 #include <libchess/board/Distances.hpp>
 #include <libchess/board/File.hpp>
+#include <libchess/board/Masks.hpp>
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
 #include <magic_enum/magic_enum.hpp>

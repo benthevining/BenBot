@@ -17,8 +17,8 @@
 #include <cassert>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libchess/board/Bitboard.hpp>
-#include <libchess/board/BitboardMasks.hpp>
 #include <libchess/board/File.hpp>
+#include <libchess/board/Masks.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/moves/Patterns.hpp>

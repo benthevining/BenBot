@@ -8,7 +8,7 @@
 
 #include <catch2/benchmark/catch_benchmark_all.hpp>
 #include <catch2/catch_test_macros.hpp>
-#include <libchess/board/BitboardMasks.hpp>
+#include <libchess/board/Masks.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Patterns.hpp>
 #include <libchess/moves/PseudoLegal.hpp>

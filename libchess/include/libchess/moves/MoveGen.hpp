@@ -17,7 +17,7 @@
 #include <cassert>
 #include <iterator>
 #include <libchess/board/Bitboard.hpp>
-#include <libchess/board/BitboardMasks.hpp>
+#include <libchess/board/Masks.hpp>
 #include <libchess/board/Pieces.hpp>
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Shifts.hpp>

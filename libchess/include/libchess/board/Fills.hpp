@@ -14,7 +14,7 @@
 #pragma once
 
 #include <libchess/board/Bitboard.hpp>
-#include <libchess/board/BitboardMasks.hpp>
+#include <libchess/board/Masks.hpp>
 #include <libchess/pieces/Colors.hpp>
 
 /** This namespace contains bitboard fill algorithms.

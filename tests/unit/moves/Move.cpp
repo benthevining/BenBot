@@ -7,8 +7,8 @@
  */
 
 #include <catch2/catch_test_macros.hpp>
-#include <libchess/board/BitboardMasks.hpp>
 #include <libchess/board/File.hpp>
+#include <libchess/board/Masks.hpp>
 #include <libchess/board/Rank.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/pieces/Colors.hpp>

@@ -33,10 +33,10 @@ set (
     # cmake-format: sortable
     board/Bitboard.hpp
     board/BitboardIndex.hpp
-    board/BitboardMasks.hpp
     board/Distances.hpp
     board/File.hpp
     board/Fills.hpp
+    board/Masks.hpp
     board/Pieces.hpp
     board/Rank.hpp
     board/Shifts.hpp

@@ -15,8 +15,8 @@
 #pragma once
 
 #include <libchess/board/Bitboard.hpp>
-#include <libchess/board/BitboardMasks.hpp>
 #include <libchess/board/Fills.hpp>
+#include <libchess/board/Masks.hpp>
 #include <libchess/board/Shifts.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/moves/Patterns.hpp>
