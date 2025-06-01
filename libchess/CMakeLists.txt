@@ -41,6 +41,7 @@ set (
     board/Rank.hpp
     board/Shifts.hpp
     board/Square.hpp
+    eval/Evaluation.hpp
     game/CastlingRights.hpp
     game/Position.hpp
     moves/Move.hpp
