@@ -31,7 +31,7 @@
       "depth": 3,
       "results": {
         "captures": 1021,
-        "castles": 6,
+        "castles": 0,
         "checkmates": 22,
         "checks": 38,
         "en_passants": 4,
@@ -47,7 +47,7 @@
         "castles": 7795,
         "checkmates": 5,
         "checks": 15492,
-        "en_passants": 4,
+        "en_passants": 0,
         "promotions": 60032,
         "stalemates": 0,
         "totalNodes": 422333

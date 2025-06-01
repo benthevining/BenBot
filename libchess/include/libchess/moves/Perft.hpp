@@ -113,31 +113,34 @@ constexpr PerftResult perft(const size_t depth, const Position& startingPosition
     PerftResult result;
 
     for (const auto& move : generate(startingPosition)) {
-        if (startingPosition.is_capture(move)) {
-            ++result.captures;
-
-            if (startingPosition.is_en_passant(move))
-                ++result.enPassantCaptures;
-        }
-
-        if (move.is_castling())
-            ++result.castles;
-
-        if (move.promotedType.has_value())
-            ++result.promotions;
-
         const auto newPosition = game::after_move(startingPosition, move);
 
-        const bool isCheck = newPosition.is_check();
+        // we want stats only for leaf nodes
+        if (depth == 1uz) {
+            if (startingPosition.is_capture(move)) {
+                ++result.captures;
 
-        if (isCheck)
-            ++result.checks;
+                if (startingPosition.is_en_passant(move))
+                    ++result.enPassantCaptures;
+            }
 
-        if (! any_legal_moves(newPosition)) {
+            if (move.is_castling())
+                ++result.castles;
+
+            if (move.promotedType.has_value())
+                ++result.promotions;
+
+            const bool isCheck = newPosition.is_check();
+
             if (isCheck)
-                ++result.checkmates;
-            else
-                ++result.stalemates;
+                ++result.checks;
+
+            if (! any_legal_moves(newPosition)) {
+                if (isCheck)
+                    ++result.checkmates;
+                else
+                    ++result.stalemates;
+            }
         }
 
         const auto childResult = perft<false>(depth - 1uz, newPosition);
