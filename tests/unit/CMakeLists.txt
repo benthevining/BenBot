@@ -35,6 +35,7 @@ target_link_libraries (libchess_tests PRIVATE libchess::libchess Catch2::Catch2W
 set (
     sources
     # cmake-format: sortable
+    bench/MoveGen.cpp
     board/Bitboard.cpp
     board/BitboardMasks.cpp
     board/Distances.cpp
@@ -60,13 +61,27 @@ source_group (TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${sources})
 # cmake-format: off
 catch_discover_tests (
         libchess_tests
-        EXTRA_ARGS --verbosity high
-        --warn NoAssertions
-        --warn UnmatchedTestSpec
-        --colour-mode none
-        --reporter console::out=-
+        EXTRA_ARGS
+            --verbosity high
+            --warn NoAssertions
+            --warn UnmatchedTestSpec
+            --colour-mode none
+            --reporter console::out=-
         TEST_PREFIX libchess.unit.
         PROPERTIES
-        SKIP_REGULAR_EXPRESSION "SKIPPED:"
+            SKIP_REGULAR_EXPRESSION "SKIPPED:"
+)
+
+catch_discover_tests (
+        libchess_tests
+        TEST_SPEC "[!benchmark]"
+        EXTRA_ARGS
+            --verbosity high
+            --warn UnmatchedTestSpec
+            --colour-mode none
+            --reporter console::out=-
+        TEST_PREFIX libchess.bench.
+        PROPERTIES
+            SKIP_REGULAR_EXPRESSION "SKIPPED:"
 )
 # cmake-format: on

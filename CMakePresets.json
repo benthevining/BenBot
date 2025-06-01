@@ -112,6 +112,31 @@
     {
       "configuration": "Debug",
       "configurePreset": "default",
+      "displayName": "Run benchmarks with Ninja (Debug)",
+      "execution": {
+        "enableFailover": false,
+        "jobs": 1
+      },
+      "filter": {
+        "include": {
+          "name": "libchess.bench."
+        }
+      },
+      "inherits": "base",
+      "name": "bench-debug",
+      "output": {
+        "verbosity": "verbose"
+      }
+    },
+    {
+      "configuration": "Release",
+      "displayName": "Run benchmarks with Ninja (Release)",
+      "inherits": "bench-debug",
+      "name": "bench-release"
+    },
+    {
+      "configuration": "Debug",
+      "configurePreset": "default",
       "displayName": "Run perft tests with Ninja (Debug)",
       "filter": {
         "include": {
