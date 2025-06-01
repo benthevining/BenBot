@@ -87,103 +87,117 @@ void print_help(const std::string_view programName)
     return options;
 }
 
-using chess::game::print_utf8;
-using chess::moves::Move;
-
-[[nodiscard]] Move pick_best_move(const Position& position)
+[[nodiscard]] std::random_device& get_rng_seed()
 {
     static std::random_device rngSeed;
-
-    static std::mt19937 rng { rngSeed() };
-
-    auto moves = chess::moves::generate(position);
-
-    // make the bot a bit more interesting to play against
-    std::ranges::shuffle(moves, rng);
-
-    const auto evals = moves
-                     | std::views::transform([position](const Move& move) {
-                           return chess::eval::evaluate(chess::game::after_move(position, move));
-                       })
-                     | std::ranges::to<std::vector>();
-
-    // evals are in range [0, 1], so find worst score for our opponent -> best score for us
-    const auto minScore = std::ranges::min_element(evals);
-
-    const auto minScoreIdx = std::ranges::distance(evals.begin(), minScore);
-
-    return moves.at(minScoreIdx);
-}
-
-[[nodiscard]] Move read_user_move(
-    const Position& position, std::string& userInputBuf, const bool uciMoveFormat)
-{
-read_next_move:
-
-    std::println("{} to move:",
-        magic_enum::enum_name(position.sideToMove));
-
-    userInputBuf.clear();
-
-    std::cin >> userInputBuf;
-
-    try {
-        if (uciMoveFormat)
-            return chess::notation::from_uci(position, userInputBuf);
-
-        return chess::notation::from_alg(position, userInputBuf);
-    } catch (const std::invalid_argument& exception) {
-        std::println("{}", exception.what());
-        goto read_next_move;
-    }
-}
-
-[[nodiscard]] Move get_next_move(
-    const GameOptions& options, const Position& position, std::string& userInputBuf)
-{
-    if (position.sideToMove == options.computerPlays)
-        return pick_best_move(position);
-
-    return read_user_move(position, userInputBuf, options.uciMoveFormat);
-}
-
-void game_loop(const GameOptions& options)
-{
-    Position position { options.startingPosition };
-
-    std::string userInputBuf;
-
-    do {
-        std::println("{}", print_utf8(position));
-
-        const auto move = get_next_move(options, position, userInputBuf);
-
-        if (options.uciMoveFormat)
-            std::println("{}", chess::notation::to_uci(move));
-        else
-            std::println("{}", chess::notation::to_alg(position, move));
-
-        position.make_move(move);
-
-        const bool anyLegalMoves = chess::moves::any_legal_moves(position);
-
-        if (position.is_check()) {
-            if (anyLegalMoves)
-                std::println("Check!");
-            else {
-                std::println("Checkmate!");
-                break;
-            }
-        } else if (! anyLegalMoves) {
-            std::println("Stalemate!");
-            break;
-        }
-    } while (true);
-
-    std::println("{}", print_utf8(position));
+    return rngSeed;
 }
 
 } // namespace
+
+struct ConsoleGame final {
+    explicit ConsoleGame(const GameOptions& options)
+        : currentPosition { options.startingPosition }
+        , uciMoveFormat { options.uciMoveFormat }
+        , computerPlays { options.computerPlays }
+    {
+    }
+
+    void loop()
+    {
+        using chess::game::print_utf8;
+
+        do {
+            std::println("{}", print_utf8(currentPosition));
+
+            const bool anyLegalMoves = chess::moves::any_legal_moves(currentPosition);
+
+            if (currentPosition.is_check()) {
+                if (anyLegalMoves)
+                    std::println("Check!");
+                else {
+                    std::println("Checkmate!");
+                    return;
+                }
+            } else if (! anyLegalMoves) {
+                std::println("Stalemate.");
+                return;
+            }
+
+            const auto move = get_next_move();
+
+            if (uciMoveFormat)
+                std::println("{}", chess::notation::to_uci(move));
+            else
+                std::println("{}", chess::notation::to_alg(currentPosition, move));
+
+            currentPosition.make_move(move);
+        } while (true);
+    }
+
+private:
+    using Move = chess::moves::Move;
+
+    [[nodiscard]] Move get_next_move()
+    {
+        if (currentPosition.sideToMove == computerPlays)
+            return pick_best_move();
+
+        return read_user_move();
+    }
+
+    [[nodiscard]] Move pick_best_move()
+    {
+        auto moves = chess::moves::generate(currentPosition);
+
+        // make the bot a bit more interesting to play against
+        std::ranges::shuffle(moves, rng);
+
+        const auto evals = moves
+                         | std::views::transform([this](const Move& move) {
+                               return chess::eval::evaluate(
+                                   chess::game::after_move(currentPosition, move));
+                           })
+                         | std::ranges::to<std::vector>();
+
+        // evals are in range [0, 1], so find worst score for our opponent -> best score for us
+        const auto minScore = std::ranges::min_element(evals);
+
+        const auto minScoreIdx = std::ranges::distance(evals.begin(), minScore);
+
+        return moves.at(minScoreIdx);
+    }
+
+    [[nodiscard]] Move read_user_move() // NOLINT(misc-no-recursion)
+    {
+        std::println("{} to move:",
+            magic_enum::enum_name(currentPosition.sideToMove));
+
+        userInputBuf.clear();
+
+        std::cin >> userInputBuf;
+
+        try {
+            if (uciMoveFormat)
+                return chess::notation::from_uci(currentPosition, userInputBuf);
+
+            return chess::notation::from_alg(currentPosition, userInputBuf);
+        } catch (const std::invalid_argument& exception) {
+            std::println("{}", exception.what());
+            return read_user_move(); // try again
+        }
+    }
+
+    Position currentPosition;
+
+    bool uciMoveFormat { false };
+
+    Color computerPlays { Color::Black };
+
+    std::string userInputBuf;
+
+    std::mt19937 rng { get_rng_seed()() };
+};
 
 int main(const int argc, const char** argv)
 try {
@@ -203,7 +217,9 @@ try {
         return EXIT_FAILURE;
     }
 
-    game_loop(parse_options(args));
+    ConsoleGame game { parse_options(args) };
+
+    game.loop();
 
     return EXIT_SUCCESS;
 } catch (const std::exception& exception) {
