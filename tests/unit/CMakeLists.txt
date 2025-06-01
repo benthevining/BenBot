@@ -35,6 +35,7 @@ target_link_libraries (libchess_tests PRIVATE libchess::libchess Catch2::Catch2W
 set (
     sources
     # cmake-format: sortable
+    bench/Bitboard.cpp
     bench/MoveGen.cpp
     board/Bitboard.cpp
     board/BitboardMasks.cpp
