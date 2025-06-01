@@ -21,6 +21,7 @@
 #include <libchess/pieces/Colors.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <print>
+#include <random>
 #include <ranges>
 #include <span>
 #include <stdexcept>
@@ -91,7 +92,14 @@ using chess::moves::Move;
 
 [[nodiscard]] Move pick_best_move(const Position& position)
 {
-    const auto moves = chess::moves::generate(position);
+    static std::random_device rngSeed;
+
+    static std::mt19937 rng { rngSeed() };
+
+    auto moves = chess::moves::generate(position);
+
+    // make the bot a bit more interesting to play against
+    std::ranges::shuffle(moves, rng);
 
     const auto evals = moves
                      | std::views::transform([position](const Move& move) {
@@ -107,53 +115,55 @@ using chess::moves::Move;
     return moves.at(minScoreIdx);
 }
 
-void game_loop(Position position, const bool uciMoveFormat, const Color computerColor)
+[[nodiscard]] Move read_user_move(
+    const Position& position, std::string& userInputBuf, const bool uciMoveFormat)
 {
-    std::string nextMove;
+read_next_move:
+
+    std::println("{} to move:",
+        magic_enum::enum_name(position.sideToMove));
+
+    userInputBuf.clear();
+
+    std::cin >> userInputBuf;
+
+    try {
+        if (uciMoveFormat)
+            return chess::notation::from_uci(position, userInputBuf);
+
+        return chess::notation::from_alg(position, userInputBuf);
+    } catch (const std::invalid_argument& exception) {
+        std::println("{}", exception.what());
+        goto read_next_move;
+    }
+}
+
+[[nodiscard]] Move get_next_move(
+    const GameOptions& options, const Position& position, std::string& userInputBuf)
+{
+    if (position.sideToMove == options.computerPlays)
+        return pick_best_move(position);
+
+    return read_user_move(position, userInputBuf, options.uciMoveFormat);
+}
+
+void game_loop(const GameOptions& options)
+{
+    Position position { options.startingPosition };
+
+    std::string userInputBuf;
 
     do {
         std::println("{}", print_utf8(position));
 
-    read_next_move:
-        if (position.sideToMove == computerColor) {
-            std::println("{} to move",
-                magic_enum::enum_name(computerColor));
+        const auto move = get_next_move(options, position, userInputBuf);
 
-            const auto move = pick_best_move(position);
+        if (options.uciMoveFormat)
+            std::println("{}", chess::notation::to_uci(move));
+        else
+            std::println("{}", chess::notation::to_alg(position, move));
 
-            if (uciMoveFormat)
-                std::println("{}", chess::notation::to_uci(move));
-            else
-                std::println("{}", chess::notation::to_alg(position, move));
-
-            position.make_move(move);
-        } else {
-            std::println("{} to move:",
-                magic_enum::enum_name(position.sideToMove));
-
-            nextMove.clear();
-
-            std::cin >> nextMove;
-
-            try {
-                if (uciMoveFormat) {
-                    const auto move = chess::notation::from_uci(position, nextMove);
-
-                    std::println("{}", chess::notation::to_uci(move));
-
-                    position.make_move(move);
-                } else {
-                    const auto move = chess::notation::from_alg(position, nextMove);
-
-                    std::println("{}", chess::notation::to_alg(position, move));
-
-                    position.make_move(move);
-                }
-            } catch (const std::invalid_argument& exception) {
-                std::println("{}", exception.what());
-                goto read_next_move;
-            }
-        }
+        position.make_move(move);
 
         const bool anyLegalMoves = chess::moves::any_legal_moves(position);
 
@@ -193,9 +203,7 @@ try {
         return EXIT_FAILURE;
     }
 
-    const auto [startingPosition, uciMoveFormat, colorToPlay] = parse_options(args);
-
-    game_loop(startingPosition, uciMoveFormat, colorToPlay);
+    game_loop(parse_options(args));
 
     return EXIT_SUCCESS;
 } catch (const std::exception& exception) {
