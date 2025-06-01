@@ -18,13 +18,13 @@
 
 #pragma once
 
-#include <array>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/pieces/Colors.hpp>
+#include <utility>
 
 /** This namespace provides some compile-time bitboard constants and masks.
     @ingroup bitboard_masks
@@ -161,11 +161,7 @@ namespace ranks {
     /** Returns a bitboard with all squares on the requested rank set to 1. */
     [[nodiscard, gnu::const]] constexpr Bitboard get(const Rank rank) noexcept
     {
-        static constexpr std::array rankMasks {
-            ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT
-        };
-
-        return rankMasks[static_cast<size_t>(rank)];
+        return ONE << (8uz * std::to_underlying(rank));
     }
 
     /// @}
