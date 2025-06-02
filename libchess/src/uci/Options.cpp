@@ -168,7 +168,7 @@ std::string StringOption::get_declaration_string()
     return std::format("name {} type string default {}", optionName, value);
 }
 
-void StringOption::handle_setvalue(std::string_view arguments)
+void StringOption::handle_setvalue(const std::string_view arguments)
 {
     auto [valueToken, valueStr] = split_at_first_space(arguments);
 

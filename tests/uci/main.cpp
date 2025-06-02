@@ -6,14 +6,7 @@
  * ======================================================================================
  */
 
-// TODO:
-
-// GUI -> Engine:
-// setoption name <id> [value <x>]
-
-// Engine -> GUI
-// info
-// option
+// TODO: send "info" command to GUI
 
 #include <algorithm>
 #include <array>
@@ -87,6 +80,7 @@ private:
         if (command == "uci") {
             // this command is sent once after program boot
             print_engine_id();
+            // print option info...
             std::println("uciok");
             return;
         }
@@ -158,8 +152,6 @@ private:
     void handle_set_option(const std::string_view args)
     {
         // args does not include the "setoption" token itself
-
-        // TODO
     }
 
     [[nodiscard]] Move pick_best_move()
