@@ -55,6 +55,7 @@ set (
     pieces/Colors.hpp
     pieces/PieceTypes.hpp
     pieces/UTF8.hpp
+    uci/CommandParsing.hpp
     util/Math.hpp
     util/Strings.hpp
 )
@@ -68,6 +69,7 @@ set (
     notation/Algebraic.cpp
     notation/FEN.cpp
     notation/UCI.cpp
+    uci/CommandParsing.cpp
     util/Strings.cpp
 )
 
