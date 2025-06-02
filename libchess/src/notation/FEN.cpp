@@ -27,7 +27,6 @@
 #include <ranges>
 #include <stdexcept>
 #include <string>
-#include <utility>
 
 namespace chess::notation {
 
@@ -198,24 +197,6 @@ std::string to_fen(const Position& position)
 
 namespace {
 
-    [[nodiscard]] std::pair<std::string_view, std::string_view>
-    split_at_first_space(
-        const std::string_view input)
-    {
-        const auto spaceIdx = input.find(' ');
-
-        if (spaceIdx == std::string_view::npos) {
-            throw std::invalid_argument {
-                std::format("Expected space in FEN string: {}", input)
-            };
-        }
-
-        return {
-            input.substr(0uz, spaceIdx),
-            input.substr(spaceIdx + 1uz)
-        };
-    }
-
     // returns the rest of the piece positions fragment that was left after parsing this rank
     [[nodiscard]] std::string_view parse_rank(
         const board::Rank rank, std::string_view fenFragment, Position& position)
@@ -329,6 +310,8 @@ namespace {
 
 Position from_fen(std::string_view fenString)
 {
+    using util::split_at_first_space;
+
     fenString = util::trim(fenString);
 
     if (fenString.empty()) {
