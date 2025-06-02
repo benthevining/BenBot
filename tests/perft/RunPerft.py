@@ -13,8 +13,8 @@ import subprocess
 from pathlib import Path
 import sys
 
-TMP_DIR_PATH = Path('@TMP_DIR@')
 TESTCASE_FILE = Path(sys.argv[1])
+TMP_DIR_PATH = Path(sys.argv[2])
 
 with open(TESTCASE_FILE, 'r') as file:
     CORRECT_DATA = json.load(file)

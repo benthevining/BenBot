@@ -20,8 +20,8 @@ def get_move_from_obj(listObj, move): # listObj is a JSON list of objects
 
     return None
 
-TMP_DIR_PATH = Path('@TMP_DIR@')
 TESTCASE_FILE = Path(sys.argv[1])
+TMP_DIR_PATH = Path(sys.argv[2])
 
 test_cases_passed = 0
 test_cases_failed = 0
