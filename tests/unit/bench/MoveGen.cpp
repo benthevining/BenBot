@@ -8,15 +8,18 @@
 
 #include <catch2/benchmark/catch_benchmark_all.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <iterator>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
+#include <libchess/moves/Move.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/moves/Patterns.hpp>
 #include <libchess/moves/PseudoLegal.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/pieces/Colors.hpp>
+#include <vector>
 
 static constexpr auto TAGS { "[moves][!benchmark]" };
 
@@ -141,9 +144,15 @@ TEST_CASE("Benchmarking legal move generation", TAGS)
     const auto position = chess::notation::from_fen(
         "R6R/3Q4/1Q4Q1/4Q3/2Q4Q/Q4Q2/pp1Q4/kBNN1KB1 w - - 0 1");
 
+    std::vector<chess::moves::Move> moves;
+
+    moves.reserve(300uz);
+
     BENCHMARK("Legal move generation")
     {
-        const auto moves = chess::moves::generate(position);
+        moves.clear();
+
+        chess::moves::generate(position, std::back_inserter(moves));
 
         return moves.size();
     };
