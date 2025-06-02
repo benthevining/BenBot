@@ -1,0 +1,39 @@
+/*
+ * ======================================================================================
+ *
+ * libchess - a chess engine by Ben Vining
+ *
+ * ======================================================================================
+ */
+
+/** @defgroup search Search
+    Functions for searching to find the best move.
+ */
+
+/** @file
+    This file defines the NegaMax function.
+    @ingroup search
+ */
+
+#pragma once
+
+#include <libchess/game/Position.hpp>
+#include <libchess/moves/Move.hpp>
+
+/** This namespace contains functions related to searching the
+    move tree for the principal variation.
+
+    @ingroup search
+ */
+namespace chess::search {
+
+using game::Position;
+using moves::Move;
+
+/** Finds the best move for the side to move in the given position.
+
+    @ingroup search
+ */
+[[nodiscard]] Move find_best_move(const Position& position);
+
+} // namespace chess::search

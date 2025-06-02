@@ -11,7 +11,6 @@ This directory contains our test suite.
 ### Targets
 
 * `libchess_tests`: unit test executable
-* `play_chess`: simple CLI chess game (see `cli/` directory)
 * `perft`: perft executable (see `perft/` directory)
 * `rampart`: detailed move generation test cases (see `rampart/` directory)
 

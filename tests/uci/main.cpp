@@ -15,12 +15,11 @@
 #include <exception>
 #include <iostream>
 #include <iterator>
-#include <libchess/eval/Evaluation.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/UCI.hpp>
-#include <libchess/search/NegaMax.hpp>
+#include <libchess/search/Search.hpp>
 #include <libchess/uci/CommandParsing.hpp>
 #include <libchess/util/Strings.hpp>
 #include <print>
@@ -140,31 +139,13 @@ private:
 
         // run search with given options...
         std::println("bestmove {}",
-            chess::notation::to_uci(pick_best_move()));
+            chess::notation::to_uci(
+                chess::search::find_best_move(currentPosition)));
     }
 
     void handle_set_option(const std::string_view args)
     {
         // args does not include the "setoption" token itself
-    }
-
-    [[nodiscard]] Move pick_best_move() const
-    {
-        auto moves = chess::moves::generate(currentPosition);
-
-        const auto evals = moves
-                         | std::views::transform([this](const Move& move) {
-                               return chess::search::negamax(
-                                   3uz,
-                                   chess::game::after_move(currentPosition, move));
-                           })
-                         | std::ranges::to<std::vector>();
-
-        const auto maxScore = std::ranges::max_element(evals);
-
-        const auto maxScoreIdx = std::ranges::distance(evals.begin(), maxScore);
-
-        return moves.at(maxScoreIdx);
     }
 
     Position currentPosition {};

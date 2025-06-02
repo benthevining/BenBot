@@ -20,7 +20,6 @@
 #include <libchess/board/Pieces.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/pieces/Colors.hpp>
-#include <libchess/pieces/PieceTypes.hpp>
 
 /** This namespace contains functions for evaluating positions.
     @ingroup eval

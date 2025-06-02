@@ -55,7 +55,7 @@ set (
     pieces/Colors.hpp
     pieces/PieceTypes.hpp
     pieces/UTF8.hpp
-    search/NegaMax.hpp
+    search/Search.hpp
     uci/CommandParsing.hpp
     uci/Options.hpp
     util/Math.hpp
@@ -71,6 +71,7 @@ set (
     notation/Algebraic.cpp
     notation/FEN.cpp
     notation/UCI.cpp
+    search/Search.cpp
     uci/CommandParsing.cpp
     uci/Options.cpp
     util/Strings.cpp
