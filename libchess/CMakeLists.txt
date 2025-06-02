@@ -55,6 +55,7 @@ set (
     pieces/Colors.hpp
     pieces/PieceTypes.hpp
     pieces/UTF8.hpp
+    search/NegaMax.hpp
     uci/CommandParsing.hpp
     uci/Options.hpp
     util/Math.hpp

@@ -63,8 +63,6 @@ namespace detail {
 
     using board::Pieces;
 
-    static constexpr auto NEUTRAL = 0.5;
-
     // Returns a [0, 1] score where 0 is lone king vs 9 queens, 2 rooks, 2 bishops & 2 knights,
     // and 1 is all those pieces vs lone king
     [[nodiscard, gnu::const]] constexpr Value material_score(
@@ -72,7 +70,7 @@ namespace detail {
     {
         const auto diff = static_cast<Value>(ourPieces.material()) - static_cast<Value>(theirPieces.material());
 
-        return diff / static_cast<Value>(pieces::values::MAX_POSSIBLE_MATERIAL);
+        return diff;
     }
 
 } // namespace detail

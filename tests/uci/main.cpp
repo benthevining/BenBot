@@ -20,10 +20,10 @@
 #include <libchess/moves/Move.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/UCI.hpp>
+#include <libchess/search/NegaMax.hpp>
 #include <libchess/uci/CommandParsing.hpp>
 #include <libchess/util/Strings.hpp>
 #include <print>
-#include <random>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -42,12 +42,6 @@ void print_engine_id()
 {
     std::println("id name BenBot");
     std::println("id author Ben Vining");
-}
-
-[[nodiscard]] std::random_device& get_rng_seed()
-{
-    static std::random_device rngSeed;
-    return rngSeed;
 }
 
 } // namespace
@@ -154,26 +148,23 @@ private:
         // args does not include the "setoption" token itself
     }
 
-    [[nodiscard]] Move pick_best_move()
+    [[nodiscard]] Move pick_best_move() const
     {
         auto moves = chess::moves::generate(currentPosition);
 
-        // make the bot a bit more interesting to play against
-        std::ranges::shuffle(moves, rng);
-
         const auto evals = moves
                          | std::views::transform([this](const Move& move) {
-                               return chess::eval::evaluate(
+                               return chess::search::negamax(
+                                   3uz,
                                    chess::game::after_move(currentPosition, move));
                            })
                          | std::ranges::to<std::vector>();
 
-        // evals are in range [0, 1], so find worst score for our opponent -> best score for us
-        const auto minScore = std::ranges::min_element(evals);
+        const auto maxScore = std::ranges::max_element(evals);
 
-        const auto minScoreIdx = std::ranges::distance(evals.begin(), minScore);
+        const auto maxScoreIdx = std::ranges::distance(evals.begin(), maxScore);
 
-        return moves.at(minScoreIdx);
+        return moves.at(maxScoreIdx);
     }
 
     Position currentPosition {};
@@ -183,8 +174,6 @@ private:
     bool shouldExit { false };
 
     bool debugMode { false };
-
-    std::mt19937 rng { get_rng_seed()() };
 };
 
 int main(
