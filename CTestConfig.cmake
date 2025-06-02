@@ -1,0 +1,15 @@
+# ======================================================================================
+#
+# libchess - a chess engine by Ben Vining
+#
+# ======================================================================================
+
+#[[
+config file for CDash dashboard testing
+this file is read by `ctest -D` to know how to submit the results to the dashboard server
+]]
+
+set (CTEST_PROJECT_NAME ben-bot)
+set (CTEST_NIGHTLY_START_TIME 01:00:00 UTC)
+set (CTEST_SUBMIT_URL https://my.cdash.org/submit.php?project=ben-bot)
+set (CTEST_DROP_SITE_CDASH TRUE)
