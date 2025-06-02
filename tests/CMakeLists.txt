@@ -23,7 +23,6 @@ find_package (Python COMPONENTS Interpreter)
 add_subdirectory (unit)
 add_subdirectory (perft)
 add_subdirectory (rampart)
-add_subdirectory (uci)
 
 #
 

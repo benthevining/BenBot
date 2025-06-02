@@ -4,8 +4,8 @@
 #
 # ======================================================================================
 
-add_executable (chess_uci)
+add_executable (ben_bot)
 
-target_link_libraries (chess_uci PRIVATE libchess::libchess)
+target_link_libraries (ben_bot PRIVATE libchess::libchess)
 
-target_sources (chess_uci PRIVATE main.cpp)
+target_sources (ben_bot PRIVATE main.cpp)

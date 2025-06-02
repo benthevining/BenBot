@@ -1,6 +1,6 @@
 # libchess
 
-This directory defines the core `libchess` library, which implements the engine's backend.
+This directory defines the core `libchess` library, which implements the engine's backend. This library provides a board representation and move generation.
 
 Include style is:
 ```cpp

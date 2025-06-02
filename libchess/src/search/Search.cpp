@@ -7,11 +7,14 @@
  */
 
 #include <algorithm>
+#include <cassert>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libchess/eval/Evaluation.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/search/Search.hpp>
 #include <limits>
+#include <ranges>
+#include <vector>
 
 namespace chess::search {
 
@@ -20,25 +23,56 @@ using Eval = eval::Value;
 
 namespace {
 
-    Eval alpha_beta(
+    constexpr auto EVAL_MIN = std::numeric_limits<Eval>::min();
+    constexpr auto EVAL_MAX = std::numeric_limits<Eval>::max();
+
+    [[nodiscard]] Eval quiescence(
+        Eval alpha, const Eval beta,
+        const Position& currentPosition)
+    {
+        assert(beta > alpha);
+
+        auto evaluation = eval::evaluate(currentPosition);
+
+        if (evaluation >= beta)
+            return beta;
+
+        alpha = std::max(alpha, evaluation);
+
+        // TODO: captures only
+        const auto moves = moves::generate(currentPosition);
+
+        // TODO: order moves for searching
+
+        for (const auto& move : moves) {
+            const auto newPosition = game::after_move(currentPosition, move);
+
+            evaluation = -quiescence(-beta, -alpha, newPosition);
+
+            if (evaluation >= beta)
+                return beta;
+
+            alpha = std::max(alpha, evaluation);
+        }
+
+        return alpha;
+    }
+
+    [[nodiscard]] Eval alpha_beta(
         Eval alpha, const Eval beta,
         const Position& currentPosition,
-        const size_t    depth,
-        Move&           bestMoveThisIteration)
+        const size_t    depth)
     {
-        if (alpha >= beta)
-            return alpha;
+        assert(beta > alpha);
 
-        if (depth == 0uz) {
-            // TODO: quiescence search
-            return eval::evaluate(currentPosition);
-        }
+        if (depth == 0uz)
+            return quiescence(alpha, beta, currentPosition);
 
         const auto moves = moves::generate(currentPosition);
 
         if (moves.empty()) {
             if (currentPosition.is_check())
-                return std::numeric_limits<Eval>::min(); // checkmate
+                return EVAL_MIN; // checkmate
 
             return 0.; // stalemate
         }
@@ -48,17 +82,14 @@ namespace {
         for (const auto& move : moves) {
             const auto newPosition = game::after_move(currentPosition, move);
 
-            const auto score = -alpha_beta(
-                -beta, -alpha, newPosition, depth - 1uz, bestMoveThisIteration);
+            const auto evaluation = -alpha_beta(
+                -beta, -alpha, newPosition, depth - 1uz);
 
-            if (score >= beta)
-                return beta;
+            if (evaluation >= beta)
+                return beta; // move was too good, opponent will avoid this position
 
             // found a new best move in this position
-            if (score > alpha) {
-                alpha                 = score;
-                bestMoveThisIteration = move;
-            }
+            alpha = std::max(alpha, evaluation);
         }
 
         return alpha;
@@ -68,15 +99,23 @@ namespace {
 
 Move find_best_move(const Position& position)
 {
-    Move bestMove {};
+    const auto moves = moves::generate(position);
 
-    alpha_beta(
-        std::numeric_limits<Eval>::min(),
-        std::numeric_limits<Eval>::max(),
-        position, 3uz,
-        bestMove);
+    const auto scores = moves
+                      | std::views::transform(
+                          [position](const Move& move) {
+                              return alpha_beta(
+                                  EVAL_MIN, EVAL_MAX,
+                                  game::after_move(position, move),
+                                  4uz);
+                          })
+                      | std::ranges::to<std::vector>();
 
-    return bestMove;
+    const auto maxScore = std::ranges::max_element(scores);
+
+    const auto maxScoreIdx = std::ranges::distance(scores.begin(), maxScore);
+
+    return moves.at(maxScoreIdx);
 }
 
 } // namespace chess::search
