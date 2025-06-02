@@ -56,6 +56,7 @@ set (
     pieces/PieceTypes.hpp
     pieces/UTF8.hpp
     uci/CommandParsing.hpp
+    uci/Options.hpp
     util/Math.hpp
     util/Strings.hpp
 )
@@ -70,6 +71,7 @@ set (
     notation/FEN.cpp
     notation/UCI.cpp
     uci/CommandParsing.cpp
+    uci/Options.cpp
     util/Strings.cpp
 )
 
