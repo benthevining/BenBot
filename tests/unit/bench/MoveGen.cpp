@@ -12,8 +12,10 @@
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
+#include <libchess/moves/MoveGen.hpp>
 #include <libchess/moves/Patterns.hpp>
 #include <libchess/moves/PseudoLegal.hpp>
+#include <libchess/notation/FEN.hpp>
 #include <libchess/pieces/Colors.hpp>
 
 static constexpr auto TAGS { "[moves][!benchmark]" };
@@ -131,5 +133,18 @@ TEST_CASE("Benchmarking pseudo-legal move generation", TAGS)
     {
         return move_gen::king(
             position.whitePieces.king, position.whitePieces.occupied);
+    };
+}
+
+TEST_CASE("Benchmarking legal move generation", TAGS)
+{
+    const auto position = chess::notation::from_fen(
+        "R6R/3Q4/1Q4Q1/4Q3/2Q4Q/Q4Q2/pp1Q4/kBNN1KB1 w - - 0 1");
+
+    BENCHMARK("Legal move generation")
+    {
+        const auto moves = chess::moves::generate(position);
+
+        return moves.size();
     };
 }
