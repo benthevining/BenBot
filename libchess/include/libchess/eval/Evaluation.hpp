@@ -67,9 +67,8 @@ namespace detail {
     [[nodiscard, gnu::const]] constexpr Value material_score(
         const Pieces& ourPieces, const Pieces& theirPieces) noexcept
     {
-        const auto diff = static_cast<Value>(ourPieces.material()) - static_cast<Value>(theirPieces.material());
-
-        return diff;
+        return static_cast<Value>(ourPieces.material())
+             - static_cast<Value>(theirPieces.material());
     }
 
 } // namespace detail

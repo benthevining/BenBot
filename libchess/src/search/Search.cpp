@@ -40,11 +40,11 @@ namespace {
 
             if (score > maxValue) {
                 maxValue = score;
-                alpha    = std::max(alpha, score);
+                alpha    = std::max(score, alpha);
             }
 
             if (score >= beta)
-                return maxValue;
+                return score;
         }
 
         return maxValue;
@@ -61,9 +61,9 @@ Move find_best_move(const Position& position)
     for (const auto& move : moves::generate(position)) {
         const auto newPosition = game::after_move(position, move);
 
-        const auto score = -alpha_beta(
-            std::numeric_limits<Eval>::max(),
+        const auto score = alpha_beta(
             std::numeric_limits<Eval>::min(),
+            std::numeric_limits<Eval>::max(),
             newPosition, 3uz);
 
         if (score > maxValue) {

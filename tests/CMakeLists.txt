@@ -24,3 +24,11 @@ add_subdirectory (unit)
 add_subdirectory (perft)
 add_subdirectory (rampart)
 add_subdirectory (uci)
+
+#
+
+add_executable (eval_printer)
+
+target_link_libraries (eval_printer PRIVATE libchess::libchess)
+
+target_sources (eval_printer PRIVATE eval_printer.cpp)
