@@ -8,7 +8,9 @@
 
 #include <catch2/benchmark/catch_benchmark_all.hpp>
 #include <catch2/catch_test_macros.hpp>
-#include <libchess/board/Masks.hpp>
+#include <libchess/board/File.hpp>
+#include <libchess/board/Rank.hpp>
+#include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Patterns.hpp>
 #include <libchess/moves/PseudoLegal.hpp>
@@ -16,59 +18,60 @@
 
 static constexpr auto TAGS { "[moves][!benchmark]" };
 
+using chess::board::File;
+using chess::board::Rank;
+using chess::board::Square;
 using chess::pieces::Color;
-
-namespace starting_masks = chess::board::masks::starting;
-
-static constexpr auto STARTING_PAWNS   = starting_masks::white::PAWNS;
-static constexpr auto STARTING_KNIGHTS = starting_masks::white::KNIGHTS;
-static constexpr auto STARTING_BISHOPS = starting_masks::white::BISHOPS;
-static constexpr auto STARTING_ROOKS   = starting_masks::white::ROOKS;
-static constexpr auto STARTING_QUEEN   = starting_masks::white::QUEEN;
-static constexpr auto STARTING_KING    = starting_masks::white::KING;
 
 TEST_CASE("Benchmarking move patterns", TAGS)
 {
     namespace move_gen = chess::moves::patterns;
 
+    // NB. we have to make sure this isn't a compile-time constant, or the
+    // functions we're trying to measure will be optimized away
+    chess::board::Bitboard board;
+
+    board.set(Square { File::D, Rank::Four });
+    board.set(Square { File::F, Rank::Six });
+
     BENCHMARK("Pawn pushes")
     {
-        return move_gen::pawn_pushes<Color::White>(STARTING_PAWNS);
+        return move_gen::pawn_pushes<Color::White>(board);
     };
 
     BENCHMARK("Pawn double pushes")
     {
-        return move_gen::pawn_double_pushes<Color::White>(STARTING_PAWNS);
+        return move_gen::pawn_double_pushes<Color::White>(board);
     };
 
     BENCHMARK("Pawn attacks")
     {
-        return move_gen::pawn_attacks<Color::White>(STARTING_PAWNS);
+        return move_gen::pawn_attacks<Color::White>(board);
     };
 
     BENCHMARK("Knight")
     {
-        return move_gen::knight(STARTING_KNIGHTS);
+        return move_gen::knight(board);
     };
 
     BENCHMARK("Bishops")
     {
-        return move_gen::bishop(STARTING_BISHOPS);
+        return move_gen::bishop(board);
     };
 
     BENCHMARK("Rooks")
     {
-        return move_gen::rook(STARTING_ROOKS);
+        return move_gen::rook(board);
     };
 
     BENCHMARK("Queen")
     {
-        return move_gen::queen(STARTING_QUEEN);
+        return move_gen::queen(board);
     };
 
     BENCHMARK("King")
     {
-        return move_gen::king(STARTING_KING);
+        return move_gen::king(board);
     };
 }
 
@@ -76,10 +79,11 @@ TEST_CASE("Benchmarking pseudo-legal move generation", TAGS)
 {
     namespace move_gen = chess::moves::pseudo_legal;
 
-    static constexpr chess::game::Position position {};
+    // NB. intentionally not constexpr
+    chess::game::Position position {};
 
-    static constexpr auto occupiedSquares = position.occupied();
-    static constexpr auto emptySquares    = position.free();
+    const auto occupiedSquares = position.occupied();
+    const auto emptySquares    = position.free();
 
     BENCHMARK("Pawn pushes")
     {

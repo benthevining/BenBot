@@ -476,22 +476,20 @@ namespace detail {
         constexpr BitboardIterator() = default;
 
         explicit constexpr BitboardIterator(const Bitboard& bitboard)
-            : board { bitboard }
+            : value { bitboard.to_int() }
         {
         }
 
-        constexpr bool operator==(const BitboardIterator& other) const noexcept { return board == other.board; }
+        constexpr bool operator==(const BitboardIterator& other) const noexcept { return value == other.value; }
 
         [[nodiscard]] constexpr value_type operator*() const noexcept
         {
-            assert(board.any());
-            return index;
+            return std::countr_zero(value);
         }
 
         constexpr BitboardIterator& operator++() noexcept
         {
-            board.unset(index);
-            index = board.first();
+            value &= value - 1;
             return *this;
         }
 
@@ -503,9 +501,7 @@ namespace detail {
         }
 
     private:
-        Bitboard board;
-
-        value_type index { board.first() };
+        std::uint64_t value {};
     };
 
 } // namespace detail
