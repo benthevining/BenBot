@@ -17,6 +17,7 @@
 #include <format>
 #include <libchess/board/BitboardIndex.hpp>
 #include <libchess/pieces/Colors.hpp>
+#include <stdexcept>
 #include <string_view>
 #include <utility>
 
@@ -45,51 +46,32 @@ enum class Rank : BitboardIndex {
 
     @ingroup board
  */
-[[nodiscard, gnu::const]] constexpr Rank back_rank_for(const Color color) noexcept
-{
-    if (color == Color::White)
-        return Rank::One;
-
-    return Rank::Eight;
-}
+[[nodiscard, gnu::const]] constexpr Rank back_rank_for(Color color) noexcept;
 
 /** Returns the next pawn rank, from the given side's perspective. */
 template <Color Side>
-[[nodiscard, gnu::const]] constexpr Rank next_pawn_rank(const Rank rank) noexcept
-{
-    if constexpr (Side == Color::White) {
-        assert(rank != Rank::Eight);
-        return static_cast<Rank>(std::to_underlying(rank) + 1uz);
-    } else {
-        assert(rank != Rank::One);
-        return static_cast<Rank>(std::to_underlying(rank) - 1uz);
-    }
-}
+[[nodiscard, gnu::const]] constexpr Rank next_pawn_rank(Rank rank) noexcept;
 
 /** Returns the previous pawn rank, from the given side's perspective. */
 template <Color Side>
-[[nodiscard, gnu::const]] constexpr Rank prev_pawn_rank(const Rank rank) noexcept
-{
-    if constexpr (Side == Color::White) {
-        assert(rank != Rank::One);
-        return static_cast<Rank>(std::to_underlying(rank) - 1uz);
-    } else {
-        assert(rank != Rank::Eight);
-        return static_cast<Rank>(std::to_underlying(rank) + 1uz);
-    }
-}
+[[nodiscard, gnu::const]] constexpr Rank prev_pawn_rank(Rank rank) noexcept;
+
+/** Interprets the given character as a rank.
+
+    @throws std::invalid_argument An exception will be thrown if a rank
+    cannot be parsed correctly from the input character.
+
+    @ingroup board
+    @see Rank
+ */
+[[nodiscard, gnu::const]] constexpr Rank rank_from_char(char character);
 
 /** Converts the rank to its single-character representation (as an integer).
 
     @ingroup board
     @see Rank
  */
-[[nodiscard, gnu::const]] constexpr char rank_to_char(const Rank rank) noexcept
-{
-    static constexpr std::string_view ranks { "12345678" };
-
-    return ranks[std::to_underlying(rank)];
-}
+[[nodiscard, gnu::const]] constexpr char rank_to_char(Rank rank) noexcept;
 
 } // namespace chess::board
 
@@ -116,3 +98,82 @@ struct std::formatter<chess::board::Rank> final {
             chess::board::rank_to_char(rank));
     }
 };
+
+/*
+                         ___                           ,--,
+      ,---,            ,--.'|_                ,--,   ,--.'|
+    ,---.'|            |  | :,'             ,--.'|   |  | :
+    |   | :            :  : ' :             |  |,    :  : '    .--.--.
+    |   | |   ,---.  .;__,'  /    ,--.--.   `--'_    |  ' |   /  /    '
+  ,--.__| |  /     \ |  |   |    /       \  ,' ,'|   '  | |  |  :  /`./
+ /   ,'   | /    /  |:__,'| :   .--.  .-. | '  | |   |  | :  |  :  ;_
+.   '  /  |.    ' / |  '  : |__  \__\/: . . |  | :   '  : |__ \  \    `.
+'   ; |:  |'   ;   /|  |  | '.'| ," .--.; | '  : |__ |  | '.'| `----.   \
+|   | '/  ''   |  / |  ;  :    ;/  /  ,.  | |  | '.'|;  :    ;/  /`--'  /__  ___  ___
+|   :    :||   :    |  |  ,   /;  :   .'   \;  :    ;|  ,   /'--'.     /  .\/  .\/  .\
+ \   \  /   \   \  /    ---`-' |  ,     .-./|  ,   /  ---`-'   `--'---'\  ; \  ; \  ; |
+  `----'     `----'             `--`---'     ---`-'                     `--" `--" `--"
+
+ */
+
+namespace chess::board {
+
+constexpr Rank back_rank_for(const Color color) noexcept
+{
+    if (color == Color::White)
+        return Rank::One;
+
+    return Rank::Eight;
+}
+
+template <Color Side>
+constexpr Rank next_pawn_rank(const Rank rank) noexcept
+{
+    if constexpr (Side == Color::White) {
+        assert(rank != Rank::Eight);
+        return static_cast<Rank>(std::to_underlying(rank) + 1uz);
+    } else {
+        assert(rank != Rank::One);
+        return static_cast<Rank>(std::to_underlying(rank) - 1uz);
+    }
+}
+
+template <Color Side>
+constexpr Rank prev_pawn_rank(const Rank rank) noexcept
+{
+    if constexpr (Side == Color::White) {
+        assert(rank != Rank::One);
+        return static_cast<Rank>(std::to_underlying(rank) - 1uz);
+    } else {
+        assert(rank != Rank::Eight);
+        return static_cast<Rank>(std::to_underlying(rank) + 1uz);
+    }
+}
+
+constexpr Rank rank_from_char(const char character)
+{
+    switch (character) {
+        case '1': return Rank::One;
+        case '2': return Rank::Two;
+        case '3': return Rank::Three;
+        case '4': return Rank::Four;
+        case '5': return Rank::Five;
+        case '6': return Rank::Six;
+        case '7': return Rank::Seven;
+        case '8': return Rank::Eight;
+
+        default:
+            throw std::invalid_argument {
+                std::format("Cannot parse Rank from character: {}", character)
+            };
+    }
+}
+
+constexpr char rank_to_char(const Rank rank) noexcept
+{
+    static constexpr std::string_view ranks { "12345678" };
+
+    return ranks[std::to_underlying(rank)];
+}
+
+} // namespace chess::board

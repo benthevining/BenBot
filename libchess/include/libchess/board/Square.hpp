@@ -298,27 +298,9 @@ constexpr Square Square::from_string(const std::string_view text)
             std::format("Cannot parse Square from invalid input string: {}", text)
         };
 
-    const auto rank = [character = text.back()] {
-        switch (character) {
-            case '1': return Rank::One;
-            case '2': return Rank::Two;
-            case '3': return Rank::Three;
-            case '4': return Rank::Four;
-            case '5': return Rank::Five;
-            case '6': return Rank::Six;
-            case '7': return Rank::Seven;
-            case '8': return Rank::Eight;
-
-            default:
-                throw std::invalid_argument {
-                    std::format("Cannot parse rank from character: {}", character)
-                };
-        }
-    }();
-
     return {
         .file = file_from_char(text.front()),
-        .rank = rank
+        .rank = rank_from_char(text.back())
     };
 }
 
