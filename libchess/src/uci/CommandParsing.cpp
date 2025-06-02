@@ -9,11 +9,14 @@
 #include <algorithm>
 #include <array>
 #include <charconv>
+#include <concepts>
+#include <libchess/moves/Move.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/UCI.hpp>
 #include <libchess/uci/CommandParsing.hpp>
 #include <libchess/util/Strings.hpp>
 #include <string_view>
+#include <vector>
 
 namespace chess::uci {
 
@@ -58,10 +61,59 @@ Position parse_position_options(const std::string_view options)
     return position;
 }
 
+namespace {
+
+    // consumes one argument from ``options``, writes its value into ``value``,
+    // and returns the rest of the ``options`` that are left
+    [[nodiscard]] std::string_view parse_option_value(
+        const std::string_view options, std::integral auto& value)
+    {
+        auto [wtime, rest] = split_at_first_space(options);
+
+        wtime = trim(wtime);
+
+        std::from_chars(
+            wtime.data(), wtime.data() + wtime.length(), value);
+
+        return rest;
+    }
+
+    // consumes all the moves following the "searchmoves" token,
+    // and returns the rest of the ``options`` that are left
+    [[nodiscard]] std::string_view parse_searchmoves(
+        std::string_view options, const Position& currentPosition,
+        std::vector<moves::Move>& output)
+    {
+        using std::operator""sv;
+
+        static constexpr std::array argumentTokens {
+            "searchmoves"sv, "ponder"sv, "wtime"sv, "btime"sv, "winc"sv, "binc"sv,
+            "movestogo"sv, "depth"sv, "nodes"sv, "mate"sv, "movetime"sv, "infinite"sv
+        };
+
+        while (! options.empty()) {
+            auto [firstMove, rest] = split_at_first_space(options);
+
+            firstMove = trim(firstMove);
+
+            if (std::ranges::contains(argumentTokens, firstMove))
+                return options; // NOLINT
+
+            options = rest;
+
+            output.emplace_back(
+                notation::from_uci(currentPosition, firstMove));
+        }
+
+        return options; // NOLINT
+    }
+
+} // namespace
+
 GoCommandOptions parse_go_options(
     std::string_view options, const Position& currentPosition)
 {
-    // args doesn't include the "go" token itself
+    // options doesn't include the "go" token itself
 
     GoCommandOptions ret;
 
@@ -83,146 +135,52 @@ GoCommandOptions parse_go_options(
         }
 
         if (firstWord == "wtime") {
-            auto [wtime, rest2] = split_at_first_space(rest);
-
-            wtime = trim(wtime);
-
-            options = rest2;
-
-            std::from_chars(
-                wtime.data(), wtime.data() + wtime.length(), ret.whiteMsLeft);
-
+            options = parse_option_value(rest, ret.whiteMsLeft);
             continue;
         }
 
         if (firstWord == "btime") {
-            auto [btime, rest2] = split_at_first_space(rest);
-
-            btime = trim(btime);
-
-            options = rest2;
-
-            std::from_chars(
-                btime.data(), btime.data() + btime.length(), ret.blackMsLeft);
-
+            options = parse_option_value(rest, ret.blackMsLeft);
             continue;
         }
 
         if (firstWord == "winc") {
-            auto [winc, rest2] = split_at_first_space(rest);
-
-            winc = trim(winc);
-
-            options = rest2;
-
-            std::from_chars(
-                winc.data(), winc.data() + winc.length(), ret.whiteIncMs);
-
+            options = parse_option_value(rest, ret.whiteIncMs);
             continue;
         }
 
         if (firstWord == "binc") {
-            auto [binc, rest2] = split_at_first_space(rest);
-
-            binc = trim(binc);
-
-            options = rest2;
-
-            std::from_chars(
-                binc.data(), binc.data() + binc.length(), ret.blackIncMs);
-
+            options = parse_option_value(rest, ret.blackIncMs);
             continue;
         }
 
         if (firstWord == "movestogo") {
-            auto [movesToGo, rest2] = split_at_first_space(rest);
-
-            movesToGo = trim(movesToGo);
-
-            options = rest2;
-
-            std::from_chars(
-                movesToGo.data(), movesToGo.data() + movesToGo.length(), ret.movesToGo);
-
+            options = parse_option_value(rest, ret.movesToGo);
             continue;
         }
 
         if (firstWord == "depth") {
-            auto [depth, rest2] = split_at_first_space(rest);
-
-            depth = trim(depth);
-
-            options = rest2;
-
-            std::from_chars(
-                depth.data(), depth.data() + depth.length(), ret.depth);
-
+            options = parse_option_value(rest, ret.depth);
             continue;
         }
 
         if (firstWord == "nodes") {
-            auto [nodes, rest2] = split_at_first_space(rest);
-
-            nodes = trim(nodes);
-
-            options = rest2;
-
-            std::from_chars(
-                nodes.data(), nodes.data() + nodes.length(), ret.nodes);
-
+            options = parse_option_value(rest, ret.nodes);
             continue;
         }
 
         if (firstWord == "mate") {
-            auto [mate, rest2] = split_at_first_space(rest);
-
-            mate = trim(mate);
-
-            options = rest2;
-
-            std::from_chars(
-                mate.data(), mate.data() + mate.length(), ret.mateIn);
-
+            options = parse_option_value(rest, ret.mateIn);
             continue;
         }
 
         if (firstWord == "movetime") {
-            auto [movetime, rest2] = split_at_first_space(rest);
-
-            movetime = trim(movetime);
-
-            options = rest2;
-
-            std::from_chars(
-                movetime.data(), movetime.data() + movetime.length(), ret.searchTime);
-
+            options = parse_option_value(rest, ret.searchTime);
             continue;
         }
 
-        if (firstWord != "searchmoves")
-            continue;
-
-        // searchmoves
-
-        using std::operator""sv;
-
-        static constexpr std::array argumentTokens {
-            "searchmoves"sv, "ponder"sv, "wtime"sv, "btime"sv, "winc"sv, "binc"sv,
-            "movestogo"sv, "depth"sv, "nodes"sv, "mate"sv, "movetime"sv, "infinite"sv
-        };
-
-        while (! options.empty()) {
-            auto [firstMove, rest2] = split_at_first_space(rest);
-
-            firstMove = trim(firstMove);
-
-            if (std::ranges::contains(argumentTokens, firstMove))
-                break;
-
-            options = rest2;
-
-            ret.moves.emplace_back(
-                notation::from_uci(currentPosition, firstMove));
+        if (firstWord == "searchmoves") {
+            options = parse_searchmoves(rest, currentPosition, ret.moves);
         }
     }
 
