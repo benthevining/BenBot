@@ -20,34 +20,48 @@ using Eval = eval::Value;
 
 namespace {
 
-    [[nodiscard]] Eval alpha_beta(
+    Eval alpha_beta(
         Eval alpha, const Eval beta,
         const Position& currentPosition,
-        const size_t    depth)
+        const size_t    depth,
+        Move&           bestMoveThisIteration)
     {
+        if (alpha >= beta)
+            return alpha;
+
         if (depth == 0uz) {
             // TODO: quiescence search
             return eval::evaluate(currentPosition);
         }
 
-        auto maxValue = std::numeric_limits<Eval>::min();
+        const auto moves = moves::generate(currentPosition);
 
-        for (const auto& move : moves::generate(currentPosition)) {
+        if (moves.empty()) {
+            if (currentPosition.is_check())
+                return std::numeric_limits<Eval>::min(); // checkmate
+
+            return 0.; // stalemate
+        }
+
+        // TODO: order moves for searching
+
+        for (const auto& move : moves) {
             const auto newPosition = game::after_move(currentPosition, move);
 
             const auto score = -alpha_beta(
-                -beta, -alpha, newPosition, depth - 1uz);
-
-            if (score > maxValue) {
-                maxValue = score;
-                alpha    = std::max(score, alpha);
-            }
+                -beta, -alpha, newPosition, depth - 1uz, bestMoveThisIteration);
 
             if (score >= beta)
-                return score;
+                return beta;
+
+            // found a new best move in this position
+            if (score > alpha) {
+                alpha                 = score;
+                bestMoveThisIteration = move;
+            }
         }
 
-        return maxValue;
+        return alpha;
     }
 
 } // namespace
@@ -56,21 +70,11 @@ Move find_best_move(const Position& position)
 {
     Move bestMove {};
 
-    auto maxValue = std::numeric_limits<Eval>::min();
-
-    for (const auto& move : moves::generate(position)) {
-        const auto newPosition = game::after_move(position, move);
-
-        const auto score = alpha_beta(
-            std::numeric_limits<Eval>::min(),
-            std::numeric_limits<Eval>::max(),
-            newPosition, 3uz);
-
-        if (score > maxValue) {
-            bestMove = move;
-            maxValue = score;
-        }
-    }
+    alpha_beta(
+        std::numeric_limits<Eval>::min(),
+        std::numeric_limits<Eval>::max(),
+        position, 3uz,
+        bestMove);
 
     return bestMove;
 }
