@@ -37,6 +37,7 @@ set (
     # cmake-format: sortable
     bench/Bitboard.cpp
     bench/MoveGen.cpp
+    BenchmarkReporter.cpp
     board/Bitboard.cpp
     board/BitboardMasks.cpp
     board/Distances.cpp
@@ -81,6 +82,7 @@ catch_discover_tests (
             --warn UnmatchedTestSpec
             --colour-mode none
             --reporter console::out=-
+            --reporter cdash::out=-
         TEST_PREFIX libchess.bench.
         PROPERTIES
             SKIP_REGULAR_EXPRESSION "SKIPPED:"

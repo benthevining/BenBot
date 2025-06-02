@@ -2,6 +2,8 @@
 
 This directory contains our test suite.
 
+Results are tracked via the [CDash dashboard](https://my.cdash.org/index.php?project=ben-bot).
+
 ## CMake
 
 ### Options
