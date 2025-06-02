@@ -48,11 +48,15 @@ enum class Rank : BitboardIndex {
  */
 [[nodiscard, gnu::const]] constexpr Rank back_rank_for(Color color) noexcept;
 
-/** Returns the next pawn rank, from the given side's perspective. */
+/** Returns the next pawn rank, from the given side's perspective.
+    @ingroup board
+ */
 template <Color Side>
 [[nodiscard, gnu::const]] constexpr Rank next_pawn_rank(Rank rank) noexcept;
 
-/** Returns the previous pawn rank, from the given side's perspective. */
+/** Returns the previous pawn rank, from the given side's perspective.
+    @ingroup board
+ */
 template <Color Side>
 [[nodiscard, gnu::const]] constexpr Rank prev_pawn_rank(Rank rank) noexcept;
 
