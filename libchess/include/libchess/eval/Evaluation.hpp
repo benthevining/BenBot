@@ -19,7 +19,9 @@
 
 #include <libchess/board/Pieces.hpp>
 #include <libchess/game/Position.hpp>
+#include <libchess/moves/MoveGen.hpp>
 #include <libchess/pieces/Colors.hpp>
+#include <limits>
 
 /** This namespace contains functions for evaluating positions.
     @ingroup eval
@@ -32,6 +34,18 @@ using game::Position;
     @ingroup eval
  */
 using Value = double;
+
+/** The maximum possible evaluation score, i.e., if the side to move
+    has mate-in-1.
+    @ingroup eval
+ */
+static constexpr auto MAX = std::numeric_limits<Value>::max();
+
+/** The minimum possible evaluation score, i.e., if the side to move
+    has gotten checkmated.
+    @ingroup eval
+ */
+static constexpr auto MIN = std::numeric_limits<Value>::min();
 
 /** Returns a numerical score representing the evaluation of the
     give position from the perspective of the side to move.
@@ -74,6 +88,13 @@ namespace detail {
 constexpr Value evaluate(const Position& position) noexcept
 {
     using pieces::Color;
+
+    if (! moves::any_legal_moves(position)) {
+        if (position.is_check())
+            return MIN; // we got mated
+
+        return 0.; // stalemate
+    }
 
     const auto& ourPieces   = position.sideToMove == Color::White ? position.whitePieces : position.blackPieces;
     const auto& theirPieces = position.sideToMove == Color::White ? position.blackPieces : position.whitePieces;

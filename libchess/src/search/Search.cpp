@@ -12,7 +12,6 @@
 #include <libchess/eval/Evaluation.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/search/Search.hpp>
-#include <limits>
 #include <ranges>
 #include <vector>
 
@@ -22,9 +21,6 @@ using std::size_t;
 using Eval = eval::Value;
 
 namespace {
-
-    constexpr auto EVAL_MIN = std::numeric_limits<Eval>::min();
-    constexpr auto EVAL_MAX = std::numeric_limits<Eval>::max();
 
     [[nodiscard]] Eval quiescence(
         Eval alpha, const Eval beta,
@@ -72,7 +68,7 @@ namespace {
 
         if (moves.empty()) {
             if (currentPosition.is_check())
-                return EVAL_MIN; // checkmate
+                return eval::MIN; // checkmate
 
             return 0.; // stalemate
         }
@@ -105,7 +101,7 @@ Move find_best_move(const Position& position)
                       | std::views::transform(
                           [position](const Move& move) {
                               return alpha_beta(
-                                  EVAL_MIN, EVAL_MAX,
+                                  eval::MIN, eval::MAX,
                                   game::after_move(position, move),
                                   4uz);
                           })
