@@ -62,8 +62,6 @@ namespace detail {
 
     using board::Pieces;
 
-    // Returns a [0, 1] score where 0 is lone king vs 9 queens, 2 rooks, 2 bishops & 2 knights,
-    // and 1 is all those pieces vs lone king
     [[nodiscard, gnu::const]] constexpr Value material_score(
         const Pieces& ourPieces, const Pieces& theirPieces) noexcept
     {

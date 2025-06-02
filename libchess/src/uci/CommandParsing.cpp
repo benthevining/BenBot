@@ -68,12 +68,12 @@ namespace {
     [[nodiscard]] std::string_view parse_option_value(
         const std::string_view options, std::integral auto& value)
     {
-        auto [wtime, rest] = split_at_first_space(options);
+        auto [valueStr, rest] = split_at_first_space(options);
 
-        wtime = trim(wtime);
+        valueStr = trim(valueStr);
 
         std::from_chars(
-            wtime.data(), wtime.data() + wtime.length(), value);
+            valueStr.data(), valueStr.data() + valueStr.length(), value);
 
         return rest;
     }
