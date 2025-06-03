@@ -103,3 +103,25 @@ TEST_CASE("UCI options - string", TAGS)
 
     REQUIRE(std::string { option.get_value() } == "bar");
 }
+
+TEST_CASE("UCI options - action", TAGS)
+{
+    bool triggered { false };
+
+    uci::Action action {
+        "Clear Cache",
+        [&triggered] { triggered = true; }
+    };
+
+    REQUIRE(action.get_declaration_string() == "option name Clear Cache type button");
+
+    action.parse("name Clear Cache");
+
+    REQUIRE(triggered);
+
+    triggered = false;
+
+    action.parse("name Clear Other");
+
+    REQUIRE(! triggered);
+}
