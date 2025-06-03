@@ -53,7 +53,7 @@ static constexpr auto MIN = std::numeric_limits<Value>::min();
 
     @ingroup eval
  */
-[[nodiscard, gnu::const]] constexpr Value evaluate(const Position& position) noexcept;
+[[nodiscard, gnu::const]] constexpr Value evaluate(const Position& position);
 
 /*
                          ___                           ,--,
@@ -83,11 +83,45 @@ namespace detail {
              - static_cast<Value>(theirPieces.material());
     }
 
+    [[nodiscard, gnu::const]] constexpr bool is_draw_by_insufficient_material(
+        const Position& position) noexcept
+    {
+        // king vs king+knight or king vs king+bishop
+
+        const auto& whitePieces = position.whitePieces;
+        const auto& blackPieces = position.blackPieces;
+
+        // even if either side has a single pawn that can't move, mate can still be possible
+        if (whitePieces.pawns.any() || blackPieces.pawns.any()
+            || whitePieces.rooks.any() || blackPieces.rooks.any()
+            || whitePieces.queens.any() || blackPieces.queens.any()) {
+            return false;
+        }
+
+        const bool whiteHasOnlyKing = ! (whitePieces.knights.any() || whitePieces.bishops.any());
+        const bool blackHasOnlyKing = ! (blackPieces.knights.any() || blackPieces.bishops.any());
+
+        if (whiteHasOnlyKing && blackHasOnlyKing)
+            return true;
+
+        if (! (whiteHasOnlyKing || blackHasOnlyKing))
+            return false;
+
+        // check if side without the lone king has only 1 knight/bishop
+        if (whiteHasOnlyKing)
+            return blackPieces.knights.count() + blackPieces.bishops.count() == 1uz;
+
+        return whitePieces.knights.count() + whitePieces.bishops.count() == 1uz;
+    }
+
 } // namespace detail
 
-constexpr Value evaluate(const Position& position) noexcept
+constexpr Value evaluate(const Position& position)
 {
     using pieces::Color;
+
+    if (detail::is_draw_by_insufficient_material(position))
+        return 0.;
 
     if (! moves::any_legal_moves(position)) {
         if (position.is_check())

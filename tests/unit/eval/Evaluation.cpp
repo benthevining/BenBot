@@ -70,3 +70,51 @@ TEST_CASE("Evaluation - checkmate", TAGS)
             match::WithinAbs(chess::eval::MIN, epsilon));
     }
 }
+
+TEST_CASE("Evaluation - draw by insufficient material", TAGS)
+{
+    SECTION("Lone kings")
+    {
+        const auto position = from_fen("8/8/1K6/8/5k2/8/8/8 w - - 0 1");
+
+        REQUIRE_THAT(
+            evaluate(position),
+            match::WithinAbs(0., epsilon));
+    }
+
+    SECTION("White has a single knight")
+    {
+        const auto position = from_fen("8/8/1K6/8/5k2/3N4/8/8 b - - 0 1");
+
+        REQUIRE_THAT(
+            evaluate(position),
+            match::WithinAbs(0., epsilon));
+    }
+
+    SECTION("White has a single bishop")
+    {
+        const auto position = from_fen("8/8/1K6/8/5k2/8/8/5B2 b - - 0 1");
+
+        REQUIRE_THAT(
+            evaluate(position),
+            match::WithinAbs(0., epsilon));
+    }
+
+    SECTION("Black has a single knight")
+    {
+        const auto position = from_fen("8/8/1K1n4/8/5k2/8/8/8 w - - 0 1");
+
+        REQUIRE_THAT(
+            evaluate(position),
+            match::WithinAbs(0., epsilon));
+    }
+
+    SECTION("Black has a single bishop")
+    {
+        const auto position = from_fen("8/8/1K6/8/3b1k2/8/8/8 w - - 0 1");
+
+        REQUIRE_THAT(
+            evaluate(position),
+            match::WithinAbs(0., epsilon));
+    }
+}
