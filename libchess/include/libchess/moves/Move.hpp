@@ -93,6 +93,8 @@ struct Move final {
 
     /** Returns true if this move is castling (in either direction). */
     [[nodiscard]] constexpr bool is_castling() const noexcept;
+
+    constexpr bool operator==(const Move&) const noexcept = default;
 };
 
 /// @ingroup moves

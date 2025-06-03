@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <array>
 #include <charconv>
-#include <concepts>
 #include <iterator>
 #include <libchess/moves/Move.hpp>
 #include <libchess/notation/FEN.hpp>
@@ -17,6 +16,7 @@
 #include <libchess/uci/CommandParsing.hpp>
 #include <libchess/util/Strings.hpp>
 #include <string_view>
+#include <utility>
 
 namespace chess::uci {
 
@@ -88,18 +88,20 @@ Position parse_position_options(std::string_view options)
 namespace {
 
     // consumes one argument from ``options``, writes its value into ``value``,
-    // and returns the rest of the ``options`` that are left
-    [[nodiscard]] std::string_view parse_option_value(
-        const std::string_view options, std::integral auto& value)
+    // and returns pair of the option value & the rest of the ``options`` that are left
+    [[nodiscard]] std::pair<size_t, std::string_view>
+    parse_int_value(const std::string_view options)
     {
         auto [valueStr, rest] = split_at_first_space(options);
 
         valueStr = trim(valueStr);
 
+        size_t value { 0uz };
+
         std::from_chars(
             valueStr.data(), valueStr.data() + valueStr.length(), value);
 
-        return trim(rest);
+        return { value, trim(rest) };
     }
 
     // consumes all the moves following the "searchmoves" token,
@@ -164,47 +166,83 @@ GoCommandOptions parse_go_options(
         }
 
         if (firstWord == "wtime") {
-            options = parse_option_value(rest, ret.whiteMsLeft);
+            const auto [wtime, rest2] = parse_int_value(rest);
+
+            ret.whiteMsLeft = wtime;
+            options         = rest2;
+
             continue;
         }
 
         if (firstWord == "btime") {
-            options = parse_option_value(rest, ret.blackMsLeft);
+            const auto [btime, rest2] = parse_int_value(rest);
+
+            ret.blackMsLeft = btime;
+            options         = rest2;
+
             continue;
         }
 
         if (firstWord == "winc") {
-            options = parse_option_value(rest, ret.whiteIncMs);
+            const auto [winc, rest2] = parse_int_value(rest);
+
+            ret.whiteIncMs = winc;
+            options        = rest2;
+
             continue;
         }
 
         if (firstWord == "binc") {
-            options = parse_option_value(rest, ret.blackIncMs);
+            const auto [binc, rest2] = parse_int_value(rest);
+
+            ret.blackIncMs = binc;
+            options        = rest2;
+
             continue;
         }
 
         if (firstWord == "movestogo") {
-            options = parse_option_value(rest, ret.movesToGo);
+            const auto [mtg, rest2] = parse_int_value(rest);
+
+            ret.movesToGo = mtg;
+            options       = rest2;
+
             continue;
         }
 
         if (firstWord == "depth") {
-            options = parse_option_value(rest, ret.depth);
+            const auto [depth, rest2] = parse_int_value(rest);
+
+            ret.depth = depth;
+            options   = rest2;
+
             continue;
         }
 
         if (firstWord == "nodes") {
-            options = parse_option_value(rest, ret.nodes);
+            const auto [nodes, rest2] = parse_int_value(rest);
+
+            ret.nodes = nodes;
+            options   = rest2;
+
             continue;
         }
 
         if (firstWord == "mate") {
-            options = parse_option_value(rest, ret.mateIn);
+            const auto [mate, rest2] = parse_int_value(rest);
+
+            ret.mateIn = mate;
+            options    = rest2;
+
             continue;
         }
 
         if (firstWord == "movetime") {
-            options = parse_option_value(rest, ret.searchTime);
+            const auto [time, rest2] = parse_int_value(rest);
+
+            ret.searchTime = time;
+            options        = rest2;
+
             continue;
         }
 

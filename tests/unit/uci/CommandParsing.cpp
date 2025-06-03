@@ -6,8 +6,10 @@
  * ======================================================================================
  */
 
+#include <algorithm>
 #include <catch2/catch_test_macros.hpp>
 #include <libchess/game/Position.hpp>
+#include <libchess/notation/Algebraic.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/uci/CommandParsing.hpp>
 
@@ -42,5 +44,63 @@ TEST_CASE("UCI parsing - position", TAGS)
             " fen   5r2/8/1b2k3/8/1P5p/3Q4/2K5/8 b - - 6 7 moves    f8f2 c2c3 e6e5  c3c4   \n");
 
         REQUIRE(position == from_fen("8/8/1b6/4k3/1PK4p/3Q4/5r2/8 b - - 10 9"));
+    }
+}
+
+TEST_CASE("UCI parsing - go", TAGS)
+{
+    using chess::uci::parse_go_options;
+
+    static constexpr Position startPos {};
+
+    SECTION("No arguments")
+    {
+        const auto opts = parse_go_options("", startPos);
+
+        REQUIRE(opts.moves.empty());
+        REQUIRE(! opts.ponderMode);
+        REQUIRE(! opts.infinite);
+        REQUIRE(! opts.whiteMsLeft.has_value());
+        REQUIRE(! opts.blackMsLeft.has_value());
+        REQUIRE(! opts.whiteIncMs.has_value());
+        REQUIRE(! opts.blackIncMs.has_value());
+        REQUIRE(! opts.movesToGo.has_value());
+        REQUIRE(! opts.depth.has_value());
+        REQUIRE(! opts.nodes.has_value());
+        REQUIRE(! opts.mateIn.has_value());
+        REQUIRE(! opts.searchTime.has_value());
+    }
+
+    SECTION("Searchmoves")
+    {
+        using chess::notation::from_alg;
+
+        const auto opts = parse_go_options(
+            "  searchmoves  b1c3   g1f3  ponder \n", startPos);
+
+        REQUIRE(opts.moves.size() == 2uz);
+
+        REQUIRE(std::ranges::contains(opts.moves,
+            from_alg(startPos, "Nc3")));
+
+        REQUIRE(std::ranges::contains(opts.moves,
+            from_alg(startPos, "Nf3")));
+
+        REQUIRE(opts.ponderMode);
+    }
+
+    SECTION("Ponder")
+    {
+        const auto opts = parse_go_options("  ponder ", startPos);
+
+        REQUIRE(opts.ponderMode);
+    }
+
+    SECTION("Depth")
+    {
+        const auto opts = parse_go_options(" depth  8 ", startPos);
+
+        REQUIRE(opts.depth.has_value());
+        REQUIRE(*opts.depth == 8uz);
     }
 }
