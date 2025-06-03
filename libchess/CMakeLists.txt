@@ -57,6 +57,7 @@ set (
     pieces/UTF8.hpp
     search/Search.hpp
     uci/CommandParsing.hpp
+    uci/EngineBase.hpp
     uci/Options.hpp
     util/Math.hpp
     util/Strings.hpp
@@ -73,6 +74,7 @@ set (
     notation/UCI.cpp
     search/Search.cpp
     uci/CommandParsing.cpp
+    uci/EngineBase.cpp
     uci/Options.cpp
     util/Strings.cpp
 )
