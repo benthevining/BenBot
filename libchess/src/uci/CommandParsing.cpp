@@ -26,7 +26,7 @@ using util::trim;
 // Note that in all UCI parsing, we need to use trim() defensively a lot,
 // because UCI allows arbitrary whitespace between tokens. Also note that
 // split_at_first_space() will return a pair whose first element is empty
-// if its input string began with a space.
+// if its input string began with a space!
 
 Position parse_position_options(std::string_view options)
 {
@@ -87,7 +87,7 @@ Position parse_position_options(std::string_view options)
 
 namespace {
 
-    // consumes one argument from ``options``, writes its value into ``value``,
+    // consumes one argument from ``options``,
     // and returns pair of the option value & the rest of the ``options`` that are left
     [[nodiscard]] std::pair<size_t, std::string_view>
     parse_int_value(const std::string_view options)
