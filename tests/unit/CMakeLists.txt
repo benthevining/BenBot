@@ -44,6 +44,7 @@ set (
     board/Fills.cpp
     board/Pieces.cpp
     board/Square.cpp
+    eval/Evaluation.cpp
     game/CastlingRights.cpp
     game/Position.cpp
     moves/EnPassant.cpp
