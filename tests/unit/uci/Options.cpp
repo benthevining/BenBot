@@ -84,3 +84,22 @@ TEST_CASE("UCI options - combo", TAGS)
 
     REQUIRE(std::string { option.get_value() } == "Two");
 }
+
+TEST_CASE("UCI options - string", TAGS)
+{
+    uci::StringOption option {
+        "MyString", "foo"
+    };
+
+    REQUIRE(std::string { option.get_value() } == "foo");
+
+    REQUIRE(option.get_declaration_string() == "option name MyString type string default foo");
+
+    option.parse("name MyString value bar");
+
+    REQUIRE(std::string { option.get_value() } == "bar");
+
+    option.parse("name OtherParam value foo");
+
+    REQUIRE(std::string { option.get_value() } == "bar");
+}
