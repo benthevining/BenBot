@@ -110,7 +110,7 @@ namespace {
         std::string_view options, const Position& currentPosition,
         std::output_iterator<moves::Move> auto outputIt)
     {
-        using std::operator""sv;
+        using namespace std::literals::string_view_literals; // NOLINT
 
         // we could instead find the first token that doesn't successfully parse as
         // a UCI move, but from_uci() throws on failure, so instead we detect the
