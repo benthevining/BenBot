@@ -23,10 +23,12 @@ namespace chess::uci {
 using util::split_at_first_space;
 using util::trim;
 
-Position parse_position_options(const std::string_view options)
+Position parse_position_options(std::string_view options)
 {
     // position [fen <fenstring> | startpos ]  moves <move1> .... <movei>
     // options doesn't include the "position" token itself
+
+    options = trim(options);
 
     Position position {};
 
@@ -35,6 +37,8 @@ Position parse_position_options(const std::string_view options)
     secondWord = trim(secondWord);
 
     if (secondWord == "fen") {
+        // we have to take care here, because the FEN string won't be quoted,
+        // so we search for the "moves" delimiter (which may be absent)
         const auto movesTokenIdx = rest.find("moves");
 
         const bool isNPos = movesTokenIdx == std::string_view::npos;
@@ -43,8 +47,15 @@ Position parse_position_options(const std::string_view options)
 
         position = notation::from_fen(fenString);
 
-        if (! isNPos)
-            rest = rest.substr(movesTokenIdx);
+        if (isNPos) {
+            // the "moves" token wasn't found, so assume that the FEN string
+            // was the last thing in the position command
+            return position;
+        }
+
+        rest = trim(rest.substr(movesTokenIdx));
+    } else {
+        rest = trim(rest);
     }
 
     auto [moveToken, moves] = split_at_first_space(rest);
@@ -54,13 +65,15 @@ Position parse_position_options(const std::string_view options)
     if (moveToken != "moves")
         return position;
 
+    moves = trim(moves);
+
     while (! moves.empty()) {
         const auto [firstMove, rest2] = split_at_first_space(moves);
 
         position.make_move(
             notation::from_uci(position, firstMove));
 
-        moves = rest2;
+        moves = trim(rest2);
     }
 
     return position;

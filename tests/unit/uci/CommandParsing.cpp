@@ -25,13 +25,13 @@ TEST_CASE("UCI parsing - position", TAGS)
     {
         static constexpr Position startPos {};
 
-        REQUIRE(parse_position_options("startpos") == startPos);
+        REQUIRE(parse_position_options("  startpos  \n") == startPos);
 
         REQUIRE(parse_position_options(
-                    "fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+                    "fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 ")
                 == startPos);
 
-        const auto position = parse_position_options("startpos moves e2e4 e7e5 g1f3");
+        const auto position = parse_position_options("startpos   moves  e2e4  e7e5        g1f3\n");
 
         REQUIRE(position == from_fen("rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2"));
     }
@@ -39,7 +39,7 @@ TEST_CASE("UCI parsing - position", TAGS)
     SECTION("From starting FEN")
     {
         const auto position = parse_position_options(
-            "fen 5r2/8/1b2k3/8/1P5p/3Q4/2K5/8 b - - 6 7 moves f8f2 c2c3 e6e5 c3c4");
+            " fen   5r2/8/1b2k3/8/1P5p/3Q4/2K5/8 b - - 6 7 moves    f8f2 c2c3 e6e5  c3c4   \n");
 
         REQUIRE(position == from_fen("8/8/1b6/4k3/1PK4p/3Q4/5r2/8 b - - 10 9"));
     }
