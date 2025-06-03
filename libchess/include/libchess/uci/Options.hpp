@@ -38,10 +38,9 @@ struct Option {
     [[nodiscard]] virtual std::string_view get_name() const noexcept = 0;
 
     /** Returns the option's declaration string suitable for sending
-        to the GUI following an "option" token. The returned string
-        should not include the "option" token.
+        to the GUI. The returned string includes the "option" token.
      */
-    [[nodiscard]] virtual std::string get_declaration_string() = 0;
+    [[nodiscard]] virtual std::string get_declaration_string() const = 0;
 
     /** Parses the arguments following a "setoption" token from the GUI,
         and updates the current state of the option object.
@@ -71,7 +70,7 @@ struct BoolOption final : Option {
 
     [[nodiscard]] std::string_view get_name() const noexcept override { return optionName; }
 
-    [[nodiscard]] std::string get_declaration_string() override;
+    [[nodiscard]] std::string get_declaration_string() const override;
 
 private:
     void handle_setvalue(std::string_view arguments) override;
@@ -100,7 +99,7 @@ struct IntOption final : Option {
 
     [[nodiscard]] std::string_view get_name() const noexcept override { return optionName; }
 
-    [[nodiscard]] std::string get_declaration_string() override;
+    [[nodiscard]] std::string get_declaration_string() const override;
 
 private:
     void handle_setvalue(std::string_view arguments) override;
@@ -129,7 +128,7 @@ struct ComboOption final : Option {
 
     [[nodiscard]] std::string_view get_name() const noexcept override { return optionName; }
 
-    [[nodiscard]] std::string get_declaration_string() override;
+    [[nodiscard]] std::string get_declaration_string() const override;
 
 private:
     void handle_setvalue(std::string_view arguments) override;
@@ -156,7 +155,7 @@ struct StringOption final : Option {
 
     [[nodiscard]] std::string_view get_name() const noexcept override { return optionName; }
 
-    [[nodiscard]] std::string get_declaration_string() override;
+    [[nodiscard]] std::string get_declaration_string() const override;
 
 private:
     void handle_setvalue(std::string_view arguments) override;
@@ -179,7 +178,7 @@ struct Action final : Option {
 
     [[nodiscard]] std::string_view get_name() const noexcept override { return optionName; }
 
-    [[nodiscard]] std::string get_declaration_string() override;
+    [[nodiscard]] std::string get_declaration_string() const override;
 
 private:
     void handle_setvalue(std::string_view arguments) override;

@@ -32,12 +32,25 @@ void Option::parse(std::string_view arguments)
     if (firstWord != "name")
         return;
 
-    auto [name, rest2] = split_at_first_space(trim(rest));
+    rest = trim(rest);
+
+    // we can't just use split_at_first_space() here, because option names
+    // may legally contain spaces
+
+    const auto valueTokenIdx = rest.find("value");
+
+    const bool isNPos = valueTokenIdx == std::string_view::npos;
+
+    auto name = isNPos ? rest : rest.substr(0, valueTokenIdx);
 
     name = trim(name);
 
-    if (name == get_name())
-        handle_setvalue(trim(rest2));
+    if (name == get_name()) {
+        if (isNPos)
+            handle_setvalue({});
+        else
+            handle_setvalue(trim(rest.substr(valueTokenIdx)));
+    }
 }
 
 /*------------------------------------------------------------------------------------------------------------------*/
@@ -49,9 +62,11 @@ BoolOption::BoolOption(
 {
 }
 
-[[nodiscard]] std::string BoolOption::get_declaration_string()
+[[nodiscard]] std::string BoolOption::get_declaration_string() const
 {
-    return std::format("name {} type check default {}", optionName, optionDefault);
+    return std::format(
+        "option name {} type check default {}",
+        optionName, optionDefault);
 }
 
 void BoolOption::handle_setvalue(const std::string_view arguments)
@@ -89,10 +104,10 @@ IntOption::IntOption(
     assert(optionDefault <= optionMax);
 }
 
-std::string IntOption::get_declaration_string()
+std::string IntOption::get_declaration_string() const
 {
     return std::format(
-        "name {} type spin default {} min {} max {}",
+        "option name {} type spin default {} min {} max {}",
         optionName, optionDefault, optionMin, optionMax);
 }
 
@@ -126,9 +141,11 @@ ComboOption::ComboOption(
     assert(std::ranges::contains(possibleValues, optionDefault));
 }
 
-std::string ComboOption::get_declaration_string()
+std::string ComboOption::get_declaration_string() const
 {
-    auto result = std::format("name {} type combo default {}", optionName, optionDefault);
+    auto result = std::format(
+        "option name {} type combo default {}",
+        optionName, optionDefault);
 
     for (const auto& value : possibleValues)
         result.append(
@@ -165,9 +182,11 @@ StringOption::StringOption(
 {
 }
 
-std::string StringOption::get_declaration_string()
+std::string StringOption::get_declaration_string() const
 {
-    return std::format("name {} type string default {}", optionName, value);
+    return std::format(
+        "option name {} type string default {}",
+        optionName, value);
 }
 
 void StringOption::handle_setvalue(const std::string_view arguments)
@@ -193,9 +212,9 @@ Action::Action(
     assert(callback != nullptr);
 }
 
-std::string Action::get_declaration_string()
+std::string Action::get_declaration_string() const
 {
-    return std::format("name {} type button", optionName);
+    return std::format("option name {} type button", optionName);
 }
 
 void Action::handle_setvalue(
