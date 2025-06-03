@@ -60,10 +60,10 @@ TEST_CASE("UCI parsing - go", TAGS)
         REQUIRE(opts.moves.empty());
         REQUIRE(! opts.ponderMode);
         REQUIRE(! opts.infinite);
-        REQUIRE(! opts.whiteMsLeft.has_value());
-        REQUIRE(! opts.blackMsLeft.has_value());
-        REQUIRE(! opts.whiteIncMs.has_value());
-        REQUIRE(! opts.blackIncMs.has_value());
+        REQUIRE(! opts.whiteTimeLeft.has_value());
+        REQUIRE(! opts.blackTimeLeft.has_value());
+        REQUIRE(! opts.whiteInc.has_value());
+        REQUIRE(! opts.blackInc.has_value());
         REQUIRE(! opts.movesToGo.has_value());
         REQUIRE(! opts.depth.has_value());
         REQUIRE(! opts.nodes.has_value());

@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
@@ -28,6 +29,8 @@
     @ingroup uci
  */
 namespace chess::uci {
+
+using Milliseconds = std::chrono::milliseconds;
 
 using game::Position;
 using std::size_t;
@@ -56,16 +59,19 @@ struct GoCommandOptions final {
     bool infinite { false };
 
     /** Number of milliseconds that White has left. */
-    std::optional<size_t> whiteMsLeft;
+    std::optional<Milliseconds> whiteTimeLeft;
 
     /** Number of milliseconds that Black has left. */
-    std::optional<size_t> blackMsLeft;
+    std::optional<Milliseconds> blackTimeLeft;
 
     /** Increment for White, in milliseconds. */
-    std::optional<size_t> whiteIncMs;
+    std::optional<Milliseconds> whiteInc;
 
     /** Increment for Black, in milliseconds. */
-    std::optional<size_t> blackIncMs;
+    std::optional<Milliseconds> blackInc;
+
+    /** Search for exactly this number of milliseconds. */
+    std::optional<Milliseconds> searchTime;
 
     /** Number of moves to the next time control. */
     std::optional<size_t> movesToGo;
@@ -78,9 +84,6 @@ struct GoCommandOptions final {
 
     /** Search for a mate in this many moves. */
     std::optional<size_t> mateIn;
-
-    /** Search for exactly this number of milliseconds. */
-    std::optional<size_t> searchTime;
 };
 
 /** Parses the options following a UCI "go" command.

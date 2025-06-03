@@ -168,8 +168,8 @@ GoCommandOptions parse_go_options(
         if (firstWord == "wtime") {
             const auto [wtime, rest2] = parse_int_value(rest);
 
-            ret.whiteMsLeft = wtime;
-            options         = rest2;
+            ret.whiteTimeLeft = Milliseconds { wtime };
+            options           = rest2;
 
             continue;
         }
@@ -177,8 +177,8 @@ GoCommandOptions parse_go_options(
         if (firstWord == "btime") {
             const auto [btime, rest2] = parse_int_value(rest);
 
-            ret.blackMsLeft = btime;
-            options         = rest2;
+            ret.blackTimeLeft = Milliseconds { btime };
+            options           = rest2;
 
             continue;
         }
@@ -186,8 +186,8 @@ GoCommandOptions parse_go_options(
         if (firstWord == "winc") {
             const auto [winc, rest2] = parse_int_value(rest);
 
-            ret.whiteIncMs = winc;
-            options        = rest2;
+            ret.whiteInc = Milliseconds { winc };
+            options      = rest2;
 
             continue;
         }
@@ -195,8 +195,8 @@ GoCommandOptions parse_go_options(
         if (firstWord == "binc") {
             const auto [binc, rest2] = parse_int_value(rest);
 
-            ret.blackIncMs = binc;
-            options        = rest2;
+            ret.blackInc = Milliseconds { binc };
+            options      = rest2;
 
             continue;
         }
@@ -240,7 +240,7 @@ GoCommandOptions parse_go_options(
         if (firstWord == "movetime") {
             const auto [time, rest2] = parse_int_value(rest);
 
-            ret.searchTime = time;
+            ret.searchTime = Milliseconds { time };
             options        = rest2;
 
             continue;
