@@ -496,12 +496,11 @@ namespace detail {
 
         value ^= zobrist::BLACK_TO_MOVE; // just toggle these bits in/out every other move
 
-        if (newEPTarget.has_value()) {
-            value ^= zobrist::en_passant_key(newEPTarget->file);
+        if (pos.enPassantTargetSquare.has_value())
+            value ^= zobrist::en_passant_key(pos.enPassantTargetSquare->file);
 
-            if (pos.enPassantTargetSquare.has_value())
-                value ^= zobrist::en_passant_key(pos.enPassantTargetSquare->file);
-        }
+        if (newEPTarget.has_value())
+            value ^= zobrist::en_passant_key(newEPTarget->file);
 
         value ^= zobrist::piece_key(move.piece, pos.sideToMove, move.from);
 
