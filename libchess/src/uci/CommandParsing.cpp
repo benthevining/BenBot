@@ -10,18 +10,23 @@
 #include <array>
 #include <charconv>
 #include <concepts>
+#include <iterator>
 #include <libchess/moves/Move.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/UCI.hpp>
 #include <libchess/uci/CommandParsing.hpp>
 #include <libchess/util/Strings.hpp>
 #include <string_view>
-#include <vector>
 
 namespace chess::uci {
 
 using util::split_at_first_space;
 using util::trim;
+
+// Note that in all UCI parsing, we need to use trim() defensively a lot,
+// because UCI allows arbitrary whitespace between tokens. Also note that
+// split_at_first_space() will return a pair whose first element is empty
+// if its input string began with a space.
 
 Position parse_position_options(std::string_view options)
 {
@@ -62,6 +67,7 @@ Position parse_position_options(std::string_view options)
 
     moveToken = trim(moveToken);
 
+    // code defensively against unrecognized tokens
     if (moveToken != "moves")
         return position;
 
@@ -93,20 +99,23 @@ namespace {
         std::from_chars(
             valueStr.data(), valueStr.data() + valueStr.length(), value);
 
-        return rest;
+        return trim(rest);
     }
 
     // consumes all the moves following the "searchmoves" token,
     // and returns the rest of the ``options`` that are left
     [[nodiscard]] std::string_view parse_searchmoves(
         std::string_view options, const Position& currentPosition,
-        std::vector<moves::Move>& output)
+        std::output_iterator<moves::Move> auto outputIt)
     {
         using std::operator""sv;
 
+        // we could instead find the first token that doesn't successfully parse as
+        // a UCI move, but from_uci() throws on failure, so instead we detect the
+        // other delimiter tokens
         static constexpr std::array argumentTokens {
-            "searchmoves"sv, "ponder"sv, "wtime"sv, "btime"sv, "winc"sv, "binc"sv,
-            "movestogo"sv, "depth"sv, "nodes"sv, "mate"sv, "movetime"sv, "infinite"sv
+            "ponder"sv, "wtime"sv, "btime"sv, "winc"sv, "binc"sv, "infinite"sv,
+            "movestogo"sv, "depth"sv, "nodes"sv, "mate"sv, "movetime"sv
         };
 
         while (! options.empty()) {
@@ -117,10 +126,9 @@ namespace {
             if (std::ranges::contains(argumentTokens, firstMove))
                 return options; // NOLINT
 
-            options = rest;
+            options = trim(rest);
 
-            output.emplace_back(
-                notation::from_uci(currentPosition, firstMove));
+            *outputIt = notation::from_uci(currentPosition, firstMove);
         }
 
         return options; // NOLINT
@@ -133,12 +141,15 @@ GoCommandOptions parse_go_options(
 {
     // options doesn't include the "go" token itself
 
+    options = trim(options);
+
     GoCommandOptions ret;
 
     while (! options.empty()) {
         auto [firstWord, rest] = split_at_first_space(options);
 
         firstWord = trim(firstWord);
+        rest      = trim(rest);
 
         options = rest;
 
@@ -198,7 +209,8 @@ GoCommandOptions parse_go_options(
         }
 
         if (firstWord == "searchmoves") {
-            options = parse_searchmoves(rest, currentPosition, ret.moves);
+            options = parse_searchmoves(
+                rest, currentPosition, std::back_inserter(ret.moves));
         }
     }
 
