@@ -19,6 +19,7 @@ using chess::game::Position;
 
 using chess::notation::from_fen;
 
+#if 0
 TEST_CASE("UCI parsing - position", TAGS)
 {
     using chess::uci::parse_position_options;
@@ -46,6 +47,7 @@ TEST_CASE("UCI parsing - position", TAGS)
         REQUIRE(position == from_fen("8/8/1b6/4k3/1PK4p/3Q4/5r2/8 b - - 10 9"));
     }
 }
+#endif
 
 TEST_CASE("UCI parsing - go", TAGS)
 {

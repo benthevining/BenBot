@@ -44,6 +44,7 @@ set (
     eval/Evaluation.hpp
     game/CastlingRights.hpp
     game/Position.hpp
+    game/Zobrist.hpp
     moves/Move.hpp
     moves/MoveGen.hpp
     moves/Patterns.hpp

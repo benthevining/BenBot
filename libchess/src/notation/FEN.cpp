@@ -346,6 +346,8 @@ Position from_fen(std::string_view fenString)
     std::from_chars(
         fullMoveCounter.data(), fullMoveCounter.data() + fullMoveCounter.length(), position.fullMoveCounter);
 
+    position.refresh_zobrist();
+
     return position;
 }
 

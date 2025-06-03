@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/Distances.hpp>
 #include <libchess/board/File.hpp>
@@ -24,6 +25,7 @@
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/CastlingRights.hpp>
+#include <libchess/game/Zobrist.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
@@ -48,6 +50,12 @@ using moves::Move;
 using pieces::Color;
 
 using PieceType = pieces::Type;
+
+struct Position;
+
+namespace detail {
+    constexpr zobrist::Value calculate_hash(const Position&) noexcept;
+}
 
 /** This class models an instant in a game of chess.
 
@@ -113,8 +121,18 @@ struct Position final {
      */
     std::uint_least64_t fullMoveCounter { 1 };
 
-    /** Returns true if the two positions are identical. */
-    [[nodiscard]] constexpr bool operator==(const Position&) const noexcept = default;
+    /** The Zobrist hash value of this position.
+        This value is incrementally updated by the ``make_move()``
+        function. If you manually change attributes of the position,
+        call the ``refresh_zobrist()`` function to recalculate it.
+     */
+    zobrist::Value hash { detail::calculate_hash(*this) };
+
+    /** Returns true if the two positions have the same Zobrist hash. */
+    [[nodiscard]] constexpr bool operator==(const Position& other) const noexcept
+    {
+        return hash == other.hash;
+    }
 
     /** Returns the piece set representing the given color. */
     template <Color Side>
@@ -210,6 +228,9 @@ struct Position final {
 
     /** Makes a move to alter the position. */
     constexpr void make_move(const Move& move) noexcept;
+
+    /** Recalculates the Zobrist hash for this position. */
+    constexpr void refresh_zobrist() noexcept;
 
     /** Returns an empty position with none of the piece bitboards initialized.
         This is useful for tasks like parsing a FEN string, for example.
@@ -378,6 +399,42 @@ namespace detail {
         };
     }
 
+    struct CastlingRightsChanges final {
+        // each of these bools are true if the given right has changed since the last move
+        bool whiteKingside { false };
+        bool whiteQueenside { false };
+        bool blackKingside { false };
+        bool blackQueenside { false };
+    };
+
+    [[nodiscard]] constexpr CastlingRightsChanges update_castling_rights(
+        Position& pos, const bool isWhite, const Move& move, const bool isCapture) noexcept
+    {
+        const auto whiteOldRights { pos.whiteCastlingRights };
+        const auto blackOldRights { pos.blackCastlingRights };
+
+        // update castling rights
+        auto& ourRights   = isWhite ? pos.whiteCastlingRights : pos.blackCastlingRights;
+        auto& theirRights = isWhite ? pos.blackCastlingRights : pos.whiteCastlingRights;
+
+        ourRights.our_move(move);
+
+        if (isWhite)
+            theirRights.their_move<Color::Black>(move, isCapture);
+        else
+            theirRights.their_move<Color::White>(move, isCapture);
+
+        const auto& whiteNewRights = pos.whiteCastlingRights;
+        const auto& blackNewRights = pos.blackCastlingRights;
+
+        return {
+            .whiteKingside  = whiteOldRights.kingside != whiteNewRights.kingside,
+            .whiteQueenside = whiteOldRights.queenside != whiteNewRights.queenside,
+            .blackKingside  = blackOldRights.kingside != blackNewRights.kingside,
+            .blackQueenside = blackOldRights.queenside != blackNewRights.queenside
+        };
+    }
+
     [[nodiscard, gnu::const]] constexpr std::uint_least8_t tick_halfmove_clock(
         const Move& move, const bool isCapture, const std::uint_least8_t prevValue) noexcept
     {
@@ -394,31 +451,137 @@ namespace detail {
         return prevValue + 1;
     }
 
+    [[nodiscard, gnu::const]] constexpr zobrist::Value calculate_hash(const Position& pos) noexcept
+    {
+        zobrist::Value value { 0uz };
+
+        if (pos.sideToMove == Color::Black)
+            value ^= zobrist::BLACK_TO_MOVE;
+
+        for (const auto type : magic_enum::enum_values<PieceType>()) {
+            const auto& white = pos.whitePieces.get_type(type);
+            const auto& black = pos.blackPieces.get_type(type);
+
+            for (const auto square : white.squares())
+                value ^= zobrist::piece_key(type, Color::White, square); // cppcheck-suppress useStlAlgorithm
+
+            for (const auto square : black.squares())
+                value ^= zobrist::piece_key(type, Color::Black, square); // cppcheck-suppress useStlAlgorithm
+        }
+
+        if (pos.whiteCastlingRights.kingside)
+            value ^= zobrist::WHITE_KINGSIDE_CASTLE;
+
+        if (pos.whiteCastlingRights.queenside)
+            value ^= zobrist::WHITE_QUEENSIDE_CASTLE;
+
+        if (pos.blackCastlingRights.kingside)
+            value ^= zobrist::BLACK_KINGSIDE_CASTLE;
+
+        if (pos.blackCastlingRights.queenside)
+            value ^= zobrist::BLACK_QUEENSIDE_CASTLE;
+
+        if (pos.enPassantTargetSquare.has_value())
+            value ^= zobrist::en_passant_key(pos.enPassantTargetSquare->file);
+
+        return value;
+    }
+
+    [[nodiscard, gnu::const]] constexpr zobrist::Value update_zobrist(
+        const Position& pos, const Move& move,
+        std::optional<Square>        newEPTarget,
+        const CastlingRightsChanges& rightsChanges) noexcept
+    {
+        auto value = pos.hash;
+
+        value ^= zobrist::BLACK_TO_MOVE; // just toggle these bits in/out every other move
+
+        if (newEPTarget.has_value()) {
+            value ^= zobrist::en_passant_key(newEPTarget->file);
+
+            if (pos.enPassantTargetSquare.has_value())
+                value ^= zobrist::en_passant_key(pos.enPassantTargetSquare->file);
+        }
+
+        value ^= zobrist::piece_key(move.piece, pos.sideToMove, move.from);
+
+        value ^= zobrist::piece_key(
+            move.is_promotion() ? *move.promotedType : move.piece,
+            pos.sideToMove, move.to);
+
+        if (pos.is_capture(move)) {
+            const auto  otherColor  = pos.sideToMove == Color::White ? Color::Black : Color::White;
+            const auto& theirPieces = otherColor == Color::White ? pos.whitePieces : pos.blackPieces;
+
+            if (pos.is_en_passant(move)) {
+                [[unlikely]];
+
+                // the captured pawn is on the file of the target square, but one file below
+                // (White capture) or one file above (Black capture)
+                const auto capturedRank = pos.sideToMove == Color::White
+                                            ? board::prev_pawn_rank<Color::White>(move.to.rank)
+                                            : board::prev_pawn_rank<Color::Black>(move.to.rank);
+
+                value ^= zobrist::piece_key(PieceType::Pawn, otherColor,
+                    Square {
+                        .file = move.to.file,
+                        .rank = capturedRank });
+            } else {
+                [[likely]];
+
+                const auto capturedType = theirPieces.get_piece_on(move.to);
+
+                assert(capturedType.has_value());
+
+                value ^= zobrist::piece_key(*capturedType, otherColor, move.to);
+            }
+        } else if (move.is_castling()) {
+            [[unlikely]];
+            if (move.to.is_kingside())
+                value ^= board::detail::kingside_castle_rook_pos_mask(pos.sideToMove).to_int();
+            else
+                value ^= board::detail::queenside_castle_rook_pos_mask(pos.sideToMove).to_int();
+        }
+
+        if (rightsChanges.whiteKingside)
+            value ^= zobrist::WHITE_KINGSIDE_CASTLE;
+
+        if (rightsChanges.whiteQueenside)
+            value ^= zobrist::WHITE_QUEENSIDE_CASTLE;
+
+        if (rightsChanges.blackKingside)
+            value ^= zobrist::BLACK_KINGSIDE_CASTLE;
+
+        if (rightsChanges.blackQueenside)
+            value ^= zobrist::BLACK_QUEENSIDE_CASTLE;
+
+        return value;
+    }
+
 } // namespace detail
+
+constexpr void Position::refresh_zobrist() noexcept
+{
+    hash = detail::calculate_hash(*this);
+}
 
 constexpr void Position::make_move(const Move& move) noexcept
 {
     // NB. must query this before updating bitboards!
     const bool isCapture = is_capture(move);
+    const bool isWhite   = sideToMove == Color::White;
+
+    const auto newEPSquare = detail::get_en_passant_target_square(move, isWhite);
+
+    const auto rightsChanges = detail::update_castling_rights(*this, isWhite, move, isCapture);
+
+    hash = detail::update_zobrist(*this, move, newEPSquare, rightsChanges);
 
     detail::update_bitboards(*this, move);
 
-    const bool isWhite = sideToMove == Color::White;
-
-    enPassantTargetSquare = detail::get_en_passant_target_square(move, isWhite);
-
-    // update castling rights
-    auto& ourRights   = isWhite ? whiteCastlingRights : blackCastlingRights;
-    auto& theirRights = isWhite ? blackCastlingRights : whiteCastlingRights;
-
-    ourRights.our_move(move);
-
-    if (isWhite)
-        theirRights.their_move<Color::Black>(move, isCapture);
-    else
-        theirRights.their_move<Color::White>(move, isCapture);
-
     halfmoveClock = detail::tick_halfmove_clock(move, isCapture, halfmoveClock);
+
+    enPassantTargetSquare = newEPSquare;
 
     // increment full move counter after every Black move
     if (! isWhite)
