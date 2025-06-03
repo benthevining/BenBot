@@ -149,7 +149,7 @@ std::string ComboOption::get_declaration_string() const
 
     for (const auto& value : possibleValues)
         result.append(
-            std::format("var {}", value));
+            std::format(" var {}", value));
 
     return result;
 }

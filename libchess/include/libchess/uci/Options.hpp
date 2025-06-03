@@ -139,7 +139,7 @@ private:
 
     std::string optionDefault;
 
-    std::string value;
+    std::string value { optionDefault };
 };
 
 /** An option that can have any arbitrary string value.

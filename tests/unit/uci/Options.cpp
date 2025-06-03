@@ -8,6 +8,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include <libchess/uci/Options.hpp>
+#include <string>
 
 static constexpr auto TAGS { "[uci][options]" };
 
@@ -56,4 +57,30 @@ TEST_CASE("UCI options - int", TAGS)
     option.parse("name HashSize value -4");
 
     REQUIRE(option.get_value() == 0);
+}
+
+TEST_CASE("UCI options - combo", TAGS)
+{
+    uci::ComboOption option {
+        "MyEnum",
+        { "One", "Two", "Three" },
+        "Two"
+    };
+
+    REQUIRE(option.get_declaration_string() == "option name MyEnum type combo default Two var One var Two var Three");
+
+    REQUIRE(std::string { option.get_value() } == "Two");
+
+    option.parse("name MyEnum value One");
+
+    REQUIRE(std::string { option.get_value() } == "One");
+
+    option.parse("name Foo value Three");
+
+    REQUIRE(std::string { option.get_value() } == "One");
+
+    // should be set to default if unknown value string is received
+    option.parse("name MyEnum value Four");
+
+    REQUIRE(std::string { option.get_value() } == "Two");
 }
