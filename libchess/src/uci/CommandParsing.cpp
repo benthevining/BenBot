@@ -35,11 +35,16 @@ Position parse_position_options(const std::string_view options)
     secondWord = trim(secondWord);
 
     if (secondWord == "fen") {
-        const auto [fenString, afterFEN] = split_at_first_space(rest);
+        const auto movesTokenIdx = rest.find("moves");
+
+        const bool isNPos = movesTokenIdx == std::string_view::npos;
+
+        const auto fenString = isNPos ? rest : rest.substr(0uz, movesTokenIdx);
 
         position = notation::from_fen(fenString);
 
-        rest = afterFEN;
+        if (! isNPos)
+            rest = rest.substr(movesTokenIdx);
     }
 
     auto [moveToken, moves] = split_at_first_space(rest);

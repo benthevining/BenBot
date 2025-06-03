@@ -55,6 +55,7 @@ set (
     notation/Algebraic.cpp
     notation/FEN.cpp
     notation/UCI.cpp
+    uci/CommandParsing.cpp
 )
 
 target_sources (libchess_tests PRIVATE ${sources})
