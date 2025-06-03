@@ -21,8 +21,10 @@ namespace chess::uci {
 using util::split_at_first_space;
 using util::trim;
 
-void Option::parse(const std::string_view arguments)
+void Option::parse(std::string_view arguments)
 {
+    arguments = trim(arguments);
+
     auto [firstWord, rest] = split_at_first_space(arguments);
 
     firstWord = trim(firstWord);
@@ -30,12 +32,12 @@ void Option::parse(const std::string_view arguments)
     if (firstWord != "name")
         return;
 
-    auto [name, rest2] = split_at_first_space(rest);
+    auto [name, rest2] = split_at_first_space(trim(rest));
 
     name = trim(name);
 
     if (name == get_name())
-        handle_setvalue(rest2);
+        handle_setvalue(trim(rest2));
 }
 
 /*------------------------------------------------------------------------------------------------------------------*/
@@ -177,9 +179,7 @@ void StringOption::handle_setvalue(const std::string_view arguments)
     if (valueToken != "value")
         return;
 
-    valueStr = trim(valueStr);
-
-    value = valueStr;
+    value = trim(valueStr);
 }
 
 /*------------------------------------------------------------------------------------------------------------------*/
