@@ -67,7 +67,6 @@ namespace detail {
 
     @todo Detect threefold reps
     @todo Funcs to get passed pawns, backward pawns
-    @todo std::hash (Zobrist hashing)
  */
 struct Position final {
     /** The positions of the White pieces.
@@ -126,7 +125,12 @@ struct Position final {
         function. If you manually change attributes of the position,
         call the ``refresh_zobrist()`` function to recalculate it.
      */
-    zobrist::Value hash { detail::calculate_hash(*this) };
+    zobrist::Value hash {
+        zobrist::calculate(sideToMove,
+            whitePieces, blackPieces,
+            whiteCastlingRights, blackCastlingRights,
+            enPassantTargetSquare)
+    };
 
     /** Returns true if the two positions have the same Zobrist hash. */
     [[nodiscard]] constexpr bool operator==(const Position& other) const noexcept
@@ -350,6 +354,14 @@ constexpr auto Position::get_half_open_files() const noexcept
          | std::views::filter([this](const File file) { return is_file_half_open(file); });
 }
 
+constexpr void Position::refresh_zobrist() noexcept
+{
+    hash = zobrist::calculate(sideToMove,
+        whitePieces, blackPieces,
+        whiteCastlingRights, blackCastlingRights,
+        enPassantTargetSquare);
+}
+
 namespace detail {
 
     constexpr void update_bitboards(
@@ -451,42 +463,6 @@ namespace detail {
         return prevValue + 1;
     }
 
-    [[nodiscard, gnu::const]] constexpr zobrist::Value calculate_hash(const Position& pos) noexcept
-    {
-        zobrist::Value value { 0uz };
-
-        if (pos.sideToMove == Color::Black)
-            value ^= zobrist::BLACK_TO_MOVE;
-
-        for (const auto type : magic_enum::enum_values<PieceType>()) {
-            const auto& white = pos.whitePieces.get_type(type);
-            const auto& black = pos.blackPieces.get_type(type);
-
-            for (const auto square : white.squares())
-                value ^= zobrist::piece_key(type, Color::White, square); // cppcheck-suppress useStlAlgorithm
-
-            for (const auto square : black.squares())
-                value ^= zobrist::piece_key(type, Color::Black, square); // cppcheck-suppress useStlAlgorithm
-        }
-
-        if (pos.whiteCastlingRights.kingside)
-            value ^= zobrist::WHITE_KINGSIDE_CASTLE;
-
-        if (pos.whiteCastlingRights.queenside)
-            value ^= zobrist::WHITE_QUEENSIDE_CASTLE;
-
-        if (pos.blackCastlingRights.kingside)
-            value ^= zobrist::BLACK_KINGSIDE_CASTLE;
-
-        if (pos.blackCastlingRights.queenside)
-            value ^= zobrist::BLACK_QUEENSIDE_CASTLE;
-
-        if (pos.enPassantTargetSquare.has_value())
-            value ^= zobrist::en_passant_key(pos.enPassantTargetSquare->file);
-
-        return value;
-    }
-
     [[nodiscard, gnu::const]] constexpr zobrist::Value update_zobrist(
         const Position& pos, const Move& move,
         std::optional<Square>        newEPTarget,
@@ -558,11 +534,6 @@ namespace detail {
     }
 
 } // namespace detail
-
-constexpr void Position::refresh_zobrist() noexcept
-{
-    hash = detail::calculate_hash(*this);
-}
 
 constexpr void Position::make_move(const Move& move) noexcept
 {

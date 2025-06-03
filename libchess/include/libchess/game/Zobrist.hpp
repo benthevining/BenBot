@@ -16,12 +16,17 @@
 #include <array>
 #include <cstdint> // IWYU pragma: keep - for std::uint64_t
 #include <libchess/board/File.hpp>
+#include <libchess/board/Pieces.hpp>
 #include <libchess/board/Square.hpp>
+#include <libchess/game/CastlingRights.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
+#include <magic_enum/magic_enum.hpp>
+#include <optional>
 #include <utility>
 
 /** This namespace contains hash keys used for Zobrist hashing.
+    These functions are mainly for internal usage by the Position class.
     @ingroup game
  */
 namespace chess::game::zobrist {
@@ -43,6 +48,14 @@ static constexpr Value BLACK_QUEENSIDE_CASTLE { 0x71588a053b2bd9e5ULL };
 
 [[nodiscard, gnu::const]] constexpr Value piece_key(
     PieceType type, Color side, const Square& square) noexcept;
+
+[[nodiscard, gnu::const]] constexpr Value calculate(
+    Color                 sideToMove,
+    const board::Pieces&  whitePieces,
+    const board::Pieces&  blackPieces,
+    const CastlingRights& whiteRights,
+    const CastlingRights& blackRights,
+    std::optional<Square> enPassantTargetSquare) noexcept;
 
 /*
                          ___                           ,--,
@@ -241,6 +254,48 @@ constexpr Value piece_key(
     const auto sideOffset = 64uz * std::to_underlying(side);
 
     return values[typeOffset + sideOffset + square.index()];
+}
+
+constexpr Value calculate(
+    const Color           sideToMove,
+    const board::Pieces&  whitePieces,
+    const board::Pieces&  blackPieces,
+    const CastlingRights& whiteRights,
+    const CastlingRights& blackRights,
+    std::optional<Square> enPassantTargetSquare) noexcept
+{
+    Value value { 0uz };
+
+    if (sideToMove == Color::Black)
+        value ^= BLACK_TO_MOVE;
+
+    for (const auto type : magic_enum::enum_values<PieceType>()) {
+        const auto& white = whitePieces.get_type(type);
+        const auto& black = blackPieces.get_type(type);
+
+        for (const auto square : white.squares())
+            value ^= piece_key(type, Color::White, square); // cppcheck-suppress useStlAlgorithm
+
+        for (const auto square : black.squares())
+            value ^= piece_key(type, Color::Black, square); // cppcheck-suppress useStlAlgorithm
+    }
+
+    if (whiteRights.kingside)
+        value ^= WHITE_KINGSIDE_CASTLE;
+
+    if (whiteRights.queenside)
+        value ^= WHITE_QUEENSIDE_CASTLE;
+
+    if (blackRights.kingside)
+        value ^= BLACK_KINGSIDE_CASTLE;
+
+    if (blackRights.queenside)
+        value ^= BLACK_QUEENSIDE_CASTLE;
+
+    if (enPassantTargetSquare.has_value())
+        value ^= en_passant_key(enPassantTargetSquare->file);
+
+    return value;
 }
 
 } // namespace chess::game::zobrist
