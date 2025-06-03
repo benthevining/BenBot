@@ -19,13 +19,15 @@ using chess::notation::from_fen;
 
 namespace match = Catch::Matchers;
 
+static constexpr auto epsilon = std::numeric_limits<double>::epsilon();
+
 TEST_CASE("Evaluation - stalemate", TAGS)
 {
-    static constexpr auto epsilon = std::numeric_limits<double>::epsilon();
-
     SECTION("White is stalemated")
     {
         const auto position = from_fen("7K/5k2/6q1/8/8/8/8/8 w - - 0 1");
+
+        REQUIRE(position.is_stalemate());
 
         REQUIRE_THAT(
             evaluate(position),
@@ -36,8 +38,35 @@ TEST_CASE("Evaluation - stalemate", TAGS)
     {
         const auto position = from_fen("2k5/P7/2K5/6B1/8/8/8/8 b - - 0 1");
 
+        REQUIRE(position.is_stalemate());
+
         REQUIRE_THAT(
             evaluate(position),
             match::WithinAbs(0., epsilon));
+    }
+}
+
+TEST_CASE("Evaluation - checkmate", TAGS)
+{
+    SECTION("White is checkmated")
+    {
+        const auto position = from_fen("rnb1kb1r/pppppppp/4q3/8/2P5/1B1n4/PP1PPPPP/RN1QKBNR w KQkq - 0 1");
+
+        REQUIRE(position.is_checkmate());
+
+        REQUIRE_THAT(
+            evaluate(position),
+            match::WithinAbs(chess::eval::MIN, epsilon));
+    }
+
+    SECTION("Black is checkmated")
+    {
+        const auto position = from_fen("r2qkbnr/ppp1pBpp/2n5/1b1pN3/8/4PQ2/PPPP1PPP/R1B1K1NR b KQkq - 0 1");
+
+        REQUIRE(position.is_checkmate());
+
+        REQUIRE_THAT(
+            evaluate(position),
+            match::WithinAbs(chess::eval::MIN, epsilon));
     }
 }
