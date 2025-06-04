@@ -44,6 +44,7 @@ set (
     eval/Evaluation.hpp
     game/CastlingRights.hpp
     game/Position.hpp
+    game/Result.hpp
     game/ThreefoldChecker.hpp
     game/TimeControl.hpp
     game/Zobrist.hpp

@@ -25,6 +25,7 @@
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/CastlingRights.hpp>
+#include <libchess/game/Result.hpp>
 #include <libchess/game/ThreefoldChecker.hpp>
 #include <libchess/game/Zobrist.hpp>
 #include <libchess/moves/Move.hpp>
@@ -210,6 +211,11 @@ struct Position final {
 
     /** Returns true if the game has concluded in a draw. */
     [[nodiscard]] bool is_draw() const;
+
+    /** If this position is a conclusive draw or checkmate, returns the appropriate Result enumeration.
+        Returns ``nullopt`` if this position is not a conclusive one.
+     */
+    [[nodiscard]] std::optional<Result> get_result() const;
 
     /// @}
 

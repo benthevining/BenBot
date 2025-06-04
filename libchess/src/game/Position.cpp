@@ -10,9 +10,12 @@
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
+#include <libchess/game/Result.hpp>
 #include <libchess/moves/MoveGen.hpp>
+#include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/UTF8.hpp>
 #include <magic_enum/magic_enum.hpp>
+#include <optional>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -47,6 +50,22 @@ bool Position::is_draw() const
         return std::cmp_greater_equal(halfmoveClock, 100); // fifty-move draw
 
     return ! is_check(); // stalemate
+}
+
+std::optional<Result> Position::get_result() const
+{
+    if (is_draw())
+        return Result::Draw;
+
+    if (! is_checkmate())
+        return std::nullopt;
+
+    if (sideToMove == pieces::Color::White) {
+        // White to move and we're checkmated, Black won
+        return Result::BlackWon;
+    }
+
+    return Result::WhiteWon;
 }
 
 namespace utf8_pieces = pieces::utf8;
