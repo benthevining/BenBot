@@ -45,6 +45,7 @@ set (
     game/CastlingRights.hpp
     game/Position.hpp
     game/ThreefoldChecker.hpp
+    game/TimeControl.hpp
     game/Zobrist.hpp
     moves/Move.hpp
     moves/MoveGen.hpp
