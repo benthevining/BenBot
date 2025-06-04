@@ -51,12 +51,6 @@ using pieces::Color;
 
 using PieceType = pieces::Type;
 
-struct Position;
-
-namespace detail {
-    constexpr zobrist::Value calculate_hash(const Position&) noexcept;
-}
-
 /** This class models an instant in a game of chess.
 
     It describes where all the pieces are placed, as well as some
@@ -411,8 +405,8 @@ namespace detail {
         };
     }
 
+    // each of these bools are true if the given right has changed since the last move
     struct CastlingRightsChanges final {
-        // each of these bools are true if the given right has changed since the last move
         bool whiteKingside { false };
         bool whiteQueenside { false };
         bool blackKingside { false };
@@ -465,7 +459,7 @@ namespace detail {
 
     [[nodiscard, gnu::const]] constexpr zobrist::Value update_zobrist(
         const Position& pos, const Move& move,
-        std::optional<Square>        newEPTarget,
+        const std::optional<Square>  newEPTarget,
         const CastlingRightsChanges& rightsChanges) noexcept
     {
         auto value = pos.hash;
@@ -545,6 +539,7 @@ constexpr void Position::make_move(const Move& move) noexcept
 
     const auto rightsChanges = detail::update_castling_rights(*this, isWhite, move, isCapture);
 
+    // NB. need to do this before updating bitboards, so it can tell the type of a captured piece
     hash = detail::update_zobrist(*this, move, newEPSquare, rightsChanges);
 
     detail::update_bitboards(*this, move);
