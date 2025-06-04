@@ -95,6 +95,22 @@ namespace values {
 
     /// @}
 
+    /** Returns the value of the given piece type.
+        @ingroup pieces
+     */
+    [[nodiscard, gnu::const]] constexpr size_t get(const Type type) noexcept
+    {
+        switch (type) {
+            case Type::Pawn  : return PAWN;
+            case Type::Knight: return KNIGHT;
+            case Type::Bishop: return BISHOP;
+            case Type::Rook  : return ROOK;
+            case Type::Queen : return QUEEN;
+            default: // king
+                return 1000uz;
+        }
+    }
+
 } // namespace values
 
 } // namespace chess::pieces
