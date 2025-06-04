@@ -54,6 +54,7 @@ set (
     moves/PseudoLegal.hpp
     notation/Algebraic.hpp
     notation/FEN.hpp
+    notation/PGN.hpp
     notation/UCI.hpp
     pieces/Colors.hpp
     pieces/PieceTypes.hpp
@@ -74,6 +75,7 @@ set (
     game/Position.cpp
     notation/Algebraic.cpp
     notation/FEN.cpp
+    notation/PGN.cpp
     notation/UCI.cpp
     search/Search.cpp
     uci/CommandParsing.cpp
