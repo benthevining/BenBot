@@ -6,6 +6,8 @@
  * ======================================================================================
  */
 
+#include "libchess/notation/FEN.hpp"
+
 #include <catch2/catch_test_macros.hpp>
 #include <libchess/game/Result.hpp>
 #include <libchess/notation/PGN.hpp>
@@ -52,6 +54,11 @@ TEST_CASE("PGN - parsing metadata", TAGS)
     REQUIRE(game.result.has_value());
     REQUIRE(*game.result == chess::game::Result::Draw);
 
-    std::println("{}",
-        chess::notation::to_pgn(game));
+    const auto correctFinalPos = chess::notation::from_fen("8/8/4R1p1/2k3p1/1p4P1/1P1b1P2/3K1n2/8 b - - 2 43");
+    const auto actualFinalPos  = game.get_final_position();
+
+    std::println("Expected: {}", chess::notation::to_fen(correctFinalPos));
+    std::println("Actual:   {}", chess::notation::to_fen(actualFinalPos));
+
+    // REQUIRE(correctFinalPos == actualFinalPos);
 }

@@ -31,8 +31,6 @@ using moves::Move;
     This structure is returned by the ``from_pgn()`` method.
 
     @ingroup notation
-
-    @todo method to get ending position
  */
 struct GameRecord final {
     /** This game's metadata. The keys will be things like
@@ -52,6 +50,9 @@ struct GameRecord final {
         this is ``nullopt``.
      */
     std::optional<game::Result> result;
+
+    /** Returns the final position of this game. */
+    [[nodiscard]] Position get_final_position() const;
 };
 
 /** Parses the text of a PGN file into a GameRecord object.

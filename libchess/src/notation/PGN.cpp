@@ -27,6 +27,16 @@
 
 namespace chess::notation {
 
+Position GameRecord::get_final_position() const
+{
+    auto position { startingPosition };
+
+    for (const auto& move : moves)
+        position.make_move(move);
+
+    return position;
+}
+
 namespace {
 
     using Metadata   = std::unordered_map<std::string, std::string>;
