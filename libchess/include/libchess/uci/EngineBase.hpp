@@ -28,9 +28,11 @@ using game::Position;
     parsing, so that the engine implementation can focus purely
     on implementing evaluation and search.
 
-    @ingroup uci
+    To use one of these, implement a derived class, then in your
+    program's ``main()`` function, create an instance of your
+    derived engine class and call its ``loop()`` method.
 
-    @todo "info" command to GUI
+    @ingroup uci
  */
 struct EngineBase {
     EngineBase() = default;
@@ -79,7 +81,10 @@ struct EngineBase {
     /** Called when a new position is received from the GUI. */
     virtual void set_position([[maybe_unused]] const Position& pos) { }
 
-    /** Called when the "go" command is received. The engine should begin searching. */
+    /** Called when the "go" command is received. The engine should begin searching. After
+        this function has been called, the engine should print to stdout a line of the form
+        "bestmove <from><to>".
+     */
     virtual void go([[maybe_unused]] const GoCommandOptions& opts) { }
 
     /** Called after any option has changed.
@@ -90,11 +95,6 @@ struct EngineBase {
     /** Called when the "debug" command is received. */
     virtual void set_debug([[maybe_unused]] bool shouldDebug) { }
 
-    /** Handles a UCI command read from the command line.
-        Programs will typically not need to call this directly.
-     */
-    void handle_command(std::string_view command);
-
     /** Runs the engine's event loop.
         This function blocks while reading from stdin. The calling thread becomes the
         engine's "main thread".
@@ -102,6 +102,8 @@ struct EngineBase {
     void loop();
 
 private:
+    void handle_command(std::string_view command);
+
     bool shouldExit { false }; // used as flag for exiting the loop() function
 
     Position position;
