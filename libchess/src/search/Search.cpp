@@ -96,36 +96,34 @@ namespace {
 
         auto evaluation = eval::evaluate(currentPosition);
 
-        return evaluation;
+        if (evaluation >= beta)
+            return beta;
 
-        // if (evaluation >= beta)
-        //     return beta;
-        //
-        // alpha = std::max(alpha, evaluation);
-        //
-        // auto moves = moves::generate<true>(currentPosition); // captures only
-        //
-        // if (moves.empty()) {
-        //     if (currentPosition.is_check())
-        //         return eval::MIN; // checkmate
-        //
-        //     return 0.; // stalemate
-        // }
-        //
-        // order_moves_for_search(moves);
-        //
-        // for (const auto& move : moves) {
-        //     const auto newPosition = game::after_move(currentPosition, move);
-        //
-        //     evaluation = -quiescence(-beta, -alpha, newPosition);
-        //
-        //     if (evaluation >= beta)
-        //         return beta;
-        //
-        //     alpha = std::max(alpha, evaluation);
-        // }
-        //
-        // return alpha;
+        alpha = std::max(alpha, evaluation);
+
+        auto moves = moves::generate<true>(currentPosition); // captures only
+
+        if (moves.empty()) {
+            if (currentPosition.is_check())
+                return eval::MIN; // checkmate
+
+            return 0.; // stalemate
+        }
+
+        order_moves_for_search(currentPosition, moves);
+
+        for (const auto& move : moves) {
+            const auto newPosition = game::after_move(currentPosition, move);
+
+            evaluation = -quiescence(-beta, -alpha, newPosition);
+
+            if (evaluation >= beta)
+                return beta;
+
+            alpha = std::max(alpha, evaluation);
+        }
+
+        return alpha;
     }
 
     [[nodiscard]] Eval alpha_beta(
@@ -137,12 +135,12 @@ namespace {
 
         auto moves = moves::generate(currentPosition);
 
-        // if (moves.empty()) {
-        //     if (currentPosition.is_check())
-        //         return eval::MIN; // checkmate
-        //
-        //     return 0.; // stalemate
-        // }
+        if (moves.empty()) {
+            if (currentPosition.is_check())
+                return eval::MIN; // checkmate
+
+            return 0.; // stalemate
+        }
 
         order_moves_for_search(currentPosition, moves);
 
@@ -197,7 +195,10 @@ Move find_best_move(const Position& position)
         }
     }
 
-    assert(best != Move {});
+    if (best == Move {}) {
+        // assert(false);
+        return moves.front();
+    }
 
     return best;
 }
