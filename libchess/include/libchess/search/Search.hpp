@@ -32,6 +32,9 @@ using moves::Move;
 
 /** Finds the best move for the side to move in the given position.
 
+    @throws std::invalid_argument An exception will be thrown if there are
+    no legal moves for the side to move in the given position.
+
     @ingroup search
  */
 [[nodiscard]] Move find_best_move(const Position& position);

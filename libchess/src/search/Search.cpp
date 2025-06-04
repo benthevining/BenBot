@@ -9,10 +9,13 @@
 #include <algorithm>
 #include <cassert>
 #include <cstddef> // IWYU pragma: keep - for size_t
+#include <format>
 #include <libchess/eval/Evaluation.hpp>
 #include <libchess/moves/MoveGen.hpp>
+#include <libchess/notation/FEN.hpp>
 #include <libchess/search/Search.hpp>
-#include <ranges>
+#include <span>
+#include <stdexcept>
 #include <vector>
 
 namespace chess::search {
@@ -22,6 +25,10 @@ using Eval = eval::Value;
 
 namespace {
 
+    void order_moves_for_search(std::span<Move> moves)
+    {
+    }
+
     [[nodiscard]] Eval quiescence(
         Eval alpha, const Eval beta,
         const Position& currentPosition)
@@ -30,14 +37,23 @@ namespace {
 
         auto evaluation = eval::evaluate(currentPosition);
 
+        return evaluation;
+
         if (evaluation >= beta)
             return beta;
 
         alpha = std::max(alpha, evaluation);
 
-        const auto moves = moves::generate<true>(currentPosition); // captures only
+        auto moves = moves::generate<true>(currentPosition); // captures only
 
-        // TODO: order moves for searching
+        if (moves.empty()) {
+            if (currentPosition.is_check())
+                return eval::MIN; // checkmate
+
+            return 0.; // stalemate
+        }
+
+        order_moves_for_search(moves);
 
         for (const auto& move : moves) {
             const auto newPosition = game::after_move(currentPosition, move);
@@ -60,25 +76,23 @@ namespace {
     {
         assert(beta > alpha);
 
-        if (depth == 0uz)
-            return quiescence(alpha, beta, currentPosition);
+        auto moves = moves::generate(currentPosition);
 
-        const auto moves = moves::generate(currentPosition);
+        // if (moves.empty()) {
+        //     if (currentPosition.is_check())
+        //         return eval::MIN; // checkmate
+        //
+        //     return 0.; // stalemate
+        // }
 
-        if (moves.empty()) {
-            if (currentPosition.is_check())
-                return eval::MIN; // checkmate
-
-            return 0.; // stalemate
-        }
-
-        // TODO: order moves for searching
+        order_moves_for_search(moves);
 
         for (const auto& move : moves) {
             const auto newPosition = game::after_move(currentPosition, move);
 
-            const auto evaluation = -alpha_beta(
-                -beta, -alpha, newPosition, depth - 1uz);
+            const auto evaluation = depth > 1uz
+                                      ? -alpha_beta(-beta, -alpha, newPosition, depth - 1uz)
+                                      : -quiescence(-beta, -alpha, newPosition);
 
             if (evaluation >= beta)
                 return beta; // move was too good, opponent will avoid this position
@@ -94,23 +108,39 @@ namespace {
 
 Move find_best_move(const Position& position)
 {
-    const auto moves = moves::generate(position);
+    auto moves = moves::generate(position);
 
-    const auto scores = moves
-                      | std::views::transform(
-                          [position](const Move& move) {
-                              return alpha_beta(
-                                  eval::MIN, eval::MAX,
-                                  game::after_move(position, move),
-                                  4uz);
-                          })
-                      | std::ranges::to<std::vector>();
+    if (moves.empty()) {
+        throw std::invalid_argument {
+            std::format(
+                "No legal moves in position {}",
+                notation::to_fen(position))
+        };
+    }
 
-    const auto maxScore = std::ranges::max_element(scores);
+    order_moves_for_search(moves);
 
-    const auto maxScoreIdx = std::ranges::distance(scores.begin(), maxScore);
+    const auto depth = 4uz;
 
-    return moves.at(maxScoreIdx);
+    Move best {};
+
+    auto alpha = eval::MIN;
+    auto beta  = eval::MAX;
+
+    for (const auto& move : moves) {
+        const auto newPosition = game::after_move(position, move);
+
+        const auto score = -alpha_beta(-beta, -alpha, newPosition, depth);
+
+        if (score > alpha) {
+            best  = move;
+            alpha = score;
+        }
+    }
+
+    assert(best != Move {});
+
+    return best;
 }
 
 } // namespace chess::search
