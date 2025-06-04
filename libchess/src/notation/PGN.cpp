@@ -11,9 +11,9 @@
 #include <cassert>
 #include <format>
 #include <iterator>
-#include <libchess/game/Position.hpp>
 #include <libchess/game/Result.hpp>
 #include <libchess/notation/Algebraic.hpp>
+#include <libchess/notation/FEN.hpp>
 #include <libchess/notation/PGN.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/util/Strings.hpp>
@@ -29,7 +29,6 @@ namespace chess::notation {
 
 namespace {
 
-    using game::Position;
     using Metadata   = std::unordered_map<std::string, std::string>;
     using GameResult = std::optional<game::Result>;
 
@@ -130,10 +129,9 @@ namespace {
     // the parsed game result
     [[nodiscard]] GameResult parse_move_list(
         std::string_view                pgnText,
+        Position                        position,
         std::output_iterator<Move> auto outputIt)
     {
-        Position position {};
-
         while (! pgnText.empty()) {
             pgnText = util::trim(pgnText);
 
@@ -198,7 +196,13 @@ GameRecord from_pgn(std::string_view pgnText)
 
     pgnText = parse_metadata_tags(pgnText, game.metadata);
 
-    game.result = parse_move_list(pgnText, std::back_inserter(game.moves));
+    if (const auto pos = game.metadata.find("FEN");
+        pos != game.metadata.end()) {
+        game.startingPosition = from_fen(pos->second);
+    }
+
+    game.result = parse_move_list(
+        pgnText, game.startingPosition, std::back_inserter(game.moves));
 
     return game;
 }
@@ -216,7 +220,9 @@ namespace {
     }
 
     void write_metadata(
-        const Metadata& metadata, std::string& output)
+        const Metadata& metadata,
+        const Position& startingPosition,
+        std::string&    output)
     {
         using namespace std::literals::string_literals; // NOLINT
 
@@ -235,14 +241,21 @@ namespace {
         for (const auto& [key, value] : metadata)
             if (! std::ranges::contains(sevenTagRoster, key))
                 write_metadata_item(key, value, output);
+
+        static constexpr Position startPos {};
+
+        if (! metadata.contains("FEN"s) && startingPosition != startPos) {
+            const auto startFEN = to_fen(startingPosition);
+            write_metadata_item("FEN", startFEN, output);
+        }
     }
 
     void write_move_list(
-        const std::span<const Move> moves, std::string& output)
+        Position                    position,
+        const std::span<const Move> moves,
+        std::string&                output)
     {
         bool firstMove { true };
-
-        Position position {};
 
         for (const auto& move : moves) {
             if (position.sideToMove == pieces::Color::White) {
@@ -290,9 +303,9 @@ std::string to_pgn(const GameRecord& game)
 {
     std::string result;
 
-    write_metadata(game.metadata, result);
+    write_metadata(game.metadata, game.startingPosition, result);
 
-    write_move_list(game.moves, result);
+    write_move_list(game.startingPosition, game.moves, result);
 
     write_game_result(game.result, result);
 

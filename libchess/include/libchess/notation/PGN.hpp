@@ -13,6 +13,7 @@
 
 #pragma once
 
+#include <libchess/game/Position.hpp>
 #include <libchess/game/Result.hpp>
 #include <libchess/moves/Move.hpp>
 #include <optional>
@@ -23,6 +24,7 @@
 
 namespace chess::notation {
 
+using game::Position;
 using moves::Move;
 
 /** A record of a complete game, including some metadata.
@@ -30,7 +32,7 @@ using moves::Move;
 
     @ingroup notation
 
-    @todo methods to get starting/ending positions
+    @todo method to get ending position
  */
 struct GameRecord final {
     /** This game's metadata. The keys will be things like
@@ -38,6 +40,9 @@ struct GameRecord final {
         surrounding quotes.
      */
     std::unordered_map<std::string, std::string> metadata;
+
+    /** The starting position of this game. */
+    Position startingPosition {};
 
     /** This game's moves. */
     std::vector<Move> moves;
