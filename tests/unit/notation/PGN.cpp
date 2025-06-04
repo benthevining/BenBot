@@ -8,6 +8,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include <libchess/notation/PGN.hpp>
+#include <print>
 #include <string_view>
 
 static constexpr auto TAGS { "[notation][PGN]" };
@@ -46,4 +47,7 @@ TEST_CASE("PGN - parsing metadata", TAGS)
     REQUIRE(game.metadata.at("White") == "Fischer, Robert J.");
     REQUIRE(game.metadata.at("Black") == "Spassky, Boris V.");
     REQUIRE(game.metadata.at("Result") == "1/2-1/2");
+
+    std::println("{}",
+        chess::notation::to_pgn(game));
 }

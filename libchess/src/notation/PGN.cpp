@@ -21,14 +21,28 @@
 #include <unordered_map>
 #include <utility>
 
-// TODO:
-// handle FEN for starting position
-// variations enclosed in parentheses
-// NAGs within movetext
-
 namespace chess::notation {
 
 namespace {
+
+    [[nodiscard]] std::pair<std::string_view, std::string_view>
+    split_at_first_space_or_newline(
+        const std::string_view input)
+    {
+        const auto spaceIdx   = input.find(' ');
+        const auto newLineIdx = input.find('\n');
+
+        const auto firstDelimIdx = std::min(spaceIdx, newLineIdx);
+
+        if (firstDelimIdx == std::string_view::npos) {
+            return { input, {} };
+        }
+
+        return {
+            input.substr(0uz, firstDelimIdx),
+            input.substr(firstDelimIdx + 1uz)
+        };
+    }
 
     // writes tag key/value pairs into metadata and returns
     // the rest of the PGN text that's left
@@ -84,26 +98,9 @@ namespace {
         return pgnText; // NOLINT
     }
 
-    [[nodiscard]] std::pair<std::string_view, std::string_view>
-    split_at_first_space_or_newline(
-        const std::string_view input)
-    {
-        const auto spaceIdx   = input.find(' ');
-        const auto newLineIdx = input.find('\n');
-
-        const auto firstDelimIdx = std::min(spaceIdx, newLineIdx);
-
-        if (firstDelimIdx == std::string_view::npos) {
-            return { input, {} };
-        }
-
-        return {
-            input.substr(0uz, firstDelimIdx),
-            input.substr(firstDelimIdx + 1uz)
-        };
-    }
-
-    void parse_move_list(
+    // writes the parsed moves into outputIt and returns
+    // the rest of the PGN text that's left
+    [[nodiscard]] std::string_view parse_move_list(
         std::string_view                pgnText,
         std::output_iterator<Move> auto outputIt)
     {
@@ -133,7 +130,7 @@ namespace {
 
                 if (newlineIdx == std::string_view::npos) {
                     // assume that a ; comment was the last thing in the file
-                    return;
+                    return {};
                 }
 
                 pgnText.remove_prefix(newlineIdx + 1uz);
@@ -145,7 +142,7 @@ namespace {
 
             if (util::trim(rest).empty()) {
                 // the PGN string is exhausted, so this last substring is the game result, not a move
-                return;
+                return firstMove;
             }
 
             // move numbers may start with 3. or 3...
@@ -161,6 +158,8 @@ namespace {
 
             pgnText = rest;
         }
+
+        return {};
     }
 
 } // namespace
@@ -170,8 +169,7 @@ GameRecord from_pgn(std::string_view pgnText)
     GameRecord game;
 
     pgnText = parse_metadata_tags(pgnText, game.metadata);
-
-    parse_move_list(pgnText, std::back_inserter(game.moves));
+    pgnText = parse_move_list(pgnText, std::back_inserter(game.moves));
 
     return game;
 }
@@ -196,6 +194,17 @@ std::string to_pgn(const GameRecord& game)
             result.append(std::format("{} ", to_alg(position, move)));
 
         position.make_move(move);
+    }
+
+    if (position.is_draw()) {
+        result.append("1/2-1/2");
+    } else if (position.is_checkmate()) {
+        const bool whiteWon = position.sideToMove == pieces::Color::Black;
+
+        const auto whiteScore = whiteWon ? 1 : 0;
+        const auto blackScore = whiteWon ? 0 : 1;
+
+        result.append(std::format("{}-{}", whiteScore, blackScore));
     }
 
     return result;
