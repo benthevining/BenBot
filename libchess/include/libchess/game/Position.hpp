@@ -25,6 +25,7 @@
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/CastlingRights.hpp>
+#include <libchess/game/ThreefoldChecker.hpp>
 #include <libchess/game/Zobrist.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/pieces/Colors.hpp>
@@ -206,6 +207,8 @@ struct Position final {
      */
     [[nodiscard]] bool is_fifty_move_draw() const;
 
+    [[nodiscard]] constexpr bool is_threefold_repetition() const noexcept;
+
     /** Returns true if the game has concluded in a draw. */
     [[nodiscard]] bool is_draw() const;
 
@@ -232,11 +235,16 @@ struct Position final {
 
     /** Returns an empty position with none of the piece bitboards initialized.
         This is useful for tasks like parsing a FEN string, for example.
+        After you've set up the position, don't forget to call ``whitePieces.refresh_occupied()``,
+        ``blackPieces.refresh_occupied()``, and ``refresh_zobrist()`` to update
+        all relevant cached state.
      */
     [[nodiscard]] static constexpr Position empty() noexcept;
 
 private:
     [[nodiscard]] constexpr bool is_side_in_check(Color side) const noexcept;
+
+    ThreefoldChecker threefoldChecker { hash };
 };
 
 /** Returns a copy of the starting position with the given move applied.
@@ -277,10 +285,20 @@ private:
 
 constexpr Position Position::empty() noexcept
 {
-    return Position {
-        .whitePieces = {},
-        .blackPieces = {}
-    };
+    Position pos;
+
+    pos.whitePieces = {};
+    pos.blackPieces = {};
+
+    return pos;
+}
+
+constexpr bool Position::is_threefold_repetition() const noexcept
+{
+    if (halfmoveClock < 8uz)
+        return false;
+
+    return threefoldChecker.is_threefold();
 }
 
 constexpr bool Position::is_check() const noexcept
@@ -354,6 +372,8 @@ constexpr void Position::refresh_zobrist() noexcept
         whitePieces, blackPieces,
         whiteCastlingRights, blackCastlingRights,
         enPassantTargetSquare);
+
+    threefoldChecker.reset(hash);
 }
 
 namespace detail {
@@ -554,6 +574,8 @@ constexpr void Position::make_move(const Move& move) noexcept
 
     // flip side to move
     sideToMove = isWhite ? Color::Black : Color::White;
+
+    threefoldChecker.push(hash);
 }
 
 constexpr Position after_move(const Position& starting, const Move& move) noexcept

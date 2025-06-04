@@ -40,11 +40,11 @@ bool Position::is_fifty_move_draw() const
 
 bool Position::is_draw() const
 {
-    if (moves::any_legal_moves(*this)) {
-        // TODO: also need to account for three-fold reps here
+    if (is_threefold_repetition())
+        return true;
 
+    if (moves::any_legal_moves(*this))
         return std::cmp_greater_equal(halfmoveClock, 100); // fifty-move draw
-    }
 
     return ! is_check(); // stalemate
 }
