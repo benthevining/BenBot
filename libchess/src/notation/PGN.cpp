@@ -17,6 +17,7 @@
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/util/Strings.hpp>
 #include <optional>
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -28,7 +29,7 @@ namespace chess::notation {
 namespace {
 
     using game::Position;
-
+    using Metadata   = std::unordered_map<std::string, std::string>;
     using GameResult = std::optional<game::Result>;
 
     [[nodiscard]] std::pair<std::string_view, std::string_view>
@@ -53,8 +54,8 @@ namespace {
     // writes tag key/value pairs into metadata and returns
     // the rest of the PGN text that's left
     [[nodiscard]] std::string_view parse_metadata_tags(
-        std::string_view                              pgnText,
-        std::unordered_map<std::string, std::string>& metadata)
+        std::string_view pgnText,
+        Metadata&        metadata)
     {
         auto openingBracketIdx = pgnText.find('[');
 
@@ -201,44 +202,77 @@ GameRecord from_pgn(std::string_view pgnText)
     return game;
 }
 
+namespace {
+
+    void write_metadata(
+        const Metadata& metadata, std::string& output)
+    {
+        for (const auto& [key, value] : metadata) {
+            output.append(std::format(
+                R"([{} "{}"]\n)", key, value));
+        }
+
+        output.append("\n");
+    }
+
+    void write_move_list(
+        const std::span<const Move> moves, std::string& output)
+    {
+        bool firstMove { true };
+
+        Position position {};
+
+        for (const auto& move : moves) {
+            if (position.sideToMove == pieces::Color::White) {
+                output.append(std::format("{}.{} ",
+                    position.fullMoveCounter, to_alg(position, move)));
+            } else {
+                if (firstMove) {
+                    output.append(std::format("{}...{} ",
+                        position.fullMoveCounter, to_alg(position, move)));
+                } else {
+                    output.append(std::format("{} ", to_alg(position, move)));
+                }
+            }
+
+            position.make_move(move);
+            firstMove = false;
+        }
+    }
+
+    void write_game_result(
+        const GameResult result, std::string& output)
+    {
+        if (! result.has_value()) {
+            output.append("*");
+            return;
+        }
+
+        switch (*result) {
+            case game::Result::Draw:
+                output.append("1/2-1/2");
+                return;
+
+            case game::Result::WhiteWon:
+                output.append("1-0");
+                return;
+
+            default: // Black won
+                output.append("0-1");
+        }
+    }
+
+} // namespace
+
 std::string to_pgn(const GameRecord& game)
 {
     std::string result;
 
-    for (const auto& [key, value] : game.metadata) {
-        result.append(std::format(
-            R"([{} "{}"]\n)", key, value));
-    }
+    write_metadata(game.metadata, result);
 
-    result.append("\n");
+    write_move_list(game.moves, result);
 
-    Position position {};
-
-    for (const auto& move : game.moves) {
-        if (position.sideToMove == pieces::Color::White)
-            result.append(std::format("{}.{} ", position.fullMoveCounter, to_alg(position, move)));
-        else
-            result.append(std::format("{} ", to_alg(position, move)));
-
-        position.make_move(move);
-    }
-
-    if (game.result.has_value()) {
-        switch (*game.result) {
-            case game::Result::Draw:
-                result.append("1/2-1/2");
-                break;
-
-            case game::Result::WhiteWon:
-                result.append("1-0");
-                break;
-
-            default: // Black won
-                result.append("0-1");
-        }
-    } else {
-        result.append("*");
-    }
+    write_game_result(game.result, result);
 
     return result;
 }

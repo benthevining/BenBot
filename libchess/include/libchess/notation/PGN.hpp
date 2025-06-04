@@ -29,6 +29,8 @@ using moves::Move;
     This structure is returned by the ``from_pgn()`` method.
 
     @ingroup notation
+
+    @todo methods to get starting/ending positions
  */
 struct GameRecord final {
     /** This game's metadata. The keys will be things like
