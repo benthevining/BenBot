@@ -7,6 +7,7 @@
  */
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <format>
 #include <iterator>
@@ -204,15 +205,35 @@ GameRecord from_pgn(std::string_view pgnText)
 
 namespace {
 
+    void write_metadata_item(
+        const std::string_view key, const std::string_view value,
+        std::string& output)
+    {
+        output.append(std::format(
+            R"([{} "{}"])", key, value));
+        output.append("\n");
+    }
+
     void write_metadata(
         const Metadata& metadata, std::string& output)
     {
-        for (const auto& [key, value] : metadata) {
-            output.append(std::format(
-                R"([{} "{}"]\n)", key, value));
+        using namespace std::literals::string_literals; // NOLINT
+
+        // if these tags are present, they must appear before any other tags and in this order
+        static const std::array sevenTagRoster {
+            "Event"s, "Site"s, "Date"s, "Round"s, "White"s, "Black"s, "Result"s
+        };
+
+        for (const auto& tag : sevenTagRoster) {
+            const auto pos = metadata.find(tag);
+
+            if (pos != metadata.end())
+                write_metadata_item(tag, pos->second, output);
         }
 
-        output.append("\n");
+        for (const auto& [key, value] : metadata)
+            if (! std::ranges::contains(sevenTagRoster, key))
+                write_metadata_item(key, value, output);
     }
 
     void write_move_list(
