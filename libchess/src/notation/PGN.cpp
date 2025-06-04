@@ -11,10 +11,12 @@
 #include <format>
 #include <iterator>
 #include <libchess/game/Position.hpp>
+#include <libchess/game/Result.hpp>
 #include <libchess/notation/Algebraic.hpp>
 #include <libchess/notation/PGN.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/util/Strings.hpp>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -24,6 +26,10 @@
 namespace chess::notation {
 
 namespace {
+
+    using game::Position;
+
+    using GameResult = std::optional<game::Result>;
 
     [[nodiscard]] std::pair<std::string_view, std::string_view>
     split_at_first_space_or_newline(
@@ -98,13 +104,33 @@ namespace {
         return pgnText; // NOLINT
     }
 
+    [[nodiscard]] GameResult parse_game_result(
+        const std::string_view text, const Position& finalPosition)
+    {
+        const auto sepIdx = text.find('-');
+
+        if (sepIdx == std::string_view::npos)
+            return finalPosition.get_result();
+
+        const auto whiteScore = util::trim(text.substr(0uz, sepIdx));
+        const auto blackScore = util::trim(text.substr(sepIdx + 1uz));
+
+        if (whiteScore == "1")
+            return game::Result::WhiteWon;
+
+        if (blackScore == "1")
+            return game::Result::BlackWon;
+
+        return game::Result::Draw;
+    }
+
     // writes the parsed moves into outputIt and returns
-    // the rest of the PGN text that's left
-    [[nodiscard]] std::string_view parse_move_list(
+    // the parsed game result
+    [[nodiscard]] GameResult parse_move_list(
         std::string_view                pgnText,
         std::output_iterator<Move> auto outputIt)
     {
-        game::Position position {};
+        Position position {};
 
         while (! pgnText.empty()) {
             pgnText = util::trim(pgnText);
@@ -130,7 +156,7 @@ namespace {
 
                 if (newlineIdx == std::string_view::npos) {
                     // assume that a ; comment was the last thing in the file
-                    return {};
+                    return parse_game_result({}, position);
                 }
 
                 pgnText.remove_prefix(newlineIdx + 1uz);
@@ -142,7 +168,7 @@ namespace {
 
             if (util::trim(rest).empty()) {
                 // the PGN string is exhausted, so this last substring is the game result, not a move
-                return firstMove;
+                return parse_game_result(firstMove, position);
             }
 
             // move numbers may start with 3. or 3...
@@ -159,7 +185,7 @@ namespace {
             pgnText = rest;
         }
 
-        return {};
+        return parse_game_result({}, position);
     }
 
 } // namespace
@@ -169,7 +195,8 @@ GameRecord from_pgn(std::string_view pgnText)
     GameRecord game;
 
     pgnText = parse_metadata_tags(pgnText, game.metadata);
-    pgnText = parse_move_list(pgnText, std::back_inserter(game.moves));
+
+    game.result = parse_move_list(pgnText, std::back_inserter(game.moves));
 
     return game;
 }
@@ -185,7 +212,7 @@ std::string to_pgn(const GameRecord& game)
 
     result.append("\n");
 
-    game::Position position {};
+    Position position {};
 
     for (const auto& move : game.moves) {
         if (position.sideToMove == pieces::Color::White)
@@ -196,15 +223,21 @@ std::string to_pgn(const GameRecord& game)
         position.make_move(move);
     }
 
-    if (position.is_draw()) {
-        result.append("1/2-1/2");
-    } else if (position.is_checkmate()) {
-        const bool whiteWon = position.sideToMove == pieces::Color::Black;
+    if (game.result.has_value()) {
+        switch (*game.result) {
+            case game::Result::Draw:
+                result.append("1/2-1/2");
+                break;
 
-        const auto whiteScore = whiteWon ? 1 : 0;
-        const auto blackScore = whiteWon ? 0 : 1;
+            case game::Result::WhiteWon:
+                result.append("1-0");
+                break;
 
-        result.append(std::format("{}-{}", whiteScore, blackScore));
+            default: // Black won
+                result.append("0-1");
+        }
+    } else {
+        result.append("*");
     }
 
     return result;

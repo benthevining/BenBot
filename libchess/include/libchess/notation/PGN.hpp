@@ -13,7 +13,9 @@
 
 #pragma once
 
+#include <libchess/game/Result.hpp>
 #include <libchess/moves/Move.hpp>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -37,6 +39,12 @@ struct GameRecord final {
 
     /** This game's moves. */
     std::vector<Move> moves;
+
+    /** If the game ended in a conclusive result, this holds the
+        appropriate Result enumeration. If the game is ongoing,
+        this is ``nullopt``.
+     */
+    std::optional<game::Result> result;
 };
 
 /** Parses the text of a PGN file into a GameRecord object.
