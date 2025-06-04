@@ -35,8 +35,7 @@ namespace {
 
         alpha = std::max(alpha, evaluation);
 
-        // TODO: captures only
-        const auto moves = moves::generate(currentPosition);
+        const auto moves = moves::generate<true>(currentPosition); // captures only
 
         // TODO: order moves for searching
 
