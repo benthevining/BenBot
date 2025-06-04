@@ -15,6 +15,7 @@ Results are tracked via the [CDash dashboard](https://my.cdash.org/index.php?pro
 * `libchess_tests`: unit test executable
 * `perft`: perft executable (see `perft/` directory)
 * `rampart`: detailed move generation test cases (see `rampart/` directory)
+* `position_solver`: simple test position solver executable (see `position-solver/` directory)
 
 ## Dependencies
 
