@@ -13,6 +13,7 @@
 #include <libchess/game/Position.hpp>
 #include <libchess/notation/Algebraic.hpp>
 #include <libchess/notation/PGN.hpp>
+#include <libchess/pieces/Colors.hpp>
 #include <libchess/util/Strings.hpp>
 #include <stdexcept>
 #include <string>
@@ -106,7 +107,7 @@ namespace {
         std::string_view                pgnText,
         std::output_iterator<Move> auto outputIt)
     {
-        game::Position position;
+        game::Position position {};
 
         while (! pgnText.empty()) {
             pgnText = util::trim(pgnText);
@@ -177,6 +178,27 @@ GameRecord from_pgn(std::string_view pgnText)
 
 std::string to_pgn(const GameRecord& game)
 {
+    std::string result;
+
+    for (const auto& [key, value] : game.metadata) {
+        result.append(std::format(
+            R"([{} "{}"]\n)", key, value));
+    }
+
+    result.append("\n");
+
+    game::Position position {};
+
+    for (const auto& move : game.moves) {
+        if (position.sideToMove == pieces::Color::White)
+            result.append(std::format("{}.{} ", position.fullMoveCounter, to_alg(position, move)));
+        else
+            result.append(std::format("{} ", to_alg(position, move)));
+
+        position.make_move(move);
+    }
+
+    return result;
 }
 
 } // namespace chess::notation

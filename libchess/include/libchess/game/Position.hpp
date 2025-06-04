@@ -60,7 +60,6 @@ using PieceType = pieces::Type;
 
     @ingroup game
 
-    @todo Detect threefold reps
     @todo Funcs to get passed pawns, backward pawns
  */
 struct Position final {
