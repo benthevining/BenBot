@@ -47,6 +47,7 @@ set (
     eval/Evaluation.cpp
     game/CastlingRights.cpp
     game/Position.cpp
+    game/ThreefoldRepetition.cpp
     game/ZobristHashing.cpp
     moves/EnPassant.cpp
     moves/Legal.cpp

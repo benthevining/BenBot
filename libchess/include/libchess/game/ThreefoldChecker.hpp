@@ -38,9 +38,9 @@ struct ThreefoldChecker final {
     [[nodiscard]] constexpr bool is_threefold() const noexcept;
 
 private:
-    // stores the hash values for the last 6 plies
+    // stores a history of hash values
     // the most recent value is at front() and the oldest is at back()
-    std::array<HashValue, 6uz> history {};
+    std::array<HashValue, 10uz> history {};
 };
 
 /*
@@ -84,20 +84,20 @@ constexpr void ThreefoldChecker::push(const HashValue newHash) noexcept
 
 constexpr bool ThreefoldChecker::is_threefold() const noexcept
 {
-    const auto hash = history.front();
+    // "A" and "B" hashes represent the moves that each player is toggling between
 
-    std::size_t repeats { 0uz };
+    const auto ourHashA   = history.front();
+    const auto theirHashA = history[1uz];
 
-    for (auto idx = 2uz; idx <= history.size(); idx += 2uz) {
-        if (history[history.size() - idx] == hash) {
-            ++repeats;
+    const auto ourHashB   = history[2uz];
+    const auto theirHashB = history[3uz];
 
-            if (repeats >= 2uz)
-                return true;
-        }
-    }
-
-    return false;
+    return ourHashA == history[4uz]
+        && theirHashA == history[5uz]
+        && ourHashB == history[6uz]
+        && theirHashB == history[7uz]
+        && ourHashA == history[8uz]
+        && theirHashA == history[9uz];
 }
 
 } // namespace chess::game

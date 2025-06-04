@@ -120,6 +120,9 @@ constexpr Value evaluate(const Position& position)
 {
     using pieces::Color;
 
+    if (position.is_threefold_repetition() || position.is_fifty_move_draw())
+        return 0.;
+
     if (detail::is_draw_by_insufficient_material(position))
         return 0.;
 
