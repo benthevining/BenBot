@@ -210,8 +210,9 @@ namespace {
         std::string& output)
     {
         output.append(std::format(
-            R"([{} "{}"])", key, value));
-        output.append("\n");
+            R"([{} "{}"]
+)",
+            key, value));
     }
 
     void write_metadata(
@@ -220,7 +221,7 @@ namespace {
         using namespace std::literals::string_literals; // NOLINT
 
         // if these tags are present, they must appear before any other tags and in this order
-        static const std::array sevenTagRoster {
+        static constexpr std::array sevenTagRoster {
             "Event"s, "Site"s, "Date"s, "Round"s, "White"s, "Black"s, "Result"s
         };
 
