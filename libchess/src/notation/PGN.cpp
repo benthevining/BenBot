@@ -198,7 +198,7 @@ namespace {
 
             std::from_chars(nag.data(), nag.data() + nag.length(), value);
 
-            output.back().nag = value;
+            output.back().nags.emplace_back(value);
         }
 
         return rest;
@@ -345,8 +345,8 @@ namespace {
                 }
             }
 
-            if (move.nag.has_value())
-                output.append(std::format("${} ", *move.nag));
+            for (const auto nag : move.nags)
+                output.append(std::format("${} ", nag));
 
             position.make_move(move.move);
             firstMove = false;

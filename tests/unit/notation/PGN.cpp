@@ -6,7 +6,6 @@
  * ======================================================================================
  */
 
-// NAGs
 // custom starting position
 // game in progress
 
@@ -87,4 +86,41 @@ TEST_CASE("PGN - line comments", TAGS)
     REQUIRE(game.moves.at(4uz).comment == "This opening is called the Ruy Lopez.");
 
     REQUIRE(to_pgn(game, false) == pgn);
+}
+
+TEST_CASE("PGN - NAGs", TAGS)
+{
+    static const std::string pgn {
+        R"([Event "F/S Return Match"]
+[Site "Belgrade, Serbia JUG"]
+[Date "1992.11.04"]
+[Round "29"]
+[White "Fischer, Robert J."]
+[Black "Spassky, Boris V."]
+[Result "1/2-1/2"]
+
+1.e4 $1 $14 e5 $4 *)"
+    };
+
+    const auto game = from_pgn(pgn);
+
+    REQUIRE(game.moves.size() == 2uz);
+
+    {
+        const auto& firstMove = game.moves.front();
+
+        REQUIRE(firstMove.nags.size() == 2uz);
+
+        REQUIRE(firstMove.nags.front() == 1u);
+        REQUIRE(firstMove.nags.back() == 14u);
+    }
+    {
+        const auto& secondMove = game.moves.back();
+
+        REQUIRE(secondMove.nags.size() == 1uz);
+
+        REQUIRE(secondMove.nags.front() == 4u);
+    }
+
+    REQUIRE(to_pgn(game) == pgn);
 }

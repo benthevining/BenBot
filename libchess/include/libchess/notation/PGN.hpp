@@ -58,15 +58,14 @@ struct GameRecord final {
          */
         std::string comment;
 
-        /** If this move was annotated with a Numerical Annotation
-            Glyph, this contains the number that followed the ``$``
-            character in the original PGN. ``nullopt`` if this move
-            had no NAG.
+        /** If this move was annotated with one or more Numerical
+            Annotation Glyph, this contains the numerical codes that
+            followed each ``$`` character in the original PGN.
 
             For example, for a move annotated ``!``, this would be 1,
             for a ``?`` this would be 2, etc.
          */
-        std::optional<std::uint_least8_t> nag;
+        std::vector<std::uint_least8_t> nags;
     };
 
     /** This game's moves. */
