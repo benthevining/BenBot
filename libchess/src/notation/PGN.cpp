@@ -12,7 +12,6 @@
 #include <charconv>
 #include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
 #include <format>
-#include <iterator>
 #include <libchess/game/Result.hpp>
 #include <libchess/notation/Algebraic.hpp>
 #include <libchess/notation/FEN.hpp>
@@ -214,20 +213,17 @@ namespace {
             pgnText = util::trim(pgnText);
 
             switch (pgnText.front()) {
-                case '{': {
-                    // comment: { continues to }
+                case '{': { // comment: { continues to }
                     pgnText = parse_block_comment(pgnText, output);
                     continue;
                 }
 
-                case ';': {
-                    // comment: ; continues to end of line
+                case ';': { // comment: ; continues to end of line
                     pgnText = parse_line_comment(pgnText, output);
                     continue;
                 }
 
-                case '$': {
-                    // NAG
+                case '$': { // NAG
                     pgnText = parse_nag(pgnText, output);
                     continue;
                 }
@@ -235,8 +231,8 @@ namespace {
                 default: {
                     auto [firstMove, rest] = split_at_first_space_or_newline(pgnText);
 
-                    if (util::trim(rest).empty()) {
-                        // the PGN string is exhausted, so this last substring is the game result, not a move
+                    if (firstMove.contains('-') && util::trim(rest).empty()) {
+                        // we're parsing the end of the move list, this token is the game result
                         return parse_game_result(firstMove, position);
                     }
 
@@ -365,10 +361,8 @@ namespace {
     void write_game_result(
         const GameResult result, std::string& output)
     {
-        if (! result.has_value()) {
-            output.append("*");
+        if (! result.has_value())
             return;
-        }
 
         switch (*result) {
             case game::Result::Draw:
@@ -397,6 +391,9 @@ std::string to_pgn(const GameRecord& game, const bool useBlockComments)
     write_move_list(game.startingPosition, game.moves, useBlockComments, result);
 
     write_game_result(game.result, result);
+
+    if (! result.empty() && result.back() == ' ')
+        result.pop_back();
 
     return result;
 }

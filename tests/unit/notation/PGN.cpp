@@ -95,9 +95,9 @@ TEST_CASE("PGN - NAGs", TAGS)
 [Round "29"]
 [White "Fischer, Robert J."]
 [Black "Spassky, Boris V."]
-[Result "1/2-1/2"]
+[Result "*"]
 
-1.e4 $1 $14 e5 $4 *)"
+1.e4 $1 $14 e5 $4)"
     };
 
     const auto game = from_pgn(pgn);
@@ -132,9 +132,9 @@ TEST_CASE("PGN - NAG inside a comment", TAGS)
 [Round "29"]
 [White "Fischer, Robert J."]
 [Black "Spassky, Boris V."]
-[Result "1/2-1/2"]
+[Result "*"]
 
-1.e4 $1 {$14} 1...e5 $4 *)"
+1.e4 $1 {$14} 1...e5 $4)"
     };
 
     const auto game = from_pgn(pgn);
@@ -166,7 +166,7 @@ TEST_CASE("PGN - custom starting position", TAGS)
     static const std::string pgn {
         R"([FEN "5r2/4k3/8/3R2n1/2K5/8/8/8 b - - 0 1"]
 
-1...Ne6 2.Re5 *)"
+1...Ne6 2.Re5 Kd6)"
     };
 
     const auto game = from_pgn(pgn);
