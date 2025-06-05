@@ -28,7 +28,6 @@
 #include <libchess/util/Math.hpp>
 #include <stdexcept>
 #include <string_view>
-#include <typeindex> // for std::hash
 #include <utility>
 
 /** This namespace contains classes related to the engine's internal
@@ -159,19 +158,6 @@ private:
     bool asIdx { false };
 };
 
-/** A hash specialization for Square objects.
-    A square's hash is simply its bitboard index.
-
-    @see chess::board::Square
-    @ingroup board
- */
-template <>
-struct hash<chess::board::Square> final {
-    using Square = chess::board::Square;
-
-    [[nodiscard, gnu::const]] constexpr size_t operator()(const Square& square) const noexcept;
-};
-
 /*
                          ___                           ,--,
       ,---,            ,--.'|_                ,--,   ,--.'|
@@ -232,11 +218,6 @@ formatter<chess::board::Square>::format(
 
     return std::format_to(
         ctx.out(), "{}{}", square.file, square.rank);
-}
-
-constexpr size_t hash<chess::board::Square>::operator()(const Square& square) const noexcept
-{
-    return square.index();
 }
 
 } // namespace std

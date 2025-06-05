@@ -53,8 +53,6 @@ using PieceType = pieces::Type;
     This struct also does not directly identify if the move is a capture.
 
     @ingroup moves
-
-    @todo std::hash
  */
 struct Move final {
     /** The starting square of the moving piece.

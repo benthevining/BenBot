@@ -24,7 +24,6 @@
 #include <libchess/board/Square.hpp>
 #include <ranges>
 #include <string>
-#include <typeindex> // for std::hash
 
 namespace chess::board {
 
@@ -256,19 +255,6 @@ private:
     bool asInt { true };
 };
 
-/** A hash specialization for Bitboard objects.
-    Bitboards are hashed as their integer representations.
-
-    @see chess::board::Bitboard
-    @ingroup board
- */
-template <>
-struct hash<chess::board::Bitboard> final {
-    using Bitboard = chess::board::Bitboard;
-
-    [[nodiscard, gnu::const]] constexpr size_t operator()(const Bitboard& board) const noexcept;
-};
-
 /*
                          ___                           ,--,
       ,---,            ,--.'|_                ,--,   ,--.'|
@@ -328,11 +314,6 @@ formatter<chess::board::Bitboard>::format(
         return std::format_to(ctx.out(), "{:#X}", board.to_int());
 
     return std::format_to(ctx.out(), "{}", print_ascii(board));
-}
-
-constexpr size_t hash<chess::board::Bitboard>::operator()(const Bitboard& board) const noexcept
-{
-    return board.to_int();
 }
 
 } // namespace std
