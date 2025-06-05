@@ -19,8 +19,6 @@ using chess::notation::from_pgn;
 using chess::notation::parse_all_pgns;
 using chess::notation::to_pgn;
 
-#if 0
-
 TEST_CASE("PGN - block comments", TAGS)
 {
     static const std::string pgn {
@@ -312,8 +310,6 @@ TEST_CASE("PGN - complex file", TAGS)
 
     REQUIRE(to_pgn(game) == pgn);
 }
-
-#endif
 
 TEST_CASE("PGN - parse_all_pgns() - single PGN", TAGS)
 {

@@ -20,7 +20,6 @@
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/util/Strings.hpp>
 #include <optional>
-#include <span>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -44,6 +43,7 @@ namespace {
 
     using std::size_t;
     using Metadata   = std::unordered_map<std::string, std::string>;
+    using Moves      = std::vector<GameRecord::Move>;
     using GameResult = std::optional<game::Result>;
 
     [[nodiscard]] std::pair<std::string_view, std::string_view>
@@ -92,9 +92,9 @@ namespace {
             }
         }
 
-        assert(false);
-
-        return input.find(')');
+        throw std::invalid_argument {
+            std::format("Unmatched ( in input string: '{}'", input)
+        };
     }
 
     // writes tag key/value pairs into metadata and returns
@@ -151,34 +151,12 @@ namespace {
         return pgnText; // NOLINT
     }
 
-    [[nodiscard]] GameResult parse_game_result(
-        const std::string_view text, const Position& finalPosition)
-    {
-        const auto sepIdx = text.find('-');
-
-        if (sepIdx == std::string_view::npos)
-            return finalPosition.get_result();
-
-        const auto whiteScore = util::trim(text.substr(0uz, sepIdx));
-        const auto blackScore = util::trim(text.substr(sepIdx + 1uz));
-
-        if (whiteScore == "1")
-            return game::Result::WhiteWon;
-
-        if (blackScore == "1")
-            return game::Result::BlackWon;
-
-        return game::Result::Draw;
-    }
-
-    using Moves = std::vector<GameRecord::Move>;
-
     // writes the content of the block comment to the last move in output
     // and returns the rest of the pgnText after the } that closes this comment
     [[nodiscard]] std::string_view parse_block_comment(
         const std::string_view pgnText, Moves& output)
     {
-        // first char in pgnText is {
+        assert(pgnText.front() == '{');
 
         const auto closeBracketIdx = pgnText.find('}');
 
@@ -197,7 +175,7 @@ namespace {
     [[nodiscard]] std::string_view parse_line_comment(
         const std::string_view pgnText, Moves& output)
     {
-        // first char in pgnText is ;
+        assert(pgnText.front() == ';');
 
         const auto newlineIdx = pgnText.find('\n');
 
@@ -220,7 +198,7 @@ namespace {
     [[nodiscard]] std::string_view parse_nag(
         const std::string_view pgnText, Moves& output)
     {
-        // first char in pgnText is $
+        assert(pgnText.front() == '$');
 
         auto [nag, rest] = split_at_first_space_or_newline(pgnText.substr(1uz));
 
@@ -265,6 +243,9 @@ namespace {
         Position         position, // intentionally by copy!
         Moves&           output)
     {
+        // With a PGN like: 1. e4 (e3), the move e3 was made from the starting position,
+        // not the position after e4. So because Position doesn't have an unmake_move()
+        // function, we instead keep a copy of the previous position before parsing each move
         auto lastPos { position };
 
         while (! pgnText.empty()) {
@@ -274,27 +255,33 @@ namespace {
                 return {};
 
             switch (pgnText.front()) {
-                case '{': { // comment: { continues to }
+                case '{': {
+                    // comment: { continues to }
                     pgnText = parse_block_comment(pgnText, output);
                     continue;
                 }
 
-                case ';': { // comment: ; continues to end of line
+                case ';': {
+                    // comment: ; continues to end of line
                     pgnText = parse_line_comment(pgnText, output);
                     continue;
                 }
 
-                case '$': { // NAG
+                case '$': {
+                    // NAG
                     pgnText = parse_nag(pgnText, output);
                     continue;
                 }
 
-                case '(': { // variation
+                case '(': {
+                    // variation
                     pgnText = parse_variation(pgnText, lastPos, output);
                     continue;
                 }
 
-                default: { // either move as SAN or game result string
+                default: {
+                    // either move as SAN or game result string
+
                     const auto [firstMove, rest] = split_at_first_space_or_newline(pgnText);
 
                     // tolerate notation such as: 1. e4 e5
@@ -339,10 +326,6 @@ namespace {
 
         const auto closeParenIdx = find_matching_close_paren(pgnText);
 
-        if (closeParenIdx == std::string_view::npos) {
-            throw std::invalid_argument { "Expected ')' following '('" };
-        }
-
         auto& variation = output.back().variations.emplace_back();
 
         parse_moves_internal<true>(
@@ -352,16 +335,35 @@ namespace {
         return pgnText.substr(closeParenIdx + 1uz);
     }
 
-    // writes the parsed moves into output and returns the parsed game result
-    [[nodiscard]] GameResult parse_move_list(
+    // writes the parsed moves into output and returns the
+    // game result string (the rest of the PGN after the last move)
+    [[nodiscard]] std::string_view parse_move_list(
         const std::string_view pgnText,
         const Position&        position,
         Moves&                 output)
     {
-        const auto gameResultText = parse_moves_internal<false>(
+        return parse_moves_internal<false>(
             pgnText, position, output);
+    }
 
-        return parse_game_result(gameResultText, position);
+    [[nodiscard]] GameResult parse_game_result(
+        const std::string_view text, const GameRecord& game)
+    {
+        const auto sepIdx = text.find('-');
+
+        if (sepIdx == std::string_view::npos)
+            return game.get_final_position().get_result();
+
+        const auto whiteScore = util::trim(text.substr(0uz, sepIdx));
+        const auto blackScore = util::trim(text.substr(sepIdx + 1uz));
+
+        if (whiteScore == "1")
+            return game::Result::WhiteWon;
+
+        if (blackScore == "1")
+            return game::Result::BlackWon;
+
+        return game::Result::Draw;
     }
 
 } // namespace
@@ -377,8 +379,10 @@ GameRecord from_pgn(std::string_view pgnText)
         game.startingPosition = from_fen(pos->second);
     }
 
-    game.result = parse_move_list(
+    const auto resultText = parse_move_list(
         pgnText, game.startingPosition, game.moves);
+
+    game.result = parse_game_result(resultText, game);
 
     return game;
 }
@@ -387,6 +391,7 @@ namespace {
 
     // returns the index in the string of the next line that either
     // starts with or doesn't start with a '[' character
+    // returns npos if no such line is found
     template <bool SearchForBracket>
     [[nodiscard]] size_t find_next_line(
         const std::string_view text)
@@ -499,22 +504,22 @@ namespace {
     }
 
     void write_move_list(
-        Position                                position,
-        const std::span<const GameRecord::Move> moves,
-        const bool                              useBlockComments,
-        std::string&                            output)
+        Position     position,
+        const Moves& moves,
+        const bool   useBlockComments,
+        std::string& output)
     {
         // true if we need to insert a move number before Black's next move
         // true for the first move of the game, the first move of a variation,
-        // or the first move after a comment
-        bool firstMove { true };
+        // the first move following a variation, or the first move after a comment
+        bool writeMoveNumber { true };
 
         for (const auto& move : moves) {
             if (position.sideToMove == pieces::Color::White) {
                 output.append(std::format("{}.{} ",
                     position.fullMoveCounter, to_alg(position, move.move)));
             } else {
-                if (firstMove) {
+                if (writeMoveNumber) {
                     output.append(std::format("{}...{} ",
                         position.fullMoveCounter, to_alg(position, move.move)));
                 } else {
@@ -525,7 +530,8 @@ namespace {
             for (const auto nag : move.nags)
                 output.append(std::format("${} ", nag));
 
-            firstMove = false;
+            // set to false after the first move
+            writeMoveNumber = false;
 
             if (! move.comment.empty()) {
                 if (useBlockComments)
@@ -533,11 +539,13 @@ namespace {
                 else
                     output.append(std::format("; {}\n", move.comment));
 
-                firstMove = true;
+                // print move number after a comment
+                writeMoveNumber = true;
             }
 
             for (const auto& variation : move.variations) {
                 output.append("(");
+
                 write_move_list(position, variation, useBlockComments, output);
 
                 if (output.back() == ' ')
@@ -546,7 +554,7 @@ namespace {
                 output.append(") ");
 
                 // we want to print a move number after closing a subvariation
-                firstMove = true;
+                writeMoveNumber = true;
             }
 
             position.make_move(move.move);
