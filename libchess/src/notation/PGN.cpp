@@ -239,9 +239,9 @@ namespace {
             throw std::invalid_argument { "Expected ')' following '('" };
         }
 
-        auto& lastMove = output.back();
+        auto lastPos { position };
 
-        auto& variation = lastMove.variations.emplace_back();
+        auto& variation = output.back().variations.emplace_back();
 
         auto variationText = pgnText.substr(1uz, closeParenIdx - 1uz);
 
@@ -265,7 +265,7 @@ namespace {
                 }
 
                 case '(': { // variation
-                    variationText = parse_variation(variationText, position, variation);
+                    variationText = parse_variation(variationText, lastPos, variation);
                     continue;
                 }
 
@@ -273,9 +273,11 @@ namespace {
                     // move as SAN
                     // here, we know that this can't be a game result string
 
-                    const auto [firstMove, rest] = split_at_first_space_or_newline(pgnText);
+                    const auto [firstMove, rest] = split_at_first_space_or_newline(variationText);
 
-                    parse_move(position, firstMove, output);
+                    lastPos = position;
+
+                    parse_move(position, firstMove, variation);
 
                     variationText = rest;
                 }
@@ -291,6 +293,8 @@ namespace {
         Position         position,
         Moves&           output)
     {
+        auto lastPos { position };
+
         while (! pgnText.empty()) {
             pgnText = util::trim(pgnText);
 
@@ -311,7 +315,7 @@ namespace {
                 }
 
                 case '(': { // variation
-                    pgnText = parse_variation(pgnText, position, output);
+                    pgnText = parse_variation(pgnText, lastPos, output);
                     continue;
                 }
 
@@ -322,6 +326,8 @@ namespace {
                         // we're parsing the end of the move list, this token is the game result
                         return parse_game_result(firstMove, position);
                     }
+
+                    lastPos = position;
 
                     parse_move(position, firstMove, output);
 

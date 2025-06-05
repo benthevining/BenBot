@@ -207,7 +207,6 @@ TEST_CASE("PGN - custom starting position", TAGS)
     REQUIRE(to_pgn(game) == pgn);
 }
 
-#if 0
 TEST_CASE("PGN - variations", TAGS)
 {
     static const std::string pgn {
@@ -219,11 +218,18 @@ TEST_CASE("PGN - variations", TAGS)
 [Black "Spassky, Boris V."]
 [Result "1/2-1/2"]
 
-1.e4 e5 2.Nf3 Nc6 3.Bb5 (3.d4 exd4))"
+1.e4 e5 2.Nf3 Nc6 3.Bb5 (3.d4 exd4) a6)"
     };
 
     const auto game = from_pgn(pgn);
 
-    REQUIRE(game.moves.size() == 5uz);
+    REQUIRE(game.moves.size() == 6uz);
+
+    const auto& variations = game.moves.at(4uz).variations;
+
+    REQUIRE(variations.size() == 1uz);
+
+    const auto& variation = variations.front();
+
+    REQUIRE(variation.size() == 2uz);
 }
-#endif
