@@ -303,22 +303,24 @@ constexpr void Pieces::our_move(const moves::Move& move, const Color ourColor) n
 
         pieceBB.unset(move.from);
         get_type(*move.promotedType).set(move.to);
-    } else {
-        [[likely]];
 
-        pieceBB ^= movementMask;
+        return;
+    }
 
-        // NB. we know that if a move is a promotion, it can't be castling
-        if (move.is_castling()) {
-            [[unlikely]];
+    [[likely]];
 
-            const auto castleMask = move.to.is_queenside()
-                                      ? detail::queenside_castle_rook_pos_mask(ourColor)
-                                      : detail::kingside_castle_rook_pos_mask(ourColor);
+    pieceBB ^= movementMask;
 
-            rooks ^= castleMask;
-            occupied ^= castleMask;
-        }
+    // NB. we know that if a move is a promotion, it can't be castling
+    if (move.is_castling()) {
+        [[unlikely]];
+
+        const auto castleMask = move.to.is_queenside()
+                                  ? detail::queenside_castle_rook_pos_mask(ourColor)
+                                  : detail::kingside_castle_rook_pos_mask(ourColor);
+
+        rooks ^= castleMask;
+        occupied ^= castleMask;
     }
 }
 
