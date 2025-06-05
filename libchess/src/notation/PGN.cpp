@@ -203,6 +203,43 @@ namespace {
         return rest;
     }
 
+    // parses the move, adds it to the output, and makes the move on the position
+    void parse_move(
+        Position& position, std::string_view moveText, Moves& output)
+    {
+        // move numbers may start with 3. or 3...
+        const auto lastDotIdx = moveText.rfind('.');
+
+        if (lastDotIdx != std::string_view::npos)
+            moveText = moveText.substr(lastDotIdx + 1uz);
+
+        const auto move = from_alg(position, moveText);
+
+        position.make_move(move);
+
+        output.emplace_back(move);
+    }
+
+    // writes the variation to the last move in output
+    // and returns the rest of the pgnText after the variation
+    [[nodiscard]] std::string_view parse_variation(
+        const std::string_view pgnText, Moves& output)
+    {
+        // first char in pgnText is (
+
+        const auto closeParenIdx = pgnText.find(')');
+
+        if (closeParenIdx == std::string_view::npos) {
+            throw std::invalid_argument { "Expected ')' following '('" };
+        }
+
+        const auto variationText = pgnText.substr(1uz, closeParenIdx - 1uz);
+
+        // TODO
+
+        return pgnText.substr(closeParenIdx + 1uz);
+    }
+
     // writes the parsed moves into output and returns the parsed game result
     [[nodiscard]] GameResult parse_move_list(
         std::string_view pgnText,
@@ -228,7 +265,12 @@ namespace {
                     continue;
                 }
 
-                default: {
+                case '(': { // variation
+                    pgnText = parse_variation(pgnText, output);
+                    continue;
+                }
+
+                default: { // either move as SAN or game result string
                     auto [firstMove, rest] = split_at_first_space_or_newline(pgnText);
 
                     if (firstMove.contains('-') && util::trim(rest).empty()) {
@@ -236,17 +278,7 @@ namespace {
                         return parse_game_result(firstMove, position);
                     }
 
-                    // move numbers may start with 3. or 3...
-                    const auto lastDotIdx = firstMove.rfind('.');
-
-                    if (lastDotIdx != std::string_view::npos)
-                        firstMove = firstMove.substr(lastDotIdx + 1uz);
-
-                    const auto move = from_alg(position, firstMove);
-
-                    position.make_move(move);
-
-                    output.emplace_back(move);
+                    parse_move(position, firstMove, output);
 
                     pgnText = rest;
                 }
