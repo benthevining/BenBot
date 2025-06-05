@@ -22,3 +22,7 @@ file in the project root sets a few default variables, and it loads the followin
 Both files are git ignored. Both files can override default values set by the project's `.envrc`.
 
 Unfortunately there is no Windows support yet.
+
+## List of useful environment variables
+
+* `LICHESS_BOT_TOKEN`: Lichess OAuth token

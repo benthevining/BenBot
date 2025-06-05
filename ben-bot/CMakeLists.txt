@@ -9,3 +9,9 @@ add_executable (ben_bot)
 target_link_libraries (ben_bot PRIVATE libchess::libchess)
 
 target_sources (ben_bot PRIVATE main.cpp)
+
+set (lichess_bot_dir "${PROJECT_SOURCE_DIR}/lichess-bot")
+
+if (IS_DIRECTORY "${lichess_bot_dir}")
+    configure_file (config.yml "${lichess_bot_dir}/config.yml" @ONLY)
+endif ()
