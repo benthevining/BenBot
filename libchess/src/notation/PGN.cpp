@@ -318,7 +318,7 @@ namespace {
         const Position&        position,
         Moves&                 output)
     {
-        // first char in pgnText is (
+        assert(pgnText.front() == '(');
 
         if (output.empty()) {
             throw std::invalid_argument { "Cannot parse a variation with an empty move list!" };

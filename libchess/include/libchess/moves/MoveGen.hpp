@@ -463,6 +463,9 @@ namespace detail {
         }
     }
 
+    // the two functions below are masks containing the set of squares that
+    // must not be attacked/occupied in order for castling to be allowed
+
     template <Color Side>
     [[nodiscard, gnu::const]] consteval Bitboard kingside_castle_mask() noexcept
     {
@@ -518,10 +521,8 @@ namespace detail {
 
         const auto allOurPieces = ourPieces.occupied;
 
-        [[maybe_unused]] const auto& rooks = ourPieces.rooks;
-
         if (rights.kingside) {
-            assert(rooks.test(Square { File::H, board::back_rank_for(position.sideToMove) }));
+            assert(ourPieces.rooks.test(Square { File::H, board::back_rank_for(position.sideToMove) }));
 
             static constexpr auto requiredSquares = kingside_castle_mask<Side>();
 
@@ -537,7 +538,7 @@ namespace detail {
         }
 
         if (rights.queenside) {
-            assert(rooks.test(Square { File::A, board::back_rank_for(position.sideToMove) }));
+            assert(ourPieces.rooks.test(Square { File::A, board::back_rank_for(position.sideToMove) }));
 
             static constexpr auto occupiedMask = queenside_castle_mask<Side, true>();
             static constexpr auto attackedMask = queenside_castle_mask<Side, false>();
@@ -562,10 +563,7 @@ namespace detail {
         const auto& ourPieces   = position.pieces_for<Side>();
         const auto& theirPieces = position.pieces_for<OtherSide<Side>>();
 
-        const auto friendlyPieces = ourPieces.occupied;
-        const auto enemyPieces    = theirPieces.occupied;
-
-        const auto allOccupied  = friendlyPieces | enemyPieces;
+        const auto allOccupied  = ourPieces.occupied | theirPieces.occupied;
         const auto emptySquares = allOccupied.inverse();
 
         add_all_pawn_moves<Side, CapturesOnly>(position, allOccupied, outputIt);

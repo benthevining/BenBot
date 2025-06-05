@@ -38,7 +38,7 @@ bool Position::is_stalemate() const
 bool Position::is_fifty_move_draw() const
 {
     return std::cmp_greater_equal(halfmoveClock, 100)
-        && moves::any_legal_moves(*this);
+        && moves::any_legal_moves(*this); // side to move must have at least 1 legal move
 }
 
 bool Position::is_draw() const
@@ -60,7 +60,7 @@ std::optional<Result> Position::get_result() const
     if (! is_checkmate())
         return std::nullopt;
 
-    if (sideToMove == pieces::Color::White) {
+    if (sideToMove == Color::White) {
         // White to move and we're checkmated, Black won
         return Result::BlackWon;
     }

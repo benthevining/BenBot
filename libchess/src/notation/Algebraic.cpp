@@ -38,10 +38,8 @@ namespace {
     [[nodiscard]] std::vector<Move> get_possible_move_origins(
         const Position& position, const Square& targetSquare, const PieceType piece)
     {
-        // generate legal moves for given piece type
         auto pieceMoves = moves::generate_for(position, piece);
 
-        // prune moves not to the target square
         std::erase_if(pieceMoves,
             [targetSquare](const Move& candidate) { return candidate.to != targetSquare; });
 

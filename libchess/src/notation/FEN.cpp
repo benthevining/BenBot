@@ -97,8 +97,7 @@ namespace {
         const auto allOccupied = whitePieces | blackPieces;
 
         for (const auto rank : std::views::reverse(magic_enum::enum_values<board::Rank>()))
-            write_rank(
-                position, rank, allOccupied, whitePieces, outputIt);
+            write_rank(position, rank, allOccupied, whitePieces, outputIt);
     }
 
     void write_castling_rights(
@@ -157,10 +156,6 @@ namespace {
 std::string to_fen(const Position& position)
 {
     std::string fen;
-
-    // see https://www.talkchess.com/forum/viewtopic.php?t=49083
-    // 92 seems to be the upper bound for FEN string length
-    fen.reserve(92uz);
 
     write_piece_positions(position, std::back_inserter(fen));
 
