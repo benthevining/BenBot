@@ -290,7 +290,6 @@ TEST_CASE("PGN - nested variations", TAGS)
     REQUIRE(to_pgn(game) == pgn);
 }
 
-#if 0
 TEST_CASE("PGN - complex file", TAGS)
 {
     static const std::string pgn {
@@ -301,19 +300,11 @@ TEST_CASE("PGN - complex file", TAGS)
 [White "Alexey Shirov"]
 [Black "Judit Polgar"]
 [Result "0-1"]
-[WhiteElo "2661"]
-[BlackElo "2675"]
-[ECO "B45c"]
-[EventDate "1994.10.??"]
-[PlyCount "58"]
-[FlipB "1"]
-[Annotator "Vining, Ben"]
 
-1.e4 c5 2.Nf3 e6 3.d4 cxd4 4.Nxd4 Nc6 5.Nc3 d6 6.g4 a6 7.Be3 Nge7 $5 $146 {An unstandard move for the Sicilian. This prepares the knight to move up the board to f5 later in the game.} 8.Nb3 b5 9.f4 Bb7 10.Qf3 $4 g5 $3 {Polgar sees that Shirov has lined up his queen on the a8-h1 diagonal, with a discovered pin of Shirov's e4 pawn by the bishop once the knight on c6 moves, so she decides to pounce right away. Polgar wants to force the f4 pawn to move so she can play Ne5.} 11. fxg5 (11.f5 Ne5 {If Shirov had advanced his f pawn instead of taking on g5, Polgar could have played Ne5 anyway.}) (11.O-O-O {Shirov probably should have simply ignored the pawn motion on the queenside and castled his king to safety, forcing Polgar to take on f4 if she wants to play Ne5. Shirov can prevent this move by recapturing e5 with his queen.} 11...gxf4 12. Qxf4) 11... Ne5 12.Qg2 $2 {Shirov spends a tempo moving his queen, but still keeps it on the dangerous a8-h1 diagonal, keeping his a4 pawn pinned.} (12.Qe2 b4 13.Na4 Bxe4) 12...b4 {Kicking away the knight that is defending the pinned e4 pawn.} 13.Ne2 h5 $3 {Polgar wants to play Nf5, so she wants to force the g4 pawn to move.} 14.gxh5 (14.gxh6 f5 $3 {If Shirov had captured the h5 pawn with en passant, Polgar still could have forced the g4 pawn to move by sacrificing her last remaining kingside pawn.} 15.gxf5 (15.g5 Bxe4) 15...Nxf5) 14...Nf5 15.Bf2 (15.exf5 $3 {If Shirov had sacrificed his queen, he would be left with a somewhat even game, losing his queen for a knight and a bishop.} 15... Bxg2 16.Bxg2 Rc8) 15...Qxg5 $3 16.Na5 (16.Qxg5 Nf3+ 17.Kd1 Nxg5) 16...Ne3 $1 {Now that the knight has vacated the F5 square, Polgar is happy to leave her light-squared bishop hanging and give up the pin of the e4 pawn in order to keep her attack towards the king going.} 17.Qg3 Qxg3 $6 {Polgar probably already wanted to begin simplifying towards a winning endgame.} (17...Nxc2+ 18.Kd1 Qxh5 $3 19.Kxc2 (19.Nxb7 Nxa1) 19...Bxe4+ {Polgar can win the E4 pawn and move her bishop out of danger in exchange for a knight.} (19...Rc8+)) 18.Nxg3 Nxc2+ 19.Kd1 Nxa1 $18 20.Nxb7 b3 $1 {Polgar is sacrificing this pawn to save the knight.} 21.axb3 (21.a3 Nc2) 21...Nxb3 22.Kc2 Nc5 23.Nxc5 dxc5 24.Be1 Nf3 25.Bc3 Nd4+ {Polgar offers to trade her knight for Shirov's dark-squared bishop.} 26.Kd3 Bd6 27.Bg2 Be5 28.Kc4 Ke7 29.Ra1 (29.Kxc5 Rhc8+ 30.Kb4 Rab8+ 31.Ka3 Nc2+ (31...Nb5+ 32.Ka2 Nxc3+ 33.bxc3 Rxc3 $20) 32.Ka2 Bxc3 33.bxc3 Rxc3 $20) 29... Nc6 0-1)"
+1.e4 c5 2.Nf3 e6 3.d4 cxd4 4.Nxd4 Nc6 5.Nc3 d6 6.g4 a6 7.Be3 Nge7 $5 $146 {An unstandard move for the Sicilian. This prepares the knight to move up the board to f5 later in the game.} 8.Nb3 b5 9.f4 Bb7 10.Qf3 $4 g5 $3 {Polgar sees that Shirov has lined up his queen on the a8-h1 diagonal, with a discovered pin of Shirov's e4 pawn by the bishop once the knight on c6 moves, so she decides to pounce right away. Polgar wants to force the f4 pawn to move so she can play Ne5.} 11.fxg5 (11.f5 Ne5 {If Shirov had advanced his f pawn instead of taking on g5, Polgar could have played Ne5 anyway.}) (11.O-O-O {Shirov probably should have simply ignored the pawn motion on the queenside and castled his king to safety, forcing Polgar to take on f4 if she wants to play Ne5. Shirov can prevent this move by recapturing e5 with his queen.} 11...gxf4 12.Qxf4) 11...Ne5 12.Qg2 $2 {Shirov spends a tempo moving his queen, but still keeps it on the dangerous a8-h1 diagonal, keeping his a4 pawn pinned.} (12.Qe2 b4 13.Na4 Bxe4) 12...b4 {Kicking away the knight that is defending the pinned e4 pawn.} 13.Ne2 h5 $3 {Polgar wants to play Nf5, so she wants to force the g4 pawn to move.} 14.gxh5 (14.gxh6 f5 $3 {If Shirov had captured the h5 pawn with en passant, Polgar still could have forced the g4 pawn to move by sacrificing her last remaining kingside pawn.} 15.gxf5 (15.g5 Bxe4) 15...Nxf5) 14...Nf5 15.Bf2 (15.exf5 $3 {If Shirov had sacrificed his queen, he would be left with a somewhat even game, losing his queen for a knight and a bishop.} 15...Bxg2 16.Bxg2 Rc8) 15...Qxg5 $3 16.Na5 (16.Qxg5 Nf3+ 17.Kd1 Nxg5) 16...Ne3 $1 {Now that the knight has vacated the F5 square, Polgar is happy to leave her light-squared bishop hanging and give up the pin of the e4 pawn in order to keep her attack towards the king going.} 17.Qg3 Qxg3 $6 {Polgar probably already wanted to begin simplifying towards a winning endgame.} (17...Nxc2+ 18.Kd1 Qxh5 $3 19.Kxc2 (19.Nxb7 Nxa1) 19...Bxe4+ {Polgar can win the E4 pawn and move her bishop out of danger in exchange for a knight.} (19...Rc8+)) 18.Nxg3 Nxc2+ 19.Kd1 Nxa1 $18 20.Nxb7 b3 $1 {Polgar is sacrificing this pawn to save the knight.} 21.axb3 (21.a3 Nc2) 21...Nxb3 22.Kc2 Nc5 23.Nxc5 dxc5 24.Be1 Nf3 25.Bc3 Nd4+ {Polgar offers to trade her knight for Shirov's dark-squared bishop.} 26.Kd3 Bd6 27.Bg2 Be5 28.Kc4 Ke7 29.Ra1 (29.Kxc5 Rhc8+ 30.Kb4 Rab8+ 31.Ka3 Nc2+ (31...Nb5+ 32.Ka2 Nxc3+ 33.bxc3 Rxc3 $20) 32.Ka2 Bxc3 33.bxc3 Rxc3 $20) 29...Nc6 0-1)"
     };
 
     const auto game = from_pgn(pgn);
 
     REQUIRE(to_pgn(game) == pgn);
 }
-#endif
