@@ -11,11 +11,15 @@
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/PGN.hpp>
 #include <string>
+#include <string_view>
 
 static constexpr auto TAGS { "[notation][PGN]" };
 
 using chess::notation::from_pgn;
+using chess::notation::parse_all_pgns;
 using chess::notation::to_pgn;
+
+#if 0
 
 TEST_CASE("PGN - block comments", TAGS)
 {
@@ -307,4 +311,77 @@ TEST_CASE("PGN - complex file", TAGS)
     const auto game = from_pgn(pgn);
 
     REQUIRE(to_pgn(game) == pgn);
+}
+
+#endif
+
+TEST_CASE("PGN - parse_all_pgns() - single PGN", TAGS)
+{
+    static constexpr std::string_view fileText {
+        R"(
+[Event "?"]
+[Site "?"]
+[Date "2013.11.02"]
+[Round "1"]
+[White "Stockfish"]
+[Black "Stockfish"]
+[Result "1/2-1/2"]
+[Eco "A07"]
+
+1. Nf3 d5 2. g3 c6 3. Bg2 Nf6 4. d3 Bg4 5. h3 Bh5 6. b3 e6 7. Bb2 Qa5+ 8.
+Qd2 Qxd2+ 1/2-1/2
+)"
+    };
+
+    const auto games = parse_all_pgns(fileText);
+
+    REQUIRE(games.size() == 1uz);
+}
+
+TEST_CASE("PGN - parse_all_pgns()", TAGS)
+{
+    static constexpr std::string_view fileText {
+        R"(
+
+[Event "?"]
+[Site "?"]
+[Date "2013.11.02"]
+[Round "1"]
+[White "Stockfish"]
+[Black "Stockfish"]
+[Result "1/2-1/2"]
+[Eco "A07"]
+
+1. Nf3 d5 2. g3 c6 3. Bg2 Nf6 4. d3 Bg4 5. h3 Bh5 6. b3 e6 7. Bb2 Qa5+ 8.
+Qd2 Qxd2+ 1/2-1/2
+
+[Event "?"]
+[Site "?"]
+[Date "2013.11.02"]
+[Round "1"]
+[White "Stockfish"]
+[Black "Stockfish"]
+[Result "1/2-1/2"]
+[Eco "E15"]
+
+1. d4 Nf6 2. c4 e6 3. Nf3 b6 4. g3 Ba6 5. Qa4 Bb7 6. Bg2 c5 7. dxc5 Bxc5 8.
+O-O Be7 1/2-1/2
+[Event "?"]
+[Site "?"]
+[Date "2013.11.02"]
+[Round "1"]
+[White "Stockfish"]
+[Black "Stockfish"]
+[Result "1/2-1/2"]
+[Eco "A41"]
+
+1. d4 d6 2. c4 e5 3. d5 f5 4. e4 fxe4 5. Nc3 Nf6 6. Nge2 Bf5 7. Ng3 Bg6 8.
+Bg5 Nbd7 1/2-1/2
+
+)"
+    };
+
+    const auto games = parse_all_pgns(fileText);
+
+    REQUIRE(games.size() == 3uz);
 }

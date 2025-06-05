@@ -90,8 +90,21 @@ struct GameRecord final {
 
     @ingroup notation
     @relates GameRecord
+    @see parse_all_pgns()
  */
 [[nodiscard]] GameRecord from_pgn(std::string_view pgnText);
+
+/** Parses a text file that may contain 0 or more PGNs into a list of
+    GameRecord objects. PGNs in the ``fileContent`` should be separated
+    by at least 1 newline character. If parsing any of the PGNs fails,
+    they will simply be omitted from the list, and any exceptions raised
+    by parsing will not be propagated.
+
+    @ingroup notation
+    @relates GameRecord
+    @see from_pgn()
+ */
+[[nodiscard]] std::vector<GameRecord> parse_all_pgns(std::string_view fileContent);
 
 /** Creates a PGN string from the given game record.
 

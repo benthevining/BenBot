@@ -270,6 +270,9 @@ namespace {
         while (! pgnText.empty()) {
             pgnText = util::trim(pgnText);
 
+            if (pgnText.empty())
+                return {};
+
             switch (pgnText.front()) {
                 case '{': { // comment: { continues to }
                     pgnText = parse_block_comment(pgnText, output);
@@ -378,6 +381,78 @@ GameRecord from_pgn(std::string_view pgnText)
         pgnText, game.startingPosition, game.moves);
 
     return game;
+}
+
+namespace {
+
+    // returns the index in the string of the next line that either
+    // starts with or doesn't start with a '[' character
+    template <bool SearchForBracket>
+    [[nodiscard]] size_t find_next_line(
+        const std::string_view text)
+    {
+        size_t lineStart { 0uz };
+
+        while (lineStart < text.size()) {
+            if constexpr (SearchForBracket) {
+                if (text[lineStart] == '[')
+                    return lineStart;
+            } else {
+                if (text[lineStart] != '[')
+                    return lineStart;
+            }
+
+            const auto nextNewline = text.find('\n', lineStart + 1uz);
+
+            if (nextNewline == std::string_view::npos)
+                return std::string_view::npos;
+
+            lineStart = nextNewline + 1uz;
+        }
+
+        return std::string_view::npos;
+    }
+
+} // namespace
+
+std::vector<GameRecord> parse_all_pgns(std::string_view fileContent)
+{
+    std::vector<GameRecord> games;
+
+    while (! fileContent.empty()) {
+        fileContent = util::trim(fileContent);
+
+        if (fileContent.empty())
+            return games;
+
+        // the move text of this PGN starts at the first line not starting in '['
+        const auto moveTextStart = find_next_line<false>(fileContent);
+
+        if (moveTextStart == std::string_view::npos)
+            return games;
+
+        // the next PGN after this one is the first line after moveTextStart that starts with a '['
+        const auto moveTextToNextPGN = find_next_line<true>(fileContent.substr(moveTextStart));
+
+        auto thisPGN = fileContent;
+
+        if (moveTextToNextPGN == std::string_view::npos) {
+            fileContent = {}; // so that we exit the loop
+        } else {
+            const auto nextPGNStart = moveTextStart + moveTextToNextPGN;
+
+            thisPGN = fileContent.substr(0uz, nextPGNStart);
+
+            fileContent.remove_prefix(nextPGNStart);
+        }
+
+        try {
+            games.emplace_back(from_pgn(thisPGN));
+        } catch (...) { // NOLINT
+        }
+    }
+
+    return games;
 }
 
 namespace {
