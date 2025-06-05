@@ -273,7 +273,14 @@ namespace {
                     // move as SAN
                     // here, we know that this can't be a game result string
 
-                    const auto [firstMove, rest] = split_at_first_space_or_newline(variationText);
+                    auto [firstMove, rest] = split_at_first_space_or_newline(variationText);
+
+                    if (firstMove.back() == '.') {
+                        const auto [realFirstMove, realRest] = split_at_first_space_or_newline(rest);
+
+                        firstMove = realFirstMove;
+                        rest      = realRest;
+                    }
 
                     lastPos = position;
 
@@ -320,7 +327,16 @@ namespace {
                 }
 
                 default: { // either move as SAN or game result string
-                    const auto [firstMove, rest] = split_at_first_space_or_newline(pgnText);
+                    auto [firstMove, rest] = split_at_first_space_or_newline(pgnText);
+
+                    // tolerate notation such as: 1. e4 e5
+                    // in that case, firstMove will be "1." and rest begins with "e4"
+                    if (firstMove.back() == '.') {
+                        const auto [realFirstMove, realRest] = split_at_first_space_or_newline(rest);
+
+                        firstMove = realFirstMove;
+                        rest      = realRest;
+                    }
 
                     if (firstMove.contains('-') && util::trim(rest).empty()) {
                         // we're parsing the end of the move list, this token is the game result
