@@ -475,7 +475,7 @@ namespace {
         using namespace std::literals::string_literals; // NOLINT
 
         // if these tags are present, they must appear before any other tags and in this order
-        static constexpr std::array sevenTagRoster {
+        static const std::array sevenTagRoster {
             "Event"s, "Site"s, "Date"s, "Round"s, "White"s, "Black"s, "Result"s
         };
 
