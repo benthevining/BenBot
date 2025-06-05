@@ -497,9 +497,14 @@ namespace {
 
         static constexpr Position startPos {};
 
-        if (! metadata.contains("FEN"s) && startingPosition != startPos) {
-            const auto startFEN = to_fen(startingPosition);
-            write_metadata_item("FEN", startFEN, output);
+        if (startingPosition != startPos) {
+            if (! metadata.contains("FEN"s)) {
+                const auto startFEN = to_fen(startingPosition);
+                write_metadata_item("FEN", startFEN, output);
+            }
+
+            if (! metadata.contains("Setup"s))
+                write_metadata_item("Setup", "1", output);
         }
     }
 

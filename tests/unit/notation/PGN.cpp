@@ -6,6 +6,11 @@
  * ======================================================================================
  */
 
+// Note: metadata tags are not guaranteed to be written in the same order they were parsed
+// the "seven tag roster" will always be in the same order, but other tags may appear in
+// any order in the output. For this reason, we can only do round tripping tests on PGNs
+// that use only the seven tag roster.
+
 #include <catch2/catch_test_macros.hpp>
 #include <libchess/game/Result.hpp>
 #include <libchess/notation/FEN.hpp>
@@ -214,7 +219,9 @@ TEST_CASE("PGN - NAG inside a comment", TAGS)
 TEST_CASE("PGN - custom starting position", TAGS)
 {
     static const std::string pgn {
-        R"([FEN "5r2/4k3/8/3R2n1/2K5/8/8/8 b - - 0 1"]
+        R"(
+[FEN "5r2/4k3/8/3R2n1/2K5/8/8/8 b - - 0 1"]
+[Setup "1"]
 
 1...Ne6 2.Re5)"
     };
@@ -224,8 +231,6 @@ TEST_CASE("PGN - custom starting position", TAGS)
     REQUIRE(game.moves.size() == 2uz);
 
     REQUIRE(game.startingPosition == chess::notation::from_fen("5r2/4k3/8/3R2n1/2K5/8/8/8 b - - 0 1"));
-
-    REQUIRE(to_pgn(game) == pgn);
 }
 
 TEST_CASE("PGN - variations", TAGS)
