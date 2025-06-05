@@ -10,6 +10,7 @@
 #include <array>
 #include <cassert>
 #include <charconv>
+#include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
 #include <format>
 #include <libchess/game/Result.hpp>
@@ -41,6 +42,7 @@ Position GameRecord::get_final_position() const
 
 namespace {
 
+    using std::size_t;
     using Metadata   = std::unordered_map<std::string, std::string>;
     using GameResult = std::optional<game::Result>;
 
@@ -61,6 +63,38 @@ namespace {
             input.substr(0uz, firstDelimIdx),
             input.substr(firstDelimIdx + 1uz)
         };
+    }
+
+    [[nodiscard]] size_t find_matching_close_paren(const std::string_view input)
+    {
+        assert(input.front() == '(');
+
+        size_t numOpenParens { 0uz };
+        size_t numCloseParens { 0uz };
+
+        for (auto idx = 0uz; idx < input.size(); ++idx) {
+            switch (input[idx]) {
+                case '(': {
+                    ++numOpenParens;
+                    continue;
+                }
+
+                case ')': {
+                    ++numCloseParens;
+
+                    if (numOpenParens == numCloseParens)
+                        return idx;
+
+                    continue;
+                }
+
+                default: continue;
+            }
+        }
+
+        assert(false);
+
+        return input.find(')');
     }
 
     // writes tag key/value pairs into metadata and returns
@@ -300,7 +334,7 @@ namespace {
             throw std::invalid_argument { "Cannot parse a variation with an empty move list!" };
         }
 
-        const auto closeParenIdx = pgnText.find(')');
+        const auto closeParenIdx = find_matching_close_paren(pgnText);
 
         if (closeParenIdx == std::string_view::npos) {
             throw std::invalid_argument { "Expected ')' following '('" };
@@ -435,6 +469,9 @@ namespace {
                     output.pop_back();
 
                 output.append(") ");
+
+                // we want to print a move number after closing a subvariation
+                firstMove = true;
             }
 
             position.make_move(move.move);
