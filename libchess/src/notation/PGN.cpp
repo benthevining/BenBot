@@ -171,13 +171,13 @@ namespace {
         if (newlineIdx == std::string_view::npos) {
             // assume that a ; comment was the last thing in the file
             if (! output.empty())
-                output.back().comment = pgnText.substr(1uz);
+                output.back().comment = util::trim(pgnText.substr(1uz));
 
             return {};
         }
 
         if (! output.empty())
-            output.back().comment = pgnText.substr(1uz, newlineIdx - 1uz);
+            output.back().comment = util::trim(pgnText.substr(1uz, newlineIdx - 1uz));
 
         return pgnText.substr(newlineIdx + 1uz);
     }
