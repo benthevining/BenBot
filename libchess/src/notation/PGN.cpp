@@ -273,13 +273,11 @@ namespace {
                     // move as SAN
                     // here, we know that this can't be a game result string
 
-                    auto [firstMove, rest] = split_at_first_space_or_newline(variationText);
+                    const auto [firstMove, rest] = split_at_first_space_or_newline(variationText);
 
                     if (firstMove.back() == '.') {
-                        const auto [realFirstMove, realRest] = split_at_first_space_or_newline(rest);
-
-                        firstMove = realFirstMove;
-                        rest      = realRest;
+                        variationText = rest;
+                        continue;
                     }
 
                     lastPos = position;
@@ -327,15 +325,14 @@ namespace {
                 }
 
                 default: { // either move as SAN or game result string
-                    auto [firstMove, rest] = split_at_first_space_or_newline(pgnText);
+                    const auto [firstMove, rest] = split_at_first_space_or_newline(pgnText);
 
                     // tolerate notation such as: 1. e4 e5
                     // in that case, firstMove will be "1." and rest begins with "e4"
+                    // this also catches cases such as "3. ... a5": we skip both the "3." and "..." tokens with this check
                     if (firstMove.back() == '.') {
-                        const auto [realFirstMove, realRest] = split_at_first_space_or_newline(rest);
-
-                        firstMove = realFirstMove;
-                        rest      = realRest;
+                        pgnText = rest;
+                        continue;
                     }
 
                     if (firstMove.contains('-') && util::trim(rest).empty()) {
