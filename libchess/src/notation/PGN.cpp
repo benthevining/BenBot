@@ -220,82 +220,15 @@ namespace {
         output.emplace_back(move);
     }
 
-    // writes the variation to the last move in output
-    // and returns the rest of the pgnText after the variation
-    [[nodiscard]] std::string_view parse_variation(
-        const std::string_view pgnText,
-        Position               position, // intentionally by COPY!
-        Moves&                 output)
-    {
-        // first char in pgnText is (
+    std::string_view parse_variation(std::string_view, Position, Moves&);
 
-        if (output.empty()) {
-            throw std::invalid_argument { "Cannot parse a variation with an empty move list!" };
-        }
-
-        const auto closeParenIdx = pgnText.find(')');
-
-        if (closeParenIdx == std::string_view::npos) {
-            throw std::invalid_argument { "Expected ')' following '('" };
-        }
-
-        auto lastPos { position };
-
-        auto& variation = output.back().variations.emplace_back();
-
-        auto variationText = pgnText.substr(1uz, closeParenIdx - 1uz);
-
-        while (! variationText.empty()) {
-            variationText = util::trim(variationText);
-
-            switch (variationText.front()) {
-                case '{': { // comment: { continues to }
-                    variationText = parse_block_comment(variationText, variation);
-                    continue;
-                }
-
-                case ';': { // comment: ; continues to end of line
-                    variationText = parse_line_comment(variationText, variation);
-                    continue;
-                }
-
-                case '$': { // NAG
-                    variationText = parse_nag(variationText, variation);
-                    continue;
-                }
-
-                case '(': { // variation
-                    variationText = parse_variation(variationText, lastPos, variation);
-                    continue;
-                }
-
-                default: {
-                    // move as SAN
-                    // here, we know that this can't be a game result string
-
-                    const auto [firstMove, rest] = split_at_first_space_or_newline(variationText);
-
-                    if (firstMove.back() == '.') {
-                        variationText = rest;
-                        continue;
-                    }
-
-                    lastPos = position;
-
-                    parse_move(position, firstMove, variation);
-
-                    variationText = rest;
-                }
-            }
-        }
-
-        return pgnText.substr(closeParenIdx + 1uz);
-    }
-
-    // writes the parsed moves into output and returns the parsed game result
-    [[nodiscard]] GameResult parse_move_list(
+    // parses a move list, including nested comments, NAGs, and variations
+    // if IsVariation is true, always returns an empty string_view
+    // if IsVariation is false (i.e. parsing root PGN), returns text of the game result
+    template <bool IsVariation>
+    std::string_view parse_moves_internal(
         std::string_view pgnText,
-        Position         position,
+        Position         position, // intentionally by copy!
         Moves&           output)
     {
         auto lastPos { position };
@@ -335,9 +268,11 @@ namespace {
                         continue;
                     }
 
-                    if (firstMove.contains('-') && util::trim(rest).empty()) {
-                        // we're parsing the end of the move list, this token is the game result
-                        return parse_game_result(firstMove, position);
+                    if constexpr (! IsVariation) {
+                        if (firstMove.contains('-') && util::trim(rest).empty()) {
+                            // we're parsing the end of the move list, this token is the game result
+                            return firstMove;
+                        }
                     }
 
                     lastPos = position;
@@ -349,7 +284,47 @@ namespace {
             }
         }
 
-        return parse_game_result({}, position);
+        return {};
+    }
+
+    // writes the variation to the last move in output
+    // and returns the rest of the pgnText after the variation
+    [[nodiscard]] std::string_view parse_variation(
+        const std::string_view pgnText,
+        Position               position, // intentionally by COPY!
+        Moves&                 output)
+    {
+        // first char in pgnText is (
+
+        if (output.empty()) {
+            throw std::invalid_argument { "Cannot parse a variation with an empty move list!" };
+        }
+
+        const auto closeParenIdx = pgnText.find(')');
+
+        if (closeParenIdx == std::string_view::npos) {
+            throw std::invalid_argument { "Expected ')' following '('" };
+        }
+
+        auto& variation = output.back().variations.emplace_back();
+
+        parse_moves_internal<true>(
+            pgnText.substr(1uz, closeParenIdx - 1uz),
+            position, variation);
+
+        return pgnText.substr(closeParenIdx + 1uz);
+    }
+
+    // writes the parsed moves into output and returns the parsed game result
+    [[nodiscard]] GameResult parse_move_list(
+        std::string_view pgnText,
+        Position         position,
+        Moves&           output)
+    {
+        const auto gameResultText = parse_moves_internal<false>(
+            pgnText, position, output);
+
+        return parse_game_result(gameResultText, position);
     }
 
 } // namespace
