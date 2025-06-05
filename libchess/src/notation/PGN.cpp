@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <charconv>
+#include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
 #include <format>
 #include <iterator>
 #include <libchess/game/Result.hpp>
@@ -183,6 +185,25 @@ namespace {
                 continue;
             }
 
+            // NAG
+            if (pgnText.front() == '$') {
+                auto [nag, rest] = split_at_first_space_or_newline(pgnText.substr(1uz));
+
+                if (! output.empty()) {
+                    nag = util::trim(nag);
+
+                    std::uint_least8_t value { 0 };
+
+                    std::from_chars(nag.data(), nag.data() + nag.length(), value);
+
+                    output.back().nag = value;
+                }
+
+                pgnText = rest;
+
+                continue;
+            }
+
             auto [firstMove, rest] = split_at_first_space_or_newline(pgnText);
 
             if (util::trim(rest).empty()) {
@@ -292,6 +313,9 @@ namespace {
                     output.append(std::format("{} ", to_alg(position, move.move)));
                 }
             }
+
+            if (move.nag.has_value())
+                output.append(std::format("${} ", *move.nag));
 
             position.make_move(move.move);
             firstMove = false;
