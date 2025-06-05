@@ -56,6 +56,7 @@ set (
     moves/PseudoLegal.cpp
     notation/Algebraic.cpp
     notation/FEN.cpp
+    notation/PGN.cpp
     notation/UCI.cpp
     uci/CommandParsing.cpp
     uci/Options.cpp
