@@ -29,7 +29,7 @@ for position in test_data:
     print(f'Test position: {fen}')
 
     result = subprocess.run(
-        ['$<TARGET_FILE:position_solver>', f'"{fen}"', f'{depth}'],
+        ['$<TARGET_FILE:position_solver>', f'{fen}', f'{depth}'],
         capture_output=True, text=True)
 
     foundMove = result.stdout.strip()
@@ -42,3 +42,6 @@ for position in test_data:
 
 print(f'{num_passed} test cases passed')
 print(f'{num_failed} test cases failed')
+
+if num_failed > 0:
+    exit(1)
