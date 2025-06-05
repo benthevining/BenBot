@@ -232,4 +232,6 @@ TEST_CASE("PGN - variations", TAGS)
     const auto& variation = variations.front();
 
     REQUIRE(variation.size() == 2uz);
+
+    REQUIRE(to_pgn(game) == pgn);
 }

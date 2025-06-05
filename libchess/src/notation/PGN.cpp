@@ -408,7 +408,8 @@ namespace {
         std::string&                            output)
     {
         // true if we need to insert a move number before Black's next move
-        // true for the fist move of the game and the first move after a comment
+        // true for the first move of the game, the first move of a variation,
+        // or the first move after a comment
         bool firstMove { true };
 
         for (const auto& move : moves) {
@@ -427,7 +428,6 @@ namespace {
             for (const auto nag : move.nags)
                 output.append(std::format("${} ", nag));
 
-            position.make_move(move.move);
             firstMove = false;
 
             if (! move.comment.empty()) {
@@ -438,6 +438,18 @@ namespace {
 
                 firstMove = true;
             }
+
+            for (const auto& variation : move.variations) {
+                output.append("(");
+                write_move_list(position, variation, useBlockComments, output);
+
+                if (output.back() == ' ')
+                    output.pop_back();
+
+                output.append(") ");
+            }
+
+            position.make_move(move.move);
         }
     }
 
