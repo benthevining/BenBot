@@ -6,11 +6,9 @@
  * ======================================================================================
  */
 
-// custom starting position
-// game in progress
-
 #include <catch2/catch_test_macros.hpp>
 #include <libchess/game/Result.hpp>
+#include <libchess/notation/FEN.hpp>
 #include <libchess/notation/PGN.hpp>
 #include <string>
 
@@ -121,6 +119,59 @@ TEST_CASE("PGN - NAGs", TAGS)
 
         REQUIRE(secondMove.nags.front() == 4u);
     }
+
+    REQUIRE(to_pgn(game) == pgn);
+}
+
+TEST_CASE("PGN - NAG inside a comment", TAGS)
+{
+    static const std::string pgn {
+        R"([Event "F/S Return Match"]
+[Site "Belgrade, Serbia JUG"]
+[Date "1992.11.04"]
+[Round "29"]
+[White "Fischer, Robert J."]
+[Black "Spassky, Boris V."]
+[Result "1/2-1/2"]
+
+1.e4 $1 {$14} 1...e5 $4 *)"
+    };
+
+    const auto game = from_pgn(pgn);
+
+    REQUIRE(game.moves.size() == 2uz);
+
+    {
+        const auto& firstMove = game.moves.front();
+
+        REQUIRE(firstMove.nags.size() == 1uz);
+
+        REQUIRE(firstMove.nags.front() == 1u);
+
+        REQUIRE(firstMove.comment == "$14");
+    }
+    {
+        const auto& secondMove = game.moves.back();
+
+        REQUIRE(secondMove.nags.size() == 1uz);
+
+        REQUIRE(secondMove.nags.front() == 4u);
+    }
+
+    REQUIRE(to_pgn(game) == pgn);
+}
+
+TEST_CASE("PGN - custom starting position", TAGS)
+{
+    static const std::string pgn {
+        R"([FEN "5r2/4k3/8/3R2n1/2K5/8/8/8 b - - 0 1"]
+
+1...Ne6 2.Re5 *)"
+    };
+
+    const auto game = from_pgn(pgn);
+
+    REQUIRE(game.startingPosition == chess::notation::from_fen("5r2/4k3/8/3R2n1/2K5/8/8/8 b - - 0 1"));
 
     REQUIRE(to_pgn(game) == pgn);
 }
