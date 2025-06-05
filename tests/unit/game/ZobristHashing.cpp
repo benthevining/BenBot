@@ -19,6 +19,28 @@ static constexpr auto TAGS { "[game][Position][Zobrist]" };
 using chess::notation::from_alg;
 using chess::notation::from_fen;
 
+TEST_CASE("Zobrist - starting position", TAGS)
+{
+    static constexpr chess::game::Position startPosition {};
+
+    const auto startPos = from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+
+    REQUIRE(startPosition.hash == startPos.hash);
+}
+
+TEST_CASE("Zobrist - reaching identical positions", TAGS)
+{
+    const auto position = from_fen("rnbqkbnr/ppp1pppp/8/3P4/8/8/PPPP1PPP/RNBQKBNR b KQkq - 0 2");
+
+    chess::game::Position pos {};
+
+    pos.make_move(from_alg(pos, "e4"));
+    pos.make_move(from_alg(pos, "d5"));
+    pos.make_move(from_alg(pos, "exd5"));
+
+    REQUIRE(pos.hash == position.hash);
+}
+
 TEST_CASE("Zobrist - hash changes", TAGS)
 {
     using chess::moves::generate;
