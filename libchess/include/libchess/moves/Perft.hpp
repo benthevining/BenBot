@@ -105,7 +105,7 @@ constexpr PerftResult& PerftResult::operator+=(const PerftResult& rhs) noexcept
 }
 
 template <bool IsRoot>
-constexpr PerftResult perft(const size_t depth, const Position& startingPosition) // NOLINT(misc-no-recursion)
+constexpr PerftResult perft(const size_t depth, const Position& startingPosition)
 {
     if (depth == 0uz)
         return { .nodes = 1uz };

@@ -13,7 +13,7 @@
 
 #pragma once
 
-#include <cstdint>
+#include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
 #include <libchess/game/Position.hpp>
 #include <libchess/game/Result.hpp>
 #include <libchess/moves/Move.hpp>
@@ -48,7 +48,7 @@ struct GameRecord final {
      */
     std::optional<game::Result> result;
 
-    /** Records a game move alongside an optional comment. */
+    /** Records a game move alongside an optional comment and possible variations. */
     struct Move final {
         /** The move. */
         moves::Move move;
