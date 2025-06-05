@@ -69,10 +69,10 @@ namespace {
     {
         assert(input.front() == '(');
 
-        size_t numOpenParens { 0uz };
+        size_t numOpenParens { 1uz };
         size_t numCloseParens { 0uz };
 
-        for (auto idx = 0uz; idx < input.size(); ++idx) {
+        for (auto idx = 1uz; idx < input.size(); ++idx) {
             switch (input[idx]) {
                 case '(': {
                     ++numOpenParens;
@@ -254,7 +254,7 @@ namespace {
         output.emplace_back(move);
     }
 
-    std::string_view parse_variation(std::string_view, Position, Moves&);
+    std::string_view parse_variation(std::string_view, const Position&, Moves&);
 
     // parses a move list, including nested comments, NAGs, and variations
     // if IsVariation is true, always returns an empty string_view
@@ -325,7 +325,7 @@ namespace {
     // and returns the rest of the pgnText after the variation
     [[nodiscard]] std::string_view parse_variation(
         const std::string_view pgnText,
-        Position               position, // intentionally by COPY!
+        const Position&        position,
         Moves&                 output)
     {
         // first char in pgnText is (
@@ -351,9 +351,9 @@ namespace {
 
     // writes the parsed moves into output and returns the parsed game result
     [[nodiscard]] GameResult parse_move_list(
-        std::string_view pgnText,
-        Position         position,
-        Moves&           output)
+        const std::string_view pgnText,
+        const Position&        position,
+        Moves&                 output)
     {
         const auto gameResultText = parse_moves_internal<false>(
             pgnText, position, output);
