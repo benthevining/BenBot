@@ -54,6 +54,7 @@ set (
     moves/Perft.hpp
     moves/PseudoLegal.hpp
     notation/Algebraic.hpp
+    notation/EPD.hpp
     notation/FEN.hpp
     notation/PGN.hpp
     notation/UCI.hpp
@@ -75,7 +76,9 @@ set (
     board/Distances.cpp
     game/Position.cpp
     notation/Algebraic.cpp
+    notation/EPD.cpp
     notation/FEN.cpp
+    notation/FENHelpers.hpp
     notation/PGN.cpp
     notation/UCI.cpp
     search/Search.cpp
@@ -93,6 +96,8 @@ target_sources (
     libchess PUBLIC FILE_SET HEADERS BASE_DIRS include FILES ${libchess_headers}
     PRIVATE ${libchess_sources}
 )
+
+target_include_directories (libchess PRIVATE "${CMAKE_CURRENT_LIST_DIR}/src/notation/")
 
 source_group (TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${libchess_headers} ${libchess_sources})
 
