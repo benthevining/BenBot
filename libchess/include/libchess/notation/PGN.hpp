@@ -25,7 +25,6 @@
 namespace chess::notation {
 
 using game::Position;
-using moves::Move;
 
 /** A record of a complete game, including some metadata.
     This structure is returned by the ``from_pgn()`` method.
@@ -42,14 +41,25 @@ struct GameRecord final {
     /** The starting position of this game. */
     Position startingPosition {};
 
-    /** This game's moves. */
-    std::vector<Move> moves;
-
     /** If the game ended in a conclusive result, this holds the
         appropriate Result enumeration. If the game is ongoing,
         this is ``nullopt``.
      */
     std::optional<game::Result> result;
+
+    /** Records a game move alongside an optional comment. */
+    struct Move final {
+        /** The move. */
+        moves::Move move;
+
+        /** The comment string associated with this move.
+            Empty if this move has no comment.
+         */
+        std::string comment;
+    };
+
+    /** This game's moves. */
+    std::vector<Move> moves;
 
     /** Returns the final position of this game. */
     [[nodiscard]] Position get_final_position() const;
@@ -67,9 +77,15 @@ struct GameRecord final {
 
 /** Creates a PGN string from the given game record.
 
+    @param game The game record to serialize.
+
+    @param useBlockComments If true (the default), move comment strings will
+    be written using the ``{<comment>}`` syntax. If false, comments will be
+    written using ``; <comment>\n``.
+
     @ingroup notation
     @relates GameRecord
  */
-[[nodiscard]] std::string to_pgn(const GameRecord& game);
+[[nodiscard]] std::string to_pgn(const GameRecord& game, bool useBlockComments = true);
 
 } // namespace chess::notation

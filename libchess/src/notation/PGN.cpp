@@ -24,6 +24,7 @@
 #include <string_view>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 namespace chess::notation {
 
@@ -32,7 +33,7 @@ Position GameRecord::get_final_position() const
     auto position { startingPosition };
 
     for (const auto& move : moves)
-        position.make_move(move);
+        position.make_move(move.move);
 
     return position;
 }
@@ -135,12 +136,11 @@ namespace {
         return game::Result::Draw;
     }
 
-    // writes the parsed moves into outputIt and returns
-    // the parsed game result
+    // writes the parsed moves into output and returns the parsed game result
     [[nodiscard]] GameResult parse_move_list(
-        std::string_view                pgnText,
-        Position                        position,
-        std::output_iterator<Move> auto outputIt)
+        std::string_view               pgnText,
+        Position                       position,
+        std::vector<GameRecord::Move>& output)
     {
         while (! pgnText.empty()) {
             pgnText = util::trim(pgnText);
@@ -155,6 +155,9 @@ namespace {
                     };
                 }
 
+                if (! output.empty())
+                    output.back().comment = pgnText.substr(1uz, closeBracketIdx - 1uz);
+
                 pgnText.remove_prefix(closeBracketIdx + 1uz);
 
                 continue;
@@ -166,8 +169,14 @@ namespace {
 
                 if (newlineIdx == std::string_view::npos) {
                     // assume that a ; comment was the last thing in the file
+                    if (! output.empty())
+                        output.back().comment = pgnText.substr(1uz);
+
                     return parse_game_result({}, position);
                 }
+
+                if (! output.empty())
+                    output.back().comment = pgnText.substr(1uz, newlineIdx - 1uz);
 
                 pgnText.remove_prefix(newlineIdx + 1uz);
 
@@ -190,7 +199,8 @@ namespace {
             const auto move = from_alg(position, firstMove);
 
             position.make_move(move);
-            *outputIt = move;
+
+            output.emplace_back(move);
 
             pgnText = rest;
         }
@@ -212,7 +222,7 @@ GameRecord from_pgn(std::string_view pgnText)
     }
 
     game.result = parse_move_list(
-        pgnText, game.startingPosition, std::back_inserter(game.moves));
+        pgnText, game.startingPosition, game.moves);
 
     return game;
 }
@@ -261,27 +271,39 @@ namespace {
     }
 
     void write_move_list(
-        Position                    position,
-        const std::span<const Move> moves,
-        std::string&                output)
+        Position                                position,
+        const std::span<const GameRecord::Move> moves,
+        const bool                              useBlockComments,
+        std::string&                            output)
     {
+        // true if we need to insert a move number before Black's next move
+        // true for the fist move of the game and the first move after a comment
         bool firstMove { true };
 
         for (const auto& move : moves) {
             if (position.sideToMove == pieces::Color::White) {
                 output.append(std::format("{}.{} ",
-                    position.fullMoveCounter, to_alg(position, move)));
+                    position.fullMoveCounter, to_alg(position, move.move)));
             } else {
                 if (firstMove) {
                     output.append(std::format("{}...{} ",
-                        position.fullMoveCounter, to_alg(position, move)));
+                        position.fullMoveCounter, to_alg(position, move.move)));
                 } else {
-                    output.append(std::format("{} ", to_alg(position, move)));
+                    output.append(std::format("{} ", to_alg(position, move.move)));
                 }
             }
 
-            position.make_move(move);
+            position.make_move(move.move);
             firstMove = false;
+
+            if (! move.comment.empty()) {
+                if (useBlockComments)
+                    output.append(std::format("{{{}}} ", move.comment));
+                else
+                    output.append(std::format("; {}\n", move.comment));
+
+                firstMove = true;
+            }
         }
     }
 
@@ -309,13 +331,13 @@ namespace {
 
 } // namespace
 
-std::string to_pgn(const GameRecord& game)
+std::string to_pgn(const GameRecord& game, const bool useBlockComments)
 {
     std::string result;
 
     write_metadata(game.metadata, game.startingPosition, result);
 
-    write_move_list(game.startingPosition, game.moves, result);
+    write_move_list(game.startingPosition, game.moves, useBlockComments, result);
 
     write_game_result(game.result, result);
 

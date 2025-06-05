@@ -54,11 +54,7 @@ TEST_CASE("PGN - parsing metadata", TAGS)
     REQUIRE(game.result.has_value());
     REQUIRE(*game.result == chess::game::Result::Draw);
 
-    const auto correctFinalPos = chess::notation::from_fen("8/8/4R1p1/2k3p1/1p4P1/1P1b1P2/3K1n2/8 b - - 2 43");
-    const auto actualFinalPos  = game.get_final_position();
+    REQUIRE(game.moves.at(4uz).comment == "This opening is called the Ruy Lopez.");
 
-    std::println("Expected: {}", chess::notation::to_fen(correctFinalPos));
-    std::println("Actual:   {}", chess::notation::to_fen(actualFinalPos));
-
-    // REQUIRE(correctFinalPos == actualFinalPos);
+    std::println("{}", chess::notation::to_pgn(game, true));
 }
