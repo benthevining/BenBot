@@ -223,9 +223,15 @@ namespace {
     // writes the variation to the last move in output
     // and returns the rest of the pgnText after the variation
     [[nodiscard]] std::string_view parse_variation(
-        const std::string_view pgnText, Moves& output)
+        const std::string_view pgnText,
+        Position               position, // intentionally by COPY!
+        Moves&                 output)
     {
         // first char in pgnText is (
+
+        if (output.empty()) {
+            throw std::invalid_argument { "Cannot parse a variation with an empty move list!" };
+        }
 
         const auto closeParenIdx = pgnText.find(')');
 
@@ -233,9 +239,48 @@ namespace {
             throw std::invalid_argument { "Expected ')' following '('" };
         }
 
-        const auto variationText = pgnText.substr(1uz, closeParenIdx - 1uz);
+        auto& lastMove = output.back();
 
-        // TODO
+        auto& variation = lastMove.variations.emplace_back();
+
+        auto variationText = pgnText.substr(1uz, closeParenIdx - 1uz);
+
+        while (! variationText.empty()) {
+            variationText = util::trim(variationText);
+
+            switch (variationText.front()) {
+                case '{': { // comment: { continues to }
+                    variationText = parse_block_comment(variationText, variation);
+                    continue;
+                }
+
+                case ';': { // comment: ; continues to end of line
+                    variationText = parse_line_comment(variationText, variation);
+                    continue;
+                }
+
+                case '$': { // NAG
+                    variationText = parse_nag(variationText, variation);
+                    continue;
+                }
+
+                case '(': { // variation
+                    variationText = parse_variation(variationText, position, variation);
+                    continue;
+                }
+
+                default: {
+                    // move as SAN
+                    // here, we know that this can't be a game result string
+
+                    const auto [firstMove, rest] = split_at_first_space_or_newline(pgnText);
+
+                    parse_move(position, firstMove, output);
+
+                    variationText = rest;
+                }
+            }
+        }
 
         return pgnText.substr(closeParenIdx + 1uz);
     }
@@ -266,12 +311,12 @@ namespace {
                 }
 
                 case '(': { // variation
-                    pgnText = parse_variation(pgnText, output);
+                    pgnText = parse_variation(pgnText, position, output);
                     continue;
                 }
 
                 default: { // either move as SAN or game result string
-                    auto [firstMove, rest] = split_at_first_space_or_newline(pgnText);
+                    const auto [firstMove, rest] = split_at_first_space_or_newline(pgnText);
 
                     if (firstMove.contains('-') && util::trim(rest).empty()) {
                         // we're parsing the end of the move list, this token is the game result

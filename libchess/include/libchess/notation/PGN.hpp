@@ -66,6 +66,14 @@ struct GameRecord final {
             for a ``?`` this would be 2, etc.
          */
         std::vector<std::uint_least8_t> nags;
+
+        using Variation = std::vector<Move>;
+
+        /** If this move has alternate possible continuations, they are
+            stored here. The first move in each of these variations is
+            the move that could've been played instead of ``move``.
+         */
+        std::vector<Variation> variations;
     };
 
     /** This game's moves. */

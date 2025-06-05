@@ -6,6 +6,8 @@
  * ======================================================================================
  */
 
+// test with spaces between move number & move
+
 #include <catch2/catch_test_macros.hpp>
 #include <libchess/game/Result.hpp>
 #include <libchess/notation/FEN.hpp>
@@ -204,3 +206,24 @@ TEST_CASE("PGN - custom starting position", TAGS)
 
     REQUIRE(to_pgn(game) == pgn);
 }
+
+#if 0
+TEST_CASE("PGN - variations", TAGS)
+{
+    static const std::string pgn {
+        R"([Event "F/S Return Match"]
+[Site "Belgrade, Serbia JUG"]
+[Date "1992.11.04"]
+[Round "29"]
+[White "Fischer, Robert J."]
+[Black "Spassky, Boris V."]
+[Result "1/2-1/2"]
+
+1.e4 e5 2.Nf3 Nc6 3.Bb5 (3.d4 exd4))"
+    };
+
+    const auto game = from_pgn(pgn);
+
+    REQUIRE(game.moves.size() == 5uz);
+}
+#endif
