@@ -24,10 +24,13 @@ num_passed = 0
 for position in test_data:
     fen = position['fen']
     move = position['move']
+    depth = position['depth']
 
     print(f'Test position: {fen}')
 
-    result = subprocess.run(['$<TARGET_FILE:position_solver>', fen], capture_output=True, text=True)
+    result = subprocess.run(
+        ['$<TARGET_FILE:position_solver>', f'"{fen}"', f'{depth}'],
+        capture_output=True, text=True)
 
     foundMove = result.stdout.strip()
 

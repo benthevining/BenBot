@@ -37,6 +37,6 @@ using moves::Move;
 
     @ingroup search
  */
-[[nodiscard]] Move find_best_move(const Position& position);
+[[nodiscard]] Move find_best_move(const Position& position, size_t searchDepth = 4uz);
 
 } // namespace chess::search

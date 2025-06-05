@@ -1,6 +1,7 @@
 [
   {
     "comment": "Queen attacked by undefended piece",
+    "depth": 2,
     "fen": "r1bqkbnr/pppp1ppp/2n5/4p1B1/8/3P4/PPP1PPPP/RN1QKBNR b KQkq - 0 1",
     "move": "Qxg5"
   }

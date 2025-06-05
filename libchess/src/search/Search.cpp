@@ -163,7 +163,7 @@ namespace {
 
 } // namespace
 
-Move find_best_move(const Position& position)
+Move find_best_move(const Position& position, const size_t searchDepth)
 {
     auto moves = moves::generate(position);
 
@@ -177,8 +177,6 @@ Move find_best_move(const Position& position)
 
     order_moves_for_search(position, moves);
 
-    const auto depth = 4uz;
-
     Move best {};
 
     auto alpha = eval::MIN;
@@ -187,7 +185,7 @@ Move find_best_move(const Position& position)
     for (const auto& move : moves) {
         const auto newPosition = game::after_move(position, move);
 
-        const auto score = -alpha_beta(-beta, -alpha, newPosition, depth);
+        const auto score = -alpha_beta(-beta, -alpha, newPosition, searchDepth);
 
         if (score > alpha) {
             best  = move;

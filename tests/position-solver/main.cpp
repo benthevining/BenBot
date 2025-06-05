@@ -6,10 +6,7 @@
  * ======================================================================================
  */
 
-// this executable is invoked with a single positional argument,
-// the FEN string of the position to solve, and prints the best
-// move in algebraic notation to stdout.
-
+#include <charconv>
 #include <cstddef> // IWYU pragma: keep - for std::ptrdiff_t
 #include <exception>
 #include <iterator>
@@ -34,17 +31,25 @@ try {
 
     args = args.subspan(1uz);
 
-    if (args.empty()) {
+    if (args.size() < 2uz) {
         std::println("Usage:");
-        std::println("{} <fen>", programName);
+        std::println("{} <fen> <depth>", programName);
         return EXIT_FAILURE;
     }
 
     const auto fenString = args.front();
 
+    args = args.subspan(1uz);
+
     const auto position = chess::notation::from_fen(fenString);
 
-    const auto move = chess::search::find_best_move(position);
+    const auto depthString = args.front();
+
+    std::size_t depth { 4uz };
+
+    std::from_chars(depthString.data(), depthString.data() + depthString.length(), depth);
+
+    const auto move = chess::search::find_best_move(position, depth);
 
     std::println("{}",
         chess::notation::to_alg(position, move));
