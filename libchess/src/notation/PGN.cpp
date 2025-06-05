@@ -138,92 +138,123 @@ namespace {
         return game::Result::Draw;
     }
 
+    using Moves = std::vector<GameRecord::Move>;
+
+    // writes the content of the block comment to the last move in output
+    // and returns the rest of the pgnText after the } that closes this comment
+    [[nodiscard]] std::string_view parse_block_comment(
+        const std::string_view pgnText, Moves& output)
+    {
+        // first char in pgnText is {
+
+        const auto closeBracketIdx = pgnText.find('}');
+
+        if (closeBracketIdx == std::string_view::npos) {
+            throw std::invalid_argument { "Expected '}' following '{'" };
+        }
+
+        if (! output.empty())
+            output.back().comment = pgnText.substr(1uz, closeBracketIdx - 1uz);
+
+        return pgnText.substr(closeBracketIdx + 1uz);
+    }
+
+    // writes the content of the line comment to the last move in output
+    // and returns the rest of the pgnText after the newline that ends this comment
+    [[nodiscard]] std::string_view parse_line_comment(
+        const std::string_view pgnText, Moves& output)
+    {
+        // first char in pgnText is ;
+
+        const auto newlineIdx = pgnText.find('\n');
+
+        if (newlineIdx == std::string_view::npos) {
+            // assume that a ; comment was the last thing in the file
+            if (! output.empty())
+                output.back().comment = pgnText.substr(1uz);
+
+            return {};
+        }
+
+        if (! output.empty())
+            output.back().comment = pgnText.substr(1uz, newlineIdx - 1uz);
+
+        return pgnText.substr(newlineIdx + 1uz);
+    }
+
+    // writes the NAG glyph value to the last move in output
+    // and returns the rest of the pgnText after the NAG glyph
+    [[nodiscard]] std::string_view parse_nag(
+        const std::string_view pgnText, Moves& output)
+    {
+        // first char in pgnText is $
+
+        auto [nag, rest] = split_at_first_space_or_newline(pgnText.substr(1uz));
+
+        if (! output.empty()) {
+            nag = util::trim(nag);
+
+            std::uint_least8_t value { 0 };
+
+            std::from_chars(nag.data(), nag.data() + nag.length(), value);
+
+            output.back().nag = value;
+        }
+
+        return rest;
+    }
+
     // writes the parsed moves into output and returns the parsed game result
     [[nodiscard]] GameResult parse_move_list(
-        std::string_view               pgnText,
-        Position                       position,
-        std::vector<GameRecord::Move>& output)
+        std::string_view pgnText,
+        Position         position,
+        Moves&           output)
     {
         while (! pgnText.empty()) {
             pgnText = util::trim(pgnText);
 
-            // comment: { continues to }
-            if (pgnText.front() == '{') {
-                const auto closeBracketIdx = pgnText.find('}');
-
-                if (closeBracketIdx == std::string_view::npos) {
-                    throw std::invalid_argument {
-                        "Expected '}' following '{'"
-                    };
+            switch (pgnText.front()) {
+                case '{': {
+                    // comment: { continues to }
+                    pgnText = parse_block_comment(pgnText, output);
+                    continue;
                 }
 
-                if (! output.empty())
-                    output.back().comment = pgnText.substr(1uz, closeBracketIdx - 1uz);
-
-                pgnText.remove_prefix(closeBracketIdx + 1uz);
-
-                continue;
-            }
-
-            // comment: ; continues to end of line
-            if (pgnText.front() == ';') {
-                const auto newlineIdx = pgnText.find('\n');
-
-                if (newlineIdx == std::string_view::npos) {
-                    // assume that a ; comment was the last thing in the file
-                    if (! output.empty())
-                        output.back().comment = pgnText.substr(1uz);
-
-                    return parse_game_result({}, position);
+                case ';': {
+                    // comment: ; continues to end of line
+                    pgnText = parse_line_comment(pgnText, output);
+                    continue;
                 }
 
-                if (! output.empty())
-                    output.back().comment = pgnText.substr(1uz, newlineIdx - 1uz);
-
-                pgnText.remove_prefix(newlineIdx + 1uz);
-
-                continue;
-            }
-
-            // NAG
-            if (pgnText.front() == '$') {
-                auto [nag, rest] = split_at_first_space_or_newline(pgnText.substr(1uz));
-
-                if (! output.empty()) {
-                    nag = util::trim(nag);
-
-                    std::uint_least8_t value { 0 };
-
-                    std::from_chars(nag.data(), nag.data() + nag.length(), value);
-
-                    output.back().nag = value;
+                case '$': {
+                    // NAG
+                    pgnText = parse_nag(pgnText, output);
+                    continue;
                 }
 
-                pgnText = rest;
+                default: {
+                    auto [firstMove, rest] = split_at_first_space_or_newline(pgnText);
 
-                continue;
+                    if (util::trim(rest).empty()) {
+                        // the PGN string is exhausted, so this last substring is the game result, not a move
+                        return parse_game_result(firstMove, position);
+                    }
+
+                    // move numbers may start with 3. or 3...
+                    const auto lastDotIdx = firstMove.rfind('.');
+
+                    if (lastDotIdx != std::string_view::npos)
+                        firstMove = firstMove.substr(lastDotIdx + 1uz);
+
+                    const auto move = from_alg(position, firstMove);
+
+                    position.make_move(move);
+
+                    output.emplace_back(move);
+
+                    pgnText = rest;
+                }
             }
-
-            auto [firstMove, rest] = split_at_first_space_or_newline(pgnText);
-
-            if (util::trim(rest).empty()) {
-                // the PGN string is exhausted, so this last substring is the game result, not a move
-                return parse_game_result(firstMove, position);
-            }
-
-            // move numbers may start with 3. or 3...
-            const auto lastDotIdx = firstMove.rfind('.');
-
-            if (lastDotIdx != std::string_view::npos)
-                firstMove = firstMove.substr(lastDotIdx + 1uz);
-
-            const auto move = from_alg(position, firstMove);
-
-            position.make_move(move);
-
-            output.emplace_back(move);
-
-            pgnText = rest;
         }
 
         return parse_game_result({}, position);
