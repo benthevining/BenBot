@@ -73,25 +73,25 @@ namespace values {
     /// @{
 
     /** The material value of a pawn (1). */
-    static constexpr size_t PAWN { 1uz };
+    static constexpr size_t PAWN { 100uz };
 
     /** The material value of a knight (3). */
-    static constexpr size_t KNIGHT { 3uz };
+    static constexpr size_t KNIGHT { 320uz };
 
     /** The material value of a bishop (4). */
-    static constexpr size_t BISHOP { 4uz };
+    static constexpr size_t BISHOP { 330uz };
 
     /** The material value of a rook (5). */
-    static constexpr size_t ROOK { 5uz };
+    static constexpr size_t ROOK { 500uz };
 
     /** The material value of a queen (9). */
-    static constexpr size_t QUEEN { 9uz };
+    static constexpr size_t QUEEN { 900uz };
 
     /** The maximum possible number of material points that a side can have. */
-    static constexpr size_t MAX_POSSIBLE_MATERIAL = QUEEN * 9uz // 8 promotions
-                                                  + KNIGHT * 2uz
-                                                  + BISHOP * 2uz
-                                                  + ROOK * 5uz;
+    static constexpr size_t MAX_POSSIBLE_MATERIAL = (QUEEN * 9uz) // 8 promotions
+                                                  + (KNIGHT * 2uz)
+                                                  + (BISHOP * 2uz)
+                                                  + (ROOK * 5uz);
 
     /// @}
 

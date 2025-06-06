@@ -53,6 +53,8 @@ static constexpr auto DRAW = static_cast<Value>(0);
     give position from the perspective of the side to move.
     Higher numbers are better for the side to move.
 
+    The value returned is in the range ``[MIN, MAX]``.
+
     @ingroup eval
  */
 [[nodiscard]] Value evaluate(const Position& position);
