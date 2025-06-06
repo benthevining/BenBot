@@ -10,7 +10,6 @@
 #include <array>
 #include <charconv>
 #include <concepts>
-#include <cstddef> // IWYU pragma: keep - for size_t
 #include <format>
 #include <iterator>
 #include <libchess/game/Position.hpp>
@@ -24,7 +23,6 @@
 namespace chess::notation {
 
 using pieces::Color;
-using std::size_t;
 
 namespace {
 
@@ -47,7 +45,7 @@ std::string to_fen(const Position& position)
 {
     std::string fen;
 
-    fen_helpers::write_piece_positions(position, std::back_inserter(fen));
+    fen_helpers::write_piece_positions(position, fen);
 
     fen.push_back(' ');
 
@@ -58,12 +56,12 @@ std::string to_fen(const Position& position)
     fen.push_back(' ');
 
     fen_helpers::write_castling_rights(
-        position.whiteCastlingRights, position.blackCastlingRights, std::back_inserter(fen));
+        position.whiteCastlingRights, position.blackCastlingRights, fen);
 
     fen.push_back(' ');
 
     fen_helpers::write_en_passant_target_square(
-        position.enPassantTargetSquare, std::back_inserter(fen));
+        position.enPassantTargetSquare, fen);
 
     fen.push_back(' ');
 

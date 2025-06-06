@@ -78,6 +78,7 @@ set (
     notation/Algebraic.cpp
     notation/EPD.cpp
     notation/FEN.cpp
+    notation/FENHelpers.cpp
     notation/FENHelpers.hpp
     notation/PGN.cpp
     notation/UCI.cpp

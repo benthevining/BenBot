@@ -60,7 +60,7 @@ std::string to_epd(const EPDPosition& pos)
 {
     std::string epd;
 
-    fen_helpers::write_piece_positions(pos.position, std::back_inserter(epd));
+    fen_helpers::write_piece_positions(pos.position, epd);
 
     epd.push_back(' ');
 
@@ -71,12 +71,12 @@ std::string to_epd(const EPDPosition& pos)
     epd.push_back(' ');
 
     fen_helpers::write_castling_rights(
-        pos.position.whiteCastlingRights, pos.position.blackCastlingRights, std::back_inserter(epd));
+        pos.position.whiteCastlingRights, pos.position.blackCastlingRights, epd);
 
     epd.push_back(' ');
 
     fen_helpers::write_en_passant_target_square(
-        pos.position.enPassantTargetSquare, std::back_inserter(epd));
+        pos.position.enPassantTargetSquare, epd);
 
     epd.push_back(' ');
 
