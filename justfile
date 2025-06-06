@@ -22,12 +22,6 @@ pre-commit:
 
 alias pc := pre-commit
 
-# Checks for things like to-do notes, #if 0, etc
-[group('lint')]
-[no-exit-message]
-relint:
-    pre-commit run --hook-stage manual relint --all-files
-
 # Updates pre-commit hooks to latest tags
 [group('misc')]
 pc-update:
