@@ -39,7 +39,7 @@ namespace {
         static constexpr Eval CASTLING_BONUS { 200. };
         static constexpr Eval OPPONENT_PAWN_CONTROLS_PENALTY { 350. };
 
-        const auto& theirPieces = currentPosition.sideToMove == Color::White ? currentPosition.blackPieces : currentPosition.whitePieces;
+        const auto& theirPieces = currentPosition.their_pieces();
 
         Eval score { 0. };
 
