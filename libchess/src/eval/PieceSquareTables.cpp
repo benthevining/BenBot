@@ -7,8 +7,11 @@
  */
 
 #include <array>
+#include <cassert>
+#include <libchess/board/Bitboard.hpp>
 #include <libchess/board/Pieces.hpp>
 #include <libchess/eval/PieceSquareTables.hpp>
+#include <libchess/pieces/Colors.hpp>
 
 namespace chess::eval {
 
@@ -119,48 +122,77 @@ static constexpr std::array kingTable {
 
 // clang-format on
 
-Value get_piece_square_value(
-    const PieceType piece, const Color color, const board::Square& square) noexcept
-{
-    // TODO: do with color flipping
-
-    const auto idx = square.index();
-
-    switch (piece) {
-        case PieceType::Pawn  : return pawnTable[idx];
-        case PieceType::Knight: return knightTable[idx];
-        case PieceType::Bishop: return bishopTable[idx];
-        case PieceType::Rook  : return rookTable[idx];
-        case PieceType::Queen : return queenTable[idx];
-        default: // king
-            return kingTable[idx];
-    }
-}
-
 namespace {
 
-    // TODO: do with color flipping
+    using board::Bitboard;
+
+    [[nodiscard, gnu::const]] Bitboard flip_vertically(const Bitboard board) noexcept
+    {
+        static constexpr Bitboard mask { 56uz };
+
+        return board ^ mask;
+    }
+
     [[nodiscard, gnu::const]] Value score_side_pieces(
-        const board::Pieces& pieces) noexcept
+        const board::Pieces& pieces, const bool isBlack) noexcept
     {
         Value score { 0 };
 
-        for (const auto idx : pieces.pawns.indices())
-            score += pawnTable[idx]; // cppcheck-suppress useStlAlgorithm
+        {
+            auto pawns = pieces.pawns;
 
-        for (const auto idx : pieces.knights.indices())
-            score += knightTable[idx]; // cppcheck-suppress useStlAlgorithm
+            if (isBlack)
+                pawns = flip_vertically(pawns);
 
-        for (const auto idx : pieces.bishops.indices())
-            score += bishopTable[idx]; // cppcheck-suppress useStlAlgorithm
+            for (const auto idx : pawns.indices())
+                score += pawnTable[idx]; // cppcheck-suppress useStlAlgorithm
+        }
+        {
+            auto knights = pieces.knights;
 
-        for (const auto idx : pieces.rooks.indices())
-            score += rookTable[idx]; // cppcheck-suppress useStlAlgorithm
+            if (isBlack)
+                knights = flip_vertically(knights);
 
-        for (const auto idx : pieces.queens.indices())
-            score += queenTable[idx]; // cppcheck-suppress useStlAlgorithm
+            for (const auto idx : knights.indices())
+                score += knightTable[idx]; // cppcheck-suppress useStlAlgorithm
+        }
+        {
+            auto bishops = pieces.bishops;
 
-        score += kingTable[pieces.king.first()];
+            if (isBlack)
+                bishops = flip_vertically(bishops);
+
+            for (const auto idx : bishops.indices())
+                score += bishopTable[idx]; // cppcheck-suppress useStlAlgorithm
+        }
+        {
+            auto rooks = pieces.rooks;
+
+            if (isBlack)
+                rooks = flip_vertically(rooks);
+
+            for (const auto idx : rooks.indices())
+                score += rookTable[idx]; // cppcheck-suppress useStlAlgorithm
+        }
+        {
+            auto queens = pieces.queens;
+
+            if (isBlack)
+                queens = flip_vertically(queens);
+
+            for (const auto idx : queens.indices())
+                score += queenTable[idx]; // cppcheck-suppress useStlAlgorithm
+        }
+        {
+            auto king = pieces.king;
+
+            assert(king.count() == 1uz);
+
+            if (isBlack)
+                king = flip_vertically(king);
+
+            score += kingTable[king.first()];
+        }
 
         return score;
     }
@@ -169,8 +201,10 @@ namespace {
 
 Value score_piece_placement(const Position& position) noexcept
 {
-    return score_side_pieces(position.our_pieces())
-         - score_side_pieces(position.their_pieces());
+    const bool isWhite = position.sideToMove == pieces::Color::White;
+
+    return score_side_pieces(position.our_pieces(), isWhite)
+         - score_side_pieces(position.their_pieces(), ! isWhite);
 }
 
 } // namespace chess::eval
