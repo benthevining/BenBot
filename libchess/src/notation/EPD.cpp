@@ -7,7 +7,7 @@
  */
 
 #include "FENHelpers.hpp" // NOLINT(build/include_subdir)
-#include <iterator>
+#include <format>
 #include <libchess/notation/EPD.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/util/Strings.hpp>
@@ -56,6 +56,25 @@ EPDPosition from_epd(std::string_view epdString)
     return pos;
 }
 
+namespace {
+
+    void write_operations(
+        const EPDPosition& pos, std::string& output)
+    {
+        for (const auto& [key, value] : pos.operations)
+            output.append(std::format(" {} \"{}\";", key, value));
+
+        using namespace std::literals::string_literals; // NOLINT
+
+        if (! pos.operations.contains("fmvn"s))
+            output.append(std::format(" fmvn {}", pos.position.fullMoveCounter));
+
+        if (! pos.operations.contains("hmvc"s))
+            output.append(std::format(" hmvc {}", pos.position.halfmoveClock));
+    }
+
+} // namespace
+
 std::string to_epd(const EPDPosition& pos)
 {
     std::string epd;
@@ -80,7 +99,7 @@ std::string to_epd(const EPDPosition& pos)
 
     epd.push_back(' ');
 
-    // TODO: operations
+    write_operations(pos, epd);
 
     return epd;
 }
