@@ -55,6 +55,6 @@ static constexpr auto DRAW = static_cast<Value>(0);
 
     @ingroup eval
  */
-[[nodiscard, gnu::const]] Value evaluate(const Position& position);
+[[nodiscard]] Value evaluate(const Position& position);
 
 } // namespace chess::eval

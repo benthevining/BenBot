@@ -15,11 +15,13 @@
 
 #include <libchess/board/Square.hpp>
 #include <libchess/eval/Evaluation.hpp>
+#include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
 
 namespace chess::eval {
 
 using PieceType = pieces::Type;
+using pieces::Color;
 
 /** Returns an evaluation value for the given piece type on
     the given square.
@@ -27,6 +29,6 @@ using PieceType = pieces::Type;
     @ingroup eval
  */
 [[nodiscard, gnu::const]] Value get_piece_square_value(
-    PieceType piece, const board::Square& square) noexcept;
+    PieceType piece, Color color, const board::Square& square) noexcept;
 
 } // namespace chess::eval

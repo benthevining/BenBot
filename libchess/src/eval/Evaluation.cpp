@@ -17,13 +17,6 @@ namespace {
 
     using board::Pieces;
 
-    [[nodiscard, gnu::const]] Value material_score(
-        const Pieces& ourPieces, const Pieces& theirPieces) noexcept
-    {
-        return static_cast<Value>(ourPieces.material())
-             - static_cast<Value>(theirPieces.material());
-    }
-
     [[nodiscard, gnu::const]] bool is_draw_by_insufficient_material(
         const Position& position) noexcept
     {
@@ -36,23 +29,40 @@ namespace {
         if (whitePieces.pawns.any() || blackPieces.pawns.any()
             || whitePieces.rooks.any() || blackPieces.rooks.any()
             || whitePieces.queens.any() || blackPieces.queens.any()) {
+            [[likely]];
             return false;
         }
 
-        const bool whiteHasOnlyKing = ! (whitePieces.knights.any() || whitePieces.bishops.any());
-        const bool blackHasOnlyKing = ! (blackPieces.knights.any() || blackPieces.bishops.any());
+        const auto numWhiteKnights = whitePieces.knights.count();
+        const auto numWhiteBishops = whitePieces.bishops.count();
+
+        const auto numBlackKnights = blackPieces.knights.count();
+        const auto numBlackBishops = blackPieces.bishops.count();
+
+        const bool whiteHasOnlyKing = numWhiteKnights + numWhiteBishops == 0uz;
+        const bool blackHasOnlyKing = numBlackKnights + numBlackBishops == 0uz;
+
+        if (! (whiteHasOnlyKing || blackHasOnlyKing)) {
+            [[likely]];
+            return false;
+        }
 
         if (whiteHasOnlyKing && blackHasOnlyKing)
             return true;
 
-        if (! (whiteHasOnlyKing || blackHasOnlyKing))
-            return false;
-
         // check if side without the lone king has only 1 knight/bishop
-        if (whiteHasOnlyKing)
-            return blackPieces.knights.count() + blackPieces.bishops.count() == 1uz;
 
-        return whitePieces.knights.count() + whitePieces.bishops.count() == 1uz;
+        if (whiteHasOnlyKing)
+            return numBlackKnights + numBlackBishops == 1uz;
+
+        return numWhiteKnights + numWhiteBishops == 1uz;
+    }
+
+    [[nodiscard, gnu::const]] Value material_score(
+        const Pieces& ourPieces, const Pieces& theirPieces) noexcept
+    {
+        return static_cast<Value>(ourPieces.material())
+             - static_cast<Value>(theirPieces.material());
     }
 
 } // namespace
