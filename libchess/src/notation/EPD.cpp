@@ -7,6 +7,8 @@
  */
 
 #include "FENHelpers.hpp" // NOLINT(build/include_subdir)
+#include <cassert>
+#include <charconv>
 #include <format>
 #include <libchess/notation/EPD.hpp>
 #include <libchess/pieces/Colors.hpp>
@@ -18,6 +20,59 @@
 namespace chess::notation {
 
 using pieces::Color;
+
+namespace {
+
+    void parse_operations(
+        EPDPosition& pos, std::string_view text)
+    {
+        text = util::trim(text);
+
+        while (! text.empty()) {
+            const auto nextSemi = text.find(';');
+
+            if (nextSemi == std::string_view::npos) {
+                throw std::invalid_argument {
+                    std::format("Expected ; in EPD operation: {}", text)
+                };
+            }
+
+            const auto thisOperation = text.substr(0, nextSemi);
+
+            auto [key, value] = util::split_at_first_space(thisOperation);
+
+            key   = util::trim(key);
+            value = util::trim(value);
+
+            assert(! key.empty());
+            assert(! value.empty());
+
+            if (value.front() == '"')
+                value.remove_prefix(1uz);
+
+            assert(! value.empty());
+
+            if (value.back() == '"')
+                value.remove_suffix(1uz);
+
+            assert(! value.empty());
+
+            pos.operations[std::string { key }] = value;
+
+            if (key == "fmvn") {
+                std::from_chars(
+                    value.data(), value.data() + value.length(),
+                    pos.position.fullMoveCounter);
+            } else if (key == "hmvc") {
+                std::from_chars(value.data(), value.data() + value.length(),
+                    pos.position.halfmoveClock);
+            }
+
+            text.remove_prefix(nextSemi + 1uz);
+        }
+    }
+
+} // namespace
 
 EPDPosition from_epd(std::string_view epdString)
 {
@@ -51,7 +106,9 @@ EPDPosition from_epd(std::string_view epdString)
 
     fen_helpers::parse_en_passant_target_square(epTarget, pos.position);
 
-    // TODO: operations
+    parse_operations(pos, rest4);
+
+    pos.position.refresh_zobrist();
 
     return pos;
 }

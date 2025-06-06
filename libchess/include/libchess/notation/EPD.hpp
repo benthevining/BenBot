@@ -30,7 +30,9 @@ struct EPDPosition final {
     /** The position itself. */
     Position position {};
 
-    /** This position's EPD operations. */
+    /** This position's EPD operations.
+        Values should not be quoted.
+     */
     std::unordered_map<std::string, std::string> operations;
 };
 
