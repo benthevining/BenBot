@@ -201,10 +201,10 @@ namespace {
 
 Value score_piece_placement(const Position& position) noexcept
 {
-    const bool isWhite = position.sideToMove == pieces::Color::White;
+    const bool isBlack = position.sideToMove == pieces::Color::Black;
 
-    return score_side_pieces(position.our_pieces(), isWhite)
-         - score_side_pieces(position.their_pieces(), ! isWhite);
+    return score_side_pieces(position.our_pieces(), isBlack)
+         - score_side_pieces(position.their_pieces(), ! isBlack);
 }
 
 } // namespace chess::eval
