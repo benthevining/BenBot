@@ -42,6 +42,7 @@ set (
     board/BitboardMasks.cpp
     board/Distances.cpp
     board/Fills.cpp
+    board/Flips.cpp
     board/Pieces.cpp
     board/Square.cpp
     eval/Evaluation.cpp
