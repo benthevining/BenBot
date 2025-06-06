@@ -55,6 +55,7 @@ set (
     moves/Patterns.cpp
     moves/PseudoLegal.cpp
     notation/Algebraic.cpp
+    notation/EPD.cpp
     notation/FEN.cpp
     notation/PGN.cpp
     notation/UCI.cpp
