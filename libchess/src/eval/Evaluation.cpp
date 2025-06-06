@@ -7,6 +7,7 @@
  */
 
 #include <libchess/eval/Evaluation.hpp>
+#include <libchess/eval/PieceSquareTables.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/pieces/Colors.hpp>
 
@@ -81,9 +82,10 @@ Value evaluate(const Position& position)
         return DRAW; // stalemate
     }
 
-    // TODO: add piece square table values
+    // TODO: give bonus for having castling rights (or already having castled)
 
-    return material_score(position);
+    return material_score(position)
+         + score_piece_placement(position);
 }
 
 } // namespace chess::eval
