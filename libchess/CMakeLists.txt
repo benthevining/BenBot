@@ -75,6 +75,7 @@ set (
     # cmake-format: sortable
     board/Bitboard.cpp
     board/Distances.cpp
+    eval/Evaluation.cpp
     eval/PieceSquareTables.cpp
     game/Position.cpp
     notation/Algebraic.cpp

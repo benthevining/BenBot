@@ -31,7 +31,7 @@ TEST_CASE("Evaluation - stalemate", TAGS)
 
         REQUIRE_THAT(
             evaluate(position),
-            match::WithinAbs(0., epsilon));
+            match::WithinAbs(chess::eval::DRAW, epsilon));
     }
 
     SECTION("Black is stalemated")
@@ -42,7 +42,7 @@ TEST_CASE("Evaluation - stalemate", TAGS)
 
         REQUIRE_THAT(
             evaluate(position),
-            match::WithinAbs(0., epsilon));
+            match::WithinAbs(chess::eval::DRAW, epsilon));
     }
 }
 
@@ -79,7 +79,7 @@ TEST_CASE("Evaluation - draw by insufficient material", TAGS)
 
         REQUIRE_THAT(
             evaluate(position),
-            match::WithinAbs(0., epsilon));
+            match::WithinAbs(chess::eval::DRAW, epsilon));
     }
 
     SECTION("White has a single knight")
@@ -88,7 +88,7 @@ TEST_CASE("Evaluation - draw by insufficient material", TAGS)
 
         REQUIRE_THAT(
             evaluate(position),
-            match::WithinAbs(0., epsilon));
+            match::WithinAbs(chess::eval::DRAW, epsilon));
     }
 
     SECTION("White has a single bishop")
@@ -97,7 +97,7 @@ TEST_CASE("Evaluation - draw by insufficient material", TAGS)
 
         REQUIRE_THAT(
             evaluate(position),
-            match::WithinAbs(0., epsilon));
+            match::WithinAbs(chess::eval::DRAW, epsilon));
     }
 
     SECTION("Black has a single knight")
@@ -106,7 +106,7 @@ TEST_CASE("Evaluation - draw by insufficient material", TAGS)
 
         REQUIRE_THAT(
             evaluate(position),
-            match::WithinAbs(0., epsilon));
+            match::WithinAbs(chess::eval::DRAW, epsilon));
     }
 
     SECTION("Black has a single bishop")
@@ -115,6 +115,6 @@ TEST_CASE("Evaluation - draw by insufficient material", TAGS)
 
         REQUIRE_THAT(
             evaluate(position),
-            match::WithinAbs(0., epsilon));
+            match::WithinAbs(chess::eval::DRAW, epsilon));
     }
 }
