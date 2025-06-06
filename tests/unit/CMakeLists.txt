@@ -46,6 +46,7 @@ set (
     board/Pieces.cpp
     board/Square.cpp
     eval/Evaluation.cpp
+    eval/PieceSquareTables.cpp
     game/CastlingRights.cpp
     game/Position.cpp
     game/ThreefoldRepetition.cpp
