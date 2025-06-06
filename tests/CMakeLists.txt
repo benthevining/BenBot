@@ -20,6 +20,8 @@ FetchContent_MakeAvailable (nlohmann_json)
 
 find_package (Python COMPONENTS Interpreter)
 
+configure_file (CTestCustom.cmake "${PROJECT_BINARY_DIR}/CTestCustom.cmake" @ONLY)
+
 add_subdirectory (unit)
 add_subdirectory (perft)
 add_subdirectory (rampart)

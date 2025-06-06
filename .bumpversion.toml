@@ -67,11 +67,11 @@ post_commit_hooks = [
 filename = "CMakeLists.txt"
 search = """
 project (
-    mtm-libs
+    libchess
     VERSION {current_version}"""
 replace = """
 project (
-    mtm-libs
+    libchess
     VERSION {new_version}"""
 
 [[tool.bumpversion.files]]

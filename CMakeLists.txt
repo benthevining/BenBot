@@ -24,8 +24,6 @@ add_subdirectory (ben-bot)
 if (LIBCHESS_TESTS)
     enable_testing ()
 
-    configure_file (config/CTestCustom.cmake CTestCustom.cmake @ONLY)
-
     add_subdirectory (tests)
 
     if (PROJECT_IS_TOP_LEVEL)
