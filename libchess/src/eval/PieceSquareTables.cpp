@@ -13,6 +13,7 @@
 #include <libchess/board/Pieces.hpp>
 #include <libchess/eval/PieceSquareTables.hpp>
 #include <libchess/pieces/Colors.hpp>
+#include <utility>
 
 namespace chess::eval {
 
@@ -127,8 +128,9 @@ namespace {
 
     using board::Bitboard;
 
+    template <bool IsBlack>
     [[nodiscard, gnu::const]] Value score_side_pieces(
-        const board::Pieces& pieces, const bool isBlack) noexcept
+        const board::Pieces& pieces) noexcept
     {
         using board::flips::vertical;
 
@@ -137,8 +139,9 @@ namespace {
         {
             auto pawns = pieces.pawns;
 
-            if (isBlack)
+            if constexpr (IsBlack) {
                 pawns = vertical(pawns);
+            }
 
             for (const auto idx : pawns.indices())
                 score += pawnTable[idx]; // cppcheck-suppress useStlAlgorithm
@@ -146,8 +149,9 @@ namespace {
         {
             auto knights = pieces.knights;
 
-            if (isBlack)
+            if constexpr (IsBlack) {
                 knights = vertical(knights);
+            }
 
             for (const auto idx : knights.indices())
                 score += knightTable[idx]; // cppcheck-suppress useStlAlgorithm
@@ -155,8 +159,9 @@ namespace {
         {
             auto bishops = pieces.bishops;
 
-            if (isBlack)
+            if constexpr (IsBlack) {
                 bishops = vertical(bishops);
+            }
 
             for (const auto idx : bishops.indices())
                 score += bishopTable[idx]; // cppcheck-suppress useStlAlgorithm
@@ -164,8 +169,9 @@ namespace {
         {
             auto rooks = pieces.rooks;
 
-            if (isBlack)
+            if constexpr (IsBlack) {
                 rooks = vertical(rooks);
+            }
 
             for (const auto idx : rooks.indices())
                 score += rookTable[idx]; // cppcheck-suppress useStlAlgorithm
@@ -173,8 +179,9 @@ namespace {
         {
             auto queens = pieces.queens;
 
-            if (isBlack)
+            if constexpr (IsBlack) {
                 queens = vertical(queens);
+            }
 
             for (const auto idx : queens.indices())
                 score += queenTable[idx]; // cppcheck-suppress useStlAlgorithm
@@ -184,8 +191,9 @@ namespace {
 
             assert(king.count() == 1uz);
 
-            if (isBlack)
+            if constexpr (IsBlack) {
                 king = vertical(king);
+            }
 
             score += kingTable[king.first()];
         }
@@ -197,10 +205,19 @@ namespace {
 
 Value score_piece_placement(const Position& position) noexcept
 {
-    const bool isBlack = position.sideToMove == pieces::Color::Black;
+    const auto [ourScore, theirScore] = [&position] {
+        if (position.sideToMove == pieces::Color::Black) {
+            return std::make_pair(
+                score_side_pieces<true>(position.our_pieces()),
+                score_side_pieces<false>(position.their_pieces()));
+        }
 
-    return score_side_pieces(position.our_pieces(), isBlack)
-         - score_side_pieces(position.their_pieces(), ! isBlack);
+        return std::make_pair(
+            score_side_pieces<false>(position.our_pieces()),
+            score_side_pieces<true>(position.their_pieces()));
+    }();
+
+    return ourScore - theirScore;
 }
 
 } // namespace chess::eval
