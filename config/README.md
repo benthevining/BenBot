@@ -1,3 +1,9 @@
+# ======================================================================================
+#
+# libchess - a chess engine by Ben Vining
+#
+# ======================================================================================
+
 # Configuration files
 
 This directory contains configuration files for miscellaneous tools used by `pre-commit` hooks, `just` recipes, etc.
@@ -7,9 +13,6 @@ directory, to try to keep the repository root as clean as possible. Only when to
 place configuration files in the repository root.
 
 # Environment variables
-
-Various CMake variables are initialized by environment variables. They frequently have the same name, but not always.
-Environment variables are typically used for injecting secrets or user-specific credentials.
 
 ## direnv
 

@@ -32,8 +32,6 @@ Checks: >
   -readability-uppercase-literal-suffix
 
 CheckOptions:
-- key: bugprone-dangling-handle.HandleClasses
-  value: mtm::dsp::BufferView;mtm::dsp::MultichannelView;mtm::midi::BufferView;mtm::dsp::engines::params::EventListView
 - key: bugprone-misplaced-widening-cast.CheckImplicitCasts
   value: true
 - key: bugprone-narrowing-conversions.WarnWithinTemplateInstantiation
@@ -50,16 +48,12 @@ CheckOptions:
   value: true
 - key: cppcoreguidelines-rvalue-reference-param-not-moved.IgnoreUnnamedParams
   value: true
-- key: misc-include-cleaner.IgnoreHeaders
-  value: DisableAllWarnings.hpp;ReenableAllWarnings.hpp
 - key: misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
   value: true
 - key: modernize-deprecated-headers.CheckHeaderFile
   value: true
 - key: performance-inefficient-string-concatenation.StrictMode
   value: true
-- key: performance-unnecessary-value-param.AllowedTypes
-  value: mtm::midi::BufferView;mtm::dsp::engines::params::EventListView
 - key: readability-identifier-length.MinimumLoopCounterNameLength
   value: 1
 - key: readability-identifier-length.IgnoredVariableNames

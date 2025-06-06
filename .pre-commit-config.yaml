@@ -83,7 +83,7 @@ repos:
   - id: insert-license
     name: Insert license header in CMake and shell files
     args: [--license-filepath=config/license_header.txt, --comment-style=#, --detect-license-in-X-top-lines=16]
-    files: .editorconfig|.git|justfile|.envrc|.cfg|.clang|Brewfile|Gemfile|requirements.txt
+    files: .editorconfig|.git|justfile|.envrc|.cfg|.clang|
     exclude: .editorconfig-checker.json
 
     # auto-fix spelling mistakes

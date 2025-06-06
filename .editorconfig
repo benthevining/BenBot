@@ -25,6 +25,3 @@ trim_trailing_whitespace = false
 
 [*.{yml,yaml,json,clang*}]
 indent_size = 2
-
-[*.ly]
-indent_style = tab
