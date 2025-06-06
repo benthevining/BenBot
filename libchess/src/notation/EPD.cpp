@@ -26,9 +26,12 @@ namespace {
     void parse_operations(
         EPDPosition& pos, std::string_view text)
     {
-        text = util::trim(text);
-
         while (! text.empty()) {
+            text = util::trim(text);
+
+            if (text.empty())
+                return;
+
             const auto nextSemi = text.find(';');
 
             if (nextSemi == std::string_view::npos) {
