@@ -49,7 +49,7 @@ Move from_uci(const Position& position, std::string_view text)
     result.to = Square::from_string(text.substr(0uz, 2uz));
     text      = text.substr(2uz);
 
-    const auto& pieces = position.sideToMove == pieces::Color::White ? position.whitePieces : position.blackPieces;
+    const auto& pieces = position.our_pieces();
 
     const auto movedType = pieces.get_piece_on(result.from);
 

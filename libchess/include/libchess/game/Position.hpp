@@ -46,6 +46,7 @@ namespace chess::game {
 
 using board::Bitboard;
 using board::File;
+using board::Pieces;
 using board::Rank;
 using board::Square;
 using moves::Move;
@@ -70,7 +71,7 @@ struct Position final {
         must not overlap with any of the indices of the bits set in
         ``blackPieces``.
      */
-    board::Pieces whitePieces { Color::White };
+    Pieces whitePieces { Color::White };
 
     /** The positions of the Black pieces.
 
@@ -78,7 +79,7 @@ struct Position final {
         must not overlap with any of the indices of the bits set in
         ``whitePieces``.
      */
-    board::Pieces blackPieces { Color::Black };
+    Pieces blackPieces { Color::Black };
 
     /** Indicates whose move it is in this position. */
     Color sideToMove { Color::White };
@@ -133,9 +134,12 @@ struct Position final {
         return hash == other.hash;
     }
 
+    /// @name Piece access
+    /// @{
+
     /** Returns the piece set representing the given color. */
     template <Color Side>
-    [[nodiscard]] constexpr board::Pieces& pieces_for() noexcept
+    [[nodiscard]] constexpr Pieces& pieces_for() noexcept
     {
         if constexpr (Side == Color::White)
             return whitePieces;
@@ -145,13 +149,51 @@ struct Position final {
 
     /** Returns the piece set representing the given color. */
     template <Color Side>
-    [[nodiscard]] constexpr const board::Pieces& pieces_for() const noexcept
+    [[nodiscard]] constexpr const Pieces& pieces_for() const noexcept
     {
         if constexpr (Side == Color::White)
             return whitePieces;
         else
             return blackPieces;
     }
+
+    /** Returns the pieces belonging to the side to move. */
+    [[nodiscard]] constexpr Pieces& our_pieces() noexcept
+    {
+        if (sideToMove == Color::White)
+            return whitePieces;
+
+        return blackPieces;
+    }
+
+    /** Returns the pieces belonging to the side to move. */
+    [[nodiscard]] constexpr const Pieces& our_pieces() const noexcept
+    {
+        if (sideToMove == Color::White)
+            return whitePieces;
+
+        return blackPieces;
+    }
+
+    /** Returns the pieces belonging to the side-to-move's opponent. */
+    [[nodiscard]] constexpr Pieces& their_pieces() noexcept
+    {
+        if (sideToMove == Color::White)
+            return blackPieces;
+
+        return whitePieces;
+    }
+
+    /** Returns the pieces belonging to the side-to-move's opponent. */
+    [[nodiscard]] constexpr const Pieces& their_pieces() const noexcept
+    {
+        if (sideToMove == Color::White)
+            return blackPieces;
+
+        return whitePieces;
+    }
+
+    /// @}
 
     /** Returns a bitboard that is the union of all White and Black
         piece positions.
@@ -340,9 +382,7 @@ constexpr bool Position::is_en_passant(const Move& move) const noexcept
 
 constexpr bool Position::is_capture(const Move& move) const noexcept
 {
-    const auto& opponentPieces = sideToMove == Color::White ? blackPieces : whitePieces;
-
-    return is_en_passant(move) || opponentPieces.occupied.test(move.to);
+    return is_en_passant(move) || their_pieces().occupied.test(move.to);
 }
 
 constexpr bool Position::is_file_open(const File file) const noexcept
@@ -388,8 +428,8 @@ namespace detail {
     {
         const bool isWhite = position.sideToMove == Color::White;
 
-        auto& ourPieces      = isWhite ? position.whitePieces : position.blackPieces;
-        auto& opponentPieces = isWhite ? position.blackPieces : position.whitePieces;
+        auto& ourPieces      = position.our_pieces();
+        auto& opponentPieces = position.their_pieces();
 
         opponentPieces.capture_at(move.to);
 
@@ -505,7 +545,7 @@ namespace detail {
 
         if (pos.is_capture(move)) {
             const auto  otherColor  = pos.sideToMove == Color::White ? Color::Black : Color::White;
-            const auto& theirPieces = otherColor == Color::White ? pos.whitePieces : pos.blackPieces;
+            const auto& theirPieces = pos.their_pieces();
 
             if (pos.is_en_passant(move)) {
                 [[unlikely]];
