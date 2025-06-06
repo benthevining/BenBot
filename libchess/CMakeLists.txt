@@ -36,6 +36,7 @@ set (
     board/Distances.hpp
     board/File.hpp
     board/Fills.hpp
+    board/Flips.hpp
     board/Masks.hpp
     board/Pieces.hpp
     board/Rank.hpp

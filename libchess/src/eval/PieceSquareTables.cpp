@@ -7,9 +7,9 @@
  */
 
 #include <array>
-#include <bit>
 #include <cassert>
 #include <libchess/board/Bitboard.hpp>
+#include <libchess/board/Flips.hpp>
 #include <libchess/board/Pieces.hpp>
 #include <libchess/eval/PieceSquareTables.hpp>
 #include <libchess/pieces/Colors.hpp>
@@ -127,23 +127,18 @@ namespace {
 
     using board::Bitboard;
 
-    [[nodiscard, gnu::const]] Bitboard flip_vertically(const Bitboard board) noexcept
-    {
-        return Bitboard {
-            std::byteswap(board.to_int())
-        };
-    }
-
     [[nodiscard, gnu::const]] Value score_side_pieces(
         const board::Pieces& pieces, const bool isBlack) noexcept
     {
+        using board::flips::vertical;
+
         Value score { 0 };
 
         {
             auto pawns = pieces.pawns;
 
             if (isBlack)
-                pawns = flip_vertically(pawns);
+                pawns = vertical(pawns);
 
             for (const auto idx : pawns.indices())
                 score += pawnTable[idx]; // cppcheck-suppress useStlAlgorithm
@@ -152,7 +147,7 @@ namespace {
             auto knights = pieces.knights;
 
             if (isBlack)
-                knights = flip_vertically(knights);
+                knights = vertical(knights);
 
             for (const auto idx : knights.indices())
                 score += knightTable[idx]; // cppcheck-suppress useStlAlgorithm
@@ -161,7 +156,7 @@ namespace {
             auto bishops = pieces.bishops;
 
             if (isBlack)
-                bishops = flip_vertically(bishops);
+                bishops = vertical(bishops);
 
             for (const auto idx : bishops.indices())
                 score += bishopTable[idx]; // cppcheck-suppress useStlAlgorithm
@@ -170,7 +165,7 @@ namespace {
             auto rooks = pieces.rooks;
 
             if (isBlack)
-                rooks = flip_vertically(rooks);
+                rooks = vertical(rooks);
 
             for (const auto idx : rooks.indices())
                 score += rookTable[idx]; // cppcheck-suppress useStlAlgorithm
@@ -179,7 +174,7 @@ namespace {
             auto queens = pieces.queens;
 
             if (isBlack)
-                queens = flip_vertically(queens);
+                queens = vertical(queens);
 
             for (const auto idx : queens.indices())
                 score += queenTable[idx]; // cppcheck-suppress useStlAlgorithm
@@ -190,7 +185,7 @@ namespace {
             assert(king.count() == 1uz);
 
             if (isBlack)
-                king = flip_vertically(king);
+                king = vertical(king);
 
             score += kingTable[king.first()];
         }
