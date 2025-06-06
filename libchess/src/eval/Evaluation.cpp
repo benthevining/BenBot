@@ -6,7 +6,6 @@
  * ======================================================================================
  */
 
-#include <libchess/board/Pieces.hpp>
 #include <libchess/eval/Evaluation.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/pieces/Colors.hpp>
@@ -14,8 +13,6 @@
 namespace chess::eval {
 
 namespace {
-
-    using board::Pieces;
 
     [[nodiscard, gnu::const]] bool is_draw_by_insufficient_material(
         const Position& position) noexcept
@@ -59,10 +56,10 @@ namespace {
     }
 
     [[nodiscard, gnu::const]] Value material_score(
-        const Pieces& ourPieces, const Pieces& theirPieces) noexcept
+        const Position& position) noexcept
     {
-        return static_cast<Value>(ourPieces.material())
-             - static_cast<Value>(theirPieces.material());
+        return static_cast<Value>(position.our_pieces().material())
+             - static_cast<Value>(position.their_pieces().material());
     }
 
 } // namespace
@@ -84,12 +81,9 @@ Value evaluate(const Position& position)
         return DRAW; // stalemate
     }
 
-    const auto& ourPieces   = position.sideToMove == Color::White ? position.whitePieces : position.blackPieces;
-    const auto& theirPieces = position.sideToMove == Color::White ? position.blackPieces : position.whitePieces;
-
-    return material_score(ourPieces, theirPieces);
-
     // TODO: add piece square table values
+
+    return material_score(position);
 }
 
 } // namespace chess::eval
