@@ -7,6 +7,7 @@
  */
 
 #include <array>
+#include <bit>
 #include <cassert>
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/Pieces.hpp>
@@ -128,9 +129,9 @@ namespace {
 
     [[nodiscard, gnu::const]] Bitboard flip_vertically(const Bitboard board) noexcept
     {
-        static constexpr Bitboard mask { 56uz };
-
-        return board ^ mask;
+        return Bitboard {
+            std::byteswap(board.to_int())
+        };
     }
 
     [[nodiscard, gnu::const]] Value score_side_pieces(
