@@ -26,7 +26,7 @@ namespace {
     void parse_operations(
         EPDPosition& pos, std::string_view text)
     {
-        while (! text.empty()) {
+        while (true) {
             text = util::trim(text);
 
             if (text.empty())

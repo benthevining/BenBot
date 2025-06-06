@@ -248,7 +248,7 @@ namespace {
         // function, we instead keep a copy of the previous position before parsing each move
         auto lastPos { position };
 
-        while (! pgnText.empty()) {
+        while (true) {
             pgnText = util::trim(pgnText);
 
             if (pgnText.empty())
@@ -307,8 +307,6 @@ namespace {
                 }
             }
         }
-
-        return {};
     }
 
     // writes the variation to the last move in output
@@ -424,7 +422,7 @@ std::vector<GameRecord> parse_all_pgns(std::string_view fileContent)
 {
     std::vector<GameRecord> games;
 
-    while (! fileContent.empty()) {
+    while (true) {
         fileContent = util::trim(fileContent);
 
         if (fileContent.empty())
@@ -456,8 +454,6 @@ std::vector<GameRecord> parse_all_pgns(std::string_view fileContent)
         } catch (...) { // NOLINT
         }
     }
-
-    return games;
 }
 
 namespace {
