@@ -42,6 +42,7 @@ set (
     board/Shifts.hpp
     board/Square.hpp
     eval/Evaluation.hpp
+    eval/PieceSquareTables.hpp
     game/CastlingRights.hpp
     game/Position.hpp
     game/Result.hpp
@@ -74,6 +75,7 @@ set (
     # cmake-format: sortable
     board/Bitboard.cpp
     board/Distances.cpp
+    eval/PieceSquareTables.cpp
     game/Position.cpp
     notation/Algebraic.cpp
     notation/EPD.cpp
