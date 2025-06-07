@@ -9,10 +9,12 @@
 #include <array>
 #include <cassert>
 #include <libchess/board/Bitboard.hpp>
+#include <libchess/board/BitboardIndex.hpp>
 #include <libchess/board/Flips.hpp>
 #include <libchess/board/Pieces.hpp>
 #include <libchess/eval/PieceSquareTables.hpp>
 #include <libchess/pieces/Colors.hpp>
+#include <numeric>
 #include <utility>
 
 namespace chess::eval {
@@ -127,78 +129,136 @@ static constexpr std::array kingTable {
 namespace {
 
     using board::Bitboard;
+    using board::BitboardIndex;
+    using board::Pieces;
+
+    using board::flips::vertical;
+
+    template <bool IsBlack>
+    [[nodiscard, gnu::const]] Value score_pawns(
+        const Pieces& pieces) noexcept
+    {
+        auto pawns = pieces.pawns;
+
+        if constexpr (IsBlack) {
+            pawns = vertical(pawns);
+        }
+
+        const auto indices = pawns.indices();
+
+        return static_cast<Value>(
+            std::reduce(
+                indices.begin(), indices.end(),
+                0, [](const int sum, const BitboardIndex idx) {
+                    return sum + pawnTable[idx];
+                }));
+    }
+
+    template <bool IsBlack>
+    [[nodiscard, gnu::const]] Value score_knights(
+        const Pieces& pieces) noexcept
+    {
+        auto knights = pieces.knights;
+
+        if constexpr (IsBlack) {
+            knights = vertical(knights);
+        }
+
+        const auto indices = knights.indices();
+
+        return static_cast<Value>(
+            std::reduce(
+                indices.begin(), indices.end(),
+                0, [](const int sum, const BitboardIndex idx) {
+                    return sum + knightTable[idx];
+                }));
+    }
+
+    template <bool IsBlack>
+    [[nodiscard, gnu::const]] Value score_bishops(
+        const Pieces& pieces) noexcept
+    {
+        auto bishops = pieces.bishops;
+
+        if constexpr (IsBlack) {
+            bishops = vertical(bishops);
+        }
+
+        const auto indices = bishops.indices();
+
+        return static_cast<Value>(
+            std::reduce(
+                indices.begin(), indices.end(),
+                0, [](const int sum, const BitboardIndex idx) {
+                    return sum + bishopTable[idx];
+                }));
+    }
+
+    template <bool IsBlack>
+    [[nodiscard, gnu::const]] Value score_rooks(
+        const Pieces& pieces) noexcept
+    {
+        auto rooks = pieces.rooks;
+
+        if constexpr (IsBlack) {
+            rooks = vertical(rooks);
+        }
+
+        const auto indices = rooks.indices();
+
+        return static_cast<Value>(
+            std::reduce(
+                indices.begin(), indices.end(),
+                0, [](const int sum, const BitboardIndex idx) {
+                    return sum + rookTable[idx];
+                }));
+    }
+
+    template <bool IsBlack>
+    [[nodiscard, gnu::const]] Value score_queens(
+        const Pieces& pieces) noexcept
+    {
+        auto queens = pieces.queens;
+
+        if constexpr (IsBlack) {
+            queens = vertical(queens);
+        }
+
+        const auto indices = queens.indices();
+
+        return static_cast<Value>(
+            std::reduce(
+                indices.begin(), indices.end(),
+                0, [](const int sum, const BitboardIndex idx) {
+                    return sum + queenTable[idx];
+                }));
+    }
+
+    template <bool IsBlack>
+    [[nodiscard, gnu::const]] Value score_king(
+        const Pieces& pieces) noexcept
+    {
+        auto king = pieces.king;
+
+        assert(king.count() == 1uz);
+
+        if constexpr (IsBlack) {
+            king = vertical(king);
+        }
+
+        return static_cast<Value>(kingTable[king.first()]);
+    }
 
     template <bool IsBlack>
     [[nodiscard, gnu::const]] Value score_side_pieces(
-        const board::Pieces& pieces) noexcept
+        const Pieces& pieces) noexcept
     {
-        using board::flips::vertical;
-
-        Value score { 0 };
-
-        {
-            auto pawns = pieces.pawns;
-
-            if constexpr (IsBlack) {
-                pawns = vertical(pawns);
-            }
-
-            for (const auto idx : pawns.indices())
-                score += pawnTable[idx]; // cppcheck-suppress useStlAlgorithm
-        }
-        {
-            auto knights = pieces.knights;
-
-            if constexpr (IsBlack) {
-                knights = vertical(knights);
-            }
-
-            for (const auto idx : knights.indices())
-                score += knightTable[idx]; // cppcheck-suppress useStlAlgorithm
-        }
-        {
-            auto bishops = pieces.bishops;
-
-            if constexpr (IsBlack) {
-                bishops = vertical(bishops);
-            }
-
-            for (const auto idx : bishops.indices())
-                score += bishopTable[idx]; // cppcheck-suppress useStlAlgorithm
-        }
-        {
-            auto rooks = pieces.rooks;
-
-            if constexpr (IsBlack) {
-                rooks = vertical(rooks);
-            }
-
-            for (const auto idx : rooks.indices())
-                score += rookTable[idx]; // cppcheck-suppress useStlAlgorithm
-        }
-        {
-            auto queens = pieces.queens;
-
-            if constexpr (IsBlack) {
-                queens = vertical(queens);
-            }
-
-            for (const auto idx : queens.indices())
-                score += queenTable[idx]; // cppcheck-suppress useStlAlgorithm
-        }
-        {
-            auto king = pieces.king;
-
-            assert(king.count() == 1uz);
-
-            if constexpr (IsBlack) {
-                king = vertical(king);
-            }
-
-            score += kingTable[king.first()];
-        }
-
-        return score;
+        return score_pawns<IsBlack>(pieces)
+             + score_knights<IsBlack>(pieces)
+             + score_bishops<IsBlack>(pieces)
+             + score_rooks<IsBlack>(pieces)
+             + score_queens<IsBlack>(pieces)
+             + score_king<IsBlack>(pieces);
     }
 
 } // namespace
