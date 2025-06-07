@@ -1,9 +1,3 @@
-# ======================================================================================
-#
-# libchess - a chess engine by Ben Vining
-#
-# ======================================================================================
-
 # Configuration files
 
 This directory contains configuration files for miscellaneous tools used by `pre-commit` hooks, `just` recipes, etc.

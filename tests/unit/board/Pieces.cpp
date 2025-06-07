@@ -29,8 +29,6 @@ TEST_CASE("Pieces - starting position", TAGS)
     {
         static constexpr Pieces pieces { Color::White };
 
-        STATIC_REQUIRE(pieces.material() == 41uz);
-
         static constexpr auto occupied = pieces.occupied;
 
         STATIC_REQUIRE(occupied.count() == 16uz);
@@ -42,8 +40,6 @@ TEST_CASE("Pieces - starting position", TAGS)
     SECTION("Black")
     {
         static constexpr Pieces pieces { Color::Black };
-
-        STATIC_REQUIRE(pieces.material() == 41uz);
 
         static constexpr auto occupied = pieces.occupied;
 

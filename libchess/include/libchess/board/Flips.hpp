@@ -1,0 +1,53 @@
+/*
+ * ======================================================================================
+ *
+ * libchess - a chess engine by Ben Vining
+ *
+ * ======================================================================================
+ */
+
+/** @file
+    This file provides functions for flipping bitboards vertically or horizontally.
+    @ingroup board
+ */
+
+#pragma once
+
+#include <bit>
+#include <libchess/board/Bitboard.hpp>
+
+/** This namespace contains functions for flipping bitboards vertically or horizontally.
+    @ingroup board
+ */
+namespace chess::board::flips {
+
+/** Returns a copy of the bitboard, mirrored vertically.
+    @ingroup board
+ */
+[[nodiscard, gnu::const]] constexpr Bitboard vertical(Bitboard board) noexcept;
+
+/*
+                         ___                           ,--,
+      ,---,            ,--.'|_                ,--,   ,--.'|
+    ,---.'|            |  | :,'             ,--.'|   |  | :
+    |   | :            :  : ' :             |  |,    :  : '    .--.--.
+    |   | |   ,---.  .;__,'  /    ,--.--.   `--'_    |  ' |   /  /    '
+  ,--.__| |  /     \ |  |   |    /       \  ,' ,'|   '  | |  |  :  /`./
+ /   ,'   | /    /  |:__,'| :   .--.  .-. | '  | |   |  | :  |  :  ;_
+.   '  /  |.    ' / |  '  : |__  \__\/: . . |  | :   '  : |__ \  \    `.
+'   ; |:  |'   ;   /|  |  | '.'| ," .--.; | '  : |__ |  | '.'| `----.   \
+|   | '/  ''   |  / |  ;  :    ;/  /  ,.  | |  | '.'|;  :    ;/  /`--'  /__  ___  ___
+|   :    :||   :    |  |  ,   /;  :   .'   \;  :    ;|  ,   /'--'.     /  .\/  .\/  .\
+ \   \  /   \   \  /    ---`-' |  ,     .-./|  ,   /  ---`-'   `--'---'\  ; \  ; \  ; |
+  `----'     `----'             `--`---'     ---`-'                     `--" `--" `--"
+
+ */
+
+constexpr Bitboard vertical(const Bitboard board) noexcept
+{
+    return Bitboard {
+        std::byteswap(board.to_int())
+    };
+}
+
+} // namespace chess::board::flips
