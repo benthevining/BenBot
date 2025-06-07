@@ -6,89 +6,23 @@
  * ======================================================================================
  */
 
+#include "MoveOrdering.hpp" // NOLINT(build/include_subdir)
 #include <algorithm>
 #include <cassert>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <format>
 #include <libchess/eval/Evaluation.hpp>
-#include <libchess/eval/Material.hpp>
 #include <libchess/moves/MoveGen.hpp>
-#include <libchess/moves/Patterns.hpp>
 #include <libchess/notation/FEN.hpp>
-#include <libchess/pieces/Colors.hpp>
-#include <libchess/pieces/PieceTypes.hpp>
 #include <libchess/search/Search.hpp>
-#include <span>
 #include <stdexcept>
-#include <vector>
 
 namespace chess::search {
 
-using pieces::Color;
 using std::size_t;
 using Eval = eval::Value;
 
 namespace {
-
-    namespace piece_values = eval::piece_values;
-
-    // higher scored moves will be searched first
-    [[nodiscard, gnu::const]] Eval move_ordering_score(
-        const Position& currentPosition, const Move& move) noexcept
-    {
-        static constexpr Eval CAPTURE_MULTIPLIER { 10. };
-        static constexpr Eval PROMOTION_MULTIPLIER { 7. };
-        static constexpr Eval CASTLING_BONUS { 200. };
-        static constexpr Eval OPPONENT_PAWN_CONTROLS_PENALTY { 350. };
-
-        const auto& theirPieces = currentPosition.their_pieces();
-
-        Eval score { 0. };
-
-        if (currentPosition.is_capture(move)) {
-            if (currentPosition.is_en_passant(move)) {
-                score += CAPTURE_MULTIPLIER;
-            } else {
-                const auto capturedType = theirPieces.get_piece_on(move.to);
-
-                assert(capturedType.has_value());
-
-                score += CAPTURE_MULTIPLIER
-                           * piece_values::get(*capturedType)
-                       - piece_values::get(move.piece);
-            }
-        }
-
-        if (move.is_promotion()) {
-            score += PROMOTION_MULTIPLIER * piece_values::get(*move.promotedType);
-        } else if (move.piece != pieces::Type::Pawn) {
-            if (move.is_castling()) {
-                score += CASTLING_BONUS;
-            } else {
-                // Penalize moving piece to a square attacked by opponent pawn
-                const auto opponentPawnAttacks = currentPosition.sideToMove == Color::White
-                                                   ? moves::patterns::pawn_attacks<Color::Black>(theirPieces.pawns)
-                                                   : moves::patterns::pawn_attacks<Color::White>(theirPieces.pawns);
-
-                if (opponentPawnAttacks.test(move.to))
-                    score -= OPPONENT_PAWN_CONTROLS_PENALTY;
-            }
-        }
-
-        return score;
-    }
-
-    void order_moves_for_search(
-        const Position&       currentPosition,
-        const std::span<Move> moves)
-    {
-        std::ranges::sort(
-            moves,
-            [&currentPosition](const Move& first, const Move& second) {
-                return move_ordering_score(currentPosition, first)
-                     > move_ordering_score(currentPosition, second);
-            });
-    }
 
     [[nodiscard]] Eval quiescence(
         Eval alpha, const Eval beta,
@@ -106,7 +40,7 @@ namespace {
 
         auto moves = moves::generate<true>(currentPosition); // captures only
 
-        order_moves_for_search(currentPosition, moves);
+        detail::order_moves_for_search(currentPosition, moves);
 
         for (const auto& move : moves) {
             assert(currentPosition.is_capture(move));
@@ -134,7 +68,7 @@ namespace {
 
         auto moves = moves::generate(currentPosition);
 
-        order_moves_for_search(currentPosition, moves);
+        detail::order_moves_for_search(currentPosition, moves);
 
         for (const auto& move : moves) {
             const auto newPosition = game::after_move(currentPosition, move);
@@ -167,7 +101,7 @@ Move find_best_move(
         };
     }
 
-    order_moves_for_search(position, moves);
+    detail::order_moves_for_search(position, moves);
 
     Move best {};
 

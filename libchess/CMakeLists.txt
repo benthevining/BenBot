@@ -87,6 +87,8 @@ set (
     notation/FENHelpers.hpp
     notation/PGN.cpp
     notation/UCI.cpp
+    search/MoveOrdering.cpp
+    search/MoveOrdering.hpp
     search/Search.cpp
     uci/CommandParsing.cpp
     uci/EngineBase.cpp
@@ -103,7 +105,10 @@ target_sources (
     PRIVATE ${libchess_sources}
 )
 
-target_include_directories (libchess PRIVATE "${CMAKE_CURRENT_LIST_DIR}/src/notation/")
+target_include_directories (
+    libchess PRIVATE "${CMAKE_CURRENT_LIST_DIR}/src/notation/"
+                     "${CMAKE_CURRENT_LIST_DIR}/src/search/"
+)
 
 source_group (TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${libchess_headers} ${libchess_sources})
 
