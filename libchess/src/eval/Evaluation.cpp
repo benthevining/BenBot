@@ -71,7 +71,7 @@ Value evaluate(const Position& position)
 
     if (! moves::any_legal_moves(position)) {
         if (position.is_check())
-            return MIN; // we got mated
+            return -MATE; // we got mated
 
         return DRAW; // stalemate
     }

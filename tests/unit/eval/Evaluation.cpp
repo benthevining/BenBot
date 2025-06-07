@@ -56,7 +56,7 @@ TEST_CASE("Evaluation - checkmate", TAGS)
 
         REQUIRE_THAT(
             evaluate(position),
-            match::WithinAbs(chess::eval::MIN, epsilon));
+            match::WithinAbs(-chess::eval::MATE, epsilon));
     }
 
     SECTION("Black is checkmated")
@@ -67,7 +67,7 @@ TEST_CASE("Evaluation - checkmate", TAGS)
 
         REQUIRE_THAT(
             evaluate(position),
-            match::WithinAbs(chess::eval::MIN, epsilon));
+            match::WithinAbs(-chess::eval::MATE, epsilon));
     }
 }
 

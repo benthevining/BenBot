@@ -18,7 +18,6 @@
 #pragma once
 
 #include <libchess/game/Position.hpp>
-#include <limits>
 
 /** This namespace contains functions for evaluating positions.
     @ingroup eval
@@ -33,16 +32,12 @@ using game::Position;
 using Value = double;
 
 /** The maximum possible evaluation score, i.e., if the side to move
-    has mate-in-1.
-    @ingroup eval
- */
-static constexpr auto MAX = std::numeric_limits<Value>::max();
+    has mate-in-1. If the side to move is in checkmate, the evaluation
+    is ``-MATE``.
 
-/** The minimum possible evaluation score, i.e., if the side to move
-    has gotten checkmated.
     @ingroup eval
  */
-static constexpr auto MIN = std::numeric_limits<Value>::min();
+static constexpr auto MATE = static_cast<Value>(10000000);
 
 /** A neutral, or draw, score.
     @ingroup eval

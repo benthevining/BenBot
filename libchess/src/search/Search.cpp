@@ -15,6 +15,7 @@
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/search/Search.hpp>
+#include <limits>
 #include <stdexcept>
 
 namespace chess::search {
@@ -105,8 +106,8 @@ Move find_best_move(
 
     Move best {};
 
-    auto alpha = eval::MIN;
-    auto beta  = eval::MAX;
+    auto alpha = std::numeric_limits<Eval>::min();
+    auto beta  = std::numeric_limits<Eval>::max();
 
     for (const auto& move : moves) {
         const auto newPosition = game::after_move(position, move);
