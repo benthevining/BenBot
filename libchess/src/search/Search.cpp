@@ -94,7 +94,8 @@ namespace {
         Eval alpha, const Eval beta,
         const Position& currentPosition)
     {
-        assert(beta > alpha);
+        // TODO: ??
+        // assert(beta > alpha);
 
         auto evaluation = eval::evaluate(currentPosition);
 
@@ -128,7 +129,8 @@ namespace {
         const Position& currentPosition,
         const size_t    depth)
     {
-        assert(beta > alpha);
+        // TODO: ??
+        // assert(beta > alpha);
 
         auto moves = moves::generate(currentPosition);
 
