@@ -13,7 +13,6 @@
 
 #pragma once
 
-#include <cassert>
 #include <libchess/board/Pieces.hpp>
 #include <libchess/eval/Evaluation.hpp>
 #include <libchess/game/Position.hpp>
@@ -46,6 +45,12 @@ namespace piece_values {
 
     /** The value of a queen. */
     static constexpr auto QUEEN { static_cast<Value>(900) };
+
+    /** The value of the king.
+        This value isn't really used in counting material, it's just an
+        arbitrarily large placeholder value.
+     */
+    static constexpr auto KING { static_cast<Value>(10000) };
 
     /// @}
 
@@ -84,14 +89,13 @@ namespace piece_values {
 
     constexpr Value get(const PieceType type) noexcept
     {
-        assert(type != PieceType::King); // the King doesn't have a material value
-
         switch (type) {
             case PieceType::Pawn  : return PAWN;
             case PieceType::Knight: return KNIGHT;
             case PieceType::Bishop: return BISHOP;
             case PieceType::Rook  : return ROOK;
-            default               : return QUEEN;
+            case PieceType::Queen : return QUEEN;
+            default               : return KING;
         }
     }
 

@@ -79,8 +79,8 @@ namespace {
     }
 
     void order_moves_for_search(
-        const Position& currentPosition,
-        std::span<Move> moves)
+        const Position&       currentPosition,
+        const std::span<Move> moves)
     {
         std::ranges::sort(
             moves,
@@ -105,16 +105,11 @@ namespace {
 
         auto moves = moves::generate<true>(currentPosition); // captures only
 
-        if (moves.empty()) {
-            if (currentPosition.is_check())
-                return eval::MIN; // checkmate
-
-            return 0.; // stalemate
-        }
-
         order_moves_for_search(currentPosition, moves);
 
         for (const auto& move : moves) {
+            assert(currentPosition.is_capture(move));
+
             const auto newPosition = game::after_move(currentPosition, move);
 
             evaluation = -quiescence(-beta, -alpha, newPosition);
@@ -137,13 +132,6 @@ namespace {
 
         auto moves = moves::generate(currentPosition);
 
-        if (moves.empty()) {
-            if (currentPosition.is_check())
-                return eval::MIN; // checkmate
-
-            return 0.; // stalemate
-        }
-
         order_moves_for_search(currentPosition, moves);
 
         for (const auto& move : moves) {
@@ -154,9 +142,8 @@ namespace {
                                       : -quiescence(-beta, -alpha, newPosition);
 
             if (evaluation >= beta)
-                return beta; // move was too good, opponent will avoid this position
+                return beta;
 
-            // found a new best move in this position
             alpha = std::max(alpha, evaluation);
         }
 
@@ -165,7 +152,8 @@ namespace {
 
 } // namespace
 
-Move find_best_move(const Position& position, const size_t searchDepth)
+Move find_best_move(
+    const Position& position, const size_t searchDepth)
 {
     auto moves = moves::generate(position);
 
@@ -195,10 +183,7 @@ Move find_best_move(const Position& position, const size_t searchDepth)
         }
     }
 
-    if (best == Move {}) {
-        // assert(false);
-        return moves.front();
-    }
+    assert(best != Move {});
 
     return best;
 }

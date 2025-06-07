@@ -14,7 +14,7 @@
   {
     "comment": "Black can mate in 1 or grab material",
     "depth": 4,
-    "fen": "rnb1k2r/pppppppp/1b3q2/8/1Nn5/1PBP4/P1P1PPPP/R2QKBNR b KQkq - 0 1",
-    "move": "Qxf2#"
+    "fen": "8/2p5/K7/3Q4/8/1q4k1/8/8 b - - 0 1",
+    "move": "Qb6#"
   }
 ]
