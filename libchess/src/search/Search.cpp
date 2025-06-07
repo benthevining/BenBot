@@ -20,12 +20,11 @@
 namespace chess::search {
 
 using std::size_t;
-using Eval = eval::Value;
 
 namespace {
 
-    [[nodiscard]] Eval quiescence(
-        Eval alpha, const Eval beta,
+    [[nodiscard]] int quiescence(
+        int alpha, const int beta,
         const Position& currentPosition)
     {
         // TODO: ??
@@ -58,8 +57,8 @@ namespace {
         return alpha;
     }
 
-    [[nodiscard]] Eval alpha_beta(
-        Eval alpha, const Eval beta,
+    [[nodiscard]] int alpha_beta(
+        int alpha, const int beta,
         const Position& currentPosition,
         const size_t    depth)
     {
@@ -105,7 +104,7 @@ Move find_best_move(
 
     Move best {};
 
-    static constexpr auto beta = eval::MATE * static_cast<Eval>(2);
+    static constexpr auto beta = eval::MATE * 2;
 
     auto alpha = -beta;
 

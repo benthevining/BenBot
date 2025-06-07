@@ -59,7 +59,7 @@ namespace {
 
 } // namespace
 
-Value evaluate(const Position& position)
+int evaluate(const Position& position)
 {
     using pieces::Color;
 

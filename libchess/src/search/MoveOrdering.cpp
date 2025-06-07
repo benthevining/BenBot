@@ -8,7 +8,6 @@
 
 #include "MoveOrdering.hpp" // NOLINT(build/include_subdir)
 #include <algorithm>
-#include <cassert>
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/eval/Evaluation.hpp>
 #include <libchess/eval/Material.hpp>
@@ -23,7 +22,6 @@ namespace {
 
     using board::Bitboard;
     using pieces::Color;
-    using Eval      = eval::Value;
     using PieceType = pieces::Type;
 
     [[nodiscard, gnu::const]] Bitboard get_opponent_pawn_attacks(const Position& position) noexcept
@@ -37,19 +35,19 @@ namespace {
     }
 
     // higher scored moves will be searched first
-    [[nodiscard, gnu::const]] Eval move_ordering_score(
+    [[nodiscard, gnu::const]] int move_ordering_score(
         const Position& currentPosition, const Move& move, const Bitboard opponentPawnAttacks)
     {
         namespace piece_values = eval::piece_values;
 
-        static constexpr auto CAPTURE_MULTIPLIER { static_cast<Eval>(10) };
-        static constexpr auto PROMOTION_MULTIPLIER { static_cast<Eval>(15) };
-        static constexpr auto CASTLING_BONUS { static_cast<Eval>(200) };
-        static constexpr auto OPPONENT_PAWN_CONTROLS_PENALTY { static_cast<Eval>(350) };
+        static constexpr auto CAPTURE_MULTIPLIER { 10 };
+        static constexpr auto PROMOTION_MULTIPLIER { 15 };
+        static constexpr auto CASTLING_BONUS { 200 };
+        static constexpr auto OPPONENT_PAWN_CONTROLS_PENALTY { 350 };
 
         const auto& theirPieces = currentPosition.their_pieces();
 
-        auto score { static_cast<Eval>(0) };
+        auto score { 0 };
 
         if (currentPosition.is_capture(move)) {
             const auto capturedType = currentPosition.is_en_passant(move)

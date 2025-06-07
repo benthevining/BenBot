@@ -13,7 +13,6 @@
 
 #pragma once
 
-#include <libchess/eval/Evaluation.hpp>
 #include <libchess/game/Position.hpp>
 
 namespace chess::eval {
@@ -25,6 +24,6 @@ using game::Position;
 
     @ingroup eval
  */
-[[nodiscard, gnu::const]] Value score_piece_placement(const Position& position) noexcept;
+[[nodiscard, gnu::const]] int score_piece_placement(const Position& position) noexcept;
 
 } // namespace chess::eval

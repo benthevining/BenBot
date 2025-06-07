@@ -26,23 +26,18 @@ namespace chess::eval {
 
 using game::Position;
 
-/** Numeric type representing evaluation results.
-    @ingroup eval
- */
-using Value = int;
-
 /** The maximum possible evaluation score, i.e., if the side to move
     has mate-in-1. If the side to move is in checkmate, the evaluation
     is ``-MATE``.
 
     @ingroup eval
  */
-static constexpr auto MATE = static_cast<Value>(10000000);
+static constexpr auto MATE { 10000000 };
 
 /** A neutral, or draw, score.
     @ingroup eval
  */
-static constexpr auto DRAW = static_cast<Value>(0);
+static constexpr auto DRAW { 0 };
 
 /** Returns a numerical score representing the evaluation of the
     give position from the perspective of the side to move.
@@ -50,6 +45,6 @@ static constexpr auto DRAW = static_cast<Value>(0);
 
     @ingroup eval
  */
-[[nodiscard]] Value evaluate(const Position& position);
+[[nodiscard]] int evaluate(const Position& position);
 
 } // namespace chess::eval

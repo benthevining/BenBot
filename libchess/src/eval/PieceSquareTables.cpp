@@ -133,7 +133,7 @@ namespace {
     using board::flips::vertical;
 
     template <bool IsBlack>
-    [[nodiscard, gnu::const]] Value score_pawns(
+    [[nodiscard, gnu::const]] int score_pawns(
         const Pieces& pieces) noexcept
     {
         auto pawns = pieces.pawns;
@@ -144,16 +144,15 @@ namespace {
 
         const auto indices = pawns.indices();
 
-        return static_cast<Value>(
-            std::reduce(
-                indices.begin(), indices.end(),
-                0, [](const int sum, const BitboardIndex idx) {
-                    return sum + pawnTable[idx];
-                }));
+        return std::reduce(
+            indices.begin(), indices.end(),
+            0, [](const int sum, const BitboardIndex idx) {
+                return sum + pawnTable[idx];
+            });
     }
 
     template <bool IsBlack>
-    [[nodiscard, gnu::const]] Value score_knights(
+    [[nodiscard, gnu::const]] int score_knights(
         const Pieces& pieces) noexcept
     {
         auto knights = pieces.knights;
@@ -164,16 +163,15 @@ namespace {
 
         const auto indices = knights.indices();
 
-        return static_cast<Value>(
-            std::reduce(
-                indices.begin(), indices.end(),
-                0, [](const int sum, const BitboardIndex idx) {
-                    return sum + knightTable[idx];
-                }));
+        return std::reduce(
+            indices.begin(), indices.end(),
+            0, [](const int sum, const BitboardIndex idx) {
+                return sum + knightTable[idx];
+            });
     }
 
     template <bool IsBlack>
-    [[nodiscard, gnu::const]] Value score_bishops(
+    [[nodiscard, gnu::const]] int score_bishops(
         const Pieces& pieces) noexcept
     {
         auto bishops = pieces.bishops;
@@ -184,16 +182,15 @@ namespace {
 
         const auto indices = bishops.indices();
 
-        return static_cast<Value>(
-            std::reduce(
-                indices.begin(), indices.end(),
-                0, [](const int sum, const BitboardIndex idx) {
-                    return sum + bishopTable[idx];
-                }));
+        return std::reduce(
+            indices.begin(), indices.end(),
+            0, [](const int sum, const BitboardIndex idx) {
+                return sum + bishopTable[idx];
+            });
     }
 
     template <bool IsBlack>
-    [[nodiscard, gnu::const]] Value score_rooks(
+    [[nodiscard, gnu::const]] int score_rooks(
         const Pieces& pieces) noexcept
     {
         auto rooks = pieces.rooks;
@@ -204,16 +201,15 @@ namespace {
 
         const auto indices = rooks.indices();
 
-        return static_cast<Value>(
-            std::reduce(
-                indices.begin(), indices.end(),
-                0, [](const int sum, const BitboardIndex idx) {
-                    return sum + rookTable[idx];
-                }));
+        return std::reduce(
+            indices.begin(), indices.end(),
+            0, [](const int sum, const BitboardIndex idx) {
+                return sum + rookTable[idx];
+            });
     }
 
     template <bool IsBlack>
-    [[nodiscard, gnu::const]] Value score_queens(
+    [[nodiscard, gnu::const]] int score_queens(
         const Pieces& pieces) noexcept
     {
         auto queens = pieces.queens;
@@ -224,16 +220,15 @@ namespace {
 
         const auto indices = queens.indices();
 
-        return static_cast<Value>(
-            std::reduce(
-                indices.begin(), indices.end(),
-                0, [](const int sum, const BitboardIndex idx) {
-                    return sum + queenTable[idx];
-                }));
+        return std::reduce(
+            indices.begin(), indices.end(),
+            0, [](const int sum, const BitboardIndex idx) {
+                return sum + queenTable[idx];
+            });
     }
 
     template <bool IsBlack>
-    [[nodiscard, gnu::const]] Value score_king(
+    [[nodiscard, gnu::const]] int score_king(
         const Pieces& pieces) noexcept
     {
         auto king = pieces.king;
@@ -244,11 +239,11 @@ namespace {
             king = vertical(king);
         }
 
-        return static_cast<Value>(kingTable[king.first()]);
+        return kingTable[king.first()];
     }
 
     template <bool IsBlack>
-    [[nodiscard, gnu::const]] Value score_side_pieces(
+    [[nodiscard, gnu::const]] int score_side_pieces(
         const Pieces& pieces) noexcept
     {
         return score_pawns<IsBlack>(pieces)
@@ -261,7 +256,7 @@ namespace {
 
 } // namespace
 
-Value score_piece_placement(const Position& position) noexcept
+int score_piece_placement(const Position& position) noexcept
 {
     const auto [ourScore, theirScore] = [&position] {
         if (position.sideToMove == pieces::Color::Black) {
