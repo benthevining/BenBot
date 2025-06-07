@@ -63,56 +63,6 @@ enum class Type : std::uint_fast8_t {
  */
 [[nodiscard, gnu::const]] constexpr char to_char(Type type, bool uppercase = true) noexcept;
 
-/** This namespace contains constants encoding the material values of the various piece types.
-    The king is not assigned a material value, as it can never be legally captured in a non-checkmated position.
-    @ingroup pieces
- */
-namespace values {
-
-    /// @ingroup pieces
-    /// @{
-
-    /** The material value of a pawn (1). */
-    static constexpr size_t PAWN { 100uz };
-
-    /** The material value of a knight (3). */
-    static constexpr size_t KNIGHT { 320uz };
-
-    /** The material value of a bishop (4). */
-    static constexpr size_t BISHOP { 330uz };
-
-    /** The material value of a rook (5). */
-    static constexpr size_t ROOK { 500uz };
-
-    /** The material value of a queen (9). */
-    static constexpr size_t QUEEN { 900uz };
-
-    /** The maximum possible number of material points that a side can have. */
-    static constexpr size_t MAX_POSSIBLE_MATERIAL = (QUEEN * 9uz) // 8 promotions
-                                                  + (KNIGHT * 2uz)
-                                                  + (BISHOP * 2uz)
-                                                  + (ROOK * 5uz);
-
-    /// @}
-
-    /** Returns the value of the given piece type.
-        @ingroup pieces
-     */
-    [[nodiscard, gnu::const]] constexpr size_t get(const Type type) noexcept
-    {
-        switch (type) {
-            case Type::Pawn  : return PAWN;
-            case Type::Knight: return KNIGHT;
-            case Type::Bishop: return BISHOP;
-            case Type::Rook  : return ROOK;
-            case Type::Queen : return QUEEN;
-            default: // king
-                return 1000uz;
-        }
-    }
-
-} // namespace values
-
 } // namespace chess::pieces
 
 namespace std {

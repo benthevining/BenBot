@@ -43,6 +43,7 @@ set (
     board/Shifts.hpp
     board/Square.hpp
     eval/Evaluation.hpp
+    eval/Material.hpp
     eval/PieceSquareTables.hpp
     game/CastlingRights.hpp
     game/Position.hpp

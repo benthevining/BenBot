@@ -11,6 +11,7 @@
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <format>
 #include <libchess/eval/Evaluation.hpp>
+#include <libchess/eval/Material.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/moves/Patterns.hpp>
 #include <libchess/notation/FEN.hpp>
@@ -25,10 +26,11 @@ namespace chess::search {
 
 using pieces::Color;
 using std::size_t;
-using Eval      = eval::Value;
-using PieceType = pieces::Type;
+using Eval = eval::Value;
 
 namespace {
+
+    namespace piece_values = eval::piece_values;
 
     // higher scored moves will be searched first
     [[nodiscard, gnu::const]] Eval move_ordering_score(
@@ -52,14 +54,14 @@ namespace {
                 assert(capturedType.has_value());
 
                 score += CAPTURE_MULTIPLIER
-                           * static_cast<Eval>(pieces::values::get(*capturedType))
-                       - static_cast<Eval>(pieces::values::get(move.piece));
+                           * piece_values::get(*capturedType)
+                       - piece_values::get(move.piece);
             }
         }
 
         if (move.is_promotion()) {
-            score += PROMOTION_MULTIPLIER * static_cast<Eval>(pieces::values::get(*move.promotedType));
-        } else if (move.piece != PieceType::Pawn) {
+            score += PROMOTION_MULTIPLIER * piece_values::get(*move.promotedType);
+        } else if (move.piece != pieces::Type::Pawn) {
             if (move.is_castling()) {
                 score += CASTLING_BONUS;
             } else {

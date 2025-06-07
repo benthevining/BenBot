@@ -7,6 +7,7 @@
  */
 
 #include <libchess/eval/Evaluation.hpp>
+#include <libchess/eval/Material.hpp>
 #include <libchess/eval/PieceSquareTables.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/pieces/Colors.hpp>
@@ -56,13 +57,6 @@ namespace {
         return numWhiteKnights + numWhiteBishops == 1uz;
     }
 
-    [[nodiscard, gnu::const]] Value material_score(
-        const Position& position) noexcept
-    {
-        return static_cast<Value>(position.our_pieces().material())
-             - static_cast<Value>(position.their_pieces().material());
-    }
-
 } // namespace
 
 Value evaluate(const Position& position)
@@ -84,7 +78,7 @@ Value evaluate(const Position& position)
 
     // TODO: give bonus for having castling rights (or already having castled)
 
-    return material_score(position)
+    return score_material(position)
          + score_piece_placement(position);
 }
 

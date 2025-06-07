@@ -15,7 +15,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <cstddef> // IWYU pragma: keep - for size_t
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Masks.hpp>
@@ -31,7 +30,6 @@
 namespace chess::board {
 
 using pieces::Color;
-using std::size_t;
 
 using PieceType = pieces::Type;
 
@@ -95,9 +93,6 @@ struct Pieces final {
         The returned bitboard has a bit set if no piece of any type is on that square.
      */
     [[nodiscard]] constexpr Bitboard free() const noexcept { return occupied.inverse(); }
-
-    /** Returns the sum of the material values for all pieces on this side. */
-    [[nodiscard]] constexpr size_t material() const noexcept;
 
     /** Returns true if there are no pawns of this color anywhere on the given file. */
     [[nodiscard]] constexpr bool is_file_half_open(File file) const noexcept;
@@ -191,17 +186,6 @@ constexpr Bitboard Pieces::get_type(const PieceType type) const noexcept
         case PieceType::King  : return king;
         default               : return pawns;
     }
-}
-
-constexpr size_t Pieces::material() const noexcept
-{
-    namespace values = pieces::values;
-
-    return (pawns.count() * values::PAWN)
-         + (knights.count() * values::KNIGHT)
-         + (bishops.count() * values::BISHOP)
-         + (rooks.count() * values::ROOK)
-         + (queens.count() * values::QUEEN);
 }
 
 constexpr bool Pieces::is_file_half_open(const File file) const noexcept
