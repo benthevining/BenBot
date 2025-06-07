@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <cstddef> // IWYU pragma: keep - for size_t
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
 
@@ -29,6 +30,7 @@ namespace chess::search {
 
 using game::Position;
 using moves::Move;
+using std::size_t;
 
 /** Finds the best move for the side to move in the given position.
 
@@ -37,6 +39,7 @@ using moves::Move;
 
     @ingroup search
  */
-[[nodiscard]] Move find_best_move(const Position& position, size_t searchDepth = 4uz);
+[[nodiscard]] Move find_best_move(
+    const Position& position, size_t searchDepth = 4uz);
 
 } // namespace chess::search

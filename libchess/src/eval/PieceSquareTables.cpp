@@ -8,7 +8,6 @@
 
 #include <array>
 #include <cassert>
-#include <libchess/board/Bitboard.hpp>
 #include <libchess/board/BitboardIndex.hpp>
 #include <libchess/board/Flips.hpp>
 #include <libchess/board/Pieces.hpp>
@@ -128,7 +127,6 @@ static constexpr std::array kingTable {
 
 namespace {
 
-    using board::Bitboard;
     using board::BitboardIndex;
     using board::Pieces;
 

@@ -26,10 +26,10 @@ namespace chess::eval {
 
 using game::Position;
 
-/** Floating-point type representing evaluation results.
+/** Numeric type representing evaluation results.
     @ingroup eval
  */
-using Value = double;
+using Value = int;
 
 /** The maximum possible evaluation score, i.e., if the side to move
     has mate-in-1. If the side to move is in checkmate, the evaluation
@@ -47,8 +47,6 @@ static constexpr auto DRAW = static_cast<Value>(0);
 /** Returns a numerical score representing the evaluation of the
     give position from the perspective of the side to move.
     Higher numbers are better for the side to move.
-
-    The value returned is in the range ``[MIN, MAX]``.
 
     @ingroup eval
  */

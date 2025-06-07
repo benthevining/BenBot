@@ -23,57 +23,53 @@ namespace {
 
     using board::Bitboard;
     using pieces::Color;
-    using Eval = eval::Value;
-
-    namespace piece_values = eval::piece_values;
+    using Eval      = eval::Value;
+    using PieceType = pieces::Type;
 
     [[nodiscard, gnu::const]] Bitboard get_opponent_pawn_attacks(const Position& position) noexcept
     {
-        if (position.sideToMove == Color::White)
-            return moves::patterns::pawn_attacks<Color::Black>(position.their_pieces().pawns);
+        using moves::patterns::pawn_attacks;
 
-        return moves::patterns::pawn_attacks<Color::White>(position.their_pieces().pawns);
+        if (position.sideToMove == Color::White)
+            return pawn_attacks<Color::Black>(position.their_pieces().pawns);
+
+        return pawn_attacks<Color::White>(position.their_pieces().pawns);
     }
 
     // higher scored moves will be searched first
     [[nodiscard, gnu::const]] Eval move_ordering_score(
-        const Position& currentPosition, const Move& move, const Bitboard opponentPawnAttacks) noexcept
+        const Position& currentPosition, const Move& move, const Bitboard opponentPawnAttacks)
     {
-        static constexpr Eval CAPTURE_MULTIPLIER { 10. };
-        static constexpr Eval PROMOTION_MULTIPLIER { 7. };
-        static constexpr Eval CASTLING_BONUS { 200. };
-        static constexpr Eval OPPONENT_PAWN_CONTROLS_PENALTY { 350. };
+        namespace piece_values = eval::piece_values;
+
+        static constexpr auto CAPTURE_MULTIPLIER { static_cast<Eval>(10) };
+        static constexpr auto PROMOTION_MULTIPLIER { static_cast<Eval>(15) };
+        static constexpr auto CASTLING_BONUS { static_cast<Eval>(200) };
+        static constexpr auto OPPONENT_PAWN_CONTROLS_PENALTY { static_cast<Eval>(350) };
 
         const auto& theirPieces = currentPosition.their_pieces();
 
-        Eval score { 0. };
+        auto score { static_cast<Eval>(0) };
 
         if (currentPosition.is_capture(move)) {
-            if (currentPosition.is_en_passant(move)) {
-                [[unlikely]];
-                score += CAPTURE_MULTIPLIER;
-            } else {
-                const auto capturedType = theirPieces.get_piece_on(move.to);
+            const auto capturedType = currentPosition.is_en_passant(move)
+                                        ? PieceType::Pawn
+                                        : theirPieces.get_piece_on(move.to).value();
 
-                assert(capturedType.has_value());
-
-                score += CAPTURE_MULTIPLIER
-                       * (piece_values::get(*capturedType)
-                           - piece_values::get(move.piece));
-            }
+            score += CAPTURE_MULTIPLIER
+                   * (piece_values::get(capturedType) - piece_values::get(move.piece));
         }
 
         if (move.is_promotion()) {
             [[unlikely]];
             score += PROMOTION_MULTIPLIER * piece_values::get(*move.promotedType);
-        } else if (move.piece != pieces::Type::Pawn) {
+        } else if (move.piece != PieceType::Pawn) {
             if (move.is_castling()) {
                 [[unlikely]];
                 score += CASTLING_BONUS;
-            } else {
+            } else if (opponentPawnAttacks.test(move.to)) {
                 // Penalize moving piece to a square attacked by opponent pawn
-                if (opponentPawnAttacks.test(move.to))
-                    score -= OPPONENT_PAWN_CONTROLS_PENALTY;
+                score -= OPPONENT_PAWN_CONTROLS_PENALTY;
             }
         }
 
@@ -88,7 +84,8 @@ void order_moves_for_search(
 {
     std::ranges::sort(
         moves,
-        [&currentPosition, opponentPawnAttacks = get_opponent_pawn_attacks(currentPosition)](const Move& first, const Move& second) {
+        [&currentPosition,
+            opponentPawnAttacks = get_opponent_pawn_attacks(currentPosition)](const Move& first, const Move& second) {
             return move_ordering_score(currentPosition, first, opponentPawnAttacks)
                  > move_ordering_score(currentPosition, second, opponentPawnAttacks);
         });
