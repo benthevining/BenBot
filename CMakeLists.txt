@@ -8,7 +8,7 @@ cmake_minimum_required (VERSION 3.30.0 FATAL_ERROR)
 
 project (
     libchess
-    VERSION 0.0.1
+    VERSION 1.0.0
     LANGUAGES CXX C
     DESCRIPTION "A chess engine"
     HOMEPAGE_URL "https://github.com/benthevining/libchess"

@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "conventional-changelog-cli": "^5.0.0"
+  }
+}
