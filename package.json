@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "conventional-changelog-cli": "^5.0.0"
-  }
+  },
+  "name": "libchess",
+  "private": true,
+  "version": "1.0.0"
 }
