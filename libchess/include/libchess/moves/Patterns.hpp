@@ -18,7 +18,6 @@
 #include <libchess/board/Fills.hpp>
 #include <libchess/board/Masks.hpp>
 #include <libchess/board/Shifts.hpp>
-#include <libchess/board/Square.hpp>
 #include <libchess/pieces/Colors.hpp>
 
 /** This namespace provides functions for generating possible moves for each piece type
@@ -32,7 +31,6 @@
 namespace chess::moves::patterns {
 
 using board::Bitboard;
-using board::Square;
 using pieces::Color;
 
 /// @ingroup moves
