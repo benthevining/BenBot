@@ -31,7 +31,7 @@ namespace {
         const Position& currentPosition,
         const size_t    plyFromRoot)
     {
-        // assert(beta > alpha);
+        assert(beta > alpha);
 
         if (currentPosition.is_draw())
             return eval::DRAW;
@@ -74,7 +74,7 @@ namespace {
         const size_t    depth,
         const size_t    plyFromRoot)
     {
-        // assert(beta > alpha);
+        assert(beta > alpha);
 
         if (currentPosition.is_draw())
             return eval::DRAW;
