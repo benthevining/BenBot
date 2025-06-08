@@ -21,6 +21,8 @@ namespace chess::moves::magics {
 
 namespace {
 
+    // see https://github.com/kz04px/libchess/blob/master/src/movegen.cpp
+
     using board::BitboardIndex;
     using std::size_t;
 
@@ -97,18 +99,21 @@ namespace {
         MagicInfo { 0x0003ffffbf7dfeecULL, 66501 }, MagicInfo { 0x0001ffff9dffa333ULL, 14826 }
     };
 
+    // Occupancy masks
+    // The next 2 functions generate masks for the "relevant occupancy bits" for a given starting square.
+    // This is basically the piece type's movement pattern, except excluding the final square in each
+    // ray direction, since for blockers it doesn't matter if there's a piece there or not.
+
     namespace masks = board::masks;
 
     using MaskArray = std::array<Bitboard, 64uz>;
-
-    constexpr auto NOT_PERIMETER = masks::PERIMETER.inverse();
 
     [[nodiscard]] constexpr MaskArray calculate_bishop_masks()
     {
         MaskArray result {};
 
         for (const auto square : masks::ALL.subboards())
-            result.at(square.first()) = patterns::bishop(square) & NOT_PERIMETER;
+            result.at(square.first()) = patterns::bishop(square) & masks::PERIMETER.inverse();
 
         return result;
     }
@@ -117,15 +122,11 @@ namespace {
     {
         MaskArray result {};
 
-#if 0
-        for (const auto square : masks::ALL.subboards())
-            result.at(square.first()) = patterns::rook(square) & NOT_PERIMETER;
-#else
         for (auto i = 0; i < 64; ++i) {
             const auto square = Square::from_index(i);
 
-            const int file = std::to_underlying(square.file);
-            const int rank = std::to_underlying(square.rank);
+            const auto file = static_cast<int>(std::to_underlying(square.file));
+            const auto rank = static_cast<int>(std::to_underlying(square.rank));
 
             // Right
             for (auto r = rank + 1; r <= 6; ++r) {
@@ -151,7 +152,6 @@ namespace {
                 result[i] |= Bitboard::from_square(nsq);
             }
         }
-#endif
 
         return result;
     }
@@ -192,33 +192,37 @@ namespace {
         MagicMoves result {};
 
         for (auto i = 0; i < 64; ++i) {
-            Bitboard perm;
-
             const auto square = Square::from_index(i);
 
             // Bishops
-            perm.clear();
-            do {
-                auto& value = result.at(calc_bishop_index(i, perm));
+            {
+                Bitboard occupied;
 
-                value = pseudo_legal::bishop(
-                    Bitboard::from_square(square),
-                    perm.inverse(), {});
+                do {
+                    auto& value = result.at(calc_bishop_index(i, occupied));
 
-                perm = permute(BISHOP_MASKS.at(i), perm);
-            } while (perm.any());
+                    value = pseudo_legal::bishop(
+                        Bitboard::from_square(square),
+                        occupied.inverse(), {});
+
+                    occupied = permute(BISHOP_MASKS.at(i), occupied);
+                } while (occupied.any());
+            }
 
             // Rooks
-            perm.clear();
-            do {
-                auto& value = result.at(calc_rook_index(i, perm));
+            {
+                Bitboard occupied;
 
-                value = pseudo_legal::rook(
-                    Bitboard::from_square(square),
-                    perm.inverse(), {});
+                do {
+                    auto& value = result.at(calc_rook_index(i, occupied));
 
-                perm = permute(ROOK_MASKS.at(i), perm);
-            } while (perm.any());
+                    value = pseudo_legal::rook(
+                        Bitboard::from_square(square),
+                        occupied.inverse(), {});
+
+                    occupied = permute(ROOK_MASKS.at(i), occupied);
+                } while (occupied.any());
+            }
         }
 
         return result;
