@@ -144,6 +144,8 @@ TEST_CASE("Benchmarking magic bitboard move generation", TAGS)
 {
     namespace move_gen = chess::moves::magics;
 
+    [[maybe_unused]] const auto magicsInit = move_gen::queen({}, {}, {});
+
     // NB. intentionally not constexpr
     chess::game::Position position {};
 
@@ -176,6 +178,8 @@ TEST_CASE("Benchmarking magic bitboard move generation", TAGS)
 
 TEST_CASE("Benchmarking legal move generation", TAGS)
 {
+    [[maybe_unused]] const auto magicsInit = chess::moves::magics::queen({}, {}, {});
+
     const auto position = chess::notation::from_fen(
         "R6R/3Q4/1Q4Q1/4Q3/2Q4Q/Q4Q2/pp1Q4/kBNN1KB1 w - - 0 1");
 

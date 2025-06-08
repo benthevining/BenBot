@@ -71,7 +71,7 @@ struct PerftResult final {
     @ingroup moves
  */
 template <bool IsRoot = true>
-[[nodiscard]] constexpr PerftResult perft(size_t depth, const Position& startingPosition = {});
+[[nodiscard]] PerftResult perft(size_t depth, const Position& startingPosition = {});
 
 /*
                          ___                           ,--,
@@ -105,7 +105,7 @@ constexpr PerftResult& PerftResult::operator+=(const PerftResult& rhs) noexcept
 }
 
 template <bool IsRoot>
-constexpr PerftResult perft(const size_t depth, const Position& startingPosition)
+PerftResult perft(const size_t depth, const Position& startingPosition)
 {
     if (depth == 0uz)
         return { .nodes = 1uz };
