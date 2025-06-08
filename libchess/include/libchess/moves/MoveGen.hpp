@@ -23,6 +23,7 @@
 #include <libchess/board/Shifts.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
+#include <libchess/moves/Magics.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/moves/PseudoLegal.hpp>
 #include <libchess/pieces/Colors.hpp>
@@ -355,13 +356,13 @@ namespace detail {
     template <Color Side, bool CapturesOnly>
     constexpr void add_bishop_moves(
         const Position&                 position,
-        const Bitboard                  emptySquares,
+        const Bitboard                  occupiedSquares,
         std::output_iterator<Move> auto outputIt)
     {
         const auto& ourPieces = position.pieces_for<Side>();
 
-        for (const auto bishopPos : ourPieces.bishops.subboards()) {
-            auto bishopMoves = pseudo_legal::bishop(bishopPos, emptySquares, ourPieces.occupied);
+        for (const auto bishopPos : ourPieces.bishops.squares()) {
+            auto bishopMoves = magics::bishop(bishopPos, occupiedSquares, ourPieces.occupied);
 
             if constexpr (CapturesOnly) {
                 bishopMoves &= position.pieces_for<OtherSide<Side>>().occupied;
@@ -369,7 +370,7 @@ namespace detail {
 
             for (const auto targetSquare : bishopMoves.squares()) {
                 const Move move {
-                    .from  = Square::from_index(bishopPos.first()),
+                    .from  = bishopPos,
                     .to    = targetSquare,
                     .piece = PieceType::Bishop
                 };
@@ -383,13 +384,13 @@ namespace detail {
     template <Color Side, bool CapturesOnly>
     constexpr void add_rook_moves(
         const Position&                 position,
-        const Bitboard                  emptySquares,
+        const Bitboard                  occupiedSquares,
         std::output_iterator<Move> auto outputIt)
     {
         const auto& ourPieces = position.pieces_for<Side>();
 
-        for (const auto rookPos : ourPieces.rooks.subboards()) {
-            auto rookMoves = pseudo_legal::rook(rookPos, emptySquares, ourPieces.occupied);
+        for (const auto rookPos : ourPieces.rooks.squares()) {
+            auto rookMoves = magics::rook(rookPos, occupiedSquares, ourPieces.occupied);
 
             if constexpr (CapturesOnly) {
                 rookMoves &= position.pieces_for<OtherSide<Side>>().occupied;
@@ -397,7 +398,7 @@ namespace detail {
 
             for (const auto targetSquare : rookMoves.squares()) {
                 const Move move {
-                    .from  = Square::from_index(rookPos.first()),
+                    .from  = rookPos,
                     .to    = targetSquare,
                     .piece = PieceType::Rook
                 };
@@ -411,13 +412,13 @@ namespace detail {
     template <Color Side, bool CapturesOnly>
     constexpr void add_queen_moves(
         const Position&                 position,
-        const Bitboard                  emptySquares,
+        const Bitboard                  occupiedSquares,
         std::output_iterator<Move> auto outputIt)
     {
         const auto& ourPieces = position.pieces_for<Side>();
 
-        for (const auto queenPos : ourPieces.queens.subboards()) {
-            auto queenMoves = pseudo_legal::queen(queenPos, emptySquares, ourPieces.occupied);
+        for (const auto queenPos : ourPieces.queens.squares()) {
+            auto queenMoves = magics::queen(queenPos, occupiedSquares, ourPieces.occupied);
 
             if constexpr (CapturesOnly) {
                 queenMoves &= position.pieces_for<OtherSide<Side>>().occupied;
@@ -425,7 +426,7 @@ namespace detail {
 
             for (const auto targetSquare : queenMoves.squares()) {
                 const Move move {
-                    .from  = Square::from_index(queenPos.first()),
+                    .from  = queenPos,
                     .to    = targetSquare,
                     .piece = PieceType::Queen
                 };
@@ -570,11 +571,11 @@ namespace detail {
 
         add_knight_moves<Side, CapturesOnly>(position, outputIt);
 
-        add_bishop_moves<Side, CapturesOnly>(position, emptySquares, outputIt);
+        add_bishop_moves<Side, CapturesOnly>(position, allOccupied, outputIt);
 
-        add_rook_moves<Side, CapturesOnly>(position, emptySquares, outputIt);
+        add_rook_moves<Side, CapturesOnly>(position, allOccupied, outputIt);
 
-        add_queen_moves<Side, CapturesOnly>(position, emptySquares, outputIt);
+        add_queen_moves<Side, CapturesOnly>(position, allOccupied, outputIt);
 
         add_king_moves<Side, CapturesOnly>(position, outputIt);
 
@@ -606,17 +607,17 @@ namespace detail {
             }
 
             case PieceType::Bishop: {
-                add_bishop_moves<Side, CapturesOnly>(position, emptySquares, outputIt);
+                add_bishop_moves<Side, CapturesOnly>(position, allOccupied, outputIt);
                 return;
             }
 
             case PieceType::Rook: {
-                add_rook_moves<Side, CapturesOnly>(position, emptySquares, outputIt);
+                add_rook_moves<Side, CapturesOnly>(position, allOccupied, outputIt);
                 return;
             }
 
             case PieceType::Queen: {
-                add_queen_moves<Side, CapturesOnly>(position, emptySquares, outputIt);
+                add_queen_moves<Side, CapturesOnly>(position, allOccupied, outputIt);
                 return;
             }
 
