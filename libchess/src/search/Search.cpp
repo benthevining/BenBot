@@ -24,9 +24,12 @@ using std::size_t;
 
 namespace {
 
+    constexpr auto EVAL_MAX = eval::MATE * 2;
+
     [[nodiscard]] int quiescence(
         int alpha, const int beta,
-        const Position& currentPosition)
+        const Position& currentPosition,
+        const size_t    plyFromRoot)
     {
         // assert(beta > alpha);
 
@@ -39,6 +42,11 @@ namespace {
 
         auto moves = moves::generate<true>(currentPosition); // captures only
 
+        if (moves.empty() && currentPosition.is_check()) {
+            // checkmate
+            return (EVAL_MAX - static_cast<int>(plyFromRoot)) * -1;
+        }
+
         detail::order_moves_for_search(currentPosition, moves);
 
         for (const auto& move : moves) {
@@ -46,7 +54,7 @@ namespace {
 
             const auto newPosition = game::after_move(currentPosition, move);
 
-            evaluation = -quiescence(-beta, -alpha, newPosition);
+            evaluation = -quiescence(-beta, -alpha, newPosition, plyFromRoot + 1uz);
 
             if (evaluation >= beta)
                 return beta;
@@ -60,11 +68,17 @@ namespace {
     [[nodiscard]] int alpha_beta(
         int alpha, const int beta,
         const Position& currentPosition,
-        const size_t    depth)
+        const size_t    depth,
+        const size_t    plyFromRoot)
     {
         // assert(beta > alpha);
 
         auto moves = moves::generate(currentPosition);
+
+        if (moves.empty() && currentPosition.is_check()) {
+            // checkmate
+            return (EVAL_MAX - static_cast<int>(plyFromRoot)) * -1;
+        }
 
         detail::order_moves_for_search(currentPosition, moves);
 
@@ -72,8 +86,8 @@ namespace {
             const auto newPosition = game::after_move(currentPosition, move);
 
             const auto evaluation = depth > 1uz
-                                      ? -alpha_beta(-beta, -alpha, newPosition, depth - 1uz)
-                                      : -quiescence(-beta, -alpha, newPosition);
+                                      ? -alpha_beta(-beta, -alpha, newPosition, depth - 1uz, plyFromRoot + 1uz)
+                                      : -quiescence(-beta, -alpha, newPosition, plyFromRoot + 1uz);
 
             if (evaluation >= beta)
                 return beta;
@@ -103,14 +117,14 @@ Move find_best_move(
 
     std::optional<Move> bestMove;
 
-    static constexpr auto beta = eval::MATE * 2;
+    static constexpr auto beta = EVAL_MAX;
 
-    auto alpha = -beta;
+    auto alpha = -EVAL_MAX;
 
     for (const auto& move : moves) {
         const auto newPosition = game::after_move(position, move);
 
-        const auto score = -alpha_beta(-beta, -alpha, newPosition, searchDepth);
+        const auto score = -alpha_beta(-beta, -alpha, newPosition, searchDepth, 1uz);
 
         if (score > alpha) {
             bestMove = move;
