@@ -15,6 +15,7 @@
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/search/Search.hpp>
+#include <optional>
 #include <stdexcept>
 
 namespace chess::search {
@@ -27,7 +28,6 @@ namespace {
         int alpha, const int beta,
         const Position& currentPosition)
     {
-        // TODO: ??
         // assert(beta > alpha);
 
         auto evaluation = eval::evaluate(currentPosition);
@@ -62,7 +62,6 @@ namespace {
         const Position& currentPosition,
         const size_t    depth)
     {
-        // TODO: ??
         // assert(beta > alpha);
 
         auto moves = moves::generate(currentPosition);
@@ -102,7 +101,7 @@ Move find_best_move(
 
     detail::order_moves_for_search(position, moves);
 
-    Move best {};
+    std::optional<Move> bestMove;
 
     static constexpr auto beta = eval::MATE * 2;
 
@@ -114,14 +113,12 @@ Move find_best_move(
         const auto score = -alpha_beta(-beta, -alpha, newPosition, searchDepth);
 
         if (score > alpha) {
-            best  = move;
-            alpha = score;
+            bestMove = move;
+            alpha    = score;
         }
     }
 
-    assert(best != Move {});
-
-    return best;
+    return bestMove.value();
 }
 
 } // namespace chess::search

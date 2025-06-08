@@ -40,22 +40,21 @@ namespace {
     {
         namespace piece_values = eval::piece_values;
 
-        static constexpr auto CAPTURE_MULTIPLIER { 10 };
-        static constexpr auto PROMOTION_MULTIPLIER { 15 };
-        static constexpr auto CASTLING_BONUS { 200 };
-        static constexpr auto OPPONENT_PAWN_CONTROLS_PENALTY { 350 };
+        static constexpr auto CAPTURE_MULTIPLIER { 10 };     // cppcheck-suppress variableScope
+        static constexpr auto PROMOTION_MULTIPLIER { 15 };   // cppcheck-suppress variableScope
+        static constexpr auto CASTLING_BONUS { 30 };         // cppcheck-suppress variableScope
+        static constexpr auto PAWN_CONTROLS_PENALTY { 350 }; // cppcheck-suppress variableScope
 
         const auto& theirPieces = currentPosition.their_pieces();
 
         auto score { 0 };
 
-        if (currentPosition.is_capture(move)) {
-            const auto capturedType = currentPosition.is_en_passant(move)
-                                        ? PieceType::Pawn
-                                        : theirPieces.get_piece_on(move.to).value();
+        if (const auto capturedType = theirPieces.get_piece_on(move.to)) {
+            // NB. checking for captures this way prevents en passant from entering this branch
 
+            // we want to prioritize searching moves that capture valuable pieces with less valuable pieces
             score += CAPTURE_MULTIPLIER
-                   * (piece_values::get(capturedType) - piece_values::get(move.piece));
+                   * (piece_values::get(*capturedType) - piece_values::get(move.piece));
         }
 
         if (move.is_promotion()) {
@@ -67,7 +66,7 @@ namespace {
                 score += CASTLING_BONUS;
             } else if (opponentPawnAttacks.test(move.to)) {
                 // Penalize moving piece to a square attacked by opponent pawn
-                score -= OPPONENT_PAWN_CONTROLS_PENALTY;
+                score -= PAWN_CONTROLS_PENALTY;
             }
         }
 
