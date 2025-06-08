@@ -9,6 +9,7 @@
 #include <array>
 #include <cstdint> // IWYU pragma: keep - for std::uint64_t
 #include <libchess/moves/Magics.hpp>
+#include <libchess/moves/PseudoLegal.hpp>
 #include <utility>
 
 namespace chess::moves::magics {
@@ -169,103 +170,17 @@ namespace {
     [[nodiscard]] constexpr Bitboard calculate_bishop_moves(
         const Square& square, const Bitboard blockers)
     {
-        Bitboard result;
-
-        const int file = std::to_underlying(square.file);
-        const int rank = std::to_underlying(square.rank);
-
-        // Up 1 Right 1
-        for (auto y = rank + 1, x = file + 1; y <= 7 && x <= 7; ++y, ++x) {
-            const auto nsq   = Square::from_index(x + y * 8);
-            const auto board = Bitboard::from_square(nsq);
-            result |= board;
-
-            if ((blockers & board).any())
-                break;
-        }
-
-        // Up 1 Left 1
-        for (auto y = rank + 1, x = file - 1; y <= 7 && x >= 0; ++y, --x) {
-            const auto nsq   = Square::from_index(x + y * 8);
-            const auto board = Bitboard::from_square(nsq);
-            result |= board;
-
-            if ((blockers & board).any())
-                break;
-        }
-
-        // Down 1 Right 1
-        for (auto y = rank - 1, x = file + 1; y >= 0 && x <= 7; --y, ++x) {
-            const auto nsq   = Square::from_index(x + y * 8);
-            const auto board = Bitboard::from_square(nsq);
-            result |= board;
-
-            if ((blockers & board).any())
-                break;
-        }
-
-        // Down 1 Left 1
-        for (auto y = rank - 1, x = file - 1; y >= 0 && x >= 0; --y, --x) {
-            const auto nsq   = Square::from_index(x + y * 8);
-            const auto board = Bitboard::from_square(nsq);
-            result |= board;
-
-            if ((blockers & board).any())
-                break;
-        }
-
-        return result;
+        return pseudo_legal::bishop(
+            Bitboard::from_square(square),
+            blockers.inverse(), {});
     }
 
     [[nodiscard]] constexpr Bitboard calculate_rook_moves(
         const Square& square, const Bitboard blockers)
     {
-        Bitboard result;
-
-        const int file = std::to_underlying(square.file);
-        const int rank = std::to_underlying(square.rank);
-
-        // Up
-        for (auto i = rank + 1; i <= 7; ++i) {
-            const auto nsq   = Square::from_index(file + i * 8);
-            const auto board = Bitboard::from_square(nsq);
-            result |= board;
-
-            if ((blockers & board).any())
-                break;
-        }
-
-        // Down
-        for (auto i = rank - 1; i >= 0; --i) {
-            const auto nsq   = Square::from_index(file + i * 8);
-            const auto board = Bitboard::from_square(nsq);
-            result |= board;
-
-            if ((blockers & board).any())
-                break;
-        }
-
-        // Right
-        for (auto i = file + 1; i <= 7; ++i) {
-            const auto nsq   = Square::from_index(i + rank * 8);
-            const auto board = Bitboard::from_square(nsq);
-            result |= board;
-
-            if ((blockers & board).any())
-                break;
-        }
-
-        // Left
-        for (auto i = file - 1; i >= 0; --i) {
-            const auto nsq   = Square::from_index(i + rank * 8);
-            const auto board = Bitboard::from_square(nsq);
-            result |= board;
-
-            if ((blockers & board).any())
-                break;
-        }
-
-        return result;
+        return pseudo_legal::rook(
+            Bitboard::from_square(square),
+            blockers.inverse(), {});
     }
 
     [[nodiscard]] constexpr Bitboard permute(
