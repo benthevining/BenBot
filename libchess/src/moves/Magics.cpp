@@ -18,6 +18,7 @@
 #include <libchess/moves/PseudoLegal.hpp>
 #include <ranges>
 #include <utility>
+#include <vector>
 
 namespace chess::moves::magics {
 
@@ -195,11 +196,14 @@ namespace {
         return Bitboard { subset.to_int() - set.to_int() } & set;
     }
 
-    using MagicMoves = std::array<Bitboard, 88772uz>;
+    // NB. this isn't a std::array because we encountered stack overflows with MSVC
+    using MagicMoves = std::vector<Bitboard>;
 
     [[nodiscard]] constexpr MagicMoves generate_magic_moves()
     {
-        MagicMoves result {};
+        MagicMoves result;
+
+        result.resize(88772uz);
 
         for (auto i = 0; i < 64; ++i) {
             const auto square = Square::from_index(i);
@@ -238,7 +242,7 @@ namespace {
         return result;
     }
 
-    // NB. the MagicMoves isn't constexpr because we hit Clang's constexpr step limit
+    // NB. the MagicMoves isn't constexpr because we currently hit every compiler's constexpr step limit
     [[nodiscard]] const MagicMoves& get_magic_moves()
     {
         static const auto moves = generate_magic_moves();
