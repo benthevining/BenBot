@@ -14,6 +14,7 @@
 #include <libchess/moves/Magics.hpp>
 #include <libchess/moves/Patterns.hpp>
 #include <libchess/moves/PseudoLegal.hpp>
+#include <ranges>
 #include <utility>
 
 namespace chess::moves::magics {
@@ -24,7 +25,7 @@ namespace {
     using std::size_t;
     using MagicInfo = std::pair<std::uint64_t, int>;
 
-    constexpr std::array bishop_stuff {
+    constexpr std::array BISHOP_MAGICS {
         MagicInfo { 0x007fbfbfbfbfbfffULL, 5378 }, MagicInfo { 0x0000a060401007fcULL, 4093 },
         MagicInfo { 0x0001004008020000ULL, 4314 }, MagicInfo { 0x0000806004000000ULL, 6587 },
         MagicInfo { 0x0000100400000000ULL, 6491 }, MagicInfo { 0x000021c100b20000ULL, 6330 },
@@ -59,7 +60,7 @@ namespace {
         MagicInfo { 0x0000004040404040ULL, 6905 }, MagicInfo { 0x007fff9fdf7ff813ULL, 16076 }
     };
 
-    constexpr std::array rook_stuff {
+    constexpr std::array ROOK_MAGICS {
         MagicInfo { 0x00280077ffebfffeULL, 26304 }, MagicInfo { 0x2004010201097fffULL, 35520 },
         MagicInfo { 0x0010020010053fffULL, 38592 }, MagicInfo { 0x0040040008004002ULL, 8026 },
         MagicInfo { 0x7fd00441ffffd003ULL, 22196 }, MagicInfo { 0x4020008887dffffeULL, 80870 },
@@ -96,11 +97,13 @@ namespace {
 
     namespace masks = board::masks;
 
+    using MaskArray = std::array<Bitboard, 64uz>;
+
     constexpr auto NOT_PERIMETER = masks::PERIMETER.inverse();
 
-    [[nodiscard]] constexpr std::array<Bitboard, 64uz> calculate_bishop_masks()
+    [[nodiscard]] constexpr MaskArray calculate_bishop_masks()
     {
-        std::array<Bitboard, 64uz> result {};
+        MaskArray result {};
 
         for (const auto square : masks::ALL.subboards())
             result.at(square.first()) = patterns::bishop(square) & NOT_PERIMETER;
@@ -108,10 +111,14 @@ namespace {
         return result;
     }
 
-    [[nodiscard]] constexpr std::array<Bitboard, 64uz> calculate_rook_masks()
+    [[nodiscard]] constexpr MaskArray calculate_rook_masks()
     {
-        std::array<Bitboard, 64uz> result {};
+        MaskArray result {};
 
+#if 0
+        for (const auto square : masks::ALL.subboards())
+            result.at(square.first()) = patterns::rook(square) & NOT_PERIMETER;
+#else
         for (auto i = 0; i < 64; ++i) {
             const auto square = Square::from_index(i);
 
@@ -142,15 +149,16 @@ namespace {
                 result[i] |= Bitboard::from_square(nsq);
             }
         }
+#endif
 
         return result;
     }
 
-    constexpr auto bishop_masks = calculate_bishop_masks();
-    constexpr auto rook_masks   = calculate_rook_masks();
+    constexpr auto BISHOP_MASKS = calculate_bishop_masks();
+    constexpr auto ROOK_MASKS   = calculate_rook_masks();
 
     [[nodiscard]] constexpr Bitboard permute(
-        const Bitboard set, const Bitboard subset)
+        const Bitboard set, const Bitboard subset) noexcept
     {
         return Bitboard { subset.to_int() - set.to_int() } & set;
     }
@@ -158,19 +166,21 @@ namespace {
     [[nodiscard]] size_t calc_bishop_index(
         const BitboardIndex squareIdx, const Bitboard occupied)
     {
-        const auto& info = bishop_stuff.at(squareIdx);
-        const auto  mask = bishop_masks.at(squareIdx);
+        const auto [mul, offset] = BISHOP_MAGICS.at(squareIdx);
 
-        return info.second + (((occupied & mask).to_int() * info.first) >> 55);
+        const auto mask = BISHOP_MASKS.at(squareIdx);
+
+        return offset + (((occupied & mask).to_int() * mul) >> 55);
     }
 
     [[nodiscard]] size_t calc_rook_index(
         const BitboardIndex squareIdx, const Bitboard occupied)
     {
-        const auto& info = rook_stuff.at(squareIdx);
-        const auto  mask = rook_masks.at(squareIdx);
+        const auto [mul, offset] = ROOK_MAGICS.at(squareIdx);
 
-        return info.second + (((occupied & mask).to_int() * info.first) >> 52);
+        const auto mask = ROOK_MASKS.at(squareIdx);
+
+        return offset + (((occupied & mask).to_int() * mul) >> 52);
     }
 
     using MagicMoves = std::array<Bitboard, 88772uz>;
@@ -187,27 +197,25 @@ namespace {
             // Bishops
             perm.clear();
             do {
-                auto& value = result.at(
-                    calc_bishop_index(i, perm));
+                auto& value = result.at(calc_bishop_index(i, perm));
 
                 value = pseudo_legal::bishop(
                     Bitboard::from_square(square),
                     perm.inverse(), {});
 
-                perm = permute(bishop_masks.at(i), perm);
+                perm = permute(BISHOP_MASKS.at(i), perm);
             } while (perm.any());
 
             // Rooks
             perm.clear();
             do {
-                auto& value = result.at(
-                    calc_rook_index(i, perm));
+                auto& value = result.at(calc_rook_index(i, perm));
 
                 value = pseudo_legal::rook(
                     Bitboard::from_square(square),
                     perm.inverse(), {});
 
-                perm = permute(rook_masks.at(i), perm);
+                perm = permute(ROOK_MASKS.at(i), perm);
             } while (perm.any());
         }
 
