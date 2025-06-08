@@ -10,7 +10,9 @@
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdint> // IWYU pragma: keep - for std::uint64_t
 #include <libchess/board/BitboardIndex.hpp>
+#include <libchess/board/File.hpp>
 #include <libchess/board/Masks.hpp>
+#include <libchess/board/Rank.hpp>
 #include <libchess/moves/Magics.hpp>
 #include <libchess/moves/Patterns.hpp>
 #include <libchess/moves/PseudoLegal.hpp>
@@ -108,7 +110,7 @@ namespace {
 
     using MaskArray = std::array<Bitboard, 64uz>;
 
-    [[nodiscard]] constexpr MaskArray calculate_bishop_masks()
+    [[nodiscard]] consteval MaskArray calculate_bishop_masks()
     {
         MaskArray result {};
 
@@ -118,38 +120,41 @@ namespace {
         return result;
     }
 
-    [[nodiscard]] constexpr MaskArray calculate_rook_masks()
+    [[nodiscard]] consteval MaskArray calculate_rook_masks()
     {
+        using board::File;
+        using board::Rank;
+
         MaskArray result {};
 
-        for (auto i = 0; i < 64; ++i) {
-            const auto square = Square::from_index(i);
+        for (const auto square : masks::ALL.squares()) {
+            auto& value = result.at(square.index());
 
             const auto file = static_cast<int>(std::to_underlying(square.file));
             const auto rank = static_cast<int>(std::to_underlying(square.rank));
 
-            // Right
             for (auto r = rank + 1; r <= 6; ++r) {
-                const auto nsq = Square::from_index(file + (r * 8));
-                result[i] |= Bitboard::from_square(nsq);
+                value |= Bitboard::from_square(Square {
+                    .file = square.file,
+                    .rank = static_cast<Rank>(r) });
             }
 
-            // Left
             for (auto r = rank - 1; r >= 1; --r) {
-                const auto nsq = Square::from_index(file + (r * 8));
-                result[i] |= Bitboard::from_square(nsq);
+                value |= Bitboard::from_square(Square {
+                    .file = square.file,
+                    .rank = static_cast<Rank>(r) });
             }
 
-            // Up
-            for (auto r = file + 1; r <= 6; ++r) {
-                const auto nsq = Square::from_index(r + (rank * 8));
-                result[i] |= Bitboard::from_square(nsq);
+            for (auto f = file + 1; f <= 6; ++f) {
+                value |= Bitboard::from_square(Square {
+                    .file = static_cast<File>(f),
+                    .rank = square.rank });
             }
 
-            // Down
-            for (auto r = file - 1; r >= 1; --r) {
-                const auto nsq = Square::from_index(r + (rank * 8));
-                result[i] |= Bitboard::from_square(nsq);
+            for (auto f = file - 1; f >= 1; --f) {
+                value |= Bitboard::from_square(Square {
+                    .file = static_cast<File>(f),
+                    .rank = square.rank });
             }
         }
 
@@ -159,30 +164,35 @@ namespace {
     constexpr auto BISHOP_MASKS = calculate_bishop_masks();
     constexpr auto ROOK_MASKS   = calculate_rook_masks();
 
-    [[nodiscard]] constexpr Bitboard permute(
-        const Bitboard set, const Bitboard subset) noexcept
-    {
-        return Bitboard { subset.to_int() - set.to_int() } & set;
-    }
+    // the next two functions calculate indices within the MagicMoves
+    // array for the given piece type, square, and occupied squares
 
-    [[nodiscard]] size_t calc_bishop_index(
+    [[nodiscard]] constexpr size_t calc_bishop_index(
         const BitboardIndex squareIdx, const Bitboard occupied)
     {
         const auto [mul, offset] = BISHOP_MAGICS.at(squareIdx);
 
         const auto mask = BISHOP_MASKS.at(squareIdx);
 
-        return offset + (((occupied & mask).to_int() * mul) >> 55);
+        return offset + (((occupied & mask).to_int() * mul) >> 55uz);
     }
 
-    [[nodiscard]] size_t calc_rook_index(
+    [[nodiscard]] constexpr size_t calc_rook_index(
         const BitboardIndex squareIdx, const Bitboard occupied)
     {
         const auto [mul, offset] = ROOK_MAGICS.at(squareIdx);
 
         const auto mask = ROOK_MASKS.at(squareIdx);
 
-        return offset + (((occupied & mask).to_int() * mul) >> 52);
+        return offset + (((occupied & mask).to_int() * mul) >> 52uz);
+    }
+
+    // returns the next permutation of the given set
+    // used to generate all permutations of possible blockers
+    [[nodiscard]] constexpr Bitboard permute(
+        const Bitboard set, const Bitboard subset) noexcept
+    {
+        return Bitboard { subset.to_int() - set.to_int() } & set;
     }
 
     using MagicMoves = std::array<Bitboard, 88772uz>;
@@ -236,43 +246,41 @@ namespace {
         return moves;
     }
 
-    [[nodiscard]] Bitboard bishop_moves(const Square& bishopPos, const Bitboard occupied)
-    {
-        static const auto& magic_moves = get_magic_moves();
-
-        return magic_moves.at(
-            calc_bishop_index(bishopPos.index(), occupied));
-    }
-
-    [[nodiscard]] Bitboard rook_moves(const Square& rookPos, const Bitboard occupied)
-    {
-        static const auto& magic_moves = get_magic_moves();
-
-        return magic_moves.at(
-            calc_rook_index(rookPos.index(), occupied));
-    }
-
 } // namespace
 
 Bitboard bishop(
     const Square& bishopPos, const Bitboard occupiedSquares, const Bitboard friendlyPieces)
 {
-    return bishop_moves(bishopPos, occupiedSquares) & friendlyPieces.inverse();
+    const auto moves = get_magic_moves().at(
+        calc_bishop_index(bishopPos.index(), occupiedSquares));
+
+    return moves & friendlyPieces.inverse();
 }
 
 Bitboard rook(
     const Square& rookPos, const Bitboard occupiedSquares, const Bitboard friendlyPieces)
 {
-    return rook_moves(rookPos, occupiedSquares) & friendlyPieces.inverse();
+    const auto moves = get_magic_moves().at(
+        calc_rook_index(rookPos.index(), occupiedSquares));
+
+    return moves & friendlyPieces.inverse();
 }
 
 Bitboard queen(
     const Square& queenPos, const Bitboard occupiedSquares, const Bitboard friendlyPieces)
 {
-    const auto moves = bishop_moves(queenPos, occupiedSquares)
-                     | rook_moves(queenPos, occupiedSquares);
+    // micro-optimization: call this once instead of twice here
+    static const auto& magic_moves = get_magic_moves();
 
-    return moves & friendlyPieces.inverse();
+    const auto squareIdx = queenPos.index();
+
+    const auto bishopMoves = magic_moves.at(
+        calc_bishop_index(squareIdx, occupiedSquares));
+
+    const auto rookMoves = magic_moves.at(
+        calc_rook_index(squareIdx, occupiedSquares));
+
+    return (bishopMoves | rookMoves) & friendlyPieces.inverse();
 }
 
 } // namespace chess::moves::magics
