@@ -13,6 +13,7 @@
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
+#include <libchess/moves/Magics.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/moves/Patterns.hpp>
@@ -139,8 +140,46 @@ TEST_CASE("Benchmarking pseudo-legal move generation", TAGS)
     };
 }
 
+TEST_CASE("Benchmarking magic bitboard move generation", TAGS)
+{
+    namespace move_gen = chess::moves::magics;
+
+    [[maybe_unused]] const auto magicsInit = move_gen::queen({}, {}, {});
+
+    // NB. intentionally not constexpr
+    chess::game::Position position {};
+
+    const auto occupiedSquares = position.occupied();
+
+    const auto dsb = Square::from_index(position.whitePieces.bishops.first());
+
+    BENCHMARK("Bishops")
+    {
+        return move_gen::bishop(
+            dsb, occupiedSquares, position.whitePieces.occupied);
+    };
+
+    const auto rook = Square::from_index(position.whitePieces.rooks.first());
+
+    BENCHMARK("Rooks")
+    {
+        return move_gen::rook(
+            rook, occupiedSquares, position.whitePieces.occupied);
+    };
+
+    const auto queen = Square::from_index(position.whitePieces.queens.first());
+
+    BENCHMARK("Queens")
+    {
+        return move_gen::queen(
+            queen, occupiedSquares, position.whitePieces.occupied);
+    };
+}
+
 TEST_CASE("Benchmarking legal move generation", TAGS)
 {
+    [[maybe_unused]] const auto magicsInit = chess::moves::magics::queen({}, {}, {});
+
     const auto position = chess::notation::from_fen(
         "R6R/3Q4/1Q4Q1/4Q3/2Q4Q/Q4Q2/pp1Q4/kBNN1KB1 w - - 0 1");
 

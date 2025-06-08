@@ -23,6 +23,7 @@
 #include <libchess/board/Shifts.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
+#include <libchess/moves/Magics.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/moves/PseudoLegal.hpp>
 #include <libchess/pieces/Colors.hpp>
@@ -44,7 +45,7 @@ using PieceType = pieces::Type;
     @see generate_for()
  */
 template <bool CapturesOnly = false>
-constexpr void generate(
+void generate(
     const Position&                 position,
     std::output_iterator<Move> auto outputIt);
 
@@ -55,7 +56,7 @@ constexpr void generate(
     @see generate_for()
  */
 template <bool CapturesOnly = false>
-[[nodiscard]] constexpr std::vector<Move> generate(const Position& position);
+[[nodiscard]] std::vector<Move> generate(const Position& position);
 
 /** Generates a list of all legal moves for only the given piece type in the given position.
 
@@ -65,7 +66,7 @@ template <bool CapturesOnly = false>
     @see generate()
  */
 template <bool CapturesOnly = false>
-constexpr void generate_for(
+void generate_for(
     const Position& position, PieceType piece,
     std::output_iterator<Move> auto outputIt);
 
@@ -77,11 +78,11 @@ constexpr void generate_for(
     @see generate()
  */
 template <bool CapturesOnly = false>
-[[nodiscard]] constexpr std::vector<Move> generate_for(
+[[nodiscard]] std::vector<Move> generate_for(
     const Position& position, PieceType piece);
 
 /** Returns true if the side to move has any legal moves in the given position. */
-[[nodiscard]] constexpr bool any_legal_moves(const Position& position);
+[[nodiscard]] bool any_legal_moves(const Position& position);
 
 /// @}
 
@@ -353,15 +354,15 @@ namespace detail {
     }
 
     template <Color Side, bool CapturesOnly>
-    constexpr void add_bishop_moves(
+    void add_bishop_moves(
         const Position&                 position,
-        const Bitboard                  emptySquares,
+        const Bitboard                  occupiedSquares,
         std::output_iterator<Move> auto outputIt)
     {
         const auto& ourPieces = position.pieces_for<Side>();
 
-        for (const auto bishopPos : ourPieces.bishops.subboards()) {
-            auto bishopMoves = pseudo_legal::bishop(bishopPos, emptySquares, ourPieces.occupied);
+        for (const auto bishopPos : ourPieces.bishops.squares()) {
+            auto bishopMoves = magics::bishop(bishopPos, occupiedSquares, ourPieces.occupied);
 
             if constexpr (CapturesOnly) {
                 bishopMoves &= position.pieces_for<OtherSide<Side>>().occupied;
@@ -369,7 +370,7 @@ namespace detail {
 
             for (const auto targetSquare : bishopMoves.squares()) {
                 const Move move {
-                    .from  = Square::from_index(bishopPos.first()),
+                    .from  = bishopPos,
                     .to    = targetSquare,
                     .piece = PieceType::Bishop
                 };
@@ -381,15 +382,15 @@ namespace detail {
     }
 
     template <Color Side, bool CapturesOnly>
-    constexpr void add_rook_moves(
+    void add_rook_moves(
         const Position&                 position,
-        const Bitboard                  emptySquares,
+        const Bitboard                  occupiedSquares,
         std::output_iterator<Move> auto outputIt)
     {
         const auto& ourPieces = position.pieces_for<Side>();
 
-        for (const auto rookPos : ourPieces.rooks.subboards()) {
-            auto rookMoves = pseudo_legal::rook(rookPos, emptySquares, ourPieces.occupied);
+        for (const auto rookPos : ourPieces.rooks.squares()) {
+            auto rookMoves = magics::rook(rookPos, occupiedSquares, ourPieces.occupied);
 
             if constexpr (CapturesOnly) {
                 rookMoves &= position.pieces_for<OtherSide<Side>>().occupied;
@@ -397,7 +398,7 @@ namespace detail {
 
             for (const auto targetSquare : rookMoves.squares()) {
                 const Move move {
-                    .from  = Square::from_index(rookPos.first()),
+                    .from  = rookPos,
                     .to    = targetSquare,
                     .piece = PieceType::Rook
                 };
@@ -409,15 +410,15 @@ namespace detail {
     }
 
     template <Color Side, bool CapturesOnly>
-    constexpr void add_queen_moves(
+    void add_queen_moves(
         const Position&                 position,
-        const Bitboard                  emptySquares,
+        const Bitboard                  occupiedSquares,
         std::output_iterator<Move> auto outputIt)
     {
         const auto& ourPieces = position.pieces_for<Side>();
 
-        for (const auto queenPos : ourPieces.queens.subboards()) {
-            auto queenMoves = pseudo_legal::queen(queenPos, emptySquares, ourPieces.occupied);
+        for (const auto queenPos : ourPieces.queens.squares()) {
+            auto queenMoves = magics::queen(queenPos, occupiedSquares, ourPieces.occupied);
 
             if constexpr (CapturesOnly) {
                 queenMoves &= position.pieces_for<OtherSide<Side>>().occupied;
@@ -425,7 +426,7 @@ namespace detail {
 
             for (const auto targetSquare : queenMoves.squares()) {
                 const Move move {
-                    .from  = Square::from_index(queenPos.first()),
+                    .from  = queenPos,
                     .to    = targetSquare,
                     .piece = PieceType::Queen
                 };
@@ -556,7 +557,7 @@ namespace detail {
     }
 
     template <Color Side, bool CapturesOnly>
-    constexpr void generate_internal(
+    void generate_internal(
         const Position&                 position,
         std::output_iterator<Move> auto outputIt)
     {
@@ -570,11 +571,11 @@ namespace detail {
 
         add_knight_moves<Side, CapturesOnly>(position, outputIt);
 
-        add_bishop_moves<Side, CapturesOnly>(position, emptySquares, outputIt);
+        add_bishop_moves<Side, CapturesOnly>(position, allOccupied, outputIt);
 
-        add_rook_moves<Side, CapturesOnly>(position, emptySquares, outputIt);
+        add_rook_moves<Side, CapturesOnly>(position, allOccupied, outputIt);
 
-        add_queen_moves<Side, CapturesOnly>(position, emptySquares, outputIt);
+        add_queen_moves<Side, CapturesOnly>(position, allOccupied, outputIt);
 
         add_king_moves<Side, CapturesOnly>(position, outputIt);
 
@@ -584,7 +585,7 @@ namespace detail {
     }
 
     template <Color Side, bool CapturesOnly>
-    constexpr void generate_for_internal(
+    void generate_for_internal(
         const Position& position, const PieceType piece,
         std::output_iterator<Move> auto outputIt)
     {
@@ -606,17 +607,17 @@ namespace detail {
             }
 
             case PieceType::Bishop: {
-                add_bishop_moves<Side, CapturesOnly>(position, emptySquares, outputIt);
+                add_bishop_moves<Side, CapturesOnly>(position, allOccupied, outputIt);
                 return;
             }
 
             case PieceType::Rook: {
-                add_rook_moves<Side, CapturesOnly>(position, emptySquares, outputIt);
+                add_rook_moves<Side, CapturesOnly>(position, allOccupied, outputIt);
                 return;
             }
 
             case PieceType::Queen: {
-                add_queen_moves<Side, CapturesOnly>(position, emptySquares, outputIt);
+                add_queen_moves<Side, CapturesOnly>(position, allOccupied, outputIt);
                 return;
             }
 
@@ -631,7 +632,7 @@ namespace detail {
     }
 
     template <Color Side>
-    [[nodiscard]] constexpr bool any_legal_moves_internal(const Position& position)
+    [[nodiscard]] bool any_legal_moves_internal(const Position& position)
     {
         std::vector<Move> moves;
 
@@ -653,7 +654,7 @@ namespace detail {
 } // namespace detail
 
 template <bool CapturesOnly>
-constexpr void generate(
+void generate(
     const Position&                 position,
     std::output_iterator<Move> auto outputIt)
 {
@@ -664,7 +665,7 @@ constexpr void generate(
 }
 
 template <bool CapturesOnly>
-constexpr std::vector<Move> generate(const Position& position)
+std::vector<Move> generate(const Position& position)
 {
     std::vector<Move> moves;
 
@@ -674,7 +675,7 @@ constexpr std::vector<Move> generate(const Position& position)
 }
 
 template <bool CapturesOnly>
-constexpr void generate_for(
+void generate_for(
     const Position& position, const PieceType piece,
     std::output_iterator<Move> auto outputIt)
 {
@@ -685,7 +686,7 @@ constexpr void generate_for(
 }
 
 template <bool CapturesOnly>
-constexpr std::vector<Move> generate_for(
+std::vector<Move> generate_for(
     const Position& position, const PieceType piece)
 {
     std::vector<Move> moves;
@@ -695,7 +696,7 @@ constexpr std::vector<Move> generate_for(
     return moves;
 }
 
-constexpr bool any_legal_moves(const Position& position)
+inline bool any_legal_moves(const Position& position)
 {
     if (position.sideToMove == Color::White)
         return detail::any_legal_moves_internal<Color::White>(position);
