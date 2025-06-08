@@ -51,6 +51,7 @@ set (
     game/ThreefoldChecker.hpp
     game/TimeControl.hpp
     game/Zobrist.hpp
+    moves/Magics.hpp
     moves/Move.hpp
     moves/MoveGen.hpp
     moves/Patterns.hpp
@@ -81,6 +82,7 @@ set (
     eval/Evaluation.cpp
     eval/PieceSquareTables.cpp
     game/Position.cpp
+    moves/Magics.cpp
     notation/Algebraic.cpp
     notation/EPD.cpp
     notation/FEN.cpp

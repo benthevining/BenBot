@@ -18,7 +18,6 @@
 #include <libchess/board/Fills.hpp>
 #include <libchess/board/Masks.hpp>
 #include <libchess/board/Shifts.hpp>
-#include <libchess/board/Square.hpp>
 #include <libchess/moves/Patterns.hpp>
 #include <libchess/pieces/Colors.hpp>
 
@@ -33,7 +32,6 @@
 namespace chess::moves::pseudo_legal {
 
 using board::Bitboard;
-using board::Square;
 using pieces::Color;
 
 /// @ingroup moves
