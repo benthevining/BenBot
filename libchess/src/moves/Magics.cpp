@@ -23,6 +23,8 @@ namespace {
 
     using board::BitboardIndex;
     using std::size_t;
+
+    // pair of multiplier, offset
     using MagicInfo = std::pair<std::uint64_t, int>;
 
     constexpr std::array BISHOP_MAGICS {
