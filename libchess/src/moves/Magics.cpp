@@ -171,22 +171,6 @@ namespace {
     constexpr auto bishop_masks = calculate_bishop_masks();
     constexpr auto rook_masks   = calculate_rook_masks();
 
-    [[nodiscard]] constexpr Bitboard calculate_bishop_moves(
-        const Square& square, const Bitboard blockers)
-    {
-        return pseudo_legal::bishop(
-            Bitboard::from_square(square),
-            blockers.inverse(), {});
-    }
-
-    [[nodiscard]] constexpr Bitboard calculate_rook_moves(
-        const Square& square, const Bitboard blockers)
-    {
-        return pseudo_legal::rook(
-            Bitboard::from_square(square),
-            blockers.inverse(), {});
-    }
-
     [[nodiscard]] constexpr Bitboard permute(
         const Bitboard set, const Bitboard subset)
     {
@@ -211,7 +195,7 @@ namespace {
         return info.second + (((occupied & mask).to_int() * info.first) >> 52);
     }
 
-    using MagicMoves = std::array<std::uint64_t, 88772uz>;
+    using MagicMoves = std::array<Bitboard, 88772uz>;
 
     [[nodiscard]] constexpr MagicMoves generate_magic_moves()
     {
@@ -228,7 +212,9 @@ namespace {
                 auto& value = result.at(
                     calc_bishop_index(i, perm));
 
-                value = calculate_bishop_moves(square, perm).to_int();
+                value = pseudo_legal::bishop(
+                    Bitboard::from_square(square),
+                    perm.inverse(), {});
 
                 perm = permute(bishop_masks.at(i), perm);
             } while (perm.any());
@@ -239,7 +225,9 @@ namespace {
                 auto& value = result.at(
                     calc_rook_index(i, perm));
 
-                value = calculate_rook_moves(square, perm).to_int();
+                value = pseudo_legal::rook(
+                    Bitboard::from_square(square),
+                    perm.inverse(), {});
 
                 perm = permute(rook_masks.at(i), perm);
             } while (perm.any());
@@ -260,20 +248,16 @@ namespace {
     {
         static const auto& magic_moves = get_magic_moves();
 
-        const auto moves = magic_moves.at(
+        return magic_moves.at(
             calc_bishop_index(bishopPos.index(), occupied));
-
-        return Bitboard { moves };
     }
 
     [[nodiscard]] Bitboard rook_moves(const Square& rookPos, const Bitboard occupied)
     {
         static const auto& magic_moves = get_magic_moves();
 
-        const auto moves = magic_moves.at(
+        return magic_moves.at(
             calc_rook_index(rookPos.index(), occupied));
-
-        return Bitboard { moves };
     }
 
 } // namespace
