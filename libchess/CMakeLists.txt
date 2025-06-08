@@ -66,6 +66,7 @@ set (
     pieces/UTF8.hpp
     search/Search.hpp
     uci/CommandParsing.hpp
+    uci/DefaultOptions.hpp
     uci/EngineBase.hpp
     uci/Options.hpp
     util/Math.hpp
