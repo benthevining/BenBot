@@ -10,7 +10,9 @@
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdint> // IWYU pragma: keep - for std::uint64_t
 #include <libchess/board/BitboardIndex.hpp>
+#include <libchess/board/Masks.hpp>
 #include <libchess/moves/Magics.hpp>
+#include <libchess/moves/Patterns.hpp>
 #include <libchess/moves/PseudoLegal.hpp>
 #include <utility>
 
@@ -92,40 +94,16 @@ namespace {
         MagicInfo { 0x0003ffffbf7dfeecULL, 66501 }, MagicInfo { 0x0001ffff9dffa333ULL, 14826 }
     };
 
+    namespace masks = board::masks;
+
+    constexpr auto NOT_PERIMETER = masks::PERIMETER.inverse();
+
     [[nodiscard]] constexpr std::array<Bitboard, 64uz> calculate_bishop_masks()
     {
         std::array<Bitboard, 64uz> result {};
 
-        for (auto i = 0; i < 64; ++i) {
-            const auto square = Square::from_index(i);
-
-            const int file = std::to_underlying(square.file);
-            const int rank = std::to_underlying(square.rank);
-
-            // Up 1 Right 1
-            for (auto y = rank + 1, x = file + 1; y <= 6 && x <= 6; ++y, ++x) {
-                const auto nsq = Square::from_index(x + (y * 8));
-                result[i] |= Bitboard::from_square(nsq);
-            }
-
-            // Up 1 Left 1
-            for (auto y = rank + 1, x = file - 1; y <= 6 && x >= 1; ++y, --x) {
-                const auto nsq = Square::from_index(x + (y * 8));
-                result[i] |= Bitboard::from_square(nsq);
-            }
-
-            // Down 1 Right 1
-            for (auto y = rank - 1, x = file + 1; y >= 1 && x <= 6; --y, ++x) {
-                const auto nsq = Square::from_index(x + (y * 8));
-                result[i] |= Bitboard::from_square(nsq);
-            }
-
-            // Down 1 Left 1
-            for (auto y = rank - 1, x = file - 1; y >= 1 && x >= 1; --y, --x) {
-                const auto nsq = Square::from_index(x + (y * 8));
-                result[i] |= Bitboard::from_square(nsq);
-            }
-        }
+        for (const auto square : masks::ALL.subboards())
+            result.at(square.first()) = patterns::bishop(square) & NOT_PERIMETER;
 
         return result;
     }
