@@ -53,6 +53,7 @@ set (
     game/ZobristHashing.cpp
     moves/EnPassant.cpp
     moves/Legal.cpp
+    moves/Magics.cpp
     moves/Move.cpp
     moves/Patterns.cpp
     moves/PseudoLegal.cpp

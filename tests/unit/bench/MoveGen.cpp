@@ -13,6 +13,7 @@
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
+#include <libchess/moves/Magics.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/moves/Patterns.hpp>
@@ -136,6 +137,40 @@ TEST_CASE("Benchmarking pseudo-legal move generation", TAGS)
     {
         return move_gen::king(
             position.whitePieces.king, position.whitePieces.occupied);
+    };
+}
+
+TEST_CASE("Benchmarking magic bitboard move generation", TAGS)
+{
+    namespace move_gen = chess::moves::magics;
+
+    // NB. intentionally not constexpr
+    chess::game::Position position {};
+
+    const auto occupiedSquares = position.occupied();
+
+    const auto dsb = Square::from_index(position.whitePieces.bishops.first());
+
+    BENCHMARK("Bishops")
+    {
+        return move_gen::bishop(
+            dsb, occupiedSquares, position.whitePieces.occupied);
+    };
+
+    const auto rook = Square::from_index(position.whitePieces.rooks.first());
+
+    BENCHMARK("Rooks")
+    {
+        return move_gen::rook(
+            rook, occupiedSquares, position.whitePieces.occupied);
+    };
+
+    const auto queen = Square::from_index(position.whitePieces.queens.first());
+
+    BENCHMARK("Queens")
+    {
+        return move_gen::queen(
+            queen, occupiedSquares, position.whitePieces.occupied);
     };
 }
 

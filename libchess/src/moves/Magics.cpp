@@ -17,7 +17,7 @@ namespace {
 
     using MagicInfo = std::pair<std::uint64_t, int>;
 
-    constexpr std::array<MagicInfo, 64uz> bishop_stuff {
+    constexpr std::array bishop_stuff {
         MagicInfo { 0x007fbfbfbfbfbfffULL, 5378 }, MagicInfo { 0x0000a060401007fcULL, 4093 },
         MagicInfo { 0x0001004008020000ULL, 4314 }, MagicInfo { 0x0000806004000000ULL, 6587 },
         MagicInfo { 0x0000100400000000ULL, 6491 }, MagicInfo { 0x000021c100b20000ULL, 6330 },
@@ -52,7 +52,7 @@ namespace {
         MagicInfo { 0x0000004040404040ULL, 6905 }, MagicInfo { 0x007fff9fdf7ff813ULL, 16076 }
     };
 
-    constexpr std::array<MagicInfo, 64uz> rook_stuff {
+    constexpr std::array rook_stuff {
         MagicInfo { 0x00280077ffebfffeULL, 26304 }, MagicInfo { 0x2004010201097fffULL, 35520 },
         MagicInfo { 0x0010020010053fffULL, 38592 }, MagicInfo { 0x0040040008004002ULL, 8026 },
         MagicInfo { 0x7fd00441ffffd003ULL, 22196 }, MagicInfo { 0x4020008887dffffeULL, 80870 },
@@ -155,7 +155,7 @@ namespace {
 
             // Down
             for (int r = file - 1; r >= 1; --r) {
-                const auto nsq = Square::from_index(r + file * 8);
+                const auto nsq = Square::from_index(r + rank * 8);
                 result[i] |= Bitboard::from_square(nsq);
             }
         }
