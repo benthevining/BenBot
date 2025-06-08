@@ -33,6 +33,9 @@ namespace {
     {
         // assert(beta > alpha);
 
+        if (currentPosition.is_draw())
+            return eval::DRAW;
+
         auto evaluation = eval::evaluate(currentPosition);
 
         if (evaluation >= beta)
@@ -72,6 +75,9 @@ namespace {
         const size_t    plyFromRoot)
     {
         // assert(beta > alpha);
+
+        if (currentPosition.is_draw())
+            return eval::DRAW;
 
         auto moves = moves::generate(currentPosition);
 
