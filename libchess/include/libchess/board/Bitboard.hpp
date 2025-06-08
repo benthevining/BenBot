@@ -14,10 +14,9 @@
 #pragma once
 
 #include <bit>
-#include <bitset>
 #include <cassert>
 #include <cstddef> // IWYU pragma: keep - for size_t
-#include <cstdint> // IWYU pragma: keep - for std::uint_least64_t
+#include <cstdint> // IWYU pragma: keep - for std::uint64_t
 #include <format>
 #include <iterator>
 #include <libchess/board/BitboardIndex.hpp>
@@ -41,8 +40,8 @@ using std::size_t;
     @ingroup board
  */
 struct Bitboard final {
-    /** Unsigned integer type used for serialization of bitboards. */
-    using Integer = std::uint_least64_t;
+    /** Unsigned integer type used for bitboard representation. */
+    using Integer = std::uint64_t;
 
     /** Constructs an empty bitboard. */
     constexpr Bitboard() noexcept = default;
@@ -50,7 +49,7 @@ struct Bitboard final {
     /** Constructs a bitboard from an integer representation.
         @see to_int()
      */
-    explicit constexpr Bitboard(Integer value) noexcept;
+    explicit constexpr Bitboard(Integer val) noexcept;
 
     /** Returns true if the two bitboards have all the same bits set. */
     [[nodiscard]] constexpr bool operator==(const Bitboard&) const noexcept = default;
@@ -59,13 +58,13 @@ struct Bitboard final {
     /// @{
 
     /** Returns true if any of the bits are set. */
-    [[nodiscard]] constexpr bool any() const noexcept { return bits.any(); }
+    [[nodiscard]] constexpr bool any() const noexcept { return value != 0; }
 
     /** Returns true if none of the bits are set. */
-    [[nodiscard]] constexpr bool none() const noexcept { return bits.none(); }
+    [[nodiscard]] constexpr bool none() const noexcept { return value == 0; }
 
     /** Returns the number of bits that are set. */
-    [[nodiscard]] constexpr size_t count() const noexcept { return bits.count(); }
+    [[nodiscard]] constexpr size_t count() const noexcept { return std::popcount(value); }
 
     /** Returns true if there is a piece on the given square. */
     [[nodiscard]] constexpr bool test(const Square square) const noexcept { return test(square.index()); }
@@ -109,12 +108,12 @@ struct Bitboard final {
     constexpr void unset(BitboardIndex index) noexcept;
 
     /** Resets all bits to 0. */
-    constexpr void clear() noexcept { bits.reset(); }
+    constexpr void clear() noexcept { value = 0; }
 
     /// @}
 
     /** Converts this bitboard to its integer representation. */
-    [[nodiscard]] constexpr Integer to_int() const noexcept { return bits.to_ullong(); }
+    [[nodiscard]] constexpr Integer to_int() const noexcept { return value; }
 
     /// @name Iteration
     /// @{
@@ -185,7 +184,7 @@ struct Bitboard final {
     [[nodiscard, gnu::const]] static constexpr Bitboard from_square(const Square& square) noexcept;
 
 private:
-    std::bitset<NUM_SQUARES> bits;
+    Integer value { 0 };
 };
 
 /// @ingroup board
@@ -320,8 +319,8 @@ formatter<chess::board::Bitboard>::format(
 
 namespace chess::board {
 
-constexpr Bitboard::Bitboard(const Integer value) noexcept
-    : bits { static_cast<unsigned long long>(value) } // NOLINT
+constexpr Bitboard::Bitboard(const Integer val) noexcept
+    : value { val }
 {
 }
 
@@ -333,76 +332,75 @@ constexpr Bitboard Bitboard::from_square(const Square& square) noexcept
 constexpr bool Bitboard::test(const BitboardIndex index) const noexcept
 {
     assert(index <= MAX_BITBOARD_IDX);
-    return bits[index];
+    return ((value >> index) & 1uz) != 0;
 }
 
 constexpr void Bitboard::set(const BitboardIndex index) noexcept
 {
     assert(index <= MAX_BITBOARD_IDX);
-    bits[index] = true;
+    value |= 1ULL << index;
 }
 
 constexpr void Bitboard::unset(const BitboardIndex index) noexcept
 {
     assert(index <= MAX_BITBOARD_IDX);
-    bits[index] = false;
+
+    const Integer mask { 1ULL << index };
+
+    value &= ~mask;
 }
 
 constexpr BitboardIndex Bitboard::first() const noexcept
 {
     // same as number of leading zeroes
-    return static_cast<BitboardIndex>(std::countr_zero(bits.to_ullong()));
+    return static_cast<BitboardIndex>(std::countr_zero(value));
 }
 
 constexpr BitboardIndex Bitboard::last() const noexcept
 {
-    if (bits.none()) {
+    if (none()) {
         [[unlikely]];
         return NUM_SQUARES;
     }
 
-    const auto trailingZeroes = [integer = bits.to_ullong()] {
-        return static_cast<BitboardIndex>(std::countl_zero(integer));
-    }();
+    const auto trailingZeroes = static_cast<BitboardIndex>(std::countl_zero(value));
 
     return NUM_SQUARES - trailingZeroes - static_cast<BitboardIndex>(1);
 }
 
 constexpr Bitboard& Bitboard::operator&=(const Bitboard& other) noexcept
 {
-    bits &= other.bits;
+    value &= other.value;
     return *this;
 }
 
 constexpr Bitboard& Bitboard::operator|=(const Bitboard& other) noexcept
 {
-    bits |= other.bits;
+    value |= other.value;
     return *this;
 }
 
 constexpr Bitboard& Bitboard::operator^=(const Bitboard& other) noexcept
 {
-    bits ^= other.bits;
+    value ^= other.value;
     return *this;
 }
 
 constexpr Bitboard& Bitboard::operator<<=(const size_t num) noexcept
 {
-    bits <<= num;
+    value <<= num;
     return *this;
 }
 
 constexpr Bitboard& Bitboard::operator>>=(const size_t num) noexcept
 {
-    bits >>= num;
+    value >>= num;
     return *this;
 }
 
 constexpr Bitboard Bitboard::inverse() const noexcept
 {
-    auto copy = *this;
-    copy.bits.flip();
-    return copy;
+    return Bitboard { ~value };
 }
 
 constexpr Bitboard operator&(const Bitboard& lhs, const Bitboard& rhs) noexcept
