@@ -28,80 +28,14 @@ set_target_properties (
     libchess PROPERTIES CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF DEBUG_POSTFIX -d
 )
 
-set (
-    libchess_headers
-    # cmake-format: sortable
-    board/Bitboard.hpp
-    board/BitboardIndex.hpp
-    board/Distances.hpp
-    board/File.hpp
-    board/Fills.hpp
-    board/Flips.hpp
-    board/Masks.hpp
-    board/Pieces.hpp
-    board/Rank.hpp
-    board/Shifts.hpp
-    board/Square.hpp
-    eval/Evaluation.hpp
-    eval/Material.hpp
-    eval/PieceSquareTables.hpp
-    game/CastlingRights.hpp
-    game/Position.hpp
-    game/Result.hpp
-    game/ThreefoldChecker.hpp
-    game/TimeControl.hpp
-    game/Zobrist.hpp
-    moves/Magics.hpp
-    moves/Move.hpp
-    moves/MoveGen.hpp
-    moves/Patterns.hpp
-    moves/Perft.hpp
-    moves/PseudoLegal.hpp
-    notation/Algebraic.hpp
-    notation/EPD.hpp
-    notation/FEN.hpp
-    notation/PGN.hpp
-    notation/UCI.hpp
-    pieces/Colors.hpp
-    pieces/PieceTypes.hpp
-    pieces/UTF8.hpp
-    search/Search.hpp
-    uci/CommandParsing.hpp
-    uci/DefaultOptions.hpp
-    uci/EngineBase.hpp
-    uci/Options.hpp
-    util/Math.hpp
-    util/Strings.hpp
+file (GLOB_RECURSE libchess_headers LIST_DIRECTORIES false
+      CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/include/libchess/*.hpp"
 )
 
-set (
-    libchess_sources
-    # cmake-format: sortable
-    board/Bitboard.cpp
-    board/Distances.cpp
-    eval/Evaluation.cpp
-    eval/PieceSquareTables.cpp
-    game/Position.cpp
-    moves/Magics.cpp
-    notation/Algebraic.cpp
-    notation/EPD.cpp
-    notation/FEN.cpp
-    notation/FENHelpers.cpp
-    notation/FENHelpers.hpp
-    notation/PGN.cpp
-    notation/UCI.cpp
-    search/MoveOrdering.cpp
-    search/MoveOrdering.hpp
-    search/Search.cpp
-    uci/CommandParsing.cpp
-    uci/EngineBase.cpp
-    uci/Options.cpp
-    util/Strings.cpp
+file (GLOB_RECURSE libchess_sources LIST_DIRECTORIES false
+      CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp"
+      "${CMAKE_CURRENT_LIST_DIR}/src/*.hpp" # include private headers too
 )
-
-list (TRANSFORM libchess_headers PREPEND "${CMAKE_CURRENT_LIST_DIR}/include/libchess/")
-
-list (TRANSFORM libchess_sources PREPEND "${CMAKE_CURRENT_LIST_DIR}/src/")
 
 target_sources (
     libchess PUBLIC FILE_SET HEADERS BASE_DIRS include FILES ${libchess_headers}

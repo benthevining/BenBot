@@ -32,38 +32,8 @@ add_executable (libchess_tests)
 
 target_link_libraries (libchess_tests PRIVATE libchess::libchess Catch2::Catch2WithMain)
 
-set (
-    sources
-    # cmake-format: sortable
-    bench/Bitboard.cpp
-    bench/MoveGen.cpp
-    BenchmarkReporter.cpp
-    board/Bitboard.cpp
-    board/BitboardMasks.cpp
-    board/Distances.cpp
-    board/Fills.cpp
-    board/Flips.cpp
-    board/Pieces.cpp
-    board/Square.cpp
-    eval/Evaluation.cpp
-    eval/PieceSquareTables.cpp
-    game/CastlingRights.cpp
-    game/Position.cpp
-    game/ThreefoldRepetition.cpp
-    game/ZobristHashing.cpp
-    moves/EnPassant.cpp
-    moves/Legal.cpp
-    moves/Magics.cpp
-    moves/Move.cpp
-    moves/Patterns.cpp
-    moves/PseudoLegal.cpp
-    notation/Algebraic.cpp
-    notation/EPD.cpp
-    notation/FEN.cpp
-    notation/PGN.cpp
-    notation/UCI.cpp
-    uci/CommandParsing.cpp
-    uci/Options.cpp
+file (GLOB_RECURSE sources LIST_DIRECTORIES false CONFIGURE_DEPENDS
+                                                  "${CMAKE_CURRENT_LIST_DIR}/*.cpp"
 )
 
 target_sources (libchess_tests PRIVATE ${sources})
