@@ -8,6 +8,7 @@
 
 #include <format>
 #include <libchess/board/Square.hpp>
+#include <libchess/game/Position.hpp>
 #include <libchess/notation/UCI.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>

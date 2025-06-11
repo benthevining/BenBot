@@ -11,11 +11,14 @@
 #pragma once
 
 #include <libchess/board/Square.hpp>
-#include <libchess/game/CastlingRights.hpp>
-#include <libchess/game/Position.hpp>
 #include <optional>
 #include <string>
 #include <string_view>
+
+namespace chess::game {
+struct Position;
+struct CastlingRights;
+} // namespace chess::game
 
 namespace chess::notation::fen_helpers {
 

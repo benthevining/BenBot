@@ -12,6 +12,7 @@
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <format>
 #include <libchess/eval/Evaluation.hpp>
+#include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/search/Search.hpp>

@@ -16,6 +16,8 @@
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Rank.hpp>
+#include <libchess/game/CastlingRights.hpp>
+#include <libchess/game/Position.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
 #include <magic_enum/magic_enum.hpp>

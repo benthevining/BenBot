@@ -13,7 +13,9 @@
 
 #pragma once
 
-#include <libchess/game/Position.hpp>
+namespace chess::game {
+struct Position;
+} // namespace chess::game
 
 namespace chess::eval {
 

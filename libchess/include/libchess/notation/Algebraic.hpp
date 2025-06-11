@@ -14,10 +14,13 @@
 
 #pragma once
 
-#include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
 #include <string>
 #include <string_view>
+
+namespace chess::game {
+struct Position;
+} // namespace chess::game
 
 namespace chess::notation {
 

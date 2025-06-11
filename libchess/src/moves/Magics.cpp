@@ -13,6 +13,7 @@
 #include <libchess/board/File.hpp>
 #include <libchess/board/Masks.hpp>
 #include <libchess/board/Rank.hpp>
+#include <libchess/board/Square.hpp>
 #include <libchess/moves/Magics.hpp>
 #include <libchess/moves/Patterns.hpp>
 #include <libchess/moves/PseudoLegal.hpp>

@@ -14,7 +14,10 @@
 #pragma once
 
 #include <libchess/board/Bitboard.hpp>
-#include <libchess/board/Square.hpp>
+
+namespace chess::board {
+struct Square;
+} // namespace chess::board
 
 /** This namespace contains functions for "magic bitboard" move generation for sliding pieces.
     The generated moves are pseudo-legal, not strictly legal, because they do not consider

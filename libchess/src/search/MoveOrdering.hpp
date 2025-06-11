@@ -8,9 +8,15 @@
 
 #pragma once
 
-#include <libchess/game/Position.hpp>
-#include <libchess/moves/Move.hpp>
 #include <span>
+
+namespace chess::game {
+struct Position;
+} // namespace chess::game
+
+namespace chess::moves {
+struct Move;
+} // namespace chess::moves
 
 namespace chess::search::detail {
 

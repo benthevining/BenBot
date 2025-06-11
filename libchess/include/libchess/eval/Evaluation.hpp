@@ -17,7 +17,9 @@
 
 #pragma once
 
-#include <libchess/game/Position.hpp>
+namespace chess::game {
+struct Position;
+} // namespace chess::game
 
 /** This namespace contains functions for evaluating positions.
     @ingroup eval

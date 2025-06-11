@@ -18,8 +18,11 @@
 #pragma once
 
 #include <cstddef> // IWYU pragma: keep - for size_t
-#include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
+
+namespace chess::game {
+struct Position;
+} // namespace chess::game
 
 /** This namespace contains functions related to searching the
     move tree for the principal variation.
