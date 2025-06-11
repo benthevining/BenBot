@@ -26,6 +26,8 @@ using std::size_t;
 
 namespace {
 
+    using EvalType = TranspositionTable::Record::EvalType;
+
     constexpr auto EVAL_MAX = eval::MATE * 2;
 
     [[nodiscard]] int quiescence(
@@ -78,8 +80,6 @@ namespace {
         const size_t        plyFromRoot,
         TranspositionTable& transTable)
     {
-        using EvalType = TranspositionTable::Record::EvalType;
-
         assert(beta > alpha);
 
         if (const auto value = transTable.probe_eval(currentPosition, depth, alpha, beta))

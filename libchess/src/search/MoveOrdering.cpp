@@ -51,13 +51,11 @@ namespace {
         static constexpr auto CASTLING_BONUS { 30 };         // cppcheck-suppress variableScope
         static constexpr auto PAWN_CONTROLS_PENALTY { 350 }; // cppcheck-suppress variableScope
 
-        const auto& theirPieces = currentPosition.their_pieces();
-
-        auto score { 0 };
-
         if (const auto* currPosRecord = transTable.find(currentPosition))
             if (currPosRecord->bestMove.has_value() && currPosRecord->bestMove == move)
                 return std::numeric_limits<int>::max(); // arbitrarily large score to ensure this move is ordered first
+
+        auto score { 0 };
 
         // look up stored record of resulting position after making move
         if (const auto* record = transTable.find(game::after_move(currentPosition, move))) {
@@ -67,7 +65,7 @@ namespace {
             score += record->eval;
         }
 
-        if (const auto capturedType = theirPieces.get_piece_on(move.to)) {
+        if (const auto capturedType = currentPosition.their_pieces().get_piece_on(move.to)) {
             // NB. checking for captures this way prevents en passant from entering this branch
 
             // we want to prioritize searching moves that capture valuable pieces with less valuable pieces
