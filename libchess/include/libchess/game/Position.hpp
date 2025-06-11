@@ -423,6 +423,23 @@ constexpr void Position::refresh_zobrist() noexcept
 
 namespace detail {
 
+    // given the en passant target square, this returns the square that the
+    // captured pawn was on
+    [[nodiscard, gnu::const]] constexpr Square get_en_passant_captured_square(
+        const Square& targetSquare, const bool isWhite) noexcept
+    {
+        // the captured pawn is on the file of the target square, but one file below
+        // (White capture) or one file above (Black capture)
+        const auto capturedRank = isWhite
+                                    ? board::prev_pawn_rank<Color::White>(targetSquare.rank)
+                                    : board::prev_pawn_rank<Color::Black>(targetSquare.rank);
+
+        return Square {
+            .file = targetSquare.file,
+            .rank = capturedRank
+        };
+    }
+
     constexpr void update_bitboards(
         Position& position, const Move& move) noexcept
     {
@@ -438,16 +455,8 @@ namespace detail {
         if (position.is_en_passant(move)) {
             [[unlikely]];
 
-            // the captured pawn is on the file of the target square, but one file below
-            // (White capture) or one file above (Black capture)
-            const auto capturedRank = isWhite
-                                        ? board::prev_pawn_rank<Color::White>(move.to.rank)
-                                        : board::prev_pawn_rank<Color::Black>(move.to.rank);
-
-            const auto idx = Square {
-                .file = move.to.file,
-                .rank = capturedRank
-            }
+            const auto idx = get_en_passant_captured_square(
+                position.enPassantTargetSquare.value(), isWhite)
                                  .index();
 
             opponentPieces.pawns.unset(idx);
@@ -484,7 +493,6 @@ namespace detail {
         const auto whiteOldRights { pos.whiteCastlingRights };
         const auto blackOldRights { pos.blackCastlingRights };
 
-        // update castling rights
         auto& ourRights   = isWhite ? pos.whiteCastlingRights : pos.blackCastlingRights;
         auto& theirRights = isWhite ? pos.blackCastlingRights : pos.whiteCastlingRights;
 
@@ -550,16 +558,11 @@ namespace detail {
             if (pos.is_en_passant(move)) {
                 [[unlikely]];
 
-                // the captured pawn is on the file of the target square, but one file below
-                // (White capture) or one file above (Black capture)
-                const auto capturedRank = pos.sideToMove == Color::White
-                                            ? board::prev_pawn_rank<Color::White>(move.to.rank)
-                                            : board::prev_pawn_rank<Color::Black>(move.to.rank);
-
-                value ^= zobrist::piece_key(PieceType::Pawn, otherColor,
-                    Square {
-                        .file = move.to.file,
-                        .rank = capturedRank });
+                value ^= zobrist::piece_key(
+                    PieceType::Pawn, otherColor,
+                    get_en_passant_captured_square(
+                        pos.enPassantTargetSquare.value(),
+                        pos.sideToMove == Color::White));
             } else {
                 [[likely]];
 
@@ -596,7 +599,6 @@ namespace detail {
 
 constexpr void Position::make_move(const Move& move) noexcept
 {
-    // NB. must query this before updating bitboards!
     const bool isCapture = is_capture(move);
     const bool isWhite   = sideToMove == Color::White;
 
@@ -604,7 +606,6 @@ constexpr void Position::make_move(const Move& move) noexcept
 
     const auto rightsChanges = detail::update_castling_rights(*this, isWhite, move, isCapture);
 
-    // NB. need to do this before updating bitboards, so it can tell the type of a captured piece
     hash = detail::update_zobrist(*this, move, newEPSquare, rightsChanges);
 
     detail::update_bitboards(*this, move);
