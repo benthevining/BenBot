@@ -237,7 +237,7 @@ private:
 
         stream << chess::notation::to_pgn(gameRecord);
 
-        std::println("Wrote PGN file to {}", pgnPath.c_str());
+        std::println("Wrote PGN file to {}", pgnPath.string());
     }
 
     Options options;

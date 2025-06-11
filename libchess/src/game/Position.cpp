@@ -122,7 +122,7 @@ namespace {
         };
     }
 
-    [[nodiscard, gnu::const]] constexpr std::uint_least8_t tick_halfmove_clock(
+    [[nodiscard, gnu::const]] std::uint_least8_t tick_halfmove_clock(
         const Move& move, const bool isCapture, const std::uint_least8_t prevValue) noexcept
     {
         if (isCapture || (move.piece == PieceType::Pawn))
@@ -138,7 +138,7 @@ namespace {
         return prevValue + 1;
     }
 
-    [[nodiscard, gnu::const]] constexpr zobrist::Value update_zobrist(
+    [[nodiscard, gnu::const]] zobrist::Value update_zobrist(
         const Position& pos, const Move& move,
         const std::optional<Square>  newEPTarget,
         const CastlingRightsChanges& rightsChanges)
