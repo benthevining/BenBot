@@ -13,6 +13,7 @@
 #include <libchess/notation/Algebraic.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/search/Search.hpp>
+#include <libchess/util/Strings.hpp>
 #include <print>
 #include <span>
 #include <string_view>
@@ -45,9 +46,7 @@ try {
 
     const auto depthString = args.front();
 
-    std::size_t depth { 4uz };
-
-    std::from_chars(depthString.data(), depthString.data() + depthString.length(), depth);
+    const auto depth = chess::util::int_from_string(depthString, 4uz);
 
     const auto move = chess::search::find_best_move(position, depth);
 

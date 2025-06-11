@@ -46,6 +46,8 @@ namespace {
     using Moves      = std::vector<GameRecord::Move>;
     using GameResult = std::optional<game::Result>;
 
+    using util::int_from_string;
+
     [[nodiscard]] std::pair<std::string_view, std::string_view>
     split_at_first_space_or_newline(
         const std::string_view input)
@@ -203,11 +205,7 @@ namespace {
         auto [nag, rest] = split_at_first_space_or_newline(pgnText.substr(1uz));
 
         if (! output.empty()) {
-            nag = util::trim(nag);
-
-            std::uint_least8_t value { 0 };
-
-            std::from_chars(nag.data(), nag.data() + nag.length(), value);
+            const auto value = int_from_string<std::uint_least8_t>(util::trim(nag));
 
             output.back().nags.emplace_back(value);
         }

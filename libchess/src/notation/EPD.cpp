@@ -8,7 +8,6 @@
 
 #include "FENHelpers.hpp" // NOLINT(build/include_subdir)
 #include <cassert>
-#include <charconv>
 #include <format>
 #include <libchess/notation/EPD.hpp>
 #include <libchess/pieces/Colors.hpp>
@@ -20,6 +19,7 @@
 namespace chess::notation {
 
 using pieces::Color;
+using util::int_from_string;
 
 namespace {
 
@@ -63,12 +63,9 @@ namespace {
             pos.operations[std::string { key }] = value;
 
             if (key == "fmvn") {
-                std::from_chars(
-                    value.data(), value.data() + value.length(),
-                    pos.position.fullMoveCounter);
+                pos.position.fullMoveCounter = int_from_string(value, pos.position.fullMoveCounter);
             } else if (key == "hmvc") {
-                std::from_chars(value.data(), value.data() + value.length(),
-                    pos.position.halfmoveClock);
+                pos.position.halfmoveClock = int_from_string(value, pos.position.halfmoveClock);
             }
 
             text.remove_prefix(nextSemi + 1uz);

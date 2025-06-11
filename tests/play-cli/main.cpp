@@ -7,7 +7,6 @@
  */
 
 #include <algorithm>
-#include <charconv>
 #include <cstddef> // IWYU pragma: keep - for std::ptrdiff_t
 #include <cstdlib>
 #include <exception>
@@ -25,6 +24,7 @@
 #include <libchess/notation/UCI.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/search/Search.hpp>
+#include <libchess/util/Strings.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <optional>
 #include <print>
@@ -52,7 +52,7 @@ void print_help(const std::string_view programName)
 }
 
 struct Options final {
-    Position startingPosition {};
+    Position startingPosition;
 
     Color computerPlays { Color::Black };
 
@@ -93,8 +93,7 @@ struct Options final {
 
             args = args.subspan(1uz);
 
-            std::from_chars(
-                depthStr.data(), depthStr.data() + depthStr.length(), opts.searchDepth);
+            opts.searchDepth = chess::util::int_from_string(depthStr, opts.searchDepth);
 
             continue;
         }

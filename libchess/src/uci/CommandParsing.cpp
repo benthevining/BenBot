@@ -8,7 +8,6 @@
 
 #include <algorithm>
 #include <array>
-#include <charconv>
 #include <iterator>
 #include <libchess/moves/Move.hpp>
 #include <libchess/notation/FEN.hpp>
@@ -92,16 +91,12 @@ namespace {
     [[nodiscard]] std::pair<size_t, std::string_view>
     parse_int_value(const std::string_view options)
     {
-        auto [valueStr, rest] = split_at_first_space(options);
+        const auto [valueStr, rest] = split_at_first_space(options);
 
-        valueStr = trim(valueStr);
-
-        size_t value { 0uz };
-
-        std::from_chars(
-            valueStr.data(), valueStr.data() + valueStr.length(), value);
-
-        return { value, trim(rest) };
+        return {
+            util::int_from_string<size_t>(trim(valueStr)),
+            trim(rest)
+        };
     }
 
     // consumes all the moves following the "searchmoves" token,

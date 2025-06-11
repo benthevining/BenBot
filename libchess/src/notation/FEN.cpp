@@ -78,6 +78,7 @@ std::string to_fen(const Position& position)
 
 Position from_fen(std::string_view fenString)
 {
+    using util::int_from_string;
     using util::split_at_first_space;
 
     fenString = util::trim(fenString);
@@ -108,11 +109,8 @@ Position from_fen(std::string_view fenString)
 
     const auto [halfMoveClock, fullMoveCounter] = split_at_first_space(rest4);
 
-    std::from_chars(
-        halfMoveClock.data(), halfMoveClock.data() + halfMoveClock.length(), position.halfmoveClock);
-
-    std::from_chars(
-        fullMoveCounter.data(), fullMoveCounter.data() + fullMoveCounter.length(), position.fullMoveCounter);
+    position.halfmoveClock   = int_from_string(halfMoveClock, position.halfmoveClock);
+    position.fullMoveCounter = int_from_string(fullMoveCounter, position.fullMoveCounter);
 
     position.refresh_zobrist();
 

@@ -8,7 +8,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <charconv>
 #include <format>
 #include <libchess/uci/Options.hpp>
 #include <libchess/util/Strings.hpp>
@@ -120,12 +119,9 @@ void IntOption::handle_setvalue(const std::string_view arguments)
     if (valueToken != "value")
         return;
 
-    valueStr = trim(valueStr);
+    const auto newValue = util::int_from_string(trim(valueStr), value);
 
-    std::from_chars(
-        valueStr.data(), valueStr.data() + valueStr.length(), value);
-
-    value = std::clamp(value, optionMin, optionMax);
+    value = std::clamp(newValue, optionMin, optionMax);
 }
 
 /*------------------------------------------------------------------------------------------------------------------*/

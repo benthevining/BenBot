@@ -7,7 +7,6 @@
  */
 
 #include <algorithm>
-#include <charconv>
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdlib>
@@ -19,6 +18,7 @@
 #include <libchess/moves/Perft.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/UCI.hpp>
+#include <libchess/util/Strings.hpp>
 #include <nlohmann/json.hpp>
 #include <optional>
 #include <print>
@@ -86,7 +86,7 @@ void print_help(const std::string_view programName)
         }
 
         // assume arg is depth
-        std::from_chars(arg.data(), arg.data() + arg.length(), options.depth);
+        options.depth = chess::util::int_from_string(arg, options.depth);
     };
 
     return options;
