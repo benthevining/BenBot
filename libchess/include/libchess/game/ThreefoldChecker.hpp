@@ -15,7 +15,7 @@
 
 #include <array>
 #include <cstddef> // IWYU pragma: keep - for size_t
-#include <libchess/game/Zobrist.hpp>
+#include <cstdint> // IWYU pragma: keep - for std::uint64_t
 
 namespace chess::game {
 
@@ -23,7 +23,7 @@ namespace chess::game {
     @ingroup game
  */
 struct ThreefoldChecker final {
-    using HashValue = zobrist::Value;
+    using HashValue = std::uint64_t;
 
     /** Creates a history containing the given initial hash value. */
     explicit constexpr ThreefoldChecker(HashValue initialPositionHash = 0uz) noexcept;

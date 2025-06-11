@@ -6,6 +6,7 @@
  * ======================================================================================
  */
 
+#include "Zobrist.hpp" // NOLINT(build/include_subdir)
 #include <array>
 #include <cassert>
 #include <libchess/board/File.hpp>
@@ -14,7 +15,6 @@
 #include <libchess/board/Square.hpp>
 #include <libchess/game/CastlingRights.hpp>
 #include <libchess/game/Position.hpp>
-#include <libchess/game/Zobrist.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <optional>
 #include <utility>

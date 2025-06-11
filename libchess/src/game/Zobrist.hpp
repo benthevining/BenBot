@@ -6,11 +6,6 @@
  * ======================================================================================
  */
 
-/** @file
-    This file provides hash keys used for Zobrist hashing.
-    @ingroup game
- */
-
 #pragma once
 
 #include <cstdint> // IWYU pragma: keep - for std::uint64_t
@@ -25,10 +20,6 @@ namespace chess::game {
 struct Position;
 } // namespace chess::game
 
-/** This namespace contains hash keys used for Zobrist hashing.
-    These functions are mainly for internal usage by the Position class.
-    @ingroup game
- */
 namespace chess::game::zobrist {
 
 using board::Pieces;
@@ -45,7 +36,7 @@ using Value     = std::uint64_t;
     const CastlingRights& blackRights,
     std::optional<Square> enPassantTargetSquare);
 
-// each of these bools are true if the given right has changed since the last move
+// each of these bools should be true if the given right has changed since the last move
 struct CastlingRightsChanges final {
     bool whiteKingside { false };
     bool whiteQueenside { false };

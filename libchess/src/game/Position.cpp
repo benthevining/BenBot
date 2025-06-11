@@ -6,14 +6,14 @@
  * ======================================================================================
  */
 
-#include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
+#include "Zobrist.hpp" // NOLINT(build/include_subdir)
+#include <cstdint>     // IWYU pragma: keep - for std::uint_least8_t
 #include <libchess/board/Distances.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/game/Result.hpp>
-#include <libchess/game/Zobrist.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/UTF8.hpp>
@@ -139,6 +139,26 @@ void Position::make_move(const Move& move)
     sideToMove = isWhite ? Color::Black : Color::White;
 
     threefoldChecker.push(hash);
+}
+
+Position::Position()
+    : hash {
+        zobrist::calculate(sideToMove,
+            whitePieces, blackPieces,
+            whiteCastlingRights, blackCastlingRights,
+            enPassantTargetSquare)
+    }
+{
+}
+
+void Position::refresh_zobrist()
+{
+    hash = zobrist::calculate(sideToMove,
+        whitePieces, blackPieces,
+        whiteCastlingRights, blackCastlingRights,
+        enPassantTargetSquare);
+
+    threefoldChecker.reset(hash);
 }
 
 bool Position::is_checkmate() const

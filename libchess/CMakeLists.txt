@@ -44,7 +44,7 @@ target_sources (
 
 target_include_directories (
     libchess PRIVATE "${CMAKE_CURRENT_LIST_DIR}/src/notation/"
-                     "${CMAKE_CURRENT_LIST_DIR}/src/search/"
+                     "${CMAKE_CURRENT_LIST_DIR}/src/search/" "${CMAKE_CURRENT_LIST_DIR}/src/game/"
 )
 
 source_group (TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${libchess_headers} ${libchess_sources})

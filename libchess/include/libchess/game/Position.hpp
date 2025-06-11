@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <cstdint> // IWYU pragma: keep - for std::uint64_t
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Pieces.hpp>
@@ -24,7 +25,6 @@
 #include <libchess/game/CastlingRights.hpp>
 #include <libchess/game/Result.hpp>
 #include <libchess/game/ThreefoldChecker.hpp>
-#include <libchess/game/Zobrist.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
@@ -60,6 +60,9 @@ using PieceType = pieces::Type;
     @todo Funcs to get passed pawns, backward pawns
  */
 struct Position final {
+    /** Creates a Position object representing the starting position. */
+    Position();
+
     /** The positions of the White pieces.
 
         @invariant The bitboard indices of the bits set in ``whitePieces``
@@ -116,12 +119,7 @@ struct Position final {
         function. If you manually change attributes of the position,
         call the ``refresh_zobrist()`` function to recalculate it.
      */
-    zobrist::Value hash {
-        zobrist::calculate(sideToMove,
-            whitePieces, blackPieces,
-            whiteCastlingRights, blackCastlingRights,
-            enPassantTargetSquare)
-    };
+    std::uint64_t hash;
 
     /** Returns true if the two positions have the same Zobrist hash. */
     [[nodiscard]] bool operator==(const Position& other) const noexcept
@@ -399,16 +397,6 @@ inline auto Position::get_half_open_files() const noexcept
 {
     return magic_enum::enum_values<File>()
          | std::views::filter([this](const File file) { return is_file_half_open(file); });
-}
-
-inline void Position::refresh_zobrist()
-{
-    hash = zobrist::calculate(sideToMove,
-        whitePieces, blackPieces,
-        whiteCastlingRights, blackCastlingRights,
-        enPassantTargetSquare);
-
-    threefoldChecker.reset(hash);
 }
 
 inline Position after_move(const Position& starting, const Move& move)
