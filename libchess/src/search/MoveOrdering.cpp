@@ -15,6 +15,8 @@
 #include <libchess/moves/Patterns.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
+#include <libchess/search/TranspositionTable.hpp>
+#include <limits>
 #include <span>
 
 namespace chess::search::detail {
@@ -37,10 +39,13 @@ namespace {
 
     // higher scored moves will be searched first
     [[nodiscard, gnu::const]] int move_ordering_score(
-        const Position& currentPosition, const Move& move, const Bitboard opponentPawnAttacks)
+        const Position& currentPosition, const Move& move,
+        const TranspositionTable& transTable,
+        const Bitboard            opponentPawnAttacks)
     {
         namespace piece_values = eval::piece_values;
 
+        static constexpr auto PV_NODE_BONUS { 1500 };        // cppcheck-suppress variableScope
         static constexpr auto CAPTURE_MULTIPLIER { 10 };     // cppcheck-suppress variableScope
         static constexpr auto PROMOTION_MULTIPLIER { 15 };   // cppcheck-suppress variableScope
         static constexpr auto CASTLING_BONUS { 30 };         // cppcheck-suppress variableScope
@@ -49,6 +54,18 @@ namespace {
         const auto& theirPieces = currentPosition.their_pieces();
 
         auto score { 0 };
+
+        if (const auto* currPosRecord = transTable.find(currentPosition))
+            if (currPosRecord->bestMove.has_value() && currPosRecord->bestMove == move)
+                return std::numeric_limits<int>::max(); // arbitrarily large score to ensure this move is ordered first
+
+        // look up stored record of resulting position after making move
+        if (const auto* record = transTable.find(game::after_move(currentPosition, move))) {
+            if (record->evalType == TranspositionTable::Record::EvalType::Exact)
+                score += PV_NODE_BONUS;
+
+            score += record->eval;
+        }
 
         if (const auto capturedType = theirPieces.get_piece_on(move.to)) {
             // NB. checking for captures this way prevents en passant from entering this branch
@@ -77,15 +94,16 @@ namespace {
 } // namespace
 
 void order_moves_for_search(
-    const Position&       currentPosition,
-    const std::span<Move> moves)
+    const Position&           currentPosition,
+    const std::span<Move>     moves,
+    const TranspositionTable& transTable)
 {
     std::ranges::sort(
         moves,
-        [&currentPosition,
+        [&currentPosition, &transTable,
             opponentPawnAttacks = get_opponent_pawn_attacks(currentPosition)](const Move& first, const Move& second) {
-            return move_ordering_score(currentPosition, first, opponentPawnAttacks)
-                 > move_ordering_score(currentPosition, second, opponentPawnAttacks);
+            return move_ordering_score(currentPosition, first, transTable, opponentPawnAttacks)
+                 > move_ordering_score(currentPosition, second, transTable, opponentPawnAttacks);
         });
 }
 

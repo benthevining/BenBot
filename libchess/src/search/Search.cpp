@@ -30,8 +30,9 @@ namespace {
 
     [[nodiscard]] int quiescence(
         int alpha, const int beta,
-        const Position& currentPosition,
-        const size_t    plyFromRoot)
+        const Position&           currentPosition,
+        const size_t              plyFromRoot,
+        const TranspositionTable& transTable)
     {
         assert(beta > alpha);
 
@@ -52,14 +53,14 @@ namespace {
             return (EVAL_MAX - static_cast<int>(plyFromRoot)) * -1;
         }
 
-        detail::order_moves_for_search(currentPosition, moves);
+        detail::order_moves_for_search(currentPosition, moves, transTable);
 
         for (const auto& move : moves) {
             assert(currentPosition.is_capture(move));
 
             const auto newPosition = game::after_move(currentPosition, move);
 
-            evaluation = -quiescence(-beta, -alpha, newPosition, plyFromRoot + 1uz);
+            evaluation = -quiescence(-beta, -alpha, newPosition, plyFromRoot + 1uz, transTable);
 
             if (evaluation >= beta)
                 return beta;
@@ -107,7 +108,7 @@ namespace {
             return eval;
         }
 
-        detail::order_moves_for_search(currentPosition, moves);
+        detail::order_moves_for_search(currentPosition, moves, transTable);
 
         std::optional<Move> bestMove;
 
@@ -116,7 +117,7 @@ namespace {
 
             const auto eval = depth > 1uz
                                 ? -alpha_beta(-beta, -alpha, newPosition, depth - 1uz, plyFromRoot + 1uz, transTable)
-                                : -quiescence(-beta, -alpha, newPosition, plyFromRoot + 1uz);
+                                : -quiescence(-beta, -alpha, newPosition, plyFromRoot + 1uz, transTable);
 
             if (eval >= beta) {
                 transTable.store(
@@ -165,7 +166,7 @@ Move find_best_move(
         };
     }
 
-    detail::order_moves_for_search(position, moves);
+    detail::order_moves_for_search(position, moves, transTable);
 
     std::optional<Move> bestMove;
 
