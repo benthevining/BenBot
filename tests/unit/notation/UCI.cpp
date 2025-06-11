@@ -29,7 +29,7 @@ using chess::notation::to_uci;
 
 TEST_CASE("UCI notation - normal moves", TAGS)
 {
-    static constexpr chess::game::Position startingPosition {};
+    const chess::game::Position startingPosition {};
 
     SECTION("Pawn move")
     {

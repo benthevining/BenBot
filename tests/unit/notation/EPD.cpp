@@ -17,7 +17,7 @@ using chess::notation::from_epd;
 
 TEST_CASE("EPD - start position", TAGS)
 {
-    static constexpr chess::game::Position startPos {};
+    const chess::game::Position startPos {};
 
     const auto epd = from_epd("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - hmvc 0; fmvn 1;");
 

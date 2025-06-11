@@ -21,7 +21,7 @@ using chess::notation::from_fen;
 
 TEST_CASE("Zobrist - starting position", TAGS)
 {
-    static constexpr chess::game::Position startPosition {};
+    const chess::game::Position startPosition {};
 
     const auto startPos = from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
@@ -47,9 +47,9 @@ TEST_CASE("Zobrist - hash changes", TAGS)
 
     SECTION("From start pos")
     {
-        static constexpr chess::game::Position pos {};
+        const chess::game::Position pos {};
 
-        static constexpr auto oldHash = pos.hash;
+        const auto oldHash = pos.hash;
 
         for (const auto& move : generate(pos)) {
             const auto newPos = chess::game::after_move(pos, move);

@@ -492,7 +492,7 @@ namespace {
             if (! std::ranges::contains(sevenTagRoster, key))
                 write_metadata_item(key, value, output);
 
-        static constexpr Position startPos {};
+        const Position startPos {};
 
         if (startingPosition != startPos) {
             if (! metadata.contains("FEN"s)) {

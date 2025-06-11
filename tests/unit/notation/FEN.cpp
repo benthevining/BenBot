@@ -31,7 +31,7 @@ namespace match = Catch::Matchers;
 
 TEST_CASE("FEN - starting position", TAGS)
 {
-    static constexpr Position startingPos;
+    const Position startingPos;
 
     static constexpr std::string_view startingFEN {
         "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"

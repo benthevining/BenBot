@@ -388,7 +388,7 @@ TEST_CASE("Algebraic notation - pawn pushes", TAGS)
 {
     SECTION("Normal")
     {
-        static constexpr Position startingPosition {};
+        const Position startingPosition {};
 
         const auto move = from_alg(startingPosition, "e3");
 

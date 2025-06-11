@@ -28,14 +28,14 @@ using chess::pieces::Color;
 
 TEST_CASE("Position - starting", TAGS)
 {
-    static constexpr Position pos {};
+    const Position pos {};
 
-    STATIC_REQUIRE(pos.sideToMove == Color::White);
-    STATIC_REQUIRE(! pos.enPassantTargetSquare.has_value());
+    REQUIRE(pos.sideToMove == Color::White);
+    REQUIRE(! pos.enPassantTargetSquare.has_value());
 
-    static constexpr auto occupied = pos.occupied();
+    const auto occupied = pos.occupied();
 
-    STATIC_REQUIRE(occupied.count() == 32uz);
+    REQUIRE(occupied.count() == 32uz);
 
     for (const auto [file, rank] : occupied.squares()) {
         REQUIRE(((rank == Rank::One) || (rank == Rank::Two)
@@ -109,9 +109,9 @@ TEST_CASE("Position - is_check()", TAGS)
 
     SECTION("Starting position")
     {
-        static constexpr Position startingPosition {};
+        const Position startingPosition {};
 
-        STATIC_REQUIRE(! startingPosition.is_check());
+        REQUIRE(! startingPosition.is_check());
         REQUIRE(! startingPosition.is_checkmate());
         REQUIRE(! startingPosition.is_stalemate());
     }
