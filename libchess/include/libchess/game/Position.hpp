@@ -267,7 +267,7 @@ struct Position final {
         given type exists on the starting square; this function only verifies that making
         the move does not leave the side's king in check.
      */
-    [[nodiscard]] constexpr bool is_legal(const Move& move) const noexcept;
+    [[nodiscard]] constexpr bool is_legal(const Move& move) const;
 
     /** Returns true if the given move is an en passant capture in the current position. */
     [[nodiscard]] constexpr bool is_en_passant(const Move& move) const noexcept;
@@ -276,10 +276,10 @@ struct Position final {
     [[nodiscard]] constexpr bool is_capture(const Move& move) const noexcept;
 
     /** Makes a move to alter the position. */
-    constexpr void make_move(const Move& move) noexcept;
+    constexpr void make_move(const Move& move);
 
     /** Recalculates the Zobrist hash for this position. */
-    constexpr void refresh_zobrist() noexcept;
+    constexpr void refresh_zobrist();
 
     /** Returns an empty position with none of the piece bitboards initialized.
         This is useful for tasks like parsing a FEN string, for example.
@@ -287,7 +287,7 @@ struct Position final {
         ``blackPieces.refresh_occupied()``, and ``refresh_zobrist()`` to update
         all relevant cached state.
      */
-    [[nodiscard]] static constexpr Position empty() noexcept;
+    [[nodiscard]] static constexpr Position empty();
 
 private:
     [[nodiscard]] constexpr bool is_side_in_check(Color side) const noexcept;
@@ -302,7 +302,7 @@ private:
     @relates Position
     @ingroup game
  */
-[[nodiscard, gnu::const]] constexpr Position after_move(const Position& starting, const Move& move) noexcept;
+[[nodiscard, gnu::const]] constexpr Position after_move(const Position& starting, const Move& move);
 
 /** Creates a UTF8 representation of the given position.
     The returned string is meant to be interpreted visually by a human, probably for debugging purposes.
@@ -331,7 +331,7 @@ private:
 
  */
 
-constexpr Position Position::empty() noexcept
+constexpr Position Position::empty()
 {
     Position pos;
 
@@ -365,7 +365,7 @@ constexpr bool Position::is_side_in_check(const Color side) const noexcept
         whitePieces, blackPieces.king, blackPieces.occupied);
 }
 
-constexpr bool Position::is_legal(const Move& move) const noexcept
+constexpr bool Position::is_legal(const Move& move) const
 {
     auto copy { *this };
 
@@ -412,7 +412,7 @@ constexpr auto Position::get_half_open_files() const noexcept
          | std::views::filter([this](const File file) { return is_file_half_open(file); });
 }
 
-constexpr void Position::refresh_zobrist() noexcept
+constexpr void Position::refresh_zobrist()
 {
     hash = zobrist::calculate(sideToMove,
         whitePieces, blackPieces,
@@ -534,7 +534,7 @@ namespace detail {
     [[nodiscard, gnu::const]] constexpr zobrist::Value update_zobrist(
         const Position& pos, const Move& move,
         const std::optional<Square>  newEPTarget,
-        const CastlingRightsChanges& rightsChanges) noexcept
+        const CastlingRightsChanges& rightsChanges)
     {
         auto value = pos.hash;
 
@@ -597,7 +597,7 @@ namespace detail {
 
 } // namespace detail
 
-constexpr void Position::make_move(const Move& move) noexcept
+constexpr void Position::make_move(const Move& move)
 {
     const bool isCapture = is_capture(move);
     const bool isWhite   = sideToMove == Color::White;
@@ -624,7 +624,7 @@ constexpr void Position::make_move(const Move& move) noexcept
     threefoldChecker.push(hash);
 }
 
-constexpr Position after_move(const Position& starting, const Move& move) noexcept
+constexpr Position after_move(const Position& starting, const Move& move)
 {
     auto copy { starting };
 

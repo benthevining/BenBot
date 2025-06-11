@@ -219,7 +219,7 @@ constexpr Bitboard diagonal(const Bitboard starting) noexcept
     return northeast(starting) | southwest(starting);
 }
 
-constexpr Bitboard antidiagonal(Bitboard starting) noexcept
+constexpr Bitboard antidiagonal(const Bitboard starting) noexcept
 {
     return northwest(starting) | southeast(starting);
 }

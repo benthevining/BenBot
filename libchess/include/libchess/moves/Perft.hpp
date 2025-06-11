@@ -105,7 +105,7 @@ constexpr PerftResult& PerftResult::operator+=(const PerftResult& rhs) noexcept
 }
 
 template <bool IsRoot>
-PerftResult perft(const size_t depth, const Position& startingPosition)
+PerftResult perft(const size_t depth, const Position& startingPosition) // NOLINT(readability-function-cognitive-complexity)
 {
     if (depth == 0uz)
         return { .nodes = 1uz };

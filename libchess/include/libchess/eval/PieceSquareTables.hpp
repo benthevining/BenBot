@@ -24,6 +24,6 @@ using game::Position;
 
     @ingroup eval
  */
-[[nodiscard, gnu::const]] int score_piece_placement(const Position& position) noexcept;
+[[nodiscard, gnu::const]] int score_piece_placement(const Position& position);
 
 } // namespace chess::eval

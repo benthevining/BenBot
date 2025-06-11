@@ -44,10 +44,10 @@ static constexpr Value WHITE_QUEENSIDE_CASTLE { 0x098dc1575ddbd151ULL };
 static constexpr Value BLACK_KINGSIDE_CASTLE { 0xdbb675f686df04a9ULL };
 static constexpr Value BLACK_QUEENSIDE_CASTLE { 0x71588a053b2bd9e5ULL };
 
-[[nodiscard, gnu::const]] constexpr Value en_passant_key(File file) noexcept;
+[[nodiscard, gnu::const]] constexpr Value en_passant_key(File file);
 
 [[nodiscard, gnu::const]] constexpr Value piece_key(
-    PieceType type, Color side, const Square& square) noexcept;
+    PieceType type, Color side, const Square& square);
 
 [[nodiscard, gnu::const]] constexpr Value calculate(
     Color                 sideToMove,
@@ -55,7 +55,7 @@ static constexpr Value BLACK_QUEENSIDE_CASTLE { 0x71588a053b2bd9e5ULL };
     const board::Pieces&  blackPieces,
     const CastlingRights& whiteRights,
     const CastlingRights& blackRights,
-    std::optional<Square> enPassantTargetSquare) noexcept;
+    std::optional<Square> enPassantTargetSquare);
 
 /*
                          ___                           ,--,
@@ -74,7 +74,7 @@ static constexpr Value BLACK_QUEENSIDE_CASTLE { 0x71588a053b2bd9e5ULL };
 
  */
 
-constexpr Value en_passant_key(const File file) noexcept
+constexpr Value en_passant_key(const File file)
 {
     static constexpr std::array values {
         0xa72780f845e9076dULL,
@@ -87,11 +87,11 @@ constexpr Value en_passant_key(const File file) noexcept
         0x40f734e63110b79dULL
     };
 
-    return values[std::to_underlying(file)];
+    return values.at(std::to_underlying(file));
 }
 
 constexpr Value piece_key(
-    const PieceType type, const Color side, const Square& square) noexcept
+    const PieceType type, const Color side, const Square& square)
 {
     static constexpr std::array values {
         0xde0a6308c3df1559ULL, 0x2c4b06b9853875ccULL, 0x2ab7e75c55f58ce1ULL, 0xd870396170507503ULL, 0x2caea0c8b9204cb4ULL,
@@ -253,7 +253,8 @@ constexpr Value piece_key(
     const auto typeOffset = 64uz * 2uz * std::to_underlying(type);
     const auto sideOffset = 64uz * std::to_underlying(side);
 
-    return values[typeOffset + sideOffset + square.index()];
+    return values.at(
+        typeOffset + sideOffset + square.index());
 }
 
 constexpr Value calculate(
@@ -262,7 +263,7 @@ constexpr Value calculate(
     const board::Pieces&        blackPieces,
     const CastlingRights&       whiteRights,
     const CastlingRights&       blackRights,
-    const std::optional<Square> enPassantTargetSquare) noexcept
+    const std::optional<Square> enPassantTargetSquare)
 {
     Value value { 0uz };
 

@@ -42,30 +42,31 @@ BitboardIndex knight_distance(
         1, 0, 0, 0, 0, 0, 0, 1
     };
 
-    const auto firstIdx  = static_cast<int>(first.index());
-    const auto secondIdx = static_cast<int>(second.index());
+    const auto firstIdx  = first.index();
+    const auto secondIdx = second.index();
 
     // NB. this isn't the same as manhattan_distance()
     const auto absDist = [firstIdx, secondIdx] {
-        const auto rankDist = (firstIdx | 7) - (secondIdx | 7);
-        const auto fileDist = (firstIdx & 7) - (secondIdx & 7);
+        const auto rankDist = static_cast<int>(firstIdx | 7uz) - static_cast<int>(secondIdx | 7uz);
+        const auto fileDist = static_cast<int>(firstIdx & 7uz) - static_cast<int>(secondIdx & 7uz);
 
         return std::abs(rankDist) + std::abs(fileDist);
     }();
 
-    auto dist = ndis.at(static_cast<size_t>(absDist));
+    assert(absDist >= 0);
+
+    auto dist = static_cast<size_t>(ndis.at(static_cast<size_t>(absDist)));
 
     if (std::cmp_equal(absDist, 9)) {
         [[unlikely]];
 
-        const auto cornerMask = corner.at(static_cast<size_t>(firstIdx))
-                              ^ corner.at(static_cast<size_t>(secondIdx));
+        const auto firstMask  = static_cast<size_t>(corner.at(firstIdx));
+        const auto secondMask = static_cast<size_t>(corner.at(secondIdx));
 
-        dist += 2 * cornerMask;
+        dist += 2uz * (firstMask ^ secondMask);
     }
 
-    assert(dist >= 0);
-    assert(dist <= 6);
+    assert(dist <= 6uz);
 
     return static_cast<BitboardIndex>(dist);
 }

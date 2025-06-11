@@ -29,10 +29,10 @@ struct ThreefoldChecker final {
     explicit constexpr ThreefoldChecker(HashValue initialPositionHash = 0uz) noexcept;
 
     /** Clears the history, inserting a single hash value. */
-    constexpr void reset(HashValue initialPositionHash) noexcept;
+    constexpr void reset(HashValue initialPositionHash);
 
     /** Pushes a new hash value into the history. */
-    constexpr void push(HashValue newHash) noexcept;
+    constexpr void push(HashValue newHash);
 
     /** Returns true if the last call to ``push()`` created a threefold repetition in the history. */
     [[nodiscard]] constexpr bool is_threefold() const noexcept;
@@ -65,19 +65,19 @@ constexpr ThreefoldChecker::ThreefoldChecker(const HashValue initialPositionHash
     history.front() = initialPositionHash;
 }
 
-constexpr void ThreefoldChecker::reset(const HashValue initialPositionHash) noexcept
+constexpr void ThreefoldChecker::reset(const HashValue initialPositionHash)
 {
     for (auto idx = 1uz; idx < history.size(); ++idx)
-        history[idx] = 0uz;
+        history.at(idx) = 0uz;
 
     history.front() = initialPositionHash;
 }
 
-constexpr void ThreefoldChecker::push(const HashValue newHash) noexcept
+constexpr void ThreefoldChecker::push(const HashValue newHash)
 {
     // move all elements back
     for (auto idx = history.size() - 1uz; idx > 0uz; --idx)
-        history[idx] = history[idx - 1uz];
+        history.at(idx) = history.at(idx - 1uz);
 
     history.front() = newHash;
 }

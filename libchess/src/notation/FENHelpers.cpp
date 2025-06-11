@@ -7,8 +7,12 @@
  */
 
 #include "FENHelpers.hpp" // NOLINT(build/include_subdir)
+#include <array>
 #include <cassert>
+#include <charconv>
+#include <cstddef> // IWYU pragma: keep - for std::ptrdiff_t
 #include <format>
+#include <iterator>
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Rank.hpp>
@@ -29,9 +33,20 @@ namespace {
 
     [[nodiscard, gnu::const]] char int_to_char(const size_t value) noexcept
     {
+        // Even though we want just a single character, to_chars() seems to be the most
+        // sanitizer-approved way to do this portably. Tricks involving '0' + value are
+        // technically implementation-defined behavior.
+
         assert(value <= 9uz);
 
-        return '0' + static_cast<char>(value);
+        std::array<char, 1uz> buf {};
+
+        std::to_chars(
+            buf.data(),
+            std::next(buf.data(), static_cast<std::ptrdiff_t>(buf.size())),
+            value);
+
+        return buf.front();
     }
 
     void write_rank(
