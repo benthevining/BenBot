@@ -13,8 +13,8 @@
 #include <libchess/board/Masks.hpp>
 #include <libchess/board/Pieces.hpp>
 #include <libchess/board/Square.hpp>
-#include <libchess/game/CastlingRights.hpp>
 #include <libchess/game/Position.hpp>
+#include <libchess/moves/Move.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <optional>
 #include <utility>
@@ -222,22 +222,16 @@ namespace {
 
 } // namespace
 
-Value calculate(
-    const Color                 sideToMove,
-    const Pieces&               whitePieces,
-    const Pieces&               blackPieces,
-    const CastlingRights&       whiteRights,
-    const CastlingRights&       blackRights,
-    const std::optional<Square> enPassantTargetSquare)
+Value calculate(const Position& pos)
 {
     Value value { 0uz };
 
-    if (sideToMove == Color::Black)
+    if (pos.sideToMove == Color::Black)
         value ^= BLACK_TO_MOVE;
 
     for (const auto type : magic_enum::enum_values<PieceType>()) {
-        const auto& white = whitePieces.get_type(type);
-        const auto& black = blackPieces.get_type(type);
+        const auto& white = pos.whitePieces.get_type(type);
+        const auto& black = pos.blackPieces.get_type(type);
 
         for (const auto square : white.squares())
             value ^= piece_key(type, Color::White, square); // cppcheck-suppress useStlAlgorithm
@@ -246,19 +240,19 @@ Value calculate(
             value ^= piece_key(type, Color::Black, square); // cppcheck-suppress useStlAlgorithm
     }
 
-    if (whiteRights.kingside)
+    if (pos.whiteCastlingRights.kingside)
         value ^= WHITE_KINGSIDE_CASTLE;
 
-    if (whiteRights.queenside)
+    if (pos.whiteCastlingRights.queenside)
         value ^= WHITE_QUEENSIDE_CASTLE;
 
-    if (blackRights.kingside)
+    if (pos.blackCastlingRights.kingside)
         value ^= BLACK_KINGSIDE_CASTLE;
 
-    if (blackRights.queenside)
+    if (pos.blackCastlingRights.queenside)
         value ^= BLACK_QUEENSIDE_CASTLE;
 
-    enPassantTargetSquare.and_then([&value](const Square& square) {
+    pos.enPassantTargetSquare.and_then([&value](const Square& square) {
         value ^= en_passant_key(square.file);
         return std::optional<int> {};
     });

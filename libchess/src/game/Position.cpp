@@ -142,21 +142,13 @@ void Position::make_move(const Move& move)
 }
 
 Position::Position()
-    : hash {
-        zobrist::calculate(sideToMove,
-            whitePieces, blackPieces,
-            whiteCastlingRights, blackCastlingRights,
-            enPassantTargetSquare)
-    }
+    : hash { zobrist::calculate(*this) }
 {
 }
 
 void Position::refresh_zobrist()
 {
-    hash = zobrist::calculate(sideToMove,
-        whitePieces, blackPieces,
-        whiteCastlingRights, blackCastlingRights,
-        enPassantTargetSquare);
+    hash = zobrist::calculate(*this);
 
     threefoldChecker.reset(hash);
 }
