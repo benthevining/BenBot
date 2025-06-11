@@ -8,6 +8,7 @@
 
 #include <array>
 #include <cassert>
+#include <libchess/board/File.hpp>
 #include <libchess/board/Masks.hpp>
 #include <libchess/board/Pieces.hpp>
 #include <libchess/board/Square.hpp>
@@ -20,26 +21,34 @@
 
 namespace chess::game::zobrist {
 
-Value en_passant_key(const File file)
-{
-    static constexpr std::array values {
-        0xa72780f845e9076dULL,
-        0xfcc6f885b6c115dcULL,
-        0x45b7a9a39104160cULL,
-        0xfe71cfea4f444115ULL,
-        0xe0d231bbdcc1441dULL,
-        0xb6ba621251f6c0faULL,
-        0xec9246215a2ae81cULL,
-        0x40f734e63110b79dULL
-    };
+using board::File;
 
-    return values.at(std::to_underlying(file));
-}
+namespace {
 
-Value piece_key(
-    const PieceType type, const Color side, const Square& square)
-{
-    static constexpr std::array values {
+    constexpr Value BLACK_TO_MOVE { 0x679ebe6f2ed869a4ULL };
+
+    constexpr Value WHITE_KINGSIDE_CASTLE { 0x6b63254b15e00a87ULL };
+    constexpr Value WHITE_QUEENSIDE_CASTLE { 0x098dc1575ddbd151ULL };
+    constexpr Value BLACK_KINGSIDE_CASTLE { 0xdbb675f686df04a9ULL };
+    constexpr Value BLACK_QUEENSIDE_CASTLE { 0x71588a053b2bd9e5ULL };
+
+    [[nodiscard, gnu::const]] Value en_passant_key(const File file)
+    {
+        static constexpr std::array values {
+            0xa72780f845e9076dULL,
+            0xfcc6f885b6c115dcULL,
+            0x45b7a9a39104160cULL,
+            0xfe71cfea4f444115ULL,
+            0xe0d231bbdcc1441dULL,
+            0xb6ba621251f6c0faULL,
+            0xec9246215a2ae81cULL,
+            0x40f734e63110b79dULL
+        };
+
+        return values.at(std::to_underlying(file));
+    }
+
+    constexpr std::array PIECE_KEYS {
         0xde0a6308c3df1559ULL, 0x2c4b06b9853875ccULL, 0x2ab7e75c55f58ce1ULL, 0xd870396170507503ULL, 0x2caea0c8b9204cb4ULL,
         0x945bed033f6e1d8dULL, 0xf76d7af05b02529bULL, 0x775d4b35eec039e6ULL, 0x53d5a48216a62191ULL, 0x243dec880916c9a9ULL,
         0x29fef5bc3455c011ULL, 0x30a3d546f5c6b927ULL, 0x551793f279293576ULL, 0x5a5fc4484265a753ULL, 0x445db7d8dba2c069ULL,
@@ -196,17 +205,22 @@ Value piece_key(
         0xe1f20c6145f85fe4ULL, 0x450a87aba3167ee7ULL, 0x677524f27efe26feULL
     };
 
-    const auto typeOffset = 64uz * 2uz * std::to_underlying(type);
-    const auto sideOffset = 64uz * std::to_underlying(side);
+    [[nodiscard, gnu::const]] Value piece_key(
+        const PieceType type, const Color side, const Square& square)
+    {
+        const auto typeOffset = 64uz * 2uz * std::to_underlying(type);
+        const auto sideOffset = 64uz * std::to_underlying(side);
 
-    const auto index = typeOffset + sideOffset + square.index();
+        const auto index = typeOffset + sideOffset + square.index();
 
-    assert(index < values.size());
+        assert(index < PIECE_KEYS.size());
 
-    // TODO: there's a bug here! Throws exception when changed to at() (happens in release mode only)
-    return values[index];
-    // return values.at(index);
-}
+        // TODO: there's a bug here! Throws exception when changed to at() (happens in release mode only)
+        return PIECE_KEYS[index];
+        // return values.at(index);
+    }
+
+} // namespace
 
 Value calculate(
     const Color                 sideToMove,
