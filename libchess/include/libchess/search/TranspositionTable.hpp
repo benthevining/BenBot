@@ -16,11 +16,14 @@
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdint> // IWYU pragma: keep - for std::uint64_t
 #include <libchess/game/Position.hpp>
+#include <libchess/moves/Move.hpp>
+#include <optional>
 #include <unordered_map>
 
 namespace chess::search {
 
 using game::Position;
+using moves::Move;
 using std::size_t;
 
 /** The transposition table data structure.
@@ -28,21 +31,41 @@ using std::size_t;
  */
 class TranspositionTable final {
 public:
-    using HashValue = std::uint64_t;
-
     /** A record of a previously searched position. */
     struct Record final {
         /** The depth that the position was searched to. */
         size_t searchedDepth { 0uz };
 
-        // TODO: eval
-        // node type: PV (exact), cut (min/max)
+        /** The evaluation of this position.
+            See ``evalType`` to determine the exact meaning of this value.
+         */
+        int eval { 0 };
 
-        // maybe also cache legal moves
+        /** This enumeration defines types of evaluation values that
+            different nodes in the search tree may be assigned.
+         */
+        enum class EvalType : std::uint_least8_t {
+            Exact, ///< Indicates that the ``eval`` value is an exact evaluation. This also indicates that this is a PV node.
+            Alpha, ///< Indicate that the ``eval`` value is a maximum evaluation; for example, if ``eval`` is 16, this means that the evaluation of this node was at most 16.
+            Beta   ///< Indicates that the ``eval`` is a minimum evaluation; for example, if ``eval`` is 16, this means that the evaluation of this node was at least 16.
+        };
+
+        /** Gives the exact meaning of the ``eval`` value. */
+        EvalType evalType { EvalType::Alpha };
+
+        /** If a conclusive best move was found in this position, it
+            is stored here. Sometimes this may be ``nullopt`` if everything
+            failed low (i.e. ``score <= alpha``).
+         */
+        std::optional<Move> bestMove;
+
+        // TODO: maybe also cache legal moves
     };
 
     /** Retrieves the stored record for the given position,
         or nullptr if the given position isn't in the table.
+
+        @see store()
      */
     [[nodiscard]] const Record* find(const Position& pos) const
     {
@@ -54,7 +77,10 @@ public:
         return nullptr;
     }
 
-    /** Stores a record for a given position. */
+    /** Stores a record for a given position.
+
+        @see find()
+     */
     void store(const Position& pos, const Record& record)
     {
         // TODO: if key was in table, need to determine whether it should be overwritten
@@ -62,7 +88,7 @@ public:
     }
 
 private:
-    std::unordered_map<HashValue, Record> records;
+    std::unordered_map<std::uint64_t, Record> records;
 };
 
 } // namespace chess::search
