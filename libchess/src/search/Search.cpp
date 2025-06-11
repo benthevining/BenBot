@@ -72,36 +72,80 @@ namespace {
 
     [[nodiscard]] int alpha_beta(
         int alpha, const int beta,
-        const Position& currentPosition,
-        const size_t    depth,
-        const size_t    plyFromRoot)
+        const Position&     currentPosition,
+        const size_t        depth,
+        const size_t        plyFromRoot,
+        TranspositionTable& transTable)
     {
+        using EvalType = TranspositionTable::Record::EvalType;
+
         assert(beta > alpha);
 
-        if (currentPosition.is_draw())
+        if (const auto value = transTable.probe_eval(currentPosition, depth, alpha, beta))
+            return value.value();
+
+        if (currentPosition.is_draw()) {
+            transTable.store(
+                currentPosition, { .searchedDepth = depth,
+                                     .eval        = eval::DRAW,
+                                     .evalType    = EvalType::Exact });
+
             return eval::DRAW;
+        }
 
         auto moves = moves::generate(currentPosition);
 
         if (moves.empty() && currentPosition.is_check()) {
             // checkmate
-            return (EVAL_MAX - static_cast<int>(plyFromRoot)) * -1;
+            const auto eval = (EVAL_MAX - static_cast<int>(plyFromRoot)) * -1;
+
+            transTable.store(
+                currentPosition, { .searchedDepth = depth,
+                                     .eval        = eval, // TODO: needs scaling/mapping?
+                                     .evalType    = EvalType::Exact });
+
+            return eval;
         }
 
         detail::order_moves_for_search(currentPosition, moves);
 
+        std::optional<Move> bestMove;
+
         for (const auto& move : moves) {
             const auto newPosition = game::after_move(currentPosition, move);
 
-            const auto evaluation = depth > 1uz
-                                      ? -alpha_beta(-beta, -alpha, newPosition, depth - 1uz, plyFromRoot + 1uz)
-                                      : -quiescence(-beta, -alpha, newPosition, plyFromRoot + 1uz);
+            const auto eval = depth > 1uz
+                                ? -alpha_beta(-beta, -alpha, newPosition, depth - 1uz, plyFromRoot + 1uz, transTable)
+                                : -quiescence(-beta, -alpha, newPosition, plyFromRoot + 1uz);
 
-            if (evaluation >= beta)
+            if (eval >= beta) {
+                transTable.store(
+                    currentPosition, { .searchedDepth = depth,
+                                         .eval        = beta,
+                                         .evalType    = EvalType::Beta,
+                                         .bestMove    = bestMove });
+
                 return beta;
+            }
 
-            alpha = std::max(alpha, evaluation);
+            if (eval > alpha) {
+                bestMove = move;
+
+                transTable.store(
+                    currentPosition, { .searchedDepth = depth,
+                                         .eval        = alpha,
+                                         .evalType    = EvalType::Alpha,
+                                         .bestMove    = bestMove });
+
+                alpha = eval;
+            }
         }
+
+        transTable.store(
+            currentPosition, { .searchedDepth = depth,
+                                 .eval        = alpha,
+                                 .evalType    = EvalType::Alpha,
+                                 .bestMove    = bestMove });
 
         return alpha;
     }
@@ -132,7 +176,7 @@ Move find_best_move(
     for (const auto& move : moves) {
         const auto newPosition = game::after_move(position, move);
 
-        const auto score = -alpha_beta(-beta, -alpha, newPosition, searchDepth, 1uz);
+        const auto score = -alpha_beta(-beta, -alpha, newPosition, searchDepth, 1uz, transTable);
 
         if (score > alpha) {
             bestMove = move;

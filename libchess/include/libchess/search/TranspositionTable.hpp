@@ -27,7 +27,11 @@ using moves::Move;
 using std::size_t;
 
 /** The transposition table data structure.
+
     @ingroup search
+
+    @todo maximum size
+    @todo replacement scheme
  */
 class TranspositionTable final {
 public:
@@ -64,8 +68,6 @@ public:
 
     /** Retrieves the stored record for the given position,
         or nullptr if the given position isn't in the table.
-
-        @see store()
      */
     [[nodiscard]] const Record* find(const Position& pos) const
     {
@@ -77,10 +79,14 @@ public:
         return nullptr;
     }
 
-    /** Stores a record for a given position.
-
-        @see find()
+    /** Similar to ``find()``, this function instead probes for an
+        evaluation value of the given position, searched to at least
+        the given depth and honoring the alpha/beta cutoff values.
      */
+    [[nodiscard]] std::optional<int> probe_eval(
+        const Position& pos, size_t depth, int alpha, int beta) const;
+
+    /** Stores a record for a given position. */
     void store(const Position& pos, const Record& record)
     {
         // TODO: if key was in table, need to determine whether it should be overwritten
@@ -90,5 +96,50 @@ public:
 private:
     std::unordered_map<std::uint64_t, Record> records;
 };
+
+/*
+                         ___                           ,--,
+      ,---,            ,--.'|_                ,--,   ,--.'|
+    ,---.'|            |  | :,'             ,--.'|   |  | :
+    |   | :            :  : ' :             |  |,    :  : '    .--.--.
+    |   | |   ,---.  .;__,'  /    ,--.--.   `--'_    |  ' |   /  /    '
+  ,--.__| |  /     \ |  |   |    /       \  ,' ,'|   '  | |  |  :  /`./
+ /   ,'   | /    /  |:__,'| :   .--.  .-. | '  | |   |  | :  |  :  ;_
+.   '  /  |.    ' / |  '  : |__  \__\/: . . |  | :   '  : |__ \  \    `.
+'   ; |:  |'   ;   /|  |  | '.'| ," .--.; | '  : |__ |  | '.'| `----.   \
+|   | '/  ''   |  / |  ;  :    ;/  /  ,.  | |  | '.'|;  :    ;/  /`--'  /__  ___  ___
+|   :    :||   :    |  |  ,   /;  :   .'   \;  :    ;|  ,   /'--'.     /  .\/  .\/  .\
+ \   \  /   \   \  /    ---`-' |  ,     .-./|  ,   /  ---`-'   `--'---'\  ; \  ; \  ; |
+  `----'     `----'             `--`---'     ---`-'                     `--" `--" `--"
+
+ */
+
+inline std::optional<int> TranspositionTable::probe_eval(
+    const Position& pos, const size_t depth, const int alpha, const int beta) const
+{
+    if (const auto* record = find(pos);
+        record != nullptr && record->searchedDepth >= depth) {
+        switch (record->evalType) {
+            using enum Record::EvalType;
+
+            case Exact:
+                return record->eval;
+
+            case Alpha: {
+                if (record->eval <= alpha)
+                    return alpha;
+
+                break;
+            }
+
+            default: { // Beta
+                if (record->eval >= beta)
+                    return beta;
+            }
+        }
+    }
+
+    return std::nullopt;
+}
 
 } // namespace chess::search
