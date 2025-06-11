@@ -14,6 +14,7 @@
 #pragma once
 
 #include <array>
+#include <cassert>
 #include <cstdint> // IWYU pragma: keep - for std::uint64_t
 #include <libchess/board/File.hpp>
 #include <libchess/board/Pieces.hpp>
@@ -253,8 +254,13 @@ constexpr Value piece_key(
     const auto typeOffset = 64uz * 2uz * std::to_underlying(type);
     const auto sideOffset = 64uz * std::to_underlying(side);
 
-    return values.at(
-        typeOffset + sideOffset + square.index());
+    const auto index = typeOffset + sideOffset + square.index();
+
+    assert(index < values.size());
+
+    // TODO: there's a bug here! Throws exception when changed to at() (happens in release mode only)
+    return values[index];
+    // return values.at(index);
 }
 
 constexpr Value calculate(
