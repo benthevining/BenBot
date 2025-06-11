@@ -126,6 +126,12 @@ struct Square final {
     return first.index() <=> second.index();
 }
 
+/** Given the en passant target square, this returns the square that the
+    captured pawn was on.
+ */
+[[nodiscard, gnu::const]] constexpr Square get_en_passant_captured_square(
+    const Square& targetSquare, bool isWhite) noexcept;
+
 /// @}
 
 } // namespace chess::board
@@ -277,6 +283,21 @@ constexpr Square Square::from_string(const std::string_view text)
     return {
         .file = file_from_char(text.front()),
         .rank = rank_from_char(text.back())
+    };
+}
+
+constexpr Square get_en_passant_captured_square(
+    const Square& targetSquare, const bool isWhite) noexcept
+{
+    // the captured pawn is on the file of the target square, but
+    // one rank below (White capture) or one rank above (Black capture)
+    const auto capturedRank = isWhite
+                                ? prev_pawn_rank<Color::White>(targetSquare.rank)
+                                : prev_pawn_rank<Color::Black>(targetSquare.rank);
+
+    return Square {
+        .file = targetSquare.file,
+        .rank = capturedRank
     };
 }
 

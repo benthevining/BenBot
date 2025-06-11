@@ -8,8 +8,11 @@
 
 #include <array>
 #include <cassert>
+#include <libchess/board/Masks.hpp>
 #include <libchess/board/Pieces.hpp>
+#include <libchess/board/Square.hpp>
 #include <libchess/game/CastlingRights.hpp>
+#include <libchess/game/Position.hpp>
 #include <libchess/game/Zobrist.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <optional>
@@ -207,8 +210,8 @@ Value piece_key(
 
 Value calculate(
     const Color                 sideToMove,
-    const board::Pieces&        whitePieces,
-    const board::Pieces&        blackPieces,
+    const Pieces&               whitePieces,
+    const Pieces&               blackPieces,
     const CastlingRights&       whiteRights,
     const CastlingRights&       blackRights,
     const std::optional<Square> enPassantTargetSquare)
@@ -243,6 +246,73 @@ Value calculate(
 
     if (enPassantTargetSquare.has_value())
         value ^= en_passant_key(enPassantTargetSquare->file);
+
+    return value;
+}
+
+Value update(
+    const Position& pos, const Move& move,
+    const std::optional<Square>  newEPTarget,
+    const CastlingRightsChanges& rightsChanges)
+{
+    auto value = pos.hash;
+
+    value ^= BLACK_TO_MOVE; // just toggle these bits in/out every other move
+
+    // remove old EP target
+    if (pos.enPassantTargetSquare.has_value())
+        value ^= en_passant_key(pos.enPassantTargetSquare->file);
+
+    // add new EP target
+    if (newEPTarget.has_value())
+        value ^= en_passant_key(newEPTarget->file);
+
+    // remove moved-from square
+    value ^= piece_key(move.piece, pos.sideToMove, move.from);
+
+    // add moved-to square
+    value ^= piece_key(
+        move.is_promotion() ? *move.promotedType : move.piece,
+        pos.sideToMove, move.to);
+
+    if (pos.is_capture(move)) {
+        const auto otherColor = pos.sideToMove == Color::White ? Color::Black : Color::White;
+
+        if (pos.is_en_passant(move)) {
+            [[unlikely]];
+
+            value ^= piece_key(
+                PieceType::Pawn, otherColor,
+                board::get_en_passant_captured_square(
+                    pos.enPassantTargetSquare.value(),
+                    pos.sideToMove == Color::White));
+        } else {
+            [[likely]];
+
+            const auto capturedType = pos.their_pieces().get_piece_on(move.to);
+
+            value ^= piece_key(
+                capturedType.value(), otherColor, move.to);
+        }
+    } else if (move.is_castling()) {
+        [[unlikely]];
+        if (move.to.is_kingside())
+            value ^= board::masks::kingside_castle_rook_pos_mask(pos.sideToMove).to_int();
+        else
+            value ^= board::masks::queenside_castle_rook_pos_mask(pos.sideToMove).to_int();
+    }
+
+    if (rightsChanges.whiteKingside)
+        value ^= WHITE_KINGSIDE_CASTLE;
+
+    if (rightsChanges.whiteQueenside)
+        value ^= WHITE_QUEENSIDE_CASTLE;
+
+    if (rightsChanges.blackKingside)
+        value ^= BLACK_KINGSIDE_CASTLE;
+
+    if (rightsChanges.blackQueenside)
+        value ^= BLACK_QUEENSIDE_CASTLE;
 
     return value;
 }

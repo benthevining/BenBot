@@ -9,7 +9,6 @@
 #include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
 #include <libchess/board/Distances.hpp>
 #include <libchess/board/File.hpp>
-#include <libchess/board/Masks.hpp>
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
@@ -31,23 +30,6 @@ using board::Rank;
 
 namespace {
 
-    // given the en passant target square, this returns the square that the
-    // captured pawn was on
-    [[nodiscard, gnu::const]] Square get_en_passant_captured_square(
-        const Square& targetSquare, const bool isWhite) noexcept
-    {
-        // the captured pawn is on the file of the target square, but
-        // one rank below (White capture) or one rank above (Black capture)
-        const auto capturedRank = isWhite
-                                    ? board::prev_pawn_rank<Color::White>(targetSquare.rank)
-                                    : board::prev_pawn_rank<Color::Black>(targetSquare.rank);
-
-        return Square {
-            .file = targetSquare.file,
-            .rank = capturedRank
-        };
-    }
-
     void update_bitboards(
         Position& position, const Move& move) noexcept
     {
@@ -63,7 +45,7 @@ namespace {
         if (position.is_en_passant(move)) {
             [[unlikely]];
 
-            const auto idx = get_en_passant_captured_square(
+            const auto idx = board::get_en_passant_captured_square(
                 position.enPassantTargetSquare.value(), isWhite)
                                  .index();
 
@@ -87,15 +69,7 @@ namespace {
         };
     }
 
-    // each of these bools are true if the given right has changed since the last move
-    struct CastlingRightsChanges final {
-        bool whiteKingside { false };
-        bool whiteQueenside { false };
-        bool blackKingside { false };
-        bool blackQueenside { false };
-    };
-
-    [[nodiscard]] CastlingRightsChanges update_castling_rights(
+    [[nodiscard]] zobrist::CastlingRightsChanges update_castling_rights(
         Position& pos, const bool isWhite, const Move& move) noexcept
     {
         const auto whiteOldRights { pos.whiteCastlingRights };
@@ -138,73 +112,6 @@ namespace {
         return prevValue + 1;
     }
 
-    [[nodiscard, gnu::const]] zobrist::Value update_zobrist(
-        const Position& pos, const Move& move,
-        const std::optional<Square>  newEPTarget,
-        const CastlingRightsChanges& rightsChanges)
-    {
-        auto value = pos.hash;
-
-        value ^= zobrist::BLACK_TO_MOVE; // just toggle these bits in/out every other move
-
-        // remove old EP target
-        if (pos.enPassantTargetSquare.has_value())
-            value ^= zobrist::en_passant_key(pos.enPassantTargetSquare->file);
-
-        // add new EP target
-        if (newEPTarget.has_value())
-            value ^= zobrist::en_passant_key(newEPTarget->file);
-
-        // remove moved-from square
-        value ^= zobrist::piece_key(move.piece, pos.sideToMove, move.from);
-
-        // add moved-to square
-        value ^= zobrist::piece_key(
-            move.is_promotion() ? *move.promotedType : move.piece,
-            pos.sideToMove, move.to);
-
-        if (pos.is_capture(move)) {
-            const auto otherColor = pos.sideToMove == Color::White ? Color::Black : Color::White;
-
-            if (pos.is_en_passant(move)) {
-                [[unlikely]];
-
-                value ^= zobrist::piece_key(
-                    PieceType::Pawn, otherColor,
-                    get_en_passant_captured_square(
-                        pos.enPassantTargetSquare.value(),
-                        pos.sideToMove == Color::White));
-            } else {
-                [[likely]];
-
-                const auto capturedType = pos.their_pieces().get_piece_on(move.to);
-
-                value ^= zobrist::piece_key(
-                    capturedType.value(), otherColor, move.to);
-            }
-        } else if (move.is_castling()) {
-            [[unlikely]];
-            if (move.to.is_kingside())
-                value ^= board::masks::kingside_castle_rook_pos_mask(pos.sideToMove).to_int();
-            else
-                value ^= board::masks::queenside_castle_rook_pos_mask(pos.sideToMove).to_int();
-        }
-
-        if (rightsChanges.whiteKingside)
-            value ^= zobrist::WHITE_KINGSIDE_CASTLE;
-
-        if (rightsChanges.whiteQueenside)
-            value ^= zobrist::WHITE_QUEENSIDE_CASTLE;
-
-        if (rightsChanges.blackKingside)
-            value ^= zobrist::BLACK_KINGSIDE_CASTLE;
-
-        if (rightsChanges.blackQueenside)
-            value ^= zobrist::BLACK_QUEENSIDE_CASTLE;
-
-        return value;
-    }
-
 } // namespace
 
 void Position::make_move(const Move& move)
@@ -216,7 +123,7 @@ void Position::make_move(const Move& move)
 
     const auto rightsChanges = update_castling_rights(*this, isWhite, move);
 
-    hash = update_zobrist(*this, move, newEPSquare, rightsChanges);
+    hash = zobrist::update(*this, move, newEPSquare, rightsChanges);
 
     update_bitboards(*this, move);
 
