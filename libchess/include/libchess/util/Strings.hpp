@@ -13,9 +13,14 @@
 
 #pragma once
 
+#include <array>
 #include <charconv>
 #include <concepts>
+#include <cstddef> // IWYU pragma: keep - for size_t
+#include <iterator>
+#include <string>
 #include <string_view>
+#include <system_error>
 #include <utility>
 
 namespace chess::util {
@@ -39,10 +44,23 @@ namespace chess::util {
 split_at_first_space(std::string_view input);
 
 /** Reads an integer from the input string using ``std::from_chars``.
+
+    @see write_integer()
  */
 template <std::integral Int>
 [[nodiscard]] Int int_from_string(
     std::string_view text, Int defaultValue = 0) noexcept;
+
+/** Appends an integer to the output string using ``std::to_chars``.
+    This function uses stack memory for ``to_chars()`` to write into.
+    If ``to_chars()`` returns an error, ``output`` is not changed.
+
+    @see int_from_string()
+ */
+template <size_t MaxLen = 5uz>
+void write_integer(
+    std::integral auto value,
+    std::string&       output);
 
 /// @}
 
@@ -83,9 +101,32 @@ template <std::integral Int>
 [[nodiscard]] Int int_from_string(
     const std::string_view text, Int defaultValue) noexcept
 {
-    std::from_chars(text.data(), text.data() + text.length(), defaultValue);
+    std::from_chars(
+        text.data(),
+        std::next(text.data(), static_cast<std::ptrdiff_t>(text.length())),
+        defaultValue);
 
     return defaultValue;
+}
+
+template <size_t MaxLen>
+void write_integer(
+    const std::integral auto value,
+    std::string&             output)
+{
+    std::array<char, MaxLen> buffer {};
+
+    const auto result = std::to_chars(
+        buffer.data(),
+        std::next(buffer.data(), static_cast<std::ptrdiff_t>(buffer.size())),
+        value);
+
+    if (result.ec != std::errc {})
+        return;
+
+    output.append(
+        buffer.data(),
+        static_cast<size_t>(std::distance(buffer.data(), result.ptr)));
 }
 
 } // namespace chess::util

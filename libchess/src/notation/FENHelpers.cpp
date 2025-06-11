@@ -8,9 +8,6 @@
 
 #include "FENHelpers.hpp" // NOLINT(build/include_subdir)
 #include <array>
-#include <cassert>
-#include <charconv>
-#include <cstddef> // IWYU pragma: keep - for std::ptrdiff_t
 #include <format>
 #include <iterator>
 #include <libchess/board/Bitboard.hpp>
@@ -20,6 +17,7 @@
 #include <libchess/game/Position.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
+#include <libchess/util/Strings.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <optional>
 #include <ranges>
@@ -33,30 +31,14 @@ using pieces::Color;
 
 namespace {
 
-    [[nodiscard, gnu::const]] char int_to_char(const size_t value) noexcept
-    {
-        // Even though we want just a single character, to_chars() seems to be the most
-        // sanitizer-approved way to do this portably. Tricks involving '0' + value are
-        // technically implementation-defined behavior.
-
-        assert(value <= 9uz);
-
-        std::array<char, 1uz> buf {};
-
-        std::to_chars(
-            buf.data(),
-            std::next(buf.data(), static_cast<std::ptrdiff_t>(buf.size())),
-            value);
-
-        return buf.front();
-    }
-
     void write_rank(
         const Position&       position,
         const board::Rank     rank,
         const board::Bitboard allOccupied, const board::Bitboard whitePieces,
         std::string& output)
     {
+        using util::write_integer;
+
         auto consecutiveEmpty { 0uz };
 
         for (const auto file : magic_enum::enum_values<board::File>()) {
@@ -68,7 +50,7 @@ namespace {
             }
 
             if (consecutiveEmpty > 0uz) {
-                output.push_back(int_to_char(consecutiveEmpty));
+                write_integer<1uz>(consecutiveEmpty, output);
                 consecutiveEmpty = 0uz;
             }
 
@@ -86,7 +68,7 @@ namespace {
         }
 
         if (consecutiveEmpty > 0uz)
-            output.push_back(int_to_char(consecutiveEmpty));
+            write_integer<1uz>(consecutiveEmpty, output);
 
         if (rank != board::Rank::One)
             output.push_back('/');

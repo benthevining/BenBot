@@ -7,10 +7,7 @@
  */
 
 #include "FENHelpers.hpp" // NOLINT(build/include_subdir)
-#include <array>
-#include <charconv>
-#include <concepts>
-#include <cstddef> // IWYU pragma: keep - for size_t
+#include <cstddef>        // IWYU pragma: keep - for size_t
 #include <format>
 #include <iterator>
 #include <libchess/game/Position.hpp>
@@ -25,23 +22,6 @@ namespace chess::notation {
 
 using pieces::Color;
 using std::size_t;
-
-namespace {
-
-    template <size_t MaxLen>
-    void write_integer(
-        const std::integral auto value,
-        std::string&             output)
-    {
-        std::array<char, MaxLen> buffer {};
-
-        const auto result = std::to_chars(buffer.data(), buffer.data() + buffer.size(), value); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-
-        output.append(buffer.data(),
-            static_cast<size_t>(std::distance(buffer.data(), result.ptr)));
-    }
-
-} // namespace
 
 std::string to_fen(const Position& position)
 {
@@ -67,11 +47,11 @@ std::string to_fen(const Position& position)
 
     fen.push_back(' ');
 
-    write_integer<3uz>(position.halfmoveClock, fen);
+    util::write_integer<3uz>(position.halfmoveClock, fen);
 
     fen.push_back(' ');
 
-    write_integer<4uz>(position.fullMoveCounter, fen);
+    util::write_integer<4uz>(position.fullMoveCounter, fen);
 
     return fen;
 }
