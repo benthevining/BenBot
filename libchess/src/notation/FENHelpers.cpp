@@ -43,7 +43,7 @@ namespace {
         auto consecutiveEmpty { 0uz };
 
         for (const auto file : magic_enum::enum_values<board::File>()) {
-            const Square square { file, rank };
+            const Square square { .file = file, .rank = rank };
 
             if (! allOccupied.test(square)) {
                 ++consecutiveEmpty;
@@ -137,7 +137,7 @@ namespace {
     [[nodiscard]] std::string_view parse_rank(
         const board::Rank rank, std::string_view fenFragment, Position& position)
     {
-        const auto rankStart = Square { board::File::A, rank }.index();
+        const auto rankStart = Square { .file = board::File::A, .rank = rank }.index();
         const auto rankEnd   = rankStart + 8uz;
 
         auto index = rankStart;

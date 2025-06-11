@@ -13,7 +13,7 @@
 
 #pragma once
 
-#include <cstdint>
+#include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
 
 namespace chess::game {
 

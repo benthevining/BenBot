@@ -106,7 +106,6 @@ template <bool CapturesOnly = false>
 namespace detail {
 
     using board::Bitboard;
-    using board::Pieces;
     using board::Rank;
     using board::Square;
     using pieces::Color;
@@ -315,8 +314,6 @@ namespace detail {
         const Position& position, const Bitboard allOccupied,
         std::output_iterator<Move> auto outputIt)
     {
-        const auto ourPawns = position.pieces_for<Side>().pawns;
-
         if constexpr (! CapturesOnly) {
             add_pawn_pushes<Side>(position, allOccupied.inverse(), outputIt);
             add_pawn_double_pushes<Side>(position, allOccupied, outputIt);
@@ -474,8 +471,8 @@ namespace detail {
 
         Bitboard board;
 
-        board.set(Square { File::F, rank });
-        board.set(Square { File::G, rank });
+        board.set(Square { .file = File::F, .rank = rank });
+        board.set(Square { .file = File::G, .rank = rank });
 
         return board;
     }
@@ -489,11 +486,11 @@ namespace detail {
 
         Bitboard board;
 
-        board.set(Square { File::C, rank });
-        board.set(Square { File::D, rank });
+        board.set(Square { .file = File::C, .rank = rank });
+        board.set(Square { .file = File::D, .rank = rank });
 
         if constexpr (Occupied) {
-            board.set(Square { File::B, rank });
+            board.set(Square { .file = File::B, .rank = rank });
         }
 
         return board;
@@ -508,19 +505,12 @@ namespace detail {
         if (position.is_check())
             return;
 
-        static constexpr bool isWhite = Side == Color::White;
+        const auto& rights = Side == Color::White ? position.whiteCastlingRights : position.blackCastlingRights;
 
-        const auto& rights = isWhite ? position.whiteCastlingRights : position.blackCastlingRights;
-
-        if (! rights.either())
-            return;
-
-        static constexpr auto OppositeColor = isWhite ? Color::Black : Color::White;
+        static constexpr auto OppositeColor = OtherSide<Side>;
 
         const auto& ourPieces   = position.pieces_for<Side>();
         const auto& theirPieces = position.pieces_for<OppositeColor>();
-
-        const auto allOurPieces = ourPieces.occupied;
 
         if (rights.kingside) {
             assert(ourPieces.rooks.test(Square { File::H, board::back_rank_for(position.sideToMove) }));
@@ -528,10 +518,10 @@ namespace detail {
             static constexpr auto requiredSquares = kingside_castle_mask<Side>();
 
             const bool castlingBlocked = (requiredSquares & allOccupied).any()
-                                      || squares_attacked<OppositeColor>(theirPieces, requiredSquares, allOurPieces);
+                                      || squares_attacked<OppositeColor>(theirPieces, requiredSquares, ourPieces.occupied);
 
             if (! castlingBlocked) {
-                const auto move = castle_kingside(isWhite ? Color::White : Color::Black);
+                const auto move = castle_kingside(Side);
 
                 if (position.is_legal(move))
                     *outputIt = move;
@@ -545,10 +535,10 @@ namespace detail {
             static constexpr auto attackedMask = queenside_castle_mask<Side, false>();
 
             const bool castlingBlocked = (allOccupied & occupiedMask).any()
-                                      || squares_attacked<OppositeColor>(theirPieces, attackedMask, allOurPieces);
+                                      || squares_attacked<OppositeColor>(theirPieces, attackedMask, ourPieces.occupied);
 
             if (! castlingBlocked) {
-                const auto move = castle_queenside(isWhite ? Color::White : Color::Black);
+                const auto move = castle_queenside(Side);
 
                 if (position.is_legal(move))
                     *outputIt = move;

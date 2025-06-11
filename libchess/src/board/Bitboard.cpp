@@ -46,7 +46,7 @@ std::string print_ascii(const Bitboard board)
         result.append(separator);
 
         for (const auto file : magic_enum::enum_values<File>()) {
-            if (board.test(Square { file, rank }))
+            if (board.test(Square { .file = file, .rank = rank }))
                 result.append(occupiedSquare);
             else
                 result.append(emptySquare);

@@ -21,6 +21,7 @@
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/Distances.hpp>
 #include <libchess/board/File.hpp>
+#include <libchess/board/Masks.hpp>
 #include <libchess/board/Pieces.hpp>
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
@@ -488,7 +489,7 @@ namespace detail {
     };
 
     [[nodiscard]] constexpr CastlingRightsChanges update_castling_rights(
-        Position& pos, const bool isWhite, const Move& move, const bool isCapture) noexcept
+        Position& pos, const bool isWhite, const Move& move) noexcept
     {
         const auto whiteOldRights { pos.whiteCastlingRights };
         const auto blackOldRights { pos.blackCastlingRights };
@@ -499,9 +500,9 @@ namespace detail {
         ourRights.our_move(move);
 
         if (isWhite)
-            theirRights.their_move<Color::Black>(move, isCapture);
+            theirRights.their_move<Color::Black>(move);
         else
-            theirRights.their_move<Color::White>(move, isCapture);
+            theirRights.their_move<Color::White>(move);
 
         const auto& whiteNewRights = pos.whiteCastlingRights;
         const auto& blackNewRights = pos.blackCastlingRights;
@@ -552,8 +553,7 @@ namespace detail {
             pos.sideToMove, move.to);
 
         if (pos.is_capture(move)) {
-            const auto  otherColor  = pos.sideToMove == Color::White ? Color::Black : Color::White;
-            const auto& theirPieces = pos.their_pieces();
+            const auto otherColor = pos.sideToMove == Color::White ? Color::Black : Color::White;
 
             if (pos.is_en_passant(move)) {
                 [[unlikely]];
@@ -566,7 +566,7 @@ namespace detail {
             } else {
                 [[likely]];
 
-                const auto capturedType = theirPieces.get_piece_on(move.to);
+                const auto capturedType = pos.their_pieces().get_piece_on(move.to);
 
                 assert(capturedType.has_value());
 
@@ -575,9 +575,9 @@ namespace detail {
         } else if (move.is_castling()) {
             [[unlikely]];
             if (move.to.is_kingside())
-                value ^= board::detail::kingside_castle_rook_pos_mask(pos.sideToMove).to_int();
+                value ^= board::masks::kingside_castle_rook_pos_mask(pos.sideToMove).to_int();
             else
-                value ^= board::detail::queenside_castle_rook_pos_mask(pos.sideToMove).to_int();
+                value ^= board::masks::queenside_castle_rook_pos_mask(pos.sideToMove).to_int();
         }
 
         if (rightsChanges.whiteKingside)
@@ -604,7 +604,7 @@ constexpr void Position::make_move(const Move& move) noexcept
 
     const auto newEPSquare = detail::get_en_passant_target_square(move, isWhite);
 
-    const auto rightsChanges = detail::update_castling_rights(*this, isWhite, move, isCapture);
+    const auto rightsChanges = detail::update_castling_rights(*this, isWhite, move);
 
     hash = detail::update_zobrist(*this, move, newEPSquare, rightsChanges);
 

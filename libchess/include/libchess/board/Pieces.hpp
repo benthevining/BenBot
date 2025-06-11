@@ -40,8 +40,6 @@ using PieceType = pieces::Type;
     bitboard index will only have its bit set in at most one of the piece type bitboards.
 
     @ingroup board
-
-    @todo func to check for doubled pawns
  */
 struct Pieces final {
     /** Creates a Pieces object encoding the starting position for the given side. */
@@ -244,36 +242,6 @@ constexpr void Pieces::capture_at(const Square square) noexcept
     occupied.unset(idx);
 }
 
-namespace detail {
-
-    [[nodiscard, gnu::const]] constexpr Bitboard queenside_castle_rook_pos_mask(
-        const Color side) noexcept
-    {
-        const auto rank = side == Color::White ? Rank::One : Rank::Eight;
-
-        Bitboard mask;
-
-        mask.set(Square { File::A, rank });
-        mask.set(Square { File::D, rank });
-
-        return mask;
-    }
-
-    [[nodiscard, gnu::const]] constexpr Bitboard kingside_castle_rook_pos_mask(
-        const Color side) noexcept
-    {
-        const auto rank = side == Color::White ? Rank::One : Rank::Eight;
-
-        Bitboard mask;
-
-        mask.set(Square { File::H, rank });
-        mask.set(Square { File::F, rank });
-
-        return mask;
-    }
-
-} // namespace detail
-
 constexpr void Pieces::our_move(const moves::Move& move, const Color ourColor) noexcept
 {
     const auto movementMask = Bitboard::from_square(move.from) | Bitboard::from_square(move.to);
@@ -300,8 +268,8 @@ constexpr void Pieces::our_move(const moves::Move& move, const Color ourColor) n
         [[unlikely]];
 
         const auto castleMask = move.to.is_queenside()
-                                  ? detail::queenside_castle_rook_pos_mask(ourColor)
-                                  : detail::kingside_castle_rook_pos_mask(ourColor);
+                                  ? masks::queenside_castle_rook_pos_mask(ourColor)
+                                  : masks::kingside_castle_rook_pos_mask(ourColor);
 
         rooks ^= castleMask;
         occupied ^= castleMask;

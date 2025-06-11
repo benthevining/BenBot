@@ -232,7 +232,8 @@ namespace {
         output.emplace_back(move);
     }
 
-    std::string_view parse_variation(std::string_view, const Position&, Moves&);
+    std::string_view parse_variation(
+        std::string_view pgnText, const Position& position, Moves& output);
 
     // parses a move list, including nested comments, NAGs, and variations
     // if IsVariation is true, always returns an empty string_view

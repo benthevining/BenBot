@@ -104,7 +104,7 @@ std::string print_utf8(const Position& position)
         result.append(separator);
 
         for (const auto file : magic_enum::enum_values<File>()) {
-            const Square square { file, rank };
+            const Square square { .file = file, .rank = rank };
 
             if (const auto piece = whitePieces.get_piece_on(square)) {
                 result.append(utf8_pieces::white::get(*piece));

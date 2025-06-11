@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <compare>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <format>
@@ -68,11 +69,8 @@ struct Square final {
 
     /** Calculates the rank and file corresponding to the given bitboard index.
         This function asserts if the passed ``index`` is greater than 63.
-
-        @throws std::invalid_argument An exception will be thrown if the passed
-        ``index`` is greater than 63.
      */
-    [[nodiscard, gnu::const]] static constexpr Square from_index(BitboardIndex index);
+    [[nodiscard, gnu::const]] static constexpr Square from_index(BitboardIndex index) noexcept;
 
     /** Creates a square from a string in algebraic notation, such as "A1", "H4", etc.
 
@@ -224,12 +222,9 @@ formatter<chess::board::Square>::format(
 
 namespace chess::board {
 
-constexpr Square Square::from_index(const BitboardIndex index)
+constexpr Square Square::from_index(const BitboardIndex index) noexcept
 {
-    if (std::cmp_greater(index, MAX_BITBOARD_IDX))
-        throw std::invalid_argument {
-            std::format("Cannot create Square from invalid bitboard index {}", index)
-        };
+    assert(index <= MAX_BITBOARD_IDX);
 
     return {
         .file = static_cast<File>(index & static_cast<BitboardIndex>(7)),

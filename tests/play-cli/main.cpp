@@ -157,7 +157,7 @@ struct CLIGame final {
 
             currentPosition.make_move(move);
 
-            gameRecord.moves.push_back(GameRecord::Move { move });
+            gameRecord.moves.push_back(GameRecord::Move { .move = move });
         }
 
         gameRecord.result = currentPosition.get_result();

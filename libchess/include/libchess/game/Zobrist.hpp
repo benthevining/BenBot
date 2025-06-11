@@ -257,12 +257,12 @@ constexpr Value piece_key(
 }
 
 constexpr Value calculate(
-    const Color           sideToMove,
-    const board::Pieces&  whitePieces,
-    const board::Pieces&  blackPieces,
-    const CastlingRights& whiteRights,
-    const CastlingRights& blackRights,
-    std::optional<Square> enPassantTargetSquare) noexcept
+    const Color                 sideToMove,
+    const board::Pieces&        whitePieces,
+    const board::Pieces&        blackPieces,
+    const CastlingRights&       whiteRights,
+    const CastlingRights&       blackRights,
+    const std::optional<Square> enPassantTargetSquare) noexcept
 {
     Value value { 0uz };
 

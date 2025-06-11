@@ -60,7 +60,7 @@ struct CastlingRights final {
         @tparam Side The color that this castling rights object represents.
      */
     template <Color Side>
-    constexpr void their_move(const Move& move, const bool isCapture) noexcept;
+    constexpr void their_move(const Move& move) noexcept;
 
     /** Returns true if castling either direction is possible. */
     [[nodiscard]] constexpr bool either() const noexcept { return kingside || queenside; }
@@ -108,11 +108,8 @@ constexpr void CastlingRights::our_move(const Move& move) noexcept
 }
 
 template <Color Side>
-constexpr void CastlingRights::their_move(const Move& move, const bool isCapture) noexcept
+constexpr void CastlingRights::their_move(const Move& move) noexcept
 {
-    if (! isCapture)
-        return;
-
     static constexpr auto backRank = Side == Color::White ? Rank::One : Rank::Eight;
 
     if (move.to.rank != backRank)

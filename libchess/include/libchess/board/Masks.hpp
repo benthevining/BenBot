@@ -31,6 +31,7 @@
  */
 namespace chess::board::masks {
 
+using pieces::Color;
 using std::size_t;
 
 /// @ingroup bitboard_masks
@@ -66,9 +67,9 @@ static constexpr Bitboard PERIMETER { 0XFF818181818181FF };
     const auto diag = static_cast<int>(square.file) - static_cast<int>(square.rank);
 
     if (diag >= 0)
-        return MAIN_DIAGONAL >> diag * 8;
+        return MAIN_DIAGONAL >> static_cast<size_t>(diag) * 8uz;
 
-    return MAIN_DIAGONAL << -diag * 8;
+    return MAIN_DIAGONAL << static_cast<size_t>(-diag) * 8uz;
 }
 
 /** Returns a bitboard with all squares on the same antidiagonal as the given square set to 1. */
@@ -77,9 +78,47 @@ static constexpr Bitboard PERIMETER { 0XFF818181818181FF };
     const auto diag = 7 - static_cast<int>(square.file) - static_cast<int>(square.rank);
 
     if (diag >= 0)
-        return MAIN_ANTIDIAGONAL >> diag * 8;
+        return MAIN_ANTIDIAGONAL >> static_cast<size_t>(diag) * 8uz;
 
-    return MAIN_ANTIDIAGONAL << -diag * 8;
+    return MAIN_ANTIDIAGONAL << static_cast<size_t>(-diag) * 8uz;
+}
+
+/** Returns a bitboard mask with the starting & ending rook positions of a queenside castling
+    move. This mask can be XOR'ed with the rooks bitboard to update the rook position after
+    queenside castling.
+
+    @see kingside_castle_rook_pos_mask()
+ */
+[[nodiscard, gnu::const]] constexpr Bitboard queenside_castle_rook_pos_mask(
+    const Color side) noexcept
+{
+    const auto rank = side == Color::White ? Rank::One : Rank::Eight;
+
+    Bitboard mask;
+
+    mask.set(Square { .file = File::A, .rank = rank });
+    mask.set(Square { .file = File::D, .rank = rank });
+
+    return mask;
+}
+
+/** Returns a bitboard mask with the starting & ending rook positions of a kingside castling
+    move. This mask can be XOR'ed with the rooks bitboard to update the rook position after
+    kingside castling.
+
+    @see queenside_castle_rook_pos_mask()
+ */
+[[nodiscard, gnu::const]] constexpr Bitboard kingside_castle_rook_pos_mask(
+    const Color side) noexcept
+{
+    const auto rank = side == Color::White ? Rank::One : Rank::Eight;
+
+    Bitboard mask;
+
+    mask.set(Square { .file = File::H, .rank = rank });
+    mask.set(Square { .file = File::F, .rank = rank });
+
+    return mask;
 }
 
 /// @}

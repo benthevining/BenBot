@@ -158,8 +158,8 @@ constexpr Move castle_kingside(const Color color) noexcept
     const auto rank = board::back_rank_for(color);
 
     return {
-        .from  = Square { File::E, rank },
-        .to    = Square { File::G, rank },
+        .from  = Square { .file = File::E, .rank = rank },
+        .to    = Square { .file = File::G, .rank = rank },
         .piece = PieceType::King
     };
 }
@@ -169,8 +169,8 @@ constexpr Move castle_queenside(const Color color) noexcept
     const auto rank = board::back_rank_for(color);
 
     return {
-        .from  = Square { File::E, rank },
-        .to    = Square { File::C, rank },
+        .from  = Square { .file = File::E, .rank = rank },
+        .to    = Square { .file = File::C, .rank = rank },
         .piece = PieceType::King
     };
 }
@@ -184,8 +184,8 @@ constexpr Move promotion(
     const bool isWhite = color == Color::White;
 
     return {
-        .from         = Square { file, isWhite ? Rank::Seven : Rank::Two },
-        .to           = Square { file, isWhite ? Rank::Eight : Rank::One },
+        .from         = Square { .file = file, .rank = isWhite ? Rank::Seven : Rank::Two },
+        .to           = Square { .file = file, .rank = isWhite ? Rank::Eight : Rank::One },
         .piece        = PieceType::Pawn,
         .promotedType = promotedType
     };
