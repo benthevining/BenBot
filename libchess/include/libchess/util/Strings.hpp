@@ -13,6 +13,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <charconv>
 #include <concepts>
@@ -24,6 +25,8 @@
 #include <utility>
 
 namespace chess::util {
+
+using std::size_t;
 
 /// @ingroup util
 /// @{
@@ -39,9 +42,18 @@ namespace chess::util {
     and an empty string_view. If the first character of the input
     string is a space, the first element of the returned pair is
     an empty string_view.
+
+    @see split_at_first_space_or_newline()
  */
 [[nodiscard]] constexpr std::pair<std::string_view, std::string_view>
 split_at_first_space(std::string_view input);
+
+/** Similar to ``split_at_first_space()``, but also splits on newlines.
+
+    @see split_at_first_space()
+ */
+[[nodiscard]] constexpr std::pair<std::string_view, std::string_view>
+split_at_first_space_or_newline(std::string_view input);
 
 /** Reads an integer from the input string using ``std::from_chars``.
 
@@ -55,12 +67,24 @@ template <std::integral Int>
     This function uses stack memory for ``to_chars()`` to write into.
     If ``to_chars()`` returns an error, ``output`` is not changed.
 
+    @tparam MaxLen The maximum number of characters that will be written
+    to ``output``.
+
     @see int_from_string()
  */
 template <size_t MaxLen = 5uz>
 void write_integer(
     std::integral auto value,
     std::string&       output);
+
+/** For a string beginning with ``(``, finds the index of the matching ``)``
+    character, taking nested ``()`` pairs into account. This function asserts
+    if the ``input`` does not begin with ``(``.
+
+    @throws std::invalid_argument An exception will be thrown if no matching
+    ``)`` character is found.
+ */
+[[nodiscard]] size_t find_matching_close_paren(std::string_view input);
 
 /// @}
 
@@ -82,8 +106,7 @@ void write_integer(
  */
 
 constexpr std::pair<std::string_view, std::string_view>
-split_at_first_space(
-    const std::string_view input)
+split_at_first_space(const std::string_view input)
 {
     const auto spaceIdx = input.find(' ');
 
@@ -94,6 +117,24 @@ split_at_first_space(
     return {
         input.substr(0uz, spaceIdx),
         input.substr(spaceIdx + 1uz)
+    };
+}
+
+constexpr std::pair<std::string_view, std::string_view>
+split_at_first_space_or_newline(const std::string_view input)
+{
+    const auto spaceIdx   = input.find(' ');
+    const auto newLineIdx = input.find('\n');
+
+    const auto firstDelimIdx = std::min(spaceIdx, newLineIdx);
+
+    if (firstDelimIdx == std::string_view::npos) {
+        return { input, {} };
+    }
+
+    return {
+        input.substr(0uz, firstDelimIdx),
+        input.substr(firstDelimIdx + 1uz)
     };
 }
 

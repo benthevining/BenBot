@@ -6,8 +6,11 @@
  * ======================================================================================
  */
 
+#include <cassert>
 #include <cctype> // IWYU pragma: keep - for std::isspace()
+#include <format>
 #include <libchess/util/Strings.hpp>
+#include <stdexcept>
 #include <string_view>
 
 namespace {
@@ -53,6 +56,36 @@ namespace chess::util {
 std::string_view trim(const std::string_view text)
 {
     return trim_start(trim_end(text));
+}
+
+size_t find_matching_close_paren(const std::string_view input)
+{
+    assert(input.front() == '(');
+
+    size_t numOpenParens { 1uz };
+    size_t numCloseParens { 0uz };
+
+    for (auto idx = 1uz; idx < input.size(); ++idx) {
+        switch (input[idx]) {
+            case '(': {
+                ++numOpenParens;
+                continue;
+            }
+
+            case ')': {
+                ++numCloseParens;
+
+                if (numOpenParens == numCloseParens)
+                    return idx;
+            }
+
+            default: continue;
+        }
+    }
+
+    throw std::invalid_argument {
+        std::format("Unmatched ( in input string: '{}'", input)
+    };
 }
 
 } // namespace chess::util

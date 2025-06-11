@@ -47,57 +47,7 @@ namespace {
     using GameResult = std::optional<game::Result>;
 
     using util::int_from_string;
-
-    [[nodiscard]] std::pair<std::string_view, std::string_view>
-    split_at_first_space_or_newline(
-        const std::string_view input)
-    {
-        const auto spaceIdx   = input.find(' ');
-        const auto newLineIdx = input.find('\n');
-
-        const auto firstDelimIdx = std::min(spaceIdx, newLineIdx);
-
-        if (firstDelimIdx == std::string_view::npos) {
-            return { input, {} };
-        }
-
-        return {
-            input.substr(0uz, firstDelimIdx),
-            input.substr(firstDelimIdx + 1uz)
-        };
-    }
-
-    [[nodiscard]] size_t find_matching_close_paren(const std::string_view input)
-    {
-        assert(input.front() == '(');
-
-        size_t numOpenParens { 1uz };
-        size_t numCloseParens { 0uz };
-
-        for (auto idx = 1uz; idx < input.size(); ++idx) {
-            switch (input[idx]) {
-                case '(': {
-                    ++numOpenParens;
-                    continue;
-                }
-
-                case ')': {
-                    ++numCloseParens;
-
-                    if (numOpenParens == numCloseParens)
-                        return idx;
-
-                    continue;
-                }
-
-                default: continue;
-            }
-        }
-
-        throw std::invalid_argument {
-            std::format("Unmatched ( in input string: '{}'", input)
-        };
-    }
+    using util::split_at_first_space_or_newline;
 
     // writes tag key/value pairs into metadata and returns
     // the rest of the PGN text that's left
@@ -321,7 +271,7 @@ namespace {
             throw std::invalid_argument { "Cannot parse a variation with an empty move list!" };
         }
 
-        const auto closeParenIdx = find_matching_close_paren(pgnText);
+        const auto closeParenIdx = util::find_matching_close_paren(pgnText);
 
         auto& variation = output.back().variations.emplace_back();
 
