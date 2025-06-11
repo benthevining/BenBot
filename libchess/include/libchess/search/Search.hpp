@@ -35,6 +35,8 @@ using game::Position;
 using moves::Move;
 using std::size_t;
 
+class TranspositionTable;
+
 /** Finds the best move for the side to move in the given position.
 
     @throws std::invalid_argument An exception will be thrown if there are
@@ -43,6 +45,8 @@ using std::size_t;
     @ingroup search
  */
 [[nodiscard]] Move find_best_move(
-    const Position& position, size_t searchDepth = 4uz);
+    const Position&     position,
+    TranspositionTable& transTable,
+    size_t              searchDepth = 4uz);
 
 } // namespace chess::search

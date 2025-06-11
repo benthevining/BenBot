@@ -11,6 +11,7 @@
 #include <libchess/game/Position.hpp>
 #include <libchess/notation/UCI.hpp>
 #include <libchess/search/Search.hpp>
+#include <libchess/search/TranspositionTable.hpp>
 #include <libchess/uci/CommandParsing.hpp>
 #include <libchess/uci/EngineBase.hpp>
 #include <print>
@@ -28,10 +29,13 @@ class BenBotEngine final : public chess::uci::EngineBase {
     void go([[maybe_unused]] const chess::uci::GoCommandOptions& opts) override
     {
         std::println("bestmove {}",
-            chess::notation::to_uci(chess::search::find_best_move(position)));
+            chess::notation::to_uci(
+                chess::search::find_best_move(position, transTable)));
     }
 
     Position position;
+
+    chess::search::TranspositionTable transTable;
 };
 
 int main(

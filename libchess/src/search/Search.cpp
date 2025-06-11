@@ -16,6 +16,7 @@
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/search/Search.hpp>
+#include <libchess/search/TranspositionTable.hpp>
 #include <optional>
 #include <stdexcept>
 
@@ -108,7 +109,7 @@ namespace {
 } // namespace
 
 Move find_best_move(
-    const Position& position, const size_t searchDepth)
+    const Position& position, TranspositionTable& transTable, const size_t searchDepth)
 {
     auto moves = moves::generate(position);
 

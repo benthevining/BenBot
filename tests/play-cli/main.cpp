@@ -24,6 +24,7 @@
 #include <libchess/notation/UCI.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/search/Search.hpp>
+#include <libchess/search/TranspositionTable.hpp>
 #include <libchess/util/Strings.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <optional>
@@ -167,11 +168,11 @@ struct CLIGame final {
     }
 
 private:
-    [[nodiscard]] Move get_computer_move() const
+    [[nodiscard]] Move get_computer_move()
     {
         std::println("Computer is thinking...");
 
-        const auto move = chess::search::find_best_move(currentPosition, options.searchDepth);
+        const auto move = chess::search::find_best_move(currentPosition, transTable, options.searchDepth);
 
         if (options.useUCI) {
             std::println("{} plays: {}",
@@ -244,6 +245,8 @@ private:
     std::string inputBuf;
 
     Position currentPosition { options.startingPosition };
+
+    chess::search::TranspositionTable transTable;
 
     GameRecord gameRecord;
 };

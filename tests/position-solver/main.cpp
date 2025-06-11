@@ -13,6 +13,7 @@
 #include <libchess/notation/Algebraic.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/search/Search.hpp>
+#include <libchess/search/TranspositionTable.hpp>
 #include <libchess/util/Strings.hpp>
 #include <print>
 #include <span>
@@ -48,7 +49,9 @@ try {
 
     const auto depth = chess::util::int_from_string(depthString, 4uz);
 
-    const auto move = chess::search::find_best_move(position, depth);
+    chess::search::TranspositionTable transTable;
+
+    const auto move = chess::search::find_best_move(position, transTable, depth);
 
     std::println("{}",
         chess::notation::to_alg(position, move));
