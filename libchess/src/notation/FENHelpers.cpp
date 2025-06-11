@@ -75,18 +75,14 @@ namespace {
             if (whitePieces.test(square)) {
                 const auto type = position.whitePieces.get_piece_on(square);
 
-                assert(type.has_value());
-
-                output.push_back(pieces::to_char(*type, true));
+                output.push_back(pieces::to_char(type.value(), true));
 
                 continue;
             }
 
             const auto type = position.blackPieces.get_piece_on(square);
 
-            assert(type.has_value());
-
-            output.push_back(pieces::to_char(*type, false));
+            output.push_back(pieces::to_char(type.value(), false));
         }
 
         if (consecutiveEmpty > 0uz)

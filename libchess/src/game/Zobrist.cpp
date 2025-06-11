@@ -258,8 +258,10 @@ Value calculate(
     if (blackRights.queenside)
         value ^= BLACK_QUEENSIDE_CASTLE;
 
-    if (enPassantTargetSquare.has_value())
-        value ^= en_passant_key(enPassantTargetSquare->file);
+    enPassantTargetSquare.and_then([&value](const Square& square) {
+        value ^= en_passant_key(square.file);
+        return std::optional<int> {};
+    });
 
     return value;
 }
@@ -274,12 +276,16 @@ Value update(
     value ^= BLACK_TO_MOVE; // just toggle these bits in/out every other move
 
     // remove old EP target
-    if (pos.enPassantTargetSquare.has_value())
-        value ^= en_passant_key(pos.enPassantTargetSquare->file);
+    pos.enPassantTargetSquare.and_then([&value](const Square& square) {
+        value ^= en_passant_key(square.file);
+        return std::optional<int> {};
+    });
 
     // add new EP target
-    if (newEPTarget.has_value())
-        value ^= en_passant_key(newEPTarget->file);
+    newEPTarget.and_then([&value](const Square& square) {
+        value ^= en_passant_key(square.file);
+        return std::optional<int> {};
+    });
 
     // remove moved-from square
     value ^= piece_key(move.piece, pos.sideToMove, move.from);
