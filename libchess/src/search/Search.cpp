@@ -83,37 +83,44 @@ namespace {
         auto moves = moves::generate<true>(currentPosition); // captures only
 
         if (moves.empty() && currentPosition.is_check()) {
-            const auto eval = checkmate_score(plyFromRoot);
+            evaluation = checkmate_score(plyFromRoot);
 
             transTable.store(
                 currentPosition, { .searchedDepth = depth,
-                                     .eval        = eval, // TODO: needs scaling/mapping?
+                                     .eval        = evaluation, // TODO: needs scaling/mapping?
                                      .evalType    = EvalType::Exact });
 
-            return eval;
+            return evaluation;
         }
 
         detail::order_moves_for_search(currentPosition, moves, transTable);
 
         auto evalType { EvalType::Alpha };
 
+        // even though we're only searching captures, we can still record
+        // the best ones found to help with move ordering in later searches
+        std::optional<Move> bestMove;
+
         for (const auto& move : moves) {
             assert(currentPosition.is_capture(move));
 
             const auto newPosition = game::after_move(currentPosition, move);
 
-            evaluation = -quiescence(-beta, -alpha, newPosition, depth + 1uz, plyFromRoot + 1uz, transTable);
+            evaluation = -quiescence(
+                -beta, -alpha, newPosition, depth + 1uz, plyFromRoot + 1uz, transTable);
 
             if (evaluation >= beta) {
                 transTable.store(
                     currentPosition, { .searchedDepth = depth,
                                          .eval        = beta,
-                                         .evalType    = EvalType::Beta });
+                                         .evalType    = EvalType::Beta,
+                                         .bestMove    = bestMove });
 
                 return beta;
             }
 
             if (evaluation > alpha) {
+                bestMove = move;
                 evalType = EvalType::Exact;
                 alpha    = evaluation;
             }
@@ -122,7 +129,8 @@ namespace {
         transTable.store(
             currentPosition, { .searchedDepth = depth,
                                  .eval        = alpha,
-                                 .evalType    = evalType });
+                                 .evalType    = evalType,
+                                 .bestMove    = bestMove });
 
         return alpha;
     }
@@ -232,7 +240,8 @@ Move find_best_move(
         for (const auto& move : moves) {
             const auto newPosition = game::after_move(position, move);
 
-            const auto score = -alpha_beta(-beta, -alpha, newPosition, searchDepth, 1uz, transTable);
+            const auto score = -alpha_beta(
+                -beta, -alpha, newPosition, depth, 1uz, transTable);
 
             if (score > alpha) {
                 bestMove = move;
