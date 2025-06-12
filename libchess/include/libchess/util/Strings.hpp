@@ -27,8 +27,9 @@ namespace chess::util {
 
 using std::ptrdiff_t;
 using std::size_t;
+using std::string_view;
 
-using StringViewPair = std::pair<std::string_view, std::string_view>;
+using StringViewPair = std::pair<string_view, string_view>;
 
 /// @ingroup util
 /// @{
@@ -36,7 +37,7 @@ using StringViewPair = std::pair<std::string_view, std::string_view>;
 /** Trims any whitespace characters from the beginning and ending
     of the string.
  */
-[[nodiscard]] std::string_view trim(std::string_view text);
+[[nodiscard]] string_view trim(string_view text);
 
 /** Splits the input string into segments before and after the first
     whitespace character. If there is no whitespace in the input
@@ -47,13 +48,13 @@ using StringViewPair = std::pair<std::string_view, std::string_view>;
 
     @see split_at_first_space_or_newline()
  */
-[[nodiscard]] StringViewPair split_at_first_space(std::string_view input);
+[[nodiscard]] StringViewPair split_at_first_space(string_view input);
 
 /** Similar to ``split_at_first_space()``, but also splits on newlines.
 
     @see split_at_first_space()
  */
-[[nodiscard]] StringViewPair split_at_first_space_or_newline(std::string_view input);
+[[nodiscard]] StringViewPair split_at_first_space_or_newline(string_view input);
 
 /** For a string beginning with ``(``, finds the index of the matching ``)``
     character, taking nested ``()`` pairs into account. This function asserts
@@ -62,7 +63,7 @@ using StringViewPair = std::pair<std::string_view, std::string_view>;
     @throws std::invalid_argument An exception will be thrown if no matching
     ``)`` character is found.
  */
-[[nodiscard]] size_t find_matching_close_paren(std::string_view input);
+[[nodiscard]] size_t find_matching_close_paren(string_view input);
 
 /** Reads an integer from the input string using ``std::from_chars``.
 
@@ -70,7 +71,7 @@ using StringViewPair = std::pair<std::string_view, std::string_view>;
  */
 template <std::integral Int>
 [[nodiscard]] Int int_from_string(
-    std::string_view text, Int defaultValue = 0) noexcept;
+    string_view text, Int defaultValue = 0) noexcept;
 
 /** Appends an integer to the output string using ``std::to_chars``.
     This function uses stack memory for ``to_chars()`` to write into.
@@ -107,7 +108,7 @@ void write_integer(
 
 template <std::integral Int>
 [[nodiscard]] Int int_from_string(
-    const std::string_view text, Int defaultValue) noexcept
+    const string_view text, Int defaultValue) noexcept
 {
     std::from_chars(
         text.data(),

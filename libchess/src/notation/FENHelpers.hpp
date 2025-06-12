@@ -24,6 +24,7 @@ namespace chess::notation::fen_helpers {
 
 using board::Square;
 using game::Position;
+using std::string_view;
 
 void write_piece_positions(
     const Position& position,
@@ -39,15 +40,15 @@ void write_en_passant_target_square(
     std::string&          output);
 
 void parse_piece_positions(
-    std::string_view fenFragment, Position& position);
+    string_view fenFragment, Position& position);
 
 void parse_side_to_move(
-    std::string_view fenFragment, Position& position);
+    string_view fenFragment, Position& position);
 
 void parse_castling_rights(
-    std::string_view fenFragment, Position& position);
+    string_view fenFragment, Position& position);
 
 void parse_en_passant_target_square(
-    std::string_view fenFragment, Position& position);
+    string_view fenFragment, Position& position);
 
 } // namespace chess::notation::fen_helpers

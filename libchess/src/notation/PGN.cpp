@@ -42,6 +42,7 @@ Position GameRecord::get_final_position() const
 namespace {
 
     using std::size_t;
+    using std::string_view;
     using Metadata   = std::unordered_map<std::string, std::string>;
     using Moves      = std::vector<GameRecord::Move>;
     using GameResult = std::optional<game::Result>;
@@ -51,16 +52,16 @@ namespace {
 
     // writes tag key/value pairs into metadata and returns
     // the rest of the PGN text that's left
-    [[nodiscard]] std::string_view parse_metadata_tags(
-        std::string_view pgnText,
-        Metadata&        metadata)
+    [[nodiscard]] string_view parse_metadata_tags(
+        string_view pgnText,
+        Metadata&   metadata)
     {
         auto openingBracketIdx = pgnText.find('[');
 
-        while (openingBracketIdx != std::string_view::npos) {
+        while (openingBracketIdx != string_view::npos) {
             const auto closingBracketIdx = pgnText.find(']', openingBracketIdx + 1uz);
 
-            if (closingBracketIdx == std::string_view::npos) {
+            if (closingBracketIdx == string_view::npos) {
                 throw std::invalid_argument { "Invalid PGN: expected ']' following '['" };
             }
 
@@ -74,7 +75,7 @@ namespace {
             // we assume that tag keys cannot include spaces
             const auto spaceIdx = tagText.find(' ');
 
-            if (spaceIdx == std::string_view::npos) {
+            if (spaceIdx == string_view::npos) {
                 throw std::invalid_argument {
                     std::format("Expected space in PGN tag key/value text: '{}'", tagText)
                 };
@@ -105,14 +106,14 @@ namespace {
 
     // writes the content of the block comment to the last move in output
     // and returns the rest of the pgnText after the } that closes this comment
-    [[nodiscard]] std::string_view parse_block_comment(
-        const std::string_view pgnText, Moves& output)
+    [[nodiscard]] string_view parse_block_comment(
+        const string_view pgnText, Moves& output)
     {
         assert(pgnText.front() == '{');
 
         const auto closeBracketIdx = pgnText.find('}');
 
-        if (closeBracketIdx == std::string_view::npos) {
+        if (closeBracketIdx == string_view::npos) {
             throw std::invalid_argument { "Expected '}' following '{'" };
         }
 
@@ -124,14 +125,14 @@ namespace {
 
     // writes the content of the line comment to the last move in output
     // and returns the rest of the pgnText after the newline that ends this comment
-    [[nodiscard]] std::string_view parse_line_comment(
-        const std::string_view pgnText, Moves& output)
+    [[nodiscard]] string_view parse_line_comment(
+        const string_view pgnText, Moves& output)
     {
         assert(pgnText.front() == ';');
 
         const auto newlineIdx = pgnText.find('\n');
 
-        if (newlineIdx == std::string_view::npos) {
+        if (newlineIdx == string_view::npos) {
             // assume that a ; comment was the last thing in the file
             if (! output.empty())
                 output.back().comment = util::trim(pgnText.substr(1uz));
@@ -147,8 +148,8 @@ namespace {
 
     // writes the NAG glyph value to the last move in output
     // and returns the rest of the pgnText after the NAG glyph
-    [[nodiscard]] std::string_view parse_nag(
-        const std::string_view pgnText, Moves& output)
+    [[nodiscard]] string_view parse_nag(
+        const string_view pgnText, Moves& output)
     {
         assert(pgnText.front() == '$');
 
@@ -165,12 +166,12 @@ namespace {
 
     // parses the move, adds it to the output, and makes the move on the position
     void parse_move(
-        Position& position, std::string_view moveText, Moves& output)
+        Position& position, string_view moveText, Moves& output)
     {
         // move numbers may start with 3. or 3...
         const auto lastDotIdx = moveText.rfind('.');
 
-        if (lastDotIdx != std::string_view::npos)
+        if (lastDotIdx != string_view::npos)
             moveText = moveText.substr(lastDotIdx + 1uz);
 
         const auto move = from_alg(position, moveText);
@@ -180,17 +181,17 @@ namespace {
         output.emplace_back(move);
     }
 
-    std::string_view parse_variation(
-        std::string_view pgnText, const Position& position, Moves& output);
+    string_view parse_variation(
+        string_view pgnText, const Position& position, Moves& output);
 
     // parses a move list, including nested comments, NAGs, and variations
     // if IsVariation is true, always returns an empty string_view
     // if IsVariation is false (i.e. parsing root PGN), returns text of the game result
     template <bool IsVariation>
-    std::string_view parse_moves_internal(
-        std::string_view pgnText,
-        Position         position, // intentionally by copy!
-        Moves&           output)
+    string_view parse_moves_internal(
+        string_view pgnText,
+        Position    position, // intentionally by copy!
+        Moves&      output)
     {
         // With a PGN like: 1. e4 (e3), the move e3 was made from the starting position,
         // not the position after e4. So because Position doesn't have an unmake_move()
@@ -260,10 +261,10 @@ namespace {
 
     // writes the variation to the last move in output
     // and returns the rest of the pgnText after the variation
-    [[nodiscard]] std::string_view parse_variation(
-        const std::string_view pgnText,
-        const Position&        position,
-        Moves&                 output)
+    [[nodiscard]] string_view parse_variation(
+        const string_view pgnText,
+        const Position&   position,
+        Moves&            output)
     {
         assert(pgnText.front() == '(');
 
@@ -284,21 +285,21 @@ namespace {
 
     // writes the parsed moves into output and returns the
     // game result string (the rest of the PGN after the last move)
-    [[nodiscard]] std::string_view parse_move_list(
-        const std::string_view pgnText,
-        const Position&        position,
-        Moves&                 output)
+    [[nodiscard]] string_view parse_move_list(
+        const string_view pgnText,
+        const Position&   position,
+        Moves&            output)
     {
         return parse_moves_internal<false>(
             pgnText, position, output);
     }
 
     [[nodiscard]] GameResult parse_game_result(
-        const std::string_view text, const GameRecord& game)
+        const string_view text, const GameRecord& game)
     {
         const auto sepIdx = text.find('-');
 
-        if (sepIdx == std::string_view::npos)
+        if (sepIdx == string_view::npos)
             return game.get_final_position().get_result();
 
         const auto whiteScore = util::trim(text.substr(0uz, sepIdx));
@@ -341,7 +342,7 @@ namespace {
     // returns npos if no such line is found
     template <bool SearchForBracket>
     [[nodiscard]] size_t find_next_line(
-        const std::string_view text)
+        const string_view text)
     {
         size_t lineStart { 0uz };
 
@@ -356,18 +357,18 @@ namespace {
 
             const auto nextNewline = text.find('\n', lineStart + 1uz);
 
-            if (nextNewline == std::string_view::npos)
-                return std::string_view::npos;
+            if (nextNewline == string_view::npos)
+                return string_view::npos;
 
             lineStart = nextNewline + 1uz;
         }
 
-        return std::string_view::npos;
+        return string_view::npos;
     }
 
 } // namespace
 
-std::vector<GameRecord> parse_all_pgns(std::string_view fileContent)
+std::vector<GameRecord> parse_all_pgns(string_view fileContent)
 {
     std::vector<GameRecord> games;
 
@@ -380,7 +381,7 @@ std::vector<GameRecord> parse_all_pgns(std::string_view fileContent)
         // the move text of this PGN starts at the first line not starting in '['
         const auto moveTextStart = find_next_line<false>(fileContent);
 
-        if (moveTextStart == std::string_view::npos)
+        if (moveTextStart == string_view::npos)
             return games;
 
         // the next PGN after this one is the first line after moveTextStart that starts with a '['
@@ -388,7 +389,7 @@ std::vector<GameRecord> parse_all_pgns(std::string_view fileContent)
 
         auto thisPGN = fileContent;
 
-        if (moveTextToNextPGN == std::string_view::npos) {
+        if (moveTextToNextPGN == string_view::npos) {
             fileContent = {}; // so that we exit the loop
         } else {
             const auto nextPGNStart = moveTextStart + moveTextToNextPGN;
@@ -408,7 +409,7 @@ std::vector<GameRecord> parse_all_pgns(std::string_view fileContent)
 namespace {
 
     void write_metadata_item(
-        const std::string_view key, const std::string_view value,
+        const string_view key, const string_view value,
         std::string& output)
     {
         output.append(std::format(

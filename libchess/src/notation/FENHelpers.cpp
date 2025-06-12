@@ -28,6 +28,7 @@
 namespace chess::notation::fen_helpers {
 
 using pieces::Color;
+using std::string_view;
 
 namespace {
 
@@ -129,8 +130,8 @@ void write_en_passant_target_square(
 namespace {
 
     // returns the rest of the piece positions fragment that was left after parsing this rank
-    [[nodiscard]] std::string_view parse_rank(
-        const board::Rank rank, std::string_view fenFragment, Position& position)
+    [[nodiscard]] string_view parse_rank(
+        const board::Rank rank, string_view fenFragment, Position& position)
     {
         const auto rankStart = Square { .file = board::File::A, .rank = rank }.index();
         const auto rankEnd   = rankStart + 8uz;
@@ -191,7 +192,7 @@ namespace {
 } // namespace
 
 void parse_piece_positions(
-    std::string_view fenFragment, Position& position)
+    string_view fenFragment, Position& position)
 {
     for (const auto rank : std::views::reverse(magic_enum::enum_values<board::Rank>()))
         fenFragment = parse_rank(rank, fenFragment, position);
@@ -201,7 +202,7 @@ void parse_piece_positions(
 }
 
 void parse_side_to_move(
-    const std::string_view fenFragment, Position& position)
+    const string_view fenFragment, Position& position)
 {
     if (fenFragment.length() != 1uz)
         throw std::invalid_argument {
@@ -214,7 +215,7 @@ void parse_side_to_move(
 }
 
 void parse_castling_rights(
-    const std::string_view fenFragment, Position& position)
+    const string_view fenFragment, Position& position)
 {
     if (fenFragment.contains('-')) {
         position.whiteCastlingRights.king_moved();
@@ -229,7 +230,7 @@ void parse_castling_rights(
 }
 
 void parse_en_passant_target_square(
-    const std::string_view fenFragment, Position& position)
+    const string_view fenFragment, Position& position)
 {
     if (fenFragment.contains('-')) {
         position.enPassantTargetSquare = std::nullopt;

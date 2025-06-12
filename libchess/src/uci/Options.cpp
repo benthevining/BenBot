@@ -17,10 +17,13 @@
 #include <vector>
 
 namespace chess::uci {
+
+using std::string_view;
+
 using util::split_at_first_space;
 using util::trim;
 
-void Option::parse(std::string_view arguments)
+void Option::parse(string_view arguments)
 {
     arguments = trim(arguments);
 
@@ -38,7 +41,7 @@ void Option::parse(std::string_view arguments)
 
     const auto valueTokenIdx = rest.find("value");
 
-    const bool isNPos = valueTokenIdx == std::string_view::npos;
+    const bool isNPos = valueTokenIdx == string_view::npos;
 
     auto name = isNPos ? rest : rest.substr(0, valueTokenIdx);
 
@@ -68,7 +71,7 @@ BoolOption::BoolOption(
         optionName, optionDefault);
 }
 
-void BoolOption::handle_setvalue(const std::string_view arguments)
+void BoolOption::handle_setvalue(const string_view arguments)
 {
     auto [valueToken, valueStr] = split_at_first_space(arguments);
 
@@ -110,7 +113,7 @@ std::string IntOption::get_declaration_string() const
         optionName, optionDefault, optionMin, optionMax);
 }
 
-void IntOption::handle_setvalue(const std::string_view arguments)
+void IntOption::handle_setvalue(const string_view arguments)
 {
     auto [valueToken, valueStr] = split_at_first_space(arguments);
 
@@ -150,7 +153,7 @@ std::string ComboOption::get_declaration_string() const
     return result;
 }
 
-void ComboOption::handle_setvalue(const std::string_view arguments)
+void ComboOption::handle_setvalue(const string_view arguments)
 {
     auto [valueToken, valueStr] = split_at_first_space(arguments);
 
@@ -185,7 +188,7 @@ std::string StringOption::get_declaration_string() const
         optionName, value);
 }
 
-void StringOption::handle_setvalue(const std::string_view arguments)
+void StringOption::handle_setvalue(const string_view arguments)
 {
     auto [valueToken, valueStr] = split_at_first_space(arguments);
 
@@ -214,7 +217,7 @@ std::string Action::get_declaration_string() const
 }
 
 void Action::handle_setvalue(
-    [[maybe_unused]] const std::string_view arguments)
+    [[maybe_unused]] const string_view arguments)
 {
     callback();
 }

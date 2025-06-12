@@ -20,6 +20,8 @@
 
 namespace chess::uci {
 
+using std::string_view;
+
 /** Base class for UCI options.
 
     @ingroup uci
@@ -35,7 +37,7 @@ struct Option {
     Option& operator=(Option&&)      = default;
 
     /** Returns this option's name. */
-    [[nodiscard]] virtual std::string_view get_name() const noexcept = 0;
+    [[nodiscard]] virtual string_view get_name() const noexcept = 0;
 
     /** Returns the option's declaration string suitable for sending
         to the GUI. The returned string includes the "option" token.
@@ -48,11 +50,11 @@ struct Option {
         Note that this may be called for any option; this class will take
         care of filtering out updates for other options.
      */
-    void parse(std::string_view arguments);
+    void parse(string_view arguments);
 
 protected:
     // Will be called with everything in the "setoption" command after the option name
-    virtual void handle_setvalue(std::string_view arguments) = 0;
+    virtual void handle_setvalue(string_view arguments) = 0;
 };
 
 /** A boolean toggle option, which may be either on or off.
@@ -68,12 +70,12 @@ struct BoolOption final : Option {
      */
     [[nodiscard]] bool get_value() const noexcept { return value; }
 
-    [[nodiscard]] std::string_view get_name() const noexcept override { return optionName; }
+    [[nodiscard]] string_view get_name() const noexcept override { return optionName; }
 
     [[nodiscard]] std::string get_declaration_string() const override;
 
 private:
-    void handle_setvalue(std::string_view arguments) override;
+    void handle_setvalue(string_view arguments) override;
 
     std::string optionName;
 
@@ -97,12 +99,12 @@ struct IntOption final : Option {
      */
     [[nodiscard]] int get_value() const noexcept { return value; }
 
-    [[nodiscard]] std::string_view get_name() const noexcept override { return optionName; }
+    [[nodiscard]] string_view get_name() const noexcept override { return optionName; }
 
     [[nodiscard]] std::string get_declaration_string() const override;
 
 private:
-    void handle_setvalue(std::string_view arguments) override;
+    void handle_setvalue(string_view arguments) override;
 
     std::string optionName;
 
@@ -124,14 +126,14 @@ struct ComboOption final : Option {
         std::vector<std::string> values,
         std::string              defaultValue);
 
-    [[nodiscard]] std::string_view get_value() const noexcept { return value; }
+    [[nodiscard]] string_view get_value() const noexcept { return value; }
 
-    [[nodiscard]] std::string_view get_name() const noexcept override { return optionName; }
+    [[nodiscard]] string_view get_name() const noexcept override { return optionName; }
 
     [[nodiscard]] std::string get_declaration_string() const override;
 
 private:
-    void handle_setvalue(std::string_view arguments) override;
+    void handle_setvalue(string_view arguments) override;
 
     std::string optionName;
 
@@ -151,14 +153,14 @@ struct StringOption final : Option {
         std::string name,
         std::string defaultValue);
 
-    [[nodiscard]] std::string_view get_value() const noexcept { return value; }
+    [[nodiscard]] string_view get_value() const noexcept { return value; }
 
-    [[nodiscard]] std::string_view get_name() const noexcept override { return optionName; }
+    [[nodiscard]] string_view get_name() const noexcept override { return optionName; }
 
     [[nodiscard]] std::string get_declaration_string() const override;
 
 private:
-    void handle_setvalue(std::string_view arguments) override;
+    void handle_setvalue(string_view arguments) override;
 
     std::string optionName;
 
@@ -176,12 +178,12 @@ struct Action final : Option {
         std::string name,
         Callback&&  action);
 
-    [[nodiscard]] std::string_view get_name() const noexcept override { return optionName; }
+    [[nodiscard]] string_view get_name() const noexcept override { return optionName; }
 
     [[nodiscard]] std::string get_declaration_string() const override;
 
 private:
-    void handle_setvalue(std::string_view arguments) override;
+    void handle_setvalue(string_view arguments) override;
 
     std::string optionName;
 

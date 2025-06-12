@@ -16,13 +16,15 @@
 
 namespace {
 
+using std::string_view;
+
 // NB. not [[gnu::const]] because std::isspace() depends on the current C locale
 [[nodiscard]] bool is_whitespace(const char text) noexcept
 {
     return std::isspace(static_cast<unsigned char>(text)) != 0;
 }
 
-[[nodiscard]] std::string_view trim_start(std::string_view text) noexcept
+[[nodiscard]] string_view trim_start(string_view text) noexcept
 {
     auto idx { 0uz };
 
@@ -38,7 +40,7 @@ namespace {
     return {};
 }
 
-[[nodiscard]] std::string_view trim_end(const std::string_view text)
+[[nodiscard]] string_view trim_end(const string_view text)
 {
     if (text.empty())
         return {};
@@ -54,12 +56,12 @@ namespace {
 
 namespace chess::util {
 
-std::string_view trim(const std::string_view text)
+string_view trim(const string_view text)
 {
     return trim_start(trim_end(text));
 }
 
-size_t find_matching_close_paren(const std::string_view input)
+size_t find_matching_close_paren(const string_view input)
 {
     assert(input.front() == '(');
 
@@ -89,11 +91,11 @@ size_t find_matching_close_paren(const std::string_view input)
     };
 }
 
-StringViewPair split_at_first_space(const std::string_view input)
+StringViewPair split_at_first_space(const string_view input)
 {
     const auto spaceIdx = input.find(' ');
 
-    if (spaceIdx == std::string_view::npos) {
+    if (spaceIdx == string_view::npos) {
         return { input, {} };
     }
 
@@ -103,14 +105,14 @@ StringViewPair split_at_first_space(const std::string_view input)
     };
 }
 
-StringViewPair split_at_first_space_or_newline(const std::string_view input)
+StringViewPair split_at_first_space_or_newline(const string_view input)
 {
     const auto spaceIdx   = input.find(' ');
     const auto newLineIdx = input.find('\n');
 
     const auto firstDelimIdx = std::min(spaceIdx, newLineIdx);
 
-    if (firstDelimIdx == std::string_view::npos) {
+    if (firstDelimIdx == string_view::npos) {
         return { input, {} };
     }
 

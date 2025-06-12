@@ -29,6 +29,7 @@
 namespace chess::notation {
 
 using board::Square;
+using std::string_view;
 using PieceType = pieces::Type;
 
 namespace {
@@ -46,7 +47,7 @@ namespace {
         return pieceMoves;
     }
 
-    [[nodiscard]] std::string_view get_check_string(const Position& position, const Move& move)
+    [[nodiscard]] string_view get_check_string(const Position& position, const Move& move)
     {
         const auto newPos = game::after_move(position, move);
 
@@ -133,9 +134,10 @@ namespace {
     using board::File;
     using board::Rank;
     using pieces::Color;
+    using MoveSpan = std::span<const Move>;
 
     [[nodiscard]] Square get_starting_square_from_file(
-        const std::span<const Move> possibleOrigins, const File file)
+        const MoveSpan possibleOrigins, const File file)
     {
         auto moveStartsOnFile = [file](const Move& move) { return move.from.file == file; };
 
@@ -162,7 +164,7 @@ namespace {
     }
 
     [[nodiscard]] Square get_starting_square_from_rank(
-        const std::span<const Move> possibleOrigins, const Rank rank)
+        const MoveSpan possibleOrigins, const Rank rank)
     {
         auto moveStartsOnRank = [rank](const Move& move) { return move.from.rank == rank; };
 
@@ -190,7 +192,7 @@ namespace {
 
     [[nodiscard]] Square get_starting_square(
         const Position& position, const Square& targetSquare, const PieceType piece,
-        const std::string_view text)
+        const string_view text)
     {
         const auto possibleOrigins = get_possible_move_origins(position, targetSquare, piece);
 
@@ -279,7 +281,7 @@ namespace {
     }
 
     [[nodiscard]] std::optional<Move> parse_pawn_capture(
-        const Square& targetSquare, const std::string_view startingFileText, const Color color)
+        const Square& targetSquare, const string_view startingFileText, const Color color)
     {
         assert(! startingFileText.empty());
 
@@ -323,17 +325,17 @@ namespace {
     }
 
     [[nodiscard]] std::optional<Move> parse_promotion(
-        const std::string_view text, const Color color)
+        const string_view text, const Color color)
     {
         const auto eqSgnPos = text.find('=');
 
-        if (eqSgnPos == std::string_view::npos)
+        if (eqSgnPos == string_view::npos)
             return std::nullopt;
 
         const auto promotedType = pieces::from_string(text.substr(eqSgnPos + 1uz, 1uz));
 
         if (const auto xPos = text.find('x');
-            xPos != std::string_view::npos) {
+            xPos != string_view::npos) {
             // string is of form dxe8=Q
             return Move {
                 .from = {
@@ -353,7 +355,7 @@ namespace {
 
 } // namespace
 
-Move from_alg(const Position& position, std::string_view text)
+Move from_alg(const Position& position, string_view text)
 {
     text = util::trim(text);
 

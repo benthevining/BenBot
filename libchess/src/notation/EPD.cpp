@@ -19,12 +19,14 @@
 namespace chess::notation {
 
 using pieces::Color;
+using std::string_view;
+
 using util::int_from_string;
 
 namespace {
 
     void parse_operations(
-        EPDPosition& pos, std::string_view text)
+        EPDPosition& pos, string_view text)
     {
         while (true) {
             text = util::trim(text);
@@ -34,7 +36,7 @@ namespace {
 
             const auto nextSemi = text.find(';');
 
-            if (nextSemi == std::string_view::npos) {
+            if (nextSemi == string_view::npos) {
                 throw std::invalid_argument {
                     std::format("Expected ; in EPD operation: {}", text)
                 };
@@ -74,7 +76,7 @@ namespace {
 
 } // namespace
 
-EPDPosition from_epd(std::string_view epdString)
+EPDPosition from_epd(string_view epdString)
 {
     using util::split_at_first_space;
 

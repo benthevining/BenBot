@@ -19,6 +19,7 @@
 
 namespace chess::uci {
 
+using std::string_view;
 using util::split_at_first_space;
 using util::trim;
 
@@ -27,7 +28,7 @@ using util::trim;
 // split_at_first_space() will return a pair whose first element is empty
 // if its input string began with a space!
 
-Position parse_position_options(std::string_view options)
+Position parse_position_options(string_view options)
 {
     // position [fen <fenstring> | startpos ]  moves <move1> .... <movei>
     // options doesn't include the "position" token itself
@@ -45,7 +46,7 @@ Position parse_position_options(std::string_view options)
         // so we search for the "moves" delimiter (which may be absent)
         const auto movesTokenIdx = rest.find("moves");
 
-        const bool isNPos = movesTokenIdx == std::string_view::npos;
+        const bool isNPos = movesTokenIdx == string_view::npos;
 
         const auto fenString = isNPos ? rest : rest.substr(0uz, movesTokenIdx);
 
@@ -88,8 +89,8 @@ namespace {
 
     // consumes one argument from ``options``,
     // and returns pair of the option value & the rest of the ``options`` that are left
-    [[nodiscard]] std::pair<size_t, std::string_view>
-    parse_int_value(const std::string_view options)
+    [[nodiscard]] std::pair<size_t, string_view>
+    parse_int_value(const string_view options)
     {
         const auto [valueStr, rest] = split_at_first_space(options);
 
@@ -101,8 +102,8 @@ namespace {
 
     // consumes all the moves following the "searchmoves" token,
     // and returns the rest of the ``options`` that are left
-    [[nodiscard]] std::string_view parse_searchmoves(
-        std::string_view options, const Position& currentPosition,
+    [[nodiscard]] string_view parse_searchmoves(
+        string_view options, const Position& currentPosition,
         std::output_iterator<moves::Move> auto outputIt)
     {
         using namespace std::literals::string_view_literals; // NOLINT
@@ -134,7 +135,7 @@ namespace {
 } // namespace
 
 GoCommandOptions parse_go_options(
-    std::string_view options, const Position& currentPosition)
+    string_view options, const Position& currentPosition)
 {
     // options doesn't include the "go" token itself
 
