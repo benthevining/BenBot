@@ -43,10 +43,13 @@ class TranspositionTable;
     ``exitFlag`` will be queried after each iteration of the iterative
     deepening loop, and the search will exit if the flag has been set to true.
 
+    See the Thread class for a higher-level encapsulation of search functionality.
+
     @throws std::invalid_argument An exception will be thrown if there are
     no legal moves for the side to move in the given position.
 
     @ingroup search
+    @see Thread
  */
 [[nodiscard]] Move find_best_move(
     const Position&         position,
