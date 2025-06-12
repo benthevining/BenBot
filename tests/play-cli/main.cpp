@@ -36,12 +36,12 @@
 #include <utility>
 #include <vector>
 
-namespace {
+namespace chess {
 
-using chess::game::Position;
-using chess::moves::Move;
-using chess::notation::GameRecord;
-using chess::pieces::Color;
+using game::Position;
+using moves::Move;
+using notation::GameRecord;
+using pieces::Color;
 using std::size_t;
 
 void print_help(const std::string_view programName)
@@ -78,7 +78,7 @@ struct Options final {
                 throw std::invalid_argument { "Expected FEN string after argument --fen" };
             }
 
-            opts.startingPosition = chess::notation::from_fen(args.front());
+            opts.startingPosition = notation::from_fen(args.front());
 
             args = args.subspan(1uz);
 
@@ -94,7 +94,7 @@ struct Options final {
 
             args = args.subspan(1uz);
 
-            opts.searchDepth = chess::util::int_from_string(depthStr, opts.searchDepth);
+            opts.searchDepth = util::int_from_string(depthStr, opts.searchDepth);
 
             continue;
         }
@@ -149,7 +149,7 @@ struct CLIGame final {
     void loop()
     {
         while (! currentPosition.get_result().has_value()) {
-            std::println("{}", chess::game::print_utf8(currentPosition));
+            std::println("{}", game::print_utf8(currentPosition));
 
             const auto move = currentPosition.sideToMove == options.computerPlays
                                 ? get_computer_move()
@@ -172,14 +172,14 @@ private:
     {
         std::println("Computer is thinking...");
 
-        const auto move = chess::search::find_best_move(currentPosition, transTable, options.searchDepth);
+        const auto move = search::find_best_move(currentPosition, transTable, options.searchDepth);
 
         if (options.useUCI) {
             std::println("{} plays: {}",
-                magic_enum::enum_name(options.computerPlays), chess::notation::to_uci(move));
+                magic_enum::enum_name(options.computerPlays), notation::to_uci(move));
         } else {
             std::println("{} plays: {}",
-                magic_enum::enum_name(options.computerPlays), chess::notation::to_alg(currentPosition, move));
+                magic_enum::enum_name(options.computerPlays), notation::to_alg(currentPosition, move));
         }
 
         return move;
@@ -196,9 +196,9 @@ private:
 
         try {
             if (options.useUCI)
-                return chess::notation::from_uci(currentPosition, inputBuf);
+                return notation::from_uci(currentPosition, inputBuf);
 
-            return chess::notation::from_alg(currentPosition, inputBuf);
+            return notation::from_alg(currentPosition, inputBuf);
         } catch (const std::invalid_argument& exception) {
             std::println("{}", exception.what());
 
@@ -209,7 +209,7 @@ private:
     void print_result() const
     {
         switch (gameRecord.result.value()) {
-            using enum chess::game::Result;
+            using enum game::Result;
 
             case Draw:
                 std::println("Draw!");
@@ -235,7 +235,7 @@ private:
 
         std::ofstream stream { pgnPath };
 
-        stream << chess::notation::to_pgn(gameRecord);
+        stream << notation::to_pgn(gameRecord);
 
         std::println("Wrote PGN file to {}", pgnPath.string());
     }
@@ -246,12 +246,12 @@ private:
 
     Position currentPosition { options.startingPosition };
 
-    chess::search::TranspositionTable transTable;
+    search::TranspositionTable transTable;
 
     GameRecord gameRecord;
 };
 
-} // namespace
+} // namespace chess
 
 int main(const int argc, const char** argv)
 try {
@@ -267,11 +267,11 @@ try {
     args = args.subspan(1uz);
 
     if (std::ranges::contains(args, "--help")) {
-        print_help(programName);
+        chess::print_help(programName);
         return EXIT_FAILURE;
     }
 
-    CLIGame game { parse_options(args) };
+    chess::CLIGame game { chess::parse_options(args) };
 
     game.loop();
 
