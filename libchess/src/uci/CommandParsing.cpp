@@ -68,8 +68,7 @@ Position parse_position_options(string_view options)
 
     moveToken = trim(moveToken);
 
-    // code defensively against unrecognized tokens
-    if (moveToken != "moves")
+    if (moveToken != "moves") // code defensively against unrecognized tokens
         return position;
 
     moves = trim(moves);

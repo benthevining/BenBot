@@ -48,6 +48,7 @@ namespace {
         return values.at(std::to_underlying(file));
     }
 
+    // each key represents a specific piece type of a given color on a specific square
     constexpr std::array PIECE_KEYS {
         0xde0a6308c3df1559ULL, 0x2c4b06b9853875ccULL, 0x2ab7e75c55f58ce1ULL, 0xd870396170507503ULL, 0x2caea0c8b9204cb4ULL,
         0x945bed033f6e1d8dULL, 0xf76d7af05b02529bULL, 0x775d4b35eec039e6ULL, 0x53d5a48216a62191ULL, 0x243dec880916c9a9ULL,
@@ -289,6 +290,7 @@ Value update(
         move.is_promotion() ? *move.promotedType : move.piece,
         pos.sideToMove, move.to);
 
+    // remove captured piece
     if (pos.is_capture(move)) {
         const auto otherColor = pos.sideToMove == Color::White ? Color::Black : Color::White;
 

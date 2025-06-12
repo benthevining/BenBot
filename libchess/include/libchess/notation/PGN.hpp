@@ -46,6 +46,10 @@ struct GameRecord final {
     /** If the game ended in a conclusive result, this holds the
         appropriate Result enumeration. If the game is ongoing,
         this is ``nullopt``.
+
+        Note that this may be different from ``record.get_final_position().get_result()``,
+        as that function only accounts for decisive board state. This value
+        may be set if a player resigned or the game was adjudicated.
      */
     std::optional<game::Result> result;
 

@@ -18,9 +18,9 @@ namespace {
 
 using std::string_view;
 
-// NB. not [[gnu::const]] because std::isspace() depends on the current C locale
 [[nodiscard]] bool is_whitespace(const char text) noexcept
 {
+    // this should take care of \r\n sequences on Windows
     return std::isspace(static_cast<unsigned char>(text)) != 0;
 }
 
@@ -42,9 +42,6 @@ using std::string_view;
 
 [[nodiscard]] string_view trim_end(const string_view text)
 {
-    if (text.empty())
-        return {};
-
     for (auto i = text.length(); i > 0uz; --i)
         if (! is_whitespace(text[i - 1uz]))
             return text.substr(0uz, i);

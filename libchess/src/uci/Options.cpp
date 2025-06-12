@@ -32,7 +32,7 @@ void Option::parse(string_view arguments)
 
     firstWord = trim(firstWord);
 
-    if (firstWord != "name")
+    if (firstWord != "name") // code defensively against unrecognized tokens
         return;
 
     rest = trim(rest);

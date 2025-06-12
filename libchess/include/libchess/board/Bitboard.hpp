@@ -58,10 +58,10 @@ struct Bitboard final {
     /// @{
 
     /** Returns true if any of the bits are set. */
-    [[nodiscard]] constexpr bool any() const noexcept { return value != 0; }
+    [[nodiscard]] constexpr bool any() const noexcept { return value != UINT64_C(0); }
 
     /** Returns true if none of the bits are set. */
-    [[nodiscard]] constexpr bool none() const noexcept { return value == 0; }
+    [[nodiscard]] constexpr bool none() const noexcept { return value == UINT64_C(0); }
 
     /** Returns the number of bits that are set. */
     [[nodiscard]] constexpr size_t count() const noexcept { return std::popcount(value); }
@@ -108,7 +108,7 @@ struct Bitboard final {
     constexpr void unset(BitboardIndex index) noexcept;
 
     /** Resets all bits to 0. */
-    constexpr void clear() noexcept { value = 0; }
+    constexpr void clear() noexcept { value = UINT64_C(0); }
 
     /// @}
 
@@ -184,7 +184,7 @@ struct Bitboard final {
     [[nodiscard, gnu::const]] static constexpr Bitboard from_square(const Square& square) noexcept;
 
 private:
-    Integer value { 0 };
+    Integer value { UINT64_C(0) };
 };
 
 /// @ingroup board
@@ -326,26 +326,26 @@ constexpr Bitboard::Bitboard(const Integer val) noexcept
 
 constexpr Bitboard Bitboard::from_square(const Square& square) noexcept
 {
-    return Bitboard { 1ULL << square.index() };
+    return Bitboard { UINT64_C(1) << square.index() };
 }
 
 constexpr bool Bitboard::test(const BitboardIndex index) const noexcept
 {
     assert(index <= MAX_BITBOARD_IDX);
-    return ((value >> index) & 1uz) != 0;
+    return ((value >> index) & UINT64_C(1)) != 0;
 }
 
 constexpr void Bitboard::set(const BitboardIndex index) noexcept
 {
     assert(index <= MAX_BITBOARD_IDX);
-    value |= 1ULL << index;
+    value |= UINT64_C(1) << index;
 }
 
 constexpr void Bitboard::unset(const BitboardIndex index) noexcept
 {
     assert(index <= MAX_BITBOARD_IDX);
 
-    const Integer mask { 1ULL << index };
+    const Integer mask { UINT64_C(1) << index };
 
     value &= ~mask;
 }
@@ -468,7 +468,10 @@ namespace detail {
 
         constexpr BitboardIterator& operator++() noexcept
         {
-            value &= value - 1;
+            assert(value > UINT64_C(0));
+
+            value &= value - UINT64_C(1);
+
             return *this;
         }
 
@@ -480,7 +483,7 @@ namespace detail {
         }
 
     private:
-        std::uint64_t value {};
+        Bitboard::Integer value { UINT64_C(0) };
     };
 
 } // namespace detail

@@ -118,7 +118,8 @@ namespace detail {
     template <Color Side>
     static constexpr Color OtherSide = Side == Color::White ? Color::Black : Color::White;
 
-    static constexpr auto promotionMask = rank_masks::ONE | rank_masks::EIGHT;
+    static constexpr auto PROMOTION_MASK     = rank_masks::ONE | rank_masks::EIGHT;
+    static constexpr auto NOT_PROMOTION_MASK = PROMOTION_MASK.inverse();
 
     static constexpr std::array possiblePromotedTypes {
         PieceType::Knight, PieceType::Bishop, PieceType::Rook, PieceType::Queen
@@ -135,7 +136,7 @@ namespace detail {
 
         // non-promoting pushes
         {
-            const auto pushes = allPushes & promotionMask.inverse();
+            const auto pushes = allPushes & NOT_PROMOTION_MASK;
 
             for (const auto target : pushes.squares()) {
                 const Move move {
@@ -151,7 +152,7 @@ namespace detail {
             }
         }
 
-        const auto promotions = allPushes & promotionMask;
+        const auto promotions = allPushes & PROMOTION_MASK;
 
         for (const auto target : promotions.squares()) {
             for (const auto promotedType : possiblePromotedTypes) {
@@ -204,21 +205,17 @@ namespace detail {
         // This way, there is always a 1-1 relationship between a target square and a
         // starting square.
 
-        const auto ourPawns = position.pieces_for<Side>().pawns;
-
+        const auto ourPawns    = position.pieces_for<Side>().pawns;
         const auto enemyPieces = position.pieces_for<OtherSide<Side>>().occupied;
 
-        const auto eastAttacks = shifts::pawn_capture_east<Side>(ourPawns);
-        const auto westAttacks = shifts::pawn_capture_west<Side>(ourPawns);
+        const auto eastCaptures = shifts::pawn_capture_east<Side>(ourPawns) & enemyPieces;
+        const auto westCaptures = shifts::pawn_capture_west<Side>(ourPawns) & enemyPieces;
 
-        const auto eastCaptures = eastAttacks & enemyPieces;
-        const auto westCaptures = westAttacks & enemyPieces;
+        const auto eastPromotionCaptures = eastCaptures & PROMOTION_MASK;
+        const auto westPromotionCaptures = westCaptures & PROMOTION_MASK;
 
-        const auto eastPromotionCaptures = eastCaptures & promotionMask;
-        const auto westPromotionCaptures = westCaptures & promotionMask;
-
-        const auto eastRegCaptures = eastCaptures & promotionMask.inverse();
-        const auto westRegCaptures = westCaptures & promotionMask.inverse();
+        const auto eastRegCaptures = eastCaptures & NOT_PROMOTION_MASK;
+        const auto westRegCaptures = westCaptures & NOT_PROMOTION_MASK;
 
         // starting positions of pawns that can make captures
         const auto canCapturePromoteEast = shifts::pawn_inv_capture_east<Side>(eastPromotionCaptures);
@@ -293,9 +290,7 @@ namespace detail {
         const auto startSquares = shifts::pawn_inv_capture_east<Side>(targetSquareBoard)
                                 | shifts::pawn_inv_capture_west<Side>(targetSquareBoard);
 
-        const auto ourPawns = position.pieces_for<Side>().pawns;
-
-        const auto eligiblePawns = ourPawns & startSquares;
+        const auto eligiblePawns = position.pieces_for<Side>().pawns & startSquares;
 
         for (const auto square : eligiblePawns.squares()) {
             const Move move {
@@ -624,6 +619,7 @@ namespace detail {
     template <Color Side>
     [[nodiscard]] bool any_legal_moves_internal(const Position& position)
     {
+        // TODO: ideally use inplace_vector here
         std::vector<Move> moves;
 
         // as an optimization, check for king moves first, because in a double check,

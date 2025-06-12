@@ -193,6 +193,9 @@ constexpr bool Pieces::is_file_half_open(const File file) const noexcept
 
 constexpr bool Pieces::has_bishop_pair() const noexcept
 {
+    // NB. can't just check that bishops.count() == 2 because
+    // it's possible that we have 2 bishops of the same color
+
     return (bishops & masks::LIGHT_SQUARES).any()
         && (bishops & masks::DARK_SQUARES).any();
 }

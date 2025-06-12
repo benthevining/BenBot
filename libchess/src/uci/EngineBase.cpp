@@ -15,6 +15,7 @@
 
 namespace chess::uci {
 
+using std::println;
 using util::split_at_first_space;
 using util::trim;
 
@@ -26,19 +27,19 @@ void EngineBase::handle_command(std::string_view command)
         return;
 
     if (command == "uci") { // this command is sent once after program boot
-        std::println("id name {}", get_name());
-        std::println("id author {}", get_author());
+        println("id name {}", get_name());
+        println("id author {}", get_author());
 
         for (const auto* option : get_options())
-            std::println("{}", option->get_declaration_string());
+            println("{}", option->get_declaration_string());
 
-        std::println("uciok");
+        println("uciok");
         return;
     }
 
     if (command == "isready") {
         wait();
-        std::println("readyok");
+        println("readyok");
         return;
     }
 

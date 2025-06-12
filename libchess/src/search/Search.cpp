@@ -28,8 +28,22 @@ namespace {
 
     using EvalType = TranspositionTable::Record::EvalType;
 
+    // arbitrary value used as the starting beta value
+    // this should be larger than mate, but smaller than
+    // the data type's max (to avoid issues with sign flipping)
     constexpr auto EVAL_MAX = eval::MATE * 2;
 
+    // mate scores are based on the distance from the root of the tree
+    // to the leaf (mate) node, so that the engine actually goes for mate
+    [[nodiscard, gnu::const]] int checkmate_score(const size_t plyFromRoot) noexcept
+    {
+        // multiply by -1 here because this score is relative to the player
+        // who played mate, not the player who got mated
+        return (EVAL_MAX - static_cast<int>(plyFromRoot)) * -1;
+    }
+
+    // searches only captures, with no depth limit, to try to
+    // improve the stability of the static evaluation function
     [[nodiscard]] int quiescence(
         int alpha, const int beta,
         const Position&           currentPosition,
@@ -50,10 +64,8 @@ namespace {
 
         auto moves = moves::generate<true>(currentPosition); // captures only
 
-        if (moves.empty() && currentPosition.is_check()) {
-            // checkmate
-            return (EVAL_MAX - static_cast<int>(plyFromRoot)) * -1;
-        }
+        if (moves.empty() && currentPosition.is_check())
+            return checkmate_score(plyFromRoot);
 
         detail::order_moves_for_search(currentPosition, moves, transTable);
 
@@ -82,6 +94,8 @@ namespace {
     {
         assert(beta > alpha);
 
+        // check if this position has been searched before to at
+        // least this depth and within these bounds for non-PV nodes
         if (const auto value = transTable.probe_eval(currentPosition, depth, alpha, beta))
             return value.value();
 
@@ -97,8 +111,7 @@ namespace {
         auto moves = moves::generate(currentPosition);
 
         if (moves.empty() && currentPosition.is_check()) {
-            // checkmate
-            const auto eval = (EVAL_MAX - static_cast<int>(plyFromRoot)) * -1;
+            const auto eval = checkmate_score(plyFromRoot);
 
             transTable.store(
                 currentPosition, { .searchedDepth = depth,
@@ -109,6 +122,8 @@ namespace {
         }
 
         detail::order_moves_for_search(currentPosition, moves, transTable);
+
+        auto evalType { EvalType::Alpha };
 
         std::optional<Move> bestMove;
 
@@ -131,21 +146,15 @@ namespace {
 
             if (eval > alpha) {
                 bestMove = move;
-
-                transTable.store(
-                    currentPosition, { .searchedDepth = depth,
-                                         .eval        = alpha,
-                                         .evalType    = EvalType::Alpha,
-                                         .bestMove    = bestMove });
-
-                alpha = eval;
+                evalType = EvalType::Exact;
+                alpha    = eval;
             }
         }
 
         transTable.store(
             currentPosition, { .searchedDepth = depth,
                                  .eval        = alpha,
-                                 .evalType    = EvalType::Alpha,
+                                 .evalType    = evalType,
                                  .bestMove    = bestMove });
 
         return alpha;

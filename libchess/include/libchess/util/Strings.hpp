@@ -35,7 +35,7 @@ using StringViewPair = std::pair<string_view, string_view>;
 /// @{
 
 /** Trims any whitespace characters from the beginning and ending
-    of the string.
+    of the string, including space and newline characters.
  */
 [[nodiscard]] string_view trim(string_view text);
 
@@ -130,6 +130,7 @@ void write_integer(
         std::next(buffer.data(), static_cast<ptrdiff_t>(buffer.size())),
         value);
 
+    // simply do nothing on failure
     if (result.ec != std::errc {})
         return;
 

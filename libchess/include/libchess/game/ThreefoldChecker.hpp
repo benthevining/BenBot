@@ -20,13 +20,18 @@
 namespace chess::game {
 
 /** This struct keeps a history of Zobrist hash values to detect threefold repetitions.
+
+    @invariant There should always be at least one non-zero hash value in the history,
+    otherwise a history of all zero hash values would erroneously be detected as a
+    threefold repetition.
+
     @ingroup game
  */
 struct ThreefoldChecker final {
     using HashValue = std::uint64_t;
 
     /** Creates a history containing the given initial hash value. */
-    explicit constexpr ThreefoldChecker(HashValue initialPositionHash = 0uz) noexcept;
+    explicit constexpr ThreefoldChecker(HashValue initialPositionHash) noexcept;
 
     /** Clears the history, inserting a single hash value. */
     constexpr void reset(HashValue initialPositionHash);

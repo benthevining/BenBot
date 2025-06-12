@@ -51,6 +51,7 @@ namespace {
         static constexpr auto CASTLING_BONUS { 30 };         // cppcheck-suppress variableScope
         static constexpr auto PAWN_CONTROLS_PENALTY { 350 }; // cppcheck-suppress variableScope
 
+        // check if this move was recorded as the best move in this position
         if (const auto* currPosRecord = transTable.find(currentPosition))
             if (currPosRecord->bestMove.has_value() && currPosRecord->bestMove == move)
                 return std::numeric_limits<int>::max(); // arbitrarily large score to ensure this move is ordered first

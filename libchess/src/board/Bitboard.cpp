@@ -29,15 +29,12 @@ namespace chess::board {
 
     Occupied squares simply get an x inside them
  */
-
-static constexpr std::string_view separator { "|" };
-
-static constexpr std::string_view emptySquare { " |" };
-
-static constexpr std::string_view occupiedSquare { "x|" };
-
 std::string print_ascii(const Bitboard board)
 {
+    static constexpr std::string_view separator { "|" };
+    static constexpr std::string_view emptySquare { " |" };
+    static constexpr std::string_view occupiedSquare { "x|" };
+
     std::string result;
 
     result.reserve(144uz);
