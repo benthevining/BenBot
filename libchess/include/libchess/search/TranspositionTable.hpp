@@ -19,6 +19,7 @@
 #include <libchess/moves/Move.hpp>
 #include <optional>
 #include <unordered_map>
+#include <utility>
 
 namespace chess::search {
 
@@ -31,7 +32,6 @@ using std::size_t;
     @ingroup search
 
     @todo maximum size
-    @todo replacement scheme
  */
 class TranspositionTable final {
 public:
@@ -87,11 +87,7 @@ public:
         const Position& pos, size_t depth, int alpha, int beta) const;
 
     /** Stores a record for a given position. */
-    void store(const Position& pos, const Record& record)
-    {
-        // TODO: if key was in table, need to determine whether it should be overwritten
-        records[pos.hash] = record;
-    }
+    void store(const Position& pos, const Record& record);
 
     /** Clears the contents of the table. */
     void clear() noexcept { records.clear(); }
@@ -143,6 +139,31 @@ inline std::optional<int> TranspositionTable::probe_eval(
     }
 
     return std::nullopt;
+}
+
+inline void TranspositionTable::store(const Position& pos, const Record& record)
+{
+    if (const auto it = records.find(pos.hash);
+        it != records.end()) {
+        // this position was already stored in the table
+        // keep the old evaluation if it was an exact one & the new one isn't,
+        // or if the new evaluation is a greater depth than the old one
+
+        auto& stored = it->second;
+
+        const bool shouldReplace
+            = record.searchedDepth > stored.searchedDepth
+           || (stored.evalType != Record::EvalType::Exact
+               && record.evalType == Record::EvalType::Exact);
+
+        if (shouldReplace)
+            stored = record;
+
+        return;
+    }
+
+    // this position hasn't been searched before, add it to the table
+    records.emplace(std::make_pair(pos.hash, record));
 }
 
 } // namespace chess::search

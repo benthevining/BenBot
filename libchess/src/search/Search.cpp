@@ -37,8 +37,8 @@ namespace {
     // to the leaf (mate) node, so that the engine actually goes for mate
     [[nodiscard, gnu::const]] int checkmate_score(const size_t plyFromRoot) noexcept
     {
-        // multiply by -1 here because this score is relative to the player
-        // who played mate, not the player who got mated
+        // multiply by -1 here because this score
+        // is relative to the player who got mated
         return (EVAL_MAX - static_cast<int>(plyFromRoot)) * -1;
     }
 
