@@ -42,6 +42,7 @@ Position GameRecord::get_final_position() const
 namespace {
 
     using std::size_t;
+    using std::string;
     using std::string_view;
     using Metadata   = std::unordered_map<std::string, std::string>;
     using Moves      = std::vector<GameRecord::Move>;
@@ -316,7 +317,7 @@ namespace {
 
 } // namespace
 
-GameRecord from_pgn(std::string_view pgnText)
+GameRecord from_pgn(string_view pgnText)
 {
     GameRecord game;
 
@@ -410,7 +411,7 @@ namespace {
 
     void write_metadata_item(
         const string_view key, const string_view value,
-        std::string& output)
+        string& output)
     {
         output.append(std::format(
             R"([{} "{}"]
@@ -421,7 +422,7 @@ namespace {
     void write_metadata(
         const Metadata& metadata,
         const Position& startingPosition,
-        std::string&    output)
+        string&         output)
     {
         using namespace std::literals::string_literals; // NOLINT
 
@@ -458,7 +459,7 @@ namespace {
         Position     position,
         const Moves& moves,
         const bool   useBlockComments,
-        std::string& output)
+        string&      output)
     {
         // true if we need to insert a move number before Black's next move
         // true for the first move of the game, the first move of a variation,
@@ -513,7 +514,7 @@ namespace {
     }
 
     void write_game_result(
-        const GameResult result, std::string& output)
+        const GameResult result, string& output)
     {
         if (! result.has_value())
             return;
@@ -534,9 +535,9 @@ namespace {
 
 } // namespace
 
-std::string to_pgn(const GameRecord& game, const bool useBlockComments)
+string to_pgn(const GameRecord& game, const bool useBlockComments)
 {
-    std::string result;
+    string result;
 
     write_metadata(game.metadata, game.startingPosition, result);
 

@@ -19,6 +19,7 @@
 namespace chess::notation {
 
 using pieces::Color;
+using std::string;
 using std::string_view;
 
 using util::int_from_string;
@@ -118,7 +119,7 @@ EPDPosition from_epd(string_view epdString)
 namespace {
 
     void write_operations(
-        const EPDPosition& pos, std::string& output)
+        const EPDPosition& pos, string& output)
     {
         for (const auto& [key, value] : pos.operations)
             output.append(std::format(" {} \"{}\";", key, value));
@@ -134,9 +135,9 @@ namespace {
 
 } // namespace
 
-std::string to_epd(const EPDPosition& pos)
+string to_epd(const EPDPosition& pos)
 {
-    std::string epd;
+    string epd;
 
     fen_helpers::write_piece_positions(pos.position, epd);
 

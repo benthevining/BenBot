@@ -21,6 +21,7 @@
 namespace chess::notation {
 
 using game::Position;
+using std::string;
 
 /** A position combined with optional EPD opcodes.
 
@@ -33,7 +34,7 @@ struct EPDPosition final {
     /** This position's EPD operations.
         Values should not be quoted.
      */
-    std::unordered_map<std::string, std::string> operations;
+    std::unordered_map<string, string> operations;
 };
 
 /** Parses an EPD string.
@@ -51,6 +52,6 @@ struct EPDPosition final {
     @ingroup notation
     @relates EPDPosition
  */
-[[nodiscard]] std::string to_epd(const EPDPosition& pos);
+[[nodiscard]] string to_epd(const EPDPosition& pos);
 
 } // namespace chess::notation

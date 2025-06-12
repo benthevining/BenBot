@@ -28,6 +28,7 @@
 namespace chess::notation::fen_helpers {
 
 using pieces::Color;
+using std::string;
 using std::string_view;
 
 namespace {
@@ -36,7 +37,7 @@ namespace {
         const Position&       position,
         const board::Rank     rank,
         const board::Bitboard allOccupied, const board::Bitboard whitePieces,
-        std::string& output)
+        string& output)
     {
         using util::write_integer;
 
@@ -79,7 +80,7 @@ namespace {
 
 void write_piece_positions(
     const Position& position,
-    std::string&    output)
+    string&         output)
 {
     const auto whitePieces = position.whitePieces.occupied;
     const auto blackPieces = position.blackPieces.occupied;
@@ -92,7 +93,7 @@ void write_piece_positions(
 void write_castling_rights(
     const game::CastlingRights& whiteRights,
     const game::CastlingRights& blackRights,
-    std::string&                output)
+    string&                     output)
 {
     if (whiteRights.neither() && blackRights.neither()) {
         output.push_back('-');
@@ -114,7 +115,7 @@ void write_castling_rights(
 
 void write_en_passant_target_square(
     const std::optional<Square> targetSquare,
-    std::string&                output)
+    string&                     output)
 {
     if (! targetSquare.has_value()) {
         output.push_back('-');

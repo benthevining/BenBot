@@ -29,8 +29,9 @@
 namespace chess::notation {
 
 using board::Square;
-using std::string_view;
 using PieceType = pieces::Type;
+using std::string;
+using std::string_view;
 
 namespace {
 
@@ -60,7 +61,7 @@ namespace {
         return "+"; // check
     }
 
-    [[nodiscard]] std::string get_disambig_string(const Position& position, const Move& move)
+    [[nodiscard]] string get_disambig_string(const Position& position, const Move& move)
     {
         const auto pieceMoves = get_possible_move_origins(position, move.to, move.piece);
 
@@ -96,7 +97,7 @@ namespace {
 
 } // namespace
 
-std::string to_alg(const Position& position, const Move& move)
+string to_alg(const Position& position, const Move& move)
 {
     const auto checkStr = get_check_string(position, move);
 

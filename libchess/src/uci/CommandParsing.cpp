@@ -20,6 +20,7 @@
 namespace chess::uci {
 
 using std::string_view;
+
 using util::split_at_first_space;
 using util::trim;
 

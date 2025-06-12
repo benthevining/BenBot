@@ -26,6 +26,7 @@
 namespace chess::notation {
 
 using game::Position;
+using std::string;
 
 /** A record of a complete game, including some metadata.
     This structure is returned by the ``from_pgn()`` method.
@@ -37,7 +38,7 @@ struct GameRecord final {
         "Event", "Site", "Date", etc. The values will not include
         surrounding quotes.
      */
-    std::unordered_map<std::string, std::string> metadata;
+    std::unordered_map<string, string> metadata;
 
     /** The starting position of this game. */
     Position startingPosition {};
@@ -56,7 +57,7 @@ struct GameRecord final {
         /** The comment string associated with this move.
             Empty if this move has no comment.
          */
-        std::string comment;
+        string comment;
 
         /** If this move was annotated with one or more Numerical
             Annotation Glyph, this contains the numerical codes that
@@ -117,6 +118,6 @@ struct GameRecord final {
     @ingroup notation
     @relates GameRecord
  */
-[[nodiscard]] std::string to_pgn(const GameRecord& game, bool useBlockComments = true);
+[[nodiscard]] string to_pgn(const GameRecord& game, bool useBlockComments = true);
 
 } // namespace chess::notation

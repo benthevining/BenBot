@@ -18,6 +18,7 @@
 
 namespace chess::uci {
 
+using std::string;
 using std::string_view;
 
 using util::split_at_first_space;
@@ -58,13 +59,13 @@ void Option::parse(string_view arguments)
 /*------------------------------------------------------------------------------------------------------------------*/
 
 BoolOption::BoolOption(
-    std::string name, const bool defaultValue)
+    string name, const bool defaultValue)
     : optionName { std::move(name) }
     , optionDefault { defaultValue }
 {
 }
 
-[[nodiscard]] std::string BoolOption::get_declaration_string() const
+[[nodiscard]] string BoolOption::get_declaration_string() const
 {
     return std::format(
         "option name {} type check default {}",
@@ -94,7 +95,7 @@ void BoolOption::handle_setvalue(const string_view arguments)
 /*------------------------------------------------------------------------------------------------------------------*/
 
 IntOption::IntOption(
-    std::string name,
+    string    name,
     const int minValue, const int maxValue,
     const int defaultValue)
     : optionName { std::move(name) }
@@ -106,7 +107,7 @@ IntOption::IntOption(
     assert(optionDefault <= optionMax);
 }
 
-std::string IntOption::get_declaration_string() const
+string IntOption::get_declaration_string() const
 {
     return std::format(
         "option name {} type spin default {} min {} max {}",
@@ -130,9 +131,9 @@ void IntOption::handle_setvalue(const string_view arguments)
 /*------------------------------------------------------------------------------------------------------------------*/
 
 ComboOption::ComboOption(
-    std::string              name,
-    std::vector<std::string> values,
-    std::string              defaultValue)
+    string              name,
+    std::vector<string> values,
+    string              defaultValue)
     : optionName { std::move(name) }
     , possibleValues { std::move(values) }
     , optionDefault { std::move(defaultValue) }
@@ -140,7 +141,7 @@ ComboOption::ComboOption(
     assert(std::ranges::contains(possibleValues, optionDefault));
 }
 
-std::string ComboOption::get_declaration_string() const
+string ComboOption::get_declaration_string() const
 {
     auto result = std::format(
         "option name {} type combo default {}",
@@ -174,14 +175,14 @@ void ComboOption::handle_setvalue(const string_view arguments)
 /*------------------------------------------------------------------------------------------------------------------*/
 
 StringOption::StringOption(
-    std::string name,
-    std::string defaultValue)
+    string name,
+    string defaultValue)
     : optionName { std::move(name) }
     , value { std::move(defaultValue) }
 {
 }
 
-std::string StringOption::get_declaration_string() const
+string StringOption::get_declaration_string() const
 {
     return std::format(
         "option name {} type string default {}",
@@ -203,15 +204,15 @@ void StringOption::handle_setvalue(const string_view arguments)
 /*------------------------------------------------------------------------------------------------------------------*/
 
 Action::Action(
-    std::string name,
-    Callback&&  action)
+    string     name,
+    Callback&& action)
     : optionName { std::move(name) }
     , callback { std::move(action) }
 {
     assert(callback != nullptr);
 }
 
-std::string Action::get_declaration_string() const
+string Action::get_declaration_string() const
 {
     return std::format("option name {} type button", optionName);
 }
