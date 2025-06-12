@@ -93,6 +93,9 @@ public:
         records[pos.hash] = record;
     }
 
+    /** Clears the contents of the table. */
+    void clear() noexcept { records.clear(); }
+
 private:
     std::unordered_map<std::uint64_t, Record> records;
 };

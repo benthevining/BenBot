@@ -24,6 +24,8 @@ class BenBotEngine final : public chess::uci::EngineBase {
 
     [[nodiscard]] std::string_view get_author() const override { return "Ben Vining"; }
 
+    void new_game() override { transTable.clear(); }
+
     void set_position(const Position& pos) override { position = pos; }
 
     void go([[maybe_unused]] const chess::uci::GoCommandOptions& opts) override
