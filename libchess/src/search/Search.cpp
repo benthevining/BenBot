@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <atomic>
 #include <cassert>
+#include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <format>
 #include <libchess/eval/Evaluation.hpp>
@@ -213,13 +214,18 @@ namespace {
 
 } // namespace
 
+using Clock = std::chrono::high_resolution_clock;
+
 Move find_best_move(
-    const Position&         position,
-    TranspositionTable&     transTable,
-    const std::atomic_bool& exitFlag,
-    const size_t            searchDepth)
+    const Position&                   position,
+    TranspositionTable&               transTable,
+    const std::atomic_bool&           exitFlag,
+    const size_t                      searchDepth,
+    const std::optional<Milliseconds> searchTime)
 {
     assert(searchDepth > 0uz);
+
+    const auto searchStartTime = Clock::now();
 
     auto moves = moves::generate(position);
 
@@ -239,10 +245,23 @@ Move find_best_move(
 
     // iterative deepening
     for (auto depth = 1uz; depth <= searchDepth; ++depth) {
-        if (depth > 1uz && exitFlag.load()) {
-            // search aborted
+        const bool shouldExit = [depth, &exitFlag, &searchTime, &searchStartTime] {
+            if (depth < 2uz)
+                return false;
+
+            if (exitFlag.load())
+                return true;
+
+            if (! searchTime.has_value())
+                return false;
+
+            const auto elapsedMs = std::chrono::duration_cast<Milliseconds>(Clock::now() - searchStartTime);
+
+            return elapsedMs >= *searchTime;
+        }();
+
+        if (shouldExit)
             return bestMove.value();
-        }
 
         // we can generate the legal moves only once, but we should reorder them each iteration
         // because the move ordering will change based on the evaluations done during the last iteration

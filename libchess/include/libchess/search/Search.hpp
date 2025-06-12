@@ -18,8 +18,10 @@
 #pragma once
 
 #include <atomic>
+#include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libchess/moves/Move.hpp>
+#include <optional>
 
 namespace chess::game {
 struct Position;
@@ -35,6 +37,8 @@ namespace chess::search {
 using game::Position;
 using moves::Move;
 using std::size_t;
+
+using Milliseconds = std::chrono::milliseconds;
 
 class TranspositionTable;
 
@@ -52,9 +56,10 @@ class TranspositionTable;
     @see Thread
  */
 [[nodiscard]] Move find_best_move(
-    const Position&         position,
-    TranspositionTable&     transTable,
-    const std::atomic_bool& exitFlag,
-    size_t                  searchDepth = 4uz);
+    const Position&             position,
+    TranspositionTable&         transTable,
+    const std::atomic_bool&     exitFlag,
+    size_t                      searchDepth = 4uz,
+    std::optional<Milliseconds> searchTime  = std::nullopt);
 
 } // namespace chess::search

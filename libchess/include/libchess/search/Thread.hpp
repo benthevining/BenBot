@@ -140,7 +140,7 @@ inline void Thread::thread_func()
             const ScopedSetter raii { searchInProgressFlag };
 
             promise.set_value(
-                find_best_move(positionToSearch, transTable, searchExitFlag, searchDepth));
+                find_best_move(positionToSearch, transTable, searchExitFlag, searchDepth, searchTime));
         } else {
             std::this_thread::sleep_for(Milliseconds { 100 });
         }
