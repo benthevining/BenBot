@@ -60,10 +60,12 @@ namespace {
 
         // look up stored record of resulting position after making move
         if (const auto* record = transTable.find(game::after_move(currentPosition, move))) {
-            if (record->evalType == TranspositionTable::Record::EvalType::Exact)
+            if (record->evalType == TranspositionTable::Record::EvalType::Exact) {
                 score += PV_NODE_BONUS;
 
-            score += record->eval;
+                // we only use the stored evaluation value if this is a PV node
+                score += record->eval;
+            }
         }
 
         if (const auto capturedType = currentPosition.their_pieces().get_piece_on(move.to)) {
