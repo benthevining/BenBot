@@ -217,22 +217,27 @@ Move find_best_move(
         };
     }
 
-    detail::order_moves_for_search(position, moves, transTable);
-
     std::optional<Move> bestMove;
 
     static constexpr auto beta = EVAL_MAX;
 
     auto alpha = -EVAL_MAX;
 
-    for (const auto& move : moves) {
-        const auto newPosition = game::after_move(position, move);
+    // iterative deepening
+    for (auto depth = 1uz; depth <= searchDepth; ++depth) {
+        // we can generate the legal moves only once, but we should reorder them each iteration
+        // because the move ordering will change based on the evaluations done during the last iteration
+        detail::order_moves_for_search(position, moves, transTable);
 
-        const auto score = -alpha_beta(-beta, -alpha, newPosition, searchDepth, 1uz, transTable);
+        for (const auto& move : moves) {
+            const auto newPosition = game::after_move(position, move);
 
-        if (score > alpha) {
-            bestMove = move;
-            alpha    = score;
+            const auto score = -alpha_beta(-beta, -alpha, newPosition, searchDepth, 1uz, transTable);
+
+            if (score > alpha) {
+                bestMove = move;
+                alpha    = score;
+            }
         }
     }
 
