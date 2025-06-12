@@ -51,7 +51,7 @@ try {
 
     chess::search::TranspositionTable transTable;
 
-    const auto move = chess::search::find_best_move(position, transTable, depth);
+    const auto move = chess::search::find_best_move(position, transTable, false, depth);
 
     std::println("{}",
         chess::notation::to_alg(position, move));

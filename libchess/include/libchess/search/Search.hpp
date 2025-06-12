@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libchess/moves/Move.hpp>
 
@@ -39,14 +40,18 @@ class TranspositionTable;
 
 /** Finds the best move for the side to move in the given position.
 
+    ``exitFlag`` will be queried after each iteration of the iterative
+    deepening loop, and the search will exit if the flag has been set to true.
+
     @throws std::invalid_argument An exception will be thrown if there are
     no legal moves for the side to move in the given position.
 
     @ingroup search
  */
 [[nodiscard]] Move find_best_move(
-    const Position&     position,
-    TranspositionTable& transTable,
-    size_t              searchDepth = 4uz);
+    const Position&         position,
+    TranspositionTable&     transTable,
+    const std::atomic_bool& exitFlag,
+    size_t                  searchDepth = 4uz);
 
 } // namespace chess::search

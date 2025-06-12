@@ -6,6 +6,7 @@
  * ======================================================================================
  */
 
+#include <atomic>
 #include <cstdlib>
 #include <exception>
 #include <libchess/game/Position.hpp>
@@ -32,14 +33,21 @@ class BenBotEngine final : public uci::EngineBase {
 
     void go([[maybe_unused]] const uci::GoCommandOptions& opts) override
     {
+        exitFlag.store(false);
+
         std::println("bestmove {}",
             notation::to_uci(
-                search::find_best_move(position, transTable)));
+                search::find_best_move(position, transTable, exitFlag)));
     }
+
+    void abort_search() override { exitFlag.store(true); }
+    void stop_search() override { exitFlag.store(true); }
 
     Position position;
 
     search::TranspositionTable transTable;
+
+    std::atomic_bool exitFlag { false };
 };
 
 } // namespace chess

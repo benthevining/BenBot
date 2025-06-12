@@ -8,6 +8,7 @@
 
 #include "MoveOrdering.hpp" // NOLINT(build/include_subdir)
 #include <algorithm>
+#include <atomic>
 #include <cassert>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <format>
@@ -213,8 +214,13 @@ namespace {
 } // namespace
 
 Move find_best_move(
-    const Position& position, TranspositionTable& transTable, const size_t searchDepth)
+    const Position&         position,
+    TranspositionTable&     transTable,
+    const std::atomic_bool& exitFlag,
+    const size_t            searchDepth)
 {
+    assert(searchDepth > 0uz);
+
     auto moves = moves::generate(position);
 
     if (moves.empty()) {
@@ -233,6 +239,11 @@ Move find_best_move(
 
     // iterative deepening
     for (auto depth = 1uz; depth <= searchDepth; ++depth) {
+        if (depth > 1uz && exitFlag.load()) {
+            // search aborted
+            return bestMove.value();
+        }
+
         // we can generate the legal moves only once, but we should reorder them each iteration
         // because the move ordering will change based on the evaluations done during the last iteration
         detail::order_moves_for_search(position, moves, transTable);
