@@ -46,41 +46,83 @@ namespace {
     // improve the stability of the static evaluation function
     [[nodiscard]] int quiescence(
         int alpha, const int beta,
-        const Position&           currentPosition,
-        const size_t              plyFromRoot,
-        const TranspositionTable& transTable)
+        const Position&     currentPosition,
+        const size_t        depth, // this value is the depth parameter that was sent to alpha/beta
+        const size_t        plyFromRoot,
+        TranspositionTable& transTable)
     {
         assert(beta > alpha);
 
-        if (currentPosition.is_draw())
+        // check if this position has been searched before to at
+        // least this depth and within these bounds for non-PV nodes
+        if (const auto value = transTable.probe_eval(currentPosition, depth, alpha, beta))
+            return value.value();
+
+        if (currentPosition.is_draw()) {
+            transTable.store(
+                currentPosition, { .searchedDepth = depth,
+                                     .eval        = eval::DRAW,
+                                     .evalType    = EvalType::Exact });
+
             return eval::DRAW;
+        }
 
         auto evaluation = eval::evaluate(currentPosition);
 
-        if (evaluation >= beta)
+        if (evaluation >= beta) {
+            transTable.store(
+                currentPosition, { .searchedDepth = depth,
+                                     .eval        = beta,
+                                     .evalType    = EvalType::Beta });
+
             return beta;
+        }
 
         alpha = std::max(alpha, evaluation);
 
         auto moves = moves::generate<true>(currentPosition); // captures only
 
-        if (moves.empty() && currentPosition.is_check())
-            return checkmate_score(plyFromRoot);
+        if (moves.empty() && currentPosition.is_check()) {
+            const auto eval = checkmate_score(plyFromRoot);
+
+            transTable.store(
+                currentPosition, { .searchedDepth = depth,
+                                     .eval        = eval, // TODO: needs scaling/mapping?
+                                     .evalType    = EvalType::Exact });
+
+            return eval;
+        }
 
         detail::order_moves_for_search(currentPosition, moves, transTable);
+
+        auto evalType { EvalType::Alpha };
 
         for (const auto& move : moves) {
             assert(currentPosition.is_capture(move));
 
             const auto newPosition = game::after_move(currentPosition, move);
 
-            evaluation = -quiescence(-beta, -alpha, newPosition, plyFromRoot + 1uz, transTable);
+            evaluation = -quiescence(-beta, -alpha, newPosition, depth + 1uz, plyFromRoot + 1uz, transTable);
 
-            if (evaluation >= beta)
+            if (evaluation >= beta) {
+                transTable.store(
+                    currentPosition, { .searchedDepth = depth,
+                                         .eval        = beta,
+                                         .evalType    = EvalType::Beta });
+
                 return beta;
+            }
 
-            alpha = std::max(alpha, evaluation);
+            if (evaluation > alpha) {
+                evalType = EvalType::Exact;
+                alpha    = evaluation;
+            }
         }
+
+        transTable.store(
+            currentPosition, { .searchedDepth = depth,
+                                 .eval        = alpha,
+                                 .evalType    = evalType });
 
         return alpha;
     }
@@ -132,7 +174,7 @@ namespace {
 
             const auto eval = depth > 1uz
                                 ? -alpha_beta(-beta, -alpha, newPosition, depth - 1uz, plyFromRoot + 1uz, transTable)
-                                : -quiescence(-beta, -alpha, newPosition, plyFromRoot + 1uz, transTable);
+                                : -quiescence(-beta, -alpha, newPosition, depth, plyFromRoot + 1uz, transTable);
 
             if (eval >= beta) {
                 transTable.store(

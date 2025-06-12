@@ -32,6 +32,7 @@ using std::size_t;
     @ingroup search
 
     @todo maximum size
+    @todo prune() function
  */
 class TranspositionTable final {
 public:
@@ -63,21 +64,14 @@ public:
          */
         std::optional<Move> bestMove;
 
+        // TODO: add age (halfmove clock?)
         // TODO: maybe also cache legal moves
     };
 
     /** Retrieves the stored record for the given position,
         or nullptr if the given position isn't in the table.
      */
-    [[nodiscard]] const Record* find(const Position& pos) const
-    {
-        if (const auto it = records.find(pos.hash);
-            it != records.end()) {
-            return &it->second;
-        }
-
-        return nullptr;
-    }
+    [[nodiscard]] const Record* find(const Position& pos) const;
 
     /** Similar to ``find()``, this function instead probes for an
         evaluation value of the given position, searched to at least
@@ -112,6 +106,16 @@ private:
   `----'     `----'             `--`---'     ---`-'                     `--" `--" `--"
 
  */
+
+inline auto TranspositionTable::find(const Position& pos) const -> const Record*
+{
+    if (const auto it = records.find(pos.hash);
+        it != records.end()) {
+        return &it->second;
+    }
+
+    return nullptr;
+}
 
 inline std::optional<int> TranspositionTable::probe_eval(
     const Position& pos, const size_t depth, const int alpha, const int beta) const
