@@ -77,8 +77,6 @@ int evaluate(const Position& position)
         return DRAW; // stalemate
     }
 
-    // TODO: give bonus for having castling rights (or already having castled)
-
     return score_material(position)
          + score_piece_placement(position);
 }
