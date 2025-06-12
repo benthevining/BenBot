@@ -17,10 +17,14 @@
 #include <vector>
 
 namespace chess::uci {
+
+using std::string;
+using std::string_view;
+
 using util::split_at_first_space;
 using util::trim;
 
-void Option::parse(std::string_view arguments)
+void Option::parse(string_view arguments)
 {
     arguments = trim(arguments);
 
@@ -28,7 +32,7 @@ void Option::parse(std::string_view arguments)
 
     firstWord = trim(firstWord);
 
-    if (firstWord != "name")
+    if (firstWord != "name") // code defensively against unrecognized tokens
         return;
 
     rest = trim(rest);
@@ -38,7 +42,7 @@ void Option::parse(std::string_view arguments)
 
     const auto valueTokenIdx = rest.find("value");
 
-    const bool isNPos = valueTokenIdx == std::string_view::npos;
+    const bool isNPos = valueTokenIdx == string_view::npos;
 
     auto name = isNPos ? rest : rest.substr(0, valueTokenIdx);
 
@@ -55,20 +59,20 @@ void Option::parse(std::string_view arguments)
 /*------------------------------------------------------------------------------------------------------------------*/
 
 BoolOption::BoolOption(
-    std::string name, const bool defaultValue)
+    string name, const bool defaultValue)
     : optionName { std::move(name) }
     , optionDefault { defaultValue }
 {
 }
 
-[[nodiscard]] std::string BoolOption::get_declaration_string() const
+[[nodiscard]] string BoolOption::get_declaration_string() const
 {
     return std::format(
         "option name {} type check default {}",
         optionName, optionDefault);
 }
 
-void BoolOption::handle_setvalue(const std::string_view arguments)
+void BoolOption::handle_setvalue(const string_view arguments)
 {
     auto [valueToken, valueStr] = split_at_first_space(arguments);
 
@@ -91,7 +95,7 @@ void BoolOption::handle_setvalue(const std::string_view arguments)
 /*------------------------------------------------------------------------------------------------------------------*/
 
 IntOption::IntOption(
-    std::string name,
+    string    name,
     const int minValue, const int maxValue,
     const int defaultValue)
     : optionName { std::move(name) }
@@ -103,14 +107,14 @@ IntOption::IntOption(
     assert(optionDefault <= optionMax);
 }
 
-std::string IntOption::get_declaration_string() const
+string IntOption::get_declaration_string() const
 {
     return std::format(
         "option name {} type spin default {} min {} max {}",
         optionName, optionDefault, optionMin, optionMax);
 }
 
-void IntOption::handle_setvalue(const std::string_view arguments)
+void IntOption::handle_setvalue(const string_view arguments)
 {
     auto [valueToken, valueStr] = split_at_first_space(arguments);
 
@@ -127,9 +131,9 @@ void IntOption::handle_setvalue(const std::string_view arguments)
 /*------------------------------------------------------------------------------------------------------------------*/
 
 ComboOption::ComboOption(
-    std::string              name,
-    std::vector<std::string> values,
-    std::string              defaultValue)
+    string              name,
+    std::vector<string> values,
+    string              defaultValue)
     : optionName { std::move(name) }
     , possibleValues { std::move(values) }
     , optionDefault { std::move(defaultValue) }
@@ -137,7 +141,7 @@ ComboOption::ComboOption(
     assert(std::ranges::contains(possibleValues, optionDefault));
 }
 
-std::string ComboOption::get_declaration_string() const
+string ComboOption::get_declaration_string() const
 {
     auto result = std::format(
         "option name {} type combo default {}",
@@ -150,7 +154,7 @@ std::string ComboOption::get_declaration_string() const
     return result;
 }
 
-void ComboOption::handle_setvalue(const std::string_view arguments)
+void ComboOption::handle_setvalue(const string_view arguments)
 {
     auto [valueToken, valueStr] = split_at_first_space(arguments);
 
@@ -171,21 +175,21 @@ void ComboOption::handle_setvalue(const std::string_view arguments)
 /*------------------------------------------------------------------------------------------------------------------*/
 
 StringOption::StringOption(
-    std::string name,
-    std::string defaultValue)
+    string name,
+    string defaultValue)
     : optionName { std::move(name) }
     , value { std::move(defaultValue) }
 {
 }
 
-std::string StringOption::get_declaration_string() const
+string StringOption::get_declaration_string() const
 {
     return std::format(
         "option name {} type string default {}",
         optionName, value);
 }
 
-void StringOption::handle_setvalue(const std::string_view arguments)
+void StringOption::handle_setvalue(const string_view arguments)
 {
     auto [valueToken, valueStr] = split_at_first_space(arguments);
 
@@ -200,21 +204,21 @@ void StringOption::handle_setvalue(const std::string_view arguments)
 /*------------------------------------------------------------------------------------------------------------------*/
 
 Action::Action(
-    std::string name,
-    Callback&&  action)
+    string     name,
+    Callback&& action)
     : optionName { std::move(name) }
     , callback { std::move(action) }
 {
     assert(callback != nullptr);
 }
 
-std::string Action::get_declaration_string() const
+string Action::get_declaration_string() const
 {
     return std::format("option name {} type button", optionName);
 }
 
 void Action::handle_setvalue(
-    [[maybe_unused]] const std::string_view arguments)
+    [[maybe_unused]] const string_view arguments)
 {
     callback();
 }

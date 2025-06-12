@@ -13,7 +13,6 @@
 
 #pragma once
 
-#include <algorithm>
 #include <array>
 #include <charconv>
 #include <concepts>
@@ -26,15 +25,19 @@
 
 namespace chess::util {
 
+using std::ptrdiff_t;
 using std::size_t;
+using std::string_view;
+
+using StringViewPair = std::pair<string_view, string_view>;
 
 /// @ingroup util
 /// @{
 
 /** Trims any whitespace characters from the beginning and ending
-    of the string.
+    of the string, including space and newline characters.
  */
-[[nodiscard]] std::string_view trim(std::string_view text);
+[[nodiscard]] string_view trim(string_view text);
 
 /** Splits the input string into segments before and after the first
     whitespace character. If there is no whitespace in the input
@@ -45,15 +48,22 @@ using std::size_t;
 
     @see split_at_first_space_or_newline()
  */
-[[nodiscard]] constexpr std::pair<std::string_view, std::string_view>
-split_at_first_space(std::string_view input);
+[[nodiscard]] StringViewPair split_at_first_space(string_view input);
 
 /** Similar to ``split_at_first_space()``, but also splits on newlines.
 
     @see split_at_first_space()
  */
-[[nodiscard]] constexpr std::pair<std::string_view, std::string_view>
-split_at_first_space_or_newline(std::string_view input);
+[[nodiscard]] StringViewPair split_at_first_space_or_newline(string_view input);
+
+/** For a string beginning with ``(``, finds the index of the matching ``)``
+    character, taking nested ``()`` pairs into account. This function asserts
+    if the ``input`` does not begin with ``(``.
+
+    @throws std::invalid_argument An exception will be thrown if no matching
+    ``)`` character is found.
+ */
+[[nodiscard]] size_t find_matching_close_paren(string_view input);
 
 /** Reads an integer from the input string using ``std::from_chars``.
 
@@ -61,7 +71,7 @@ split_at_first_space_or_newline(std::string_view input);
  */
 template <std::integral Int>
 [[nodiscard]] Int int_from_string(
-    std::string_view text, Int defaultValue = 0) noexcept;
+    string_view text, Int defaultValue = 0) noexcept;
 
 /** Appends an integer to the output string using ``std::to_chars``.
     This function uses stack memory for ``to_chars()`` to write into.
@@ -76,15 +86,6 @@ template <size_t MaxLen = 5uz>
 void write_integer(
     std::integral auto value,
     std::string&       output);
-
-/** For a string beginning with ``(``, finds the index of the matching ``)``
-    character, taking nested ``()`` pairs into account. This function asserts
-    if the ``input`` does not begin with ``(``.
-
-    @throws std::invalid_argument An exception will be thrown if no matching
-    ``)`` character is found.
- */
-[[nodiscard]] size_t find_matching_close_paren(std::string_view input);
 
 /// @}
 
@@ -105,46 +106,13 @@ void write_integer(
 
  */
 
-constexpr std::pair<std::string_view, std::string_view>
-split_at_first_space(const std::string_view input)
-{
-    const auto spaceIdx = input.find(' ');
-
-    if (spaceIdx == std::string_view::npos) {
-        return { input, {} };
-    }
-
-    return {
-        input.substr(0uz, spaceIdx),
-        input.substr(spaceIdx + 1uz)
-    };
-}
-
-constexpr std::pair<std::string_view, std::string_view>
-split_at_first_space_or_newline(const std::string_view input)
-{
-    const auto spaceIdx   = input.find(' ');
-    const auto newLineIdx = input.find('\n');
-
-    const auto firstDelimIdx = std::min(spaceIdx, newLineIdx);
-
-    if (firstDelimIdx == std::string_view::npos) {
-        return { input, {} };
-    }
-
-    return {
-        input.substr(0uz, firstDelimIdx),
-        input.substr(firstDelimIdx + 1uz)
-    };
-}
-
 template <std::integral Int>
 [[nodiscard]] Int int_from_string(
-    const std::string_view text, Int defaultValue) noexcept
+    const string_view text, Int defaultValue) noexcept
 {
     std::from_chars(
         text.data(),
-        std::next(text.data(), static_cast<std::ptrdiff_t>(text.length())),
+        std::next(text.data(), static_cast<ptrdiff_t>(text.length())),
         defaultValue);
 
     return defaultValue;
@@ -159,9 +127,10 @@ void write_integer(
 
     const auto result = std::to_chars(
         buffer.data(),
-        std::next(buffer.data(), static_cast<std::ptrdiff_t>(buffer.size())),
+        std::next(buffer.data(), static_cast<ptrdiff_t>(buffer.size())),
         value);
 
+    // simply do nothing on failure
     if (result.ec != std::errc {})
         return;
 

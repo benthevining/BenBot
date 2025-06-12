@@ -6,6 +6,7 @@
  * ======================================================================================
  */
 
+#include <algorithm>
 #include <cassert>
 #include <cctype> // IWYU pragma: keep - for std::isspace()
 #include <format>
@@ -15,13 +16,15 @@
 
 namespace {
 
-// NB. not [[gnu::const]] because std::isspace() depends on the current C locale
+using std::string_view;
+
 [[nodiscard]] bool is_whitespace(const char text) noexcept
 {
+    // this should take care of \r\n sequences on Windows
     return std::isspace(static_cast<unsigned char>(text)) != 0;
 }
 
-[[nodiscard]] std::string_view trim_start(std::string_view text) noexcept
+[[nodiscard]] string_view trim_start(string_view text) noexcept
 {
     auto idx { 0uz };
 
@@ -37,11 +40,8 @@ namespace {
     return {};
 }
 
-[[nodiscard]] std::string_view trim_end(const std::string_view text)
+[[nodiscard]] string_view trim_end(const string_view text)
 {
-    if (text.empty())
-        return {};
-
     for (auto i = text.length(); i > 0uz; --i)
         if (! is_whitespace(text[i - 1uz]))
             return text.substr(0uz, i);
@@ -53,12 +53,12 @@ namespace {
 
 namespace chess::util {
 
-std::string_view trim(const std::string_view text)
+string_view trim(const string_view text)
 {
     return trim_start(trim_end(text));
 }
 
-size_t find_matching_close_paren(const std::string_view input)
+size_t find_matching_close_paren(const string_view input)
 {
     assert(input.front() == '(');
 
@@ -85,6 +85,37 @@ size_t find_matching_close_paren(const std::string_view input)
 
     throw std::invalid_argument {
         std::format("Unmatched ( in input string: '{}'", input)
+    };
+}
+
+StringViewPair split_at_first_space(const string_view input)
+{
+    const auto spaceIdx = input.find(' ');
+
+    if (spaceIdx == string_view::npos) {
+        return { input, {} };
+    }
+
+    return {
+        input.substr(0uz, spaceIdx),
+        input.substr(spaceIdx + 1uz)
+    };
+}
+
+StringViewPair split_at_first_space_or_newline(const string_view input)
+{
+    const auto spaceIdx   = input.find(' ');
+    const auto newLineIdx = input.find('\n');
+
+    const auto firstDelimIdx = std::min(spaceIdx, newLineIdx);
+
+    if (firstDelimIdx == string_view::npos) {
+        return { input, {} };
+    }
+
+    return {
+        input.substr(0uz, firstDelimIdx),
+        input.substr(firstDelimIdx + 1uz)
     };
 }
 

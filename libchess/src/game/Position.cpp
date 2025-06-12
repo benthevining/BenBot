@@ -27,6 +27,7 @@
 namespace chess::game {
 
 using board::Rank;
+using std::uint_least8_t;
 
 namespace {
 
@@ -96,20 +97,20 @@ namespace {
         };
     }
 
-    [[nodiscard, gnu::const]] std::uint_least8_t tick_halfmove_clock(
-        const Move& move, const bool isCapture, const std::uint_least8_t prevValue) noexcept
+    [[nodiscard, gnu::const]] uint_least8_t tick_halfmove_clock(
+        const Move& move, const bool isCapture, const uint_least8_t prevValue) noexcept
     {
         if (isCapture || (move.piece == PieceType::Pawn))
-            return 0;
+            return UINT8_C(0);
 
-        static constexpr auto MAX_VALUE = static_cast<std::uint_least8_t>(100);
+        static constexpr auto MAX_VALUE = UINT8_C(100);
 
         if (std::cmp_greater_equal(prevValue, MAX_VALUE)) {
             [[unlikely]];
             return MAX_VALUE;
         }
 
-        return prevValue + 1;
+        return prevValue + UINT8_C(1);
     }
 
 } // namespace
@@ -198,8 +199,6 @@ std::optional<Result> Position::get_result() const
     return Result::WhiteWon;
 }
 
-namespace utf8_pieces = pieces::utf8;
-
 /* Example output of empty board:
 
     | | | | | | | | |
@@ -213,15 +212,15 @@ namespace utf8_pieces = pieces::utf8;
 
     A1 is bottom left, H8 is top right
  */
-
-static constexpr std::string_view separator { "|" };
-
-static constexpr std::string_view emptySquare { " |" };
-
 std::string print_utf8(const Position& position)
 {
+    namespace utf8_pieces = pieces::utf8;
+
     using board::Rank;
     using board::Square;
+
+    static constexpr std::string_view separator { "|" };
+    static constexpr std::string_view emptySquare { " |" };
 
     const auto& whitePieces = position.whitePieces;
     const auto& blackPieces = position.blackPieces;

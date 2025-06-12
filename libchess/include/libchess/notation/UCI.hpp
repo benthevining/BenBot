@@ -44,6 +44,7 @@ using moves::Move;
     @ingroup notation
     @see from_uci()
  */
-[[nodiscard]] Move from_uci(const Position& position, std::string_view text);
+[[nodiscard]] Move from_uci(
+    const Position& position, std::string_view text);
 
 } // namespace chess::notation

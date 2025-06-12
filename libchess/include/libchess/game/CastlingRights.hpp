@@ -48,6 +48,8 @@ struct CastlingRights final {
 
     /** Called when a rook moves.
         Moving a rook loses castling rights to that side.
+
+        @param isKingside Should be true if the move's ``from`` square is on the kingside.
      */
     constexpr void rook_moved(bool isKingside) noexcept;
 
@@ -94,6 +96,11 @@ constexpr void CastlingRights::king_moved() noexcept
 
 constexpr void CastlingRights::rook_moved(const bool isKingside) noexcept
 {
+    // if the rook wasn't already on its starting square, then the castling rights
+    // to that side would've already been lost, so we can tell if any rook move
+    // should lose castling rights to that side with a simple boolean indicating
+    // if the move's from square is on the kingside
+
     kingside  = kingside && ! isKingside;
     queenside = queenside && isKingside;
 }
@@ -110,6 +117,12 @@ constexpr void CastlingRights::our_move(const Move& move) noexcept
 template <Color Side>
 constexpr void CastlingRights::their_move(const Move& move) noexcept
 {
+    // we want to mark castling rights as lost when a rook is captured
+    // we simply test if the move's to square is the rook's starting position,
+    // since the rook either must've been there (in which case this move is a
+    // rook capture), or must've already moved (meaning the rights to that side
+    // must've already been lost)
+
     static constexpr auto backRank = Side == Color::White ? Rank::One : Rank::Eight;
 
     if (move.to.rank != backRank)

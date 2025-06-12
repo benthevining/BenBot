@@ -27,160 +27,166 @@
 #include <string_view>
 #include <vector>
 
+namespace chess {
+
+using moves::PerftResult;
+
+using std::println;
+
 struct PerftOptions final {
-    chess::game::Position startingPosition {};
+    game::Position startingPosition {};
 
     std::size_t depth { 1uz };
 
     std::optional<std::filesystem::path> jsonOutputPath;
 };
 
-using chess::moves::PerftResult;
-
 namespace {
 
-void print_help(const std::string_view programName)
-{
-    std::println("Usage:");
-    std::println("{} <depth> [--fen \"<fenString>\"] [--write-json <path>]", programName);
-    std::println("If the --write-json option is given, a JSON file with results will be written to the given path.");
-}
-
-[[nodiscard]] PerftOptions parse_options(std::span<const std::string_view> args)
-{
-    PerftOptions options {};
-
-    while (! args.empty()) {
-        const auto arg = args.front();
-
-        args = args.subspan(1uz);
-
-        if (arg == "--fen") {
-            if (args.empty())
-                throw std::invalid_argument {
-                    "Error: expected FEN string following option --fen"
-                };
-
-            const auto fen = args.front();
-
-            args = args.subspan(1uz);
-
-            options.startingPosition = chess::notation::from_fen(fen);
-
-            continue;
-        }
-
-        if (arg == "--write-json") {
-            if (args.empty())
-                throw std::invalid_argument {
-                    "Error: expected path following option --write-json"
-                };
-
-            const auto path = args.front();
-
-            args = args.subspan(1uz);
-
-            options.jsonOutputPath = path;
-
-            continue;
-        }
-
-        // assume arg is depth
-        options.depth = chess::util::int_from_string(arg, options.depth);
-    };
-
-    return options;
-}
-
-void write_json_file(
-    const PerftOptions& options,
-    const PerftResult&  result,
-    const auto          wallTime)
-{
-    if (! options.jsonOutputPath.has_value())
-        return;
-
-    const auto& path = *options.jsonOutputPath;
-
-    nlohmann::json json;
-
-    json["starting_fen"]        = chess::notation::to_fen(options.startingPosition);
-    json["depth"]               = options.depth;
-    json["search_time_seconds"] = wallTime.count();
-
-    auto& result_json = json["results"];
-
-    result_json["totalNodes"]  = result.nodes;
-    result_json["captures"]    = result.captures;
-    result_json["en_passants"] = result.enPassantCaptures;
-    result_json["castles"]     = result.castles;
-    result_json["promotions"]  = result.promotions;
-    result_json["checks"]      = result.checks;
-    result_json["checkmates"]  = result.checkmates;
-    result_json["stalemates"]  = result.stalemates;
-
-    std::filesystem::create_directories(path.parent_path());
-
-    std::ofstream output { path };
-
-    output << json.dump(1);
-
-    std::println("Wrote JSON results to {}", path.string()); // NOLINT(build/include_what_you_use)
-    std::println("");
-}
-
-void print_root_nodes(const PerftResult& result)
-{
-    for (const auto [move, numChildren] : result.rootNodes) {
-        std::println("{} {}",
-            chess::notation::to_uci(move), numChildren);
+    void print_help(const std::string_view programName)
+    {
+        println("Usage:");
+        println("{} <depth> [--fen \"<fenString>\"] [--write-json <path>]", programName);
+        println("If the --write-json option is given, a JSON file with results will be written to the given path.");
     }
-}
 
-void print_results(
-    const PerftResult& result,
-    const auto         wallTime)
-{
-    std::println("Nodes: {}", result.nodes);
-    std::println("Captures: {}", result.captures);
-    std::println("En passant captures: {}", result.enPassantCaptures);
-    std::println("Castles: {}", result.castles);
-    std::println("Promotions: {}", result.promotions);
-    std::println("Checks: {}", result.checks);
-    std::println("Checkmates: {}", result.checkmates);
-    std::println("Stalemates: {}", result.stalemates);
+    [[nodiscard]] PerftOptions parse_options(std::span<const std::string_view> args)
+    {
+        PerftOptions options {};
 
-    std::println("");
-    std::println("Search time: {}", wallTime);
-}
+        while (! args.empty()) {
+            const auto arg = args.front();
 
-void run_perft(const PerftOptions& options)
-{
-    using Clock = std::chrono::high_resolution_clock;
+            args = args.subspan(1uz);
 
-    std::println("Starting position:");
-    std::println("{}", chess::game::print_utf8(options.startingPosition));
-    std::println("Running perft depth {}...", options.depth);
-    std::println("");
+            if (arg == "--fen") {
+                if (args.empty())
+                    throw std::invalid_argument {
+                        "Error: expected FEN string following option --fen"
+                    };
 
-    const auto startTime = Clock::now();
+                const auto fen = args.front();
 
-    const auto result = chess::moves::perft(options.depth, options.startingPosition);
+                args = args.subspan(1uz);
 
-    const auto endTime = Clock::now();
+                options.startingPosition = notation::from_fen(fen);
 
-    const auto wallTime = std::chrono::duration_cast<std::chrono::seconds>(endTime - startTime);
+                continue;
+            }
 
-    write_json_file(options, result, wallTime);
+            if (arg == "--write-json") {
+                if (args.empty())
+                    throw std::invalid_argument {
+                        "Error: expected path following option --write-json"
+                    };
 
-    print_root_nodes(result);
+                const auto path = args.front();
 
-    std::println("");
+                args = args.subspan(1uz);
 
-    print_results(result, wallTime);
-}
+                options.jsonOutputPath = path;
+
+                continue;
+            }
+
+            // assume arg is depth
+            options.depth = util::int_from_string(arg, options.depth);
+        };
+
+        return options;
+    }
+
+    void write_json_file(
+        const PerftOptions& options,
+        const PerftResult&  result,
+        const auto          wallTime)
+    {
+        if (! options.jsonOutputPath.has_value())
+            return;
+
+        const auto& path = *options.jsonOutputPath;
+
+        nlohmann::json json;
+
+        json["starting_fen"]        = notation::to_fen(options.startingPosition);
+        json["depth"]               = options.depth;
+        json["search_time_seconds"] = wallTime.count();
+
+        auto& result_json = json["results"];
+
+        result_json["totalNodes"]  = result.nodes;
+        result_json["captures"]    = result.captures;
+        result_json["en_passants"] = result.enPassantCaptures;
+        result_json["castles"]     = result.castles;
+        result_json["promotions"]  = result.promotions;
+        result_json["checks"]      = result.checks;
+        result_json["checkmates"]  = result.checkmates;
+        result_json["stalemates"]  = result.stalemates;
+
+        std::filesystem::create_directories(path.parent_path());
+
+        std::ofstream output { path };
+
+        output << json.dump(1);
+
+        println("Wrote JSON results to {}", path.string()); // NOLINT(build/include_what_you_use)
+        println("");
+    }
+
+    void print_root_nodes(const PerftResult& result)
+    {
+        for (const auto [move, numChildren] : result.rootNodes) {
+            println("{} {}",
+                notation::to_uci(move), numChildren);
+        }
+    }
+
+    void print_results(
+        const PerftResult& result,
+        const auto         wallTime)
+    {
+        println("Nodes: {}", result.nodes);
+        println("Captures: {}", result.captures);
+        println("En passant captures: {}", result.enPassantCaptures);
+        println("Castles: {}", result.castles);
+        println("Promotions: {}", result.promotions);
+        println("Checks: {}", result.checks);
+        println("Checkmates: {}", result.checkmates);
+        println("Stalemates: {}", result.stalemates);
+
+        println("");
+        println("Search time: {}", wallTime);
+    }
+
+    void run_perft(const PerftOptions& options)
+    {
+        using Clock = std::chrono::high_resolution_clock;
+
+        println("Starting position:");
+        println("{}", game::print_utf8(options.startingPosition));
+        println("Running perft depth {}...", options.depth);
+        println("");
+
+        const auto startTime = Clock::now();
+
+        const auto result = moves::perft(options.depth, options.startingPosition);
+
+        const auto endTime = Clock::now();
+
+        const auto wallTime = std::chrono::duration_cast<std::chrono::seconds>(endTime - startTime);
+
+        write_json_file(options, result, wallTime);
+
+        print_root_nodes(result);
+
+        println("");
+
+        print_results(result, wallTime);
+    }
 
 } // namespace
+
+} // namespace chess
 
 int main(const int argc, const char** argv)
 try {
@@ -197,11 +203,11 @@ try {
 
     if (args.empty()
         || std::ranges::contains(args, "--help")) {
-        print_help(programName);
+        chess::print_help(programName);
         return EXIT_FAILURE;
     }
 
-    run_perft(parse_options(args));
+    chess::run_perft(chess::parse_options(args));
 
     return EXIT_SUCCESS;
 } catch (const std::exception& exception) {

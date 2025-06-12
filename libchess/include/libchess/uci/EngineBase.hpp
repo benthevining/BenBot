@@ -22,6 +22,7 @@
 namespace chess::uci {
 
 using game::Position;
+using std::string_view;
 
 /** A base class for UCI chess engines.
     This class provides handling of UCI command printing and
@@ -45,10 +46,10 @@ struct EngineBase {
     EngineBase& operator=(EngineBase&&)      = default;
 
     /** This must return the name of the engine. */
-    [[nodiscard]] virtual std::string_view get_name() const = 0;
+    [[nodiscard]] virtual string_view get_name() const = 0;
 
     /** This must return the name of the engine's author. */
-    [[nodiscard]] virtual std::string_view get_author() const = 0;
+    [[nodiscard]] virtual string_view get_author() const = 0;
 
     /** This must return the list of all options the engine supports. */
     [[nodiscard]] virtual std::span<Option*> get_options() { return {}; }
@@ -102,7 +103,7 @@ struct EngineBase {
     void loop();
 
 private:
-    void handle_command(std::string_view command);
+    void handle_command(string_view command);
 
     bool shouldExit { false }; // used as flag for exiting the loop() function
 
