@@ -117,12 +117,12 @@ template <Color Side>
 constexpr Bitboard pawn_double_pushes(
     const Bitboard startingPawns, const Bitboard occupiedSquares) noexcept
 {
+    namespace ranks = board::masks::ranks;
+
     const auto moves = patterns::pawn_double_pushes<Side>(startingPawns) & occupiedSquares.inverse();
 
     // Need to filter out any pushes that would jump over a piece on the third/sixth rank
-    static constexpr auto rankMask = Side == Color::White
-                                       ? board::masks::ranks::THREE
-                                       : board::masks::ranks::SIX;
+    static constexpr auto rankMask = Side == Color::White ? ranks::THREE : ranks::SIX;
 
     const auto fileMask = board::fills::file(occupiedSquares & rankMask);
 
@@ -154,8 +154,10 @@ namespace detail {
     // occluded fills exclude blockers, but include the sliding piece start squares
     namespace occluded_fills {
 
-        static constexpr auto notAFile = board::masks::files::A.inverse();
-        static constexpr auto notHFile = board::masks::files::H.inverse();
+        namespace files = board::masks::files;
+
+        static constexpr auto notAFile = files::A.inverse();
+        static constexpr auto notHFile = files::H.inverse();
 
         [[nodiscard, gnu::const]] constexpr Bitboard north(
             Bitboard rooks, Bitboard empty) noexcept

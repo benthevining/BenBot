@@ -74,14 +74,14 @@ namespace {
         const auto originSquare = move.from;
 
         if (std::ranges::count_if(pieceMoves,
-                [originSquare](const Move& candidate) { return candidate.from.file == originSquare.file; })
+                [file = originSquare.file](const Move& candidate) { return candidate.from.file == file; })
             == 1uz) {
             // file of departure is unique, use it to disambiguate
             return std::format("{}", originSquare.file);
         }
 
         if (std::ranges::count_if(pieceMoves,
-                [originSquare](const Move& candidate) { return candidate.from.rank == originSquare.rank; })
+                [rank = originSquare.rank](const Move& candidate) { return candidate.from.rank == rank; })
             == 1uz) {
             // rank of departure is unique, use it to disambiguate
             return std::format("{}", originSquare.rank);

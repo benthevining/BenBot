@@ -6,6 +6,7 @@
  * ======================================================================================
  */
 
+#include <algorithm>
 #include <cassert>
 #include <cctype> // IWYU pragma: keep - for std::isspace()
 #include <format>
@@ -85,6 +86,37 @@ size_t find_matching_close_paren(const std::string_view input)
 
     throw std::invalid_argument {
         std::format("Unmatched ( in input string: '{}'", input)
+    };
+}
+
+StringViewPair split_at_first_space(const std::string_view input)
+{
+    const auto spaceIdx = input.find(' ');
+
+    if (spaceIdx == std::string_view::npos) {
+        return { input, {} };
+    }
+
+    return {
+        input.substr(0uz, spaceIdx),
+        input.substr(spaceIdx + 1uz)
+    };
+}
+
+StringViewPair split_at_first_space_or_newline(const std::string_view input)
+{
+    const auto spaceIdx   = input.find(' ');
+    const auto newLineIdx = input.find('\n');
+
+    const auto firstDelimIdx = std::min(spaceIdx, newLineIdx);
+
+    if (firstDelimIdx == std::string_view::npos) {
+        return { input, {} };
+    }
+
+    return {
+        input.substr(0uz, firstDelimIdx),
+        input.substr(firstDelimIdx + 1uz)
     };
 }
 
