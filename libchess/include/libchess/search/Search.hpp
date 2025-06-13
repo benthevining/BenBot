@@ -18,8 +18,10 @@
 #pragma once
 
 #include <atomic>
+#include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libchess/moves/Move.hpp>
+#include <optional>
 
 namespace chess::game {
 struct Position;
@@ -36,6 +38,8 @@ using game::Position;
 using moves::Move;
 using std::size_t;
 
+using Milliseconds = std::chrono::milliseconds;
+
 class TranspositionTable;
 
 /** Finds the best move for the side to move in the given position.
@@ -43,15 +47,19 @@ class TranspositionTable;
     ``exitFlag`` will be queried after each iteration of the iterative
     deepening loop, and the search will exit if the flag has been set to true.
 
+    See the Thread class for a higher-level encapsulation of search functionality.
+
     @throws std::invalid_argument An exception will be thrown if there are
     no legal moves for the side to move in the given position.
 
     @ingroup search
+    @see Thread
  */
 [[nodiscard]] Move find_best_move(
-    const Position&         position,
-    TranspositionTable&     transTable,
-    const std::atomic_bool& exitFlag,
-    size_t                  searchDepth = 4uz);
+    const Position&             position,
+    TranspositionTable&         transTable,
+    const std::atomic_bool&     exitFlag,
+    size_t                      searchDepth = 4uz,
+    std::optional<Milliseconds> searchTime  = std::nullopt);
 
 } // namespace chess::search
