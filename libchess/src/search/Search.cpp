@@ -23,6 +23,7 @@
 #include <optional>
 #include <ranges>
 #include <stdexcept>
+#include <type_traits>
 #include <vector>
 
 namespace chess::search {
@@ -217,7 +218,12 @@ namespace {
 
 } // namespace
 
-using Clock = std::chrono::high_resolution_clock;
+// On some systems, high_resolution_clock can be unsteady,
+// in which case it's better to fall back to steady_clock
+using HighResolutionSteadyClock = std::conditional_t<
+    std::chrono::high_resolution_clock::is_steady,
+    std::chrono::high_resolution_clock,
+    std::chrono::steady_clock>;
 
 Move find_best_move(
     const Options&          options,
@@ -226,7 +232,7 @@ Move find_best_move(
 {
     assert(options.depth > 0uz);
 
-    const auto searchStartTime = Clock::now();
+    const auto searchStartTime = HighResolutionSteadyClock::now();
 
     std::vector<Move> moves;
 
@@ -268,7 +274,7 @@ Move find_best_move(
             if (! options.searchTime.has_value())
                 return false;
 
-            const auto elapsedMs = std::chrono::duration_cast<Milliseconds>(Clock::now() - searchStartTime);
+            const auto elapsedMs = std::chrono::duration_cast<Milliseconds>(HighResolutionSteadyClock::now() - searchStartTime);
 
             return elapsedMs >= *options.searchTime;
         }();
