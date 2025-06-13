@@ -16,7 +16,7 @@
 #include <atomic>
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
-#include <future>
+#include <functional>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/search/Search.hpp>
@@ -49,10 +49,16 @@ public:
 
     ~Thread();
 
-    /** Launches the search asynchronously. */
+    /** Typedef for a callback that is invoked with the search result. */
+    using Callback = std::function<void(Move)>;
+
+    /** Launches the search asynchronously.
+        The result callback is invoked on the background searcher thread
+        once the search completes.
+     */
     void run(
-        std::promise<Move> result,
-        const Options&     options);
+        const Options& options,
+        Callback&&     callback);
 
     /** Blocks the calling thread until the ongoing search (if any) has finished.
         Note that this function does not signal to the search that it should exit.
@@ -89,7 +95,7 @@ private:
 
     std::thread thread { [this] { thread_func(); } };
 
-    std::promise<Move> promise;
+    Callback resultCallback;
 };
 
 /*
@@ -135,7 +141,7 @@ inline void Thread::thread_func()
         if (startNewSearchFlag.exchange(false)) {
             const ScopedSetter raii { searchInProgressFlag };
 
-            promise.set_value(
+            resultCallback(
                 find_best_move(searchOptions, transTable, searchExitFlag));
         } else {
             std::this_thread::sleep_for(Milliseconds { 100 });
@@ -163,8 +169,8 @@ inline void Thread::new_game()
 }
 
 inline void Thread::run(
-    std::promise<Move> result,
-    const Options&     options)
+    const Options& options,
+    Callback&&     callback)
 {
     // exit previous search, if any
     interrupt();
@@ -172,9 +178,8 @@ inline void Thread::run(
 
     // store parameters for thread to read
 
-    promise = std::move(result);
-
-    searchOptions = options;
+    resultCallback = std::move(callback);
+    searchOptions  = options;
 
     // signal to start new search
     searchExitFlag.store(false);

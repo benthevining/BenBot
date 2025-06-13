@@ -11,23 +11,20 @@
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdlib>
 #include <exception>
-#include <future>
 #include <libchess/game/Position.hpp>
-#include <libchess/game/TimeControl.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/notation/UCI.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/search/Thread.hpp>
 #include <libchess/uci/CommandParsing.hpp>
 #include <libchess/uci/EngineBase.hpp>
-#include <optional>
 #include <print>
 #include <string_view>
-#include <utility>
 
 namespace chess {
 
 using game::Position;
+using moves::Move;
 using pieces::Color;
 using std::size_t;
 
@@ -47,17 +44,12 @@ class BenBotEngine final : public uci::EngineBase {
         opts.update_search_options(
             searchOptions, searchOptions.position.sideToMove == Color::White);
 
-        std::promise<moves::Move> result;
-
-        auto future = result.get_future();
-
         searcherThread.run(
-            std::move(result), searchOptions);
-
-        future.wait();
-
-        std::println("bestmove {}",
-            notation::to_uci(future.get()));
+            searchOptions,
+            [](const Move bestMove) {
+                std::println("bestmove {}",
+                    notation::to_uci(bestMove));
+            });
     }
 
     void abort_search() override { searcherThread.interrupt(); }
