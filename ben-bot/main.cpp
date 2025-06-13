@@ -40,40 +40,19 @@ class BenBotEngine final : public uci::EngineBase {
 
     void new_game() override { searcherThread.new_game(); }
 
-    void set_position(const Position& pos) override { position = pos; }
+    void set_position(const Position& pos) override { searchOptions.position = pos; }
 
     void go(const uci::GoCommandOptions& opts) override
     {
-        const auto maxDepth = opts.depth.or_else([] {
-                                            return std::optional { 4uz };
-                                        })
-                                  .value();
-
-        const auto searchTime = opts.searchTime.or_else(
-            [&opts, isWhite = position.sideToMove == Color::White] {
-                const auto& timeLeft = isWhite ? opts.whiteTimeLeft : opts.blackTimeLeft;
-
-                if (! timeLeft.has_value())
-                    return std::optional<Milliseconds> {};
-
-                const auto& inc = isWhite ? opts.whiteInc : opts.blackInc;
-
-                const auto incValue = inc.or_else([] {
-                                             return std::optional { Milliseconds { 0 } };
-                                         })
-                                          .value();
-
-                return std::optional {
-                    game::determine_search_time(*timeLeft, incValue)
-                };
-            });
+        opts.update_search_options(
+            searchOptions, searchOptions.position.sideToMove == Color::White);
 
         std::promise<moves::Move> result;
 
         auto future = result.get_future();
 
         searcherThread.run(
-            std::move(result), position, maxDepth, searchTime);
+            std::move(result), searchOptions);
 
         future.wait();
 
@@ -88,7 +67,7 @@ class BenBotEngine final : public uci::EngineBase {
 
     search::Thread searcherThread;
 
-    Position position;
+    search::Options searchOptions;
 };
 
 } // namespace chess

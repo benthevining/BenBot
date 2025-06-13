@@ -217,23 +217,21 @@ namespace {
 using Clock = std::chrono::high_resolution_clock;
 
 Move find_best_move(
-    const Position&                   position,
-    TranspositionTable&               transTable,
-    const std::atomic_bool&           exitFlag,
-    const size_t                      searchDepth,
-    const std::optional<Milliseconds> searchTime)
+    const Options&          options,
+    TranspositionTable&     transTable,
+    const std::atomic_bool& exitFlag)
 {
-    assert(searchDepth > 0uz);
+    assert(options.depth > 0uz);
 
     const auto searchStartTime = Clock::now();
 
-    auto moves = moves::generate(position);
+    auto moves = moves::generate(options.position);
 
     if (moves.empty()) {
         throw std::invalid_argument {
             std::format(
                 "No legal moves in position {}",
-                notation::to_fen(position))
+                notation::to_fen(options.position))
         };
     }
 
@@ -244,20 +242,20 @@ Move find_best_move(
     auto alpha = -EVAL_MAX;
 
     // iterative deepening
-    for (auto depth = 1uz; depth <= searchDepth; ++depth) {
-        const bool shouldExit = [depth, &exitFlag, &searchTime, &searchStartTime] {
+    for (auto depth = 1uz; depth <= options.depth; ++depth) {
+        const bool shouldExit = [depth, &exitFlag, &options, &searchStartTime] {
             if (depth < 2uz)
                 return false;
 
             if (exitFlag.load())
                 return true;
 
-            if (! searchTime.has_value())
+            if (! options.searchTime.has_value())
                 return false;
 
             const auto elapsedMs = std::chrono::duration_cast<Milliseconds>(Clock::now() - searchStartTime);
 
-            return elapsedMs >= *searchTime;
+            return elapsedMs >= *options.searchTime;
         }();
 
         if (shouldExit)
@@ -265,10 +263,10 @@ Move find_best_move(
 
         // we can generate the legal moves only once, but we should reorder them each iteration
         // because the move ordering will change based on the evaluations done during the last iteration
-        detail::order_moves_for_search(position, moves, transTable);
+        detail::order_moves_for_search(options.position, moves, transTable);
 
         for (const auto& move : moves) {
-            const auto newPosition = game::after_move(position, move);
+            const auto newPosition = game::after_move(options.position, move);
 
             const auto score = -alpha_beta(
                 -beta, -alpha, newPosition, depth, 1uz, transTable);

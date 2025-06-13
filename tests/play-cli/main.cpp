@@ -143,24 +143,25 @@ struct CLIGame final {
     explicit CLIGame(Options opts)
         : options { std::move(opts) }
     {
+        searchOptions.position      = options.startingPosition;
         gameRecord.startingPosition = options.startingPosition;
     }
 
     void loop()
     {
-        while (! currentPosition.get_result().has_value()) {
-            std::println("{}", game::print_utf8(currentPosition));
+        while (! searchOptions.position.get_result().has_value()) {
+            std::println("{}", game::print_utf8(searchOptions.position));
 
-            const auto move = currentPosition.sideToMove == options.computerPlays
+            const auto move = searchOptions.position.sideToMove == options.computerPlays
                                 ? get_computer_move()
                                 : read_user_move();
 
-            currentPosition.make_move(move);
+            searchOptions.position.make_move(move);
 
             gameRecord.moves.push_back(GameRecord::Move { .move = move });
         }
 
-        gameRecord.result = currentPosition.get_result();
+        gameRecord.result = searchOptions.position.get_result();
 
         print_result();
 
@@ -172,14 +173,14 @@ private:
     {
         std::println("Computer is thinking...");
 
-        const auto move = search::find_best_move(currentPosition, transTable, options.searchDepth);
+        const auto move = search::find_best_move(searchOptions, transTable);
 
         if (options.useUCI) {
             std::println("{} plays: {}",
                 magic_enum::enum_name(options.computerPlays), notation::to_uci(move));
         } else {
             std::println("{} plays: {}",
-                magic_enum::enum_name(options.computerPlays), notation::to_alg(currentPosition, move));
+                magic_enum::enum_name(options.computerPlays), notation::to_alg(searchOptions.position, move));
         }
 
         return move;
@@ -188,7 +189,7 @@ private:
     [[nodiscard]] Move read_user_move()
     {
         std::println("{} to play:",
-            magic_enum::enum_name(currentPosition.sideToMove));
+            magic_enum::enum_name(searchOptions.position.sideToMove));
 
         inputBuf.clear();
 
@@ -196,9 +197,9 @@ private:
 
         try {
             if (options.useUCI)
-                return notation::from_uci(currentPosition, inputBuf);
+                return notation::from_uci(searchOptions.position, inputBuf);
 
-            return notation::from_alg(currentPosition, inputBuf);
+            return notation::from_alg(searchOptions.position, inputBuf);
         } catch (const std::invalid_argument& exception) {
             std::println("{}", exception.what());
 
@@ -244,7 +245,7 @@ private:
 
     std::string inputBuf;
 
-    Position currentPosition { options.startingPosition };
+    search::Options searchOptions;
 
     search::TranspositionTable transTable;
 

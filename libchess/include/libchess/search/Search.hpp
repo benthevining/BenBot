@@ -42,6 +42,24 @@ using Milliseconds = std::chrono::milliseconds;
 
 class TranspositionTable;
 
+/** This struct encapsulates the parameters to the search algorithm.
+
+    @ingroup search
+    @see find_best_move()
+ */
+struct Options final {
+    /** The root position to be searched. */
+    Position position;
+
+    /** The maximum search depth (in plies). */
+    size_t depth { 4uz };
+
+    /** The maximum search time. */
+    std::optional<Milliseconds> searchTime;
+
+    // TODO: max nodes
+};
+
 /** Finds the best move for the side to move in the given position.
 
     ``exitFlag`` will be queried after each iteration of the iterative
@@ -53,13 +71,11 @@ class TranspositionTable;
     no legal moves for the side to move in the given position.
 
     @ingroup search
-    @see Thread
+    @see Options, Thread
  */
 [[nodiscard]] Move find_best_move(
-    const Position&             position,
-    TranspositionTable&         transTable,
-    const std::atomic_bool&     exitFlag,
-    size_t                      searchDepth = 4uz,
-    std::optional<Milliseconds> searchTime  = std::nullopt);
+    const Options&          options,
+    TranspositionTable&     transTable,
+    const std::atomic_bool& exitFlag = false);
 
 } // namespace chess::search

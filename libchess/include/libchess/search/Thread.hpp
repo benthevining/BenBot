@@ -21,8 +21,6 @@
 #include <libchess/moves/Move.hpp>
 #include <libchess/search/Search.hpp>
 #include <libchess/search/TranspositionTable.hpp>
-#include <limits>
-#include <optional>
 #include <thread>
 #include <utility>
 
@@ -53,10 +51,8 @@ public:
 
     /** Launches the search asynchronously. */
     void run(
-        std::promise<Move>          result,
-        const Position&             position,
-        size_t                      maxDepth      = std::numeric_limits<size_t>::max(),
-        std::optional<Milliseconds> maxSearchTime = std::nullopt);
+        std::promise<Move> result,
+        const Options&     options);
 
     /** Blocks the calling thread until the ongoing search (if any) has finished.
         Note that this function does not signal to the search that it should exit.
@@ -77,6 +73,8 @@ private:
 
     TranspositionTable transTable;
 
+    Options searchOptions;
+
     // used to signal to the background thread that it should exit
     std::atomic_bool threadExitFlag { false };
 
@@ -92,12 +90,6 @@ private:
     std::thread thread { [this] { thread_func(); } };
 
     std::promise<Move> promise;
-
-    Position positionToSearch;
-
-    size_t searchDepth { std::numeric_limits<size_t>::max() };
-
-    std::optional<Milliseconds> searchTime;
 };
 
 /*
@@ -144,7 +136,7 @@ inline void Thread::thread_func()
             const ScopedSetter raii { searchInProgressFlag };
 
             promise.set_value(
-                find_best_move(positionToSearch, transTable, searchExitFlag, searchDepth, searchTime));
+                find_best_move(searchOptions, transTable, searchExitFlag));
         } else {
             std::this_thread::sleep_for(Milliseconds { 100 });
         }
@@ -171,10 +163,8 @@ inline void Thread::new_game()
 }
 
 inline void Thread::run(
-    std::promise<Move>                result,
-    const Position&                   position,
-    const size_t                      maxDepth,
-    const std::optional<Milliseconds> maxSearchTime)
+    std::promise<Move> result,
+    const Options&     options)
 {
     // exit previous search, if any
     interrupt();
@@ -184,9 +174,7 @@ inline void Thread::run(
 
     promise = std::move(result);
 
-    positionToSearch = position;
-    searchDepth      = maxDepth;
-    searchTime       = maxSearchTime;
+    searchOptions = options;
 
     // signal to start new search
     searchExitFlag.store(false);

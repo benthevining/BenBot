@@ -21,6 +21,7 @@
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
+#include <libchess/search/Search.hpp>
 #include <optional>
 #include <string_view>
 #include <vector>
@@ -84,6 +85,9 @@ struct GoCommandOptions final {
 
     /** Search for a mate in this many moves. */
     std::optional<size_t> mateIn;
+
+    /** Populates the given search options struct with information from these options. */
+    void update_search_options(search::Options& searchOptions, bool isWhite) const;
 };
 
 /** Parses the options following a UCI "go" command.

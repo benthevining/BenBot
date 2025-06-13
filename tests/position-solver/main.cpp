@@ -43,18 +43,19 @@ try {
 
     args = args.subspan(1uz);
 
-    const auto position = chess::notation::from_fen(fenString);
-
     const auto depthString = args.front();
 
-    const auto depth = chess::util::int_from_string(depthString, 4uz);
+    const chess::search::Options options {
+        .position = chess::notation::from_fen(fenString),
+        .depth    = chess::util::int_from_string(depthString, 4uz)
+    };
 
     chess::search::TranspositionTable transTable;
 
-    const auto move = chess::search::find_best_move(position, transTable, false, depth);
+    const auto move = chess::search::find_best_move(options, transTable);
 
     std::println("{}",
-        chess::notation::to_alg(position, move));
+        chess::notation::to_alg(options.position, move));
 
     return EXIT_SUCCESS;
 } catch (const std::exception& exception) {
