@@ -20,6 +20,7 @@
 #include <libchess/search/Search.hpp>
 #include <libchess/search/TranspositionTable.hpp>
 #include <optional>
+#include <span>
 #include <stdexcept>
 
 namespace chess::search {
@@ -235,6 +236,11 @@ Move find_best_move(
         };
     }
 
+    const auto numMovesToSearch = options.maxNodes.or_else([numMoves = moves.size()] {
+                                                      return std::optional { numMoves };
+                                                  })
+                                      .value();
+
     std::optional<Move> bestMove;
 
     static constexpr auto beta = EVAL_MAX;
@@ -267,7 +273,12 @@ Move find_best_move(
         // because the move ordering will change based on the evaluations done during the last iteration
         detail::order_moves_for_search(options.position, moves, transTable);
 
-        for (const auto& move : moves) {
+        // do this inside the loop, so that each iteration, the moves are reordered and the first N are searched
+        std::span movesToSearch { moves };
+
+        movesToSearch = movesToSearch.first(numMovesToSearch);
+
+        for (const auto& move : movesToSearch) {
             const auto newPosition = game::after_move(options.position, move);
 
             const auto score = -alpha_beta(

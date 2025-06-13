@@ -57,7 +57,10 @@ struct Options final {
     /** The maximum search time. */
     std::optional<Milliseconds> searchTime;
 
-    // TODO: max nodes
+    /** Search only this many nodes. Setting this value too low can
+        really emphasize the effects of our move ordering algorithm.
+     */
+    std::optional<size_t> maxNodes;
 };
 
 /** Finds the best move for the side to move in the given position.

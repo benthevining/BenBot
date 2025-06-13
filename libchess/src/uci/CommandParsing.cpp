@@ -260,6 +260,10 @@ void GoCommandOptions::update_search_options(
     if (depth.has_value())
         searchOptions.depth = *depth;
 
+    if (nodes.has_value())
+        searchOptions.maxNodes = nodes;
+
+    // search time
     if (searchTime.has_value())
         searchOptions.searchTime = searchTime;
     else if (infinite)
