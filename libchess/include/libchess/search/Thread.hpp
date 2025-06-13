@@ -77,15 +77,10 @@ private:
     // this is the function that the background thread spins in
     void thread_func();
 
-    TranspositionTable transTable;
-
-    Options searchOptions;
+    Context context;
 
     // used to signal to the background thread that it should exit
     std::atomic_bool threadExitFlag { false };
-
-    // used to signal to the current search that it should exit
-    std::atomic_bool searchExitFlag { false };
 
     // used to signal to the background thread that it should start a new search
     std::atomic_bool startNewSearchFlag { false };
@@ -141,8 +136,7 @@ inline void Thread::thread_func()
         if (startNewSearchFlag.exchange(false)) {
             const ScopedSetter raii { searchInProgressFlag };
 
-            resultCallback(
-                find_best_move(searchOptions, transTable, searchExitFlag));
+            resultCallback(context.search());
         } else {
             std::this_thread::sleep_for(Milliseconds { 100 });
         }
@@ -158,14 +152,14 @@ inline void Thread::wait() const
 inline void Thread::interrupt()
 {
     startNewSearchFlag.store(false);
-    searchExitFlag.store(true);
+    context.exitFlag.store(true);
 }
 
 inline void Thread::new_game()
 {
     interrupt();
     wait();
-    transTable.clear();
+    context.transTable.clear();
 }
 
 inline void Thread::run(
@@ -178,11 +172,10 @@ inline void Thread::run(
 
     // store parameters for thread to read
 
-    resultCallback = std::move(callback);
-    searchOptions  = options;
+    resultCallback  = std::move(callback);
+    context.options = options;
 
     // signal to start new search
-    searchExitFlag.store(false);
     startNewSearchFlag.store(true);
 }
 

@@ -21,6 +21,7 @@
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libchess/moves/Move.hpp>
+#include <libchess/search/TranspositionTable.hpp>
 #include <optional>
 #include <vector>
 
@@ -40,8 +41,6 @@ using moves::Move;
 using std::size_t;
 
 using Milliseconds = std::chrono::milliseconds;
-
-class TranspositionTable;
 
 /** This struct encapsulates the parameters to the search algorithm.
 
@@ -74,17 +73,54 @@ struct Options final {
     ``exitFlag`` will be queried after each iteration of the iterative
     deepening loop, and the search will exit if the flag has been set to true.
 
-    See the Thread class for a higher-level encapsulation of search functionality.
+    See the Context and Thread classes for higher-level encapsulations of
+    search functionality.
 
     @throws std::invalid_argument An exception will be thrown if there are
     no legal moves for the side to move in the given position.
 
     @ingroup search
-    @see Options, Thread
+    @see Context, Options, Thread
  */
 [[nodiscard]] Move find_best_move(
     const Options&          options,
     TranspositionTable&     transTable,
     const std::atomic_bool& exitFlag = false);
+
+/** This struct encapsulates everything needed to perform a search.
+    You can keep one of these alive between searches by simply updating
+    the options and then calling ``search()`` again.
+
+    The Thread class provides the capability to run the search on a background thread.
+
+    @ingroup search
+    @see find_best_move(), Thread
+ */
+struct Context final {
+    /** The options to use for the search. */
+    Options options;
+
+    /** The transposition table used for the search.
+        Results are persistent between successive searches.
+     */
+    TranspositionTable transTable;
+
+    /** An exit flag used for this search.
+        This can be set to true while the ``search()`` method is running,
+        which will cause it to abort at the next opportunity. This is reset
+        to false at the start of each ``search()`` invocation.
+     */
+    std::atomic_bool exitFlag { false };
+
+    /** Performs a search.
+        @see find_best_move()
+     */
+    [[nodiscard]] Move search()
+    {
+        exitFlag.store(false);
+
+        return find_best_move(options, transTable, exitFlag);
+    }
+};
 
 } // namespace chess::search

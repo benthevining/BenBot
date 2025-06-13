@@ -45,17 +45,15 @@ try {
 
     const auto depthString = args.front();
 
-    const chess::search::Options options {
-        .position = chess::notation::from_fen(fenString),
-        .depth    = chess::util::int_from_string(depthString, 4uz)
-    };
+    chess::search::Context context;
 
-    chess::search::TranspositionTable transTable;
+    context.options.position = chess::notation::from_fen(fenString);
+    context.options.depth    = chess::util::int_from_string(depthString, 4uz);
 
-    const auto move = chess::search::find_best_move(options, transTable);
+    const auto move = context.search();
 
     std::println("{}",
-        chess::notation::to_alg(options.position, move));
+        chess::notation::to_alg(context.options.position, move));
 
     return EXIT_SUCCESS;
 } catch (const std::exception& exception) {
