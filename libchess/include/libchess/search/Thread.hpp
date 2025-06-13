@@ -46,14 +46,13 @@ public:
 
     Thread(const Thread&)            = delete;
     Thread& operator=(const Thread&) = delete;
-
-    Thread(Thread&&)            = default;
-    Thread& operator=(Thread&&) = default;
+    Thread(Thread&&)                 = delete;
+    Thread& operator=(Thread&&)      = delete;
 
     ~Thread();
 
     /** Launches the search asynchronously. */
-    [[nodiscard]] void run(
+    void run(
         std::promise<Move>          result,
         const Position&             position,
         size_t                      maxDepth      = std::numeric_limits<size_t>::max(),
@@ -62,10 +61,15 @@ public:
     /** Blocks the calling thread until the ongoing search (if any) has finished.
         Note that this function does not signal to the search that it should exit.
      */
-    void wait();
+    void wait() const;
 
     /** Signals to the ongoing search, if any, that it should exit. */
-    void abort();
+    void interrupt();
+
+    /** Aborts any ongoing search and clears the transposition table. Blocks while
+        waiting for any ongoing search to exit.
+     */
+    void new_game();
 
 private:
     // this is the function that the background thread spins in
@@ -85,7 +89,7 @@ private:
     // used by the background thread to signal to other threads that is has a search in progress
     std::atomic_bool searchInProgressFlag { false };
 
-    std::thread thread[this] { thread_func(); }
+    std::thread thread { [this] { thread_func(); } };
 
     std::promise<Move> promise;
 
@@ -116,7 +120,7 @@ private:
 inline Thread::~Thread()
 {
     threadExitFlag.store(true);
-    abort();
+    interrupt();
     thread.join();
 }
 
@@ -147,26 +151,33 @@ inline void Thread::thread_func()
     }
 }
 
-inline void Thread::wait()
+inline void Thread::wait() const
 {
     while (searchInProgressFlag.load())
         std::this_thread::sleep_for(Milliseconds { 100 });
 }
 
-inline void Thread::abort()
+inline void Thread::interrupt()
 {
     startNewSearchFlag.store(false);
     searchExitFlag.store(true);
 }
 
+inline void Thread::new_game()
+{
+    interrupt();
+    wait();
+    transTable.clear();
+}
+
 inline void Thread::run(
-    std::promise<Move>          result,
-    const Position&             position,
-    const size_t                maxDepth,
-    std::optional<Milliseconds> maxSearchTime)
+    std::promise<Move>                result,
+    const Position&                   position,
+    const size_t                      maxDepth,
+    const std::optional<Milliseconds> maxSearchTime)
 {
     // exit previous search, if any
-    abort();
+    interrupt();
     wait();
 
     // store parameters for thread to read

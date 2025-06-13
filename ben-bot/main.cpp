@@ -7,47 +7,88 @@
  */
 
 #include <atomic>
+#include <chrono>
+#include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdlib>
 #include <exception>
+#include <future>
 #include <libchess/game/Position.hpp>
+#include <libchess/game/TimeControl.hpp>
+#include <libchess/moves/Move.hpp>
 #include <libchess/notation/UCI.hpp>
-#include <libchess/search/Search.hpp>
-#include <libchess/search/TranspositionTable.hpp>
+#include <libchess/pieces/Colors.hpp>
+#include <libchess/search/Thread.hpp>
 #include <libchess/uci/CommandParsing.hpp>
 #include <libchess/uci/EngineBase.hpp>
+#include <optional>
 #include <print>
 #include <string_view>
+#include <utility>
 
 namespace chess {
 
 using game::Position;
+using pieces::Color;
+using std::size_t;
+
+using Milliseconds = std::chrono::milliseconds;
 
 class BenBotEngine final : public uci::EngineBase {
     [[nodiscard]] std::string_view get_name() const override { return "BenBot"; }
 
     [[nodiscard]] std::string_view get_author() const override { return "Ben Vining"; }
 
-    void new_game() override { transTable.clear(); }
+    void new_game() override { searcherThread.new_game(); }
 
     void set_position(const Position& pos) override { position = pos; }
 
-    void go([[maybe_unused]] const uci::GoCommandOptions& opts) override
+    void go(const uci::GoCommandOptions& opts) override
     {
-        exitFlag.store(false);
+        const auto maxDepth = opts.depth.or_else([] {
+                                            return std::optional { 4uz };
+                                        })
+                                  .value();
+
+        const auto searchTime = opts.searchTime.or_else(
+            [&opts, isWhite = position.sideToMove == Color::White] {
+                const auto& timeLeft = isWhite ? opts.whiteTimeLeft : opts.blackTimeLeft;
+
+                if (! timeLeft.has_value())
+                    return std::optional<Milliseconds> {};
+
+                const auto& inc = isWhite ? opts.whiteInc : opts.blackInc;
+
+                const auto incValue = inc.or_else([] {
+                                             return std::optional { Milliseconds { 0 } };
+                                         })
+                                          .value();
+
+                return std::optional {
+                    game::determine_search_time(*timeLeft, incValue)
+                };
+            });
+
+        std::promise<moves::Move> result;
+
+        auto future = result.get_future();
+
+        searcherThread.run(
+            std::move(result), position, maxDepth, searchTime);
+
+        future.wait();
 
         std::println("bestmove {}",
-            notation::to_uci(
-                search::find_best_move(position, transTable, exitFlag)));
+            notation::to_uci(future.get()));
     }
 
-    void abort_search() override { exitFlag.store(true); }
-    void stop_search() override { exitFlag.store(true); }
+    void abort_search() override { searcherThread.interrupt(); }
+    void stop_search() override { searcherThread.interrupt(); }
+
+    void wait() override { searcherThread.wait(); }
+
+    search::Thread searcherThread;
 
     Position position;
-
-    search::TranspositionTable transTable;
-
-    std::atomic_bool exitFlag { false };
 };
 
 } // namespace chess
