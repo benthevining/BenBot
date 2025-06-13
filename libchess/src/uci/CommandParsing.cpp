@@ -257,6 +257,14 @@ GoCommandOptions parse_go_options(
 void GoCommandOptions::update_search_options(
     search::Options& searchOptions, const bool isWhite) const
 {
+    // always clear this, because if movesToSearch isn't specified, we
+    // want the search algorithm to generate all legal moves instead
+    searchOptions.movesToSearch.clear();
+
+    if (! moves.empty())
+        std::ranges::copy(moves,
+            std::back_inserter(searchOptions.movesToSearch));
+
     if (depth.has_value())
         searchOptions.depth = *depth;
 

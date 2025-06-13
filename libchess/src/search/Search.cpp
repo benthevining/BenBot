@@ -13,6 +13,7 @@
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <format>
+#include <iterator>
 #include <libchess/eval/Evaluation.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
@@ -20,8 +21,9 @@
 #include <libchess/search/Search.hpp>
 #include <libchess/search/TranspositionTable.hpp>
 #include <optional>
-#include <span>
+#include <ranges>
 #include <stdexcept>
+#include <vector>
 
 namespace chess::search {
 
@@ -226,7 +228,12 @@ Move find_best_move(
 
     const auto searchStartTime = Clock::now();
 
-    auto moves = moves::generate(options.position);
+    std::vector<Move> moves;
+
+    if (options.movesToSearch.empty())
+        moves::generate(options.position, std::back_inserter(moves));
+    else
+        std::ranges::copy(options.movesToSearch, std::back_inserter(moves));
 
     if (moves.empty()) {
         throw std::invalid_argument {
@@ -273,12 +280,7 @@ Move find_best_move(
         // because the move ordering will change based on the evaluations done during the last iteration
         detail::order_moves_for_search(options.position, moves, transTable);
 
-        // do this inside the loop, so that each iteration, the moves are reordered and the first N are searched
-        std::span movesToSearch { moves };
-
-        movesToSearch = movesToSearch.first(numMovesToSearch);
-
-        for (const auto& move : movesToSearch) {
+        for (const auto& move : moves | std::views::take(numMovesToSearch)) {
             const auto newPosition = game::after_move(options.position, move);
 
             const auto score = -alpha_beta(

@@ -22,6 +22,7 @@
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libchess/moves/Move.hpp>
 #include <optional>
+#include <vector>
 
 namespace chess::game {
 struct Position;
@@ -61,6 +62,11 @@ struct Options final {
         really emphasize the effects of our move ordering algorithm.
      */
     std::optional<size_t> maxNodes;
+
+    /** Restrict the search to only these moves.
+        If this is empty, all legal moves in the position will be searched.
+     */
+    std::vector<Move> movesToSearch;
 };
 
 /** Finds the best move for the side to move in the given position.
