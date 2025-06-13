@@ -241,8 +241,10 @@ Move find_best_move(
 
     auto alpha = -EVAL_MAX;
 
+    auto depth = 1uz;
+
     // iterative deepening
-    for (auto depth = 1uz; depth <= options.depth; ++depth) {
+    for (; depth <= options.depth; ++depth) {
         const bool shouldExit = [depth, &exitFlag, &options, &searchStartTime] {
             if (depth < 2uz)
                 return false;
@@ -259,7 +261,7 @@ Move find_best_move(
         }();
 
         if (shouldExit)
-            return bestMove.value();
+            break;
 
         // we can generate the legal moves only once, but we should reorder them each iteration
         // because the move ordering will change based on the evaluations done during the last iteration
@@ -277,6 +279,11 @@ Move find_best_move(
             }
         }
     }
+
+    transTable.store(options.position, { .searchedDepth = depth,
+                                           .eval        = alpha,
+                                           .evalType    = EvalType::Exact,
+                                           .bestMove    = bestMove });
 
     return bestMove.value();
 }

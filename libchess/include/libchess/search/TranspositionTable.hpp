@@ -15,11 +15,11 @@
 
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdint> // IWYU pragma: keep - for std::uint64_t
+#include <iterator>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
 #include <optional>
 #include <unordered_map>
-#include <utility>
 
 namespace chess::search {
 
@@ -79,6 +79,11 @@ public:
      */
     [[nodiscard]] std::optional<int> probe_eval(
         const Position& pos, size_t depth, int alpha, int beta) const;
+
+    /** Writes the principal variation moves to the output iterator. */
+    void get_pv(
+        const Position&                 rootPosition,
+        std::output_iterator<Move> auto output) const;
 
     /** Stores a record for a given position. */
     void store(const Position& pos, const Record& record);
@@ -145,6 +150,28 @@ inline std::optional<int> TranspositionTable::probe_eval(
     return std::nullopt;
 }
 
+void TranspositionTable::get_pv(
+    const Position&                 rootPosition,
+    std::output_iterator<Move> auto output) const
+{
+    const auto* record = find(rootPosition);
+
+    auto position { rootPosition };
+
+    while (record != nullptr) {
+        if (! record->bestMove.has_value())
+            return;
+
+        const auto& move = record->bestMove.value();
+
+        *output = move;
+
+        position.make_move(move);
+
+        record = find(position);
+    }
+}
+
 inline void TranspositionTable::store(const Position& pos, const Record& record)
 {
     if (const auto it = records.find(pos.hash);
@@ -167,7 +194,7 @@ inline void TranspositionTable::store(const Position& pos, const Record& record)
     }
 
     // this position hasn't been searched before, add it to the table
-    records.emplace(std::make_pair(pos.hash, record));
+    records.emplace(pos.hash, record);
 }
 
 } // namespace chess::search
