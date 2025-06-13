@@ -141,3 +141,22 @@
 * Windows fixes ([cd51a5c](https://github.com/benthevining/libchess/commit/cd51a5c3ad6b2ead4fcc160fc71434d0a4851248))
 * writing "seven tag roster" in required order ([47bb00a](https://github.com/benthevining/libchess/commit/47bb00a5ec404338e29ceee3ba5f718280dfcbbd))
 * writing game result to created PGN strings ([#95](https://github.com/benthevining/libchess/issues/95)) ([2a52d92](https://github.com/benthevining/libchess/commit/2a52d929585e41dd2e5e48a1a63fd0ab16008c13))
+## [1.1.0](https://github.com/benthevining/libchess/compare/v1.0.0...v1.1.0) (2025-06-13)
+
+### Features
+
+* basic replacement scheme for transposition table ([1308c4e](https://github.com/benthevining/libchess/commit/1308c4e36c0c9981fbe91e16e2f7809c5ba1e8ff))
+* clear() method for transposition table ([656a669](https://github.com/benthevining/libchess/commit/656a669100652c114eda408f2e7f54b956b7ac40))
+* function to get PV from transposition table ([#123](https://github.com/benthevining/libchess/issues/123)) ([0c5c453](https://github.com/benthevining/libchess/commit/0c5c45372430deeea2103ec84db542ff3cd60a3c))
+* initial commit of searcher thread class ([f207b89](https://github.com/benthevining/libchess/commit/f207b89f5fc633976a4ef2b7f79bc94bf55274fd))
+* initial commit of transposition table ([e78c42e](https://github.com/benthevining/libchess/commit/e78c42ed3c70a9497542e41669a9a1d37cd3c974))
+* search function can now restrict search to specific moves ([#130](https://github.com/benthevining/libchess/issues/130)) ([bcf19b3](https://github.com/benthevining/libchess/commit/bcf19b30fbd10c1875d199d9fb2a7e7c6131b4bc))
+* search function now has option to limit number of searched nodes ([#130](https://github.com/benthevining/libchess/issues/130)) ([1efa158](https://github.com/benthevining/libchess/commit/1efa158adb743a5adb8bf4a38b140ec5937264fd))
+* search is now interruptible using an atomic flag ([45969e6](https://github.com/benthevining/libchess/commit/45969e6cb41c3f2c18783102c0b6ccef15a060bc))
+
+### Bug Fixes
+
+* iterative deepening ([503ffbd](https://github.com/benthevining/libchess/commit/503ffbd10d1372a222c7f6174b6f7c786c7739e5))
+* MSVC fixes ([99fdf7e](https://github.com/benthevining/libchess/commit/99fdf7e9b926718598447fde8015ba5f8a14387f))
+* reverted clang-tidy fix ([925fe27](https://github.com/benthevining/libchess/commit/925fe27014e4753cb7b42a4c004070539f224bdf))
+* using transposition table in quiescence search function ([7783073](https://github.com/benthevining/libchess/commit/77830730871bb0637add24163fc5c80b47bc7e50))
