@@ -15,7 +15,9 @@
 #include <libchess/board/Pieces.hpp>
 #include <libchess/game/CastlingRights.hpp>
 #include <libchess/game/Position.hpp>
+#include <libchess/moves/Attacks.hpp>
 #include <libchess/moves/MoveGen.hpp>
+#include <libchess/moves/Patterns.hpp>
 #include <libchess/moves/PseudoLegal.hpp>
 #include <libchess/pieces/Colors.hpp>
 
@@ -188,6 +190,31 @@ namespace {
         return ourScore - theirScore;
     }
 
+    [[nodiscard, gnu::const]] int score_squares_controlled_around_kings(
+        const Position& position) noexcept
+    {
+        const auto surroundingWhiteKing = moves::patterns::king(position.whitePieces.king);
+
+        const auto whiteControlsAroundWK = static_cast<int>(moves::num_squares_attacked<Color::White>(position.whitePieces, surroundingWhiteKing, position.blackPieces.occupied));
+        const auto blackControlsAroundWK = static_cast<int>(moves::num_squares_attacked<Color::Black>(position.blackPieces, surroundingWhiteKing, position.whitePieces.occupied));
+
+        const auto whiteScore = whiteControlsAroundWK - blackControlsAroundWK;
+
+        const auto surroundingBlackKing = moves::patterns::king(position.blackPieces.king);
+
+        const auto whiteControlsAroundBK = static_cast<int>(moves::num_squares_attacked<Color::White>(position.whitePieces, surroundingBlackKing, position.blackPieces.occupied));
+        const auto blackControlsAroundBK = static_cast<int>(moves::num_squares_attacked<Color::Black>(position.blackPieces, surroundingBlackKing, position.whitePieces.occupied));
+
+        const auto blackScore = blackControlsAroundBK - whiteControlsAroundBK;
+
+        const bool isWhite = position.sideToMove == Color::White;
+
+        // const auto ourScore   = isWhite ? whiteScore : blackScore;
+        const auto theirScore = isWhite ? blackScore : whiteScore;
+
+        return theirScore;
+    }
+
 } // namespace
 
 int evaluate(const Position& position)
@@ -208,7 +235,8 @@ int evaluate(const Position& position)
     return score_material(position)
          + score_piece_placement(position)
          + score_rook_files(position)
-         + score_king_safety(position);
+         + score_king_safety(position)
+         + score_squares_controlled_around_kings(position);
 }
 
 } // namespace chess::eval
