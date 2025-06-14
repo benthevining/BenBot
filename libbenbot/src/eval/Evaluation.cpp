@@ -9,6 +9,7 @@
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Material.hpp>
 #include <libbenbot/eval/PieceSquareTables.hpp>
+#include <libchess/board/Distances.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Masks.hpp>
 #include <libchess/board/Pieces.hpp>
@@ -121,16 +122,20 @@ namespace {
     [[nodiscard, gnu::const]] int score_king_safety(
         const Position& position) noexcept
     {
-        static constexpr auto OPEN_KING_PENALTY     = -35;
-        static constexpr auto STRANDED_KING_PENALTY = -75;
+        static constexpr auto OPEN_KING_PENALTY        = -35;
+        static constexpr auto STRANDED_KING_PENALTY    = -75;
+        static constexpr auto ATTACKING_KNIGHT_PENALTY = -3;
+        static constexpr auto ATTACKING_QUEEN_PENALTY  = -7;
 
         auto score_side_king = [&position,
                                    allPawns = position.whitePieces.pawns | position.blackPieces.pawns](
-                                   const Pieces& pieces, const game::CastlingRights& castlingRights) {
+                                   const Pieces& pieces, const game::CastlingRights& castlingRights,
+                                   const Pieces& enemyPieces) {
             auto score { 0 };
 
             const auto location = pieces.get_king_location();
 
+            // king on open file or diagonal
             if (position.is_file_half_open(location.file))
                 score += (OPEN_KING_PENALTY / 2);
             else if (position.is_file_open(location.file)
@@ -145,6 +150,22 @@ namespace {
                 && (location.file == File::D || location.file == File::E))
                 score += STRANDED_KING_PENALTY;
 
+            static constexpr auto MAX_DISTANCE = 7uz;
+
+            // enemy knights & queens near king
+            for (const auto knightPos : enemyPieces.knights.squares()) {
+                const auto distance = board::chebyshev_distance(location, knightPos);
+
+                // penalty increases with smaller distance
+                score += static_cast<int>(MAX_DISTANCE - distance) * ATTACKING_KNIGHT_PENALTY;
+            }
+
+            for (const auto queenPos : enemyPieces.queens.squares()) {
+                const auto distance = board::chebyshev_distance(location, queenPos);
+
+                score += static_cast<int>(MAX_DISTANCE - distance) * ATTACKING_QUEEN_PENALTY;
+            }
+
             return score;
         };
 
@@ -152,11 +173,13 @@ namespace {
 
         const auto ourScore = score_side_king(
             position.our_pieces(),
-            isWhite ? position.whiteCastlingRights : position.blackCastlingRights);
+            isWhite ? position.whiteCastlingRights : position.blackCastlingRights,
+            position.their_pieces());
 
         const auto theirScore = score_side_king(
             position.their_pieces(),
-            isWhite ? position.blackCastlingRights : position.whiteCastlingRights);
+            isWhite ? position.blackCastlingRights : position.whiteCastlingRights,
+            position.our_pieces());
 
         return ourScore - theirScore;
     }
