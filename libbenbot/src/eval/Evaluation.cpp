@@ -9,8 +9,10 @@
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Material.hpp>
 #include <libbenbot/eval/PieceSquareTables.hpp>
+#include <libchess/board/File.hpp>
 #include <libchess/board/Masks.hpp>
 #include <libchess/board/Pieces.hpp>
+#include <libchess/game/CastlingRights.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/pieces/Colors.hpp>
@@ -20,6 +22,7 @@ namespace chess::eval {
 namespace {
 
     using board::Pieces;
+    using pieces::Color;
 
     namespace masks = board::masks;
 
@@ -110,14 +113,16 @@ namespace {
         return score_side_bishops(position.our_pieces()) - score_side_bishops(position.their_pieces());
     }
 
-    // penalty for king on open file or diagonal
+    // awards various penalties for king danger
     [[nodiscard, gnu::const]] int score_king_safety(
         const Position& position) noexcept
     {
-        static constexpr auto OPEN_KING_PENALTY = -35;
+        static constexpr auto OPEN_KING_PENALTY     = -35;
+        static constexpr auto STRANDED_KING_PENALTY = -75;
 
         auto score_side_king = [&position,
-                                   allPawns = position.whitePieces.pawns | position.blackPieces.pawns](const Pieces& pieces) {
+                                   allPawns = position.whitePieces.pawns | position.blackPieces.pawns](
+                                   const Pieces& pieces, const game::CastlingRights& castlingRights) {
             auto score { 0 };
 
             const auto location = pieces.get_king_location();
@@ -129,18 +134,33 @@ namespace {
                      || (masks::antidiagonal(location) & allPawns).none())
                 score += OPEN_KING_PENALTY;
 
+            using board::File;
+
+            // king stranded in center without castling rights
+            if (castlingRights.neither()
+                && (location.file == File::D || location.file == File::E))
+                score += STRANDED_KING_PENALTY;
+
             return score;
         };
 
-        return score_side_king(position.our_pieces()) - score_side_king(position.their_pieces());
+        const bool isWhite = position.sideToMove == Color::White;
+
+        const auto ourScore = score_side_king(
+            position.our_pieces(),
+            isWhite ? position.whiteCastlingRights : position.blackCastlingRights);
+
+        const auto theirScore = score_side_king(
+            position.their_pieces(),
+            isWhite ? position.blackCastlingRights : position.whiteCastlingRights);
+
+        return ourScore - theirScore;
     }
 
 } // namespace
 
 int evaluate(const Position& position)
 {
-    using pieces::Color;
-
     if (position.is_threefold_repetition() || position.is_fifty_move_draw())
         return DRAW;
 
