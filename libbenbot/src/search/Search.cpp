@@ -273,7 +273,9 @@ Move Context<PrintUCIInfo>::search()
     auto alpha = -EVAL_MAX;
 
     // iterative deepening
-    for (auto depth = 1uz; depth <= options.depth; ++depth) {
+    auto depth = 1uz;
+
+    for (; depth <= options.depth; ++depth) {
         const bool shouldExit = [depth, this, &searchStartTime] {
             if (depth == 1uz)
                 return false;
@@ -309,17 +311,14 @@ Move Context<PrintUCIInfo>::search()
         }
     }
 
+    const auto score = alpha;
+
     // store the root position evaluation / best move for move ordering of the next search() invocation
     // the evaluation is the evaluation of the position resulting from playing the best move
 
-    const auto* bestStored = transTable.find(
-        game::after_move(options.position, bestMove.value()));
-
-    assert(bestStored != nullptr);
-
-    transTable.store(options.position, { .searchedDepth = bestStored->searchedDepth,
-                                           .eval        = bestStored->eval,
-                                           .evalType    = bestStored->evalType,
+    transTable.store(options.position, { .searchedDepth = depth,
+                                           .eval        = score,
+                                           .evalType    = EvalType::Exact,
                                            .bestMove    = bestMove });
 
     if constexpr (PrintUCIInfo) {
@@ -330,7 +329,7 @@ Move Context<PrintUCIInfo>::search()
         // TODO: nodes searched, PV, mate scores
         std::println(
             "info depth {} score cp {} time {}",
-            bestStored->searchedDepth, bestStored->eval, searchDuration.count());
+            depth, score, searchDuration.count());
 
         std::println("bestmove {}", notation::to_uci(bestMove.value()));
     }
