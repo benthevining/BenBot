@@ -43,8 +43,7 @@ namespace {
     // to the leaf (mate) node, so that the engine actually goes for mate
     [[nodiscard, gnu::const]] int checkmate_score(const size_t plyFromRoot) noexcept
     {
-        // multiply by -1 here because this score
-        // is relative to the player who got mated
+        // multiply by -1 here because this score is relative to the player who got mated
         return (EVAL_MAX - static_cast<int>(plyFromRoot)) * -1;
     }
 
@@ -58,17 +57,18 @@ namespace {
     {
         assert(beta > alpha);
 
-        // In quiescence search mode, we have no depth limit, so I think it makes sense to store
-        // a low value here so that non-quiescence searches to depths of 2 and higher will overwrite
-        // results stored from quiescence searches (because those searches will consider quiet moves
-        // that may be stronger).
-        static constexpr auto depth = 1uz;
+        // In quiescence search, we do not probe the transposition table for a stored evaluation.
+        // In regular alpha/beta, we're able to check if an eval was stored with the given depth
+        // that we'd be searching the position to, but quiescence search has no depth limit. I
+        // tried probing the table for stored results with an arbitrary depth such as 5 or 10,
+        // but experimental results showed that not probing the tree here made the bot stronger.
 
-        // check if this position has been searched before to at
-        // least this depth and within these bounds for non-PV nodes
-        // TODO: require some arbitrary higher depth for a table hit here?
-        if (const auto value = transTable.probe_eval(currentPosition, depth, alpha, beta))
-            return value.value();
+        // This is the depth that we store alongside evaluations in the transposition table for
+        // results computed inside this function. In quiescence search mode, we have no depth limit,
+        // so I think it makes sense to store a low value here so that non-quiescence searches to
+        // depths of 2 and higher will overwrite results stored from quiescence searches (because
+        // those searches will consider quiet moves that may be stronger).
+        static constexpr auto depth = 1uz;
 
         if (currentPosition.is_draw()) {
             transTable.store(
@@ -79,7 +79,6 @@ namespace {
             return eval::DRAW;
         }
 
-        // in quiescence search, we actually call the static evaluation function
         auto evaluation = eval::evaluate(currentPosition);
 
         // see if we can get a cutoff (we may not need to generate moves for this position)
