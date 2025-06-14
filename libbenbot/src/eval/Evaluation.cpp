@@ -90,28 +90,7 @@ namespace {
         return score_side_rooks(position.our_pieces()) - score_side_rooks(position.their_pieces());
     }
 
-    // awards a bonus for bishops on open diagonals or antidiagonals
-    [[nodiscard, gnu::const]] int score_bishop_diags(
-        const Position& position) noexcept
-    {
-        static constexpr auto OPEN_DIAG_BONUS = 55;
-
-        auto score_side_bishops = [allPawns = position.whitePieces.pawns | position.blackPieces.pawns](const Pieces& pieces) {
-            auto score { 0 };
-
-            for (const auto square : pieces.bishops.squares()) {
-                if ((masks::diagonal(square) & allPawns).none())
-                    score += OPEN_DIAG_BONUS;
-
-                if ((masks::antidiagonal(square) & allPawns).none())
-                    score += OPEN_DIAG_BONUS;
-            }
-
-            return score;
-        };
-
-        return score_side_bishops(position.our_pieces()) - score_side_bishops(position.their_pieces());
-    }
+    // NB. I tried adding a bonus for bishops on open diagonals, but that seemed to make the engine weaker
 
     // awards various penalties for king danger
     [[nodiscard, gnu::const]] int score_king_safety(
