@@ -25,6 +25,7 @@
 #include <libchess/game/CastlingRights.hpp>
 #include <libchess/game/Result.hpp>
 #include <libchess/game/ThreefoldChecker.hpp>
+#include <libchess/moves/Attacks.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
@@ -344,11 +345,11 @@ inline bool Position::is_threefold_repetition() const noexcept
 inline bool Position::is_side_in_check(const Color side) const noexcept
 {
     if (side == Color::White) {
-        return squares_attacked<Color::Black>(
+        return moves::squares_attacked<Color::Black>(
             blackPieces, whitePieces.king, whitePieces.occupied);
     }
 
-    return squares_attacked<Color::White>(
+    return moves::squares_attacked<Color::White>(
         whitePieces, blackPieces.king, blackPieces.occupied);
 }
 
