@@ -18,9 +18,11 @@
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/FEN.hpp>
+#include <libchess/notation/UCI.hpp>
 #include <libchess/search/Search.hpp>
 #include <libchess/search/TranspositionTable.hpp>
 #include <optional>
+#include <print>
 #include <ranges>
 #include <stdexcept>
 #include <type_traits>
@@ -234,7 +236,8 @@ using HighResolutionSteadyClock = std::conditional_t<
     std::chrono::high_resolution_clock,
     std::chrono::steady_clock>;
 
-Move Context::search()
+template <bool PrintUCIInfo>
+Move Context<PrintUCIInfo>::search()
 {
     exitFlag.store(false);
 
@@ -317,7 +320,14 @@ Move Context::search()
                                            .evalType    = bestStored->evalType,
                                            .bestMove    = bestMove });
 
+    if constexpr (PrintUCIInfo) {
+        std::println("bestmove {}", notation::to_uci(bestMove.value()));
+    }
+
     return bestMove.value();
 }
+
+template struct Context<true>;
+template struct Context<false>;
 
 } // namespace chess::search

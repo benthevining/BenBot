@@ -6,16 +6,11 @@
  * ======================================================================================
  */
 
-#include <atomic>
-#include <chrono>
-#include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdlib>
 #include <exception>
-#include <future>
 #include <libchess/game/Position.hpp>
-#include <libchess/moves/Move.hpp>
-#include <libchess/notation/UCI.hpp>
 #include <libchess/pieces/Colors.hpp>
+#include <libchess/search/Search.hpp>
 #include <libchess/search/Thread.hpp>
 #include <libchess/uci/CommandParsing.hpp>
 #include <libchess/uci/EngineBase.hpp>
@@ -24,13 +19,6 @@
 
 namespace chess {
 
-using game::Position;
-using moves::Move;
-using pieces::Color;
-using std::size_t;
-
-using Milliseconds = std::chrono::milliseconds;
-
 class BenBotEngine final : public uci::EngineBase {
     [[nodiscard]] std::string_view get_name() const override { return "BenBot"; }
 
@@ -38,27 +26,15 @@ class BenBotEngine final : public uci::EngineBase {
 
     void new_game() override { searcherThread.new_game(); }
 
-    void set_position(const Position& pos) override { searchOptions.position = pos; }
+    void set_position(const game::Position& pos) override { searchOptions.position = pos; }
 
     void go(const uci::GoCommandOptions& opts) override
     {
         opts.update_search_options(
-            searchOptions, searchOptions.position.sideToMove == Color::White);
-
-        std::promise<Move> bestMove;
-
-        auto value = bestMove.get_future();
-
-        searcherThread.run(
             searchOptions,
-            [&bestMove](const Move move) {
-                bestMove.set_value(move);
-            });
+            searchOptions.position.sideToMove == pieces::Color::White);
 
-        value.wait();
-
-        std::println("bestmove {}",
-            notation::to_uci(value.get()));
+        searcherThread.run(searchOptions);
     }
 
     void abort_search() override { searcherThread.interrupt(); }

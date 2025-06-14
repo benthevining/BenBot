@@ -74,9 +74,13 @@ struct Options final {
 
     The Thread class provides the capability to run the search on a background thread.
 
+    @tparam PrintUCIInfo If true, the ``search()`` function prints UCI-format "info"
+    output during the search, using ``std::println()``.
+
     @ingroup search
     @see find_best_move(), Thread
  */
+template <bool PrintUCIInfo = false>
 struct Context final {
     /** The options to use for the search. */
     Options options;
