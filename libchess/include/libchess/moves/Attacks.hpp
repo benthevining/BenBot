@@ -13,6 +13,7 @@
 
 #pragma once
 
+#include <cstddef> // IWYU pragma: keep - for size_t
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/Pieces.hpp>
 #include <libchess/moves/Patterns.hpp>
@@ -24,6 +25,7 @@ namespace chess::moves {
 using board::Bitboard;
 using board::Pieces;
 using pieces::Color;
+using std::size_t;
 
 /** Returns true if any of the ``pieces`` attacks any of the ``targetSquares``.
     This function considers only pseudo-legal moves, not strictly legal moves.
@@ -31,9 +33,22 @@ using pieces::Color;
     @tparam Side The color that the ``pieces`` represent.
 
     @ingroup moves
+    @see num_squares_attacked()
  */
 template <Color Side>
 [[nodiscard, gnu::const]] constexpr bool squares_attacked(
+    const Pieces& pieces, Bitboard targetSquares, Bitboard enemyPieces) noexcept;
+
+/** Returns the number of ``targetSquares`` that any of the ``pieces`` attack.
+    This function considers only pseudo-legal moves, not strictly legal moves.
+
+    @tparam Side The color that the ``pieces`` represent.
+
+    @ingroup moves
+    @see squares_attacked()
+ */
+template <Color Side>
+[[nodiscard, gnu::const]] constexpr size_t num_squares_attacked(
     const Pieces& pieces, Bitboard targetSquares, Bitboard enemyPieces) noexcept;
 
 /*
@@ -98,6 +113,25 @@ constexpr bool squares_attacked(
     const auto kingAttacks = patterns::king(pieces.king);
 
     return (kingAttacks & targetSquares).any();
+}
+
+template <Color Side>
+constexpr size_t num_squares_attacked(
+    const Pieces& pieces, Bitboard targetSquares, Bitboard enemyPieces) noexcept
+{
+    const auto friendlyPieces = pieces.occupied;
+    const auto emptySquares   = (friendlyPieces | enemyPieces).inverse();
+
+    const auto pawnAttacks   = patterns::pawn_attacks<Side>(pieces.pawns);
+    const auto knightAttacks = patterns::knight(pieces.knights);
+    const auto queenAttacks  = pseudo_legal::queen(pieces.queens, emptySquares, friendlyPieces);
+    const auto rookAttacks   = pseudo_legal::rook(pieces.rooks, emptySquares, friendlyPieces);
+    const auto bishopAttacks = pseudo_legal::bishop(pieces.bishops, emptySquares, friendlyPieces);
+    const auto kingAttacks   = patterns::king(pieces.king);
+
+    const auto allAttacks = pawnAttacks | knightAttacks | queenAttacks | rookAttacks | bishopAttacks | kingAttacks;
+
+    return (targetSquares & allAttacks).count();
 }
 
 } // namespace chess::moves
