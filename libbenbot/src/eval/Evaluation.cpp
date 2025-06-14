@@ -15,6 +15,7 @@
 #include <libchess/game/CastlingRights.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
+#include <libchess/moves/PseudoLegal.hpp>
 #include <libchess/pieces/Colors.hpp>
 
 namespace chess::eval {
@@ -88,6 +89,30 @@ namespace {
         };
 
         return score_side_rooks(position.our_pieces()) - score_side_rooks(position.their_pieces());
+    }
+
+    // bonus for connected rooks
+    [[nodiscard, gnu::const]] int score_connected_rooks(
+        const Position& position) noexcept
+    {
+        static constexpr auto CONNECTED_ROOKS_BONUS = 10;
+
+        auto score_connected_rooks = [emptySquares = position.free()](const Pieces& pieces) {
+            auto score { 0 };
+
+            for (const auto rookPos : pieces.rooks.subboards()) {
+                // check this way because the top-level rook move generation function prunes squares occupied by friendly pieces,
+                // but we want to check if the rook can attack a square occupied by another friendly rook
+                const auto attackedSquares = moves::pseudo_legal::detail::rook_attacks(rookPos, emptySquares);
+
+                if ((attackedSquares & pieces.rooks).count() > 1uz)
+                    score += CONNECTED_ROOKS_BONUS;
+            }
+
+            return score;
+        };
+
+        return score_connected_rooks(position.our_pieces()) - score_connected_rooks(position.their_pieces());
     }
 
     // NB. I tried adding a bonus for bishops on open diagonals, but that seemed to make the engine weaker
