@@ -68,25 +68,6 @@ struct Options final {
     std::vector<Move> movesToSearch;
 };
 
-/** Finds the best move for the side to move in the given position.
-
-    ``exitFlag`` will be queried after each iteration of the iterative
-    deepening loop, and the search will exit if the flag has been set to true.
-
-    See the Context and Thread classes for higher-level encapsulations of
-    search functionality.
-
-    @throws std::invalid_argument An exception will be thrown if there are
-    no legal moves for the side to move in the given position.
-
-    @ingroup search
-    @see Context, Options, Thread
- */
-[[nodiscard]] Move find_best_move(
-    const Options&          options,
-    TranspositionTable&     transTable,
-    const std::atomic_bool& exitFlag = false);
-
 /** This struct encapsulates everything needed to perform a search.
     You can keep one of these alive between searches by simply updating
     the options and then calling ``search()`` again.
@@ -113,14 +94,13 @@ struct Context final {
     std::atomic_bool exitFlag { false };
 
     /** Performs a search.
+
+        @throws std::invalid_argument An exception will be thrown if there are
+        no legal moves for the side to move in the given position.
+
         @see find_best_move()
      */
-    [[nodiscard]] Move search()
-    {
-        exitFlag.store(false);
-
-        return find_best_move(options, transTable, exitFlag);
-    }
+    [[nodiscard]] Move search();
 };
 
 } // namespace chess::search

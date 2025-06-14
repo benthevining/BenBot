@@ -225,31 +225,30 @@ using HighResolutionSteadyClock = std::conditional_t<
     std::chrono::high_resolution_clock,
     std::chrono::steady_clock>;
 
-Move find_best_move(
-    const Options&          options,
-    TranspositionTable&     transTable,
-    const std::atomic_bool& exitFlag)
+Move Context::search()
 {
+    exitFlag.store(false);
+
     assert(options.depth > 0uz);
 
     const auto searchStartTime = HighResolutionSteadyClock::now();
 
-    std::vector<Move> moves;
+    // if the movesToSearch was empty, then we search all legal moves
+    if (options.movesToSearch.empty()) {
+        [[likely]];
 
-    if (options.movesToSearch.empty())
-        moves::generate(options.position, std::back_inserter(moves));
-    else
-        std::ranges::copy(options.movesToSearch, std::back_inserter(moves));
+        moves::generate(options.position, std::back_inserter(options.movesToSearch));
 
-    if (moves.empty()) {
-        throw std::invalid_argument {
-            std::format(
-                "No legal moves in position {}",
-                notation::to_fen(options.position))
-        };
+        if (options.movesToSearch.empty()) {
+            throw std::invalid_argument {
+                std::format(
+                    "No legal moves in position {}",
+                    notation::to_fen(options.position))
+            };
+        }
     }
 
-    const auto numMovesToSearch = options.maxNodes.or_else([numMoves = moves.size()] {
+    const auto numMovesToSearch = options.maxNodes.or_else([numMoves = options.movesToSearch.size()] {
                                                       return std::optional { numMoves };
                                                   })
                                       .value();
@@ -260,12 +259,10 @@ Move find_best_move(
 
     auto alpha = -EVAL_MAX;
 
-    auto depth = 1uz;
-
     // iterative deepening
-    for (; depth <= options.depth; ++depth) {
-        const bool shouldExit = [depth, &exitFlag, &options, &searchStartTime] {
-            if (depth < 2uz)
+    for (auto depth = 1uz; depth <= options.depth; ++depth) {
+        const bool shouldExit = [depth, this, &searchStartTime] {
+            if (depth == 1uz)
                 return false;
 
             if (exitFlag.load())
@@ -284,13 +281,13 @@ Move find_best_move(
 
         // we can generate the legal moves only once, but we should reorder them each iteration
         // because the move ordering will change based on the evaluations done during the last iteration
-        detail::order_moves_for_search(options.position, moves, transTable);
+        detail::order_moves_for_search(options.position, options.movesToSearch, transTable);
 
-        for (const auto& move : moves | std::views::take(numMovesToSearch)) {
-            const auto newPosition = game::after_move(options.position, move);
-
+        for (const auto& move : options.movesToSearch | std::views::take(numMovesToSearch)) {
             const auto score = -alpha_beta(
-                -beta, -alpha, newPosition, depth, 1uz, transTable);
+                -beta, -alpha,
+                game::after_move(options.position, move),
+                depth, 1uz, transTable);
 
             if (score > alpha) {
                 bestMove = move;
@@ -299,9 +296,17 @@ Move find_best_move(
         }
     }
 
-    transTable.store(options.position, { .searchedDepth = depth,
-                                           .eval        = alpha,
-                                           .evalType    = EvalType::Exact,
+    // store the root position evaluation / best move for move ordering of the next search() invocation
+    // the evaluation is the evaluation of the position resulting from playing the best move
+
+    const auto* bestStored = transTable.find(
+        game::after_move(options.position, bestMove.value()));
+
+    assert(bestStored != nullptr);
+
+    transTable.store(options.position, { .searchedDepth = bestStored->searchedDepth,
+                                           .eval        = bestStored->eval,
+                                           .evalType    = bestStored->evalType,
                                            .bestMove    = bestMove });
 
     return bestMove.value();
