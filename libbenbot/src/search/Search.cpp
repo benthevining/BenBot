@@ -335,9 +335,13 @@ Move Context<PrintUCIInfo>::search()
                 bestMove = move;
                 alpha    = score;
             }
+
+            if (interrupter.should_exit())
+                goto end_search;
         }
     }
 
+end_search:
     const auto score = alpha;
 
     // store the root position evaluation / best move for move ordering of the next search() invocation
