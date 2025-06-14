@@ -1,6 +1,6 @@
 # libbenbot
 
-This directory defines BenBot's evaluation and search logic.
+This library defines BenBot's evaluation and search logic.
 
 Include style is:
 ```cpp

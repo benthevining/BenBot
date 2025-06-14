@@ -18,7 +18,6 @@
 #include <libbenbot/search/Search.hpp>
 #include <libbenbot/search/TranspositionTable.hpp>
 #include <libchess/game/Position.hpp>
-#include <libchess/game/TimeControl.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/UCI.hpp>
@@ -342,6 +341,24 @@ Move Context<PrintUCIInfo>::search()
 template struct Context<true>;
 template struct Context<false>;
 
+namespace {
+
+    [[nodiscard]] Milliseconds determine_search_time(
+        const Milliseconds timeRemaining, const std::optional<Milliseconds> increment) noexcept
+    {
+        const auto incValue = increment.or_else([] {
+                                           return std::optional { Milliseconds { 0 } };
+                                       })
+                                  .value();
+
+        return Milliseconds {
+            (timeRemaining.count() / 20uz)
+            + (incValue.count() / 2uz)
+        };
+    }
+
+} // namespace
+
 void Options::update_from(uci::GoCommandOptions&& goOptions)
 {
     // always clear this, because if movesToSearch isn't specified, we
@@ -367,15 +384,11 @@ void Options::update_from(uci::GoCommandOptions&& goOptions)
 
         const auto& timeLeft = isWhite ? goOptions.whiteTimeLeft : goOptions.blackTimeLeft;
 
+        // need to know at least our time remaining in order to calculate search time limit
         if (timeLeft.has_value()) {
-            const auto& inc = isWhite ? goOptions.whiteInc : goOptions.blackInc;
-
-            const auto incValue = inc.or_else([] {
-                                         return std::optional { Milliseconds { 0 } };
-                                     })
-                                      .value();
-
-            searchTime = game::determine_search_time(*timeLeft, incValue);
+            searchTime = determine_search_time(
+                *timeLeft,
+                isWhite ? goOptions.whiteInc : goOptions.blackInc);
         }
     }
 }
