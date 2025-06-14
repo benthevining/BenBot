@@ -9,6 +9,7 @@
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Material.hpp>
 #include <libbenbot/eval/PieceSquareTables.hpp>
+#include <libchess/board/Masks.hpp>
 #include <libchess/board/Pieces.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
@@ -17,6 +18,10 @@
 namespace chess::eval {
 
 namespace {
+
+    using board::Pieces;
+
+    namespace masks = board::masks;
 
     [[nodiscard, gnu::const]] bool is_draw_by_insufficient_material(
         const Position& position) noexcept
@@ -66,7 +71,7 @@ namespace {
         static constexpr auto HALF_OPEN_FILE_BONUS = 30;
         static constexpr auto OPEN_FILE_BONUS      = 70;
 
-        auto score_side_rooks = [&position](const board::Pieces& pieces) {
+        auto score_side_rooks = [&position](const Pieces& pieces) {
             auto score { 0 };
 
             for (const auto square : pieces.rooks.squares()) {
@@ -80,6 +85,54 @@ namespace {
         };
 
         return score_side_rooks(position.our_pieces()) - score_side_rooks(position.their_pieces());
+    }
+
+    // awards a bonus for bishops on open diagonals or antidiagonals
+    [[nodiscard, gnu::const]] int score_bishop_diags(
+        const Position& position) noexcept
+    {
+        static constexpr auto OPEN_DIAG_BONUS = 55;
+
+        auto score_side_bishops = [allPawns = position.whitePieces.pawns | position.blackPieces.pawns](const Pieces& pieces) {
+            auto score { 0 };
+
+            for (const auto square : pieces.bishops.squares()) {
+                if ((masks::diagonal(square) & allPawns).none())
+                    score += OPEN_DIAG_BONUS;
+
+                if ((masks::antidiagonal(square) & allPawns).none())
+                    score += OPEN_DIAG_BONUS;
+            }
+
+            return score;
+        };
+
+        return score_side_bishops(position.our_pieces()) - score_side_bishops(position.their_pieces());
+    }
+
+    // penalty for king on open file or diagonal
+    [[nodiscard, gnu::const]] int score_king_safety(
+        const Position& position) noexcept
+    {
+        static constexpr auto OPEN_KING_PENALTY = -35;
+
+        auto score_side_king = [&position,
+                                   allPawns = position.whitePieces.pawns | position.blackPieces.pawns](const Pieces& pieces) {
+            auto score { 0 };
+
+            const auto location = pieces.get_king_location();
+
+            if (position.is_file_half_open(location.file))
+                score += (OPEN_KING_PENALTY / 2);
+            else if (position.is_file_open(location.file)
+                     || (masks::diagonal(location) & allPawns).none()
+                     || (masks::antidiagonal(location) & allPawns).none())
+                score += OPEN_KING_PENALTY;
+
+            return score;
+        };
+
+        return score_side_king(position.our_pieces()) - score_side_king(position.their_pieces());
     }
 
 } // namespace
@@ -103,7 +156,8 @@ int evaluate(const Position& position)
 
     return score_material(position)
          + score_piece_placement(position)
-         + score_rook_files(position);
+         + score_rook_files(position)
+         + score_king_safety(position);
 }
 
 } // namespace chess::eval
