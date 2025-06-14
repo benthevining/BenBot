@@ -9,6 +9,7 @@
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Material.hpp>
 #include <libbenbot/eval/PieceSquareTables.hpp>
+#include <libchess/board/Pieces.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/pieces/Colors.hpp>
@@ -58,6 +59,29 @@ namespace {
         return numWhiteKnights + numWhiteBishops == 1uz;
     }
 
+    // awards a bonus for rooks on open or half-open files
+    [[nodiscard, gnu::const]] int score_rook_files(
+        const Position& position) noexcept
+    {
+        static constexpr auto HALF_OPEN_FILE_BONUS = 30;
+        static constexpr auto OPEN_FILE_BONUS      = 70;
+
+        auto score_side_rooks = [&position](const board::Pieces& pieces) {
+            auto score { 0 };
+
+            for (const auto square : pieces.rooks.squares()) {
+                if (position.is_file_half_open(square.file))
+                    score += HALF_OPEN_FILE_BONUS;
+                else if (position.is_file_open(square.file))
+                    score += OPEN_FILE_BONUS;
+            }
+
+            return score;
+        };
+
+        return score_side_rooks(position.our_pieces()) - score_side_rooks(position.their_pieces());
+    }
+
 } // namespace
 
 int evaluate(const Position& position)
@@ -78,7 +102,8 @@ int evaluate(const Position& position)
     }
 
     return score_material(position)
-         + score_piece_placement(position);
+         + score_piece_placement(position)
+         + score_rook_files(position);
 }
 
 } // namespace chess::eval
