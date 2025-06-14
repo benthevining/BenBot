@@ -17,6 +17,7 @@
 #include <libchess/pieces/PieceTypes.hpp>
 #include <libchess/search/TranspositionTable.hpp>
 #include <limits>
+#include <optional>
 #include <span>
 
 namespace chess::search::detail {
@@ -41,32 +42,34 @@ namespace {
     [[nodiscard, gnu::const]] int move_ordering_score(
         const Position& currentPosition, const Move& move,
         const TranspositionTable& transTable,
-        const Bitboard            opponentPawnAttacks)
+        const Bitboard            opponentPawnAttacks,
+        const std::optional<Move> bestMove)
     {
         namespace piece_values = eval::piece_values;
 
-        static constexpr auto PV_NODE_BONUS { 1500 };        // cppcheck-suppress variableScope
+        static constexpr auto PV_NODE_BONUS { 15000 };       // cppcheck-suppress variableScope
+        static constexpr auto CUT_NODE_PENALTY { -15000 };   // cppcheck-suppress variableScope
         static constexpr auto CAPTURE_MULTIPLIER { 10 };     // cppcheck-suppress variableScope
         static constexpr auto PROMOTION_MULTIPLIER { 15 };   // cppcheck-suppress variableScope
         static constexpr auto CASTLING_BONUS { 30 };         // cppcheck-suppress variableScope
         static constexpr auto PAWN_CONTROLS_PENALTY { 350 }; // cppcheck-suppress variableScope
 
         // check if this move was recorded as the best move in this position
-        if (const auto* currPosRecord = transTable.find(currentPosition))
-            if (currPosRecord->bestMove.has_value() && currPosRecord->bestMove == move)
-                return std::numeric_limits<int>::max(); // arbitrarily large score to ensure this move is ordered first
-
-        auto score { 0 };
+        if (bestMove.has_value() && *bestMove == move)
+            return std::numeric_limits<int>::max(); // arbitrarily large score to ensure this move is ordered first
 
         // look up stored record of resulting position after making move
         if (const auto* record = transTable.find(game::after_move(currentPosition, move))) {
-            if (record->evalType == TranspositionTable::Record::EvalType::Exact) {
-                score += PV_NODE_BONUS;
+            switch (record->evalType) {
+                using enum TranspositionTable::Record::EvalType;
 
-                // we only use the stored evaluation value if this is a PV node
-                score += record->eval;
+                case Exact: return PV_NODE_BONUS;
+                case Beta : return CUT_NODE_PENALTY;
+                default   : break;
             }
         }
+
+        auto score { 0 };
 
         if (const auto capturedType = currentPosition.their_pieces().get_piece_on(move.to)) {
             // NB. checking for captures this way prevents en passant from entering this branch
@@ -99,12 +102,18 @@ void order_moves_for_search(
     const std::span<Move>     moves,
     const TranspositionTable& transTable)
 {
+    std::optional<Move> bestMove;
+
+    // do this lookup only once
+    if (const auto* currPosRecord = transTable.find(currentPosition))
+        bestMove = currPosRecord->bestMove;
+
     std::ranges::sort(
         moves,
-        [&currentPosition, &transTable,
+        [&currentPosition, &transTable, bestMove,
             opponentPawnAttacks = get_opponent_pawn_attacks(currentPosition)](const Move& first, const Move& second) {
-            return move_ordering_score(currentPosition, first, transTable, opponentPawnAttacks)
-                 > move_ordering_score(currentPosition, second, transTable, opponentPawnAttacks);
+            return move_ordering_score(currentPosition, first, transTable, opponentPawnAttacks, bestMove)
+                 > move_ordering_score(currentPosition, second, transTable, opponentPawnAttacks, bestMove);
         });
 }
 
