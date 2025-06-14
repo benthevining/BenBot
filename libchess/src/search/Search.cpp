@@ -48,26 +48,29 @@ namespace {
         return (EVAL_MAX - static_cast<int>(plyFromRoot)) * -1;
     }
 
-    // this function implements both normal alpha/beta search as well as the quiescence search
-    // the quiescence search searches only captures, with the goal of evaluating only quiet
-    // positions to try and improve the stability of the static evaluation function
-    template <bool QuiescenceSearch>
-    [[nodiscard]] int alpha_beta(
+    // searches only captures, with no depth limit, to try to
+    // improve the stability of the static evaluation function
+    [[nodiscard]] int quiescence(
         int alpha, const int beta,
         const Position&     currentPosition,
-        const size_t        depth,
-        const size_t        plyFromRoot,
+        const size_t        plyFromRoot, // increases each iteration (recursion)
         TranspositionTable& transTable)
     {
         assert(beta > alpha);
 
+        // In quiescence search mode, we have no depth limit, so I think it makes sense to store
+        // a low value here so that non-quiescence searches to depths of 2 and higher will overwrite
+        // results stored from quiescence searches (because those searches will consider quiet moves
+        // that may be stronger).
+        static constexpr auto depth = 1uz;
+
         // check if this position has been searched before to at
         // least this depth and within these bounds for non-PV nodes
-        if (const auto eval = transTable.probe_eval(currentPosition, depth, alpha, beta))
-            return eval.value();
+        // TODO: require some arbitrary higher depth for a table hit here?
+        if (const auto value = transTable.probe_eval(currentPosition, depth, alpha, beta))
+            return value.value();
 
         if (currentPosition.is_draw()) {
-            // conclusive draws: stalemate, threefold repetition, 50-move rule
             transTable.store(
                 currentPosition, { .searchedDepth = depth,
                                      .eval        = eval::DRAW,
@@ -76,10 +79,104 @@ namespace {
             return eval::DRAW;
         }
 
-        auto moves = moves::generate<QuiescenceSearch>(currentPosition);
+        // in quiescence search, we actually call the static evaluation function
+        auto evaluation = eval::evaluate(currentPosition);
+
+        // see if we can get a cutoff (we may not need to generate moves for this position)
+        if (evaluation >= beta) {
+            transTable.store(
+                currentPosition, { .searchedDepth = depth,
+                                     .eval        = beta,
+                                     .evalType    = EvalType::Beta });
+
+            return beta;
+        }
+
+        alpha = std::max(alpha, evaluation);
+
+        auto moves = moves::generate<true>(currentPosition); // captures only
 
         if (moves.empty() && currentPosition.is_check()) {
-            // checkmate
+            evaluation = checkmate_score(plyFromRoot);
+
+            transTable.store(
+                currentPosition, { .searchedDepth = depth,
+                                     .eval        = evaluation, // TODO: needs scaling/mapping?
+                                     .evalType    = EvalType::Exact });
+
+            return evaluation;
+        }
+
+        detail::order_moves_for_search(currentPosition, moves, transTable);
+
+        auto evalType { EvalType::Alpha };
+
+        // even though we're only searching captures, we can still record
+        // the best ones found to help with move ordering in later searches
+        std::optional<Move> bestMove;
+
+        for (const auto& move : moves) {
+            assert(currentPosition.is_capture(move));
+
+            evaluation = -quiescence(
+                -beta, -alpha,
+                game::after_move(currentPosition, move),
+                plyFromRoot + 1uz, transTable);
+
+            if (evaluation >= beta) {
+                transTable.store(
+                    currentPosition, { .searchedDepth = depth,
+                                         .eval        = beta,
+                                         .evalType    = EvalType::Beta,
+                                         .bestMove    = bestMove });
+
+                return beta;
+            }
+
+            if (evaluation > alpha) {
+                bestMove = move;
+                evalType = EvalType::Exact;
+                alpha    = evaluation;
+            }
+        }
+
+        transTable.store(
+            currentPosition, { .searchedDepth = depth,
+                                 .eval        = alpha,
+                                 .evalType    = evalType,
+                                 .bestMove    = bestMove });
+
+        return alpha;
+    }
+
+    // standard alpha/beta search algorithm
+    // this is called in the body of the higher-level iterative deepening loop
+    [[nodiscard]] int alpha_beta(
+        int alpha, const int beta,
+        const Position&     currentPosition,
+        const size_t        depth,       // this is the depth left to be searched - decreases each iteration, and when this reaches 1, we call the quiescence search
+        const size_t        plyFromRoot, // increases each iteration
+        TranspositionTable& transTable)
+    {
+        assert(beta > alpha);
+
+        // check if this position has been searched before to at
+        // least this depth and within these bounds for non-PV nodes
+        if (const auto value = transTable.probe_eval(currentPosition, depth, alpha, beta))
+            return value.value();
+
+        if (currentPosition.is_draw()) {
+            transTable.store(
+                currentPosition, { .searchedDepth = depth,
+                                     .eval        = eval::DRAW,
+                                     .evalType    = EvalType::Exact });
+
+            return eval::DRAW;
+        }
+
+        auto moves = moves::generate(currentPosition);
+
+        if (moves.empty() && currentPosition.is_check()) {
             const auto eval = checkmate_score(plyFromRoot);
 
             transTable.store(
@@ -88,23 +185,6 @@ namespace {
                                      .evalType    = EvalType::Exact });
 
             return eval;
-        }
-
-        if constexpr (QuiescenceSearch) {
-            // during quiescence search, we first call the static
-            // evaluation function to see if we can get a cutoff
-            const auto eval = eval::evaluate(currentPosition);
-
-            if (eval >= beta) {
-                transTable.store(
-                    currentPosition, { .searchedDepth = depth,
-                                         .eval        = beta,
-                                         .evalType    = EvalType::Beta });
-
-                return beta;
-            }
-
-            alpha = std::max(alpha, eval);
         }
 
         detail::order_moves_for_search(currentPosition, moves, transTable);
@@ -116,11 +196,9 @@ namespace {
         for (const auto& move : moves) {
             const auto newPosition = game::after_move(currentPosition, move);
 
-            // remain quiescence search if we were called as a quiescence search
-            // otherwise, switch to quiescence search mode if depth has decremented to 1
-            const auto eval = (! QuiescenceSearch && depth > 1uz)
-                                ? -alpha_beta<false>(-beta, -alpha, newPosition, depth - 1uz, plyFromRoot + 1uz, transTable)
-                                : -alpha_beta<true>(-beta, -alpha, newPosition, depth, plyFromRoot + 1uz, transTable); // NB. don't decrement depth here to avoid uint wraparound issues!
+            const auto eval = depth > 1uz
+                                ? -alpha_beta(-beta, -alpha, newPosition, depth - 1uz, plyFromRoot + 1uz, transTable)
+                                : -quiescence(-beta, -alpha, newPosition, plyFromRoot + 1uz, transTable);
 
             if (eval >= beta) {
                 transTable.store(
@@ -167,8 +245,6 @@ Move Context::search()
 
     // if the movesToSearch was empty, then we search all legal moves
     if (options.movesToSearch.empty()) {
-        [[likely]];
-
         moves::generate(options.position, std::back_inserter(options.movesToSearch));
 
         if (options.movesToSearch.empty()) {
@@ -180,6 +256,7 @@ Move Context::search()
         }
     }
 
+    // TODO: I think this is technically supposed to be the max *nodes* to search?
     const auto numMovesToSearch = options.maxNodes.or_else([numMoves = options.movesToSearch.size()] {
                                                       return std::optional { numMoves };
                                                   })
@@ -216,7 +293,7 @@ Move Context::search()
         detail::order_moves_for_search(options.position, options.movesToSearch, transTable);
 
         for (const auto& move : options.movesToSearch | std::views::take(numMovesToSearch)) {
-            const auto score = -alpha_beta<false>(
+            const auto score = -alpha_beta(
                 -beta, -alpha,
                 game::after_move(options.position, move),
                 depth, 1uz, transTable);
