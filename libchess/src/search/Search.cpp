@@ -120,7 +120,7 @@ namespace {
             // otherwise, switch to quiescence search mode if depth has decremented to 1
             const auto eval = (! QuiescenceSearch && depth > 1uz)
                                 ? -alpha_beta<false>(-beta, -alpha, newPosition, depth - 1uz, plyFromRoot + 1uz, transTable)
-                                : -alpha_beta<true>(-beta, -alpha, newPosition, depth - 1uz, plyFromRoot + 1uz, transTable);
+                                : -alpha_beta<true>(-beta, -alpha, newPosition, depth, plyFromRoot + 1uz, transTable); // NB. don't decrement depth here to avoid uint wraparound issues!
 
             if (eval >= beta) {
                 transTable.store(

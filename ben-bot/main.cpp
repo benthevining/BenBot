@@ -11,6 +11,7 @@
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdlib>
 #include <exception>
+#include <future>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/notation/UCI.hpp>
@@ -44,12 +45,20 @@ class BenBotEngine final : public uci::EngineBase {
         opts.update_search_options(
             searchOptions, searchOptions.position.sideToMove == Color::White);
 
+        std::promise<Move> bestMove;
+
+        auto value = bestMove.get_future();
+
         searcherThread.run(
             searchOptions,
-            [](const Move bestMove) {
-                std::println("bestmove {}",
-                    notation::to_uci(bestMove));
+            [&bestMove](const Move move) {
+                bestMove.set_value(move);
             });
+
+        value.wait();
+
+        std::println("bestmove {}",
+            notation::to_uci(value.get()));
     }
 
     void abort_search() override { searcherThread.interrupt(); }
