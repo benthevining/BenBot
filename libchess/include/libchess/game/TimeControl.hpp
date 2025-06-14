@@ -48,8 +48,8 @@ constexpr Milliseconds determine_search_time(
     const Milliseconds& timeRemaining, const Milliseconds& increment) noexcept
 {
     return Milliseconds {
-        timeRemaining / Milliseconds { 20 }
-        + increment / Milliseconds { 2 }
+        (timeRemaining.count() / 20uz)
+        + (increment.count() / 2uz)
     };
 }
 

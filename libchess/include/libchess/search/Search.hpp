@@ -22,6 +22,7 @@
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libchess/moves/Move.hpp>
 #include <libchess/search/TranspositionTable.hpp>
+#include <limits>
 #include <optional>
 #include <vector>
 
@@ -52,7 +53,7 @@ struct Options final {
     Position position;
 
     /** The maximum search depth (in plies). */
-    size_t depth { 4uz };
+    size_t depth { std::numeric_limits<size_t>::max() };
 
     /** The maximum search time. */
     std::optional<Milliseconds> searchTime;
@@ -104,7 +105,7 @@ struct Context final {
 
         @see find_best_move()
      */
-    [[nodiscard]] Move search();
+    Move search();
 };
 
 } // namespace chess::search

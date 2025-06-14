@@ -321,6 +321,15 @@ Move Context<PrintUCIInfo>::search()
                                            .bestMove    = bestMove });
 
     if constexpr (PrintUCIInfo) {
+        const auto endTime = HighResolutionSteadyClock::now();
+
+        const auto searchDuration = std::chrono::duration_cast<Milliseconds>(endTime - searchStartTime);
+
+        // TODO: nodes searched, PV, mate scores
+        std::println(
+            "info depth {} score cp {} time {}",
+            bestStored->searchedDepth, bestStored->eval, searchDuration.count());
+
         std::println("bestmove {}", notation::to_uci(bestMove.value()));
     }
 

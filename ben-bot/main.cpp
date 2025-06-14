@@ -11,7 +11,6 @@
 #include <libchess/game/Position.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/search/Search.hpp>
-#include <libchess/search/Thread.hpp>
 #include <libchess/uci/CommandParsing.hpp>
 #include <libchess/uci/EngineBase.hpp>
 #include <print>
@@ -24,27 +23,20 @@ class BenBotEngine final : public uci::EngineBase {
 
     [[nodiscard]] std::string_view get_author() const override { return "Ben Vining"; }
 
-    void new_game() override { searcherThread.new_game(); }
+    void new_game() override { searchContext.transTable.clear(); }
 
-    void set_position(const game::Position& pos) override { searchOptions.position = pos; }
+    void set_position(const game::Position& pos) override { searchContext.options.position = pos; }
 
     void go(const uci::GoCommandOptions& opts) override
     {
         opts.update_search_options(
-            searchOptions,
-            searchOptions.position.sideToMove == pieces::Color::White);
+            searchContext.options,
+            searchContext.options.position.sideToMove == pieces::Color::White);
 
-        searcherThread.run(searchOptions);
+        searchContext.search();
     }
 
-    void abort_search() override { searcherThread.interrupt(); }
-    void stop_search() override { searcherThread.interrupt(); }
-
-    void wait() override { searcherThread.wait(); }
-
-    search::Thread searcherThread;
-
-    search::Options searchOptions;
+    search::Context<true> searchContext;
 };
 
 } // namespace chess

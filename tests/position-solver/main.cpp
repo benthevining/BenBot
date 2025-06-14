@@ -45,7 +45,7 @@ try {
 
     const auto depthString = args.front();
 
-    chess::search::Context context;
+    chess::search::Context<false> context;
 
     context.options.position = chess::notation::from_fen(fenString);
     context.options.depth    = chess::util::int_from_string(depthString, 4uz);

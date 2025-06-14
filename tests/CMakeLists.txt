@@ -26,3 +26,5 @@ add_subdirectory (unit)
 add_subdirectory (perft)
 add_subdirectory (rampart)
 add_subdirectory (position-solver)
+
+include (fastchess.cmake)
