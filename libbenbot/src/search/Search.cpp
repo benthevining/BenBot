@@ -98,7 +98,8 @@ namespace {
         int alpha, const int beta,
         const Position&     currentPosition,
         const size_t        plyFromRoot, // increases each iteration (recursion)
-        TranspositionTable& transTable)
+        TranspositionTable& transTable,
+        const Interrupter&  interrupter)
     {
         assert(beta > alpha);
 
@@ -162,10 +163,13 @@ namespace {
         for (const auto& move : moves) {
             assert(currentPosition.is_capture(move));
 
+            if (interrupter.should_exit())
+                return evaluation;
+
             evaluation = -quiescence(
                 -beta, -alpha,
                 game::after_move(currentPosition, move),
-                plyFromRoot + 1uz, transTable);
+                plyFromRoot + 1uz, transTable, interrupter);
 
             if (evaluation >= beta) {
                 transTable.store(
@@ -246,7 +250,7 @@ namespace {
 
             const auto eval = depth > 1uz
                                 ? -alpha_beta(-beta, -alpha, newPosition, depth - 1uz, plyFromRoot + 1uz, transTable, interrupter)
-                                : -quiescence(-beta, -alpha, newPosition, plyFromRoot + 1uz, transTable);
+                                : -quiescence(-beta, -alpha, newPosition, plyFromRoot + 1uz, transTable, interrupter);
 
             if (eval >= beta) {
                 transTable.store(
