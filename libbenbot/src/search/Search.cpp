@@ -53,13 +53,6 @@ namespace {
 
     // Times the search and also watches the "exit" flag
     struct Interrupter final {
-        // On some systems, high_resolution_clock can be unsteady,
-        // in which case it's better to fall back to steady_clock
-        using Clock = std::conditional_t<
-            std::chrono::high_resolution_clock::is_steady,
-            std::chrono::high_resolution_clock,
-            std::chrono::steady_clock>;
-
         Interrupter(
             const std::atomic_bool&           exitFlagToUse,
             const std::optional<Milliseconds> maxSearchTime)
@@ -85,6 +78,13 @@ namespace {
         }
 
     private:
+        // On some systems, high_resolution_clock can be unsteady,
+        // in which case it's better to fall back to steady_clock
+        using Clock = std::conditional_t<
+            std::chrono::high_resolution_clock::is_steady,
+            std::chrono::high_resolution_clock,
+            std::chrono::steady_clock>;
+
         const std::atomic_bool& exitFlag;
 
         std::chrono::time_point<Clock> startTime { Clock::now() };
@@ -200,7 +200,8 @@ namespace {
         const Position&     currentPosition,
         const size_t        depth,       // this is the depth left to be searched - decreases each iteration, and when this reaches 1, we call the quiescence search
         const size_t        plyFromRoot, // increases each iteration
-        TranspositionTable& transTable)
+        TranspositionTable& transTable,
+        const Interrupter&  interrupter)
     {
         assert(beta > alpha);
 
@@ -238,10 +239,13 @@ namespace {
         std::optional<Move> bestMove;
 
         for (const auto& move : moves) {
+            if (interrupter.should_exit())
+                return beta;
+
             const auto newPosition = game::after_move(currentPosition, move);
 
             const auto eval = depth > 1uz
-                                ? -alpha_beta(-beta, -alpha, newPosition, depth - 1uz, plyFromRoot + 1uz, transTable)
+                                ? -alpha_beta(-beta, -alpha, newPosition, depth - 1uz, plyFromRoot + 1uz, transTable, interrupter)
                                 : -quiescence(-beta, -alpha, newPosition, plyFromRoot + 1uz, transTable);
 
             if (eval >= beta) {
@@ -321,7 +325,7 @@ Move Context<PrintUCIInfo>::search()
             const auto score = -alpha_beta(
                 -beta, -alpha,
                 game::after_move(options.position, move),
-                depth, 1uz, transTable);
+                depth, 1uz, transTable, interrupter);
 
             if (score > alpha) {
                 bestMove = move;
