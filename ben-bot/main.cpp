@@ -8,13 +8,13 @@
 
 #include <cstdlib>
 #include <exception>
+#include <libbenbot/search/Search.hpp>
 #include <libchess/game/Position.hpp>
-#include <libchess/pieces/Colors.hpp>
-#include <libchess/search/Search.hpp>
 #include <libchess/uci/CommandParsing.hpp>
 #include <libchess/uci/EngineBase.hpp>
 #include <print>
 #include <string_view>
+#include <utility>
 
 namespace chess {
 
@@ -27,12 +27,11 @@ class BenBotEngine final : public uci::EngineBase {
 
     void set_position(const game::Position& pos) override { searchContext.options.position = pos; }
 
-    void go(const uci::GoCommandOptions& opts) override
+    void go(uci::GoCommandOptions&& opts) override
     {
-        opts.update_search_options(
-            searchContext.options,
-            searchContext.options.position.sideToMove == pieces::Color::White);
+        searchContext.options.update_from(std::move(opts));
 
+        // this function blocks & synchronously prints UCI "info" & "bestmove" output
         searchContext.search();
     }
 

@@ -20,8 +20,9 @@
 #include <atomic>
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
+#include <libbenbot/search/TranspositionTable.hpp>
 #include <libchess/moves/Move.hpp>
-#include <libchess/search/TranspositionTable.hpp>
+#include <libchess/uci/CommandParsing.hpp>
 #include <limits>
 #include <optional>
 #include <vector>
@@ -67,6 +68,9 @@ struct Options final {
         If this is empty, all legal moves in the position will be searched.
      */
     std::vector<Move> movesToSearch;
+
+    /** Updates the values in this options struct with the UCI "go" command options. */
+    void update_from(uci::GoCommandOptions&& goOptions);
 };
 
 /** This struct encapsulates everything needed to perform a search.

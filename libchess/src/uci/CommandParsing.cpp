@@ -9,11 +9,9 @@
 #include <algorithm>
 #include <array>
 #include <iterator>
-#include <libchess/game/TimeControl.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/UCI.hpp>
-#include <libchess/search/Search.hpp>
 #include <libchess/uci/CommandParsing.hpp>
 #include <libchess/util/Strings.hpp>
 #include <optional>
@@ -252,44 +250,6 @@ GoCommandOptions parse_go_options(
     }
 
     return ret;
-}
-
-void GoCommandOptions::update_search_options(
-    search::Options& searchOptions, const bool isWhite) const
-{
-    // always clear this, because if movesToSearch isn't specified, we
-    // want the search algorithm to generate all legal moves instead
-    searchOptions.movesToSearch.clear();
-
-    if (! moves.empty())
-        std::ranges::copy(moves,
-            std::back_inserter(searchOptions.movesToSearch));
-
-    if (depth.has_value())
-        searchOptions.depth = *depth;
-
-    if (nodes.has_value())
-        searchOptions.maxNodes = nodes;
-
-    // search time
-    if (searchTime.has_value())
-        searchOptions.searchTime = searchTime;
-    else if (infinite)
-        searchOptions.searchTime = std::nullopt;
-    else {
-        const auto& timeLeft = isWhite ? whiteTimeLeft : blackTimeLeft;
-
-        if (timeLeft.has_value()) {
-            const auto& inc = isWhite ? whiteInc : blackInc;
-
-            const auto incValue = inc.or_else([] {
-                                         return std::optional { Milliseconds { 0 } };
-                                     })
-                                      .value();
-
-            searchOptions.searchTime = game::determine_search_time(*timeLeft, incValue);
-        }
-    }
 }
 
 } // namespace chess::uci

@@ -10,10 +10,9 @@
 #include <cstddef> // IWYU pragma: keep - for std::ptrdiff_t
 #include <exception>
 #include <iterator>
+#include <libbenbot/search/Search.hpp>
 #include <libchess/notation/Algebraic.hpp>
 #include <libchess/notation/FEN.hpp>
-#include <libchess/search/Search.hpp>
-#include <libchess/search/TranspositionTable.hpp>
 #include <libchess/util/Strings.hpp>
 #include <print>
 #include <span>

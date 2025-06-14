@@ -8,10 +8,10 @@
 
 #include <array>
 #include <cassert>
+#include <libbenbot/eval/PieceSquareTables.hpp>
 #include <libchess/board/BitboardIndex.hpp>
 #include <libchess/board/Flips.hpp>
 #include <libchess/board/Pieces.hpp>
-#include <libchess/eval/PieceSquareTables.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <numeric>

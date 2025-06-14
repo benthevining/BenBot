@@ -14,18 +14,21 @@
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <format>
 #include <iterator>
-#include <libchess/eval/Evaluation.hpp>
+#include <libbenbot/eval/Evaluation.hpp>
+#include <libbenbot/search/Search.hpp>
+#include <libbenbot/search/TranspositionTable.hpp>
 #include <libchess/game/Position.hpp>
+#include <libchess/game/TimeControl.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/UCI.hpp>
-#include <libchess/search/Search.hpp>
-#include <libchess/search/TranspositionTable.hpp>
+#include <libchess/pieces/Colors.hpp>
 #include <optional>
 #include <print>
 #include <ranges>
 #include <stdexcept>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace chess::search {
@@ -338,5 +341,43 @@ Move Context<PrintUCIInfo>::search()
 
 template struct Context<true>;
 template struct Context<false>;
+
+void Options::update_from(uci::GoCommandOptions&& goOptions)
+{
+    // always clear this, because if movesToSearch isn't specified, we
+    // want the search algorithm to generate all legal moves instead
+    movesToSearch.clear();
+
+    if (! goOptions.moves.empty())
+        movesToSearch = std::move(goOptions.moves);
+
+    if (goOptions.depth.has_value())
+        depth = *goOptions.depth;
+
+    if (goOptions.nodes.has_value())
+        maxNodes = goOptions.nodes;
+
+    // search time
+    if (goOptions.searchTime.has_value()) {
+        searchTime = goOptions.searchTime;
+    } else if (goOptions.infinite) {
+        searchTime = std::nullopt;
+    } else {
+        const bool isWhite = position.sideToMove == pieces::Color::White;
+
+        const auto& timeLeft = isWhite ? goOptions.whiteTimeLeft : goOptions.blackTimeLeft;
+
+        if (timeLeft.has_value()) {
+            const auto& inc = isWhite ? goOptions.whiteInc : goOptions.blackInc;
+
+            const auto incValue = inc.or_else([] {
+                                         return std::optional { Milliseconds { 0 } };
+                                     })
+                                      .value();
+
+            searchTime = game::determine_search_time(*timeLeft, incValue);
+        }
+    }
+}
 
 } // namespace chess::search

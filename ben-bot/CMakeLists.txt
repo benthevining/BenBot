@@ -6,7 +6,7 @@
 
 add_executable (ben_bot)
 
-target_link_libraries (ben_bot PRIVATE libchess::libchess)
+target_link_libraries (ben_bot PRIVATE libbenbot::libbenbot)
 
 target_sources (ben_bot PRIVATE main.cpp)
 

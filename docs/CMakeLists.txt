@@ -27,11 +27,12 @@ set (DOXYGEN_FILE_PATTERNS *.hpp)
 set (DOXYGEN_INCLUDE_FILE_PATTERNS *.hpp)
 
 get_target_property (libchess_headers libchess::libchess HEADER_SET)
+get_target_property (libbenbot_headers libbenbot::libbenbot HEADER_SET)
 
 # cmake-format: off
 doxygen_add_docs (
         libchess_docs
-        "${DOXYGEN_USE_MDFILE_AS_MAINPAGE}" ${libchess_headers}
+        "${DOXYGEN_USE_MDFILE_AS_MAINPAGE}" ${libchess_headers} ${libbenbot_headers}
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
         COMMENT "Building Doxygen documentation..."
         USE_STAMP_FILE

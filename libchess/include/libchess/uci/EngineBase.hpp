@@ -86,7 +86,7 @@ struct EngineBase {
         this function has been called, the engine should print to stdout a line of the form
         "bestmove <from><to>".
      */
-    virtual void go([[maybe_unused]] const GoCommandOptions& opts) { }
+    virtual void go([[maybe_unused]] GoCommandOptions&& opts) { }
 
     /** Called after any option has changed.
         The main thread will first call ``parse()`` for each option, and then call this function.

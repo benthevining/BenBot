@@ -6,7 +6,7 @@
 
 add_executable (position_solver)
 
-target_link_libraries (position_solver PRIVATE libchess::libchess)
+target_link_libraries (position_solver PRIVATE libbenbot::libbenbot)
 
 target_sources (position_solver PRIVATE main.cpp)
 

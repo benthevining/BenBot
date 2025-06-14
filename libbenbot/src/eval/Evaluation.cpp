@@ -6,9 +6,9 @@
  * ======================================================================================
  */
 
-#include <libchess/eval/Evaluation.hpp>
-#include <libchess/eval/Material.hpp>
-#include <libchess/eval/PieceSquareTables.hpp>
+#include <libbenbot/eval/Evaluation.hpp>
+#include <libbenbot/eval/Material.hpp>
+#include <libbenbot/eval/PieceSquareTables.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/pieces/Colors.hpp>

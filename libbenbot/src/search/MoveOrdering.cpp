@@ -8,14 +8,14 @@
 
 #include "MoveOrdering.hpp" // NOLINT(build/include_subdir)
 #include <algorithm>
+#include <libbenbot/eval/Material.hpp>
+#include <libbenbot/search/TranspositionTable.hpp>
 #include <libchess/board/Bitboard.hpp>
-#include <libchess/eval/Material.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/moves/Patterns.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
-#include <libchess/search/TranspositionTable.hpp>
 #include <limits>
 #include <optional>
 #include <span>

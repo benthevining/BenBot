@@ -19,6 +19,7 @@ option (LIBCHESS_DOCS "Build the documentation (requires Doxygen)" "${PROJECT_IS
 option (LIBCHESS_TESTS "Build the tests" "${PROJECT_IS_TOP_LEVEL}")
 
 add_subdirectory (libchess)
+add_subdirectory (libbenbot)
 add_subdirectory (ben-bot)
 
 if (LIBCHESS_TESTS)
