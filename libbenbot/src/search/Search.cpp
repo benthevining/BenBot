@@ -51,6 +51,47 @@ namespace {
         return (EVAL_MAX - static_cast<int>(plyFromRoot)) * -1;
     }
 
+    // Times the search and also watches the "exit" flag
+    struct Interrupter final {
+        // On some systems, high_resolution_clock can be unsteady,
+        // in which case it's better to fall back to steady_clock
+        using Clock = std::conditional_t<
+            std::chrono::high_resolution_clock::is_steady,
+            std::chrono::high_resolution_clock,
+            std::chrono::steady_clock>;
+
+        Interrupter(
+            const std::atomic_bool&           exitFlagToUse,
+            const std::optional<Milliseconds> maxSearchTime)
+            : exitFlag { exitFlagToUse }
+            , searchTime { maxSearchTime }
+        {
+        }
+
+        [[nodiscard]] Milliseconds get_search_duration() const
+        {
+            return std::chrono::duration_cast<Milliseconds>(Clock::now() - startTime);
+        }
+
+        [[nodiscard]] bool should_exit() const
+        {
+            if (exitFlag.load())
+                return true;
+
+            if (! searchTime.has_value())
+                return false;
+
+            return get_search_duration() >= *searchTime;
+        }
+
+    private:
+        const std::atomic_bool& exitFlag;
+
+        std::chrono::time_point<Clock> startTime { Clock::now() };
+
+        std::optional<Milliseconds> searchTime;
+    };
+
     // searches only captures, with no depth limit, to try to
     // improve the stability of the static evaluation function
     [[nodiscard]] int quiescence(
@@ -231,13 +272,6 @@ namespace {
 
 } // namespace
 
-// On some systems, high_resolution_clock can be unsteady,
-// in which case it's better to fall back to steady_clock
-using HighResolutionSteadyClock = std::conditional_t<
-    std::chrono::high_resolution_clock::is_steady,
-    std::chrono::high_resolution_clock,
-    std::chrono::steady_clock>;
-
 template <bool PrintUCIInfo>
 Move Context<PrintUCIInfo>::search()
 {
@@ -245,7 +279,7 @@ Move Context<PrintUCIInfo>::search()
 
     assert(options.depth > 0uz);
 
-    const auto searchStartTime = HighResolutionSteadyClock::now();
+    const Interrupter interrupter { exitFlag, options.searchTime };
 
     // if the movesToSearch was empty, then we search all legal moves
     if (options.movesToSearch.empty()) {
@@ -276,22 +310,7 @@ Move Context<PrintUCIInfo>::search()
     auto depth = 1uz;
 
     for (; depth <= options.depth; ++depth) {
-        const bool shouldExit = [depth, this, &searchStartTime] {
-            if (depth == 1uz)
-                return false;
-
-            if (exitFlag.load())
-                return true;
-
-            if (! options.searchTime.has_value())
-                return false;
-
-            const auto elapsedMs = std::chrono::duration_cast<Milliseconds>(HighResolutionSteadyClock::now() - searchStartTime);
-
-            return elapsedMs >= *options.searchTime;
-        }();
-
-        if (shouldExit)
+        if (depth > 1uz && interrupter.should_exit())
             break;
 
         // we can generate the legal moves only once, but we should reorder them each iteration
@@ -322,9 +341,7 @@ Move Context<PrintUCIInfo>::search()
                                            .bestMove    = bestMove });
 
     if constexpr (PrintUCIInfo) {
-        const auto endTime = HighResolutionSteadyClock::now();
-
-        const auto searchDuration = std::chrono::duration_cast<Milliseconds>(endTime - searchStartTime);
+        const auto searchDuration = interrupter.get_search_duration();
 
         // TODO: nodes searched, PV, mate scores
         std::println(
