@@ -86,6 +86,8 @@ namespace chess::board {
 /** Returns the knight distance between the two squares; that is, the number of moves a knight
     requires to maneuver from ``first`` to ``second``.
 
+    The maximum knight distance is 6.
+
     @relates Square
  */
 [[nodiscard, gnu::const]] BitboardIndex knight_distance(

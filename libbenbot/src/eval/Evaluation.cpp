@@ -150,19 +150,23 @@ namespace {
                 && (location.file == File::D || location.file == File::E))
                 score += STRANDED_KING_PENALTY;
 
-            static constexpr auto MAX_DISTANCE = 7uz;
-
             // enemy knights & queens near king
+
             for (const auto knightPos : enemyPieces.knights.squares()) {
-                const auto distance = board::chebyshev_distance(location, knightPos);
+                static constexpr auto MAX_DISTANCE = 6uz;
+
+                const auto distance = board::knight_distance(location, knightPos);
 
                 // penalty increases with smaller distance
                 score += static_cast<int>(MAX_DISTANCE - distance) * ATTACKING_KNIGHT_PENALTY;
             }
 
             for (const auto queenPos : enemyPieces.queens.squares()) {
+                static constexpr auto MAX_DISTANCE = 7uz;
+
                 const auto distance = board::chebyshev_distance(location, queenPos);
 
+                // penalty increases with smaller distance
                 score += static_cast<int>(MAX_DISTANCE - distance) * ATTACKING_QUEEN_PENALTY;
             }
 
