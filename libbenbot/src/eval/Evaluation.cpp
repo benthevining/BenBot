@@ -119,7 +119,10 @@ namespace {
         return score_connected_rooks(position.our_pieces()) - score_connected_rooks(position.their_pieces());
     }
 
-    // NB. I tried adding a bonus for bishops on open diagonals, but that seemed to make the engine weaker
+    // NB. I tried adding a bonus for bishops on open diagonals, but that seemed to make the engine weaker.
+    // I've also tried adding a bonus for the bishop pair that increased with fewer pawns on the board, and
+    // also a bonus for knights when there are more pawns on the board, but each of those individually and
+    // combined seemed to make the engine weaker.
 
     // awards various penalties for king danger
     [[nodiscard, gnu::const]] int score_king_safety(
