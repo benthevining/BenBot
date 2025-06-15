@@ -235,6 +235,7 @@ int evaluate(const Position& position)
     return score_material(position)
          + score_piece_placement(position)
          + score_rook_files(position)
+         + score_connected_rooks(position)
          + score_king_safety(position)
          + score_squares_controlled_around_kings(position);
 }
