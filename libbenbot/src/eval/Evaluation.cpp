@@ -6,6 +6,7 @@
  * ======================================================================================
  */
 
+#include <array>
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Material.hpp>
 #include <libbenbot/eval/PieceSquareTables.hpp>
@@ -14,12 +15,14 @@
 #include <libchess/board/Fills.hpp>
 #include <libchess/board/Masks.hpp>
 #include <libchess/board/Pieces.hpp>
+#include <libchess/board/Rank.hpp>
 #include <libchess/game/CastlingRights.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Attacks.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/moves/Patterns.hpp>
 #include <libchess/pieces/Colors.hpp>
+#include <utility>
 
 namespace chess::eval {
 
@@ -224,18 +227,21 @@ namespace {
 
     template <Color Side>
     [[nodiscard, gnu::const]] int score_side_passed_pawns(
-        const Position& position) noexcept
+        const Position& position)
     {
-        static constexpr auto PASSER_BONUS      = 15;
+        using board::Rank;
+
         static constexpr auto ROOK_BEHIND_BONUS = 10;
         static constexpr auto KING_ESCORT_BONUS = 8;
 
         const auto passers = position.get_passed_pawns<Side>();
 
-        auto score = static_cast<int>(passers.count()) * PASSER_BONUS;
+        const auto& ourPieces = position.pieces_for<Side>();
 
-        const auto rooks = position.pieces_for<Side>().rooks;
-        const auto king  = position.pieces_for<Side>().get_king_location();
+        auto score { 0 };
+
+        const auto rooks = ourPieces.rooks;
+        const auto king  = ourPieces.get_king_location();
 
         for (const auto pawn : passers.subboards()) {
             const auto mask = board::fills::pawn_rear<Side>(pawn);
@@ -243,8 +249,21 @@ namespace {
             if ((mask & rooks).any())
                 score += ROOK_BEHIND_BONUS;
 
-            if (board::chebyshev_distance(king, board::Square::from_index(pawn.first())) < 2uz)
+            const auto square = board::Square::from_index(pawn.first());
+
+            if (board::chebyshev_distance(king, square) < 2uz)
                 score += KING_ESCORT_BONUS;
+
+            const auto squaresFromPromoting
+                = Side == Color::White
+                    ? std::to_underlying(Rank::Eight) - std::to_underlying(square.rank)
+                    : std::to_underlying(square.rank) - std::to_underlying(Rank::One);
+
+            static constexpr std::array bonuses {
+                10000, 100, 85, 70, 60, 50, 35
+            };
+
+            score += bonuses.at(squaresFromPromoting);
         }
 
         return score;
