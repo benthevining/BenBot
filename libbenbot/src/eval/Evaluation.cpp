@@ -227,8 +227,8 @@ namespace {
         const Position& position) noexcept
     {
         static constexpr auto PASSER_BONUS      = 15;
-        static constexpr auto ROOK_BEHIND_BONUS = 9;
-        static constexpr auto KING_ESCORT_BONUS = 10;
+        static constexpr auto ROOK_BEHIND_BONUS = 10;
+        static constexpr auto KING_ESCORT_BONUS = 8;
 
         const auto passers = position.get_passed_pawns<Side>();
 
