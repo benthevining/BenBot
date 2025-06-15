@@ -20,13 +20,16 @@
 #include <cstdint> // IWYU pragma: keep - for std::uint64_t
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/File.hpp>
+#include <libchess/board/Fills.hpp>
 #include <libchess/board/Pieces.hpp>
+#include <libchess/board/Shifts.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/CastlingRights.hpp>
 #include <libchess/game/Result.hpp>
 #include <libchess/game/ThreefoldChecker.hpp>
 #include <libchess/moves/Attacks.hpp>
 #include <libchess/moves/Move.hpp>
+#include <libchess/moves/Patterns.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
 #include <magic_enum/magic_enum.hpp>
@@ -58,7 +61,7 @@ using PieceType = pieces::Type;
 
     @ingroup game
 
-    @todo Funcs to get passed pawns, backward pawns
+    @todo Func to get backward pawns
  */
 struct Position final {
     /** Creates a Position object representing the starting position. */
@@ -229,6 +232,10 @@ struct Position final {
     /** Returns true if the king of the side to move is in check. */
     [[nodiscard]] bool is_check() const noexcept { return is_side_in_check(sideToMove); }
 
+    /** Returns a bitboard containing the locations of passed pawns for the given side. */
+    template <Color Side>
+    [[nodiscard]] Bitboard get_passed_pawns() const noexcept;
+
     /// @name Game result queries
     /// @{
 
@@ -398,6 +405,28 @@ inline auto Position::get_half_open_files() const noexcept
 {
     return magic_enum::enum_values<File>()
          | std::views::filter([this](const File file) { return is_file_half_open(file); });
+}
+
+template <Color Side>
+Bitboard Position::get_passed_pawns() const noexcept
+{
+    static constexpr auto OtherSide = pieces::other_side<Side>();
+
+    const auto friendlyPawns = pieces_for<Side>().pawns;
+    const auto enemyPawns    = pieces_for<OtherSide>().pawns;
+
+    Bitboard passedPawns;
+
+    for (const auto pawn : friendlyPawns.subboards()) {
+        // the pawn's file & the two adjacent files, only filled in front of the pawn's progression
+        const auto mask = board::fills::pawn_front<Side>(
+            moves::patterns::pawn_attacks<Side>(pawn) | board::shifts::pawn_forward<Side>(pawn));
+
+        if ((mask & enemyPawns).none())
+            passedPawns |= pawn;
+    }
+
+    return passedPawns;
 }
 
 inline Position after_move(const Position& starting, const Move& move)

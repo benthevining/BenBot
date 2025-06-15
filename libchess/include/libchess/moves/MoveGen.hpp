@@ -115,9 +115,6 @@ namespace detail {
     namespace rank_masks = board::masks::ranks;
     namespace shifts     = board::shifts;
 
-    template <Color Side>
-    static constexpr Color OtherSide = Side == Color::White ? Color::Black : Color::White;
-
     static constexpr auto PROMOTION_MASK     = rank_masks::ONE | rank_masks::EIGHT;
     static constexpr auto NOT_PROMOTION_MASK = PROMOTION_MASK.inverse();
 
@@ -206,7 +203,7 @@ namespace detail {
         // starting square.
 
         const auto ourPawns    = position.pieces_for<Side>().pawns;
-        const auto enemyPieces = position.pieces_for<OtherSide<Side>>().occupied;
+        const auto enemyPieces = position.pieces_for<pieces::other_side<Side>()>().occupied;
 
         const auto eastCaptures = shifts::pawn_capture_east<Side>(ourPawns) & enemyPieces;
         const auto westCaptures = shifts::pawn_capture_west<Side>(ourPawns) & enemyPieces;
@@ -329,7 +326,7 @@ namespace detail {
             auto knightMoves = pseudo_legal::knight(knightPos, ourPieces.occupied);
 
             if constexpr (CapturesOnly) {
-                knightMoves &= position.pieces_for<OtherSide<Side>>().occupied;
+                knightMoves &= position.pieces_for<pieces::other_side<Side>()>().occupied;
             }
 
             for (const auto targetSquare : knightMoves.squares()) {
@@ -357,7 +354,7 @@ namespace detail {
             auto bishopMoves = magics::bishop(bishopPos, occupiedSquares, ourPieces.occupied);
 
             if constexpr (CapturesOnly) {
-                bishopMoves &= position.pieces_for<OtherSide<Side>>().occupied;
+                bishopMoves &= position.pieces_for<pieces::other_side<Side>()>().occupied;
             }
 
             for (const auto targetSquare : bishopMoves.squares()) {
@@ -385,7 +382,7 @@ namespace detail {
             auto rookMoves = magics::rook(rookPos, occupiedSquares, ourPieces.occupied);
 
             if constexpr (CapturesOnly) {
-                rookMoves &= position.pieces_for<OtherSide<Side>>().occupied;
+                rookMoves &= position.pieces_for<pieces::other_side<Side>()>().occupied;
             }
 
             for (const auto targetSquare : rookMoves.squares()) {
@@ -413,7 +410,7 @@ namespace detail {
             auto queenMoves = magics::queen(queenPos, occupiedSquares, ourPieces.occupied);
 
             if constexpr (CapturesOnly) {
-                queenMoves &= position.pieces_for<OtherSide<Side>>().occupied;
+                queenMoves &= position.pieces_for<pieces::other_side<Side>()>().occupied;
             }
 
             for (const auto targetSquare : queenMoves.squares()) {
@@ -439,7 +436,7 @@ namespace detail {
         auto kingMoves = pseudo_legal::king(ourPieces.king, ourPieces.occupied);
 
         if constexpr (CapturesOnly) {
-            kingMoves &= position.pieces_for<OtherSide<Side>>().occupied;
+            kingMoves &= position.pieces_for<pieces::other_side<Side>()>().occupied;
         }
 
         const auto kingSquare = ourPieces.get_king_location();
@@ -502,7 +499,7 @@ namespace detail {
 
         const auto& rights = Side == Color::White ? position.whiteCastlingRights : position.blackCastlingRights;
 
-        static constexpr auto OppositeColor = OtherSide<Side>;
+        static constexpr auto OppositeColor = pieces::other_side<Side>();
 
         const auto& ourPieces   = position.pieces_for<Side>();
         const auto& theirPieces = position.pieces_for<OppositeColor>();
@@ -547,7 +544,7 @@ namespace detail {
         std::output_iterator<Move> auto outputIt)
     {
         const auto& ourPieces   = position.pieces_for<Side>();
-        const auto& theirPieces = position.pieces_for<OtherSide<Side>>();
+        const auto& theirPieces = position.pieces_for<pieces::other_side<Side>()>();
 
         const auto allOccupied  = ourPieces.occupied | theirPieces.occupied;
         const auto emptySquares = allOccupied.inverse();
@@ -575,7 +572,7 @@ namespace detail {
         std::output_iterator<Move> auto outputIt)
     {
         const auto& ourPieces   = position.pieces_for<Side>();
-        const auto& theirPieces = position.pieces_for<OtherSide<Side>>();
+        const auto& theirPieces = position.pieces_for<pieces::other_side<Side>()>();
 
         const auto allOccupied  = ourPieces.occupied | theirPieces.occupied;
         const auto emptySquares = allOccupied.inverse();

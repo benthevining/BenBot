@@ -25,4 +25,19 @@ enum class Color : std::uint_fast8_t {
     White  ///< The White player.
 };
 
+/** Returns the opposite color.
+
+    @ingroup pieces
+    @see Color
+ */
+template <Color Side>
+[[nodiscard]] constexpr Color other_side() noexcept
+{
+    if constexpr (Side == Color::White) {
+        return Color::Black;
+    } else {
+        return Color::White;
+    }
+}
+
 } // namespace chess::pieces

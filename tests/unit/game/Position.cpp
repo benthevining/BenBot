@@ -15,6 +15,7 @@
 #include <libchess/notation/FEN.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <magic_enum/magic_enum.hpp>
+#include <print>
 #include <ranges>
 #include <vector>
 
@@ -150,5 +151,34 @@ TEST_CASE("Position - is_check()", TAGS)
         REQUIRE(! pos.is_check());
         REQUIRE(! pos.is_checkmate());
         REQUIRE(pos.is_stalemate());
+    }
+}
+
+TEST_CASE("Position - passed pawns", TAGS)
+{
+    using chess::notation::from_fen;
+
+    SECTION("Starting position")
+    {
+        const Position startingPosition {};
+
+        REQUIRE(startingPosition.get_passed_pawns<Color::White>().none());
+        REQUIRE(startingPosition.get_passed_pawns<Color::Black>().none());
+    }
+
+    SECTION("White and Black each have a passer")
+    {
+        const auto position = from_fen("8/8/2Pk4/8/8/5p2/5K2/8 w - - 0 1");
+
+        REQUIRE(position.get_passed_pawns<Color::White>().count() == 1uz);
+        REQUIRE(position.get_passed_pawns<Color::Black>().count() == 1uz);
+    }
+
+    SECTION("White has a passer")
+    {
+        const auto position = from_fen("8/3Pp3/2p1P3/2P5/1k1K4/5p2/5P2/8 w - - 0 1");
+
+        REQUIRE(position.get_passed_pawns<Color::White>().count() == 1uz);
+        REQUIRE(position.get_passed_pawns<Color::Black>().count() == 0uz);
     }
 }
