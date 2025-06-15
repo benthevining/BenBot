@@ -241,8 +241,8 @@ namespace {
     {
         using board::Rank;
 
-        static constexpr auto ROOK_BEHIND_BONUS = 10;
-        static constexpr auto KING_ESCORT_BONUS = 8;
+        static constexpr auto ROOK_BEHIND_BONUS = 25;
+        static constexpr auto KING_ESCORT_BONUS = 10;
 
         const auto passers = position.get_passed_pawns<Side>();
 
