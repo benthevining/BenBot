@@ -138,6 +138,20 @@ TEST_CASE("Manhattan distance", TAGS)
     }
 }
 
+TEST_CASE("Center Manhattan distance", TAGS)
+{
+    using chess::board::center_manhattan_distance;
+
+    STATIC_REQUIRE(center_manhattan_distance(Square { File::D, Rank::Four }) == 0uz);
+    STATIC_REQUIRE(center_manhattan_distance(Square { File::D, Rank::Five }) == 0uz);
+    STATIC_REQUIRE(center_manhattan_distance(Square { File::E, Rank::Four }) == 0uz);
+    STATIC_REQUIRE(center_manhattan_distance(Square { File::E, Rank::Five }) == 0uz);
+
+    STATIC_REQUIRE(center_manhattan_distance(Square { File::C, Rank::Two }) == 3uz);
+
+    STATIC_REQUIRE(center_manhattan_distance(Square { File::A, Rank::Eight }) == 6uz);
+}
+
 TEST_CASE("Chebyshev distance", TAGS)
 {
     using chess::board::chebyshev_distance;

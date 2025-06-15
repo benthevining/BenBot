@@ -63,11 +63,20 @@ namespace chess::board {
 
     This may also be known as "taxicab" distance.
 
-    @see chebyshev_distance()
+    @see chebyshev_distance(), center_manhattan_distance()
     @relates Square
  */
 [[nodiscard, gnu::const]] constexpr BitboardIndex manhattan_distance(
     const Square& first, const Square& second) noexcept;
+
+/** Returns the smallest Manhattan distance from the given square to any of the four central squares.
+    The maximum value is 6, from each of the 4 corners.
+
+    @see manhattan_distance()
+    @relates Square
+ */
+[[nodiscard, gnu::const]] constexpr BitboardIndex center_manhattan_distance(
+    const Square& square) noexcept;
 
 /** Returns the Chebyshev distance between the two squares.
 
@@ -144,6 +153,18 @@ constexpr BitboardIndex manhattan_distance(
     const Square& first, const Square& second) noexcept
 {
     return file_distance(first, second) + rank_distance(first, second);
+}
+
+constexpr BitboardIndex center_manhattan_distance(
+    const Square& square) noexcept
+{
+    auto file = static_cast<int>(square.file);
+    auto rank = static_cast<int>(square.rank);
+
+    file ^= (file - 4) >> 8;
+    rank ^= (rank - 4) >> 8;
+
+    return (file + rank) & 7;
 }
 
 constexpr BitboardIndex chebyshev_distance(

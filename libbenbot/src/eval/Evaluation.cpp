@@ -7,6 +7,7 @@
  */
 
 #include <array>
+#include <cmath>
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Material.hpp>
 #include <libbenbot/eval/PieceSquareTables.hpp>
@@ -276,7 +277,7 @@ namespace {
     }
 
     [[nodiscard, gnu::const]] int score_passed_pawns(
-        const Position& position) noexcept
+        const Position& position)
     {
         const auto whiteScore = score_side_passed_pawns<Color::White>(position);
         const auto blackScore = score_side_passed_pawns<Color::Black>(position);
@@ -287,6 +288,29 @@ namespace {
         const auto theirScore = isWhite ? blackScore : whiteScore;
 
         return ourScore - theirScore;
+    }
+
+    // this "mop up" function gives a bonus for cornering the enemy king in the endgame
+    // this can help to prevent draws when you're up material
+    [[nodiscard, gnu::const]] int score_endgame_mopup(
+        const Position& position, const int materialScore)
+    {
+        if (std::cmp_greater(materialScore, piece_values::PAWN * 2uz)) {
+            const auto endgameWeight = endgame_phase_weight(position);
+
+            const auto ourKing   = position.our_pieces().get_king_location();
+            const auto theirKing = position.their_pieces().get_king_location();
+
+            // bonus for forcing enemy king to edge of board
+            auto score = static_cast<int>(board::center_manhattan_distance(theirKing)) * 10;
+
+            // use ortho distance to encourage direct opposition
+            score += (14 - static_cast<int>(board::manhattan_distance(ourKing, theirKing))) * 4;
+
+            return static_cast<int>(std::round(static_cast<float>(score) * endgameWeight));
+        }
+
+        return 0;
     }
 
 } // namespace
@@ -306,13 +330,16 @@ int evaluate(const Position& position)
         return DRAW; // stalemate
     }
 
-    return score_material(position)
+    const auto materialScore = score_material(position);
+
+    return materialScore
          + score_piece_placement(position)
          + score_rook_files(position)
          + score_connected_rooks(position)
          + score_king_safety(position)
          + score_squares_controlled_around_kings(position)
-         + score_passed_pawns(position);
+         + score_passed_pawns(position)
+         + score_endgame_mopup(position, materialScore);
 }
 
 } // namespace chess::eval
