@@ -29,6 +29,11 @@ namespace chess::eval {
 
 namespace {
 
+    // Things I've tried that seemed to make the engine weaker:
+    // - bonus for bishops on open diagonals
+    // - bonus for the bishop pair that increases with fewer pawns on the board, and also a bonus for knights when there are more pawns on the board
+    // - penalty for isolated pawns
+
     using board::Pieces;
     using pieces::Color;
 
@@ -123,11 +128,6 @@ namespace {
 
         return score_connected_rooks(position.our_pieces()) - score_connected_rooks(position.their_pieces());
     }
-
-    // NB. I tried adding a bonus for bishops on open diagonals, but that seemed to make the engine weaker.
-    // I've also tried adding a bonus for the bishop pair that increased with fewer pawns on the board, and
-    // also a bonus for knights when there are more pawns on the board, but each of those individually and
-    // combined seemed to make the engine weaker.
 
     // awards various penalties for king danger
     [[nodiscard, gnu::const]] int score_king_safety(
@@ -233,8 +233,6 @@ namespace {
         return (ourScore - theirScore) * 2;
     }
 
-    // NB. I tried applying a penalty for isolated pawns, but it made the engine weaker
-
     template <Color Side>
     [[nodiscard, gnu::const]] int score_side_passed_pawns(
         const Position& position)
@@ -304,6 +302,7 @@ namespace {
     [[nodiscard, gnu::const]] int score_endgame_mopup(
         const Position& position, const float endgameWeight, const int materialScore)
     {
+        // only give a mop up score if we're the one up material (and on the attack)
         if (std::cmp_greater(materialScore, piece_values::PAWN * 2uz)) {
             const auto ourKing   = position.our_pieces().get_king_location();
             const auto theirKing = position.their_pieces().get_king_location();
