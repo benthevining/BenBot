@@ -41,6 +41,7 @@ template <Color Side>
 
 /** Returns the number of ``targetSquares`` that any of the ``pieces`` attack.
     This function considers only pseudo-legal moves, not strictly legal moves.
+    King attacks will only be considered if ``includeKing`` is true.
 
     @tparam Side The color that the ``pieces`` represent.
 
@@ -49,7 +50,7 @@ template <Color Side>
  */
 template <Color Side>
 [[nodiscard, gnu::const]] constexpr size_t num_squares_attacked(
-    const Pieces& pieces, Bitboard targetSquares, Bitboard enemyPieces) noexcept;
+    const Pieces& pieces, Bitboard targetSquares, Bitboard enemyPieces, bool includeKing = true) noexcept;
 
 /*
                          ___                           ,--,
@@ -117,7 +118,7 @@ constexpr bool squares_attacked(
 
 template <Color Side>
 constexpr size_t num_squares_attacked(
-    const Pieces& pieces, Bitboard targetSquares, Bitboard enemyPieces) noexcept
+    const Pieces& pieces, const Bitboard targetSquares, const Bitboard enemyPieces, const bool includeKing) noexcept
 {
     const auto friendlyPieces = pieces.occupied;
     const auto emptySquares   = (friendlyPieces | enemyPieces).inverse();
@@ -127,9 +128,12 @@ constexpr size_t num_squares_attacked(
     const auto queenAttacks  = pseudo_legal::queen(pieces.queens, emptySquares, friendlyPieces);
     const auto rookAttacks   = pseudo_legal::rook(pieces.rooks, emptySquares, friendlyPieces);
     const auto bishopAttacks = pseudo_legal::bishop(pieces.bishops, emptySquares, friendlyPieces);
-    const auto kingAttacks   = patterns::king(pieces.king);
 
-    const auto allAttacks = pawnAttacks | knightAttacks | queenAttacks | rookAttacks | bishopAttacks | kingAttacks;
+    auto allAttacks = pawnAttacks | knightAttacks | queenAttacks | rookAttacks | bishopAttacks;
+
+    if (includeKing) {
+        allAttacks |= patterns::king(pieces.king);
+    }
 
     return (targetSquares & allAttacks).count();
 }

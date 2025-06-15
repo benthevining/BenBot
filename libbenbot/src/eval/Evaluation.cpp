@@ -201,9 +201,15 @@ namespace {
     [[nodiscard, gnu::const]] int score_squares_controlled_around_kings(
         const Position& position) noexcept
     {
+        // We give a penalty if the opponent attacks more squares around our king than we do.
+        // One detail here is that in calculating the attack sets, the defender's king isn't
+        // included in determining the number of squares we defend around the king - it's more
+        // about the number of pieces/pawns that are defending the king. However, we do count
+        // king attacks offensively against squares surrounding the opponent's king.
+
         const auto surroundingWhiteKing = moves::patterns::king(position.whitePieces.king);
 
-        const auto whiteControlsAroundWK = static_cast<int>(moves::num_squares_attacked<Color::White>(position.whitePieces, surroundingWhiteKing, position.blackPieces.occupied));
+        const auto whiteControlsAroundWK = static_cast<int>(moves::num_squares_attacked<Color::White>(position.whitePieces, surroundingWhiteKing, position.blackPieces.occupied, false));
         const auto blackControlsAroundWK = static_cast<int>(moves::num_squares_attacked<Color::Black>(position.blackPieces, surroundingWhiteKing, position.whitePieces.occupied));
 
         const auto whiteScore = whiteControlsAroundWK - blackControlsAroundWK;
@@ -211,7 +217,7 @@ namespace {
         const auto surroundingBlackKing = moves::patterns::king(position.blackPieces.king);
 
         const auto whiteControlsAroundBK = static_cast<int>(moves::num_squares_attacked<Color::White>(position.whitePieces, surroundingBlackKing, position.blackPieces.occupied));
-        const auto blackControlsAroundBK = static_cast<int>(moves::num_squares_attacked<Color::Black>(position.blackPieces, surroundingBlackKing, position.whitePieces.occupied));
+        const auto blackControlsAroundBK = static_cast<int>(moves::num_squares_attacked<Color::Black>(position.blackPieces, surroundingBlackKing, position.whitePieces.occupied, false));
 
         const auto blackScore = blackControlsAroundBK - whiteControlsAroundBK;
 
