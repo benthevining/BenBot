@@ -4,8 +4,6 @@
 #
 # ======================================================================================
 
-include_guard (GLOBAL)
-
 find_program (FASTCHESS_PROGRAM NAMES fastchess fast-chess DOC "fastchess CLI executable")
 
 if (NOT FASTCHESS_PROGRAM)

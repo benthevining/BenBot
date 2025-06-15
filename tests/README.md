@@ -22,3 +22,4 @@ Results are tracked via the [CDash dashboard](https://my.cdash.org/index.php?pro
 * [Catch2](https://github.com/catchorg/Catch2), unit test framework
 * [nlohmann_json](https://json.nlohmann.me/), needed by `perft` and `rampart` for outputting results as JSON
 * Python interpreter, needed for perft and rampart wrapper scripts
+* [fastchess](https://github.com/Disservin/fastchess), for UCI compliance testing and SPRT testing
