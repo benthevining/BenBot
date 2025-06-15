@@ -228,18 +228,23 @@ namespace {
     {
         static constexpr auto PASSER_BONUS      = 15;
         static constexpr auto ROOK_BEHIND_BONUS = 9;
+        static constexpr auto KING_ESCORT_BONUS = 10;
 
         const auto passers = position.get_passed_pawns<Side>();
 
         auto score = static_cast<int>(passers.count()) * PASSER_BONUS;
 
         const auto rooks = position.pieces_for<Side>().rooks;
+        const auto king  = position.pieces_for<Side>().get_king_location();
 
         for (const auto pawn : passers.subboards()) {
             const auto mask = board::fills::pawn_rear<Side>(pawn);
 
             if ((mask & rooks).any())
                 score += ROOK_BEHIND_BONUS;
+
+            if (board::chebyshev_distance(king, board::Square::from_index(pawn.first())) < 2uz)
+                score += KING_ESCORT_BONUS;
         }
 
         return score;
