@@ -11,6 +11,7 @@
 #include <libbenbot/eval/PieceSquareTables.hpp>
 #include <libchess/board/Distances.hpp>
 #include <libchess/board/File.hpp>
+#include <libchess/board/Fills.hpp>
 #include <libchess/board/Masks.hpp>
 #include <libchess/board/Pieces.hpp>
 #include <libchess/game/CastlingRights.hpp>
@@ -218,6 +219,8 @@ namespace {
 
         return ourScore - theirScore;
     }
+
+    // NB. I tried applying a penalty for isolated pawns, but it made the engine weaker
 
 } // namespace
 
