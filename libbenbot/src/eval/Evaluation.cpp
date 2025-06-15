@@ -133,7 +133,7 @@ namespace {
     [[nodiscard, gnu::const]] int score_king_safety(
         const Position& position, const float endgameWeight) noexcept
     {
-        static constexpr auto OPEN_KING_PENALTY        = -35;
+        static constexpr auto OPEN_KING_PENALTY        = -50;
         static constexpr auto STRANDED_KING_PENALTY    = -75;
         static constexpr auto ATTACKING_KNIGHT_PENALTY = -3;
         static constexpr auto ATTACKING_QUEEN_PENALTY  = -7;
