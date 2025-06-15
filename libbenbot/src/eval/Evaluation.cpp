@@ -242,7 +242,7 @@ namespace {
         using board::Rank;
 
         static constexpr auto ROOK_BEHIND_BONUS = 25;
-        static constexpr auto KING_ESCORT_BONUS = 10;
+        static constexpr auto KING_ESCORT_BONUS = 2;
 
         const auto passers = position.get_passed_pawns<Side>();
 
@@ -261,8 +261,14 @@ namespace {
 
             const auto square = board::Square::from_index(pawn.first());
 
-            if (board::chebyshev_distance(king, square) < 2uz)
-                score += KING_ESCORT_BONUS;
+            // bonus for king closer to passed pawn
+            {
+                static constexpr auto MAX_DIST = 7uz;
+
+                const auto kingDist = board::chebyshev_distance(king, square);
+
+                score += static_cast<int>(MAX_DIST - kingDist) * KING_ESCORT_BONUS;
+            }
 
             const auto squaresFromPromoting
                 = Side == Color::White
