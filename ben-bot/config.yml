@@ -12,7 +12,7 @@ engine:
   dir: "@CMAKE_CURRENT_BINARY_DIR@/Release"
   name: "ben_bot"
   protocol: "uci"
-  ponder: true
+  ponder: false
 
   polyglot:
     enabled: false
@@ -22,7 +22,7 @@ engine:
     resign_score: -1000            # If the score is less than or equal to this value, the bot resigns (in cp).
     resign_for_egtb_minus_two: true # If true the bot will resign in positions where the online_egtb returns a wdl of -2.
     resign_moves: 3                # How many moves in a row the score has to be below the resign value.
-    offer_draw_enabled: true       # Whether or not the bot should offer/accept draw.
+    offer_draw_enabled: false      # Whether or not the bot should offer/accept draw.
     offer_draw_score: 0            # If the absolute value of the score is less than or equal to this value, the bot offers/accepts draw (in cp).
     offer_draw_for_egtb_zero: true # If true the bot will offer/accept draw in positions where the online_egtb returns a wdl of 0.
     offer_draw_moves: 10           # How many moves in a row the absolute value of the score has to be below the draw value.
@@ -61,27 +61,13 @@ engine:
   lichess_bot_tbs:                 # The tablebases list here will be read by lichess-bot, not the engine.
     syzygy:
       enabled: false               # Whether or not to use local syzygy endgame tablebases.
-      paths:                       # Paths to Syzygy endgame tablebases.
-      - "engines/syzygy"
-      max_pieces: 7                # Maximum number of pieces in the endgame tablebase.
-      move_quality: "best"         # One of "best" or "suggest" (it takes all the moves with the same WDL and tells the engine to only consider these; will move instantly if there is only 1 "good" move).
     gaviota:
       enabled: false               # Whether or not to use local gaviota endgame tablebases.
-      paths:
-      - "engines/gaviota"
-      max_pieces: 5
-      min_dtm_to_consider_as_wdl_1: 120 # The minimum DTM to consider as syzygy WDL=1/-1. Set to 100 to disable.
-      move_quality: "best"         # One of "best" or "suggest" (it takes all the moves with the same WDL and tells the engine to only consider these; will move instantly if there is only 1 "good" move).
 
   uci_options:                     # Arbitrary UCI options passed to the engine.
-    # Move Overhead: 100             # Increase if your bot flags games too often.
-    # Threads: 4                     # Max CPU threads the engine can use.
-    # Hash: 512                      # Max memory (in megabytes) the engine can allocate.
-    # SyzygyPath: "./syzygy/"        # Paths to Syzygy endgame tablebases that the engine reads.
-    # UCI_ShowWDL: true              # Show the chance of the engine winning.
-#   go_commands:                   # Additional options to pass to the UCI go command.
-#     nodes: 1                     # Search so many nodes only.
-#     depth: 5                     # Search depth ply only.
+    #go_commands:                   # Additional options to pass to the UCI go command.
+      #depth: 5                    # Search depth ply only.
+     #     nodes: 1                     # Search so many nodes only.
 #     movetime: 1000               # Integer. Search exactly movetime milliseconds.
 
   silence_stderr: false            # Some engines (yes you, Leela) are very noisy.
@@ -89,7 +75,7 @@ engine:
 abort_time: 30                     # Time to abort a game in seconds when there is no activity.
 fake_think_time: false             # Artificially slow down the bot to pretend like it's thinking.
 rate_limiting_delay: 0             # Time (in ms) to delay after sending a move to prevent "Too Many Requests" errors.
-move_overhead: 2000                # Increase if your bot flags games too often.
+move_overhead: 1000                # Increase if your bot flags games too often.
 max_takebacks_accepted: 0          # The number of times to allow an opponent to take back a move in a game.
 quit_after_all_games_finish: false # If set to true, then pressing Ctrl-C to quit will only stop lichess-bot after all current games have finished.
 
@@ -102,7 +88,7 @@ correspondence:
 challenge:                         # Incoming challenges.
   concurrency: 1                   # Number of games to play simultaneously.
   sort_by: "best"                  # Possible values: "best" and "first".
-  preference: "none"               # Possible values: "none", "human", "bot".
+  preference: "human"              # Possible values: "none", "human", "bot".
   accept_bot: true                 # Accepts challenges coming from other bots.
   only_bot: false                  # Accept challenges by bots only.
   max_increment: 20                # Maximum amount of increment to accept a challenge in seconds. The max is 180. Set to 0 for no increment.
@@ -138,17 +124,17 @@ greeting:
   hello_spectators: "Hi! I'm {me}. Type !help for a list of commands I can respond to." # Message to send to spectator chat at the start of a game
   goodbye_spectators: "Thanks for watching!" # Message to send to spectator chat at the end of a game
 
-# pgn_directory: "game_records"    # A directory where PGN-format records of the bot's games are kept
-# pgn_file_grouping: "game"        # How to group games into files. Options are "game", "opponent", and "all"
-                                   # "game" (default) - every game is written to a different file named "{White name} vs. {Black name} - {lichess game ID}.pgn"
-                                   # "opponent" - every game with a given opponent is written to a file named "{Bot name} games vs. {Opponent name}.pgn"
-                                   # "all" - every game is written to a single file named "{Bot name} games.pgn"
+pgn_directory: "@PROJECT_SOURCE_DIR@/logs/lichess-bot/pgn" # A directory where PGN-format records of the bot's games are kept
+pgn_file_grouping: "game"        # How to group games into files. Options are "game", "opponent", and "all"
+                                 #   "game" (default) - every game is written to a different file named "{White name} vs. {Black name} - {lichess game ID}.pgn"
+                                 #   "opponent" - every game with a given opponent is written to a file named "{Bot name} games vs. {Opponent name}.pgn"
+                                 #   "all" - every game is written to a single file named "{Bot name} games.pgn"
 
 matchmaking:
-  allow_matchmaking: false         # Set it to 'true' to challenge other bots.
-  allow_during_games: false        # Set it to 'true' to create challenges during long games.
-  challenge_variant: "random"      # If set to 'random', the bot will choose one variant from the variants enabled in 'challenge.variants'.
-  challenge_timeout: 30            # Create a challenge after being idle for 'challenge_timeout' minutes. The minimum is 1 minute.
+  allow_matchmaking: true         # Set it to 'true' to challenge other bots.
+  allow_during_games: true        # Set it to 'true' to create challenges during long games.
+  challenge_variant: "standard"    # If set to 'random', the bot will choose one variant from the variants enabled in 'challenge.variants'.
+  challenge_timeout: 1            # Create a challenge after being idle for 'challenge_timeout' minutes. The minimum is 1 minute.
   challenge_initial_time:          # Initial time in seconds of the challenge (to be chosen at random).
   - 60
   - 180
@@ -157,6 +143,6 @@ matchmaking:
   - 2
   opponent_rating_difference: 300  # The maximum difference in rating between the bot's rating and opponent's rating.
   rating_preference: "none"        # One of "none", "high", "low".
-  challenge_mode: "random"         # Set it to the mode in which challenges are sent. Possible options are 'casual', 'rated' and 'random'.
+  challenge_mode: "rated"          # Set it to the mode in which challenges are sent. Possible options are 'casual', 'rated' and 'random'.
   challenge_filter: none           # If a bot declines a challenge, do not issue a similar challenge to that bot. Possible options are 'none', 'coarse', and 'fine'.
   include_challenge_block_list: false  # Do not challenge bots in the challenge: block_list in addition to the matchmaking block list.
