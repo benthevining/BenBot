@@ -230,7 +230,7 @@ namespace {
         const auto ourScore   = isWhite ? whiteScore : blackScore;
         const auto theirScore = isWhite ? blackScore : whiteScore;
 
-        return ourScore - theirScore;
+        return (ourScore - theirScore) * 2;
     }
 
     // NB. I tried applying a penalty for isolated pawns, but it made the engine weaker
