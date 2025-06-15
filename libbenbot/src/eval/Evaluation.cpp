@@ -32,7 +32,6 @@ namespace {
     // Things I've tried that seemed to make the engine weaker:
     // - bonus for bishops on open diagonals
     // - bonus for the bishop pair that increases with fewer pawns on the board, and also a bonus for knights when there are more pawns on the board
-    // - penalty for isolated pawns
 
     using board::Pieces;
     using pieces::Color;
@@ -297,6 +296,41 @@ namespace {
         return ourScore - theirScore;
     }
 
+    template <Color Side>
+    [[nodiscard, gnu::const]] int score_side_isolated_pawns(
+        const Position& position) noexcept
+    {
+        auto score { 0 };
+
+        const auto ourPawns = position.pieces_for<Side>().pawns;
+
+        for (const auto pawn : ourPawns.subboards()) {
+            const auto otherPawns = ourPawns & pawn.inverse();
+
+            const auto mask = board::fills::file(
+                moves::patterns::pawn_attacks<Side>(pawn));
+
+            if ((mask & otherPawns).none())
+                score -= 20;
+        }
+
+        return score;
+    }
+
+    [[nodiscard, gnu::const]] int score_isolated_pawns(
+        const Position& position) noexcept
+    {
+        const auto whiteScore = score_side_isolated_pawns<Color::White>(position);
+        const auto blackScore = score_side_isolated_pawns<Color::Black>(position);
+
+        const bool isWhite = position.sideToMove == Color::White;
+
+        const auto ourScore   = isWhite ? whiteScore : blackScore;
+        const auto theirScore = isWhite ? blackScore : whiteScore;
+
+        return ourScore - theirScore;
+    }
+
     // this "mop up" function gives a bonus for cornering the enemy king in the endgame
     // this can help to prevent draws when you're up material
     [[nodiscard, gnu::const]] int score_endgame_mopup(
@@ -347,6 +381,7 @@ int evaluate(const Position& position)
          + score_king_safety(position, endgameWeight)
          + score_squares_controlled_around_kings(position)
          + score_passed_pawns(position)
+         + score_isolated_pawns(position)
          + score_endgame_mopup(position, endgameWeight, materialScore);
 }
 
