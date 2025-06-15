@@ -18,7 +18,6 @@
 #include <libchess/moves/Attacks.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/moves/Patterns.hpp>
-#include <libchess/moves/PseudoLegal.hpp>
 #include <libchess/pieces/Colors.hpp>
 
 namespace chess::eval {
@@ -98,18 +97,20 @@ namespace {
     [[nodiscard, gnu::const]] int score_connected_rooks(
         const Position& position) noexcept
     {
-        static constexpr auto CONNECTED_ROOKS_BONUS = 10;
+        static constexpr auto OPEN_FILE_BONUS = 10; // extra bonus for connected rooks on open file
 
-        auto score_connected_rooks = [emptySquares = position.free()](const Pieces& pieces) {
+        auto score_connected_rooks = [&position](const Pieces& pieces) {
             auto score { 0 };
 
-            for (const auto rookPos : pieces.rooks.subboards()) {
-                // check this way because the top-level rook move generation function prunes squares occupied by friendly pieces,
-                // but we want to check if the rook can attack a square occupied by another friendly rook
-                const auto attackedSquares = moves::pseudo_legal::detail::rook_attacks(rookPos, emptySquares);
+            // I originally tried adding a smaller bonus for connected rooks on any rank or file,
+            // but experimental results showed that the engine was stronger with just the bonus
+            // for connected rooks on open files
 
-                if ((attackedSquares & pieces.rooks).count() > 1uz)
-                    score += CONNECTED_ROOKS_BONUS;
+            for (const auto file : position.get_open_files()) {
+                const auto mask = masks::files::get(file);
+
+                if ((mask & pieces.rooks).count() > 1uz)
+                    score += OPEN_FILE_BONUS;
             }
 
             return score;
