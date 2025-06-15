@@ -305,12 +305,10 @@ namespace {
         const auto ourPawns = position.pieces_for<Side>().pawns;
 
         for (const auto pawn : ourPawns.subboards()) {
-            const auto otherPawns = ourPawns & pawn.inverse();
-
             const auto mask = board::fills::file(
                 moves::patterns::pawn_attacks<Side>(pawn));
 
-            if ((mask & otherPawns).none())
+            if ((mask & ourPawns).none())
                 score -= 20;
         }
 
