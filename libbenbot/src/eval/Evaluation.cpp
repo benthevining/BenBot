@@ -209,10 +209,10 @@ namespace {
 
         const bool isWhite = position.sideToMove == Color::White;
 
-        // const auto ourScore   = isWhite ? whiteScore : blackScore;
+        const auto ourScore   = isWhite ? whiteScore : blackScore;
         const auto theirScore = isWhite ? blackScore : whiteScore;
 
-        return theirScore;
+        return ourScore - theirScore;
     }
 
 } // namespace
