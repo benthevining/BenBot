@@ -11,7 +11,6 @@
 #include <libbenbot/eval/PieceSquareTables.hpp>
 #include <libchess/board/Distances.hpp>
 #include <libchess/board/File.hpp>
-#include <libchess/board/Fills.hpp>
 #include <libchess/board/Masks.hpp>
 #include <libchess/board/Pieces.hpp>
 #include <libchess/game/CastlingRights.hpp>
@@ -222,6 +221,20 @@ namespace {
 
     // NB. I tried applying a penalty for isolated pawns, but it made the engine weaker
 
+    [[nodiscard, gnu::const]] int score_passed_pawns(
+        const Position& position) noexcept
+    {
+        const auto whitePassers = position.get_passed_pawns<Color::White>().count();
+        const auto blackPassers = position.get_passed_pawns<Color::Black>().count();
+
+        const bool isWhite = position.sideToMove == Color::White;
+
+        const auto ourPassers   = isWhite ? whitePassers : blackPassers;
+        const auto theirPassers = isWhite ? blackPassers : whitePassers;
+
+        return ourPassers - theirPassers;
+    }
+
 } // namespace
 
 int evaluate(const Position& position)
@@ -244,7 +257,8 @@ int evaluate(const Position& position)
          + score_rook_files(position)
          + score_connected_rooks(position)
          + score_king_safety(position)
-         + score_squares_controlled_around_kings(position);
+         + score_squares_controlled_around_kings(position)
+         + score_passed_pawns(position);
 }
 
 } // namespace chess::eval
