@@ -2,6 +2,10 @@
 
 A chess engine.
 
+* Board representation and move generation is in `libchess/`
+* Evaluation and search is in `libbenbot/`
+* `ben-bot/` is the actual UCI engine executable
+
 See each subdirectory's readme for details.
 
 ## CMake options
