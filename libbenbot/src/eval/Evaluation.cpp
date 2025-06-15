@@ -131,14 +131,14 @@ namespace {
 
     // awards various penalties for king danger
     [[nodiscard, gnu::const]] int score_king_safety(
-        const Position& position) noexcept
+        const Position& position, const float endgameWeight) noexcept
     {
         static constexpr auto OPEN_KING_PENALTY        = -35;
         static constexpr auto STRANDED_KING_PENALTY    = -75;
         static constexpr auto ATTACKING_KNIGHT_PENALTY = -3;
         static constexpr auto ATTACKING_QUEEN_PENALTY  = -7;
 
-        auto score_side_king = [&position,
+        auto score_side_king = [&position, endgameWeight,
                                    allPawns = position.whitePieces.pawns | position.blackPieces.pawns](
                                    const Pieces& pieces, const game::CastlingRights& castlingRights,
                                    const Pieces& enemyPieces) {
@@ -160,6 +160,9 @@ namespace {
             if (castlingRights.neither()
                 && (location.file == File::D || location.file == File::E))
                 score += STRANDED_KING_PENALTY;
+
+            // open/stranded king penalties matter less in endgame
+            score = static_cast<int>(std::round(static_cast<float>(score) * (1.f - endgameWeight)));
 
             // enemy knights & queens near king
 
@@ -293,11 +296,9 @@ namespace {
     // this "mop up" function gives a bonus for cornering the enemy king in the endgame
     // this can help to prevent draws when you're up material
     [[nodiscard, gnu::const]] int score_endgame_mopup(
-        const Position& position, const int materialScore)
+        const Position& position, const float endgameWeight, const int materialScore)
     {
         if (std::cmp_greater(materialScore, piece_values::PAWN * 2uz)) {
-            const auto endgameWeight = endgame_phase_weight(position);
-
             const auto ourKing   = position.our_pieces().get_king_location();
             const auto theirKing = position.their_pieces().get_king_location();
 
@@ -330,16 +331,18 @@ int evaluate(const Position& position)
         return DRAW; // stalemate
     }
 
+    const auto endgameWeight = endgame_phase_weight(position);
+
     const auto materialScore = score_material(position);
 
     return materialScore
          + score_piece_placement(position)
          + score_rook_files(position)
          + score_connected_rooks(position)
-         + score_king_safety(position)
+         + score_king_safety(position, endgameWeight)
          + score_squares_controlled_around_kings(position)
          + score_passed_pawns(position)
-         + score_endgame_mopup(position, materialScore);
+         + score_endgame_mopup(position, endgameWeight, materialScore);
 }
 
 } // namespace chess::eval
