@@ -13,6 +13,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <libchess/board/Pieces.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
@@ -67,6 +68,15 @@ namespace piece_values {
  */
 [[nodiscard, gnu::const]] constexpr int score_material(const Position& position) noexcept;
 
+/** Returns a value between 0 and 1 indicating the approximated game phase.
+    The value is 0 at the start of the game and 1 in the late endgame.
+    This value is computed based on the amount of non-pawn material left
+    on the board.
+
+    @ingroup eval
+ */
+[[nodiscard, gnu::const]] constexpr float endgame_phase_weight(const Position& position) noexcept;
+
 /*
                          ___                           ,--,
       ,---,            ,--.'|_                ,--,   ,--.'|
@@ -100,17 +110,44 @@ namespace piece_values {
 
 } // namespace piece_values
 
+namespace detail {
+
+    [[nodiscard, gnu::const]] constexpr int count_material(
+        const board::Pieces& pieces, const bool includePawns = true) noexcept
+    {
+        auto total = (static_cast<int>(pieces.knights.count()) * piece_values::KNIGHT)
+                   + (static_cast<int>(pieces.bishops.count()) * piece_values::BISHOP)
+                   + (static_cast<int>(pieces.rooks.count()) * piece_values::ROOK)
+                   + (static_cast<int>(pieces.queens.count()) * piece_values::QUEEN);
+
+        if (includePawns)
+            total += (static_cast<int>(pieces.pawns.count()) * piece_values::PAWN);
+
+        return total;
+    }
+
+} // namespace detail
+
 constexpr int score_material(const Position& position) noexcept
 {
-    auto score_side_material = [](const board::Pieces& pieces) {
-        return (static_cast<int>(pieces.pawns.count()) * piece_values::PAWN)
-             + (static_cast<int>(pieces.knights.count()) * piece_values::KNIGHT)
-             + (static_cast<int>(pieces.bishops.count()) * piece_values::BISHOP)
-             + (static_cast<int>(pieces.rooks.count()) * piece_values::ROOK)
-             + (static_cast<int>(pieces.queens.count()) * piece_values::QUEEN);
-    };
+    return detail::count_material(position.our_pieces()) - detail::count_material(position.their_pieces());
+}
 
-    return score_side_material(position.our_pieces()) - score_side_material(position.their_pieces());
+constexpr float endgame_phase_weight(const Position& position) noexcept
+{
+    static constexpr auto EG_MATERIAL_START_ONE_SIDE = static_cast<float>(
+        piece_values::ROOK * 2uz + piece_values::BISHOP + piece_values::KNIGHT);
+
+    static constexpr auto EG_MATERIAL_START = EG_MATERIAL_START_ONE_SIDE * 2.f;
+
+    static constexpr auto multiplier = 1.f / EG_MATERIAL_START;
+
+    const auto nonPawnMaterialLeft = detail::count_material(position.whitePieces, false)
+                                   + detail::count_material(position.blackPieces, false);
+
+    const auto pcntLeft = static_cast<float>(nonPawnMaterialLeft) * multiplier;
+
+    return 1.f - std::min(1.f, pcntLeft);
 }
 
 } // namespace chess::eval

@@ -8,6 +8,8 @@
 
 #include <array>
 #include <cassert>
+#include <cmath>
+#include <libbenbot/eval/Material.hpp>
 #include <libbenbot/eval/PieceSquareTables.hpp>
 #include <libchess/board/BitboardIndex.hpp>
 #include <libchess/board/Flips.hpp>
@@ -106,12 +108,10 @@ static constexpr std::array queenTable {
 //                                    H8
 };
 
-// KING
-// For now these are middle game values
-// TODO: separate table for endgame values
+// KING: Middle-game
 // Make the king stand behind the pawn shelter
 // Harsh penalties for king dragged out into the open
-static constexpr std::array kingTable {
+static constexpr std::array kingMiddlegameTable {
 //   A1
      20,  30,  10,  0,   0,   10,  30,  20,
      20,  20,  0,   0,   0,   0,   20,  20,
@@ -121,6 +121,20 @@ static constexpr std::array kingTable {
     -30, -40, -40, -50, -50, -40, -40, -30,
     -30, -40, -40, -50, -50, -40, -40, -30,
     -30, -40, -40, -50, -50, -40, -40, -30
+//                                      H8
+};
+
+// KING: Endgame
+static constexpr std::array kingEndgameTable {
+//   A1
+    -50, -30, -30, -30, -30, -30, -30, -50,
+    -30, -30,  0,   0,   0,   0,  -30, -30,
+    -30, -10,  20,  30,  30,  20, -10, -30,
+    -30, -10,  30,  40,  40,  30, -10, -30,
+    -30, -10,  30,  40,  40,  30, -10, -30,
+    -30, -10,  20,  30,  30,  20, -10, -30,
+    -30, -20, -10,  0,   0,  -10, -20, -30,
+    -50, -40, -30, -20, -20, -30, -40, -50
 //                                      H8
 };
 
@@ -224,7 +238,8 @@ namespace {
     }
 
     template <bool IsBlack>
-    [[nodiscard, gnu::const]] int score_king(const Pieces& pieces)
+    [[nodiscard, gnu::const]] int score_king(
+        const Pieces& pieces, const float endgameWeight)
     {
         auto king = pieces.king;
 
@@ -234,18 +249,25 @@ namespace {
             king = vertical(king);
         }
 
-        return kingTable.at(king.first());
+        const auto idx = king.first();
+
+        const auto middlegameValue = kingMiddlegameTable.at(idx);
+        const auto endgameValue    = kingEndgameTable.at(idx);
+
+        return static_cast<int>(std::round(static_cast<float>(middlegameValue) * 1.f - endgameWeight))
+             + static_cast<int>(std::round(static_cast<float>(endgameValue) * endgameWeight));
     }
 
     template <bool IsBlack>
-    [[nodiscard, gnu::const]] int score_side_pieces(const Pieces& pieces)
+    [[nodiscard, gnu::const]] int score_side_pieces(
+        const Pieces& pieces, const float endgameWeight)
     {
         return score_pawns<IsBlack>(pieces)
              + score_knights<IsBlack>(pieces)
              + score_bishops<IsBlack>(pieces)
              + score_rooks<IsBlack>(pieces)
              + score_queens<IsBlack>(pieces)
-             + score_king<IsBlack>(pieces);
+             + score_king<IsBlack>(pieces, endgameWeight);
     }
 
 } // namespace
@@ -253,15 +275,17 @@ namespace {
 int score_piece_placement(const Position& position)
 {
     const auto [ourScore, theirScore] = [&position] {
+        const auto endgameWeight = endgame_phase_weight(position);
+
         if (position.sideToMove == pieces::Color::Black) {
             return std::make_pair(
-                score_side_pieces<true>(position.our_pieces()),
-                score_side_pieces<false>(position.their_pieces()));
+                score_side_pieces<true>(position.our_pieces(), endgameWeight),
+                score_side_pieces<false>(position.their_pieces(), endgameWeight));
         }
 
         return std::make_pair(
-            score_side_pieces<false>(position.our_pieces()),
-            score_side_pieces<true>(position.their_pieces()));
+            score_side_pieces<false>(position.our_pieces(), endgameWeight),
+            score_side_pieces<true>(position.their_pieces(), endgameWeight));
     }();
 
     return ourScore - theirScore;
