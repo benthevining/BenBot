@@ -135,6 +135,8 @@ constexpr int score_material(const Position& position) noexcept
 
 constexpr float endgame_phase_weight(const Position& position) noexcept
 {
+    // game phase is roughly determined based on the total amount of non-pawn material left on the board
+    // we say that the endgame has begun once the queens & two pairs of minor pieces have been traded
     static constexpr auto EG_MATERIAL_START_ONE_SIDE = static_cast<float>(
         piece_values::ROOK * 2uz + piece_values::BISHOP + piece_values::KNIGHT);
 
