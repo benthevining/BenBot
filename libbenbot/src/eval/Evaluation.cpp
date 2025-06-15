@@ -11,6 +11,7 @@
 #include <libbenbot/eval/PieceSquareTables.hpp>
 #include <libchess/board/Distances.hpp>
 #include <libchess/board/File.hpp>
+#include <libchess/board/Fills.hpp>
 #include <libchess/board/Masks.hpp>
 #include <libchess/board/Pieces.hpp>
 #include <libchess/game/CastlingRights.hpp>
@@ -221,18 +222,41 @@ namespace {
 
     // NB. I tried applying a penalty for isolated pawns, but it made the engine weaker
 
+    template <Color Side>
+    [[nodiscard, gnu::const]] int score_side_passed_pawns(
+        const Position& position) noexcept
+    {
+        static constexpr auto PASSER_BONUS      = 15;
+        static constexpr auto ROOK_BEHIND_BONUS = 9;
+
+        const auto passers = position.get_passed_pawns<Side>();
+
+        auto score = static_cast<int>(passers.count()) * PASSER_BONUS;
+
+        const auto rooks = position.pieces_for<Side>().rooks;
+
+        for (const auto pawn : passers.subboards()) {
+            const auto mask = board::fills::pawn_rear<Side>(pawn);
+
+            if ((mask & rooks).any())
+                score += ROOK_BEHIND_BONUS;
+        }
+
+        return score;
+    }
+
     [[nodiscard, gnu::const]] int score_passed_pawns(
         const Position& position) noexcept
     {
-        const auto whitePassers = position.get_passed_pawns<Color::White>().count();
-        const auto blackPassers = position.get_passed_pawns<Color::Black>().count();
+        const auto whiteScore = score_side_passed_pawns<Color::White>(position);
+        const auto blackScore = score_side_passed_pawns<Color::Black>(position);
 
         const bool isWhite = position.sideToMove == Color::White;
 
-        const auto ourPassers   = isWhite ? whitePassers : blackPassers;
-        const auto theirPassers = isWhite ? blackPassers : whitePassers;
+        const auto ourScore   = isWhite ? whiteScore : blackScore;
+        const auto theirScore = isWhite ? blackScore : whiteScore;
 
-        return ourPassers - theirPassers;
+        return ourScore - theirScore;
     }
 
 } // namespace
