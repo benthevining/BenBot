@@ -243,9 +243,6 @@ namespace {
         std::optional<Move> bestMove;
 
         for (const auto& move : moves) {
-            if (interrupter.should_exit())
-                return beta;
-
             const auto newPosition = game::after_move(currentPosition, move);
 
             const auto eval = depth > 1uz
