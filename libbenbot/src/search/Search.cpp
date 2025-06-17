@@ -337,11 +337,13 @@ Move Context<PrintUCIInfo>::search()
                 alpha             = score;
             }
 
-            if (interrupter.should_exit()) {
+            if (bestMove.has_value() && interrupter.should_exit()) {
                 --depth; // store the last completed depth in the transposition table
                 goto end_search;
             }
         }
+
+        assert(bestMoveThisDepth.has_value());
 
         bestMove  = bestMoveThisDepth;
         bestScore = alpha;
