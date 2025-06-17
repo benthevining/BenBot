@@ -357,7 +357,7 @@ namespace {
     [[nodiscard, gnu::const]] int no_pieces_left_bonus(
         const Position& position) noexcept
     {
-        static constexpr auto LAST_PIECE_BONUS = 350;
+        static constexpr auto LAST_PIECE_BONUS = 500;
 
         auto num_non_pawn_pieces = [](const Pieces& pieces) {
             return pieces.knights.count() + pieces.bishops.count()
