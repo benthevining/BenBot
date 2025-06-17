@@ -17,6 +17,7 @@
 #include <libchess/board/Masks.hpp>
 #include <libchess/board/Pieces.hpp>
 #include <libchess/board/Rank.hpp>
+#include <libchess/board/Square.hpp>
 #include <libchess/game/CastlingRights.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Attacks.hpp>
@@ -252,8 +253,13 @@ namespace {
     {
         using board::Rank;
 
-        static constexpr auto ROOK_BEHIND_BONUS = 25;
-        static constexpr auto KING_ESCORT_BONUS = 2;
+        static constexpr auto OtherSide = pieces::other_side<Side>();
+
+        static constexpr auto promotionRank = Side == Color::White ? Rank::Eight : Rank::One;
+
+        static constexpr auto ROOK_BEHIND_BONUS           = 25;
+        static constexpr auto KING_ESCORT_BONUS           = 2;
+        static constexpr auto ENEMY_KING_BLOCKING_PENALTY = 50;
 
         const auto passers = position.get_passed_pawns<Side>();
 
@@ -263,6 +269,8 @@ namespace {
 
         const auto rooks = ourPieces.rooks;
         const auto king  = ourPieces.get_king_location();
+
+        const auto enemyKing = position.pieces_for<OtherSide>().get_king_location();
 
         for (const auto pawn : passers.subboards()) {
             const auto mask = board::fills::pawn_rear<Side>(pawn);
@@ -291,6 +299,10 @@ namespace {
             };
 
             score += bonuses.at(squaresFromPromoting);
+
+            // penalty for enemy king on promotion square
+            if (enemyKing == board::Square { .file = square.file, .rank = promotionRank })
+                score -= ENEMY_KING_BLOCKING_PENALTY;
         }
 
         return score;
