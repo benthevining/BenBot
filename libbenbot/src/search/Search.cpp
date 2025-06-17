@@ -163,6 +163,9 @@ namespace {
         for (const auto& move : moves) {
             assert(currentPosition.is_capture(move));
 
+            if (interrupter.should_exit())
+                return alpha;
+
             evaluation = -quiescence(
                 -beta, -alpha,
                 game::after_move(currentPosition, move),
@@ -183,9 +186,6 @@ namespace {
                 evalType = EvalType::Exact;
                 alpha    = evaluation;
             }
-
-            if (interrupter.should_exit())
-                return alpha;
         }
 
         transTable.store(
