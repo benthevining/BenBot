@@ -307,17 +307,21 @@ Move Context<PrintUCIInfo>::search()
 
     std::optional<Move> bestMove;
 
-    static constexpr auto beta = EVAL_MAX;
-
-    auto alpha = -EVAL_MAX;
+    int bestScore { 0 };
 
     // iterative deepening
     auto depth = 1uz;
 
     while (depth <= options.depth) {
+        static constexpr auto beta = EVAL_MAX;
+
+        auto alpha = -EVAL_MAX;
+
         // we can generate the legal moves only once, but we should reorder them each iteration
         // because the move ordering will change based on the evaluations done during the last iteration
         detail::order_moves_for_search(options.position, options.movesToSearch, transTable);
+
+        std::optional<Move> bestMoveThisDepth;
 
         for (const auto& move : options.movesToSearch | std::views::take(numMovesToSearch)) {
             const auto score = -alpha_beta(
@@ -326,14 +330,19 @@ Move Context<PrintUCIInfo>::search()
                 depth, 1uz, transTable, interrupter);
 
             if (score > alpha) {
-                bestMove = move;
-                alpha    = score;
+                bestMoveThisDepth = move;
+                alpha             = score;
             }
 
             if (interrupter.should_exit()) {
                 --depth; // store the last completed depth in the transposition table
                 goto end_search;
             }
+        }
+
+        if (bestMoveThisDepth.has_value()) {
+            bestMove  = bestMoveThisDepth;
+            bestScore = alpha;
         }
 
         if (interrupter.should_exit())
@@ -343,13 +352,12 @@ Move Context<PrintUCIInfo>::search()
     }
 
 end_search:
-    const auto score = alpha;
+    assert(bestMove.has_value());
 
     // store the root position evaluation / best move for move ordering of the next search() invocation
     // the evaluation is the evaluation of the position resulting from playing the best move
-
     transTable.store(options.position, { .searchedDepth = depth,
-                                           .eval        = score,
+                                           .eval        = bestScore,
                                            .evalType    = EvalType::Exact,
                                            .bestMove    = bestMove });
 
@@ -359,7 +367,7 @@ end_search:
         // TODO: nodes searched, PV, mate scores
         std::println(
             "info depth {} score cp {} time {}",
-            depth, score, searchDuration.count());
+            depth, bestScore, searchDuration.count());
 
         std::println("bestmove {}", notation::to_uci(bestMove.value()));
     }
