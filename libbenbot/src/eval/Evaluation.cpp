@@ -351,6 +351,37 @@ namespace {
         return 0;
     }
 
+    // gives a bonus if we have at least 1 non-pawn piece left and our opponent doesn't
+    // in cases such as having a queen & piece vs a rook, this prompts the engine to
+    // consider sac'ing the queen for the rook, to eliminate the opponent's last piece
+    [[nodiscard, gnu::const]] int no_pieces_left_bonus(
+        const Position& position) noexcept
+    {
+        static constexpr auto LAST_PIECE_BONUS = 350;
+
+        auto num_non_pawn_pieces = [](const Pieces& pieces) {
+            return pieces.knights.count() + pieces.bishops.count()
+                 + pieces.rooks.count() + pieces.queens.count();
+        };
+
+        const auto ourNumPieces   = num_non_pawn_pieces(position.our_pieces());
+        const auto theirNumPieces = num_non_pawn_pieces(position.their_pieces());
+
+        if (ourNumPieces == 0uz) {
+            // we have no non-pawn pieces left, give a penalty if our opponent does
+            if (theirNumPieces > 0uz)
+                return -LAST_PIECE_BONUS;
+
+            return 0;
+        }
+
+        // we have at least one piece left, award the bonus if our opponent doesn't
+        if (theirNumPieces == 0uz)
+            return LAST_PIECE_BONUS;
+
+        return 0;
+    }
+
 } // namespace
 
 int evaluate(const Position& position)
@@ -373,6 +404,7 @@ int evaluate(const Position& position)
     const auto materialScore = score_material(position);
 
     return materialScore
+         + no_pieces_left_bonus(position)
          + score_piece_placement(position)
          + score_rook_files(position)
          + score_connected_rooks(position)
