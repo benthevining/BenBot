@@ -315,8 +315,10 @@ Move Context<PrintUCIInfo>::search()
     auto depth = 1uz;
 
     for (; depth <= options.depth; ++depth) {
-        if (depth > 1uz && interrupter.should_exit())
+        if (depth > 1uz && interrupter.should_exit()) {
+            --depth; // store the last completed depth in the transposition table
             break;
+        }
 
         // we can generate the legal moves only once, but we should reorder them each iteration
         // because the move ordering will change based on the evaluations done during the last iteration
@@ -333,8 +335,10 @@ Move Context<PrintUCIInfo>::search()
                 alpha    = score;
             }
 
-            if (interrupter.should_exit())
+            if (interrupter.should_exit()) {
+                --depth; // store the last completed depth in the transposition table
                 goto end_search;
+            }
         }
     }
 
