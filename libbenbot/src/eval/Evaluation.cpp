@@ -184,7 +184,11 @@ namespace {
                 score += static_cast<int>(MAX_DISTANCE - distance) * ATTACKING_QUEEN_PENALTY;
             }
 
-            return score;
+            static constexpr auto STARTING_NON_PAWN_MATERIAL
+                = piece_values::QUEEN + (piece_values::ROOK * 2) + (piece_values::BISHOP * 2) + (piece_values::KNIGHT * 2);
+
+            // weight score by opponent's remaining material
+            return score * (detail::count_material(enemyPieces, false) / STARTING_NON_PAWN_MATERIAL);
         };
 
         const bool isWhite = position.sideToMove == Color::White;
