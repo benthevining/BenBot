@@ -289,10 +289,8 @@ namespace {
                 score += static_cast<int>(MAX_DIST - kingDist) * KING_ESCORT_BONUS;
             }
 
-            const auto squaresFromPromoting
-                = Side == Color::White
-                    ? std::to_underlying(Rank::Eight) - std::to_underlying(square.rank)
-                    : std::to_underlying(square.rank) - std::to_underlying(Rank::One);
+            const auto squaresFromPromoting = std::abs(
+                static_cast<int>(square.rank) - static_cast<int>(promotionRank));
 
             static constexpr std::array bonuses {
                 10000, 100, 85, 70, 60, 50, 35
@@ -301,6 +299,9 @@ namespace {
             score += bonuses.at(squaresFromPromoting);
 
             // penalty for enemy king on promotion square
+            // this is intended to help the engine reduce the draw rate in king/pawn endgames,
+            // by seeing that if the enemy king can blockade the promotion square, then we're
+            // less likely to be able to force promotion
             if (enemyKing == board::Square { .file = square.file, .rank = promotionRank })
                 score -= ENEMY_KING_BLOCKING_PENALTY;
         }
