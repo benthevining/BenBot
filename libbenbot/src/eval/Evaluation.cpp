@@ -232,6 +232,20 @@ namespace {
         return (ourScore - theirScore) * 2;
     }
 
+    [[nodiscard, gnu::const]] int score_center_control(
+        const Position& position) noexcept
+    {
+        const auto whiteControls = static_cast<int>(moves::num_squares_attacked<Color::White>(position.whitePieces, masks::CENTER, position.blackPieces.occupied, false));
+        const auto blackControls = static_cast<int>(moves::num_squares_attacked<Color::Black>(position.blackPieces, masks::CENTER, position.whitePieces.occupied, false));
+
+        const bool isWhite = position.sideToMove == Color::White;
+
+        const auto ourControl   = isWhite ? whiteControls : blackControls;
+        const auto theirControl = isWhite ? blackControls : whiteControls;
+
+        return ourControl - theirControl;
+    }
+
     template <Color Side>
     [[nodiscard, gnu::const]] int score_side_passed_pawns(
         const Position& position)
@@ -410,6 +424,7 @@ int evaluate(const Position& position)
          + score_connected_rooks(position)
          + score_king_safety(position, endgameWeight)
          + score_squares_controlled_around_kings(position)
+         + score_center_control(position)
          + score_passed_pawns(position)
          + score_isolated_pawns(position)
          + score_endgame_mopup(position, endgameWeight, materialScore);
