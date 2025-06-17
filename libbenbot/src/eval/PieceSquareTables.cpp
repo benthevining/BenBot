@@ -254,7 +254,7 @@ namespace {
         const auto middlegameValue = kingMiddlegameTable.at(idx);
         const auto endgameValue    = kingEndgameTable.at(idx);
 
-        return static_cast<int>(std::round(static_cast<float>(middlegameValue) * 1.f - endgameWeight))
+        return static_cast<int>(std::round(static_cast<float>(middlegameValue) * (1.f - endgameWeight)))
              + static_cast<int>(std::round(static_cast<float>(endgameValue) * endgameWeight));
     }
 
