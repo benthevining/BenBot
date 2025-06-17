@@ -314,12 +314,7 @@ Move Context<PrintUCIInfo>::search()
     // iterative deepening
     auto depth = 1uz;
 
-    for (; depth <= options.depth; ++depth) {
-        if (depth > 1uz && interrupter.should_exit()) {
-            --depth; // store the last completed depth in the transposition table
-            break;
-        }
-
+    while (depth <= options.depth) {
         // we can generate the legal moves only once, but we should reorder them each iteration
         // because the move ordering will change based on the evaluations done during the last iteration
         detail::order_moves_for_search(options.position, options.movesToSearch, transTable);
@@ -340,6 +335,11 @@ Move Context<PrintUCIInfo>::search()
                 goto end_search;
             }
         }
+
+        if (interrupter.should_exit())
+            break;
+
+        ++depth;
     }
 
 end_search:
