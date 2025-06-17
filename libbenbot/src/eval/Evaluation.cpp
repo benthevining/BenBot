@@ -410,15 +410,21 @@ namespace {
     }
 
     // a crude way to evaluate "space":
-    // we take each side's pawn rearfill, and look at how many of those squares are controlled by that side
+    // we take each side's pawn rearfill, and look at how many more of those squares are controlled by that side than by their opponent
+    // this serves to discourage the engine from overextending, but also to incentivize expanding the pawn line to claim more space
     [[nodiscard, gnu::const]] int score_space(
         const Position& position) noexcept
     {
         const auto behindWhitePawns = board::fills::pawn_rear<Color::White>(position.whitePieces.pawns);
         const auto behindBlackPawns = board::fills::pawn_rear<Color::Black>(position.blackPieces.pawns);
 
-        const auto whiteSquares = static_cast<int>(moves::num_squares_attacked<Color::White>(position.whitePieces, behindWhitePawns, position.blackPieces.occupied));
-        const auto blackSquares = static_cast<int>(moves::num_squares_attacked<Color::Black>(position.blackPieces, behindBlackPawns, position.whitePieces.occupied));
+        const auto whiteSquares
+            = static_cast<int>(moves::num_squares_attacked<Color::White>(position.whitePieces, behindWhitePawns, position.blackPieces.occupied))
+            - static_cast<int>(moves::num_squares_attacked<Color::Black>(position.blackPieces, behindWhitePawns, position.whitePieces.occupied));
+
+        const auto blackSquares
+            = static_cast<int>(moves::num_squares_attacked<Color::Black>(position.blackPieces, behindBlackPawns, position.whitePieces.occupied))
+            - static_cast<int>(moves::num_squares_attacked<Color::White>(position.whitePieces, behindBlackPawns, position.blackPieces.occupied));
 
         const bool isWhite = position.sideToMove == Color::White;
 
