@@ -264,6 +264,9 @@ namespace {
                 evalType = EvalType::Exact;
                 alpha    = eval;
             }
+
+            if (interrupter.should_exit())
+                return alpha;
         }
 
         transTable.store(
@@ -340,10 +343,8 @@ Move Context<PrintUCIInfo>::search()
             }
         }
 
-        if (bestMoveThisDepth.has_value()) {
-            bestMove  = bestMoveThisDepth;
-            bestScore = alpha;
-        }
+        bestMove  = bestMoveThisDepth;
+        bestScore = alpha;
 
         if (interrupter.should_exit())
             break;
