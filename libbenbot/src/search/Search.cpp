@@ -372,16 +372,25 @@ template struct Context<false>;
 namespace {
 
     [[nodiscard]] Milliseconds determine_search_time(
-        const Milliseconds timeRemaining, const std::optional<Milliseconds> increment) noexcept
+        const Milliseconds                timeRemaining,
+        const std::optional<Milliseconds> increment,
+        const std::optional<size_t>       movesToNextTimeControl)
     {
-        const auto incValue = increment.or_else([] {
-                                           return std::optional { Milliseconds { 0 } };
-                                       })
-                                  .value();
+        const auto inc = increment.or_else([] {
+                                      return std::optional { Milliseconds { 0 } };
+                                  })
+                             .value();
+
+        const auto movesToGo = movesToNextTimeControl.or_else([] {
+                                                         return std::optional { 40uz };
+                                                     })
+                                   .value();
+
+        assert(movesToGo > 0uz);
 
         return Milliseconds {
-            (timeRemaining.count() / 20uz)
-            + (incValue.count() / 2uz)
+            (timeRemaining.count() / movesToGo)
+            + (inc.count() / (movesToGo / 10uz))
         };
     }
 
@@ -416,7 +425,8 @@ void Options::update_from(uci::GoCommandOptions&& goOptions)
         if (timeLeft.has_value()) {
             searchTime = determine_search_time(
                 *timeLeft,
-                isWhite ? goOptions.whiteInc : goOptions.blackInc);
+                isWhite ? goOptions.whiteInc : goOptions.blackInc,
+                goOptions.movesToGo);
         }
     }
 }
