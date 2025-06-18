@@ -267,20 +267,24 @@ namespace {
 
         const auto passers = position.get_passed_pawns<Side>();
 
-        const auto& ourPieces = position.pieces_for<Side>();
+        const auto& ourPieces   = position.pieces_for<Side>();
+        const auto& theirPieces = position.pieces_for<OtherSide>();
 
         auto score { 0 };
 
         const auto rooks = ourPieces.rooks;
         const auto king  = ourPieces.get_king_location();
 
-        const auto enemyKing = position.pieces_for<OtherSide>().get_king_location();
+        const auto enemyKing = theirPieces.get_king_location();
 
         for (const auto pawn : passers.subboards()) {
             const auto mask = board::fills::pawn_rear<Side>(pawn);
 
+            // bonus for friendly rook behind the pawn, penalty for enemy rook behind the pawn
             if ((mask & rooks).any())
                 score += ROOK_BEHIND_BONUS;
+            else if ((mask & theirPieces.rooks).any())
+                score -= ROOK_BEHIND_BONUS;
 
             const auto square = board::Square::from_index(pawn.first());
 
