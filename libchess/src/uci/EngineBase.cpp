@@ -7,6 +7,7 @@
  */
 
 #include <iostream>
+#include <libchess/moves/Magics.hpp>
 #include <libchess/uci/CommandParsing.hpp>
 #include <libchess/uci/EngineBase.hpp>
 #include <libchess/util/Strings.hpp>
@@ -18,6 +19,11 @@ namespace chess::uci {
 using std::println;
 using util::split_at_first_space;
 using util::trim;
+
+EngineBase::EngineBase()
+{
+    moves::magics::init();
+}
 
 void EngineBase::handle_command(std::string_view command)
 {

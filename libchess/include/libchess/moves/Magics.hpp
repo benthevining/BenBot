@@ -58,6 +58,12 @@ using board::Square;
 [[nodiscard]] Bitboard queen(
     const Square& queenPos, Bitboard occupiedSquares, Bitboard friendlyPieces);
 
+/** Initializes the static arrays containing the magic bitboard move data.
+    Calling this is optional; if this isn't called before the first call to ``bishop()``, ``rook()``,
+    or ``queen()``, then that first call will perform the initialization.
+ */
+void init();
+
 /// @}
 
 } // namespace chess::moves::magics

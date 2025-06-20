@@ -36,7 +36,7 @@ using std::string_view;
     @ingroup uci
  */
 struct EngineBase {
-    EngineBase() = default;
+    EngineBase();
 
     virtual ~EngineBase() = default;
 

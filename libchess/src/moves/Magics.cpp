@@ -288,4 +288,9 @@ Bitboard queen(
     return (bishopMoves | rookMoves) & friendlyPieces.inverse();
 }
 
+void init()
+{
+    [[maybe_unused]] static const auto& magic_moves = get_magic_moves();
+}
+
 } // namespace chess::moves::magics
