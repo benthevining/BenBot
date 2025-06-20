@@ -125,6 +125,17 @@ namespace {
             return eval::DRAW;
         }
 
+        if (currentPosition.is_checkmate()) {
+            const auto evaluation = checkmate_score(plyFromRoot);
+
+            transTable.store(
+                currentPosition, { .searchedDepth = depth,
+                                     .eval        = evaluation, // TODO: needs scaling/mapping?
+                                     .evalType    = EvalType::Exact });
+
+            return evaluation;
+        }
+
         auto evaluation = eval::evaluate(currentPosition);
 
         // see if we can get a cutoff (we may not need to generate moves for this position)
@@ -140,17 +151,6 @@ namespace {
         alpha = std::max(alpha, evaluation);
 
         auto moves = moves::generate<true>(currentPosition); // captures only
-
-        if (moves.empty() && currentPosition.is_check()) {
-            evaluation = checkmate_score(plyFromRoot);
-
-            transTable.store(
-                currentPosition, { .searchedDepth = depth,
-                                     .eval        = evaluation, // TODO: needs scaling/mapping?
-                                     .evalType    = EvalType::Exact });
-
-            return evaluation;
-        }
 
         detail::order_moves_for_search(currentPosition, moves, transTable);
 
