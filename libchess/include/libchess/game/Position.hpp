@@ -60,8 +60,6 @@ using PieceType = pieces::Type;
     en passant possibility, etc.
 
     @ingroup game
-
-    @todo Func to get backward pawns
  */
 struct Position final {
     /** Creates a Position object representing the starting position. */
@@ -250,7 +248,11 @@ struct Position final {
      */
     [[nodiscard]] bool is_fifty_move_draw() const;
 
+    /** Returns true if this position is a draw by threefold repetition. */
     [[nodiscard]] bool is_threefold_repetition() const noexcept;
+
+    /** Returns true if this position is either lone kings or lone king vs. king and bishop or knight. */
+    [[nodiscard]] bool is_draw_by_insufficient_material() const noexcept;
 
     /** Returns true if the game has concluded in a draw. */
     [[nodiscard]] bool is_draw() const;

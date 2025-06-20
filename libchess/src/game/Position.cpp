@@ -172,9 +172,44 @@ bool Position::is_fifty_move_draw() const
         && moves::any_legal_moves(*this); // side to move must have at least 1 legal move
 }
 
+bool Position::is_draw_by_insufficient_material() const noexcept
+{
+    // even if either side has a single pawn that can't move, mate can still be possible
+    if (whitePieces.pawns.any() || blackPieces.pawns.any()
+        || whitePieces.rooks.any() || blackPieces.rooks.any()
+        || whitePieces.queens.any() || blackPieces.queens.any()) {
+        [[likely]];
+        return false;
+    }
+
+    const auto numWhiteKnights = whitePieces.knights.count();
+    const auto numWhiteBishops = whitePieces.bishops.count();
+
+    const auto numBlackKnights = blackPieces.knights.count();
+    const auto numBlackBishops = blackPieces.bishops.count();
+
+    const bool whiteHasOnlyKing = numWhiteKnights + numWhiteBishops == 0uz;
+    const bool blackHasOnlyKing = numBlackKnights + numBlackBishops == 0uz;
+
+    if (! (whiteHasOnlyKing || blackHasOnlyKing)) {
+        [[likely]];
+        return false;
+    }
+
+    if (whiteHasOnlyKing && blackHasOnlyKing)
+        return true;
+
+    // check if side without the lone king has only 1 knight/bishop
+
+    if (whiteHasOnlyKing)
+        return numBlackKnights + numBlackBishops == 1uz;
+
+    return numWhiteKnights + numWhiteBishops == 1uz;
+}
+
 bool Position::is_draw() const
 {
-    if (is_threefold_repetition())
+    if (is_threefold_repetition() || is_draw_by_insufficient_material())
         return true;
 
     if (moves::any_legal_moves(*this))
