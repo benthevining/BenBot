@@ -405,6 +405,8 @@ namespace {
 
 int evaluate(const Position& position)
 {
+    // TODO: I'd like to get rid of these branches, but when I do, the engine
+    // crashes with a std::array::at() exception in release mode only...
     if (position.is_draw())
         return DRAW;
 
