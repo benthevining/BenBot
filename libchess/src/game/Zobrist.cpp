@@ -214,11 +214,7 @@ namespace {
 
         const auto index = typeOffset + sideOffset + square.index();
 
-        assert(index < PIECE_KEYS.size());
-
-        // TODO: there's a bug here! Throws exception when changed to at() (happens in release mode only)
-        return PIECE_KEYS[index];
-        // return values.at(index);
+        return PIECE_KEYS.at(index);
     }
 
 } // namespace
