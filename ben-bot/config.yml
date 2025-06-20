@@ -31,32 +31,15 @@ engine:
   online_moves:
     max_out_of_book_moves: 10      # Stop using online opening books after they don't have a move for 'max_out_of_book_moves' positions. Doesn't apply to the online endgame tablebases.
     max_retries: 2                 # The maximum amount of retries when getting an online move.
-    max_depth: 10                # How many moves from the start to take from online books. Default is no limit.
+    max_depth: 10                  # How many moves from the start to take from online books. Default is no limit.
     chessdb_book:
-      enabled: false               # Whether or not to use chessdb book.
-      min_time: 20                 # Minimum time (in seconds) to use chessdb book.
-      move_quality: "good"         # One of "all", "good", "best".
-      min_depth: 20                # Only for move_quality: "best".
+      enabled: false
     lichess_cloud_analysis:
-      enabled: false               # Whether or not to use lichess cloud analysis.
-      min_time: 20                 # Minimum time (in seconds) the bot must have to use cloud analysis.
-      move_quality: "best"         # One of "good", "best".
-      max_score_difference: 50     # Only for move_quality: "good". The maximum score difference (in cp) between the best move and the other moves.
-      min_depth: 20
-      min_knodes: 0
+      enabled: false
     lichess_opening_explorer:
       enabled: false
-      min_time: 20
-      source: "masters"            # One of "lichess", "masters", "player"
-      player_name: ""              # The lichess username. Leave empty for the bot's username to be used. Used only when source is "player".
-      sort: "winrate"              # One of "winrate", "games_played"
-      min_games: 10                # Minimum number of times a move must have been played to be chosen.
     online_egtb:
       enabled: false               # Whether or not to enable online endgame tablebases.
-      min_time: 20                 # Minimum time (in seconds) the bot must have to use online EGTBs.
-      max_pieces: 7                # Maximum number of pieces on the board to use endgame tablebases.
-      source: "lichess"            # One of "lichess", "chessdb".
-      move_quality: "best"         # One of "best" or "suggest" (it takes all the moves with the same WDL and tells the engine to only consider these; will move instantly if there is only 1 "good" move).
 
   lichess_bot_tbs:                 # The tablebases list here will be read by lichess-bot, not the engine.
     syzygy:
@@ -65,10 +48,6 @@ engine:
       enabled: false               # Whether or not to use local gaviota endgame tablebases.
 
   uci_options:                     # Arbitrary UCI options passed to the engine.
-    #go_commands:                   # Additional options to pass to the UCI go command.
-      #depth: 5                    # Search depth ply only.
-     #     nodes: 1                     # Search so many nodes only.
-#     movetime: 1000               # Integer. Search exactly movetime milliseconds.
 
   silence_stderr: false            # Some engines (yes you, Leela) are very noisy.
 
@@ -86,7 +65,7 @@ correspondence:
   ponder: false                    # Ponder in correspondence games the bot is connected to.
 
 challenge:                         # Incoming challenges.
-  concurrency: 1                   # Number of games to play simultaneously.
+  concurrency: 5                   # Number of games to play simultaneously.
   sort_by: "best"                  # Possible values: "best" and "first".
   preference: "human"              # Possible values: "none", "human", "bot".
   accept_bot: true                 # Accepts challenges coming from other bots.
