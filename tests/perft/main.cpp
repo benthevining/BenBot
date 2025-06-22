@@ -15,7 +15,7 @@
 #include <fstream>
 #include <iterator>
 #include <libchess/game/Position.hpp>
-#include <libchess/moves/Perft.hpp>
+#include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/UCI.hpp>
 #include <libchess/util/Strings.hpp>
@@ -29,12 +29,10 @@
 
 namespace chess {
 
-using moves::PerftResult;
-
 using std::println;
 
 struct PerftOptions final {
-    game::Position startingPosition {};
+    game::Position startingPosition;
 
     std::size_t depth { 1uz };
 
@@ -42,6 +40,42 @@ struct PerftOptions final {
 };
 
 namespace {
+
+    struct PerftResult final {
+        size_t nodes { 0uz };
+
+        size_t captures { 0uz };
+
+        size_t enPassantCaptures { 0uz };
+
+        size_t castles { 0uz };
+
+        size_t promotions { 0uz };
+
+        size_t checks { 0uz };
+
+        size_t checkmates { 0uz };
+
+        size_t stalemates { 0uz };
+
+        std::vector<std::pair<moves::Move, size_t>> rootNodes;
+
+        PerftResult& operator+=(const PerftResult& rhs) noexcept;
+    };
+
+    PerftResult& PerftResult::operator+=(const PerftResult& rhs) noexcept
+    {
+        nodes += rhs.nodes;
+        captures += rhs.captures;
+        enPassantCaptures += rhs.enPassantCaptures;
+        castles += rhs.castles;
+        promotions += rhs.promotions;
+        checks += rhs.checks;
+        checkmates += rhs.checkmates;
+        stalemates += rhs.stalemates;
+
+        return *this;
+    }
 
     void print_help(const std::string_view programName)
     {
@@ -158,6 +192,57 @@ namespace {
         println("Search time: {}", wallTime);
     }
 
+    template <bool IsRoot = true>
+    [[nodiscard]] PerftResult perft(const size_t depth, const game::Position& startingPosition = {}) // NOLINT(readability-function-cognitive-complexity)
+    {
+        if (depth == 0uz)
+            return { .nodes = 1uz };
+
+        PerftResult result;
+
+        for (const auto& move : moves::generate(startingPosition)) {
+            const auto newPosition = after_move(startingPosition, move);
+
+            // we want stats only for leaf nodes
+            if (depth == 1uz) {
+                if (startingPosition.is_capture(move)) {
+                    ++result.captures;
+
+                    if (startingPosition.is_en_passant(move))
+                        ++result.enPassantCaptures;
+                }
+
+                if (move.is_castling())
+                    ++result.castles;
+
+                if (move.promotedType.has_value())
+                    ++result.promotions;
+
+                const bool isCheck = newPosition.is_check();
+
+                if (isCheck)
+                    ++result.checks;
+
+                if (! moves::any_legal_moves(newPosition)) {
+                    if (isCheck)
+                        ++result.checkmates;
+                    else
+                        ++result.stalemates;
+                }
+            }
+
+            const auto childResult = perft<false>(depth - 1uz, newPosition);
+
+            if constexpr (IsRoot) {
+                result.rootNodes.emplace_back(move, childResult.nodes);
+            }
+
+            result += childResult;
+        }
+
+        return result;
+    }
+
     void run_perft(const PerftOptions& options)
     {
         using Clock = std::chrono::high_resolution_clock;
@@ -169,7 +254,7 @@ namespace {
 
         const auto startTime = Clock::now();
 
-        const auto result = moves::perft(options.depth, options.startingPosition);
+        const auto result = perft(options.depth, options.startingPosition);
 
         const auto endTime = Clock::now();
 
