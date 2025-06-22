@@ -50,7 +50,7 @@ namespace {
 
     [[nodiscard]] string_view get_check_string(const Position& position, const Move& move)
     {
-        const auto newPos = game::after_move(position, move);
+        const auto newPos = after_move(position, move);
 
         if (! newPos.is_check())
             return {};
@@ -269,8 +269,8 @@ namespace {
         const Square& targetSquare, const File startingFile, const Color color)
     {
         const auto fromRank = color == Color::White
-                                ? board::prev_pawn_rank<Color::White>(targetSquare.rank)
-                                : board::prev_pawn_rank<Color::Black>(targetSquare.rank);
+                                ? prev_pawn_rank<Color::White>(targetSquare.rank)
+                                : prev_pawn_rank<Color::Black>(targetSquare.rank);
 
         return {
             .from = Square {

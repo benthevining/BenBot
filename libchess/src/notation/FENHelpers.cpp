@@ -59,14 +59,14 @@ namespace {
             if (whitePieces.test(square)) {
                 const auto type = position.whitePieces.get_piece_on(square);
 
-                output.push_back(pieces::to_char(type.value(), true));
+                output.push_back(to_char(type.value(), true));
 
                 continue;
             }
 
             const auto type = position.blackPieces.get_piece_on(square);
 
-            output.push_back(pieces::to_char(type.value(), false));
+            output.push_back(to_char(type.value(), false));
         }
 
         if (consecutiveEmpty > 0uz)
@@ -124,8 +124,8 @@ void write_en_passant_target_square(
 
     const auto [file, rank] = *targetSquare;
 
-    output.push_back(board::file_to_char(file, false));
-    output.push_back(board::rank_to_char(rank));
+    output.push_back(file_to_char(file, false));
+    output.push_back(rank_to_char(rank));
 }
 
 namespace {

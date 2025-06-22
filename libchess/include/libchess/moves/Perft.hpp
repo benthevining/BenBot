@@ -113,7 +113,7 @@ PerftResult perft(const size_t depth, const Position& startingPosition) // NOLIN
     PerftResult result;
 
     for (const auto& move : generate(startingPosition)) {
-        const auto newPosition = game::after_move(startingPosition, move);
+        const auto newPosition = after_move(startingPosition, move);
 
         // we want stats only for leaf nodes
         if (depth == 1uz) {

@@ -295,7 +295,7 @@ Value update(
 
             value ^= piece_key(
                 PieceType::Pawn, otherColor,
-                board::get_en_passant_captured_square(
+                get_en_passant_captured_square(
                     pos.enPassantTargetSquare.value(),
                     pos.sideToMove == Color::White));
         } else {

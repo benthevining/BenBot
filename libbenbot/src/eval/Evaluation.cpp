@@ -128,7 +128,7 @@ namespace {
             for (const auto knightPos : enemyPieces.knights.squares()) {
                 static constexpr auto MAX_DISTANCE = 6uz;
 
-                const auto distance = board::knight_distance(location, knightPos);
+                const auto distance = knight_distance(location, knightPos);
 
                 // penalty increases with smaller distance
                 score += static_cast<int>(MAX_DISTANCE - distance) * ATTACKING_KNIGHT_PENALTY;
@@ -137,7 +137,7 @@ namespace {
             for (const auto queenPos : enemyPieces.queens.squares()) {
                 static constexpr auto MAX_DISTANCE = 7uz;
 
-                const auto distance = board::chebyshev_distance(location, queenPos);
+                const auto distance = chebyshev_distance(location, queenPos);
 
                 // penalty increases with smaller distance
                 score += static_cast<int>(MAX_DISTANCE - distance) * ATTACKING_QUEEN_PENALTY;
@@ -251,7 +251,7 @@ namespace {
             {
                 static constexpr auto MAX_DIST = 7uz;
 
-                const auto kingDist = board::chebyshev_distance(king, square);
+                const auto kingDist = chebyshev_distance(king, square);
 
                 score += static_cast<int>(MAX_DIST - kingDist) * KING_ESCORT_BONUS;
             }
@@ -334,10 +334,10 @@ namespace {
             const auto theirKing = position.their_pieces().get_king_location();
 
             // bonus for forcing enemy king to edge of board
-            auto score = static_cast<int>(board::center_manhattan_distance(theirKing)) * 10;
+            auto score = static_cast<int>(center_manhattan_distance(theirKing)) * 10;
 
             // use ortho distance to encourage direct opposition
-            score += (14 - static_cast<int>(board::manhattan_distance(ourKing, theirKing))) * 4;
+            score += (14 - static_cast<int>(manhattan_distance(ourKing, theirKing))) * 4;
 
             return static_cast<int>(std::round(static_cast<float>(score) * endgameWeight));
         }

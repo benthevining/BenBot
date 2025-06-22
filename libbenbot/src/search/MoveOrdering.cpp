@@ -59,7 +59,7 @@ namespace {
             return std::numeric_limits<int>::max(); // arbitrarily large score to ensure this move is ordered first
 
         // look up stored record of resulting position after making move
-        if (const auto* record = transTable.find(game::after_move(currentPosition, move))) {
+        if (const auto* record = transTable.find(after_move(currentPosition, move))) {
             switch (record->evalType) {
                 using enum TranspositionTable::Record::EvalType;
 

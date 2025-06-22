@@ -303,8 +303,17 @@ private:
 
     @relates Position
     @ingroup game
+    @see after_null_move()
  */
 [[nodiscard, gnu::const]] Position after_move(const Position& starting, const Move& move);
+
+/** Returns a copy of the starting position with the side to move flipped.
+
+    @relates Position
+    @ingroup game
+    @see after_move()
+ */
+[[nodiscard, gnu::const]] Position after_null_move(const Position& starting);
 
 /** Creates a UTF8 representation of the given position.
     The returned string is meant to be interpreted visually by a human, probably for debugging purposes.
@@ -436,6 +445,15 @@ inline Position after_move(const Position& starting, const Move& move)
     auto copy { starting };
 
     copy.make_move(move);
+
+    return copy;
+}
+
+inline Position after_null_move(const Position& starting)
+{
+    auto copy { starting };
+
+    copy.sideToMove = starting.sideToMove == Color::White ? Color::Black : Color::White;
 
     return copy;
 }

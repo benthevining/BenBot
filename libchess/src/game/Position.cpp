@@ -59,7 +59,7 @@ namespace {
         const Move& move, const bool isWhite) noexcept
     {
         if (move.piece != PieceType::Pawn
-            || std::cmp_not_equal(board::rank_distance(move.from, move.to), 2uz)) {
+            || std::cmp_not_equal(rank_distance(move.from, move.to), 2uz)) {
             [[likely]];
             return std::nullopt;
         }

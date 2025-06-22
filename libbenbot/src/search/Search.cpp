@@ -243,7 +243,7 @@ namespace {
         std::optional<Move> bestMove;
 
         for (const auto& move : moves) {
-            const auto newPosition = game::after_move(currentPosition, move);
+            const auto newPosition = after_move(currentPosition, move);
 
             const auto eval = depth > 1uz
                                 ? -alpha_beta(-beta, -alpha, newPosition, depth - 1uz, plyFromRoot + 1uz, transTable, interrupter)

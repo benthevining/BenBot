@@ -149,7 +149,7 @@ constexpr bool Move::is_castling() const noexcept
 {
     return piece == PieceType::King
         && std::cmp_greater(
-            board::file_distance(from, to),
+            file_distance(from, to),
             1uz);
 }
 
