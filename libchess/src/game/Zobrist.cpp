@@ -8,7 +8,6 @@
 
 #include "Zobrist.hpp" // NOLINT(build/include_subdir)
 #include <array>
-#include <cassert>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Masks.hpp>
 #include <libchess/board/Pieces.hpp>
