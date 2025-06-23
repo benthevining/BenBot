@@ -170,23 +170,22 @@ namespace {
         return score;
     }
 
+    template <Color Side>
+    [[nodiscard, gnu::const]] int score_side_pawns(const Position& position)
+    {
+        return score_side_passed_pawns<Side>(position)
+             + score_side_isolated_pawns<Side>(position)
+             + score_side_doubled_pawns<Side>(position)
+             + score_side_backward_pawns<Side>(position)
+             + score_side_pawn_chains<Side>(position);
+    }
+
 } // namespace
 
 [[nodiscard, gnu::const]] int score_pawn_structure(const Position& position)
 {
-    const auto whiteScore
-        = score_side_passed_pawns<Color::White>(position)
-        + score_side_isolated_pawns<Color::White>(position)
-        + score_side_doubled_pawns<Color::White>(position)
-        + score_side_backward_pawns<Color::White>(position)
-        + score_side_pawn_chains<Color::White>(position);
-
-    const auto blackScore
-        = score_side_passed_pawns<Color::Black>(position)
-        + score_side_isolated_pawns<Color::Black>(position)
-        + score_side_doubled_pawns<Color::Black>(position)
-        + score_side_backward_pawns<Color::Black>(position)
-        + score_side_pawn_chains<Color::Black>(position);
+    const auto whiteScore = score_side_pawns<Color::White>(position);
+    const auto blackScore = score_side_pawns<Color::Black>(position);
 
     const bool isWhite = position.sideToMove == Color::White;
 
