@@ -18,9 +18,9 @@
 
 namespace chess::eval::detail {
 
-namespace {
+using pieces::Color;
 
-    using pieces::Color;
+namespace {
 
     template <Color Side>
     [[nodiscard, gnu::const]] int score_side_passed_pawns(const Position& position)
@@ -87,19 +87,6 @@ namespace {
         return score;
     }
 
-    [[nodiscard, gnu::const]] int score_passed_pawns(const Position& position)
-    {
-        const auto whiteScore = score_side_passed_pawns<Color::White>(position);
-        const auto blackScore = score_side_passed_pawns<Color::Black>(position);
-
-        const bool isWhite = position.sideToMove == Color::White;
-
-        const auto ourScore   = isWhite ? whiteScore : blackScore;
-        const auto theirScore = isWhite ? blackScore : whiteScore;
-
-        return ourScore - theirScore;
-    }
-
     template <Color Side>
     [[nodiscard, gnu::const]] int score_side_isolated_pawns(const Position& position) noexcept
     {
@@ -118,25 +105,24 @@ namespace {
         return score;
     }
 
-    [[nodiscard, gnu::const]] int score_isolated_pawns(const Position& position) noexcept
-    {
-        const auto whiteScore = score_side_isolated_pawns<Color::White>(position);
-        const auto blackScore = score_side_isolated_pawns<Color::Black>(position);
-
-        const bool isWhite = position.sideToMove == Color::White;
-
-        const auto ourScore   = isWhite ? whiteScore : blackScore;
-        const auto theirScore = isWhite ? blackScore : whiteScore;
-
-        return ourScore - theirScore;
-    }
-
 } // namespace
 
 [[nodiscard, gnu::const]] int score_pawn_structure(const Position& position)
 {
-    return score_passed_pawns(position)
-         + score_isolated_pawns(position);
+    const auto whiteScore
+        = detail::score_side_passed_pawns<Color::White>(position)
+        + detail::score_side_isolated_pawns<Color::White>(position);
+
+    const auto blackScore
+        = detail::score_side_passed_pawns<Color::Black>(position)
+        + detail::score_side_isolated_pawns<Color::Black>(position);
+
+    const bool isWhite = position.sideToMove == Color::White;
+
+    const auto ourScore   = isWhite ? whiteScore : blackScore;
+    const auto theirScore = isWhite ? blackScore : whiteScore;
+
+    return ourScore - theirScore;
 }
 
 } // namespace chess::eval::detail
