@@ -141,6 +141,9 @@ namespace {
     template <Color Side>
     [[nodiscard, gnu::const]] int score_side_pawn_chains(const Position& position) noexcept
     {
+        // for each pawn, we award a bonus for each square it attacks that has a friendly pawn on it
+        // this has the effect of awarding a larger bonus for larger pawn chains
+
         auto score { 0 };
 
         const auto pawns = position.pieces_for<Side>().pawns;
