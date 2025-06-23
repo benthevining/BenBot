@@ -7,13 +7,13 @@
  */
 
 #include "PawnStructure.hpp" // NOLINT(build/include_subdir)
+#include "Positional.hpp"    // NOLINT(build/include_subdir)
 #include <cmath>
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Material.hpp>
 #include <libbenbot/eval/PieceSquareTables.hpp>
 #include <libchess/board/Distances.hpp>
 #include <libchess/board/File.hpp>
-#include <libchess/board/Fills.hpp>
 #include <libchess/board/Masks.hpp>
 #include <libchess/board/Pieces.hpp>
 #include <libchess/board/Square.hpp>
@@ -195,20 +195,6 @@ namespace {
         return (ourScore - theirScore) * 2;
     }
 
-    [[nodiscard, gnu::const]] int score_center_control(
-        const Position& position) noexcept
-    {
-        const auto whiteControls = static_cast<int>(moves::num_squares_attacked<Color::White>(position.whitePieces, masks::CENTER, position.blackPieces.occupied, false));
-        const auto blackControls = static_cast<int>(moves::num_squares_attacked<Color::Black>(position.blackPieces, masks::CENTER, position.whitePieces.occupied, false));
-
-        const bool isWhite = position.sideToMove == Color::White;
-
-        const auto ourControl   = isWhite ? whiteControls : blackControls;
-        const auto theirControl = isWhite ? blackControls : whiteControls;
-
-        return ourControl - theirControl;
-    }
-
     // this "mop up" function gives a bonus for cornering the enemy king in the endgame
     // this can help to prevent draws when you're up material
     [[nodiscard, gnu::const]] int score_endgame_mopup(
@@ -262,31 +248,6 @@ namespace {
         return 0;
     }
 
-    // a crude way to evaluate "space":
-    // we take each side's pawn rearfill, and look at how many more of those squares are controlled by that side than by their opponent
-    // this serves to discourage the engine from overextending, but also to incentivize expanding the pawn line to claim more space
-    [[nodiscard, gnu::const]] int score_space(
-        const Position& position) noexcept
-    {
-        const auto behindWhitePawns = board::fills::pawn_rear<Color::White>(position.whitePieces.pawns);
-        const auto behindBlackPawns = board::fills::pawn_rear<Color::Black>(position.blackPieces.pawns);
-
-        const auto whiteSquares
-            = static_cast<int>(moves::num_squares_attacked<Color::White>(position.whitePieces, behindWhitePawns, position.blackPieces.occupied))
-            - static_cast<int>(moves::num_squares_attacked<Color::Black>(position.blackPieces, behindWhitePawns, position.whitePieces.occupied));
-
-        const auto blackSquares
-            = static_cast<int>(moves::num_squares_attacked<Color::Black>(position.blackPieces, behindBlackPawns, position.whitePieces.occupied))
-            - static_cast<int>(moves::num_squares_attacked<Color::White>(position.whitePieces, behindBlackPawns, position.blackPieces.occupied));
-
-        const bool isWhite = position.sideToMove == Color::White;
-
-        const auto ourSquares   = isWhite ? whiteSquares : blackSquares;
-        const auto theirSquares = isWhite ? blackSquares : whiteSquares;
-
-        return (ourSquares - theirSquares) * 2;
-    }
-
 } // namespace
 
 int evaluate(const Position& position)
@@ -302,9 +263,8 @@ int evaluate(const Position& position)
          + score_connected_rooks(position)
          + score_king_safety(position, endgameWeight)
          + score_squares_controlled_around_kings(position)
-         + score_center_control(position)
          + score_endgame_mopup(position, endgameWeight, materialScore)
-         + score_space(position)
+         + detail::score_positional(position)
          + detail::score_pawn_structure(position);
 }
 
