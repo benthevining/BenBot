@@ -15,6 +15,7 @@
 #include <libchess/board/Fills.hpp>
 #include <libchess/board/Masks.hpp>
 #include <libchess/board/Rank.hpp>
+#include <libchess/board/Shifts.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Patterns.hpp>
@@ -87,6 +88,18 @@ namespace {
             // less likely to be able to force promotion
             if (enemyKing == board::Square { .file = square.file, .rank = promotionRank })
                 score -= ENEMY_KING_BLOCKING_PENALTY;
+
+            namespace shifts = board::shifts;
+
+            // bonus for being protected by a friendly pawn
+
+            const auto protectorMask
+                = shifts::pawn_inv_capture_east<Side>(pawn)
+                | shifts::pawn_inv_capture_west<Side>(pawn);
+
+            const auto protectors = ourPieces.pawns & protectorMask;
+
+            score += static_cast<int>(protectors.count()) * 10;
         }
 
         return score;
