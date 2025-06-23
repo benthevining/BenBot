@@ -251,3 +251,34 @@ TEST_CASE("Position - passed pawns", TAGS)
         REQUIRE(position.get_passed_pawns<Color::Black>().count() == 0uz);
     }
 }
+
+TEST_CASE("Position - backward pawns", TAGS)
+{
+    SECTION("Starting position")
+    {
+        const Position startingPosition {};
+
+        REQUIRE(startingPosition.get_backward_pawns<Color::White>().none());
+        REQUIRE(startingPosition.get_backward_pawns<Color::Black>().none());
+    }
+
+    SECTION("Telestop weakness")
+    {
+        const auto position = from_fen("8/5p2/6p1/p1p3P1/P1P5/7P/1P6/8 w - - 0 1");
+
+        const auto wBackwards = position.get_backward_pawns<Color::White>();
+
+        REQUIRE(wBackwards.count() == 2uz);
+
+        REQUIRE(wBackwards.test(Square { .file = File::B, .rank = Rank::Two }));
+        REQUIRE(wBackwards.test(Square { .file = File::H, .rank = Rank::Three }));
+
+        const auto bBackwards = position.get_backward_pawns<Color::Black>();
+
+        REQUIRE(bBackwards.count() == 3uz);
+
+        REQUIRE(bBackwards.test(Square { .file = File::A, .rank = Rank::Five }));
+        REQUIRE(bBackwards.test(Square { .file = File::C, .rank = Rank::Five }));
+        REQUIRE(bBackwards.test(Square { .file = File::F, .rank = Rank::Seven }));
+    }
+}

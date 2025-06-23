@@ -234,6 +234,10 @@ struct Position final {
     template <Color Side>
     [[nodiscard]] Bitboard get_passed_pawns() const noexcept;
 
+    /** Returns a bitboard containing the locations of backward pawns for the given side. */
+    template <Color Side>
+    [[nodiscard]] Bitboard get_backward_pawns() const noexcept;
+
     /// @name Game result queries
     /// @{
 
@@ -438,6 +442,25 @@ Bitboard Position::get_passed_pawns() const noexcept
     }
 
     return passedPawns;
+}
+
+template <Color Side>
+Bitboard Position::get_backward_pawns() const noexcept
+{
+    static constexpr auto OtherSide = pieces::other_side<Side>();
+
+    const auto friendlyPawns = pieces_for<Side>().pawns;
+    const auto enemyPawns    = pieces_for<OtherSide>().pawns;
+
+    const auto ourAttackSpans = board::fills::pawn_front<Side>(
+        moves::patterns::pawn_attacks<Side>(friendlyPawns));
+
+    const auto theirAttacks = moves::patterns::pawn_attacks<OtherSide>(enemyPawns);
+
+    const auto backwardArea = board::fills::pawn_rear<Side>(
+        ourAttackSpans.inverse() & theirAttacks);
+
+    return backwardArea & friendlyPawns;
 }
 
 inline Position after_move(const Position& starting, const Move& move)
