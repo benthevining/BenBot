@@ -430,18 +430,10 @@ Bitboard Position::get_passed_pawns() const noexcept
     const auto friendlyPawns = pieces_for<Side>().pawns;
     const auto enemyPawns    = pieces_for<OtherSide>().pawns;
 
-    Bitboard passedPawns;
+    const auto mask = board::fills::pawn_front<OtherSide>(
+        enemyPawns | moves::patterns::pawn_attacks<OtherSide>(enemyPawns));
 
-    for (const auto pawn : friendlyPawns.subboards()) {
-        // the pawn's file & the two adjacent files, only filled in front of the pawn's progression
-        const auto mask = board::fills::pawn_front<Side>(
-            moves::patterns::pawn_attacks<Side>(pawn) | board::shifts::pawn_forward<Side>(pawn));
-
-        if ((mask & enemyPawns).none())
-            passedPawns |= pawn;
-    }
-
-    return passedPawns;
+    return friendlyPawns & mask.inverse();
 }
 
 template <Color Side>
