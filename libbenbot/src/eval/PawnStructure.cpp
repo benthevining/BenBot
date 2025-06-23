@@ -8,11 +8,13 @@
 
 #include "PawnStructure.hpp" // NOLINT(build/include_subdir)
 #include <array>
-#include <cmath>                        // IWYU pragma: keep - for std::abs()
+#include <cmath> // IWYU pragma: keep - for std::abs()
+#include <libchess/board/Bitboard.hpp>
 #include <libchess/board/Distances.hpp> // IWYU pragma: keep - for chebyshev_distance()
 #include <libchess/board/File.hpp>
 #include <libchess/board/Fills.hpp>
 #include <libchess/board/Masks.hpp>
+#include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Patterns.hpp>
@@ -112,6 +114,7 @@ namespace {
     [[nodiscard, gnu::const]] int score_side_doubled_pawns(const Position& position) noexcept
     {
         static constexpr auto DOUBLED_PAWN_PENALTY = -10;
+        static constexpr auto ISOLATED_PENALTY     = -20;
 
         auto score { 0 };
 
@@ -120,8 +123,16 @@ namespace {
         for (const auto file : magic_enum::enum_values<board::File>()) {
             const auto pawnsOnFile = (pawns & board::masks::files::get(file)).count();
 
-            if (pawnsOnFile > 1uz)
+            if (pawnsOnFile > 1uz) {
                 score += DOUBLED_PAWN_PENALTY;
+
+                const auto mask = board::fills::file(
+                    moves::patterns::pawn_attacks<Side>(
+                        board::Bitboard::from_square(board::Square { .file = file, .rank = board::Rank::One })));
+
+                if ((mask & pawns).none())
+                    score += ISOLATED_PENALTY;
+            }
         }
 
         return score;
