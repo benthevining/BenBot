@@ -129,9 +129,6 @@ namespace {
     template <Color Side>
     [[nodiscard, gnu::const]] int score_side_doubled_pawns(const Position& position) noexcept
     {
-        static constexpr auto DOUBLED_PAWN_PENALTY = -10;
-        static constexpr auto ISOLATED_PENALTY     = -20;
-
         auto score { 0 };
 
         const auto pawns = position.pieces_for<Side>().pawns;
@@ -139,19 +136,17 @@ namespace {
         for (const auto file : magic_enum::enum_values<board::File>()) {
             const auto pawnsOnFile = (pawns & board::masks::files::get(file)).count();
 
-            if (pawnsOnFile > 1uz) {
-                score += DOUBLED_PAWN_PENALTY;
-
-                const auto mask = board::fills::file(
-                    moves::patterns::pawn_attacks<Side>(
-                        board::Bitboard::from_square(board::Square { .file = file, .rank = board::Rank::One })));
-
-                if ((mask & pawns).none())
-                    score += ISOLATED_PENALTY;
-            }
+            if (pawnsOnFile > 1uz)
+                score -= 10;
         }
 
         return score;
+    }
+
+    template <Color Side>
+    [[nodiscard, gnu::const]] int score_side_backward_pawns(const Position& position) noexcept
+    {
+        return static_cast<int>(position.get_backward_pawns<Side>().count()) * -20;
     }
 
     template <Color Side>
@@ -183,12 +178,14 @@ namespace {
         = score_side_passed_pawns<Color::White>(position)
         + score_side_isolated_pawns<Color::White>(position)
         + score_side_doubled_pawns<Color::White>(position)
+        + score_side_backward_pawns<Color::White>(position)
         + score_side_pawn_chains<Color::White>(position);
 
     const auto blackScore
         = score_side_passed_pawns<Color::Black>(position)
         + score_side_isolated_pawns<Color::Black>(position)
         + score_side_doubled_pawns<Color::Black>(position)
+        + score_side_backward_pawns<Color::Black>(position)
         + score_side_pawn_chains<Color::Black>(position);
 
     const bool isWhite = position.sideToMove == Color::White;
