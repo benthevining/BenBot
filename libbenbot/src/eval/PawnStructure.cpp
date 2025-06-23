@@ -138,6 +138,24 @@ namespace {
         return score;
     }
 
+    template <Color Side>
+    [[nodiscard, gnu::const]] int score_side_pawn_chains(const Position& position) noexcept
+    {
+        auto score { 0 };
+
+        const auto pawns = position.pieces_for<Side>().pawns;
+
+        for (const auto pawn : pawns.subboards()) {
+            const auto attacks = moves::patterns::pawn_attacks<Side>(pawn);
+
+            const auto defended = static_cast<int>((pawns & attacks).count());
+
+            score += (defended * 10);
+        }
+
+        return score;
+    }
+
 } // namespace
 
 [[nodiscard, gnu::const]] int score_pawn_structure(const Position& position)
@@ -145,12 +163,14 @@ namespace {
     const auto whiteScore
         = score_side_passed_pawns<Color::White>(position)
         + score_side_isolated_pawns<Color::White>(position)
-        + score_side_doubled_pawns<Color::White>(position);
+        + score_side_doubled_pawns<Color::White>(position)
+        + score_side_pawn_chains<Color::White>(position);
 
     const auto blackScore
         = score_side_passed_pawns<Color::Black>(position)
         + score_side_isolated_pawns<Color::Black>(position)
-        + score_side_doubled_pawns<Color::Black>(position);
+        + score_side_doubled_pawns<Color::Black>(position)
+        + score_side_pawn_chains<Color::Black>(position);
 
     const bool isWhite = position.sideToMove == Color::White;
 
