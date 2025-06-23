@@ -97,9 +97,12 @@ namespace {
                 = shifts::pawn_inv_capture_east<Side>(pawn)
                 | shifts::pawn_inv_capture_west<Side>(pawn);
 
-            const auto protectors = ourPieces.pawns & protectorMask;
-
-            score += static_cast<int>(protectors.count()) * 10;
+            for (const auto protector : (ourPieces.pawns & protectorMask).subboards()) {
+                if ((protector & passers).any()) // protected passed pawns
+                    score += 15;
+                else
+                    score += 10; // protected by a non-passed pawn
+            }
         }
 
         return score;
