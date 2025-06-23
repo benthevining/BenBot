@@ -10,11 +10,14 @@
 #include <array>
 #include <cmath>                        // IWYU pragma: keep - for std::abs()
 #include <libchess/board/Distances.hpp> // IWYU pragma: keep - for chebyshev_distance()
+#include <libchess/board/File.hpp>
 #include <libchess/board/Fills.hpp>
+#include <libchess/board/Masks.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Patterns.hpp>
 #include <libchess/pieces/Colors.hpp>
+#include <magic_enum/magic_enum.hpp>
 
 namespace chess::eval::detail {
 
@@ -105,17 +108,38 @@ namespace {
         return score;
     }
 
+    template <Color Side>
+    [[nodiscard, gnu::const]] int score_side_doubled_pawns(const Position& position) noexcept
+    {
+        static constexpr auto DOUBLED_PAWN_PENALTY = -10;
+
+        auto score { 0 };
+
+        const auto pawns = position.pieces_for<Side>().pawns;
+
+        for (const auto file : magic_enum::enum_values<board::File>()) {
+            const auto pawnsOnFile = (pawns & board::masks::files::get(file)).count();
+
+            if (pawnsOnFile > 1uz)
+                score += DOUBLED_PAWN_PENALTY;
+        }
+
+        return score;
+    }
+
 } // namespace
 
 [[nodiscard, gnu::const]] int score_pawn_structure(const Position& position)
 {
     const auto whiteScore
-        = detail::score_side_passed_pawns<Color::White>(position)
-        + detail::score_side_isolated_pawns<Color::White>(position);
+        = score_side_passed_pawns<Color::White>(position)
+        + score_side_isolated_pawns<Color::White>(position)
+        + score_side_doubled_pawns<Color::White>(position);
 
     const auto blackScore
-        = detail::score_side_passed_pawns<Color::Black>(position)
-        + detail::score_side_isolated_pawns<Color::Black>(position);
+        = score_side_passed_pawns<Color::Black>(position)
+        + score_side_isolated_pawns<Color::Black>(position)
+        + score_side_doubled_pawns<Color::Black>(position);
 
     const bool isWhite = position.sideToMove == Color::White;
 
