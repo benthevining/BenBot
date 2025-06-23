@@ -1,0 +1,21 @@
+/*
+ * ======================================================================================
+ *
+ * libchess - a chess engine by Ben Vining
+ *
+ * ======================================================================================
+ */
+
+#pragma once
+
+namespace chess::game {
+struct Position;
+} // namespace chess::game
+
+namespace chess::eval::detail {
+
+using game::Position;
+
+[[nodiscard, gnu::const]] int score_pawn_structure(const Position& position);
+
+} // namespace chess::eval::detail

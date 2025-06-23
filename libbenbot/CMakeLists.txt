@@ -28,7 +28,9 @@ target_sources (
     PRIVATE ${libbenbot_sources}
 )
 
-target_include_directories (libbenbot PRIVATE "${CMAKE_CURRENT_LIST_DIR}/src/search/")
+target_include_directories (
+    libbenbot PRIVATE "${CMAKE_CURRENT_LIST_DIR}/src/search/" "${CMAKE_CURRENT_LIST_DIR}/src/eval/"
+)
 
 source_group (TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${libbenbot_headers} ${libbenbot_sources})
 
