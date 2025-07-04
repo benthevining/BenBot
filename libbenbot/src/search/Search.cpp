@@ -310,10 +310,7 @@ Move Context<PrintUCIInfo>::search()
     }
 
     // TODO: I think this is technically supposed to be the max *nodes* to search?
-    const auto numMovesToSearch = options.maxNodes.or_else([numMoves = options.movesToSearch.size()] {
-                                                      return std::optional { numMoves };
-                                                  })
-                                      .value();
+    const auto numMovesToSearch = options.maxNodes.value_or(options.movesToSearch.size());
 
     std::optional<Move> bestMove;
 
@@ -395,15 +392,9 @@ namespace {
         const std::optional<Milliseconds> increment,
         const std::optional<size_t>       movesToNextTimeControl)
     {
-        const auto inc = increment.or_else([] {
-                                      return std::optional { Milliseconds { 0 } };
-                                  })
-                             .value();
+        const auto inc = increment.value_or(Milliseconds { 0 });
 
-        const auto movesToGo = movesToNextTimeControl.or_else([] {
-                                                         return std::optional { 40uz };
-                                                     })
-                                   .value();
+        const auto movesToGo = movesToNextTimeControl.value_or(40uz);
 
         assert(movesToGo > 0uz);
 
