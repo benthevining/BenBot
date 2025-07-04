@@ -112,57 +112,23 @@ namespace {
     // improve the stability of the static evaluation function
     [[nodiscard]] int quiescence(
         int alpha, int beta,
-        const Position&     currentPosition,
-        const size_t        plyFromRoot, // increases each iteration (recursion)
-        TranspositionTable& transTable,
-        const Interrupter&  interrupter)
+        const Position&    currentPosition,
+        const size_t       plyFromRoot, // increases each iteration (recursion)
+        const Interrupter& interrupter)
     {
         assert(beta > alpha);
 
-        // In quiescence search, we do not probe the transposition table for a stored evaluation.
-        // In regular alpha/beta, we're able to check if an eval was stored with the given depth
-        // that we'd be searching the position to, but quiescence search has no depth limit. I
-        // tried probing the table for stored results with an arbitrary depth such as 5 or 10,
-        // but experimental results showed that not probing the tree here made the bot stronger.
-
-        // This is the depth that we store alongside evaluations in the transposition table for
-        // results computed inside this function. In quiescence search mode, we have no depth limit,
-        // so I think it makes sense to store a low value here so that non-quiescence searches to
-        // depths of 2 and higher will overwrite results stored from quiescence searches (because
-        // those searches will consider quiet moves that may be stronger).
-        static constexpr auto depth = 1uz;
-
-        if (currentPosition.is_draw()) {
-            transTable.store(
-                currentPosition, { .searchedDepth = depth,
-                                     .eval        = eval::DRAW,
-                                     .evalType    = EvalType::Exact });
-
+        if (currentPosition.is_draw())
             return eval::DRAW;
-        }
 
-        if (currentPosition.is_checkmate()) {
-            const auto evaluation = checkmate_score(plyFromRoot);
-
-            transTable.store(
-                currentPosition, { .searchedDepth = depth,
-                                     .eval        = evaluation, // TODO: needs scaling/mapping?
-                                     .evalType    = EvalType::Exact });
-
-            return evaluation;
-        }
+        if (currentPosition.is_checkmate())
+            return checkmate_score(plyFromRoot);
 
         auto evaluation = eval::evaluate(currentPosition);
 
         // see if we can get a cutoff (we may not need to generate moves for this position)
-        if (evaluation >= beta) {
-            transTable.store(
-                currentPosition, { .searchedDepth = depth,
-                                     .eval        = beta,
-                                     .evalType    = EvalType::Beta });
-
+        if (evaluation >= beta)
             return beta;
-        }
 
         alpha = std::max(alpha, evaluation);
 
@@ -191,12 +157,6 @@ namespace {
 
         detail::order_moves_for_q_search(currentPosition, moves);
 
-        auto evalType { EvalType::Alpha };
-
-        // even though we're only searching captures, we can still record
-        // the best ones found to help with move ordering in later searches
-        std::optional<Move> bestMove;
-
         for (const auto& move : moves) {
             assert(currentPosition.is_capture(move));
 
@@ -206,30 +166,13 @@ namespace {
             evaluation = -quiescence(
                 -beta, -alpha,
                 game::after_move(currentPosition, move),
-                plyFromRoot + 1uz, transTable, interrupter);
+                plyFromRoot + 1uz, interrupter);
 
-            if (evaluation >= beta) {
-                transTable.store(
-                    currentPosition, { .searchedDepth = depth,
-                                         .eval        = beta,
-                                         .evalType    = EvalType::Beta,
-                                         .bestMove    = bestMove });
-
+            if (evaluation >= beta)
                 return beta;
-            }
 
-            if (evaluation > alpha) {
-                bestMove = move;
-                evalType = EvalType::Exact;
-                alpha    = evaluation;
-            }
+            alpha = std::max(alpha, evaluation);
         }
-
-        transTable.store(
-            currentPosition, { .searchedDepth = depth,
-                                 .eval        = alpha,
-                                 .evalType    = evalType,
-                                 .bestMove    = bestMove });
 
         return alpha;
     }
@@ -305,7 +248,7 @@ namespace {
 
             const auto eval = depth > 1uz
                                 ? -alpha_beta(-beta, -alpha, newPosition, depth - 1uz, plyFromRoot + 1uz, transTable, interrupter)
-                                : -quiescence(-beta, -alpha, newPosition, plyFromRoot + 1uz, transTable, interrupter);
+                                : -quiescence(-beta, -alpha, newPosition, plyFromRoot + 1uz, interrupter);
 
             if (eval >= beta) {
                 transTable.store(
