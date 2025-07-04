@@ -16,13 +16,22 @@ FetchContent_Declare (
     FIND_PACKAGE_ARGS 0.9.7
 )
 
-FetchContent_MakeAvailable (magic_enum)
+FetchContent_Declare (
+    inplace_vector
+    SYSTEM
+    GIT_REPOSITORY "https://github.com/bemanproject/inplace_vector.git"
+    GIT_TAG origin/main
+    GIT_PROGRESS ON
+    FIND_PACKAGE_ARGS
+)
+
+FetchContent_MakeAvailable (magic_enum inplace_vector)
 
 add_library (libchess STATIC)
 
 target_compile_features (libchess PUBLIC cxx_std_23)
 
-target_link_libraries (libchess PUBLIC magic_enum::magic_enum)
+target_link_libraries (libchess PUBLIC magic_enum::magic_enum beman::inplace_vector)
 
 set_target_properties (
     libchess PROPERTIES CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF DEBUG_POSTFIX -d

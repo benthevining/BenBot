@@ -14,6 +14,7 @@
 #pragma once
 
 #include <array>
+#include <beman/inplace_vector/inplace_vector.hpp>
 #include <cassert>
 #include <iterator>
 #include <libchess/board/Bitboard.hpp>
@@ -616,12 +617,12 @@ namespace detail {
     template <Color Side>
     [[nodiscard]] bool any_legal_moves_internal(const Position& position)
     {
-        // TODO: ideally use inplace_vector here
-        std::vector<Move> moves;
+        // optimize this function by avoiding dynamic allocation, since the number
+        // of moves we're generating at a time should be relatively small
+        beman::inplace_vector<Move, 100uz> moves;
 
         // as an optimization, check for king moves first, because in a double check,
         // a king move would be the only valid response
-
         for (const auto piece : { PieceType::King, PieceType::Pawn, PieceType::Knight, PieceType::Queen, PieceType::Rook, PieceType::Bishop }) {
             generate_for_internal<Side, false>(position, piece, std::back_inserter(moves));
 

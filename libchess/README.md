@@ -22,3 +22,4 @@ Include style is:
 ## Dependencies
 
 * [magic_enum](https://github.com/Neargye/magic_enum), for easy serialization & stringification of enums
+* [inplace_vector](https://github.com/bemanproject/inplace_vector/tree/main), to help avoid dynamic allocations where possible
