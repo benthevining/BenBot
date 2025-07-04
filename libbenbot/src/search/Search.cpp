@@ -17,6 +17,7 @@
 #include <atomic>
 #include <cassert>
 #include <chrono>
+#include <cmath>   // IWYU pragma: keep - for std::abs()
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <format>
 #include <iterator>
@@ -67,7 +68,21 @@ namespace {
         return score <= -eval::MATE;
     }
 
-    // Times the search and also watches the "exit" flag
+    [[nodiscard, gnu::const]] bool is_mate_score(const int score) noexcept
+    {
+        static constexpr auto MAX_MATE_DEPTH { 1000 };
+
+        return std::abs(score) > EVAL_MAX - MAX_MATE_DEPTH;
+    }
+
+    [[nodiscard, gnu::const]] size_t ply_to_mate_from_score(const int score) noexcept
+    {
+        assert(is_mate_score(score));
+
+        return static_cast<size_t>(EVAL_MAX - std::abs(score));
+    }
+
+    // times the search and also watches the "exit" flag
     struct Interrupter final {
         Interrupter(
             const std::atomic_bool&           exitFlagToUse,
@@ -312,6 +327,8 @@ Move Context<PrintUCIInfo>::search()
     // TODO: I think this is technically supposed to be the max *nodes* to search?
     const auto numMovesToSearch = options.maxNodes.value_or(options.movesToSearch.size());
 
+    const bool infinite = ! options.searchTime.has_value();
+
     std::optional<Move> bestMove;
 
     int bestScore { 0 };
@@ -353,6 +370,9 @@ Move Context<PrintUCIInfo>::search()
         bestScore = alpha;
 
         if (interrupter.should_exit())
+            break;
+
+        if (! infinite && is_mate_score(bestScore) && ply_to_mate_from_score(bestScore) <= depth)
             break;
 
         ++depth;
