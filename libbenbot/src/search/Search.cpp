@@ -391,10 +391,24 @@ end_search:
     if constexpr (PrintUCIInfo) {
         const auto searchDuration = interrupter.get_search_duration();
 
-        // TODO: nodes searched, PV, mate scores
-        std::println(
-            "info depth {} score cp {} time {}",
-            depth, bestScore, searchDuration.count());
+        // TODO: nodes searched
+        if (is_mate_score(bestScore)) {
+            const auto plyToMate = ply_to_mate_from_score(bestScore);
+            const auto mateIn    = plyToMate / 2uz; // plies -> moves
+
+            auto mateVal = static_cast<int>(mateIn);
+
+            if (bestScore < 0)
+                mateVal *= -1;
+
+            std::println(
+                "info depth {} score mate {} time {}",
+                depth, mateVal, searchDuration.count());
+        } else {
+            std::println(
+                "info depth {} score cp {} time {}",
+                depth, bestScore, searchDuration.count());
+        }
 
         std::println("bestmove {}", notation::to_uci(bestMove.value()));
     }
