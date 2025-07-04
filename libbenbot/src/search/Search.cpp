@@ -83,6 +83,18 @@ namespace {
         return static_cast<size_t>(EVAL_MAX - std::abs(score));
     }
 
+    // maps ply-from-root mate scores to the MATE constant
+    [[nodiscard, gnu::const]] int to_tt_score(const int score) noexcept
+    {
+        if (is_losing_mate_score(score))
+            return -eval::MATE;
+
+        if (is_winning_mate_score(score))
+            return eval::MATE;
+
+        return score;
+    }
+
     // times the search and also watches the "exit" flag
     struct Interrupter final {
         Interrupter(
@@ -213,8 +225,20 @@ namespace {
 
         // check if this position has been searched before to at
         // least this depth and within these bounds for non-PV nodes
-        if (const auto value = transTable.probe_eval(currentPosition, depth, alpha, beta))
-            return value.value();
+        if (const auto value = transTable.probe_eval(currentPosition, depth, alpha, beta)) {
+            const auto [score, type] = value.value();
+
+            // map MATE constant to a ply-from-root mate score
+            if (type == EvalType::Exact) {
+                if (score == -eval::MATE)
+                    return checkmate_score(plyFromRoot);
+
+                if (score == eval::MATE)
+                    return -checkmate_score(plyFromRoot);
+            }
+
+            return score;
+        }
 
         if (currentPosition.is_draw()) {
             transTable.store(
@@ -228,14 +252,12 @@ namespace {
         auto moves = moves::generate(currentPosition);
 
         if (moves.empty() && currentPosition.is_check()) {
-            const auto eval = checkmate_score(plyFromRoot);
-
             transTable.store(
                 currentPosition, { .searchedDepth = depth,
-                                     .eval        = eval, // TODO: needs scaling/mapping?
+                                     .eval        = -eval::MATE,
                                      .evalType    = EvalType::Exact });
 
-            return eval;
+            return checkmate_score(plyFromRoot);
         }
 
         // mate distance pruning
@@ -275,7 +297,7 @@ namespace {
             if (eval >= beta) {
                 transTable.store(
                     currentPosition, { .searchedDepth = depth,
-                                         .eval        = beta,
+                                         .eval        = to_tt_score(beta),
                                          .evalType    = EvalType::Beta,
                                          .bestMove    = bestMove });
 
@@ -294,7 +316,7 @@ namespace {
 
         transTable.store(
             currentPosition, { .searchedDepth = depth,
-                                 .eval        = alpha,
+                                 .eval        = to_tt_score(alpha),
                                  .evalType    = evalType,
                                  .bestMove    = bestMove });
 
@@ -406,7 +428,7 @@ end_search:
     // store the root position evaluation / best move for move ordering of the next search() invocation
     // the evaluation is the evaluation of the position resulting from playing the best move
     transTable.store(options.position, { .searchedDepth = depth,
-                                           .eval        = bestScore,
+                                           .eval        = to_tt_score(bestScore),
                                            .evalType    = EvalType::Exact,
                                            .bestMove    = bestMove });
 
