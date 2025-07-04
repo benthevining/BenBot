@@ -124,6 +124,9 @@ namespace {
         if (currentPosition.is_checkmate())
             return checkmate_score(plyFromRoot);
 
+        if (interrupter.should_exit())
+            return eval::DRAW;
+
         auto evaluation = eval::evaluate(currentPosition);
 
         // see if we can get a cutoff (we may not need to generate moves for this position)
@@ -159,9 +162,6 @@ namespace {
 
         for (const auto& move : moves) {
             assert(currentPosition.is_capture(move));
-
-            if (interrupter.should_exit())
-                return alpha;
 
             evaluation = -quiescence(
                 -beta, -alpha,
