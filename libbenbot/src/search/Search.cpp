@@ -230,10 +230,10 @@ namespace {
 
             // map MATE constant to a ply-from-root mate score
             if (type == EvalType::Exact) {
-                if (score == -eval::MATE)
+                if (score <= -eval::MATE)
                     return checkmate_score(plyFromRoot);
 
-                if (score == eval::MATE)
+                if (score >= eval::MATE)
                     return -checkmate_score(plyFromRoot);
             }
 
