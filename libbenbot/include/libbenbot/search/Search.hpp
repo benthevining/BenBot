@@ -101,21 +101,18 @@ struct Context final {
      */
     TranspositionTable transTable;
 
-    /** An exit flag used for this search.
-        This can be set to true while the ``search()`` method is running,
-        which will cause it to abort at the next opportunity. This is reset
-        to false at the start of each ``search()`` invocation.
-     */
-    std::atomic_bool exitFlag { false };
-
     /** Performs a search.
 
         @throws std::invalid_argument An exception will be thrown if there are
         no legal moves for the side to move in the given position.
-
-        @see find_best_move()
      */
     Move search();
+
+    /** Call this to abort the last call to ``search()``. */
+    void abort() noexcept { exitFlag.store(true); }
+
+private:
+    std::atomic_bool exitFlag { false };
 };
 
 } // namespace chess::search
