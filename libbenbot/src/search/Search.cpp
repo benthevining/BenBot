@@ -57,6 +57,16 @@ namespace {
         return (EVAL_MAX - static_cast<int>(plyFromRoot)) * -1;
     }
 
+    [[nodiscard, gnu::const]] bool is_winning_mate_score(const int score) noexcept
+    {
+        return score >= eval::MATE;
+    }
+
+    [[nodiscard, gnu::const]] bool is_losing_mate_score(const int score) noexcept
+    {
+        return score <= -eval::MATE;
+    }
+
     // Times the search and also watches the "exit" flag
     struct Interrupter final {
         Interrupter(
@@ -206,7 +216,7 @@ namespace {
     // standard alpha/beta search algorithm
     // this is called in the body of the higher-level iterative deepening loop
     [[nodiscard]] int alpha_beta(
-        int alpha, const int beta,
+        int alpha, int beta,
         const Position&     currentPosition,
         const size_t        depth,       // this is the depth left to be searched - decreases each iteration, and when this reaches 1, we call the quiescence search
         const size_t        plyFromRoot, // increases each iteration
@@ -240,6 +250,27 @@ namespace {
                                      .evalType    = EvalType::Exact });
 
             return eval;
+        }
+
+        // mate distance pruning
+        if (is_winning_mate_score(alpha)) {
+            const auto mateScore = checkmate_score(plyFromRoot);
+
+            if (mateScore < beta) {
+                beta = mateScore;
+
+                if (alpha >= mateScore)
+                    return mateScore;
+            }
+        } else if (is_losing_mate_score(alpha)) {
+            const auto mateScore = checkmate_score(plyFromRoot);
+
+            if (mateScore > alpha) {
+                alpha = mateScore;
+
+                if (beta <= mateScore)
+                    return mateScore;
+            }
         }
 
         detail::order_moves_for_search(currentPosition, moves, transTable);
