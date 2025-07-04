@@ -33,6 +33,7 @@
 #include <print>
 #include <ranges>
 #include <stdexcept>
+#include <string>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -300,6 +301,27 @@ namespace {
         return alpha;
     }
 
+    [[nodiscard]] std::string get_score_string(const int score)
+    {
+        if (! is_mate_score(score))
+            return std::format("score cp {}", score);
+
+        auto plyToMate = ply_to_mate_from_score(score);
+
+        if (plyToMate > 0uz)
+            ++plyToMate;
+
+        // plies -> moves
+        const auto mateIn = plyToMate / 2uz;
+
+        auto mateVal = static_cast<int>(mateIn);
+
+        if (score < 0)
+            mateVal *= -1;
+
+        return std::format("score mate {}", mateVal);
+    }
+
 } // namespace
 
 template <bool PrintUCIInfo>
@@ -392,23 +414,11 @@ end_search:
         const auto searchDuration = interrupter.get_search_duration();
 
         // TODO: nodes searched
-        if (is_mate_score(bestScore)) {
-            const auto plyToMate = ply_to_mate_from_score(bestScore);
-            const auto mateIn    = plyToMate / 2uz; // plies -> moves
-
-            auto mateVal = static_cast<int>(mateIn);
-
-            if (bestScore < 0)
-                mateVal *= -1;
-
-            std::println(
-                "info depth {} score mate {} time {}",
-                depth, mateVal, searchDuration.count());
-        } else {
-            std::println(
-                "info depth {} score cp {} time {}",
-                depth, bestScore, searchDuration.count());
-        }
+        std::println(
+            "info depth {} {} time {}",
+            depth,
+            get_score_string(bestScore),
+            searchDuration.count());
 
         std::println("bestmove {}", notation::to_uci(bestMove.value()));
     }
