@@ -25,6 +25,7 @@
 #include <limits>
 #include <optional>
 #include <span>
+#include <utility>
 
 namespace chess::search::detail {
 
@@ -120,6 +121,28 @@ void order_moves_for_search(
             opponentPawnAttacks = get_opponent_pawn_attacks(currentPosition)](const Move& first, const Move& second) {
             return move_ordering_score(currentPosition, first, transTable, opponentPawnAttacks, bestMove)
                  > move_ordering_score(currentPosition, second, transTable, opponentPawnAttacks, bestMove);
+        });
+}
+
+// in quiescence search, moves are ordered simply by the value of the captured piece
+void order_moves_for_q_search(
+    const Position& currentPosition,
+    std::span<Move> moves)
+{
+    const auto& theirPieces = currentPosition.their_pieces();
+
+    auto get_captured_type = [&currentPosition, &theirPieces](const Move& move) {
+        if (currentPosition.is_en_passant(move))
+            return PieceType::Pawn;
+
+        return theirPieces.get_piece_on(move.to).value();
+    };
+
+    std::ranges::sort(
+        moves,
+        [captured_type = std::move(get_captured_type)](const Move& first, const Move& second) {
+            return eval::piece_values::get(captured_type(first))
+                 > eval::piece_values::get(captured_type(second));
         });
 }
 

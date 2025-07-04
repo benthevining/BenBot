@@ -38,4 +38,8 @@ void order_moves_for_search(
     std::span<Move>           moves,
     const TranspositionTable& transTable);
 
+void order_moves_for_q_search(
+    const Position& currentPosition,
+    std::span<Move> moves);
+
 } // namespace chess::search::detail

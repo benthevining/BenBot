@@ -158,7 +158,7 @@ namespace {
 
         auto moves = moves::generate<true>(currentPosition); // captures only
 
-        detail::order_moves_for_search(currentPosition, moves, transTable);
+        detail::order_moves_for_q_search(currentPosition, moves);
 
         auto evalType { EvalType::Alpha };
 
