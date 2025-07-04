@@ -111,7 +111,7 @@ namespace {
     // searches only captures, with no depth limit, to try to
     // improve the stability of the static evaluation function
     [[nodiscard]] int quiescence(
-        int alpha, const int beta,
+        int alpha, int beta,
         const Position&     currentPosition,
         const size_t        plyFromRoot, // increases each iteration (recursion)
         TranspositionTable& transTable,
@@ -165,6 +165,27 @@ namespace {
         }
 
         alpha = std::max(alpha, evaluation);
+
+        // mate distance pruning
+        if (is_winning_mate_score(alpha)) {
+            const auto mateScore = checkmate_score(plyFromRoot);
+
+            if (mateScore < beta) {
+                beta = mateScore;
+
+                if (alpha >= mateScore)
+                    return mateScore;
+            }
+        } else if (is_losing_mate_score(alpha)) {
+            const auto mateScore = checkmate_score(plyFromRoot);
+
+            if (mateScore > alpha) {
+                alpha = mateScore;
+
+                if (beta <= mateScore)
+                    return mateScore;
+            }
+        }
 
         auto moves = moves::generate<true>(currentPosition); // captures only
 
