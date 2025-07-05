@@ -46,9 +46,7 @@ namespace detail {
 
     [[nodiscard, gnu::const]] bool is_mate_score(const int score) noexcept
     {
-        static constexpr auto MAX_MATE_DEPTH { 1000 };
-
-        return std::abs(score) > EVAL_MAX - MAX_MATE_DEPTH;
+        return std::abs(score) >= eval::MATE;
     }
 
     [[nodiscard, gnu::const]] size_t ply_to_mate_from_score(const int score) noexcept
