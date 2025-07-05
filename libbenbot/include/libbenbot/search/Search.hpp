@@ -106,7 +106,10 @@ struct Options final {
 struct Callbacks final {
     /** The results from a completed search. */
     struct Result final {
-        /** The total amount of time spent searching to produce this result. */
+        /** The total amount of time spent searching to produce this result.
+            For depths greater than 1, this value is the duration of the entire
+            search, including lower depths of the iterative deepening loop.
+         */
         Milliseconds duration;
 
         /** The total depth that was searched. */
@@ -119,6 +122,7 @@ struct Callbacks final {
         Move bestMove;
     };
 
+    /** Function type that accepts a single Result argument. */
     using Callback = std::function<void(const Result&)>;
 
     /** Function object that will be invoked with results from a completed search. */
@@ -160,13 +164,30 @@ struct Context final {
     /** The callback functions that will be invoked with search results. */
     Callbacks callbacks;
 
-    /** Performs a search. */
+    /** Performs a search.
+        Results will be propagated via the ``callbacks`` that have been
+        assigned.
+
+        The search may execute for a potentially unbounded amount of time.
+        The search can be interrupted by calling the ``abort()`` method while
+        ``search()`` is executing.
+
+        This function accesses ``options`` and ``callbacks``; these objects
+        must not be mutated while ``search()`` is executing. ``abort()``,
+        ``wait()``, ``in_progress()``, and ``reset()`` may be called while
+        ``search()`` is executing without introducing data races.
+     */
     void search();
 
-    /** Call this to abort the last call to ``search()``. */
+    /** This function may be called while ``search()`` is executing to interrupt
+        the search. If a search is in progress, calling this method will cause the
+        search routine to return at the next available point.
+     */
     void abort() noexcept { exitFlag.store(true); }
 
-    /** Clears the transposition table. */
+    /** Clears the transposition table.
+        If a search is in progress, this method blocks until the search completes.
+     */
     void reset()
     {
         wait();
