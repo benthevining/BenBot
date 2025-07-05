@@ -174,14 +174,17 @@ namespace {
         const size_t       plyFromRoot, // increases each iteration (recursion)
         const Interrupter& interrupter)
     {
+        if (interrupter.should_exit())
+            return eval::DRAW;
+
+        if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot))
+            return cutoff.value();
+
         if (currentPosition.is_draw())
             return eval::DRAW;
 
         if (currentPosition.is_checkmate())
             return checkmate_score(plyFromRoot);
-
-        if (interrupter.should_exit())
-            return eval::DRAW;
 
         auto evaluation = eval::evaluate(currentPosition);
 
@@ -190,9 +193,6 @@ namespace {
             return bounds.beta;
 
         bounds.alpha = std::max(bounds.alpha, evaluation);
-
-        if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot))
-            return cutoff.value();
 
         auto moves = moves::generate<true>(currentPosition); // captures only
 
@@ -225,6 +225,9 @@ namespace {
         TranspositionTable& transTable,
         const Interrupter&  interrupter)
     {
+        if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot))
+            return cutoff.value();
+
         // it's important that we do this check before probing the transposition table,
         // because the table only contains static evaluations and doesn't consider game
         // history, so its stored evaluations can't detect threefold repetition draws
@@ -255,9 +258,6 @@ namespace {
 
             return checkmate_score(plyFromRoot);
         }
-
-        if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot))
-            return cutoff.value();
 
         detail::order_moves_for_search(currentPosition, moves, transTable);
 
