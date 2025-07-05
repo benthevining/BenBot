@@ -117,9 +117,6 @@ struct Callbacks final {
 
         /** The best move found in the position. */
         Move bestMove;
-
-        /** Prints UCI-format "info" output from this result. */
-        void print_uci(bool printBestmove) const;
     };
 
     using Callback = std::function<void(const Result&)>;
@@ -147,13 +144,7 @@ struct Callbacks final {
     }
 
     /** Creates a set of callbacks that print UCI-compatible output. */
-    [[nodiscard]] static Callbacks make_uci_handler()
-    {
-        return {
-            .onSearchComplete = [](const Result& res) { res.print_uci(true); },
-            .onIteration = [](const Result& res) { res.print_uci(false); }
-        };
-    }
+    [[nodiscard]] static Callbacks make_uci_handler();
 };
 
 /** This struct encapsulates everything needed to perform a search.

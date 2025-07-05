@@ -43,16 +43,26 @@ namespace {
         return std::format("mate {}", mateVal);
     }
 
+    template <bool PrintBestMove>
+    void print_uci_info(const Callbacks::Result& res)
+    {
+        std::println(
+            "info depth {} score {} time {}",
+            res.depth, get_score_string(res.score), res.duration.count());
+
+        if constexpr (PrintBestMove) {
+            std::println("bestmove {}", notation::to_uci(res.bestMove));
+        }
+    }
+
 } // namespace
 
-void Callbacks::Result::print_uci(const bool printBestmove) const
+Callbacks Callbacks::make_uci_handler()
 {
-    std::println(
-        "info depth {} score {} time {}",
-        depth, get_score_string(score), duration.count());
-
-    if (printBestmove)
-        std::println("bestmove {}", notation::to_uci(bestMove));
+    return {
+        .onSearchComplete = [](const Result& res) { print_uci_info<true>(res); },
+        .onIteration = [](const Result& res) { print_uci_info<false>(res); },
+    };
 }
 
 } // namespace chess::search
