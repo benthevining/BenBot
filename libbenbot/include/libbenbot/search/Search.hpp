@@ -169,8 +169,13 @@ struct Context final {
     /** Clears the transposition table. */
     void reset() { transTable.clear(); }
 
+    /** Returns true if a search is currently in progress. */
+    [[nodiscard]] bool in_progress() const noexcept { return activeFlag.load(); }
+
 private:
     std::atomic_bool exitFlag { false };
+
+    std::atomic_bool activeFlag { false };
 
     TranspositionTable transTable;
 };

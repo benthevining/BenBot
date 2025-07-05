@@ -302,11 +302,20 @@ namespace {
         return bounds.alpha;
     }
 
+    struct ScopedSetter final {
+        std::atomic_bool& value; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
+
+        ~ScopedSetter() { value.store(false); }
+    };
+
 } // namespace
 
 void Context::search()
 {
     exitFlag.store(false);
+    activeFlag.store(true);
+
+    const ScopedSetter raii { activeFlag };
 
     assert(options.depth > 0uz);
 
