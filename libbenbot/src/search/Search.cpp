@@ -222,6 +222,9 @@ namespace {
         TranspositionTable& transTable,
         const Interrupter&  interrupter)
     {
+        if (interrupter.should_exit())
+            return eval::DRAW;
+
         if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot))
             return cutoff.value();
 
@@ -342,21 +345,21 @@ void Context::search()
                 game::after_move(options.position, move),
                 depth, 1uz, transTable, interrupter);
 
+            if (interrupter.should_exit())
+                break;
+
             if (score > bounds.alpha) {
                 bestMoveThisDepth = move;
                 bounds.alpha      = score;
             }
-
-            if (bestMove.has_value() && interrupter.should_exit()) {
-                --depth; // store the last completed depth in the transposition table
-                goto end_search;
-            }
         }
 
-        assert(bestMoveThisDepth.has_value());
+        if (bestMoveThisDepth.has_value()) {
+            [[likely]];
 
-        bestMove  = bestMoveThisDepth;
-        bestScore = bounds.alpha;
+            bestMove  = bestMoveThisDepth;
+            bestScore = bounds.alpha;
+        }
 
         if (interrupter.should_exit())
             break;
@@ -375,7 +378,6 @@ void Context::search()
         ++depth;
     }
 
-end_search:
     assert(bestMove.has_value());
 
     // store the root position evaluation / best move for move ordering of the next search() invocation
