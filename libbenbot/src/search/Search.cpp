@@ -19,18 +19,15 @@
 #include <cassert>
 #include <cmath>   // IWYU pragma: keep - for std::abs()
 #include <cstddef> // IWYU pragma: keep - for size_t
-#include <format>
 #include <iterator>
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/search/Search.hpp>
 #include <libbenbot/search/TranspositionTable.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
-#include <libchess/notation/FEN.hpp>
 #include <libchess/uci/CommandParsing.hpp>
 #include <optional>
 #include <ranges>
-#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -315,13 +312,7 @@ void Context::search()
     if (options.movesToSearch.empty()) {
         moves::generate(options.position, std::back_inserter(options.movesToSearch));
 
-        if (options.movesToSearch.empty()) {
-            throw std::invalid_argument {
-                std::format(
-                    "No legal moves in position {}",
-                    notation::to_fen(options.position))
-            };
-        }
+        assert(! options.movesToSearch.empty());
     }
 
     // TODO: I think this is technically supposed to be the max *nodes* to search?

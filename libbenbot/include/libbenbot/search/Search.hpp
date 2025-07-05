@@ -168,11 +168,7 @@ struct Context final {
      */
     TranspositionTable transTable;
 
-    /** Performs a search.
-
-        @throws std::invalid_argument An exception will be thrown if there are
-        no legal moves for the side to move in the given position.
-     */
+    /** Performs a search. */
     void search();
 
     /** Call this to abort the last call to ``search()``. */
