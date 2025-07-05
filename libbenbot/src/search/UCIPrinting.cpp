@@ -13,6 +13,7 @@
  */
 
 #include <format>
+#include <iostream>
 #include <libbenbot/search/Search.hpp>
 #include <libchess/notation/UCI.hpp>
 #include <print>
@@ -52,6 +53,13 @@ namespace {
 
         if constexpr (PrintBestMove) {
             std::println("bestmove {}", notation::to_uci(res.bestMove));
+
+            // Because these callbacks are executed on the searcher background thread,
+            // without this flush here, the output may not actually be written when we
+            // expect, leading to timeouts or GUIs thinking we've hung/disconnected.
+            // Because the best move is always printed last after all info output, we
+            // can do the flush only in this branch.
+            std::cout.flush();
         }
     }
 

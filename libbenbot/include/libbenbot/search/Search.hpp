@@ -167,7 +167,11 @@ struct Context final {
     void abort() noexcept { exitFlag.store(true); }
 
     /** Clears the transposition table. */
-    void reset() { transTable.clear(); }
+    void reset()
+    {
+        wait();
+        transTable.clear();
+    }
 
     /** Returns true if a search is currently in progress. */
     [[nodiscard]] bool in_progress() const noexcept { return activeFlag.load(); }
