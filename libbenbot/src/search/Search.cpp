@@ -95,6 +95,19 @@ namespace {
         return score;
     }
 
+    struct Bounds final {
+        int alpha { -EVAL_MAX };
+        int beta { EVAL_MAX };
+
+        [[nodiscard, gnu::const]] Bounds invert() const noexcept
+        {
+            return {
+                .alpha = -beta,
+                .beta  = -alpha
+            };
+        }
+    };
+
     // times the search and also watches the "exit" flag
     struct Interrupter final {
         Interrupter(
@@ -139,12 +152,12 @@ namespace {
     // searches only captures, with no depth limit, to try to
     // improve the stability of the static evaluation function
     [[nodiscard]] int quiescence(
-        int alpha, int beta,
+        Bounds             bounds,
         const Position&    currentPosition,
         const size_t       plyFromRoot, // increases each iteration (recursion)
         const Interrupter& interrupter)
     {
-        assert(beta > alpha);
+        assert(bounds.beta > bounds.alpha);
 
         if (currentPosition.is_draw())
             return eval::DRAW;
@@ -158,28 +171,28 @@ namespace {
         auto evaluation = eval::evaluate(currentPosition);
 
         // see if we can get a cutoff (we may not need to generate moves for this position)
-        if (evaluation >= beta)
-            return beta;
+        if (evaluation >= bounds.beta)
+            return bounds.beta;
 
-        alpha = std::max(alpha, evaluation);
+        bounds.alpha = std::max(bounds.alpha, evaluation);
 
         // mate distance pruning
-        if (is_winning_mate_score(alpha)) {
+        if (is_winning_mate_score(bounds.alpha)) {
             const auto mateScore = checkmate_score(plyFromRoot);
 
-            if (mateScore < beta) {
-                beta = mateScore;
+            if (mateScore < bounds.beta) {
+                bounds.beta = mateScore;
 
-                if (alpha >= mateScore)
+                if (bounds.alpha >= mateScore)
                     return mateScore;
             }
-        } else if (is_losing_mate_score(alpha)) {
+        } else if (is_losing_mate_score(bounds.alpha)) {
             const auto mateScore = checkmate_score(plyFromRoot);
 
-            if (mateScore > alpha) {
-                alpha = mateScore;
+            if (mateScore > bounds.alpha) {
+                bounds.alpha = mateScore;
 
-                if (beta <= mateScore)
+                if (bounds.beta <= mateScore)
                     return mateScore;
             }
         }
@@ -192,30 +205,30 @@ namespace {
             assert(currentPosition.is_capture(move));
 
             evaluation = -quiescence(
-                -beta, -alpha,
+                bounds.invert(),
                 game::after_move(currentPosition, move),
                 plyFromRoot + 1uz, interrupter);
 
-            if (evaluation >= beta)
-                return beta;
+            if (evaluation >= bounds.beta)
+                return bounds.beta;
 
-            alpha = std::max(alpha, evaluation);
+            bounds.alpha = std::max(bounds.alpha, evaluation);
         }
 
-        return alpha;
+        return bounds.alpha;
     }
 
     // standard alpha/beta search algorithm
     // this is called in the body of the higher-level iterative deepening loop
     [[nodiscard]] int alpha_beta(
-        int alpha, int beta,
+        Bounds              bounds,
         const Position&     currentPosition,
         const size_t        depth,       // this is the depth left to be searched - decreases each iteration, and when this reaches 1, we call the quiescence search
         const size_t        plyFromRoot, // increases each iteration
         TranspositionTable& transTable,
         const Interrupter&  interrupter)
     {
-        assert(beta > alpha);
+        assert(bounds.beta > bounds.alpha);
 
         // it's important that we do this check before probing the transposition table,
         // because the table only contains static evaluations and doesn't consider game
@@ -225,7 +238,7 @@ namespace {
 
         // check if this position has been searched before to at
         // least this depth and within these bounds for non-PV nodes
-        if (const auto value = transTable.probe_eval(currentPosition, depth, alpha, beta)) {
+        if (const auto value = transTable.probe_eval(currentPosition, depth, bounds.alpha, bounds.beta)) {
             const auto [score, type] = value.value();
 
             // map MATE constant to a ply-from-root mate score
@@ -261,22 +274,22 @@ namespace {
         }
 
         // mate distance pruning
-        if (is_winning_mate_score(alpha)) {
+        if (is_winning_mate_score(bounds.alpha)) {
             const auto mateScore = checkmate_score(plyFromRoot);
 
-            if (mateScore < beta) {
-                beta = mateScore;
+            if (mateScore < bounds.beta) {
+                bounds.beta = mateScore;
 
-                if (alpha >= mateScore)
+                if (bounds.alpha >= mateScore)
                     return mateScore;
             }
-        } else if (is_losing_mate_score(alpha)) {
+        } else if (is_losing_mate_score(bounds.alpha)) {
             const auto mateScore = checkmate_score(plyFromRoot);
 
-            if (mateScore > alpha) {
-                alpha = mateScore;
+            if (mateScore > bounds.alpha) {
+                bounds.alpha = mateScore;
 
-                if (beta <= mateScore)
+                if (bounds.beta <= mateScore)
                     return mateScore;
             }
         }
@@ -291,36 +304,36 @@ namespace {
             const auto newPosition = after_move(currentPosition, move);
 
             const auto eval = depth > 1uz
-                                ? -alpha_beta(-beta, -alpha, newPosition, depth - 1uz, plyFromRoot + 1uz, transTable, interrupter)
-                                : -quiescence(-beta, -alpha, newPosition, plyFromRoot + 1uz, interrupter);
+                                ? -alpha_beta(bounds.invert(), newPosition, depth - 1uz, plyFromRoot + 1uz, transTable, interrupter)
+                                : -quiescence(bounds.invert(), newPosition, plyFromRoot + 1uz, interrupter);
 
-            if (eval >= beta) {
+            if (eval >= bounds.beta) {
                 transTable.store(
                     currentPosition, { .searchedDepth = depth,
-                                         .eval        = to_tt_score(beta),
+                                         .eval        = to_tt_score(bounds.beta),
                                          .evalType    = EvalType::Beta,
                                          .bestMove    = bestMove });
 
-                return beta;
+                return bounds.beta;
             }
 
-            if (eval > alpha) {
-                bestMove = move;
-                evalType = EvalType::Exact;
-                alpha    = eval;
+            if (eval > bounds.alpha) {
+                bestMove     = move;
+                evalType     = EvalType::Exact;
+                bounds.alpha = eval;
             }
 
             if (interrupter.should_exit())
-                return alpha;
+                return bounds.alpha;
         }
 
         transTable.store(
             currentPosition, { .searchedDepth = depth,
-                                 .eval        = to_tt_score(alpha),
+                                 .eval        = to_tt_score(bounds.alpha),
                                  .evalType    = evalType,
                                  .bestMove    = bestMove });
 
-        return alpha;
+        return bounds.alpha;
     }
 
     [[nodiscard]] std::string get_score_string(const int score)
@@ -381,9 +394,7 @@ Move Context<PrintUCIInfo>::search()
     auto depth = 1uz;
 
     while (depth <= options.depth) {
-        static constexpr auto beta = EVAL_MAX;
-
-        auto alpha = -EVAL_MAX;
+        Bounds bounds {};
 
         // we can generate the legal moves only once, but we should reorder them each iteration
         // because the move ordering will change based on the evaluations done during the last iteration
@@ -393,13 +404,13 @@ Move Context<PrintUCIInfo>::search()
 
         for (const auto& move : options.movesToSearch | std::views::take(numMovesToSearch)) {
             const auto score = -alpha_beta(
-                -beta, -alpha,
+                bounds.invert(),
                 game::after_move(options.position, move),
                 depth, 1uz, transTable, interrupter);
 
-            if (score > alpha) {
+            if (score > bounds.alpha) {
                 bestMoveThisDepth = move;
-                alpha             = score;
+                bounds.alpha      = score;
             }
 
             if (bestMove.has_value() && interrupter.should_exit()) {
@@ -411,7 +422,7 @@ Move Context<PrintUCIInfo>::search()
         assert(bestMoveThisDepth.has_value());
 
         bestMove  = bestMoveThisDepth;
-        bestScore = alpha;
+        bestScore = bounds.alpha;
 
         if (interrupter.should_exit())
             break;
