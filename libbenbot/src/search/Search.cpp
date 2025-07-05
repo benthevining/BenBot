@@ -28,7 +28,6 @@
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/UCI.hpp>
-#include <libchess/pieces/Colors.hpp>
 #include <optional>
 #include <print>
 #include <ranges>
@@ -493,7 +492,7 @@ void Options::update_from(uci::GoCommandOptions&& goOptions)
     } else if (goOptions.infinite) {
         searchTime = std::nullopt;
     } else {
-        const bool isWhite = position.sideToMove == pieces::Color::White;
+        const bool isWhite = position.is_white_to_move();
 
         const auto& timeLeft = isWhite ? goOptions.whiteTimeLeft : goOptions.blackTimeLeft;
 

@@ -20,7 +20,6 @@
 #include <libchess/board/Flips.hpp>
 #include <libchess/board/Pieces.hpp>
 #include <libchess/game/Position.hpp>
-#include <libchess/pieces/Colors.hpp>
 #include <span>
 #include <utility>
 
@@ -235,7 +234,7 @@ int score_piece_placement(const Position& position)
     const auto [ourScore, theirScore] = [&position] {
         const auto endgameWeight = endgame_phase_weight(position);
 
-        if (position.sideToMove == pieces::Color::Black) {
+        if (position.is_black_to_move()) {
             return std::make_pair(
                 score_side_pieces<true>(position.our_pieces(), endgameWeight),
                 score_side_pieces<false>(position.their_pieces(), endgameWeight));

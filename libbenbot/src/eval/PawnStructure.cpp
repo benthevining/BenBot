@@ -193,7 +193,7 @@ namespace {
     const auto whiteScore = score_side_pawns<Color::White>(position);
     const auto blackScore = score_side_pawns<Color::Black>(position);
 
-    const bool isWhite = position.sideToMove == Color::White;
+    const bool isWhite = position.is_white_to_move();
 
     const auto ourScore   = isWhite ? whiteScore : blackScore;
     const auto theirScore = isWhite ? blackScore : whiteScore;

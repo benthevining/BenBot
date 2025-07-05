@@ -40,7 +40,7 @@ namespace {
     void update_bitboards(
         Position& position, const Move& move) noexcept
     {
-        const bool isWhite = position.sideToMove == Color::White;
+        const bool isWhite = position.is_white_to_move();
 
         auto& ourPieces      = position.our_pieces();
         auto& opponentPieces = position.their_pieces();
@@ -124,7 +124,7 @@ namespace {
 void Position::make_move(const Move& move)
 {
     const bool isCapture = is_capture(move);
-    const bool isWhite   = sideToMove == Color::White;
+    const bool isWhite   = is_white_to_move();
 
     const auto newEPSquare = get_en_passant_target_square(move, isWhite);
 
@@ -232,7 +232,7 @@ std::optional<Result> Position::get_result() const
     if (! is_checkmate())
         return std::nullopt;
 
-    if (sideToMove == Color::White) {
+    if (is_white_to_move()) {
         // White to move and we're checkmated, Black won
         return Result::BlackWon;
     }

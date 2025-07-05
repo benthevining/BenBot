@@ -28,7 +28,6 @@
 #include <libchess/board/File.hpp>
 #include <libchess/board/Fills.hpp>
 #include <libchess/board/Pieces.hpp>
-#include <libchess/board/Shifts.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/CastlingRights.hpp>
 #include <libchess/game/Result.hpp>
@@ -161,7 +160,7 @@ struct Position final {
     /** Returns the pieces belonging to the side to move. */
     [[nodiscard]] Pieces& our_pieces() noexcept
     {
-        if (sideToMove == Color::White)
+        if (is_white_to_move())
             return whitePieces;
 
         return blackPieces;
@@ -170,7 +169,7 @@ struct Position final {
     /** Returns the pieces belonging to the side to move. */
     [[nodiscard]] const Pieces& our_pieces() const noexcept
     {
-        if (sideToMove == Color::White)
+        if (is_white_to_move())
             return whitePieces;
 
         return blackPieces;
@@ -179,7 +178,7 @@ struct Position final {
     /** Returns the pieces belonging to the side-to-move's opponent. */
     [[nodiscard]] Pieces& their_pieces() noexcept
     {
-        if (sideToMove == Color::White)
+        if (is_white_to_move())
             return blackPieces;
 
         return whitePieces;
@@ -188,13 +187,25 @@ struct Position final {
     /** Returns the pieces belonging to the side-to-move's opponent. */
     [[nodiscard]] const Pieces& their_pieces() const noexcept
     {
-        if (sideToMove == Color::White)
+        if (is_white_to_move())
             return blackPieces;
 
         return whitePieces;
     }
 
     /// @}
+
+    /** Returns true if the side to move is White. */
+    [[nodiscard]] bool is_white_to_move() const noexcept
+    {
+        return sideToMove == Color::White;
+    }
+
+    /** Returns true if the side to move is Black. */
+    [[nodiscard]] bool is_black_to_move() const noexcept
+    {
+        return sideToMove == Color::Black;
+    }
 
     /** Returns a bitboard that is the union of all White and Black
         piece positions.
@@ -474,7 +485,7 @@ inline Position after_null_move(const Position& starting)
 {
     auto copy { starting };
 
-    copy.sideToMove = starting.sideToMove == Color::White ? Color::Black : Color::White;
+    copy.sideToMove = starting.is_white_to_move() ? Color::Black : Color::White;
 
     return copy;
 }

@@ -39,7 +39,7 @@ namespace {
     {
         using moves::patterns::pawn_attacks;
 
-        if (position.sideToMove == Color::White)
+        if (position.is_white_to_move())
             return pawn_attacks<Color::Black>(position.their_pieces().pawns);
 
         return pawn_attacks<Color::White>(position.their_pieces().pawns);

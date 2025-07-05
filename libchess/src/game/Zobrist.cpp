@@ -228,7 +228,7 @@ Value calculate(const Position& pos)
 {
     Value value { 0uz };
 
-    if (pos.sideToMove == Color::Black)
+    if (pos.is_black_to_move())
         value ^= BLACK_TO_MOVE;
 
     for (const auto type : magic_enum::enum_values<PieceType>()) {
@@ -293,7 +293,7 @@ Value update(
 
     // remove captured piece
     if (pos.is_capture(move)) {
-        const auto otherColor = pos.sideToMove == Color::White ? Color::Black : Color::White;
+        const auto otherColor = pos.is_white_to_move() ? Color::Black : Color::White;
 
         if (pos.is_en_passant(move)) {
             [[unlikely]];
@@ -302,7 +302,7 @@ Value update(
                 PieceType::Pawn, otherColor,
                 get_en_passant_captured_square(
                     pos.enPassantTargetSquare.value(),
-                    pos.sideToMove == Color::White));
+                    pos.is_white_to_move()));
         } else {
             [[likely]];
 

@@ -16,7 +16,6 @@
 #include <cassert>
 #include <format>
 #include <libchess/notation/EPD.hpp>
-#include <libchess/pieces/Colors.hpp>
 #include <libchess/util/Strings.hpp>
 #include <stdexcept>
 #include <string>
@@ -24,7 +23,6 @@
 
 namespace chess::notation {
 
-using pieces::Color;
 using std::string;
 using std::string_view;
 
@@ -151,7 +149,7 @@ string to_epd(const EPDPosition& pos)
 
     // side to move
     epd.push_back(
-        pos.position.sideToMove == Color::White ? 'w' : 'b');
+        pos.position.is_white_to_move() ? 'w' : 'b');
 
     epd.push_back(' ');
 

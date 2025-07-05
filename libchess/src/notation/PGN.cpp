@@ -23,7 +23,6 @@
 #include <libchess/notation/Algebraic.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/PGN.hpp>
-#include <libchess/pieces/Colors.hpp>
 #include <libchess/util/Strings.hpp>
 #include <optional>
 #include <stdexcept>
@@ -473,7 +472,7 @@ namespace {
         bool writeMoveNumber { true };
 
         for (const auto& move : moves) {
-            if (position.sideToMove == pieces::Color::White) {
+            if (position.is_white_to_move()) {
                 output.append(std::format("{}.{} ",
                     position.fullMoveCounter, to_alg(position, move.move)));
             } else {

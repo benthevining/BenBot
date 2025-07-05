@@ -33,7 +33,7 @@ namespace masks = board::masks;
     const auto whiteControls = static_cast<int>(moves::num_squares_attacked<Color::White>(position.whitePieces, masks::CENTER, position.blackPieces.occupied, false));
     const auto blackControls = static_cast<int>(moves::num_squares_attacked<Color::Black>(position.blackPieces, masks::CENTER, position.whitePieces.occupied, false));
 
-    const bool isWhite = position.sideToMove == Color::White;
+    const bool isWhite = position.is_white_to_move();
 
     const auto ourControl   = isWhite ? whiteControls : blackControls;
     const auto theirControl = isWhite ? blackControls : whiteControls;
@@ -58,7 +58,7 @@ namespace masks = board::masks;
         = static_cast<int>(moves::num_squares_attacked<Color::Black>(position.blackPieces, behindBlackPawns, position.whitePieces.occupied))
         - static_cast<int>(moves::num_squares_attacked<Color::White>(position.whitePieces, behindBlackPawns, position.blackPieces.occupied));
 
-    const bool isWhite = position.sideToMove == Color::White;
+    const bool isWhite = position.is_white_to_move();
 
     const auto ourSquares   = isWhite ? whiteSquares : blackSquares;
     const auto theirSquares = isWhite ? blackSquares : whiteSquares;

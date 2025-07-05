@@ -648,7 +648,7 @@ void generate(
     const Position&                 position,
     std::output_iterator<Move> auto outputIt)
 {
-    if (position.sideToMove == Color::White)
+    if (position.is_white_to_move())
         detail::generate_internal<Color::White, CapturesOnly>(position, outputIt);
     else
         detail::generate_internal<Color::Black, CapturesOnly>(position, outputIt);
@@ -669,7 +669,7 @@ void generate_for(
     const Position& position, const PieceType piece,
     std::output_iterator<Move> auto outputIt)
 {
-    if (position.sideToMove == Color::White)
+    if (position.is_white_to_move())
         detail::generate_for_internal<Color::White, CapturesOnly>(position, piece, outputIt);
     else
         detail::generate_for_internal<Color::Black, CapturesOnly>(position, piece, outputIt);
@@ -688,7 +688,7 @@ std::vector<Move> generate_for(
 
 inline bool any_legal_moves(const Position& position)
 {
-    if (position.sideToMove == Color::White)
+    if (position.is_white_to_move())
         return detail::any_legal_moves_internal<Color::White>(position);
 
     return detail::any_legal_moves_internal<Color::Black>(position);

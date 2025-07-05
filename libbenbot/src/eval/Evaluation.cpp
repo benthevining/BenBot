@@ -155,7 +155,7 @@ namespace {
             return score * (detail::count_material(enemyPieces, false) / STARTING_NON_PAWN_MATERIAL);
         };
 
-        const bool isWhite = position.sideToMove == Color::White;
+        const bool isWhite = position.is_white_to_move();
 
         const auto ourScore = score_side_king(
             position.our_pieces(),
@@ -193,7 +193,7 @@ namespace {
 
         const auto blackScore = blackControlsAroundBK - whiteControlsAroundBK;
 
-        const bool isWhite = position.sideToMove == Color::White;
+        const bool isWhite = position.is_white_to_move();
 
         const auto ourScore   = isWhite ? whiteScore : blackScore;
         const auto theirScore = isWhite ? blackScore : whiteScore;

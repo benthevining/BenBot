@@ -18,7 +18,6 @@
 #include <iterator>
 #include <libchess/game/Position.hpp>
 #include <libchess/notation/FEN.hpp>
-#include <libchess/pieces/Colors.hpp>
 #include <libchess/util/Strings.hpp>
 #include <ranges>
 #include <stdexcept>
@@ -26,7 +25,6 @@
 
 namespace chess::notation {
 
-using pieces::Color;
 using std::size_t;
 
 std::string to_fen(const Position& position)
@@ -39,7 +37,7 @@ std::string to_fen(const Position& position)
 
     // side to move
     fen.push_back(
-        position.sideToMove == Color::White ? 'w' : 'b');
+        position.is_white_to_move() ? 'w' : 'b');
 
     fen.push_back(' ');
 
