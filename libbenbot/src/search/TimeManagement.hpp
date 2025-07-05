@@ -27,7 +27,8 @@ using Milliseconds = std::chrono::milliseconds;
 
 using std::size_t;
 
-// times the search and also watches the "exit" flag
+// this object is responsible for interrupting an ongoing search
+// monitors the search's duration, and also watches the exit flag
 struct Interrupter final {
     Interrupter(
         const std::atomic_bool&           exitFlagToUse,
@@ -37,11 +38,14 @@ struct Interrupter final {
     {
     }
 
+    // queries the clock's current time, which may be a system call
     [[nodiscard]] Milliseconds get_search_duration() const
     {
         return std::chrono::duration_cast<Milliseconds>(Clock::now() - startTime);
     }
 
+    // "active" check: queries clock time to check search duration, checks atomic stop flag
+    // updates cached internal abort state
     [[nodiscard]] bool should_abort()
     {
         aborted = aborted || should_trigger_abort();
@@ -49,6 +53,7 @@ struct Interrupter final {
         return aborted;
     }
 
+    // "passive" check: only returns cached internal abort state
     [[nodiscard]] bool was_aborted() const noexcept { return aborted; }
 
     void iteration_completed() noexcept { anyIterationCompleted = true; }
@@ -56,8 +61,7 @@ struct Interrupter final {
 private:
     [[nodiscard]] bool should_trigger_abort() const
     {
-        // we don't allow aborting the search until at least
-        // the depth 1 search has been completed
+        // we don't allow aborting until at least the depth 1 search has been completed
         if (! anyIterationCompleted)
             return false;
 
@@ -70,19 +74,22 @@ private:
         return get_search_duration() >= *searchTime;
     }
 
-    // On some systems, high_resolution_clock can be unsteady,
+    // on some systems, high_resolution_clock can be unsteady,
     // in which case it's better to fall back to steady_clock
     using Clock = std::conditional_t<
         std::chrono::high_resolution_clock::is_steady,
         std::chrono::high_resolution_clock,
         std::chrono::steady_clock>;
 
-    const std::atomic_bool& exitFlag;
+    const std::atomic_bool& exitFlag; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
     std::chrono::time_point<Clock> startTime { Clock::now() };
 
     std::optional<Milliseconds> searchTime;
 
+    // because checking the clock's current time is probably a system call,
+    // it's desirable to try and cache the aborted state to avoid recalculating
+    // it when possible
     bool aborted { false };
 
     bool anyIterationCompleted { false };
