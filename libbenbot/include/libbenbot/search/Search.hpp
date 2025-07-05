@@ -89,6 +89,12 @@ struct Options final {
 
     /** Updates the values in this options struct with the UCI "go" command options. */
     void update_from(uci::GoCommandOptions&& goOptions);
+
+    /** Returns true if this search has any bounds other than depth. */
+    [[nodiscard]] bool is_bounded() const noexcept
+    {
+        return searchTime.has_value() || maxNodes.has_value();
+    }
 };
 
 /** This struct encapsulates a set of functions that will be called to

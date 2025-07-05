@@ -323,7 +323,7 @@ void Context::search()
     // TODO: I think this is technically supposed to be the max *nodes* to search?
     const auto numMovesToSearch = options.maxNodes.value_or(options.movesToSearch.size());
 
-    const bool infinite = ! options.searchTime.has_value();
+    const bool infinite = ! options.is_bounded();
 
     std::optional<Move> bestMove;
 
