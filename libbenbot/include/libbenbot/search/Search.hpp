@@ -54,6 +54,14 @@ using std::size_t;
 
 using Milliseconds = std::chrono::milliseconds;
 
+#ifndef DOXYGEN
+namespace detail {
+    [[nodiscard, gnu::const]] bool is_mate_score(int score) noexcept;
+
+    [[nodiscard, gnu::const]] size_t ply_to_mate_from_score(int score) noexcept;
+} // namespace detail
+#endif
+
 /** This struct encapsulates the parameters to the search algorithm.
 
     @ingroup search

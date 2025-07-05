@@ -27,13 +27,10 @@
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/FEN.hpp>
-#include <libchess/notation/UCI.hpp>
 #include <libchess/uci/CommandParsing.hpp>
 #include <optional>
-#include <print>
 #include <ranges>
 #include <stdexcept>
-#include <string>
 #include <utility>
 #include <vector>
 
@@ -42,13 +39,33 @@ namespace chess::search {
 using std::size_t;
 
 namespace {
-
-    using EvalType = TranspositionTable::Record::EvalType;
-
     // arbitrary value used as the starting beta value
     // this should be larger than mate, but smaller than
     // the data type's max (to avoid issues with sign flipping)
     constexpr auto EVAL_MAX = eval::MATE * 2;
+} // namespace
+
+namespace detail {
+
+    [[nodiscard, gnu::const]] bool is_mate_score(const int score) noexcept
+    {
+        static constexpr auto MAX_MATE_DEPTH { 1000 };
+
+        return std::abs(score) > EVAL_MAX - MAX_MATE_DEPTH;
+    }
+
+    [[nodiscard, gnu::const]] size_t ply_to_mate_from_score(const int score) noexcept
+    {
+        assert(is_mate_score(score));
+
+        return static_cast<size_t>(EVAL_MAX - std::abs(score));
+    }
+
+} // namespace detail
+
+namespace {
+
+    using EvalType = TranspositionTable::Record::EvalType;
 
     // mate scores are based on the distance from the root of the tree
     // to the leaf (mate) node, so that the engine actually goes for mate
@@ -66,20 +83,6 @@ namespace {
     [[nodiscard, gnu::const]] bool is_losing_mate_score(const int score) noexcept
     {
         return score <= -eval::MATE;
-    }
-
-    [[nodiscard, gnu::const]] bool is_mate_score(const int score) noexcept
-    {
-        static constexpr auto MAX_MATE_DEPTH { 1000 };
-
-        return std::abs(score) > EVAL_MAX - MAX_MATE_DEPTH;
-    }
-
-    [[nodiscard, gnu::const]] size_t ply_to_mate_from_score(const int score) noexcept
-    {
-        assert(is_mate_score(score));
-
-        return static_cast<size_t>(EVAL_MAX - std::abs(score));
     }
 
     // maps ply-from-root mate scores to the MATE constant
@@ -363,8 +366,11 @@ void Context::search()
         if (interrupter.should_exit())
             break;
 
-        if (! infinite && is_mate_score(bestScore) && ply_to_mate_from_score(bestScore) <= depth)
+        if (! infinite
+            && detail::is_mate_score(bestScore)
+            && detail::ply_to_mate_from_score(bestScore) <= depth) {
             break;
+        }
 
         ++depth;
     }
@@ -420,42 +426,6 @@ void Options::update_from(uci::GoCommandOptions&& goOptions)
             assert(false); // TODO: ??
         }
     }
-}
-
-namespace {
-
-    [[nodiscard]] std::string get_score_string(const int score)
-    {
-        if (! is_mate_score(score))
-            return std::format("score cp {}", score);
-
-        auto plyToMate = ply_to_mate_from_score(score);
-
-        if (plyToMate > 0uz)
-            ++plyToMate;
-
-        // plies -> moves
-        const auto mateIn = plyToMate / 2uz;
-
-        auto mateVal = static_cast<int>(mateIn);
-
-        if (score < 0)
-            mateVal *= -1;
-
-        return std::format("score mate {}", mateVal);
-    }
-
-} // namespace
-
-void Callbacks::Result::print_uci() const
-{
-    std::println(
-        "info depth {} {} time {}",
-        depth,
-        get_score_string(score),
-        duration.count());
-
-    std::println("bestmove {}", notation::to_uci(bestMove));
 }
 
 } // namespace chess::search
