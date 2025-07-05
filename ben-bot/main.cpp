@@ -36,7 +36,7 @@ private:
 
     [[nodiscard]] std::string_view get_author() const override { return "Ben Vining"; }
 
-    void new_game() override { searchContext.transTable.clear(); }
+    void new_game() override { searchContext.reset(); }
 
     void set_position(const game::Position& pos) override { searchContext.options.position = pos; }
 
@@ -46,6 +46,8 @@ private:
 
         searchContext.search();
     }
+
+    void abort_search() override { searchContext.abort(); }
 
     search::Context searchContext;
 };

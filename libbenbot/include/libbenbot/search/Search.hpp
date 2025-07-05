@@ -160,19 +160,19 @@ struct Context final {
     /** The callback functions that will be invoked with search results. */
     Callbacks callbacks;
 
-    /** The transposition table used for the search.
-        Results are persistent between successive searches.
-     */
-    TranspositionTable transTable;
-
     /** Performs a search. */
     void search();
 
     /** Call this to abort the last call to ``search()``. */
     void abort() noexcept { exitFlag.store(true); }
 
+    /** Clears the transposition table. */
+    void reset() { transTable.clear(); }
+
 private:
     std::atomic_bool exitFlag { false };
+
+    TranspositionTable transTable;
 };
 
 } // namespace chess::search

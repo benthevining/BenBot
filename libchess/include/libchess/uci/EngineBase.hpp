@@ -71,13 +71,8 @@ struct EngineBase {
      */
     virtual void new_game() { }
 
-    /** This function is called when the search should be exited as quickly as possible. */
+    /** This function is called when the search should be exited. */
     virtual void abort_search() { }
-
-    /** This function is called when the search should be stopped, but with less urgency
-        than ``abort_search()``.
-     */
-    virtual void stop_search() { }
 
     /** This function is called when the "ponderhit" command is received.
         This means that the engine was told to ponder on the same move the user has played.

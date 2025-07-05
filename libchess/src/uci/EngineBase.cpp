@@ -68,7 +68,7 @@ void EngineBase::handle_command(std::string_view command)
     }
 
     if (command == "stop") {
-        stop_search();
+        abort_search();
         return;
     }
 
