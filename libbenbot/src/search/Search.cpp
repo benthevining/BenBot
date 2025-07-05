@@ -203,6 +203,9 @@ namespace {
                 game::after_move(currentPosition, move),
                 plyFromRoot + 1uz, interrupter);
 
+            if (interrupter.was_aborted())
+                return eval::DRAW;
+
             if (evaluation >= bounds.beta)
                 return bounds.beta;
 
@@ -272,6 +275,9 @@ namespace {
                                 ? -alpha_beta(bounds.invert(), newPosition, depth - 1uz, plyFromRoot + 1uz, transTable, interrupter)
                                 : -quiescence(bounds.invert(), newPosition, plyFromRoot + 1uz, interrupter);
 
+            if (interrupter.should_abort())
+                return eval::DRAW;
+
             if (eval >= bounds.beta) {
                 transTable.store(
                     currentPosition, { .searchedDepth = depth,
@@ -287,9 +293,6 @@ namespace {
                 evalType     = EvalType::Exact;
                 bounds.alpha = eval;
             }
-
-            if (interrupter.should_abort())
-                return bounds.alpha;
         }
 
         transTable.store(
@@ -309,6 +312,7 @@ void Context::search()
 
     assert(options.depth > 0uz);
 
+    // create this object first, because it records the start time internally
     Interrupter interrupter { exitFlag, options.searchTime };
 
     // if the movesToSearch was empty, then we search all legal moves
