@@ -36,7 +36,7 @@ include (Catch)
 
 add_executable (libchess_tests)
 
-target_link_libraries (libchess_tests PRIVATE libbenbot::libbenbot Catch2::Catch2WithMain)
+target_link_libraries (libchess_tests PRIVATE libchess::libchess Catch2::Catch2WithMain)
 
 file (GLOB_RECURSE sources LIST_DIRECTORIES false CONFIGURE_DEPENDS
                                                   "${CMAKE_CURRENT_LIST_DIR}/*.cpp"
