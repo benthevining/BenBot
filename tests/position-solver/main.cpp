@@ -50,15 +50,19 @@ try {
 
     const auto depthString = args.front();
 
-    chess::search::Context<false> context;
+    namespace search = chess::search;
+
+    search::Context context;
 
     context.options.position = chess::notation::from_fen(fenString);
     context.options.depth    = chess::util::int_from_string(depthString, 4uz);
 
-    const auto move = context.search();
+    context.callbacks.onSearchComplete = [&context](const search::Callbacks::Result& result) {
+        std::println("{}",
+            chess::notation::to_alg(context.options.position, result.bestMove));
+    };
 
-    std::println("{}",
-        chess::notation::to_alg(context.options.position, move));
+    context.search();
 
     return EXIT_SUCCESS;
 } catch (const std::exception& exception) {

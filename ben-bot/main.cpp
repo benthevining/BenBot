@@ -25,6 +25,15 @@
 namespace chess {
 
 class BenBotEngine final : public uci::EngineBase {
+public:
+    BenBotEngine()
+    {
+        searchContext.callbacks.onSearchComplete = [](const search::Callbacks::Result& result) {
+            result.print_uci();
+        };
+    }
+
+private:
     [[nodiscard]] std::string_view get_name() const override { return "BenBot"; }
 
     [[nodiscard]] std::string_view get_author() const override { return "Ben Vining"; }
@@ -37,11 +46,10 @@ class BenBotEngine final : public uci::EngineBase {
     {
         searchContext.options.update_from(std::move(opts));
 
-        // this function blocks & synchronously prints UCI "info" & "bestmove" output
         searchContext.search();
     }
 
-    search::Context<true> searchContext;
+    search::Context searchContext;
 };
 
 } // namespace chess

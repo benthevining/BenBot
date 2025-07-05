@@ -17,7 +17,6 @@
 #include <algorithm>
 #include <atomic>
 #include <cassert>
-#include <chrono>
 #include <cmath>   // IWYU pragma: keep - for std::abs()
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <format>
@@ -295,31 +294,9 @@ namespace {
         return bounds.alpha;
     }
 
-    [[nodiscard]] std::string get_score_string(const int score)
-    {
-        if (! is_mate_score(score))
-            return std::format("score cp {}", score);
-
-        auto plyToMate = ply_to_mate_from_score(score);
-
-        if (plyToMate > 0uz)
-            ++plyToMate;
-
-        // plies -> moves
-        const auto mateIn = plyToMate / 2uz;
-
-        auto mateVal = static_cast<int>(mateIn);
-
-        if (score < 0)
-            mateVal *= -1;
-
-        return std::format("score mate {}", mateVal);
-    }
-
 } // namespace
 
-template <bool PrintUCIInfo>
-Move Context<PrintUCIInfo>::search()
+void Context::search()
 {
     exitFlag.store(false);
 
@@ -402,24 +379,11 @@ end_search:
                                            .evalType    = EvalType::Exact,
                                            .bestMove    = bestMove });
 
-    if constexpr (PrintUCIInfo) {
-        const auto searchDuration = interrupter.get_search_duration();
-
-        // TODO: nodes searched
-        std::println(
-            "info depth {} {} time {}",
-            depth,
-            get_score_string(bestScore),
-            searchDuration.count());
-
-        std::println("bestmove {}", notation::to_uci(bestMove.value()));
-    }
-
-    return bestMove.value();
+    callbacks.searchComplete({ .duration = interrupter.get_search_duration(),
+        .depth                           = depth,
+        .score                           = bestScore,
+        .bestMove                        = bestMove.value() });
 }
-
-template struct Context<true>;
-template struct Context<false>;
 
 void Options::update_from(uci::GoCommandOptions&& goOptions)
 {
@@ -456,6 +420,42 @@ void Options::update_from(uci::GoCommandOptions&& goOptions)
             assert(false); // TODO: ??
         }
     }
+}
+
+namespace {
+
+    [[nodiscard]] std::string get_score_string(const int score)
+    {
+        if (! is_mate_score(score))
+            return std::format("score cp {}", score);
+
+        auto plyToMate = ply_to_mate_from_score(score);
+
+        if (plyToMate > 0uz)
+            ++plyToMate;
+
+        // plies -> moves
+        const auto mateIn = plyToMate / 2uz;
+
+        auto mateVal = static_cast<int>(mateIn);
+
+        if (score < 0)
+            mateVal *= -1;
+
+        return std::format("score mate {}", mateVal);
+    }
+
+} // namespace
+
+void Callbacks::Result::print_uci() const
+{
+    std::println(
+        "info depth {} {} time {}",
+        depth,
+        get_score_string(score),
+        duration.count());
+
+    std::println("bestmove {}", notation::to_uci(bestMove));
 }
 
 } // namespace chess::search

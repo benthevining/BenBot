@@ -26,6 +26,7 @@
 #include <atomic>
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
+#include <functional>
 #include <libbenbot/search/TranspositionTable.hpp>
 #include <libchess/moves/Move.hpp>
 #include <limits>
@@ -56,7 +57,7 @@ using Milliseconds = std::chrono::milliseconds;
 /** This struct encapsulates the parameters to the search algorithm.
 
     @ingroup search
-    @see find_best_move()
+    @see Context
  */
 struct Options final {
     /** The root position to be searched. */
@@ -82,22 +83,54 @@ struct Options final {
     void update_from(uci::GoCommandOptions&& goOptions);
 };
 
+/** This struct encapsulates a set of functions that will be called to
+    process search progress and results.
+
+    @ingroup search
+    @see Context
+ */
+struct Callbacks final {
+    /** The results from a completed search. */
+    struct Result final {
+        /** The total amount of time spent searching to produce this result. */
+        Milliseconds duration;
+
+        /** The total depth that was searched. */
+        size_t depth { 0uz };
+
+        /** The evaluation of the position resulting from playing the best move. */
+        int score { 0 };
+
+        /** The best move found in the position. */
+        Move bestMove;
+
+        /** Prints UCI-format "info" and "bestmove" output from this result. */
+        void print_uci() const;
+    };
+
+    /** Function object that will be invoked with search results. */
+    std::function<void(const Result&)> onSearchComplete;
+
+    /** Can be safely called without checking if ``onSearchComplete`` is null. */
+    void searchComplete(const Result& result) const
+    {
+        if (onSearchComplete != nullptr)
+            onSearchComplete(result);
+    }
+};
+
 /** This struct encapsulates everything needed to perform a search.
     You can keep one of these alive between searches by simply updating
     the options and then calling ``search()`` again.
 
-    The Thread class provides the capability to run the search on a background thread.
-
-    @tparam PrintUCIInfo If true, the ``search()`` function prints UCI-format "info"
-    output during the search, using ``std::println()``.
-
     @ingroup search
-    @see find_best_move(), Thread
  */
-template <bool PrintUCIInfo = false>
 struct Context final {
     /** The options to use for the search. */
     Options options;
+
+    /** The callback functions that will be invoked with search results. */
+    Callbacks callbacks;
 
     /** The transposition table used for the search.
         Results are persistent between successive searches.
@@ -109,7 +142,7 @@ struct Context final {
         @throws std::invalid_argument An exception will be thrown if there are
         no legal moves for the side to move in the given position.
      */
-    Move search();
+    void search();
 
     /** Call this to abort the last call to ``search()``. */
     void abort() noexcept { exitFlag.store(true); }
