@@ -354,15 +354,19 @@ void Context::search()
             }
         }
 
-        if (bestMoveThisDepth.has_value()) {
-            [[likely]];
-
-            bestMove  = bestMoveThisDepth;
-            bestScore = bounds.alpha;
+        if (interrupter.was_aborted()) {
+            // we write to the transposition table below, and we want to store
+            // the last completed depth as the stored evaluation's depth
+            --depth;
+            break;
         }
 
-        if (interrupter.was_aborted())
-            break;
+        assert(bestMoveThisDepth.has_value());
+
+        bestMove  = bestMoveThisDepth;
+        bestScore = bounds.alpha;
+
+        interrupter.iteration_completed();
 
         callbacks.iterationComplete({ .duration = interrupter.get_search_duration(),
             .depth                              = depth,

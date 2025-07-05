@@ -51,9 +51,16 @@ struct Interrupter final {
 
     [[nodiscard]] bool was_aborted() const noexcept { return aborted; }
 
+    void iteration_completed() noexcept { anyIterationCompleted = true; }
+
 private:
     [[nodiscard]] bool should_trigger_abort() const
     {
+        // we don't allow aborting the search until at least
+        // the depth 1 search has been completed
+        if (! anyIterationCompleted)
+            return false;
+
         if (exitFlag.load())
             return true;
 
@@ -77,6 +84,8 @@ private:
     std::optional<Milliseconds> searchTime;
 
     bool aborted { false };
+
+    bool anyIterationCompleted { false };
 };
 
 [[nodiscard, gnu::const]] inline Milliseconds determine_search_time(
