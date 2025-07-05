@@ -127,14 +127,14 @@ struct Callbacks final {
     Callback onIteration;
 
     /** Can be safely called without checking if ``onSearchComplete`` is null. */
-    void searchComplete(const Result& result) const
+    void search_complete(const Result& result) const
     {
         if (onSearchComplete != nullptr)
             onSearchComplete(result);
     }
 
     /** Can be safely called without checking if ``onIteration`` is null. */
-    void iterationComplete(const Result& result) const
+    void iteration_complete(const Result& result) const
     {
         if (onIteration != nullptr)
             onIteration(result);

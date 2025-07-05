@@ -368,10 +368,10 @@ void Context::search()
 
         interrupter.iteration_completed();
 
-        callbacks.iterationComplete({ .duration = interrupter.get_search_duration(),
-            .depth                              = depth,
-            .score                              = bestScore,
-            .bestMove                           = bestMove.value() });
+        callbacks.iteration_complete({ .duration = interrupter.get_search_duration(),
+            .depth                               = depth,
+            .score                               = bestScore,
+            .bestMove                            = bestMove.value() });
 
         if (! infinite
             && detail::is_mate_score(bestScore)
@@ -391,10 +391,10 @@ void Context::search()
                                            .evalType    = EvalType::Exact,
                                            .bestMove    = bestMove });
 
-    callbacks.searchComplete({ .duration = interrupter.get_search_duration(),
-        .depth                           = depth,
-        .score                           = bestScore,
-        .bestMove                        = bestMove.value() });
+    callbacks.search_complete({ .duration = interrupter.get_search_duration(),
+        .depth                            = depth,
+        .score                            = bestScore,
+        .bestMove                         = bestMove.value() });
 }
 
 void Options::update_from(uci::GoCommandOptions&& goOptions)
