@@ -49,6 +49,8 @@ private:
 
     void abort_search() override { searchContext.abort(); }
 
+    void wait() override { searchContext.wait(); }
+
     search::Context searchContext;
 };
 

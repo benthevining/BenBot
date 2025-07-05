@@ -28,6 +28,7 @@
 #include <libchess/uci/CommandParsing.hpp>
 #include <optional>
 #include <ranges>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -406,6 +407,12 @@ void Context::search()
         .depth                            = depth,
         .score                            = bestScore,
         .bestMove                         = bestMove.value() });
+}
+
+void Context::wait() const
+{
+    while (activeFlag.load())
+        std::this_thread::yield();
 }
 
 void Options::update_from(uci::GoCommandOptions&& goOptions)
