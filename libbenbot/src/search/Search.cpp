@@ -268,7 +268,7 @@ namespace {
         for (const auto& move : moves) {
             const auto newPosition = after_move(currentPosition, move);
 
-            const auto eval = depth > 1uz
+            const auto eval = depth > 0uz
                                 ? -alpha_beta(bounds.invert(), newPosition, depth - 1uz, plyFromRoot + 1uz, transTable, interrupter)
                                 : -quiescence(bounds.invert(), newPosition, plyFromRoot + 1uz, interrupter);
 
@@ -337,11 +337,11 @@ void Context::search()
     auto depth = 1uz;
 
     while (depth <= options.depth) {
-        Bounds bounds {};
-
         // we can generate the legal moves only once, but we should reorder them each iteration
         // because the move ordering will change based on the evaluations done during the last iteration
         detail::order_moves_for_search(options.position, options.movesToSearch, transTable);
+
+        Bounds bounds {};
 
         std::optional<Move> bestMoveThisDepth;
 
