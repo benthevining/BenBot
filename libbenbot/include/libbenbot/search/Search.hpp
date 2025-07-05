@@ -125,6 +125,14 @@ struct Callbacks final {
         if (onSearchComplete != nullptr)
             onSearchComplete(result);
     }
+
+    /** Creates a set of callbacks that print UCI-compatible output. */
+    [[nodiscard]] static Callbacks make_uci_handler()
+    {
+        return {
+            .onSearchComplete = [](const Result& res) { res.print_uci(); }
+        };
+    }
 };
 
 /** This struct encapsulates everything needed to perform a search.

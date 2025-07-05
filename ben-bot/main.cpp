@@ -28,9 +28,7 @@ class BenBotEngine final : public uci::EngineBase {
 public:
     BenBotEngine()
     {
-        searchContext.callbacks.onSearchComplete = [](const search::Callbacks::Result& result) {
-            result.print_uci();
-        };
+        searchContext.callbacks = search::Callbacks::make_uci_handler();
     }
 
 private:

@@ -110,6 +110,7 @@ template <bool CapturesOnly = false>
 
  */
 
+#ifndef DOXYGEN
 namespace detail {
 
     using board::Bitboard;
@@ -642,6 +643,7 @@ namespace detail {
     }
 
 } // namespace detail
+#endif // DOXYGEN
 
 template <bool CapturesOnly>
 void generate(

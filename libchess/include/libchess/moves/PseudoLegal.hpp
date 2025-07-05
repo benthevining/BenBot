@@ -154,6 +154,7 @@ constexpr Bitboard king(
     return patterns::king(startingKing) & friendlyPieces.inverse();
 }
 
+#ifndef DOXYGEN
 namespace detail {
 
     // Sliding piece attack generation is implemented using the Kogge-Stone fill algorithms
@@ -300,6 +301,7 @@ namespace detail {
     }
 
 } // namespace detail
+#endif // DOXYGEN
 
 constexpr Bitboard rook(
     const Bitboard startingRooks, const Bitboard emptySquares, const Bitboard friendlyPieces) noexcept
