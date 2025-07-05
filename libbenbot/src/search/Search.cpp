@@ -101,12 +101,49 @@ namespace {
         int alpha { -EVAL_MAX };
         int beta { EVAL_MAX };
 
-        [[nodiscard, gnu::const]] Bounds invert() const noexcept
+        Bounds() noexcept = default;
+
+        Bounds(const int alphaToUse, const int betaToUse) noexcept
+            : alpha { alphaToUse }
+            , beta { betaToUse }
         {
-            return {
-                .alpha = -beta,
-                .beta  = -alpha
-            };
+            assert(beta > alpha);
+        }
+
+        [[nodiscard]] Bounds invert() const noexcept
+        {
+            return { -beta, -alpha };
+        }
+
+        // if an MDP cutoff is available, returns the cutoff value
+        // if this returns nullopt, the search should continue
+        [[nodiscard]] std::optional<int> mate_distance_pruning(const size_t plyFromRoot) noexcept
+        {
+            if (is_winning_mate_score(alpha)) {
+                const auto mateScore = checkmate_score(plyFromRoot);
+
+                if (mateScore < beta) {
+                    beta = mateScore;
+
+                    if (alpha >= mateScore)
+                        return mateScore;
+                }
+
+                return std::nullopt;
+            }
+
+            if (is_losing_mate_score(alpha)) {
+                const auto mateScore = checkmate_score(plyFromRoot);
+
+                if (mateScore > alpha) {
+                    alpha = mateScore;
+
+                    if (beta <= mateScore)
+                        return mateScore;
+                }
+            }
+
+            return std::nullopt;
         }
     };
 
@@ -118,8 +155,6 @@ namespace {
         const size_t       plyFromRoot, // increases each iteration (recursion)
         const Interrupter& interrupter)
     {
-        assert(bounds.beta > bounds.alpha);
-
         if (currentPosition.is_draw())
             return eval::DRAW;
 
@@ -137,26 +172,8 @@ namespace {
 
         bounds.alpha = std::max(bounds.alpha, evaluation);
 
-        // mate distance pruning
-        if (is_winning_mate_score(bounds.alpha)) {
-            const auto mateScore = checkmate_score(plyFromRoot);
-
-            if (mateScore < bounds.beta) {
-                bounds.beta = mateScore;
-
-                if (bounds.alpha >= mateScore)
-                    return mateScore;
-            }
-        } else if (is_losing_mate_score(bounds.alpha)) {
-            const auto mateScore = checkmate_score(plyFromRoot);
-
-            if (mateScore > bounds.alpha) {
-                bounds.alpha = mateScore;
-
-                if (bounds.beta <= mateScore)
-                    return mateScore;
-            }
-        }
+        if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot))
+            return cutoff.value();
 
         auto moves = moves::generate<true>(currentPosition); // captures only
 
@@ -189,8 +206,6 @@ namespace {
         TranspositionTable& transTable,
         const Interrupter&  interrupter)
     {
-        assert(bounds.beta > bounds.alpha);
-
         // it's important that we do this check before probing the transposition table,
         // because the table only contains static evaluations and doesn't consider game
         // history, so its stored evaluations can't detect threefold repetition draws
@@ -234,26 +249,8 @@ namespace {
             return checkmate_score(plyFromRoot);
         }
 
-        // mate distance pruning
-        if (is_winning_mate_score(bounds.alpha)) {
-            const auto mateScore = checkmate_score(plyFromRoot);
-
-            if (mateScore < bounds.beta) {
-                bounds.beta = mateScore;
-
-                if (bounds.alpha >= mateScore)
-                    return mateScore;
-            }
-        } else if (is_losing_mate_score(bounds.alpha)) {
-            const auto mateScore = checkmate_score(plyFromRoot);
-
-            if (mateScore > bounds.alpha) {
-                bounds.alpha = mateScore;
-
-                if (bounds.beta <= mateScore)
-                    return mateScore;
-            }
-        }
+        if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot))
+            return cutoff.value();
 
         detail::order_moves_for_search(currentPosition, moves, transTable);
 
