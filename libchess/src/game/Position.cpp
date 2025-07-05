@@ -20,6 +20,7 @@
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/game/Result.hpp>
+#include <libchess/moves/Move.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/UTF8.hpp>

@@ -28,6 +28,7 @@
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/UCI.hpp>
+#include <libchess/uci/CommandParsing.hpp>
 #include <optional>
 #include <print>
 #include <ranges>

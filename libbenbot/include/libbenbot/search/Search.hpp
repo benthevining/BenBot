@@ -17,7 +17,7 @@
  */
 
 /** @file
-    This file defines the NegaMax function.
+    This file defines the searching interface.
     @ingroup search
  */
 
@@ -28,7 +28,6 @@
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libbenbot/search/TranspositionTable.hpp>
 #include <libchess/moves/Move.hpp>
-#include <libchess/uci/CommandParsing.hpp>
 #include <limits>
 #include <optional>
 #include <vector>
@@ -36,6 +35,10 @@
 namespace chess::game {
 struct Position;
 } // namespace chess::game
+
+namespace chess::uci {
+struct GoCommandOptions;
+} // namespace chess::uci
 
 /** This namespace contains functions related to searching the
     move tree for the principal variation.

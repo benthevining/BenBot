@@ -33,7 +33,6 @@
 #include <libchess/game/Result.hpp>
 #include <libchess/game/ThreefoldChecker.hpp>
 #include <libchess/moves/Attacks.hpp>
-#include <libchess/moves/Move.hpp>
 #include <libchess/moves/Patterns.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
@@ -41,6 +40,10 @@
 #include <optional>
 #include <ranges>
 #include <string>
+
+namespace chess::moves {
+struct Move;
+} // namespace chess::moves
 
 /** This namespace contains classes for modeling the state
     of a game of chess.
