@@ -303,22 +303,32 @@ namespace {
         return bounds.alpha;
     }
 
-    struct ScopedSetter final {
-        std::atomic_bool& value; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
+    struct ActiveFlagSetter final {
+        explicit ActiveFlagSetter(std::atomic_bool& flag)
+            : value { flag }
+        {
+            value.store(true);
+        }
 
-        ~ScopedSetter() { value.store(false); }
+        ~ActiveFlagSetter() { value.store(false); }
+
+        ActiveFlagSetter(const ActiveFlagSetter&)            = delete;
+        ActiveFlagSetter& operator=(const ActiveFlagSetter&) = delete;
+        ActiveFlagSetter(ActiveFlagSetter&&)                 = delete;
+        ActiveFlagSetter& operator=(ActiveFlagSetter&&)      = delete;
+
+    private:
+        std::atomic_bool& value; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
     };
 
 } // namespace
 
 void Context::search()
 {
-    exitFlag.store(false);
-    activeFlag.store(true);
-
-    const ScopedSetter raii { activeFlag };
-
     assert(options.depth > 0uz);
+
+    // sets activeFlag to true while inside this function, resets it to false once function exits
+    const ActiveFlagSetter activeFlagRAII { activeFlag };
 
     // create this object first, because it records the start time internally
     Interrupter interrupter { exitFlag, options.searchTime };

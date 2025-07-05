@@ -31,11 +31,13 @@ using std::size_t;
 // monitors the search's duration, and also watches the exit flag
 struct Interrupter final {
     Interrupter(
-        const std::atomic_bool&           exitFlagToUse,
+        std::atomic_bool&                 exitFlagToUse,
         const std::optional<Milliseconds> maxSearchTime)
         : exitFlag { exitFlagToUse }
         , searchTime { maxSearchTime }
     {
+        // make sure exit flag is false when search starts
+        exitFlagToUse.store(false);
     }
 
     // queries the clock's current time, which may be a system call
