@@ -112,12 +112,19 @@ struct Callbacks final {
         /** The best move found in the position. */
         Move bestMove;
 
-        /** Prints UCI-format "info" and "bestmove" output from this result. */
-        void print_uci() const;
+        /** Prints UCI-format "info" output from this result. */
+        void print_uci(bool printBestmove) const;
     };
 
-    /** Function object that will be invoked with search results. */
-    std::function<void(const Result&)> onSearchComplete;
+    using Callback = std::function<void(const Result&)>;
+
+    /** Function object that will be invoked with results from a completed search. */
+    Callback onSearchComplete;
+
+    /** Function object that will be invoked with results from each iteration of
+        the iterative deepening loop.
+     */
+    Callback onIteration;
 
     /** Can be safely called without checking if ``onSearchComplete`` is null. */
     void searchComplete(const Result& result) const
@@ -126,11 +133,19 @@ struct Callbacks final {
             onSearchComplete(result);
     }
 
+    /** Can be safely called without checking if ``onIteration`` is null. */
+    void iterationComplete(const Result& result) const
+    {
+        if (onIteration != nullptr)
+            onIteration(result);
+    }
+
     /** Creates a set of callbacks that print UCI-compatible output. */
     [[nodiscard]] static Callbacks make_uci_handler()
     {
         return {
-            .onSearchComplete = [](const Result& res) { res.print_uci(); }
+            .onSearchComplete = [](const Result& res) { res.print_uci(true); },
+            .onIteration = [](const Result& res) { res.print_uci(false); }
         };
     }
 };

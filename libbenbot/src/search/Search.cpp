@@ -366,6 +366,11 @@ void Context::search()
         if (interrupter.should_exit())
             break;
 
+        callbacks.iterationComplete({ .duration = interrupter.get_search_duration(),
+            .depth                              = depth,
+            .score                              = bestScore,
+            .bestMove                           = bestMove.value() });
+
         if (! infinite
             && detail::is_mate_score(bestScore)
             && detail::ply_to_mate_from_score(bestScore) <= depth) {
