@@ -97,6 +97,25 @@ namespace {
         return score;
     }
 
+    // maps the MATE constant to a ply-from-root mate score
+    [[nodiscard, gnu::const]] int from_tt_score(
+        const TranspositionTable::ProbedEval& eval,
+        const size_t                          plyFromRoot) noexcept
+    {
+        const auto [score, type] = eval;
+
+        // map MATE constant to a ply-from-root mate score
+        if (type == EvalType::Exact) {
+            if (score <= -eval::MATE)
+                return checkmate_score(plyFromRoot);
+
+            if (score >= eval::MATE)
+                return -checkmate_score(plyFromRoot);
+        }
+
+        return score;
+    }
+
     struct Bounds final {
         int alpha { -EVAL_MAX };
         int beta { EVAL_MAX };
@@ -214,20 +233,8 @@ namespace {
 
         // check if this position has been searched before to at
         // least this depth and within these bounds for non-PV nodes
-        if (const auto value = transTable.probe_eval(currentPosition, depth, bounds.alpha, bounds.beta)) {
-            const auto [score, type] = value.value();
-
-            // map MATE constant to a ply-from-root mate score
-            if (type == EvalType::Exact) {
-                if (score <= -eval::MATE)
-                    return checkmate_score(plyFromRoot);
-
-                if (score >= eval::MATE)
-                    return -checkmate_score(plyFromRoot);
-            }
-
-            return score;
-        }
+        if (const auto value = transTable.probe_eval(currentPosition, depth, bounds.alpha, bounds.beta))
+            return from_tt_score(*value, plyFromRoot);
 
         if (currentPosition.is_draw()) {
             transTable.store(

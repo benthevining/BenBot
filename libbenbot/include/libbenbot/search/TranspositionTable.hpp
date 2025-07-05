@@ -74,13 +74,15 @@ public:
      */
     [[nodiscard]] const Record* find(const Position& pos) const;
 
+    using ProbedEval = std::pair<int, Record::EvalType>;
+
     /** Similar to ``find()``, this function instead probes for an
         evaluation value of the given position, searched to at least
         the given depth and honoring the alpha/beta cutoff values.
 
         Returns pair of the evaluation value and the value type.
      */
-    [[nodiscard]] std::optional<std::pair<int, Record::EvalType>> probe_eval(
+    [[nodiscard]] std::optional<ProbedEval> probe_eval(
         const Position& pos, size_t depth, int alpha, int beta) const;
 
     /** Writes the principal variation moves to the output iterator. */
@@ -127,7 +129,7 @@ inline auto TranspositionTable::find(const Position& pos) const -> const Record*
 
 inline auto TranspositionTable::probe_eval(
     const Position& pos, const size_t depth, const int alpha, const int beta) const
-    -> std::optional<std::pair<int, Record::EvalType>>
+    -> std::optional<ProbedEval>
 {
     if (const auto* record = find(pos);
         record != nullptr && record->searchedDepth >= depth) {
