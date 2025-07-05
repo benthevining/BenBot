@@ -166,12 +166,12 @@ namespace {
     // searches only captures, with no depth limit, to try to
     // improve the stability of the static evaluation function
     [[nodiscard]] int quiescence(
-        Bounds             bounds,
-        const Position&    currentPosition,
-        const size_t       plyFromRoot, // increases each iteration (recursion)
-        const Interrupter& interrupter)
+        Bounds          bounds,
+        const Position& currentPosition,
+        const size_t    plyFromRoot, // increases each iteration (recursion)
+        Interrupter&    interrupter)
     {
-        if (interrupter.should_exit())
+        if (interrupter.should_abort())
             return eval::DRAW;
 
         if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot))
@@ -217,12 +217,12 @@ namespace {
     [[nodiscard]] int alpha_beta(
         Bounds              bounds,
         const Position&     currentPosition,
-        const size_t        depth,       // this is the depth left to be searched - decreases each iteration, and when this reaches 1, we call the quiescence search
+        const size_t        depth,       // this is the depth left to be searched - decreases each iteration, and when this reaches 0, we call the quiescence search
         const size_t        plyFromRoot, // increases each iteration
         TranspositionTable& transTable,
-        const Interrupter&  interrupter)
+        Interrupter&        interrupter)
     {
-        if (interrupter.should_exit())
+        if (interrupter.should_abort())
             return eval::DRAW;
 
         if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot))
@@ -288,7 +288,7 @@ namespace {
                 bounds.alpha = eval;
             }
 
-            if (interrupter.should_exit())
+            if (interrupter.should_abort())
                 return bounds.alpha;
         }
 
@@ -309,7 +309,7 @@ void Context::search()
 
     assert(options.depth > 0uz);
 
-    const Interrupter interrupter { exitFlag, options.searchTime };
+    Interrupter interrupter { exitFlag, options.searchTime };
 
     // if the movesToSearch was empty, then we search all legal moves
     if (options.movesToSearch.empty()) {
@@ -345,7 +345,7 @@ void Context::search()
                 game::after_move(options.position, move),
                 depth, 1uz, transTable, interrupter);
 
-            if (interrupter.should_exit())
+            if (interrupter.was_aborted())
                 break;
 
             if (score > bounds.alpha) {
@@ -361,7 +361,7 @@ void Context::search()
             bestScore = bounds.alpha;
         }
 
-        if (interrupter.should_exit())
+        if (interrupter.was_aborted())
             break;
 
         callbacks.iterationComplete({ .duration = interrupter.get_search_duration(),

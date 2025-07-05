@@ -42,7 +42,17 @@ struct Interrupter final {
         return std::chrono::duration_cast<Milliseconds>(Clock::now() - startTime);
     }
 
-    [[nodiscard]] bool should_exit() const
+    [[nodiscard]] bool should_abort()
+    {
+        aborted = aborted || should_trigger_abort();
+
+        return aborted;
+    }
+
+    [[nodiscard]] bool was_aborted() const noexcept { return aborted; }
+
+private:
+    [[nodiscard]] bool should_trigger_abort() const
     {
         if (exitFlag.load())
             return true;
@@ -53,7 +63,6 @@ struct Interrupter final {
         return get_search_duration() >= *searchTime;
     }
 
-private:
     // On some systems, high_resolution_clock can be unsteady,
     // in which case it's better to fall back to steady_clock
     using Clock = std::conditional_t<
@@ -66,6 +75,8 @@ private:
     std::chrono::time_point<Clock> startTime { Clock::now() };
 
     std::optional<Milliseconds> searchTime;
+
+    bool aborted { false };
 };
 
 [[nodiscard, gnu::const]] inline Milliseconds determine_search_time(
