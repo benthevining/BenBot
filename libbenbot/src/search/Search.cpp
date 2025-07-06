@@ -350,6 +350,8 @@ void Context::search()
     auto depth = 1uz;
 
     while (depth <= options.depth) {
+        const IterationTimer timer;
+
         // we can generate the legal moves only once, but we should reorder them each iteration
         // because the move ordering will change based on the evaluations done during the last iteration
         detail::order_moves_for_search(options.position, options.movesToSearch, transTable);
@@ -392,10 +394,18 @@ void Context::search()
             .score                               = bestScore,
             .bestMove                            = bestMove.value() });
 
+        // if we're not in infinite mode & we've found a mate, don't do a deeper iteration
         if (! infinite
             && detail::is_mate_score(bestScore)
             && detail::ply_to_mate_from_score(bestScore) <= depth) {
             break;
+        }
+
+        // if the iteration we just completed took as much or more time than we
+        // have remaining for the search, then don't start a deeper iteration
+        if (const auto remaining = interrupter.get_remaining_time()) {
+            if (timer.get_duration() >= *remaining)
+                break;
         }
 
         ++depth;

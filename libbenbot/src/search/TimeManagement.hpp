@@ -27,6 +27,13 @@ using Milliseconds = std::chrono::milliseconds;
 
 using std::size_t;
 
+// on some systems, high_resolution_clock can be unsteady,
+// in which case it's better to fall back to steady_clock
+using Clock = std::conditional_t<
+    std::chrono::high_resolution_clock::is_steady,
+    std::chrono::high_resolution_clock,
+    std::chrono::steady_clock>;
+
 // this object is responsible for interrupting an ongoing search
 // monitors the search's duration, and also watches the exit flag
 struct Interrupter final {
@@ -44,6 +51,14 @@ struct Interrupter final {
     [[nodiscard]] Milliseconds get_search_duration() const
     {
         return std::chrono::duration_cast<Milliseconds>(Clock::now() - startTime);
+    }
+
+    // returns time remaining until abort time, or nullopt if there's no time bound
+    [[nodiscard]] std::optional<Milliseconds> get_remaining_time() const
+    {
+        return searchTime.and_then([this](const Milliseconds timeLimit) {
+            return std::optional { timeLimit - get_search_duration() };
+        });
     }
 
     // "active" check: queries clock time to check search duration, checks atomic stop flag
@@ -76,13 +91,6 @@ private:
         return get_search_duration() >= *searchTime;
     }
 
-    // on some systems, high_resolution_clock can be unsteady,
-    // in which case it's better to fall back to steady_clock
-    using Clock = std::conditional_t<
-        std::chrono::high_resolution_clock::is_steady,
-        std::chrono::high_resolution_clock,
-        std::chrono::steady_clock>;
-
     const std::atomic_bool& exitFlag; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
     std::chrono::time_point<Clock> startTime { Clock::now() };
@@ -95,6 +103,16 @@ private:
     bool aborted { false };
 
     bool anyIterationCompleted { false };
+};
+
+struct IterationTimer final {
+    [[nodiscard]] Milliseconds get_duration() const
+    {
+        return std::chrono::duration_cast<Milliseconds>(Clock::now() - startTime);
+    }
+
+private:
+    std::chrono::time_point<Clock> startTime { Clock::now() };
 };
 
 [[nodiscard, gnu::const]] inline Milliseconds determine_search_time(
