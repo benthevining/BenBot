@@ -353,7 +353,7 @@ void Context::search()
         if (interrupter.should_abort())
             break;
 
-        const IterationTimer timer;
+        const Timer timer;
 
         // we can generate the legal moves only once, but we should reorder them each iteration
         // because the move ordering will change based on the evaluations done during the last iteration
