@@ -397,22 +397,24 @@ void Context::search()
             .score                               = bestScore,
             .bestMove                            = bestMove.value() });
 
-        // if we're not in infinite mode & we've found a mate, don't do a deeper iteration
-        if (! infinite
-            && detail::is_mate_score(bestScore)
-            && detail::ply_to_mate_from_score(bestScore) <= depth) {
-            break;
-        }
-
-        // if the iteration we just completed took as much or more time than we
-        // have remaining for the search, then don't start a deeper iteration
-        if (const auto remaining = interrupter.get_remaining_time()) {
-            if (timer.get_duration() >= *remaining)
+        if (! infinite) {
+            // if we've found a mate, don't do a deeper iteration
+            if (detail::is_mate_score(bestScore)
+                && detail::ply_to_mate_from_score(bestScore) <= depth) {
                 break;
+            }
+
+            // if the iteration we just completed took as much or more time than we
+            // have remaining for the search, then don't start a deeper iteration
+            // because it would probably get interrupted
+            if (const auto remaining = interrupter.get_remaining_time()) {
+                if (timer.get_duration() >= *remaining)
+                    break;
+            }
         }
 
         ++depth;
-    }
+    } // iterative deepening loop end
 
     assert(bestMove.has_value());
 
