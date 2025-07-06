@@ -134,9 +134,9 @@ namespace {
         // if this returns nullopt, the search should continue
         [[nodiscard]] std::optional<int> mate_distance_pruning(const size_t plyFromRoot) noexcept
         {
-            if (is_winning_mate_score(alpha)) {
-                const auto mateScore = checkmate_score(plyFromRoot);
+            const auto mateScore = checkmate_score(plyFromRoot);
 
+            if (is_winning_mate_score(alpha)) {
                 if (mateScore < beta) {
                     beta = mateScore;
 
@@ -148,8 +148,6 @@ namespace {
             }
 
             if (is_losing_mate_score(alpha)) {
-                const auto mateScore = checkmate_score(plyFromRoot);
-
                 if (mateScore > alpha) {
                     alpha = mateScore;
 

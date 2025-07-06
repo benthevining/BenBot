@@ -112,8 +112,6 @@ void EngineBase::loop()
     std::string inputBuf;
 
     do {
-        inputBuf.clear();
-
         std::getline(std::cin, inputBuf);
 
         handle_command(inputBuf);
