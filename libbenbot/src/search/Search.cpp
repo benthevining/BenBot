@@ -330,7 +330,6 @@ void Context::search()
     // sets activeFlag to true while inside this function, resets it to false once function exits
     const ActiveFlagSetter activeFlagRAII { activeFlag };
 
-    // create this object first, because it records the start time internally
     Interrupter interrupter { exitFlag, options.searchTime };
 
     // if the movesToSearch was empty, then we search all legal moves

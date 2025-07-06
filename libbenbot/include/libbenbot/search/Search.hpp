@@ -17,7 +17,7 @@
  */
 
 /** @file
-    This file defines the searching interface.
+    This file defines the search context class.
     @ingroup search
  */
 
@@ -110,7 +110,7 @@ struct Callbacks final {
             For depths greater than 1, this value is the duration of the entire
             search, including lower depths of the iterative deepening loop.
          */
-        Milliseconds duration;
+        Milliseconds duration { 0uz };
 
         /** The total depth that was searched. */
         size_t depth { 0uz };
@@ -186,10 +186,12 @@ struct Context final {
     void abort() noexcept { exitFlag.store(true); }
 
     /** Clears the transposition table.
-        If a search is in progress, this method blocks until the search completes.
+        If a search is in progress, this method cancels it and blocks until it returns.
+        Invoking this method is thread-safe, even if a search was in progress.
      */
     void reset()
     {
+        abort();
         wait();
         transTable.clear();
     }
