@@ -12,12 +12,13 @@
  * ======================================================================================
  */
 
-#include "PawnStructure.hpp" // NOLINT(build/include_subdir)
-#include "Positional.hpp"    // NOLINT(build/include_subdir)
+#include "PawnStructure.hpp"     // NOLINT(build/include_subdir)
+#include "PieceSquareTables.hpp" // NOLINT(build/include_subdir)
+#include "Positional.hpp"        // NOLINT(build/include_subdir)
+#include <algorithm>
 #include <cmath>
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Material.hpp>
-#include <libbenbot/eval/PieceSquareTables.hpp>
 #include <libchess/board/Distances.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Masks.hpp>
@@ -34,6 +35,26 @@
 namespace chess::eval {
 
 namespace {
+
+    // returns a [0..1] value that is 0 at the start of the game and 1 in the late endgame
+    [[nodiscard, gnu::const]] float endgame_phase_weight(const Position& position) noexcept
+    {
+        // game phase is roughly determined based on the total amount of non-pawn material left on the board
+        // we say that the endgame has begun once the queens & two pairs of minor pieces have been traded
+        static constexpr auto EG_MATERIAL_START_ONE_SIDE = static_cast<float>(
+            (piece_values::ROOK * 2uz) + piece_values::BISHOP + piece_values::KNIGHT);
+
+        static constexpr auto EG_MATERIAL_START = EG_MATERIAL_START_ONE_SIDE * 2.f;
+
+        static constexpr auto multiplier = 1.f / EG_MATERIAL_START;
+
+        const auto nonPawnMaterialLeft = detail::count_material(position.whitePieces, false)
+                                       + detail::count_material(position.blackPieces, false);
+
+        const auto pcntLeft = static_cast<float>(nonPawnMaterialLeft) * multiplier;
+
+        return 1.f - std::min(1.f, pcntLeft);
+    }
 
     // Things I've tried that seemed to make the engine weaker:
     // - bonus for bishops on open diagonals
@@ -264,7 +285,7 @@ int evaluate(const Position& position)
 
     return materialScore
          + no_pieces_left_bonus(position)
-         + score_piece_placement(position)
+         + score_piece_placement(position, endgameWeight)
          + score_rook_files(position)
          + score_connected_rooks(position)
          + score_king_safety(position, endgameWeight)

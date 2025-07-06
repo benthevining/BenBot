@@ -12,11 +12,10 @@
  * ======================================================================================
  */
 
+#include "PieceSquareTables.hpp" // NOLINT(build/include_subdir)
 #include <array>
 #include <cassert>
 #include <cmath>
-#include <libbenbot/eval/Material.hpp>
-#include <libbenbot/eval/PieceSquareTables.hpp>
 #include <libchess/board/Flips.hpp>
 #include <libchess/board/Pieces.hpp>
 #include <libchess/game/Position.hpp>
@@ -229,11 +228,9 @@ namespace {
 
 } // namespace
 
-int score_piece_placement(const Position& position)
+int score_piece_placement(const Position& position, const float endgameWeight)
 {
-    const auto [ourScore, theirScore] = [&position] {
-        const auto endgameWeight = endgame_phase_weight(position);
-
+    const auto [ourScore, theirScore] = [&position, endgameWeight] {
         if (position.is_black_to_move()) {
             return std::make_pair(
                 score_side_pieces<true>(position.our_pieces(), endgameWeight),
