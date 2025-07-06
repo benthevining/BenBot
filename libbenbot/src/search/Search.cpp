@@ -350,6 +350,9 @@ void Context::search()
     auto depth = 1uz;
 
     while (depth <= options.depth) {
+        if (interrupter.should_abort())
+            break;
+
         const IterationTimer timer;
 
         // we can generate the legal moves only once, but we should reorder them each iteration
