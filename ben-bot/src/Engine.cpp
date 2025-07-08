@@ -14,6 +14,7 @@
 
 #include "Engine.hpp"
 #include "Data.hpp"
+#include "TextTable.hpp"
 #include <exception>
 #include <filesystem>
 #include <fstream>
@@ -113,12 +114,23 @@ void Engine::print_help() const
     println(
         "All standard UCI commands are supported, as well as the following non-standard commands:");
 
-    println(
-        "loadbook <path> - reads the given JSON file into the engine's openings database. See book.json in the ben-bot source code for an example of the format.");
-    println(
-        "options         - dump current UCI option values");
-    println(
-        "help            - displays this text");
+    println();
+
+    TextTable table;
+
+    // clang-format off
+    table
+        .append_column("Command").append_column("Notes")
+        .new_row()
+        .append_column("loadbook <path>").append_column("Reads the given JSON file into the engine's openings database. See book.json in the ben-bot source code for an example of the format.")
+        .new_row()
+        .append_column("options").append_column("Dump current UCI option values")
+        .new_row()
+        .append_column("help").append_column("Display this text");
+    // clang-format on
+
+    println("{}",
+        table.to_string("", "|", "\n"));
 }
 
 void Engine::print_options() const
