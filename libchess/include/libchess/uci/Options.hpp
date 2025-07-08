@@ -74,10 +74,15 @@ protected:
 struct BoolOption final : Option {
     BoolOption(string name, bool defaultValue);
 
+    using Value = bool;
+
     /** Returns this option's current value, as set by the last
         call to ``parse()``.
      */
     [[nodiscard]] bool get_value() const noexcept { return value; }
+
+    /** Returns this option's default value. */
+    [[nodiscard]] bool get_default_value() const noexcept { return optionDefault; }
 
     [[nodiscard]] string_view get_name() const noexcept override { return optionName; }
 
@@ -103,10 +108,15 @@ struct IntOption final : Option {
         int minValue, int maxValue,
         int defaultValue);
 
+    using Value = int;
+
     /** Returns this option's current value, as set by the last
         call to ``parse()``.
      */
     [[nodiscard]] int get_value() const noexcept { return value; }
+
+    /** Returns this option's default value. */
+    [[nodiscard]] int get_default_value() const noexcept { return optionDefault; }
 
     [[nodiscard]] string_view get_name() const noexcept override { return optionName; }
 
@@ -135,7 +145,12 @@ struct ComboOption final : Option {
         std::vector<string> values,
         string              defaultValue);
 
+    using Value = string_view;
+
     [[nodiscard]] string_view get_value() const noexcept { return value; }
+
+    /** Returns this option's default value. */
+    [[nodiscard]] string_view get_default_value() const noexcept { return optionDefault; }
 
     [[nodiscard]] string_view get_name() const noexcept override { return optionName; }
 
@@ -154,11 +169,14 @@ private:
 };
 
 /** An option that can have any arbitrary string value.
+    String options are empty by default.
 
     @ingroup cli
  */
 struct StringOption final : Option {
     StringOption(string name, string defaultValue);
+
+    using Value = string_view;
 
     [[nodiscard]] string_view get_value() const noexcept { return value; }
 
@@ -182,6 +200,8 @@ struct Action final : Option {
     using Callback = std::function<void()>;
 
     Action(string name, Callback&& action);
+
+    using Value = void;
 
     [[nodiscard]] string_view get_name() const noexcept override { return optionName; }
 

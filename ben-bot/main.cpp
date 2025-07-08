@@ -86,6 +86,11 @@ class BenBotEngine final : public uci::EngineBase {
             return;
         }
 
+        if (command == "options") {
+            print_options();
+            return;
+        }
+
         if (command == "help") {
             print_help();
             return;
@@ -131,7 +136,22 @@ class BenBotEngine final : public uci::EngineBase {
         println(
             "loadbook <path> - reads the given JSON file into the engine's openings database. See book.json in the ben-bot source code for an example of the format.");
         println(
+            "options         - dump current UCI option values");
+        println(
             "help            - displays this text");
+    }
+
+    void print_options() const
+    {
+        const auto& ownBook = searcher.context.openingBook.enabled;
+
+        println(
+            "{} - toggle - controls whether internal opening book is used - current {} - default {}",
+            ownBook.get_name(), ownBook.get_value(), ownBook.get_default_value());
+
+        println(
+            "{} - button - press to clear the transposition table",
+            clearTT.get_name());
     }
 
     search::Thread searcher { search::Callbacks::make_uci_handler() };
