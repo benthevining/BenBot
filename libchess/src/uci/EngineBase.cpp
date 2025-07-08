@@ -93,6 +93,8 @@ void EngineBase::handle_command(std::string_view command)
     }
 
     if (firstWord == "setoption") {
+        wait();
+
         for (auto* option : get_options())
             option->parse(rest);
 

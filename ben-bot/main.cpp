@@ -12,7 +12,7 @@
  * ======================================================================================
  */
 
-#include <atomic>
+#include <array>
 #include <cmrc/cmrc.hpp>
 #include <cstdlib>
 #include <exception>
@@ -22,7 +22,9 @@
 #include <libchess/game/Position.hpp>
 #include <libchess/uci/CommandParsing.hpp>
 #include <libchess/uci/EngineBase.hpp>
+#include <libchess/uci/Options.hpp>
 #include <print>
+#include <span>
 #include <string_view>
 #include <utility>
 
@@ -43,7 +45,7 @@ class BenBotEngine final : public uci::EngineBase {
             const auto bookFile = cmrc::ben_bot_resources::get_filesystem()
                                       .open("book.json");
 
-            openingBook.add_from_json(std::string_view { bookFile });
+            searcher.context.openingBook.book.add_from_json(std::string_view { bookFile });
 
             bookLoaded = true;
         }
@@ -57,11 +59,15 @@ class BenBotEngine final : public uci::EngineBase {
 
     void wait() override { searcher.context.wait(); }
 
+    [[nodiscard]] std::span<uci::Option*> get_options() override { return options; }
+
     search::Thread searcher { search::Callbacks::make_uci_handler() };
 
-    search::OpeningBook openingBook;
-
     bool bookLoaded { false };
+
+    std::array<uci::Option*, 1uz> options {
+        &searcher.context.openingBook.enabled
+    };
 };
 
 } // namespace chess
