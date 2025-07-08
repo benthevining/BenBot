@@ -34,6 +34,10 @@ namespace uci    = chess::uci;
 namespace search = chess::search;
 
 class Engine final : public uci::EngineBase {
+public:
+    void print_logo_and_version() const;
+
+private:
     [[nodiscard]] string_view get_name() const override { return "BenBot"; }
 
     [[nodiscard]] string_view get_author() const override { return "Ben Vining"; }

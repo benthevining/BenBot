@@ -95,13 +95,18 @@ try {
     println(std::cerr, "{}", except.what());
 }
 
-void Engine::print_help() const
+void Engine::print_logo_and_version() const
 {
     println("{}", get_ascii_logo());
 
     println(
         "{}, version {}, by {}",
         get_name(), get_version_string(), get_author());
+}
+
+void Engine::print_help() const
+{
+    print_logo_and_version();
 
     println();
 

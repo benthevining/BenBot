@@ -24,6 +24,8 @@ int main(
 try {
     ben_bot::Engine engine;
 
+    engine.print_logo_and_version();
+
     engine.loop();
 
     return EXIT_SUCCESS;
