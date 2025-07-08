@@ -37,10 +37,9 @@ class BenBotEngine final : public uci::EngineBase {
 
     void new_game() override
     {
-        searcher.context.reset();
+        searcher.context.reset(); // clears transposition table
 
-        if (! bookLoaded) {
-            // load embedded book data into opening book data structure
+        if (! bookLoaded) { // load embedded book data into opening book data structure
             const auto bookFile = cmrc::ben_bot_resources::get_filesystem()
                                       .open("book.json");
 

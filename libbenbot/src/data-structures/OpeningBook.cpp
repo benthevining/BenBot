@@ -12,34 +12,17 @@
  * ======================================================================================
  */
 
+#include <algorithm>
 #include <cassert>
 #include <libbenbot/data-structures/OpeningBook.hpp>
 #include <libchess/notation/UCI.hpp>
 #include <libchess/util/Strings.hpp>
 #include <nlohmann/json.hpp>
+#include <ranges>
 #include <string_view>
 #include <vector>
 
 namespace chess::search {
-
-void OpeningBook::add_line(std::string_view line)
-{
-    Position position;
-
-    while (! line.empty()) {
-        auto [first, rest] = util::split_at_first_space(line);
-
-        first = util::trim(first);
-
-        const auto move = notation::from_uci(position, first);
-
-        lines[position.hash].emplace_back(move);
-
-        position.make_move(move);
-
-        line = rest;
-    }
-}
 
 /* Example JSON:
 
@@ -68,15 +51,44 @@ void OpeningBook::add_from_json(const std::string_view json)
 
     assert(data.is_array());
 
-    std::vector<std::string_view> lines;
+    std::vector<std::string_view> jsonLines;
 
     for (const auto& child : data) {
-        lines.clear();
+        jsonLines.clear();
 
-        child.at("lines").get_to(lines);
+        child.at("lines").get_to(jsonLines);
 
-        for (const auto line : lines)
+        for (const auto line : jsonLines)
             add_line(line);
+    }
+
+    // prune duplicate moves
+    for (auto& moves : std::views::values(lines)) {
+        // std::ranges::sort(moves);
+
+        const auto [first, last] = std::ranges::unique(moves);
+
+        moves.erase(first, last);
+    }
+}
+
+// "line" is space-separated UCI moves
+void OpeningBook::add_line(std::string_view line)
+{
+    Position position;
+
+    while (! line.empty()) {
+        auto [first, rest] = util::split_at_first_space(line);
+
+        first = util::trim(first);
+
+        const auto move = notation::from_uci(position, first);
+
+        lines[position.hash].emplace_back(move);
+
+        position.make_move(move);
+
+        line = rest;
     }
 }
 
