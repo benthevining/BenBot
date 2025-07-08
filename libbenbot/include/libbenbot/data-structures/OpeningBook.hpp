@@ -50,6 +50,22 @@ public:
      */
     void add_line(std::string_view line);
 
+    /** Adds all lines from a JSON text.
+
+      The format of the JSON should be:
+      @code{.json}
+      [
+        {
+          "comment": "optional",
+          "lines": [
+            "UCI moves..."
+          ]
+        }
+      ]
+      @endcode
+     */
+    void add_from_json(std::string_view json);
+
 private:
     std::unordered_map<std::uint64_t, std::vector<Move>> lines;
 };
