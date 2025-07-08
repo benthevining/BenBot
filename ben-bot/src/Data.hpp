@@ -22,6 +22,8 @@ using std::string_view;
 
 [[nodiscard]] string_view get_opening_book_json_text();
 
+[[nodiscard]] string_view get_ascii_logo();
+
 [[nodiscard, gnu::const]] string_view get_version_string();
 
 } // namespace ben_bot

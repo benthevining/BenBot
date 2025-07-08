@@ -20,4 +20,10 @@ FetchContent_Declare (
 
 FetchContent_MakeAvailable (cmrc)
 
-cmrc_add_resource_library (ben_bot_resources ALIAS ben_bot::resources book.json)
+# cmake-format: off
+cmrc_add_resource_library (
+        ben_bot_resources
+        ALIAS ben_bot::resources
+        book.json license_header.txt
+)
+# cmake-format: on

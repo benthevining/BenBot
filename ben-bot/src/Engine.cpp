@@ -97,9 +97,13 @@ try {
 
 void Engine::print_help() const
 {
+    println("{}", get_ascii_logo());
+
     println(
         "{}, version {}, by {}",
         get_name(), get_version_string(), get_author());
+
+    println();
 
     println(
         "All standard UCI commands are supported, as well as the following non-standard commands:");

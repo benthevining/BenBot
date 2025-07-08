@@ -29,6 +29,14 @@ string_view get_opening_book_json_text()
     return string_view { bookFile }; // NOLINT
 }
 
+string_view get_ascii_logo()
+{
+    const auto file = cmrc::ben_bot_resources::get_filesystem()
+                          .open("license_header.txt");
+
+    return string_view { file }; // NOLINT
+}
+
 string_view get_version_string()
 {
     return VERSION_STRING;
