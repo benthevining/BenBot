@@ -77,6 +77,10 @@ void Engine::print_help() const
 
 void Engine::print_options() const
 {
+    println("The following UCI options are supported:");
+
+    println();
+
     TextTable table;
 
     table.append_column("Option")
