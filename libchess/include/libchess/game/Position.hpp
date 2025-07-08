@@ -124,12 +124,15 @@ struct Position final {
      */
     std::uint_least64_t fullMoveCounter { 1 };
 
+    /** Unsigned 64-bit integer used for hash values. */
+    using Hash = std::uint64_t;
+
     /** The Zobrist hash value of this position.
         This value is incrementally updated by the ``make_move()``
         function. If you manually change attributes of the position,
         call the ``refresh_zobrist()`` function to recalculate it.
      */
-    std::uint64_t hash;
+    Hash hash;
 
     /** Returns true if the two positions have the same Zobrist hash. */
     [[nodiscard]] bool operator==(const Position& other) const noexcept

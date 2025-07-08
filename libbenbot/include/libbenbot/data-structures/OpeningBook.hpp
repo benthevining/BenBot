@@ -70,7 +70,7 @@ public:
 private:
     void add_line(std::string_view line);
 
-    std::unordered_map<std::uint64_t, std::vector<Move>> lines;
+    std::unordered_map<Position::Hash, std::vector<Move>> lines;
 };
 
 /** This struct combines an opening book database with a parameter to enable/disable it,

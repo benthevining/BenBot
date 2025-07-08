@@ -20,7 +20,6 @@
 #pragma once
 
 #include <cstddef> // IWYU pragma: keep - for size_t
-#include <cstdint> // IWYU pragma: keep - for std::uint64_t
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
 #include <optional>
@@ -91,7 +90,7 @@ public:
     void clear() noexcept { records.clear(); }
 
 private:
-    std::unordered_map<std::uint64_t, Record> records;
+    std::unordered_map<Position::Hash, Record> records;
 };
 
 /*

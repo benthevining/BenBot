@@ -30,14 +30,16 @@ using board::File;
 
 namespace {
 
-    constexpr Value BLACK_TO_MOVE { 0x679ebe6f2ed869a4ULL };
+    using Hash = Position::Hash;
 
-    constexpr Value WHITE_KINGSIDE_CASTLE { 0x6b63254b15e00a87ULL };
-    constexpr Value WHITE_QUEENSIDE_CASTLE { 0x098dc1575ddbd151ULL };
-    constexpr Value BLACK_KINGSIDE_CASTLE { 0xdbb675f686df04a9ULL };
-    constexpr Value BLACK_QUEENSIDE_CASTLE { 0x71588a053b2bd9e5ULL };
+    constexpr Hash BLACK_TO_MOVE { 0x679ebe6f2ed869a4ULL };
 
-    [[nodiscard, gnu::const]] constexpr Value en_passant_key(const File file)
+    constexpr Hash WHITE_KINGSIDE_CASTLE { 0x6b63254b15e00a87ULL };
+    constexpr Hash WHITE_QUEENSIDE_CASTLE { 0x098dc1575ddbd151ULL };
+    constexpr Hash BLACK_KINGSIDE_CASTLE { 0xdbb675f686df04a9ULL };
+    constexpr Hash BLACK_QUEENSIDE_CASTLE { 0x71588a053b2bd9e5ULL };
+
+    [[nodiscard, gnu::const]] constexpr Hash en_passant_key(const File file)
     {
         static constexpr std::array values {
             0xa72780f845e9076dULL,
@@ -211,7 +213,7 @@ namespace {
         0xe1f20c6145f85fe4ULL, 0x450a87aba3167ee7ULL, 0x677524f27efe26feULL
     };
 
-    [[nodiscard, gnu::const]] constexpr Value piece_key(
+    [[nodiscard, gnu::const]] constexpr Hash piece_key(
         const PieceType type, const Color side, const Square& square)
     {
         const auto typeOffset = 64uz * 2uz * std::to_underlying(type);
@@ -224,9 +226,9 @@ namespace {
 
 } // namespace
 
-Value calculate(const Position& pos)
+Hash calculate(const Position& pos)
 {
-    Value value { 0uz };
+    Hash value { 0uz };
 
     if (pos.is_black_to_move())
         value ^= BLACK_TO_MOVE;
@@ -262,7 +264,7 @@ Value calculate(const Position& pos)
     return value;
 }
 
-Value update(
+Hash update(
     const Position& pos, const Move& move,
     const std::optional<Square>  newEPTarget,
     const CastlingRightsChanges& rightsChanges)
