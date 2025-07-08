@@ -64,24 +64,24 @@ namespace {
 
     // mate scores are based on the distance from the root of the tree
     // to the leaf (mate) node, so that the engine actually goes for mate
-    [[nodiscard, gnu::const]] int checkmate_score(const size_t plyFromRoot) noexcept
+    [[nodiscard, gnu::const]] constexpr int checkmate_score(const size_t plyFromRoot) noexcept
     {
         // multiply by -1 here because this score is relative to the player who got mated
         return (EVAL_MAX - static_cast<int>(plyFromRoot)) * -1;
     }
 
-    [[nodiscard, gnu::const]] bool is_winning_mate_score(const int score) noexcept
+    [[nodiscard, gnu::const]] constexpr bool is_winning_mate_score(const int score) noexcept
     {
         return score >= eval::MATE;
     }
 
-    [[nodiscard, gnu::const]] bool is_losing_mate_score(const int score) noexcept
+    [[nodiscard, gnu::const]] constexpr bool is_losing_mate_score(const int score) noexcept
     {
         return score <= -eval::MATE;
     }
 
     // maps ply-from-root mate scores to the MATE constant
-    [[nodiscard, gnu::const]] int to_tt_score(const int score) noexcept
+    [[nodiscard, gnu::const]] constexpr int to_tt_score(const int score) noexcept
     {
         if (is_losing_mate_score(score))
             return -eval::MATE;
@@ -93,7 +93,7 @@ namespace {
     }
 
     // maps the MATE constant to a ply-from-root mate score
-    [[nodiscard, gnu::const]] int from_tt_score(
+    [[nodiscard, gnu::const]] constexpr int from_tt_score(
         const TranspositionTable::ProbedEval& eval,
         const size_t                          plyFromRoot) noexcept
     {
@@ -115,23 +115,23 @@ namespace {
         int alpha { -EVAL_MAX };
         int beta { EVAL_MAX };
 
-        Bounds() noexcept = default;
+        constexpr Bounds() noexcept = default;
 
-        Bounds(const int alphaToUse, const int betaToUse) noexcept
+        constexpr Bounds(const int alphaToUse, const int betaToUse) noexcept
             : alpha { alphaToUse }
             , beta { betaToUse }
         {
             assert(beta > alpha);
         }
 
-        [[nodiscard]] Bounds invert() const noexcept
+        [[nodiscard]] constexpr Bounds invert() const noexcept
         {
             return { -beta, -alpha };
         }
 
         // if an MDP cutoff is available, returns the cutoff value
         // if this returns nullopt, the search should continue
-        [[nodiscard]] std::optional<int> mate_distance_pruning(const size_t plyFromRoot) noexcept
+        [[nodiscard]] constexpr std::optional<int> mate_distance_pruning(const size_t plyFromRoot) noexcept
         {
             const auto mateScore = checkmate_score(plyFromRoot);
 

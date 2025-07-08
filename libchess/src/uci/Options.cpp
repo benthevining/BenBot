@@ -71,7 +71,7 @@ BoolOption::BoolOption(
 {
 }
 
-[[nodiscard]] string BoolOption::get_declaration_string() const
+string BoolOption::get_declaration_string() const
 {
     return std::format(
         "option name {} type check default {}",

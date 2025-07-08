@@ -37,7 +37,7 @@ namespace {
     constexpr Value BLACK_KINGSIDE_CASTLE { 0xdbb675f686df04a9ULL };
     constexpr Value BLACK_QUEENSIDE_CASTLE { 0x71588a053b2bd9e5ULL };
 
-    [[nodiscard, gnu::const]] Value en_passant_key(const File file)
+    [[nodiscard, gnu::const]] constexpr Value en_passant_key(const File file)
     {
         static constexpr std::array values {
             0xa72780f845e9076dULL,
@@ -211,7 +211,7 @@ namespace {
         0xe1f20c6145f85fe4ULL, 0x450a87aba3167ee7ULL, 0x677524f27efe26feULL
     };
 
-    [[nodiscard, gnu::const]] Value piece_key(
+    [[nodiscard, gnu::const]] constexpr Value piece_key(
         const PieceType type, const Color side, const Square& square)
     {
         const auto typeOffset = 64uz * 2uz * std::to_underlying(type);

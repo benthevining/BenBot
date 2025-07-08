@@ -62,7 +62,7 @@ namespace {
         }
     }
 
-    [[nodiscard, gnu::const]] std::optional<Square> get_en_passant_target_square(
+    [[nodiscard, gnu::const]] constexpr std::optional<Square> get_en_passant_target_square(
         const Move& move, const bool isWhite) noexcept
     {
         if (move.piece != PieceType::Pawn
@@ -77,7 +77,7 @@ namespace {
         };
     }
 
-    [[nodiscard]] zobrist::CastlingRightsChanges update_castling_rights(
+    [[nodiscard]] constexpr zobrist::CastlingRightsChanges update_castling_rights(
         Position& pos, const bool isWhite, const Move& move) noexcept
     {
         const auto whiteOldRights { pos.whiteCastlingRights };
@@ -104,7 +104,7 @@ namespace {
         };
     }
 
-    [[nodiscard, gnu::const]] uint_least8_t tick_halfmove_clock(
+    [[nodiscard, gnu::const]] constexpr uint_least8_t tick_halfmove_clock(
         const Move& move, const bool isCapture, const uint_least8_t prevValue) noexcept
     {
         if (isCapture || (move.piece == PieceType::Pawn))

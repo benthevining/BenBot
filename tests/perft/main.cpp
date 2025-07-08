@@ -72,7 +72,7 @@ namespace {
 
         std::vector<RootNodeInfo> rootNodes;
 
-        PerftResult& operator+=(const PerftResult& rhs) noexcept
+        constexpr PerftResult& operator+=(const PerftResult& rhs) noexcept
         {
             nodes += rhs.nodes;
             captures += rhs.captures;

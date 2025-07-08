@@ -37,7 +37,7 @@ namespace chess::eval {
 namespace {
 
     // returns a [0..1] value that is 0 at the start of the game and 1 in the late endgame
-    [[nodiscard, gnu::const]] float endgame_phase_weight(const Position& position) noexcept
+    [[nodiscard, gnu::const]] constexpr float endgame_phase_weight(const Position& position) noexcept
     {
         // game phase is roughly determined based on the total amount of non-pawn material left on the board
         // we say that the endgame has begun once the queens & two pairs of minor pieces have been traded

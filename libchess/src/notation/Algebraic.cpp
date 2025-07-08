@@ -271,7 +271,7 @@ namespace {
         }
     }
 
-    [[nodiscard]] Move create_pawn_capture(
+    [[nodiscard]] constexpr Move create_pawn_capture(
         const Square& targetSquare, const File startingFile, const Color color)
     {
         const auto fromRank = color == Color::White
@@ -287,7 +287,7 @@ namespace {
         };
     }
 
-    [[nodiscard]] std::optional<Move> parse_pawn_capture(
+    [[nodiscard]] constexpr std::optional<Move> parse_pawn_capture(
         const Square& targetSquare, const string_view startingFileText, const Color color)
     {
         assert(! startingFileText.empty());
@@ -331,7 +331,7 @@ namespace {
         }
     }
 
-    [[nodiscard]] std::optional<Move> parse_promotion(
+    [[nodiscard]] constexpr std::optional<Move> parse_promotion(
         const string_view text, const Color color)
     {
         const auto eqSgnPos = text.find('=');

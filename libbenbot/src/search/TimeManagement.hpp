@@ -113,7 +113,7 @@ private:
 };
 
 // decides the amount of time to limit the search to, based on the parameters
-[[nodiscard, gnu::const]] inline Milliseconds determine_search_time(
+[[nodiscard, gnu::const]] constexpr Milliseconds determine_search_time(
     const Milliseconds                timeRemaining,
     const std::optional<Milliseconds> increment,
     const std::optional<size_t>       movesToNextTimeControl)

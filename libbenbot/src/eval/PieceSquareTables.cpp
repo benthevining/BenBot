@@ -148,7 +148,7 @@ namespace {
     using board::Pieces;
 
     template <bool IsBlack>
-    [[nodiscard, gnu::const]] int sum_squares(
+    [[nodiscard, gnu::const]] constexpr int sum_squares(
         board::Bitboard board, const std::span<const int> table) noexcept
     {
         if constexpr (IsBlack) {
@@ -164,31 +164,31 @@ namespace {
     }
 
     template <bool IsBlack>
-    [[nodiscard, gnu::const]] int score_pawns(const Pieces& pieces)
+    [[nodiscard, gnu::const]] constexpr int score_pawns(const Pieces& pieces)
     {
         return sum_squares<IsBlack>(pieces.pawns, pawnTable);
     }
 
     template <bool IsBlack>
-    [[nodiscard, gnu::const]] int score_knights(const Pieces& pieces)
+    [[nodiscard, gnu::const]] constexpr int score_knights(const Pieces& pieces)
     {
         return sum_squares<IsBlack>(pieces.knights, knightTable);
     }
 
     template <bool IsBlack>
-    [[nodiscard, gnu::const]] int score_bishops(const Pieces& pieces)
+    [[nodiscard, gnu::const]] constexpr int score_bishops(const Pieces& pieces)
     {
         return sum_squares<IsBlack>(pieces.bishops, bishopTable);
     }
 
     template <bool IsBlack>
-    [[nodiscard, gnu::const]] int score_rooks(const Pieces& pieces)
+    [[nodiscard, gnu::const]] constexpr int score_rooks(const Pieces& pieces)
     {
         return sum_squares<IsBlack>(pieces.rooks, rookTable);
     }
 
     template <bool IsBlack>
-    [[nodiscard, gnu::const]] int score_queens(const Pieces& pieces)
+    [[nodiscard, gnu::const]] constexpr int score_queens(const Pieces& pieces)
     {
         return sum_squares<IsBlack>(pieces.queens, queenTable);
     }
