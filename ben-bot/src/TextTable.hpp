@@ -14,9 +14,7 @@
 
 #pragma once
 
-#include <algorithm>
-#include <cstddef> // IWYU pragma: keep - for size_t;
-#include <format>
+#include <cstddef> // IWYU pragma: keep - for size_t
 #include <span>
 #include <string>
 #include <string_view>
@@ -55,7 +53,7 @@ struct TextTable final {
 
 private:
     struct Row final {
-        void add_column(string_view text);
+        void add_column(string_view text) { columns.emplace_back(text); }
 
         [[nodiscard]] std::span<const string> get_columns() const noexcept { return columns; }
 
@@ -73,136 +71,5 @@ private:
 
     bool startNewRow { true };
 };
-
-/*
-                         ___                           ,--,
-      ,---,            ,--.'|_                ,--,   ,--.'|
-    ,---.'|            |  | :,'             ,--.'|   |  | :
-    |   | :            :  : ' :             |  |,    :  : '    .--.--.
-    |   | |   ,---.  .;__,'  /    ,--.--.   `--'_    |  ' |   /  /    '
-  ,--.__| |  /     \ |  |   |    /       \  ,' ,'|   '  | |  |  :  /`./
- /   ,'   | /    /  |:__,'| :   .--.  .-. | '  | |   |  | :  |  :  ;_
-.   '  /  |.    ' / |  '  : |__  \__\/: . . |  | :   '  : |__ \  \    `.
-'   ; |:  |'   ;   /|  |  | '.'| ," .--.; | '  : |__ |  | '.'| `----.   \
-|   | '/  ''   |  / |  ;  :    ;/  /  ,.  | |  | '.'|;  :    ;/  /`--'  /__  ___  ___
-|   :    :||   :    |  |  ,   /;  :   .'   \;  :    ;|  ,   /'--'.     /  .\/  .\/  .\
- \   \  /   \   \  /    ---`-' |  ,     .-./|  ,   /  ---`-'   `--'---'\  ; \  ; \  ; |
-  `----'     `----'             `--`---'     ---`-'                     `--" `--" `--"
-
- */
-
-inline TextTable& TextTable::append_column(const string_view text)
-{
-    if (startNewRow) {
-        rows.emplace_back();
-        startNewRow = false;
-    }
-
-    rows.back().add_column(text);
-
-    return *this;
-}
-
-inline TextTable& TextTable::new_row()
-{
-    if (startNewRow)
-        rows.emplace_back();
-    else
-        startNewRow = true;
-
-    return *this;
-}
-
-inline std::vector<string> TextTable::get_rows(
-    const string_view rowPrefix,
-    const string_view columnSeparator,
-    const string_view rowSuffix) const
-{
-    std::vector<string> result;
-
-    result.reserve(rows.size());
-
-    const auto widths = get_column_widths();
-
-    for (const auto& row : rows) {
-        result.emplace_back(
-            std::format(
-                "{}{}{}",
-                rowPrefix, row.to_string(columnSeparator, widths), rowSuffix));
-    }
-
-    return result;
-}
-
-inline string TextTable::to_string(
-    const string_view rowPrefix,
-    const string_view columnSeparator,
-    const string_view rowSuffix) const
-{
-    string result;
-
-    for (const auto& row : get_rows(rowPrefix, columnSeparator, rowSuffix))
-        result.append(row);
-
-    return result;
-}
-
-inline size_t TextTable::num_columns() const
-{
-    size_t maxColummns { 0uz };
-
-    for (const auto& row : rows)
-        maxColummns = std::max(maxColummns, row.get_columns().size());
-
-    return maxColummns;
-}
-
-inline std::vector<size_t> TextTable::get_column_widths() const
-{
-    std::vector<size_t> widths;
-
-    widths.resize(num_columns());
-
-    for (const auto& row : rows) {
-        const auto columns = row.get_columns();
-
-        for (auto i = 0uz; i < columns.size(); ++i)
-            widths[i] = std::max(widths[i], columns[i].length());
-    }
-
-    return widths;
-}
-
-inline void TextTable::Row::add_column(const string_view text)
-{
-    columns.emplace_back(text);
-}
-
-inline string TextTable::Row::to_string(
-    const string_view             columnSeparator,
-    const std::span<const size_t> widths) const
-{
-    string result;
-
-    size_t index { 0uz };
-
-    for (const auto width : widths) {
-        if (index > 0uz)
-            result.append(columnSeparator);
-
-        string padded;
-
-        if (index < columns.size())
-            padded = columns[index];
-
-        padded.resize(width, ' ');
-
-        result.append(padded);
-
-        ++index;
-    }
-
-    return result;
-}
 
 } // namespace ben_bot
