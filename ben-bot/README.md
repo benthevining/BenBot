@@ -2,6 +2,10 @@
 
 This directory contains the `ben-bot` executable. This executable is a command line UCI engine.
 
+## Dependencies
+
+* [cmrc](https://github.com/vector-of-bool/cmrc), used for embedding the opening book data
+
 ## Running a Lichess bot instance
 
 * Clone the [lichess-bot](https://github.com/lichess-bot-devs/lichess-bot) repository into a subdirectory of this project's root

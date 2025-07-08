@@ -10,8 +10,6 @@
 #
 # ======================================================================================
 
-include (FetchContent)
-
 FetchContent_Declare (
     magic_enum
     SYSTEM
