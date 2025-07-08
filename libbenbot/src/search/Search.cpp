@@ -324,6 +324,7 @@ namespace {
 void Context::search()
 {
     assert(options.depth > 0uz);
+    assert(! activeFlag.load());
 
     // sets activeFlag to true while inside this function, resets it to false once function exits
     const ActiveFlagSetter activeFlagRAII { activeFlag };
