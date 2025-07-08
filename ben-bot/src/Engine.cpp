@@ -17,6 +17,7 @@
 #include "TextTable.hpp"
 #include <exception>
 #include <filesystem>
+#include <format>
 #include <fstream>
 #include <ios>
 #include <iostream>
@@ -135,15 +136,30 @@ void Engine::print_help() const
 
 void Engine::print_options() const
 {
+    TextTable table;
+
+    table.append_column("Option")
+        .append_column("Type")
+        .append_column("Notes")
+        .append_column("Default")
+        .append_column("Current");
+
     const auto& ownBook = searcher.context.openingBook.enabled;
 
-    println(
-        "{} - toggle - controls whether internal opening book is used - current {} - default {}",
-        ownBook.get_name(), ownBook.get_value(), ownBook.get_default_value());
+    table.new_row()
+        .append_column(ownBook.get_name())
+        .append_column("Toggle")
+        .append_column("Controls whether internal opening book is used")
+        .append_column(std::format("{}", ownBook.get_default_value()))
+        .append_column(std::format("{}", ownBook.get_value()));
 
-    println(
-        "{} - button - press to clear the transposition table",
-        clearTT.get_name());
+    table.new_row()
+        .append_column(clearTT.get_name())
+        .append_column("Button")
+        .append_column("Press to clear the transposition table");
+
+    println("{}",
+        table.to_string("", "|", "\n"));
 }
 
 } // namespace ben_bot
