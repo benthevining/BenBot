@@ -26,7 +26,17 @@ add_executable (ben_bot)
 
 target_link_libraries (ben_bot PRIVATE libbenbot::libbenbot ben_bot::resources)
 
-target_sources (ben_bot PRIVATE main.cpp)
+file (GLOB_RECURSE ben_bot_sources LIST_DIRECTORIES false
+      CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/src/*.hpp" "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp"
+)
+
+target_sources (ben_bot PRIVATE ${ben_bot_sources})
+
+target_include_directories (ben_bot PRIVATE "${CMAKE_CURRENT_LIST_DIR}/src")
+
+source_group (TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${ben_bot_sources})
+
+#
 
 set (lichess_bot_dir "${PROJECT_SOURCE_DIR}/lichess-bot")
 
