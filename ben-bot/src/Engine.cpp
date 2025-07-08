@@ -119,19 +119,20 @@ void Engine::print_help() const
 
     TextTable table;
 
-    // clang-format off
     table
-        .append_column("Command").append_column("Notes")
+        .append_column("Command")
+        .append_column("Notes")
         .new_row()
-        .append_column("loadbook <path>").append_column("Reads the given JSON file into the engine's openings database. See book.json in the ben-bot source code for an example of the format.")
+        .append_column("loadbook <path>")
+        .append_column("Reads the given JSON file into the engine's openings database. See book.json in the ben-bot source code for an example of the format.")
         .new_row()
-        .append_column("options").append_column("Dump current UCI option values")
+        .append_column("options")
+        .append_column("Dump current UCI option values")
         .new_row()
-        .append_column("help").append_column("Display this text");
-    // clang-format on
+        .append_column("help")
+        .append_column("Display this text");
 
-    println("{}",
-        table.to_string("", "|", "\n"));
+    println("{}", table.to_string());
 }
 
 void Engine::print_options() const
@@ -158,8 +159,7 @@ void Engine::print_options() const
         .append_column("Button")
         .append_column("Press to clear the transposition table");
 
-    println("{}",
-        table.to_string("", "|", "\n"));
+    println("{}", table.to_string());
 }
 
 } // namespace ben_bot

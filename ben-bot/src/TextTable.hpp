@@ -40,9 +40,9 @@ struct TextTable final {
 
     // concatenates all the rows in the table into a single string
     [[nodiscard]] string to_string(
-        string_view rowPrefix,
-        string_view columnSeparator,
-        string_view rowSuffix) const;
+        string_view rowPrefix       = "",
+        string_view columnSeparator = "|",
+        string_view rowSuffix       = "\n") const;
 
 private:
     struct Row final {
