@@ -175,11 +175,11 @@ namespace {
         if (interrupter.should_abort())
             return eval::DRAW;
 
-        if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot))
-            return cutoff.value();
-
         if (currentPosition.is_draw())
             return eval::DRAW;
+
+        if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot))
+            return cutoff.value();
 
         if (currentPosition.is_checkmate())
             return checkmate_score(plyFromRoot);
@@ -232,14 +232,14 @@ namespace {
         if (interrupter.should_abort())
             return eval::DRAW;
 
-        if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot))
-            return cutoff.value();
-
         // it's important that we do this check before probing the transposition table,
         // because the table only contains static evaluations and doesn't consider game
         // history, so its stored evaluations can't detect threefold repetition draws
         if (currentPosition.is_threefold_repetition())
             return eval::DRAW;
+
+        if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot))
+            return cutoff.value();
 
         // check if this position has been searched before to at
         // least this depth and within these bounds for non-PV nodes
