@@ -376,7 +376,14 @@ void Context::search()
 
         std::optional<Move> bestMoveThisDepth;
 
+        size_t moveNum { 0uz }; // replace with std::enumerate once Clang supports it
+
         for (const auto& move : options.movesToSearch | std::views::take(numMovesToSearch)) {
+            callbacks.curr_move({ .move = move,
+                .number                 = moveNum });
+
+            ++moveNum;
+
             const auto score = -alpha_beta(
                 bounds.invert(),
                 game::after_move(options.position, move),
