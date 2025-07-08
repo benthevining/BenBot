@@ -28,13 +28,15 @@
 
 namespace ben_bot {
 
+using std::string_view;
+
 namespace uci    = chess::uci;
 namespace search = chess::search;
 
 class Engine final : public uci::EngineBase {
-    [[nodiscard]] std::string_view get_name() const override { return "BenBot"; }
+    [[nodiscard]] string_view get_name() const override { return "BenBot"; }
 
-    [[nodiscard]] std::string_view get_author() const override { return "Ben Vining"; }
+    [[nodiscard]] string_view get_author() const override { return "Ben Vining"; }
 
     void new_game(bool firstCall) override;
 
@@ -48,7 +50,7 @@ class Engine final : public uci::EngineBase {
 
     [[nodiscard]] std::span<uci::Option*> get_options() override { return options; }
 
-    void handle_custom_command(std::string_view command, std::string_view options) override;
+    void handle_custom_command(string_view command, string_view options) override;
 
     void load_book_file(const std::filesystem::path& file);
 

@@ -18,8 +18,10 @@
 
 namespace ben_bot {
 
-[[nodiscard]] std::string_view get_opening_book_json_text();
+using std::string_view;
 
-[[nodiscard, gnu::const]] std::string_view get_version_string();
+[[nodiscard]] string_view get_opening_book_json_text();
+
+[[nodiscard, gnu::const]] string_view get_version_string();
 
 } // namespace ben_bot

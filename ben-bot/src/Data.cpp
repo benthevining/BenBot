@@ -21,15 +21,15 @@ CMRC_DECLARE(ben_bot_resources);
 
 namespace ben_bot {
 
-std::string_view get_opening_book_json_text()
+string_view get_opening_book_json_text()
 {
     const auto bookFile = cmrc::ben_bot_resources::get_filesystem()
                               .open("book.json");
 
-    return std::string_view { bookFile }; // NOLINT
+    return string_view { bookFile }; // NOLINT
 }
 
-std::string_view get_version_string()
+string_view get_version_string()
 {
     return VERSION_STRING;
 }

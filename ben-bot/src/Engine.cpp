@@ -29,8 +29,10 @@ namespace ben_bot {
 
 using std::println;
 
+using Path = std::filesystem::path;
+
 namespace {
-    [[nodiscard]] std::string load_file_as_string(const std::filesystem::path& file)
+    [[nodiscard]] std::string load_file_as_string(const Path& file)
     {
         std::ifstream input { file };
 
@@ -58,10 +60,10 @@ void Engine::new_game(const bool firstCall)
 
 // this function implements non-standard UCI commands that we support
 void Engine::handle_custom_command(
-    const std::string_view command, const std::string_view options)
+    const string_view command, const string_view options)
 {
     if (command == "loadbook") {
-        load_book_file(std::filesystem::path { options });
+        load_book_file(Path { options });
         return;
     }
 
@@ -79,7 +81,7 @@ void Engine::handle_custom_command(
     println("Type 'help' for a list of supported commands");
 }
 
-void Engine::load_book_file(const std::filesystem::path& file)
+void Engine::load_book_file(const Path& file)
 try {
     wait();
 
