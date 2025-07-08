@@ -97,6 +97,14 @@ struct EngineBase {
     /** Called when the "debug" command is received. */
     virtual void set_debug([[maybe_unused]] bool shouldDebug) { }
 
+    /** Any command input string not recognized as a standard UCI command will invoke this function.
+        Engines can implement custom commands by overriding this function. The "command" argument
+        will be the first word of the input command line.
+     */
+    virtual void handle_custom_command(
+        [[maybe_unused]] string_view command,
+        [[maybe_unused]] string_view options) { }
+
     /** Runs the engine's event loop.
         This function blocks while reading from stdin. The calling thread becomes the
         engine's "main thread".

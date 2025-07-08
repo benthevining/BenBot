@@ -100,11 +100,14 @@ void EngineBase::handle_command(std::string_view command)
         return;
     }
 
-    if (firstWord == "debug") {
-        rest = trim(rest);
+    rest = trim(rest);
 
+    if (firstWord == "debug") {
         set_debug(rest == "on");
+        return;
     }
+
+    handle_custom_command(firstWord, rest);
 }
 
 void EngineBase::loop()
