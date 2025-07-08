@@ -15,6 +15,7 @@
 #include "Engine.hpp"
 #include <cstdlib>
 #include <exception>
+#include <iostream>
 #include <print>
 
 int main(
@@ -27,9 +28,9 @@ try {
 
     return EXIT_SUCCESS;
 } catch (const std::exception& exception) {
-    std::println("{}", exception.what());
+    std::println(std::cerr, "{}", exception.what());
     return EXIT_FAILURE;
 } catch (...) {
-    std::println("Error: unknown exception thrown!");
+    std::println(std::cerr, "Error: unknown exception thrown!");
     return EXIT_FAILURE;
 }

@@ -18,6 +18,7 @@
 #include <filesystem>
 #include <fstream>
 #include <ios>
+#include <iostream>
 #include <iterator>
 #include <libchess/moves/Magics.hpp>
 #include <print>
@@ -26,19 +27,7 @@
 
 namespace chess {
 
-void BenBotEngine::new_game()
-{
-    moves::magics::init();
-
-    searcher.context.reset(); // clears transposition table
-
-    if (! bookLoaded) { // load embedded book data into opening book data structure
-        searcher.context.openingBook.book.add_from_json(
-            get_opening_book_json_text());
-
-        bookLoaded = true;
-    }
-}
+using std::println;
 
 namespace {
     [[nodiscard]] std::string load_file_as_string(const std::filesystem::path& file)
@@ -54,7 +43,19 @@ namespace {
     }
 } // namespace
 
-using std::println;
+void BenBotEngine::new_game()
+{
+    moves::magics::init();
+
+    searcher.context.reset(); // clears transposition table
+
+    if (! bookLoaded) { // load embedded book data into opening book data structure
+        searcher.context.openingBook.book.add_from_json(
+            get_opening_book_json_text());
+
+        bookLoaded = true;
+    }
+}
 
 // this function implements non-standard UCI commands that we support
 void BenBotEngine::handle_custom_command(
@@ -75,7 +76,7 @@ void BenBotEngine::handle_custom_command(
         return;
     }
 
-    println("Unknown UCI command: {}", command);
+    println(std::cerr, "Unknown UCI command: {}", command);
     println("Type 'help' for a list of supported commands");
 }
 
@@ -86,11 +87,11 @@ try {
     searcher.context.openingBook.book.add_from_json(
         load_file_as_string(file));
 } catch (const std::exception& except) {
-    println(
+    println(std::cerr,
         "Error reading from opening book file at path: {}",
         file.string());
 
-    println("{}", except.what());
+    println(std::cerr, "{}", except.what());
 }
 
 void BenBotEngine::print_help() const
