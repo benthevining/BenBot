@@ -25,6 +25,9 @@
 #pragma once
 
 #include <cassert>
+#include <compare>
+#include <cstddef> // IWYU pragma: keep - for size_t
+#include <libchess/board/BitboardIndex.hpp>
 #include <libchess/board/Distances.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Rank.hpp>
@@ -100,6 +103,29 @@ struct Move final {
 
     constexpr bool operator==(const Move&) const noexcept = default;
 };
+
+/** Provides a strong ordering of moves. This can be useful for sorting lists of moves.
+    @ingroup moves
+    @relates Move
+ */
+[[nodiscard, gnu::const]] inline std::strong_ordering operator<=>(const Move& first, const Move& second) noexcept
+{
+    auto get_hash = [](const Move& move) {
+        using std::size_t;
+
+        static constexpr auto MAX_SQUARE = static_cast<size_t>(board::NUM_SQUARES);
+
+        auto value = static_cast<size_t>(move.from.index())
+                   + (static_cast<size_t>(move.to.index()) * MAX_SQUARE);
+
+        if (move.promotedType.has_value())
+            value += static_cast<size_t>(std::to_underlying(*move.promotedType)) * MAX_SQUARE * MAX_SQUARE;
+
+        return value;
+    };
+
+    return get_hash(first) <=> get_hash(second);
+}
 
 /// @ingroup moves
 /// @{

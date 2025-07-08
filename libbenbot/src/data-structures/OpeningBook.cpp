@@ -64,7 +64,7 @@ void OpeningBook::add_from_json(const std::string_view json)
 
     // prune duplicate moves
     for (auto& moves : std::views::values(lines)) {
-        // std::ranges::sort(moves);
+        std::ranges::sort(moves);
 
         const auto [first, last] = std::ranges::unique(moves);
 

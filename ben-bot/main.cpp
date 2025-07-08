@@ -20,6 +20,7 @@
 #include <libbenbot/search/Search.hpp>
 #include <libbenbot/search/Thread.hpp>
 #include <libchess/game/Position.hpp>
+#include <libchess/moves/Magics.hpp>
 #include <libchess/uci/CommandParsing.hpp>
 #include <libchess/uci/EngineBase.hpp>
 #include <libchess/uci/Options.hpp>
@@ -39,6 +40,8 @@ class BenBotEngine final : public uci::EngineBase {
 
     void new_game() override
     {
+        moves::magics::init();
+
         searcher.context.reset(); // clears transposition table
 
         if (! bookLoaded) { // load embedded book data into opening book data structure
