@@ -47,11 +47,11 @@ namespace {
 
 void Engine::new_game(const bool firstCall)
 {
-    chess::moves::magics::init();
-
     searcher.context.reset(); // clears transposition table
 
     if (firstCall) {
+        chess::moves::magics::init();
+
         // load embedded book data into opening book data structure
         searcher.context.openingBook.book.add_from_json(
             get_opening_book_json_text());
