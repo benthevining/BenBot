@@ -13,13 +13,13 @@
  */
 
 #include "Data.hpp"
-#include "Version.hpp"
+#include "BenBotVersion.hpp"
 #include <cmrc/cmrc.hpp>
 #include <string_view>
 
 CMRC_DECLARE(ben_bot_resources);
 
-namespace chess {
+namespace ben_bot {
 
 std::string_view get_opening_book_json_text()
 {
@@ -34,4 +34,4 @@ std::string_view get_version_string()
     return VERSION_STRING;
 }
 
-} // namespace chess
+} // namespace ben_bot

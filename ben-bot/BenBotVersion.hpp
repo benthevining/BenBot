@@ -18,10 +18,10 @@
 
 #include <string_view>
 
-namespace chess {
+namespace ben_bot {
 
 static constexpr std::string_view VERSION_STRING {
     "@libchess_VERSION@"
 };
 
-}
+} // namespace ben_bot

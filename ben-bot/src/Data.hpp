@@ -16,10 +16,10 @@
 
 #include <string_view>
 
-namespace chess {
+namespace ben_bot {
 
 [[nodiscard]] std::string_view get_opening_book_json_text();
 
 [[nodiscard, gnu::const]] std::string_view get_version_string();
 
-} // namespace chess
+} // namespace ben_bot

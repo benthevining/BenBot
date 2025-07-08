@@ -22,7 +22,7 @@ int main(
     [[maybe_unused]] const int    argc,
     [[maybe_unused]] const char** argv)
 try {
-    chess::BenBotEngine engine;
+    ben_bot::Engine engine;
 
     engine.loop();
 

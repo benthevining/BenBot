@@ -25,7 +25,7 @@
 #include <string>
 #include <string_view>
 
-namespace chess {
+namespace ben_bot {
 
 using std::println;
 
@@ -43,9 +43,9 @@ namespace {
     }
 } // namespace
 
-void BenBotEngine::new_game(const bool firstCall)
+void Engine::new_game(const bool firstCall)
 {
-    moves::magics::init();
+    chess::moves::magics::init();
 
     searcher.context.reset(); // clears transposition table
 
@@ -57,7 +57,7 @@ void BenBotEngine::new_game(const bool firstCall)
 }
 
 // this function implements non-standard UCI commands that we support
-void BenBotEngine::handle_custom_command(
+void Engine::handle_custom_command(
     const std::string_view command, const std::string_view options)
 {
     if (command == "loadbook") {
@@ -79,7 +79,7 @@ void BenBotEngine::handle_custom_command(
     println("Type 'help' for a list of supported commands");
 }
 
-void BenBotEngine::load_book_file(const std::filesystem::path& file)
+void Engine::load_book_file(const std::filesystem::path& file)
 try {
     wait();
 
@@ -93,7 +93,7 @@ try {
     println(std::cerr, "{}", except.what());
 }
 
-void BenBotEngine::print_help() const
+void Engine::print_help() const
 {
     println(
         "{}, version {}, by {}",
@@ -110,7 +110,7 @@ void BenBotEngine::print_help() const
         "help            - displays this text");
 }
 
-void BenBotEngine::print_options() const
+void Engine::print_options() const
 {
     const auto& ownBook = searcher.context.openingBook.enabled;
 
@@ -123,4 +123,4 @@ void BenBotEngine::print_options() const
         clearTT.get_name());
 }
 
-} // namespace chess
+} // namespace ben_bot

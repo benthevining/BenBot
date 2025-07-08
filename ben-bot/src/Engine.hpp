@@ -26,16 +26,19 @@
 #include <string_view>
 #include <utility>
 
-namespace chess {
+namespace ben_bot {
 
-class BenBotEngine final : public uci::EngineBase {
+namespace uci    = chess::uci;
+namespace search = chess::search;
+
+class Engine final : public uci::EngineBase {
     [[nodiscard]] std::string_view get_name() const override { return "BenBot"; }
 
     [[nodiscard]] std::string_view get_author() const override { return "Ben Vining"; }
 
     void new_game(bool firstCall) override;
 
-    void set_position(const game::Position& pos) override { searcher.set_position(pos); }
+    void set_position(const chess::game::Position& pos) override { searcher.set_position(pos); }
 
     void go(uci::GoCommandOptions&& opts) override { searcher.start(std::move(opts)); }
 
@@ -66,4 +69,4 @@ class BenBotEngine final : public uci::EngineBase {
     };
 };
 
-} // namespace chess
+} // namespace ben_bot
