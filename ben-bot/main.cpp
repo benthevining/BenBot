@@ -37,7 +37,9 @@
 CMRC_DECLARE(ben_bot_resources);
 
 namespace {
-[[nodiscard]] std::string load_file_as_string(const std::filesystem::path& file)
+using Path = std::filesystem::path;
+
+[[nodiscard]] std::string load_file_as_string(const Path& file)
 {
     std::ifstream input { file };
 
@@ -80,7 +82,7 @@ class BenBotEngine final : public uci::EngineBase {
     void handle_custom_command(const string_view command, const string_view options) override
     {
         if (command == "loadbook") {
-            load_book_file(std::filesystem::path { options });
+            load_book_file(Path { options });
             return;
         }
 
@@ -103,7 +105,7 @@ class BenBotEngine final : public uci::EngineBase {
 
     [[nodiscard]] std::span<uci::Option*> get_options() override { return options; }
 
-    void load_book_file(const std::filesystem::path& file)
+    void load_book_file(const Path& file)
     try {
         wait();
 
@@ -117,7 +119,7 @@ class BenBotEngine final : public uci::EngineBase {
         println("{}", except.what());
     }
 
-    void print_help()
+    void print_help() const
     {
         println(
             "{} by {}",
