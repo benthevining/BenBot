@@ -38,13 +38,6 @@ struct TextTable final {
 
     [[nodiscard]] size_t num_columns() const;
 
-    // returns a set of strings, one for each row, which have been
-    // padded and formatted to align vertically
-    [[nodiscard]] std::vector<string> get_rows(
-        string_view rowPrefix,
-        string_view columnSeparator,
-        string_view rowSuffix) const;
-
     // concatenates all the rows in the table into a single string
     [[nodiscard]] string to_string(
         string_view rowPrefix,

@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <format>
 #include <span>
+#include <string>
 #include <vector>
 
 namespace ben_bot {
@@ -42,36 +43,21 @@ TextTable& TextTable::new_row()
     return *this;
 }
 
-std::vector<string> TextTable::get_rows(
-    const string_view rowPrefix,
-    const string_view columnSeparator,
-    const string_view rowSuffix) const
-{
-    std::vector<string> result;
-
-    result.reserve(rows.size());
-
-    const auto widths = get_column_widths();
-
-    for (const auto& row : rows) {
-        result.emplace_back(
-            std::format(
-                "{}{}{}",
-                rowPrefix, row.to_string(columnSeparator, widths), rowSuffix));
-    }
-
-    return result;
-}
-
 string TextTable::to_string(
     const string_view rowPrefix,
     const string_view columnSeparator,
     const string_view rowSuffix) const
 {
+    const auto widths = get_column_widths();
+
     string result;
 
-    for (const auto& row : get_rows(rowPrefix, columnSeparator, rowSuffix))
-        result.append(row);
+    for (const auto& row : rows) {
+        result.append(
+            std::format(
+                "{}{}{}",
+                rowPrefix, row.to_string(columnSeparator, widths), rowSuffix));
+    }
 
     return result;
 }
@@ -81,7 +67,7 @@ size_t TextTable::num_columns() const
     size_t maxColummns { 0uz };
 
     for (const auto& row : rows)
-        maxColummns = std::max(maxColummns, row.get_columns().size());
+        maxColummns = std::max(maxColummns, row.get_columns().size()); // cppcheck-suppress useStlAlgorithm
 
     return maxColummns;
 }
