@@ -12,24 +12,20 @@
  * ======================================================================================
  */
 
-#include "Engine.hpp"
-#include <cstdlib>
-#include <exception>
-#include <print>
+#include "Resources.hpp"
+#include <cmrc/cmrc.hpp>
+#include <string_view>
 
-int main(
-    [[maybe_unused]] const int    argc,
-    [[maybe_unused]] const char** argv)
-try {
-    chess::BenBotEngine engine;
+CMRC_DECLARE(ben_bot_resources);
 
-    engine.loop();
+namespace chess {
 
-    return EXIT_SUCCESS;
-} catch (const std::exception& exception) {
-    std::println("{}", exception.what());
-    return EXIT_FAILURE;
-} catch (...) {
-    std::println("Error: unknown exception thrown!");
-    return EXIT_FAILURE;
+std::string_view get_opening_book_json_text()
+{
+    const auto bookFile = cmrc::ben_bot_resources::get_filesystem()
+                              .open("book.json");
+
+    return std::string_view { bookFile }; // NOLINT
 }
+
+} // namespace chess

@@ -12,8 +12,8 @@
  * ======================================================================================
  */
 
-#include "Engine.hpp" // NOLINT(build/include_subdir)
-#include <cmrc/cmrc.hpp>
+#include "Engine.hpp"
+#include "Resources.hpp"
 #include <exception>
 #include <filesystem>
 #include <fstream>
@@ -24,8 +24,6 @@
 #include <string>
 #include <string_view>
 
-CMRC_DECLARE(ben_bot_resources);
-
 namespace chess {
 
 void BenBotEngine::new_game()
@@ -35,10 +33,8 @@ void BenBotEngine::new_game()
     searcher.context.reset(); // clears transposition table
 
     if (! bookLoaded) { // load embedded book data into opening book data structure
-        const auto bookFile = cmrc::ben_bot_resources::get_filesystem()
-                                  .open("book.json");
-
-        searcher.context.openingBook.book.add_from_json(std::string_view { bookFile });
+        searcher.context.openingBook.book.add_from_json(
+            get_opening_book_json_text());
 
         bookLoaded = true;
     }

@@ -12,24 +12,12 @@
  * ======================================================================================
  */
 
-#include "Engine.hpp"
-#include <cstdlib>
-#include <exception>
-#include <print>
+#pragma once
 
-int main(
-    [[maybe_unused]] const int    argc,
-    [[maybe_unused]] const char** argv)
-try {
-    chess::BenBotEngine engine;
+#include <string_view>
 
-    engine.loop();
+namespace chess {
 
-    return EXIT_SUCCESS;
-} catch (const std::exception& exception) {
-    std::println("{}", exception.what());
-    return EXIT_FAILURE;
-} catch (...) {
-    std::println("Error: unknown exception thrown!");
-    return EXIT_FAILURE;
+[[nodiscard]] std::string_view get_opening_book_json_text();
+
 }
