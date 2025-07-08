@@ -27,7 +27,8 @@
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <functional>
-#include <libbenbot/search/TranspositionTable.hpp>
+#include <libbenbot/data-structures/OpeningBook.hpp>
+#include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libchess/moves/Move.hpp>
 #include <limits>
 #include <optional>
@@ -196,6 +197,9 @@ struct Context final {
         This object can only be safely mutated when no search is executing.
      */
     Options options;
+
+    /** The opening book used for this search. */
+    OpeningBookContext openingBook;
 
     /** Performs a search.
         Results will be propagated via the ``callbacks`` that have been

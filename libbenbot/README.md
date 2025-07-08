@@ -12,3 +12,7 @@ Include style is:
 ### Targets
 
 * `libbenbot::libbenbot`: library target
+
+## Dependencies
+
+* [nlohmann_json](https://json.nlohmann.me/), used for deserializing opening book from JSON. Used as private dependency only.

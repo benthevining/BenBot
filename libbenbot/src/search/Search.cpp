@@ -20,9 +20,9 @@
 #include <cmath>   // IWYU pragma: keep - for std::abs()
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <iterator>
+#include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/search/Search.hpp>
-#include <libbenbot/search/TranspositionTable.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/uci/CommandParsing.hpp>
@@ -340,6 +340,18 @@ void Context::search()
     const ActiveFlagSetter activeFlagRAII { activeFlag };
 
     Interrupter interrupter { exitFlag, options.searchTime };
+
+    if (const auto bookMove = openingBook.get_move(options.position)) {
+        const auto eval = eval::evaluate(game::after_move(options.position, *bookMove));
+
+        callbacks.search_complete({ .duration = interrupter.get_search_duration(),
+            .depth                            = 1uz,
+            .score                            = eval,
+            .bestMove                         = *bookMove,
+            .nodesSearched                    = 0uz });
+
+        return;
+    }
 
     // if the movesToSearch was empty, then we search all legal moves
     if (options.movesToSearch.empty()) {
