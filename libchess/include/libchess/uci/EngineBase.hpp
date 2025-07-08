@@ -90,7 +90,9 @@ struct EngineBase {
     virtual void go([[maybe_unused]] GoCommandOptions&& opts) { }
 
     /** Called after any option has changed.
-        The main thread will first call ``parse()`` for each option, and then call this function.
+        The main thread will first call ``parse()`` for each option, and then call this function
+        if any options have been changed. This function will not be called if an unrecognized
+        option name was specified to ``setoption``.
      */
     virtual void options_changed() { }
 
