@@ -31,6 +31,7 @@
 #include <libchess/moves/Move.hpp>
 #include <limits>
 #include <optional>
+#include <utility>
 #include <vector>
 
 namespace chess::game {
@@ -158,11 +159,16 @@ struct Callbacks final {
     @ingroup search
  */
 struct Context final {
-    /** The options to use for the search. */
-    Options options;
+    /** Creates a search context with a specified set of result callbacks. */
+    explicit Context(Callbacks&& callbacksToUse)
+        : callbacks { std::move(callbacksToUse) }
+    {
+    }
 
-    /** The callback functions that will be invoked with search results. */
-    Callbacks callbacks;
+    /** The options to use for the search.
+        This object can only be safely mutated when no search is executing.
+     */
+    Options options;
 
     /** Performs a search.
         Results will be propagated via the ``callbacks`` that have been
@@ -210,6 +216,8 @@ private:
     std::atomic_bool activeFlag { false };
 
     TranspositionTable transTable;
+
+    Callbacks callbacks;
 };
 
 } // namespace chess::search

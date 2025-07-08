@@ -27,13 +27,6 @@
 namespace chess {
 
 class BenBotEngine final : public uci::EngineBase {
-public:
-    BenBotEngine()
-    {
-        searcher.context.callbacks = search::Callbacks::make_uci_handler();
-    }
-
-private:
     [[nodiscard]] std::string_view get_name() const override { return "BenBot"; }
 
     [[nodiscard]] std::string_view get_author() const override { return "Ben Vining"; }
@@ -48,7 +41,7 @@ private:
 
     void wait() override { searcher.context.wait(); }
 
-    search::Thread searcher;
+    search::Thread searcher { search::Callbacks::make_uci_handler() };
 };
 
 } // namespace chess

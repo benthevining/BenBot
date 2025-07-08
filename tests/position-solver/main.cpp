@@ -52,15 +52,16 @@ try {
 
     namespace search = chess::search;
 
-    search::Context context;
+    search::Context context {
+        search::Callbacks {
+            .onSearchComplete = [&context](const search::Callbacks::Result& result) {
+                std::println("{}",
+                    chess::notation::to_alg(context.options.position, result.bestMove));
+            } }
+    };
 
     context.options.position = chess::notation::from_fen(fenString);
     context.options.depth    = chess::util::int_from_string(depthString, 4uz);
-
-    context.callbacks.onSearchComplete = [&context](const search::Callbacks::Result& result) {
-        std::println("{}",
-            chess::notation::to_alg(context.options.position, result.bestMove));
-    };
 
     context.search();
 

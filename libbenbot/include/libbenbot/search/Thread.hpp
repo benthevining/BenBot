@@ -36,7 +36,13 @@ namespace chess::search {
     @ingroup search
  */
 struct Thread final {
-    Thread() = default;
+    /** Creates a searcher thread with a specified set of result callbacks.
+        Note that the result callbacks will be invoked on the background thread.
+     */
+    explicit Thread(Callbacks&& callbacksToUse)
+        : context { std::move(callbacksToUse) }
+    {
+    }
 
     ~Thread()
     {
