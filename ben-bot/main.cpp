@@ -68,8 +68,14 @@ class BenBotEngine final : public uci::EngineBase {
 
     bool bookLoaded { false };
 
-    std::array<uci::Option*, 1uz> options {
-        &searcher.context.openingBook.enabled
+    uci::Action clearTT {
+        "Clear Hash",
+        [this] { searcher.context.reset(); }
+    };
+
+    std::array<uci::Option*, 2uz> options {
+        &searcher.context.openingBook.enabled,
+        &clearTT
     };
 };
 
