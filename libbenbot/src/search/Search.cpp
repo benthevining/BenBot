@@ -427,6 +427,7 @@ void Context::search()
             .nodesSearched                       = stats.nodesSearched });
 
         if (! infinite) {
+            // if we've hit our node limit, don't do a deeper iteration
             if (options.maxNodes.has_value()
                 && stats.nodesSearched >= *options.maxNodes) {
                 break;
@@ -451,13 +452,6 @@ void Context::search()
     } // iterative deepening loop end
 
     assert(bestMove.has_value());
-
-    // store the root position evaluation / best move for move ordering of the next search() invocation
-    // the evaluation is the evaluation of the position resulting from playing the best move
-    transTable.store(options.position, { .searchedDepth = depth,
-                                           .eval        = to_tt_score(bestScore),
-                                           .evalType    = EvalType::Exact,
-                                           .bestMove    = bestMove });
 
     callbacks.search_complete({ .duration = interrupter.get_search_duration(),
         .depth                            = depth,
