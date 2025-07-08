@@ -31,16 +31,19 @@
 #include <span>
 #include <stdexcept>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace chess {
 
+using std::chrono::seconds;
 using std::println;
+using std::size_t;
 
 struct PerftOptions final {
     game::Position startingPosition;
 
-    std::size_t depth { 1uz };
+    size_t depth { 1uz };
 
     std::optional<std::filesystem::path> jsonOutputPath;
 };
@@ -64,24 +67,25 @@ namespace {
 
         size_t stalemates { 0uz };
 
-        std::vector<std::pair<moves::Move, size_t>> rootNodes;
+        // pair of move, num child nodes
+        using RootNodeInfo = std::pair<moves::Move, size_t>;
 
-        PerftResult& operator+=(const PerftResult& rhs) noexcept;
+        std::vector<RootNodeInfo> rootNodes;
+
+        PerftResult& operator+=(const PerftResult& rhs) noexcept
+        {
+            nodes += rhs.nodes;
+            captures += rhs.captures;
+            enPassantCaptures += rhs.enPassantCaptures;
+            castles += rhs.castles;
+            promotions += rhs.promotions;
+            checks += rhs.checks;
+            checkmates += rhs.checkmates;
+            stalemates += rhs.stalemates;
+
+            return *this;
+        }
     };
-
-    PerftResult& PerftResult::operator+=(const PerftResult& rhs) noexcept
-    {
-        nodes += rhs.nodes;
-        captures += rhs.captures;
-        enPassantCaptures += rhs.enPassantCaptures;
-        castles += rhs.castles;
-        promotions += rhs.promotions;
-        checks += rhs.checks;
-        checkmates += rhs.checkmates;
-        stalemates += rhs.stalemates;
-
-        return *this;
-    }
 
     void print_help(const std::string_view programName)
     {
@@ -139,7 +143,7 @@ namespace {
     void write_json_file(
         const PerftOptions& options,
         const PerftResult&  result,
-        const auto          wallTime)
+        const seconds       wallTime)
     {
         if (! options.jsonOutputPath.has_value())
             return;
@@ -183,7 +187,7 @@ namespace {
 
     void print_results(
         const PerftResult& result,
-        const auto         wallTime)
+        const seconds      wallTime)
     {
         println("Nodes: {}", result.nodes);
         println("Captures: {}", result.captures);
@@ -199,7 +203,9 @@ namespace {
     }
 
     template <bool IsRoot = true>
-    [[nodiscard]] PerftResult perft(const size_t depth, const game::Position& startingPosition = {}) // NOLINT(readability-function-cognitive-complexity)
+    [[nodiscard]] PerftResult perft(
+        const size_t          depth,
+        const game::Position& startingPosition = {}) // NOLINT(readability-function-cognitive-complexity)
     {
         if (depth == 0uz)
             return { .nodes = 1uz };
@@ -264,7 +270,7 @@ namespace {
 
         const auto endTime = Clock::now();
 
-        const auto wallTime = std::chrono::duration_cast<std::chrono::seconds>(endTime - startTime);
+        const auto wallTime = std::chrono::duration_cast<seconds>(endTime - startTime);
 
         write_json_file(options, result, wallTime);
 

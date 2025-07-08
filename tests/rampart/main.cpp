@@ -22,7 +22,6 @@
 #include <filesystem>
 #include <fstream>
 #include <iterator>
-#include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/Algebraic.hpp>
 #include <libchess/notation/FEN.hpp>
