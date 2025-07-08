@@ -121,6 +121,12 @@ struct Callbacks final {
 
         /** The best move found in the position. */
         Move bestMove;
+
+        /** The total number of nodes visited during this search. For depths greater
+            than 1, this value includes nodes visited in shallower depths of the
+            iterative deepening loop.
+         */
+        size_t nodesSearched { 0uz };
     };
 
     /** Function type that accepts a single Result argument. */

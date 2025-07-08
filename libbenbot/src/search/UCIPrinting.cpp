@@ -12,6 +12,10 @@
  * ======================================================================================
  */
 
+#include <cassert>
+#include <chrono>
+#include <cmath>
+#include <cstddef> // IWYU pragma: keep - for size_t
 #include <format>
 #include <iostream>
 #include <libbenbot/search/Search.hpp>
@@ -22,6 +26,8 @@
 namespace chess::search {
 
 namespace {
+
+    using std::size_t;
 
     [[nodiscard]] std::string get_score_string(const int score)
     {
@@ -44,12 +50,24 @@ namespace {
         return std::format("mate {}", mateVal);
     }
 
+    [[nodiscard]] size_t get_nodes_per_second(const Callbacks::Result& res)
+    {
+        const auto seconds = static_cast<double>(res.duration.count()) * 0.001;
+
+        assert(seconds > 0.);
+
+        const auto nps = static_cast<double>(res.nodesSearched) / seconds;
+
+        return static_cast<size_t>(std::round(nps));
+    }
+
     template <bool PrintBestMove>
     void print_uci_info(const Callbacks::Result& res)
     {
         std::println(
-            "info depth {} score {} time {}",
-            res.depth, get_score_string(res.score), res.duration.count());
+            "info depth {} score {} time {} nodes {} nps {}",
+            res.depth, get_score_string(res.score), res.duration.count(),
+            res.nodesSearched, get_nodes_per_second(res));
 
         if constexpr (PrintBestMove) {
             std::println("bestmove {}", notation::to_uci(res.bestMove));

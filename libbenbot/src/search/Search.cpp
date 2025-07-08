@@ -160,13 +160,18 @@ namespace {
         }
     };
 
+    struct Stats final {
+        size_t nodesSearched { 0uz };
+    };
+
     // searches only captures, with no depth limit, to try to
     // improve the stability of the static evaluation function
     [[nodiscard]] int quiescence(
         Bounds          bounds,
         const Position& currentPosition,
         const size_t    plyFromRoot, // increases each iteration (recursion)
-        Interrupter&    interrupter)
+        Interrupter&    interrupter,
+        Stats&          stats)
     {
         if (interrupter.should_abort())
             return eval::DRAW;
@@ -198,10 +203,12 @@ namespace {
             evaluation = -quiescence(
                 bounds.invert(),
                 game::after_move(currentPosition, move),
-                plyFromRoot + 1uz, interrupter);
+                plyFromRoot + 1uz, interrupter, stats);
 
             if (interrupter.was_aborted())
                 return eval::DRAW;
+
+            ++stats.nodesSearched;
 
             if (evaluation >= bounds.beta)
                 return bounds.beta;
@@ -220,7 +227,8 @@ namespace {
         const size_t        depth,       // this is the depth left to be searched - decreases each iteration, and when this reaches 0, we call the quiescence search
         const size_t        plyFromRoot, // increases each iteration
         TranspositionTable& transTable,
-        Interrupter&        interrupter)
+        Interrupter&        interrupter,
+        Stats&              stats)
     {
         if (interrupter.should_abort())
             return eval::DRAW;
@@ -269,11 +277,13 @@ namespace {
             const auto newPosition = after_move(currentPosition, move);
 
             const auto eval = depth > 0uz
-                                ? -alpha_beta(bounds.invert(), newPosition, depth - 1uz, plyFromRoot + 1uz, transTable, interrupter)
-                                : -quiescence(bounds.invert(), newPosition, plyFromRoot + 1uz, interrupter);
+                                ? -alpha_beta(bounds.invert(), newPosition, depth - 1uz, plyFromRoot + 1uz, transTable, interrupter, stats)
+                                : -quiescence(bounds.invert(), newPosition, plyFromRoot + 1uz, interrupter, stats);
 
             if (interrupter.should_abort())
                 return eval::DRAW;
+
+            ++stats.nodesSearched;
 
             if (eval >= bounds.beta) {
                 transTable.store(
@@ -343,6 +353,8 @@ void Context::search()
 
     const bool infinite = ! options.is_bounded();
 
+    Stats stats;
+
     std::optional<Move> bestMove;
 
     int bestScore { 0 };
@@ -368,7 +380,7 @@ void Context::search()
             const auto score = -alpha_beta(
                 bounds.invert(),
                 game::after_move(options.position, move),
-                depth, 1uz, transTable, interrupter);
+                depth, 1uz, transTable, interrupter, stats);
 
             if (interrupter.was_aborted())
                 break;
@@ -396,7 +408,8 @@ void Context::search()
         callbacks.iteration_complete({ .duration = interrupter.get_search_duration(),
             .depth                               = depth,
             .score                               = bestScore,
-            .bestMove                            = bestMove.value() });
+            .bestMove                            = bestMove.value(),
+            .nodesSearched                       = stats.nodesSearched });
 
         if (! infinite) {
             // if we've found a mate, don't do a deeper iteration
@@ -429,7 +442,8 @@ void Context::search()
     callbacks.search_complete({ .duration = interrupter.get_search_duration(),
         .depth                            = depth,
         .score                            = bestScore,
-        .bestMove                         = bestMove.value() });
+        .bestMove                         = bestMove.value(),
+        .nodesSearched                    = stats.nodesSearched });
 }
 
 void Context::wait() const
