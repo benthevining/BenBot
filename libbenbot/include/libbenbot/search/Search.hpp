@@ -141,6 +141,9 @@ struct Callbacks final {
      */
     Callback onIteration;
 
+    /** When a move from the opening book is played, this function object is called. */
+    std::function<void(const Move&)> onOpeningBookHit;
+
     /** Can be safely called without checking if ``onSearchComplete`` is null. */
     void search_complete(const Result& result) const
     {
@@ -153,6 +156,13 @@ struct Callbacks final {
     {
         if (onIteration != nullptr)
             onIteration(result);
+    }
+
+    /** Can be safely called without checking if ``onOpeningBookHit`` is null. */
+    void opening_book_hit(const Move& move) const
+    {
+        if (onOpeningBookHit != nullptr)
+            onOpeningBookHit(move);
     }
 
     /** Creates a set of callbacks that print UCI-compatible output. */

@@ -81,13 +81,19 @@ namespace {
         }
     }
 
+    void on_book_hit([[maybe_unused]] const Move& move)
+    {
+        std::println("info string Opening book hit!");
+    }
+
 } // namespace
 
 Callbacks Callbacks::make_uci_handler()
 {
     return {
         .onSearchComplete = [](const Result& res) { print_uci_info<true>(res); },
-        .onIteration = [](const Result& res) { print_uci_info<false>(res); }
+        .onIteration = [](const Result& res) { print_uci_info<false>(res); },
+        .onOpeningBookHit = [](const Move& move) { on_book_hit(move); }
     };
 }
 

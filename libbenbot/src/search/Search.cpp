@@ -341,6 +341,8 @@ void Context::search()
     Interrupter interrupter { exitFlag, options.searchTime };
 
     if (const auto bookMove = openingBook.get_move(options.position)) {
+        callbacks.opening_book_hit(*bookMove);
+
         const auto eval = eval::evaluate(game::after_move(options.position, *bookMove));
 
         callbacks.search_complete({ .duration = interrupter.get_search_duration(),
