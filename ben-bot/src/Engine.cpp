@@ -65,6 +65,11 @@ void Engine::handle_custom_command(
         return;
     }
 
+    if (command == "showpos") {
+        print_position_utf8();
+        return;
+    }
+
     if (command == "options") {
         print_options();
         return;

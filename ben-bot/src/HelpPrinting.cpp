@@ -16,6 +16,7 @@
 #include "Engine.hpp"
 #include "TextTable.hpp"
 #include <format>
+#include <libchess/game/Position.hpp>
 #include <print>
 #include <string>
 
@@ -43,6 +44,9 @@ namespace {
             .new_row()
             .append_column("loadbook <path>")
             .append_column("Reads the given JSON file into the engine's openings database. See book.json in the ben-bot source code for an example of the format.")
+            .new_row()
+            .append_column("showpos")
+            .append_column("Prints a UTF-8 representation of the current position")
             .new_row()
             .append_column("options")
             .append_column("Dump current UCI option values")
@@ -104,6 +108,11 @@ void Engine::print_options() const
         .append_column("Press to clear the transposition table");
 
     println("{}", table.to_string());
+}
+
+void Engine::print_position_utf8() const
+{
+    println("{}", print_utf8(searcher.context.options.position));
 }
 
 } // namespace ben_bot

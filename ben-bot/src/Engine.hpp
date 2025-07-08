@@ -39,7 +39,6 @@ public:
 
 private:
     [[nodiscard]] string_view get_name() const override { return "BenBot"; }
-
     [[nodiscard]] string_view get_author() const override { return "Ben Vining"; }
 
     void new_game(bool firstCall) override;
@@ -59,8 +58,8 @@ private:
     void load_book_file(const std::filesystem::path& file);
 
     void print_help() const;
-
     void print_options() const;
+    void print_position_utf8() const;
 
     search::Thread searcher { search::Callbacks::make_uci_handler() };
 
