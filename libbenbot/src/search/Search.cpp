@@ -422,6 +422,12 @@ void Context::search()
             .nodesSearched                       = stats.nodesSearched });
 
         if (! infinite) {
+            // only 1 legal move, don't do a deeper iteration
+            if (options.movesToSearch.size() == 1uz) {
+                [[unlikely]];
+                break;
+            }
+
             // if we've hit our node limit, don't do a deeper iteration
             if (options.maxNodes.has_value()
                 && stats.nodesSearched >= *options.maxNodes) {
