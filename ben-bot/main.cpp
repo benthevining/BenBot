@@ -52,6 +52,7 @@ namespace {
 
 namespace chess {
 
+using std::println;
 using std::string_view;
 
 class BenBotEngine final : public uci::EngineBase {
@@ -78,8 +79,18 @@ class BenBotEngine final : public uci::EngineBase {
     // this function implements non-standard UCI commands that we support
     void handle_custom_command(const string_view command, const string_view options) override
     {
-        if (command == "loadbook")
+        if (command == "loadbook") {
             load_book_file(std::filesystem::path { options });
+            return;
+        }
+
+        if (command == "help") {
+            print_help();
+            return;
+        }
+
+        println("Unknown UCI command: {}", command);
+        println("Type 'help' for a list of supported commands");
     }
 
     void set_position(const game::Position& pos) override { searcher.set_position(pos); }
@@ -99,11 +110,26 @@ class BenBotEngine final : public uci::EngineBase {
         searcher.context.openingBook.book.add_from_json(
             load_file_as_string(file));
     } catch (const std::exception& except) {
-        std::println(
+        println(
             "Error reading from opening book file at path: {}",
             file.string());
 
-        std::println("{}", except.what());
+        println("{}", except.what());
+    }
+
+    void print_help()
+    {
+        println(
+            "{} by {}",
+            get_name(), get_author());
+
+        println(
+            "All standard UCI commands are supported, as well as the following non-standard commands:");
+
+        println(
+            "loadbook <path> - reads the given JSON file into the engine's openings database. See book.json in the ben-bot source code for an example of the format.");
+        println(
+            "help            - displays this text");
     }
 
     search::Thread searcher { search::Callbacks::make_uci_handler() };
