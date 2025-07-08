@@ -24,7 +24,7 @@ cmrc_add_resource_library (ben_bot_resources ALIAS ben_bot::resources book.json)
 
 add_executable (ben_bot)
 
-target_link_libraries (ben_bot PRIVATE libbenbot::libbenbot ben_bot::resources)
+target_link_libraries (ben_bot PRIVATE ben_bot::libbenbot ben_bot::resources)
 
 file (GLOB_RECURSE ben_bot_sources LIST_DIRECTORIES false
       CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/src/*.hpp" "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp"

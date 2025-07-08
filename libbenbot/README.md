@@ -11,7 +11,7 @@ Include style is:
 
 ### Targets
 
-* `libbenbot::libbenbot`: library target
+* `ben_bot::libbenbot`: library target
 
 ## Dependencies
 

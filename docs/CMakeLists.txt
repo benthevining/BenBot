@@ -32,8 +32,8 @@ set (DOXYGEN_USE_MDFILE_AS_MAINPAGE "${PROJECT_SOURCE_DIR}/README.md")
 set (DOXYGEN_FILE_PATTERNS *.hpp)
 set (DOXYGEN_INCLUDE_FILE_PATTERNS *.hpp)
 
-get_target_property (libchess_headers libchess::libchess HEADER_SET)
-get_target_property (libbenbot_headers libbenbot::libbenbot HEADER_SET)
+get_target_property (libchess_headers ben_bot::libchess HEADER_SET)
+get_target_property (libbenbot_headers ben_bot::libbenbot HEADER_SET)
 
 # cmake-format: off
 doxygen_add_docs (

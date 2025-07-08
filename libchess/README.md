@@ -17,7 +17,7 @@ Include style is:
 
 ### Targets
 
-* `libchess::libchess`: library target
+* `ben_bot::libchess`: library target
 
 ## Dependencies
 

@@ -62,4 +62,4 @@ target_include_directories (
 
 source_group (TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${libchess_headers} ${libchess_sources})
 
-add_library (libchess::libchess ALIAS libchess)
+add_library (ben_bot::libchess ALIAS libchess)

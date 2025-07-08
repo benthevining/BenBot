@@ -12,7 +12,7 @@
 
 add_executable (perft)
 
-target_link_libraries (perft PRIVATE libchess::libchess nlohmann_json::nlohmann_json)
+target_link_libraries (perft PRIVATE ben_bot::libchess nlohmann_json::nlohmann_json)
 
 target_sources (perft PRIVATE main.cpp)
 

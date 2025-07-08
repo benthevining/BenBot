@@ -12,7 +12,7 @@
 
 add_executable (rampart)
 
-target_link_libraries (rampart PRIVATE libchess::libchess nlohmann_json::nlohmann_json)
+target_link_libraries (rampart PRIVATE ben_bot::libchess nlohmann_json::nlohmann_json)
 
 target_sources (rampart PRIVATE main.cpp)
 
