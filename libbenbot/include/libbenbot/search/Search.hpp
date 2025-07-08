@@ -27,7 +27,7 @@
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <functional>
-#include <libbenbot/search/TranspositionTable.hpp>
+#include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libchess/moves/Move.hpp>
 #include <limits>
 #include <optional>

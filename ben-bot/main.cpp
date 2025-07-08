@@ -47,7 +47,8 @@ class BenBotEngine final : public uci::EngineBase {
 } // namespace chess
 
 int main(
-    [[maybe_unused]] const int argc, [[maybe_unused]] const char** argv)
+    [[maybe_unused]] const int    argc,
+    [[maybe_unused]] const char** argv)
 try {
     chess::BenBotEngine engine;
 
