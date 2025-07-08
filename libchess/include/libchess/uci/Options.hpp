@@ -54,10 +54,13 @@ struct Option {
     /** Parses the arguments following a "setoption" token from the GUI,
         and updates the current state of the option object.
         The ``arguments`` should not include the "setoption" token.
-        Note that this may be called for any option; this class will take
-        care of filtering out updates for other options.
+        Note that this may be called for any option; this base class will
+        take care of filtering out updates for other options.
+
+        @returns True if this call had an effect; false if the ``arguments``
+        were for a different option.
      */
-    void parse(string_view arguments);
+    bool parse(string_view arguments);
 
 protected:
     // Will be called with everything in the "setoption" command after the option name

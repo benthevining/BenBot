@@ -32,14 +32,8 @@ void EngineBase::handle_command(std::string_view command)
     if (command.empty())
         return;
 
-    if (command == "uci") { // this command is sent once after program boot
-        println("id name {}", get_name());
-        println("id author {}", get_author());
-
-        for (const auto* option : get_options())
-            println("{}", option->get_declaration_string());
-
-        println("uciok");
+    if (command == "uci") {
+        respond_to_uci();
         return;
     }
 
@@ -86,17 +80,12 @@ void EngineBase::handle_command(std::string_view command)
         return;
     }
 
+    rest = trim(rest);
+
     if (firstWord == "setoption") {
-        wait();
-
-        for (auto* option : get_options())
-            option->parse(rest);
-
-        options_changed();
+        handle_setoption(rest);
         return;
     }
-
-    rest = trim(rest);
 
     if (firstWord == "debug") {
         set_debug(rest == "on");
@@ -104,6 +93,36 @@ void EngineBase::handle_command(std::string_view command)
     }
 
     handle_custom_command(firstWord, rest);
+}
+
+void EngineBase::respond_to_uci()
+{
+    // this command is sent once after program boot
+
+    println("id name {}", get_name());
+    println("id author {}", get_author());
+
+    for (const auto* option : get_options())
+        println("{}", option->get_declaration_string());
+
+    println("uciok");
+}
+
+void EngineBase::handle_setoption(const string_view arguments)
+{
+    wait();
+
+    bool anyChanged { false };
+
+    for (auto* option : get_options()) {
+        if (option->parse(arguments)) {
+            anyChanged = true;
+            break;
+        }
+    }
+
+    if (anyChanged)
+        options_changed();
 }
 
 void EngineBase::loop()

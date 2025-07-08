@@ -114,6 +114,10 @@ struct EngineBase {
 private:
     void handle_command(string_view command);
 
+    void respond_to_uci();
+
+    void handle_setoption(string_view arguments);
+
     bool shouldExit { false }; // used as flag for exiting the loop() function
 
     Position position;

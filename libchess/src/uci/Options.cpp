@@ -30,16 +30,17 @@ using std::string_view;
 using util::split_at_first_space;
 using util::trim;
 
-void Option::parse(string_view arguments)
+bool Option::parse(const string_view arguments)
 {
-    arguments = trim(arguments);
-
     auto [firstWord, rest] = split_at_first_space(arguments);
 
     firstWord = trim(firstWord);
 
-    if (firstWord != "name") // code defensively against unrecognized tokens
-        return;
+    // code defensively against unrecognized tokens
+    if (firstWord != "name") {
+        [[unlikely]];
+        return false;
+    }
 
     rest = trim(rest);
 
@@ -54,12 +55,15 @@ void Option::parse(string_view arguments)
 
     name = trim(name);
 
-    if (name == get_name()) {
-        if (isNPos)
-            handle_setvalue({});
-        else
-            handle_setvalue(trim(rest.substr(valueTokenIdx)));
-    }
+    if (name != get_name())
+        return false;
+
+    if (isNPos)
+        handle_setvalue({});
+    else
+        handle_setvalue(trim(rest.substr(valueTokenIdx)));
+
+    return true;
 }
 
 /*------------------------------------------------------------------------------------------------------------------*/
