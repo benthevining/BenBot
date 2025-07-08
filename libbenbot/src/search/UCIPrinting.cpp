@@ -81,23 +81,13 @@ namespace {
         }
     }
 
-    void print_currmove(const Callbacks::CurrMoveInfo& info)
-    {
-        std::println(
-            "info currmove {} currmovenumber {}",
-            notation::to_uci(info.move),
-            info.number + 1uz // convert 0-based index to 1-based index
-        );
-    }
-
 } // namespace
 
 Callbacks Callbacks::make_uci_handler()
 {
     return {
         .onSearchComplete = [](const Result& res) { print_uci_info<true>(res); },
-        .onIteration = [](const Result& res) { print_uci_info<false>(res); },
-        .onCurrMove = [](const CurrMoveInfo& info) { print_currmove(info); }
+        .onIteration = [](const Result& res) { print_uci_info<false>(res); }
     };
 }
 

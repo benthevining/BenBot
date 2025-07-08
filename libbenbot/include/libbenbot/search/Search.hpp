@@ -130,15 +130,6 @@ struct Callbacks final {
         size_t nodesSearched { 0uz };
     };
 
-    /** Information about which move the search is currently evaluating. */
-    struct CurrMoveInfo final {
-        /** The move. */
-        Move move;
-
-        /** The index of the move in the move list. 0-based index. */
-        size_t number { 0uz };
-    };
-
     /** Function type that accepts a single Result argument. */
     using Callback = std::function<void(const Result&)>;
 
@@ -149,11 +140,6 @@ struct Callbacks final {
         the iterative deepening loop.
      */
     Callback onIteration;
-
-    /** Function object that will be invoked when the search begins evaluating a new
-        root move.
-     */
-    std::function<void(const CurrMoveInfo&)> onCurrMove;
 
     /** Can be safely called without checking if ``onSearchComplete`` is null. */
     void search_complete(const Result& result) const
@@ -167,13 +153,6 @@ struct Callbacks final {
     {
         if (onIteration != nullptr)
             onIteration(result);
-    }
-
-    /** Can be safely called without checking if ``onCurrMove`` is null. */
-    void curr_move(const CurrMoveInfo& info) const
-    {
-        if (onCurrMove != nullptr)
-            onCurrMove(info);
     }
 
     /** Creates a set of callbacks that print UCI-compatible output. */
