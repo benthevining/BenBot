@@ -33,7 +33,7 @@ class BenBotEngine final : public uci::EngineBase {
 
     [[nodiscard]] std::string_view get_author() const override { return "Ben Vining"; }
 
-    void new_game() override;
+    void new_game(bool firstCall) override;
 
     void set_position(const game::Position& pos) override { searcher.set_position(pos); }
 
@@ -54,8 +54,6 @@ class BenBotEngine final : public uci::EngineBase {
     void print_options() const;
 
     search::Thread searcher { search::Callbacks::make_uci_handler() };
-
-    bool bookLoaded { false };
 
     uci::Action clearTT {
         "Clear Hash",

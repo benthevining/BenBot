@@ -44,7 +44,8 @@ void EngineBase::handle_command(std::string_view command)
     }
 
     if (command == "ucinewgame") { // isready will be queried after this
-        new_game();
+        new_game(! initialized);
+        initialized = true;
         return;
     }
 

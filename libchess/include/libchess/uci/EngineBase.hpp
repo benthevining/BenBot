@@ -20,7 +20,7 @@
 #pragma once
 
 #include <libchess/game/Position.hpp>
-#include <libchess/uci/CommandParsing.hpp>
+#include <libchess/uci/CommandParsing.hpp> // IWYU pragma: keep - for GoCommandOptions
 #include <libchess/uci/Options.hpp>
 #include <span>
 #include <string_view>
@@ -67,9 +67,13 @@ struct EngineBase {
 
     /** This function will be called when the "ucinewgame" command is received.
         This should flush any game-specific data structures such as hash tables,
-        transposition table, etc.
+        transposition table, etc. ``wait()`` will be called after this, before
+        the next search begins.
+
+        @param firstCall True if this is the first time ``new_game()`` has been
+        called.
      */
-    virtual void new_game() { }
+    virtual void new_game([[maybe_unused]] bool firstCall) { }
 
     /** This function is called when the search should be exited. */
     virtual void abort_search() { }
@@ -121,6 +125,8 @@ private:
     void handle_setoption(string_view arguments);
 
     bool shouldExit { false }; // used as flag for exiting the loop() function
+
+    bool initialized { false };
 
     Position position;
 };

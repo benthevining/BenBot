@@ -43,17 +43,16 @@ namespace {
     }
 } // namespace
 
-void BenBotEngine::new_game()
+void BenBotEngine::new_game(const bool firstCall)
 {
     moves::magics::init();
 
     searcher.context.reset(); // clears transposition table
 
-    if (! bookLoaded) { // load embedded book data into opening book data structure
+    if (firstCall) {
+        // load embedded book data into opening book data structure
         searcher.context.openingBook.book.add_from_json(
             get_opening_book_json_text());
-
-        bookLoaded = true;
     }
 }
 
