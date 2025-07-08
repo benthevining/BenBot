@@ -27,7 +27,6 @@
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/uci/CommandParsing.hpp>
 #include <optional>
-#include <ranges>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -360,9 +359,6 @@ void Context::search()
         assert(! options.movesToSearch.empty());
     }
 
-    // TODO: I think this is technically supposed to be the max *nodes* to search?
-    const auto numMovesToSearch = options.maxNodes.value_or(options.movesToSearch.size());
-
     const bool infinite = ! options.is_bounded();
 
     Stats stats;
@@ -390,7 +386,7 @@ void Context::search()
 
         size_t moveNum { 0uz }; // replace with std::enumerate once Clang supports it
 
-        for (const auto& move : options.movesToSearch | std::views::take(numMovesToSearch)) {
+        for (const auto& move : options.movesToSearch) {
             callbacks.curr_move({ .move = move,
                 .number                 = moveNum });
 
@@ -431,6 +427,11 @@ void Context::search()
             .nodesSearched                       = stats.nodesSearched });
 
         if (! infinite) {
+            if (options.maxNodes.has_value()
+                && stats.nodesSearched >= *options.maxNodes) {
+                break;
+            }
+
             // if we've found a mate, don't do a deeper iteration
             if (detail::is_mate_score(bestScore)
                 && detail::ply_to_mate_from_score(bestScore) <= depth) {
