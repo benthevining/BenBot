@@ -14,10 +14,8 @@
 
 #include "Engine.hpp"
 #include "Data.hpp"
-#include "TextTable.hpp"
 #include <exception>
 #include <filesystem>
-#include <format>
 #include <fstream>
 #include <ios>
 #include <iostream>
@@ -28,8 +26,6 @@
 #include <string_view>
 
 namespace ben_bot {
-
-using std::println;
 
 using Path = std::filesystem::path;
 
@@ -79,8 +75,8 @@ void Engine::handle_custom_command(
         return;
     }
 
-    println(std::cerr, "Unknown UCI command: {}", command);
-    println("Type 'help' for a list of supported commands");
+    std::println(std::cerr, "Unknown UCI command: {}", command);
+    std::println("Type 'help' for a list of supported commands");
 }
 
 void Engine::load_book_file(const Path& file)
@@ -90,76 +86,11 @@ try {
     searcher.context.openingBook.book.add_from_json(
         load_file_as_string(file));
 } catch (const std::exception& except) {
-    println(std::cerr,
+    std::println(std::cerr,
         "Error reading from opening book file at path: {}",
         file.string());
 
-    println(std::cerr, "{}", except.what());
-}
-
-void Engine::print_logo_and_version() const
-{
-    println("{}", get_ascii_logo());
-
-    println(
-        "{}, version {}, by {}",
-        get_name(), get_version_string(), get_author());
-}
-
-void Engine::print_help() const
-{
-    print_logo_and_version();
-
-    println();
-
-    println(
-        "All standard UCI commands are supported, as well as the following non-standard commands:");
-
-    println();
-
-    TextTable table;
-
-    table
-        .append_column("Command")
-        .append_column("Notes")
-        .new_row()
-        .append_column("loadbook <path>")
-        .append_column("Reads the given JSON file into the engine's openings database. See book.json in the ben-bot source code for an example of the format.")
-        .new_row()
-        .append_column("options")
-        .append_column("Dump current UCI option values")
-        .new_row()
-        .append_column("help")
-        .append_column("Display this text");
-
-    println("{}", table.to_string());
-}
-
-void Engine::print_options() const
-{
-    TextTable table;
-
-    table.append_column("Option")
-        .append_column("Type")
-        .append_column("Notes")
-        .append_column("Default")
-        .append_column("Current");
-
-    const auto& ownBook = searcher.context.openingBook.enabled;
-
-    table.new_row()
-        .append_column(ownBook.get_name())
-        .append_column("Toggle")
-        .append_column("Controls whether internal opening book is used")
-        .append_column(std::format("{}", ownBook.get_default_value()))
-        .append_column(std::format("{}", ownBook.get_value()));
-
-    table.new_row()
-        .append_column(clearTT.get_name())
-        .append_column("Button")
-        .append_column("Press to clear the transposition table");
-
-    println("{}", table.to_string());
+    std::println(std::cerr, "{}", except.what());
 }
 
 } // namespace ben_bot
