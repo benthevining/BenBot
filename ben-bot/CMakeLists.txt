@@ -30,11 +30,16 @@ file (GLOB_RECURSE ben_bot_sources LIST_DIRECTORIES false
       CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/src/*.hpp" "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp"
 )
 
-target_sources (ben_bot PRIVATE ${ben_bot_sources})
+set (generated_includes "${CMAKE_CURRENT_BINARY_DIR}/generated/include")
+set (generated_header "${generated_includes}/Version.hpp")
 
-target_include_directories (ben_bot PRIVATE "${CMAKE_CURRENT_LIST_DIR}/src")
+configure_file (Version.hpp "${generated_header}" @ONLY)
+
+target_sources (ben_bot PRIVATE ${ben_bot_sources} "${generated_header}")
 
 source_group (TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${ben_bot_sources})
+
+target_include_directories (ben_bot PRIVATE "${CMAKE_CURRENT_LIST_DIR}/src" "${generated_includes}")
 
 #
 

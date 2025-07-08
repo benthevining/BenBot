@@ -13,7 +13,7 @@
  */
 
 #include "Engine.hpp"
-#include "Resources.hpp"
+#include "Data.hpp"
 #include <exception>
 #include <filesystem>
 #include <fstream>
@@ -96,8 +96,8 @@ try {
 void BenBotEngine::print_help() const
 {
     println(
-        "{} by {}",
-        get_name(), get_author());
+        "{}, version {}, by {}",
+        get_name(), get_version_string(), get_author());
 
     println(
         "All standard UCI commands are supported, as well as the following non-standard commands:");

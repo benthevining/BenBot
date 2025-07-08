@@ -12,12 +12,26 @@
  * ======================================================================================
  */
 
-#pragma once
-
+#include "Data.hpp"
+#include "Version.hpp"
+#include <cmrc/cmrc.hpp>
 #include <string_view>
+
+CMRC_DECLARE(ben_bot_resources);
 
 namespace chess {
 
-[[nodiscard]] std::string_view get_opening_book_json_text();
+std::string_view get_opening_book_json_text()
+{
+    const auto bookFile = cmrc::ben_bot_resources::get_filesystem()
+                              .open("book.json");
 
+    return std::string_view { bookFile }; // NOLINT
 }
+
+std::string_view get_version_string()
+{
+    return VERSION_STRING;
+}
+
+} // namespace chess
