@@ -24,6 +24,6 @@ FetchContent_MakeAvailable (cmrc)
 cmrc_add_resource_library (
         ben_bot_resources
         ALIAS ben_bot::resources
-        book.json license_header.txt
+        book.json license_header.txt 8moves_v3.pgn
 )
 # cmake-format: on

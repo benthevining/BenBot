@@ -23,6 +23,7 @@
 #include <iterator>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Magics.hpp>
+#include <libchess/notation/PGN.hpp>
 #include <print>
 #include <string>
 #include <string_view>
@@ -53,8 +54,11 @@ void Engine::new_game(const bool firstCall)
         chess::moves::magics::init();
 
         // load embedded book data into opening book data structure
-        searcher.context.openingBook.book.add_from_json(
-            get_opening_book_json_text());
+        // searcher.context.openingBook.book.add_from_json(
+        //     get_opening_book_json_text());
+
+        for (const auto& game : chess::notation::parse_all_pgns(get_opening_book_pgn_text()))
+            searcher.context.openingBook.book.add_from_pgn(game, true);
     }
 }
 
