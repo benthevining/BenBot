@@ -16,6 +16,7 @@
 #include "Engine.hpp"
 #include "TextTable.hpp"
 #include <format>
+#include <libbenbot/eval/Evaluation.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <print>
@@ -98,12 +99,31 @@ void Engine::print_options() const
     println("{}", table.to_string());
 }
 
+namespace {
+    void print_eval(const chess::game::Position& pos)
+    {
+        if (pos.is_checkmate()) {
+            println("eval: #");
+            return;
+        }
+
+        if (pos.is_draw()) {
+            println("eval: 0");
+            return;
+        }
+
+        println("eval: {}", chess::eval::evaluate(pos));
+    }
+} // namespace
+
 void Engine::print_current_position() const
 {
     const auto& pos = searcher.context.options.position;
 
     println("{}", print_utf8(pos));
     println("{}", chess::notation::to_fen(pos));
+    println();
+    print_eval(pos);
 }
 
 } // namespace ben_bot
