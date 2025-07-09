@@ -66,7 +66,7 @@ void Engine::handle_custom_command(
     }
 
     if (command == "showpos") {
-        print_position_utf8();
+        print_current_position();
         return;
     }
 

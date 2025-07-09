@@ -17,6 +17,7 @@
 #include "TextTable.hpp"
 #include <format>
 #include <libchess/game/Position.hpp>
+#include <libchess/notation/FEN.hpp>
 #include <print>
 #include <string>
 
@@ -46,7 +47,7 @@ namespace {
             .append_column("Reads the given JSON file into the engine's openings database. See book.json in the ben-bot source code for an example of the format.")
             .new_row()
             .append_column("showpos")
-            .append_column("Prints a UTF-8 representation of the current position")
+            .append_column("Prints the current position")
             .new_row()
             .append_column("options")
             .append_column("Dump current UCI option values")
@@ -110,9 +111,12 @@ void Engine::print_options() const
     println("{}", table.to_string());
 }
 
-void Engine::print_position_utf8() const
+void Engine::print_current_position() const
 {
-    println("{}", print_utf8(searcher.context.options.position));
+    const auto& pos = searcher.context.options.position;
+
+    println("{}", print_utf8(pos));
+    println("{}", chess::notation::to_fen(pos));
 }
 
 } // namespace ben_bot

@@ -59,7 +59,7 @@ private:
 
     void print_help() const;
     void print_options() const;
-    void print_position_utf8() const;
+    void print_current_position() const;
 
     search::Thread searcher { search::Callbacks::make_uci_handler() };
 
