@@ -58,6 +58,8 @@ private:
 
     void load_book_file(const std::filesystem::path& file);
 
+    void load_book_moves(string_view pgnText);
+
     void make_null_move();
 
     void print_help() const;
@@ -103,7 +105,7 @@ private:
             .action = [this](const string_view args) {
                 load_book_file(std::filesystem::path { args });
             },
-            .description = "Reads the given JSON file into the engine's openings database. See book.json in the ben-bot source code for an example of the format.",
+            .description = "Reads the given PGN file into the engine's openings database. The file may contain multiple PGNs separated by whitespace.",
             .argsHelp = "<path>"
         },
         CustomCommand {

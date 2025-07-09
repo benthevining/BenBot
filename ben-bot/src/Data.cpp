@@ -32,14 +32,9 @@ namespace {
     }
 } // namespace
 
-string_view get_opening_book_json_text()
-{
-    return get_named_resource("book.json");
-}
-
 string_view get_opening_book_pgn_text()
 {
-    return get_named_resource("8moves_v3.pgn");
+    return get_named_resource("book.pgn");
 }
 
 string_view get_ascii_logo()

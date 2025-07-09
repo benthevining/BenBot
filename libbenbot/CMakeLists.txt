@@ -14,7 +14,7 @@ add_library (libbenbot STATIC)
 
 target_compile_features (libbenbot PUBLIC cxx_std_23)
 
-target_link_libraries (libbenbot PUBLIC ben_bot::libchess PRIVATE nlohmann_json::nlohmann_json)
+target_link_libraries (libbenbot PUBLIC ben_bot::libchess)
 
 set_target_properties (
     libbenbot PROPERTIES CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF DEBUG_POSTFIX -d

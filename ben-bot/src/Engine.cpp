@@ -53,12 +53,8 @@ void Engine::new_game(const bool firstCall)
     if (firstCall) {
         chess::moves::magics::init();
 
-        // load embedded book data into opening book data structure
-        // searcher.context.openingBook.book.add_from_json(
-        //     get_opening_book_json_text());
-
-        for (const auto& game : chess::notation::parse_all_pgns(get_opening_book_pgn_text()))
-            searcher.context.openingBook.book.add_from_pgn(game, true);
+        load_book_moves(
+            get_opening_book_pgn_text());
     }
 }
 
@@ -78,11 +74,17 @@ void Engine::handle_custom_command(
     std::println("Type 'help' for a list of supported commands");
 }
 
-void Engine::load_book_file(const Path& file)
-try {
+void Engine::load_book_moves(const string_view pgnText)
+{
     wait();
 
-    searcher.context.openingBook.book.add_from_json(
+    for (const auto& game : chess::notation::parse_all_pgns(pgnText))
+        searcher.context.openingBook.book.add_from_pgn(game, true);
+}
+
+void Engine::load_book_file(const Path& file)
+try {
+    load_book_moves(
         load_file_as_string(file));
 } catch (const std::exception& except) {
     std::println(std::cerr,

@@ -28,7 +28,6 @@
 #include <optional>
 #include <random>
 #include <span>
-#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -52,22 +51,6 @@ public:
      */
     [[nodiscard]] std::span<const Move> get_moves(const Position& position) const;
 
-    /** Adds all lines from a JSON text.
-
-      The format of the JSON should be:
-      @code{.json}
-      [
-        {
-          "comment": "optional",
-          "lines": [
-            "UCI moves..."
-          ]
-        }
-      ]
-      @endcode
-     */
-    void add_from_json(std::string_view json);
-
     /** Adds moves from a PGN file. */
     void add_from_pgn(
         const notation::GameRecord& game, bool includeVariations = true)
@@ -80,8 +63,6 @@ public:
     void prune();
 
 private:
-    void add_line(std::string_view line);
-
     void add_pgn_moves(
         std::span<const notation::GameRecord::Move> moves,
         Position position, bool includeVariations);
