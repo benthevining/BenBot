@@ -30,11 +30,11 @@
 
 namespace ben_bot {
 
-using Path = std::filesystem::path;
-
 namespace {
-    [[nodiscard]] std::string load_file_as_string(const Path& file)
+    [[nodiscard]] std::string load_file_as_string(path file)
     {
+        file = absolute(file);
+
         std::ifstream input { file };
 
         input.exceptions(
@@ -43,6 +43,21 @@ namespace {
         using Iterator = std::istreambuf_iterator<char>;
 
         return { Iterator { input }, Iterator {} };
+    }
+
+    void overwrite_file(path file, const string_view content)
+    {
+        file = absolute(file);
+
+        // need to make sure the dest directory exists
+        std::filesystem::create_directories(file.parent_path());
+
+        std::ofstream output { file };
+
+        output.exceptions(
+            std::ios_base::badbit | std::ios_base::failbit);
+
+        output << content;
     }
 } // namespace
 
@@ -82,13 +97,33 @@ void Engine::load_book_moves(const string_view pgnText)
         searcher.context.openingBook.book.add_from_pgn(game, true);
 }
 
-void Engine::load_book_file(const Path& file)
+void Engine::load_book_file(const path& file)
 try {
     load_book_moves(
         load_file_as_string(file));
 } catch (const std::exception& except) {
     std::println(std::cerr,
         "Error reading from opening book file at path: {}",
+        file.string());
+
+    std::println(std::cerr, "{}", except.what());
+}
+
+void Engine::dump_book_to_file(const path& file) const
+try {
+    searcher.context.wait(); // NB. the virtual wait() function is not const
+
+    std::string fileContent;
+
+    for (const auto& game : searcher.context.openingBook.book.to_pgns()) {
+        fileContent.append(chess::notation::to_pgn(game));
+        fileContent.append(2uz, '\n');
+    }
+
+    overwrite_file(file, fileContent);
+} catch (const std::exception& except) {
+    std::println(std::cerr,
+        "Error writing opening book to file at path: {}",
         file.string());
 
     std::println(std::cerr, "{}", except.what());

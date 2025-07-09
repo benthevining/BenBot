@@ -53,11 +53,18 @@ public:
 
     /** Adds moves from a PGN file. */
     void add_from_pgn(
-        const notation::GameRecord& game, bool includeVariations = true)
+        const notation::GameRecord& game,
+        const bool                  includeVariations = true)
     {
         add_pgn_moves(game.moves, game.startingPosition, includeVariations);
         prune();
     }
+
+    /** Writes the openings database as a set of PGNs.
+        Each root move from the starting position is given its own PGN file,
+        with variations being used to consolidate them from there.
+     */
+    [[nodiscard]] std::vector<notation::GameRecord> to_pgns() const;
 
     /** Prunes duplicate moves from the database. */
     void prune();
@@ -66,6 +73,10 @@ private:
     void add_pgn_moves(
         std::span<const notation::GameRecord::Move> moves,
         Position position, bool includeVariations);
+
+    void add_next_position(
+        const Position&       position,
+        notation::GameRecord& game) const;
 
     std::unordered_map<Position::Hash, std::vector<Move>> lines;
 };
