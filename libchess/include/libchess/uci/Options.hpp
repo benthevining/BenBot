@@ -53,17 +53,6 @@ struct Option {
      */
     [[nodiscard]] virtual string get_declaration_string() const = 0;
 
-    /** Parses the arguments following a "setoption" token from the GUI,
-        and updates the current state of the option object.
-        The ``arguments`` should not include the "setoption" token.
-        Note that this may be called for any option; this base class will
-        take care of filtering out updates for other options.
-
-        @returns True if this call had an effect; false if the ``arguments``
-        were for a different option.
-     */
-    bool parse(string_view arguments);
-
     /** Returns a textual representation of this option's type. */
     [[nodiscard]] virtual string_view get_type() const noexcept = 0;
 
@@ -88,8 +77,9 @@ struct Option {
      */
     [[nodiscard]] virtual Variant get_default_value_variant() const = 0;
 
-protected:
-    // Will be called with everything in the "setoption" command after the option name
+    /** Will be called with everything in the "setoption" command after the option name.
+        This is typically not called directly by user code.
+     */
     virtual void handle_setvalue(string_view arguments) = 0;
 };
 
@@ -122,9 +112,9 @@ struct BoolOption final : Option {
 
     [[nodiscard]] string_view get_help() const noexcept override { return help; }
 
-private:
     void handle_setvalue(string_view arguments) override;
 
+private:
     string optionName;
 
     bool optionDefault { true };
@@ -167,9 +157,9 @@ struct IntOption final : Option {
 
     [[nodiscard]] string_view get_help() const noexcept override { return help; }
 
-private:
     void handle_setvalue(string_view arguments) override;
 
+private:
     string optionName;
 
     int optionMin { 0 };
@@ -212,9 +202,9 @@ struct ComboOption final : Option {
 
     [[nodiscard]] string_view get_help() const noexcept override { return help; }
 
-private:
     void handle_setvalue(string_view arguments) override;
 
+private:
     string optionName;
 
     std::vector<string> possibleValues;
@@ -250,9 +240,9 @@ struct StringOption final : Option {
 
     [[nodiscard]] string_view get_help() const noexcept override { return help; }
 
-private:
     void handle_setvalue(string_view arguments) override;
 
+private:
     string optionName;
 
     string value;
@@ -284,9 +274,9 @@ struct Action final : Option {
 
     [[nodiscard]] bool has_value() const noexcept override { return false; }
 
-private:
     void handle_setvalue(string_view arguments) override;
 
+private:
     [[noreturn]] static void throw_value_error()
     {
         throw std::logic_error { "get_value_variant() called on option of Action type" };

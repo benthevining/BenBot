@@ -30,44 +30,6 @@ using std::string_view;
 using util::split_at_first_space;
 using util::trim;
 
-bool Option::parse(const string_view arguments)
-{
-    auto [firstWord, rest] = split_at_first_space(arguments);
-
-    firstWord = trim(firstWord);
-
-    // code defensively against unrecognized tokens
-    if (firstWord != "name") {
-        [[unlikely]];
-        return false;
-    }
-
-    rest = trim(rest);
-
-    // we can't just use split_at_first_space() here, because option names
-    // may legally contain spaces
-
-    const auto valueTokenIdx = rest.find("value");
-
-    const bool isNPos = valueTokenIdx == string_view::npos;
-
-    auto name = isNPos ? rest : rest.substr(0, valueTokenIdx);
-
-    name = trim(name);
-
-    if (name != get_name())
-        return false;
-
-    if (isNPos)
-        handle_setvalue({});
-    else
-        handle_setvalue(trim(rest.substr(valueTokenIdx)));
-
-    return true;
-}
-
-/*------------------------------------------------------------------------------------------------------------------*/
-
 BoolOption::BoolOption(
     string name, const bool defaultValue, string helpString)
     : optionName { std::move(name) }

@@ -12,6 +12,7 @@
  * ======================================================================================
  */
 
+#include <algorithm>
 #include <iostream>
 #include <libchess/uci/CommandParsing.hpp>
 #include <libchess/uci/EngineBase.hpp>
@@ -111,19 +112,46 @@ void EngineBase::respond_to_uci()
 
 void EngineBase::handle_setoption(const string_view arguments)
 {
-    wait();
+    auto [firstWord, rest] = split_at_first_space(arguments);
 
-    bool anyChanged { false };
+    firstWord = trim(firstWord);
 
-    for (auto* option : get_options()) {
-        if (option->parse(arguments)) {
-            anyChanged = true;
-            break;
-        }
+    // code defensively against unrecognized tokens
+    if (firstWord != "name") {
+        [[unlikely]];
+        return;
     }
 
-    if (anyChanged)
+    rest = trim(rest);
+
+    // we can't just use split_at_first_space() here, because option names
+    // may legally contain spaces
+
+    const auto valueTokenIdx = rest.find("value");
+
+    const bool isNPos = valueTokenIdx == string_view::npos;
+
+    auto name = isNPos ? rest : rest.substr(0uz, valueTokenIdx);
+
+    name = trim(name);
+
+    wait();
+
+    const auto options = get_options();
+
+    if (const auto it = std::ranges::find_if(
+            options,
+            [name](const Option* opt) { return opt->get_name() == name; });
+        it != options.end()) {
+        auto* option = *it;
+
+        if (isNPos)
+            option->handle_setvalue({});
+        else
+            option->handle_setvalue(trim(rest.substr(valueTokenIdx)));
+
         options_changed();
+    }
 }
 
 void EngineBase::loop()
