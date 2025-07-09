@@ -105,7 +105,7 @@ private:
             .action = [this](const string_view args) {
                 load_book_file(std::filesystem::path { args });
             },
-            .description = "Reads the given PGN file into the engine's openings database. The file may contain multiple PGNs separated by whitespace.",
+            .description = "Reads the given PGN file into the engine's openings database. The file may contain multiple PGNs separated by at least one blank line.",
             .argsHelp = "<path>"
         },
         CustomCommand {
