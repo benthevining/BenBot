@@ -58,6 +58,8 @@ private:
 
     void load_book_file(const std::filesystem::path& file);
 
+    void make_null_move();
+
     void print_help() const;
     void print_options() const;
     void print_current_position() const;
@@ -95,7 +97,7 @@ private:
     };
 
     // clang-format off
-    std::array<CustomCommand, 4uz> customCommands {
+    std::array<CustomCommand, 5uz> customCommands {
         CustomCommand {
             .name   = "loadbook",
             .action = [this](const string_view args) {
@@ -108,6 +110,11 @@ private:
             .name = "showpos",
             .action = CustomCommand::void_cb([this] { print_current_position(); }),
             .description = "Prints the current position"
+        },
+        CustomCommand {
+            .name = "makenull",
+            .action = CustomCommand::void_cb([this]{ make_null_move(); }),
+            .description = "Play a null move on the internal board"
         },
         CustomCommand {
             .name = "options",

@@ -336,4 +336,21 @@ Hash update(
     return value;
 }
 
+Hash after_null_move(const Position& pos)
+{
+    auto value = pos.hash;
+
+    value ^= BLACK_TO_MOVE; // just toggle these bits in/out every other move
+
+    // remove old EP target
+    pos.enPassantTargetSquare.and_then([&value](const Square& square) {
+        value ^= en_passant_key(square.file);
+        return std::optional<int> {};
+    });
+
+    // NB. it's impossible for a null move to introduce a new EP target
+
+    return value;
+}
+
 } // namespace chess::game::zobrist

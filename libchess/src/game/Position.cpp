@@ -105,9 +105,9 @@ namespace {
     }
 
     [[nodiscard, gnu::const]] constexpr uint_least8_t tick_halfmove_clock(
-        const Move& move, const bool isCapture, const uint_least8_t prevValue) noexcept
+        const bool isPawnMove, const bool isCapture, const uint_least8_t prevValue) noexcept
     {
-        if (isCapture || (move.piece == PieceType::Pawn))
+        if (isCapture || isPawnMove)
             return UINT8_C(0);
 
         static constexpr auto MAX_VALUE = UINT8_C(100);
@@ -135,9 +135,31 @@ void Position::make_move(const Move& move)
 
     update_bitboards(*this, move);
 
-    halfmoveClock = tick_halfmove_clock(move, isCapture, halfmoveClock);
+    halfmoveClock = tick_halfmove_clock(
+        move.piece == PieceType::Pawn, isCapture, halfmoveClock);
 
     enPassantTargetSquare = newEPSquare;
+
+    // increment full move counter after every Black move
+    if (! isWhite)
+        ++fullMoveCounter;
+
+    // flip side to move
+    sideToMove = isWhite ? Color::Black : Color::White;
+
+    threefoldChecker.push(hash);
+}
+
+void Position::make_null_move()
+{
+    const bool isWhite = is_white_to_move();
+
+    hash = zobrist::after_null_move(*this);
+
+    halfmoveClock = tick_halfmove_clock(
+        false, false, halfmoveClock);
+
+    enPassantTargetSquare = std::nullopt;
 
     // increment full move counter after every Black move
     if (! isWhite)

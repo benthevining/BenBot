@@ -21,6 +21,7 @@
 #include <ios>
 #include <iostream>
 #include <iterator>
+#include <libchess/game/Position.hpp>
 #include <libchess/moves/Magics.hpp>
 #include <print>
 #include <string>
@@ -85,6 +86,13 @@ try {
         file.string());
 
     std::println(std::cerr, "{}", except.what());
+}
+
+void Engine::make_null_move()
+{
+    wait();
+
+    searcher.context.options.position.make_null_move();
 }
 
 } // namespace ben_bot

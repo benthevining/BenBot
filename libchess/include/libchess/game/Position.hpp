@@ -307,6 +307,13 @@ struct Position final {
     /** Makes a move to alter the position. */
     void make_move(const Move& move);
 
+    /** Makes a null move.
+        This essentially represents the side to move "passing" their turn.
+        This does update the Zobrist hash, halfmove clock and fullmove counter in the same
+        way that ``make_move()`` does.
+     */
+    void make_null_move();
+
     /** Recalculates the Zobrist hash for this position. */
     void refresh_zobrist();
 
@@ -491,7 +498,7 @@ inline Position after_null_move(const Position& starting)
 {
     auto copy { starting };
 
-    copy.sideToMove = starting.is_white_to_move() ? Color::Black : Color::White;
+    copy.make_null_move();
 
     return copy;
 }
