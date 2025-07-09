@@ -36,13 +36,8 @@ struct TextTable final {
     // subsequent calls to append_column() will write to the new row
     TextTable& new_row();
 
-    [[nodiscard]] size_t num_columns() const;
-
     // concatenates all the rows in the table into a single string
-    [[nodiscard]] string to_string(
-        string_view rowPrefix       = "",
-        string_view columnSeparator = "|",
-        string_view rowSuffix       = "\n") const;
+    [[nodiscard]] string to_string() const;
 
 private:
     struct Row final {
@@ -50,13 +45,13 @@ private:
 
         [[nodiscard]] std::span<const string> get_columns() const noexcept { return columns; }
 
-        [[nodiscard]] string to_string(
-            string_view             columnSeparator,
-            std::span<const size_t> widths) const;
+        [[nodiscard]] string to_string(std::span<const size_t> widths) const;
 
     private:
         std::vector<string> columns;
     };
+
+    [[nodiscard]] size_t num_columns() const;
 
     [[nodiscard]] std::vector<size_t> get_column_widths() const;
 

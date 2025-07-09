@@ -14,7 +14,6 @@
 
 #include "TextTable.hpp"
 #include <algorithm>
-#include <format>
 #include <span>
 #include <string>
 #include <vector>
@@ -43,20 +42,15 @@ TextTable& TextTable::new_row()
     return *this;
 }
 
-string TextTable::to_string(
-    const string_view rowPrefix,
-    const string_view columnSeparator,
-    const string_view rowSuffix) const
+string TextTable::to_string() const
 {
     const auto widths = get_column_widths();
 
     string result;
 
     for (const auto& row : rows) {
-        result.append(
-            std::format(
-                "{}{}{}",
-                rowPrefix, row.to_string(columnSeparator, widths), rowSuffix));
+        result.append(row.to_string(widths));
+        result.append(1uz, '\n');
     }
 
     return result;
@@ -89,7 +83,6 @@ std::vector<size_t> TextTable::get_column_widths() const
 }
 
 string TextTable::Row::to_string(
-    const string_view             columnSeparator,
     const std::span<const size_t> widths) const
 {
     string result;
@@ -98,7 +91,7 @@ string TextTable::Row::to_string(
 
     for (const auto width : widths) {
         if (index > 0uz)
-            result.append(columnSeparator);
+            result.append(1uz, '|');
 
         string padded;
 
