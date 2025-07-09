@@ -34,38 +34,6 @@ void Engine::print_logo_and_version() const
         get_name(), get_version_string(), get_author());
 }
 
-namespace {
-    [[nodiscard]] std::string get_help_string_internal()
-    {
-        TextTable table;
-
-        table
-            .append_column("Command")
-            .append_column("Notes")
-            .new_row()
-            .append_column("loadbook <path>")
-            .append_column("Reads the given JSON file into the engine's openings database. See book.json in the ben-bot source code for an example of the format.")
-            .new_row()
-            .append_column("showpos")
-            .append_column("Prints the current position")
-            .new_row()
-            .append_column("options")
-            .append_column("Dump current UCI option values")
-            .new_row()
-            .append_column("help")
-            .append_column("Display this text");
-
-        return table.to_string();
-    }
-
-    [[nodiscard]] string_view get_help_text()
-    {
-        static const auto text = get_help_string_internal();
-
-        return text;
-    }
-} // namespace
-
 void Engine::print_help() const
 {
     print_logo_and_version();
@@ -77,7 +45,18 @@ void Engine::print_help() const
 
     println();
 
-    println("{}", get_help_text());
+    TextTable table;
+
+    table.append_column("Command")
+        .append_column("Notes");
+
+    for (const auto& command : customCommands) {
+        table.new_row()
+            .append_column(std::format("{} {}", command.name, command.argsHelp))
+            .append_column(command.description);
+    }
+
+    println("{}", table.to_string());
 }
 
 void Engine::print_options() const

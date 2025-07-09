@@ -16,6 +16,7 @@
 
 #include <array>
 #include <filesystem>
+#include <functional>
 #include <libbenbot/search/Search.hpp>
 #include <libbenbot/search/Thread.hpp>
 #include <libchess/game/Position.hpp>
@@ -61,6 +62,25 @@ private:
     void print_options() const;
     void print_current_position() const;
 
+    struct CustomCommand final {
+        using Callback = std::function<void(string_view)>;
+
+        string_view name;
+
+        Callback action;
+
+        string_view description;
+
+        string_view argsHelp;
+
+        [[nodiscard]] static Callback void_cb(std::function<void()>&& func)
+        {
+            return [callback = std::move(func)]([[maybe_unused]] const string_view args) {
+                callback();
+            };
+        }
+    };
+
     search::Thread searcher { search::Callbacks::make_uci_handler() };
 
     uci::Action clearTT {
@@ -72,6 +92,34 @@ private:
         &searcher.context.openingBook.enabled,
         &clearTT
     };
+
+    // clang-format off
+    std::array<CustomCommand, 4uz> customCommands {
+        CustomCommand {
+            .name   = "loadbook",
+            .action = [this](const string_view args) {
+                load_book_file(std::filesystem::path { args });
+            },
+            .description = "Reads the given JSON file into the engine's openings database. See book.json in the ben-bot source code for an example of the format.",
+            .argsHelp = "<path>"
+        },
+        CustomCommand {
+            .name = "showpos",
+            .action = CustomCommand::void_cb([this] { print_current_position(); }),
+            .description = "Prints the current position"
+        },
+        CustomCommand {
+            .name = "options",
+            .action = CustomCommand::void_cb([this] { print_options(); }),
+            .description = "Dump current UCI option values"
+        },
+        CustomCommand {
+            .name = "help",
+            .action = CustomCommand::void_cb([this] { print_help(); }),
+            .description = "Display this text"
+        }
+    };
+    // clang-format on
 };
 
 } // namespace ben_bot

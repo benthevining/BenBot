@@ -14,6 +14,7 @@
 
 #include "Engine.hpp"
 #include "Data.hpp"
+#include <algorithm>
 #include <exception>
 #include <filesystem>
 #include <fstream>
@@ -60,23 +61,11 @@ void Engine::new_game(const bool firstCall)
 void Engine::handle_custom_command(
     const string_view command, const string_view options)
 {
-    if (command == "loadbook") {
-        load_book_file(Path { options });
-        return;
-    }
-
-    if (command == "showpos") {
-        print_current_position();
-        return;
-    }
-
-    if (command == "options") {
-        print_options();
-        return;
-    }
-
-    if (command == "help") {
-        print_help();
+    if (const auto it = std::ranges::find_if(
+            customCommands,
+            [command](const CustomCommand& cmd) { return cmd.name == command; });
+        it != customCommands.end()) {
+        it->action(options);
         return;
     }
 
