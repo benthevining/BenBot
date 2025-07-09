@@ -20,6 +20,7 @@
 #include <libchess/notation/FEN.hpp>
 #include <print>
 #include <string>
+#include <variant>
 
 namespace ben_bot {
 
@@ -73,26 +74,26 @@ void Engine::print_options() const
         .append_column("Default")
         .append_column("Current");
 
-    // for (const auto* option : options) {
-    //     table.new_row()
-    //     .append_column(option->get_name())
-    //     .append_column(option->get_type())
-    //     .append_column(option->get_help());
-    // }
+    for (const auto* option : options) {
+        table.new_row()
+            .append_column(option->get_name())
+            .append_column(option->get_type())
+            .append_column(option->get_help());
 
-    const auto& ownBook = searcher.context.openingBook.enabled;
+        if (option->has_value()) {
+            std::visit(
+                [&table](auto defaultValue) {
+                    table.append_column(std::format("{}", defaultValue));
+                },
+                option->get_default_value_variant());
 
-    table.new_row()
-        .append_column(ownBook.get_name())
-        .append_column("Toggle")
-        .append_column("Controls whether internal opening book is used")
-        .append_column(std::format("{}", ownBook.get_default_value()))
-        .append_column(std::format("{}", ownBook.get_value()));
-
-    table.new_row()
-        .append_column(clearTT.get_name())
-        .append_column("Button")
-        .append_column("Press to clear the transposition table");
+            std::visit(
+                [&table](auto value) {
+                    table.append_column(std::format("{}", value));
+                },
+                option->get_value_variant());
+        }
+    }
 
     println("{}", table.to_string());
 }

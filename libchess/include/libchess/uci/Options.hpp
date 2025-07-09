@@ -20,8 +20,10 @@
 #pragma once
 
 #include <functional>
+#include <stdexcept>
 #include <string>
 #include <string_view>
+#include <variant>
 #include <vector>
 
 namespace chess::uci {
@@ -68,6 +70,24 @@ struct Option {
     /** Returns the help string for this option. */
     [[nodiscard]] virtual string_view get_help() const noexcept = 0;
 
+    /** Returns true if this option type has an associated value.
+        False only for Action options.
+     */
+    [[nodiscard]] virtual bool has_value() const noexcept { return true; }
+
+    /** Represents a variant that can hold any of the derived class's value types. */
+    using Variant = std::variant<bool, int, string_view>;
+
+    /** Returns this option's current value, as a variant.
+        Note that if ``has_value()`` returns false, you must not call this method!
+     */
+    [[nodiscard]] virtual Variant get_value_variant() const = 0;
+
+    /** Returns this option's default value, as a variant.
+        Note that if ``has_value()`` returns false, you must not call this method!
+     */
+    [[nodiscard]] virtual Variant get_default_value_variant() const = 0;
+
 protected:
     // Will be called with everything in the "setoption" command after the option name
     virtual void handle_setvalue(string_view arguments) = 0;
@@ -87,8 +107,12 @@ struct BoolOption final : Option {
      */
     [[nodiscard]] bool get_value() const noexcept { return value; }
 
+    [[nodiscard]] Variant get_value_variant() const override { return value; }
+
     /** Returns this option's default value. */
     [[nodiscard]] bool get_default_value() const noexcept { return optionDefault; }
+
+    [[nodiscard]] Variant get_default_value_variant() const override { return optionDefault; }
 
     [[nodiscard]] string_view get_name() const noexcept override { return optionName; }
 
@@ -128,8 +152,12 @@ struct IntOption final : Option {
      */
     [[nodiscard]] int get_value() const noexcept { return value; }
 
+    [[nodiscard]] Variant get_value_variant() const override { return value; }
+
     /** Returns this option's default value. */
     [[nodiscard]] int get_default_value() const noexcept { return optionDefault; }
+
+    [[nodiscard]] Variant get_default_value_variant() const override { return optionDefault; }
 
     [[nodiscard]] string_view get_name() const noexcept override { return optionName; }
 
@@ -169,8 +197,12 @@ struct ComboOption final : Option {
 
     [[nodiscard]] string_view get_value() const noexcept { return value; }
 
+    [[nodiscard]] Variant get_value_variant() const override { return get_value(); }
+
     /** Returns this option's default value. */
     [[nodiscard]] string_view get_default_value() const noexcept { return optionDefault; }
+
+    [[nodiscard]] Variant get_default_value_variant() const override { return get_default_value(); }
 
     [[nodiscard]] string_view get_name() const noexcept override { return optionName; }
 
@@ -206,6 +238,10 @@ struct StringOption final : Option {
 
     [[nodiscard]] string_view get_value() const noexcept { return value; }
 
+    [[nodiscard]] Variant get_value_variant() const override { return get_value(); }
+
+    [[nodiscard]] Variant get_default_value_variant() const override { return string_view {}; }
+
     [[nodiscard]] string_view get_name() const noexcept override { return optionName; }
 
     [[nodiscard]] string get_declaration_string() const override;
@@ -235,6 +271,9 @@ struct Action final : Option {
 
     using Value = void;
 
+    [[nodiscard]] Variant get_value_variant() const override { throw_value_error(); }
+    [[nodiscard]] Variant get_default_value_variant() const override { throw_value_error(); }
+
     [[nodiscard]] string_view get_name() const noexcept override { return optionName; }
 
     [[nodiscard]] string get_declaration_string() const override;
@@ -243,8 +282,15 @@ struct Action final : Option {
 
     [[nodiscard]] string_view get_help() const noexcept override { return help; }
 
+    [[nodiscard]] bool has_value() const noexcept override { return false; }
+
 private:
     void handle_setvalue(string_view arguments) override;
+
+    [[noreturn]] static void throw_value_error()
+    {
+        throw std::logic_error { "get_value_variant() called on option of Action type" };
+    }
 
     string optionName;
 
