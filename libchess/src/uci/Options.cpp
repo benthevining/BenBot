@@ -69,9 +69,10 @@ bool Option::parse(const string_view arguments)
 /*------------------------------------------------------------------------------------------------------------------*/
 
 BoolOption::BoolOption(
-    string name, const bool defaultValue)
+    string name, const bool defaultValue, string helpString)
     : optionName { std::move(name) }
     , optionDefault { defaultValue }
+    , help { std::move(helpString) }
 {
 }
 
@@ -107,11 +108,13 @@ void BoolOption::handle_setvalue(const string_view arguments)
 IntOption::IntOption(
     string    name,
     const int minValue, const int maxValue,
-    const int defaultValue)
+    const int defaultValue,
+    string    helpString)
     : optionName { std::move(name) }
     , optionMin { minValue }
     , optionMax { maxValue }
     , optionDefault { defaultValue }
+    , help { std::move(helpString) }
 {
     assert(optionDefault >= optionMin);
     assert(optionDefault <= optionMax);
@@ -143,10 +146,12 @@ void IntOption::handle_setvalue(const string_view arguments)
 ComboOption::ComboOption(
     string              name,
     std::vector<string> values,
-    string              defaultValue)
+    string              defaultValue,
+    string              helpString)
     : optionName { std::move(name) }
     , possibleValues { std::move(values) }
     , optionDefault { std::move(defaultValue) }
+    , help { std::move(helpString) }
 {
     assert(std::ranges::contains(possibleValues, optionDefault));
 }
@@ -186,9 +191,11 @@ void ComboOption::handle_setvalue(const string_view arguments)
 
 StringOption::StringOption(
     string name,
-    string defaultValue)
+    string defaultValue,
+    string helpString)
     : optionName { std::move(name) }
     , value { std::move(defaultValue) }
+    , help { std::move(helpString) }
 {
 }
 
@@ -215,9 +222,11 @@ void StringOption::handle_setvalue(const string_view arguments)
 
 Action::Action(
     string     name,
-    Callback&& action)
+    Callback&& action,
+    string     helpString)
     : optionName { std::move(name) }
     , callback { std::move(action) }
+    , help { std::move(helpString) }
 {
     assert(callback != nullptr);
 }

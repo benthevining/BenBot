@@ -22,7 +22,7 @@ namespace uci = chess::uci;
 
 TEST_CASE("UCI options - bool", TAGS)
 {
-    uci::BoolOption option { "Toggle parameter", true };
+    uci::BoolOption option { "Toggle parameter", true, "" };
 
     REQUIRE(option.get_declaration_string() == "option name Toggle parameter type check default true");
 
@@ -40,7 +40,7 @@ TEST_CASE("UCI options - bool", TAGS)
 TEST_CASE("UCI options - int", TAGS)
 {
     uci::IntOption option {
-        "HashSize", 0, 100, 50
+        "HashSize", 0, 100, 50, ""
     };
 
     REQUIRE(option.get_declaration_string() == "option name HashSize type spin default 50 min 0 max 100");
@@ -70,7 +70,7 @@ TEST_CASE("UCI options - combo", TAGS)
     uci::ComboOption option {
         "MyEnum",
         { "One", "Two", "Three" },
-        "Two"
+        "Two", ""
     };
 
     REQUIRE(option.get_declaration_string() == "option name MyEnum type combo default Two var One var Two var Three");
@@ -94,7 +94,7 @@ TEST_CASE("UCI options - combo", TAGS)
 TEST_CASE("UCI options - string", TAGS)
 {
     uci::StringOption option {
-        "MyString", "foo"
+        "MyString", "foo", ""
     };
 
     REQUIRE(std::string { option.get_value() } == "foo");
@@ -116,7 +116,7 @@ TEST_CASE("UCI options - action", TAGS)
 
     uci::Action action {
         "Clear Cache",
-        [&triggered] { triggered = true; }
+        [&triggered] { triggered = true; }, ""
     };
 
     REQUIRE(action.get_declaration_string() == "option name Clear Cache type button");

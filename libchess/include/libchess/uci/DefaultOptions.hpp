@@ -40,7 +40,11 @@ namespace chess::uci::default_options {
  */
 [[nodiscard]] inline BoolOption own_book()
 {
-    return { "OwnBook", true };
+    return {
+        "OwnBook",
+        true,
+        "Controls whether the engine's internal opening book is used"
+    };
 }
 
 /** Creates the UCI "Ponder" option.
@@ -52,7 +56,11 @@ namespace chess::uci::default_options {
  */
 [[nodiscard]] inline BoolOption ponder()
 {
-    return { "Ponder", true };
+    return {
+        "Ponder",
+        true,
+        "Controls whether pondering is allowed"
+    };
 }
 
 /** Creates the "UCI_ShowCurrLine" option.
@@ -61,7 +69,11 @@ namespace chess::uci::default_options {
  */
 [[nodiscard]] inline BoolOption show_curr_line()
 {
-    return { "UCI_ShowCurrLine", false };
+    return {
+        "UCI_ShowCurrLine",
+        false,
+        "Controls whether to show the current line the search is calculating"
+    };
 }
 
 /** Creates the "UCI_ShowRefutations" option.
@@ -70,7 +82,11 @@ namespace chess::uci::default_options {
  */
 [[nodiscard]] inline BoolOption show_refutations()
 {
-    return { "UCI_ShowRefutations", false };
+    return {
+        "UCI_ShowRefutations",
+        false,
+        "Controls whether to show refutation lines the search has found"
+    };
 }
 
 /** Creates the "UCI_AnalyseMode" option.
@@ -80,7 +96,11 @@ namespace chess::uci::default_options {
  */
 [[nodiscard]] inline BoolOption analyze_mode()
 {
-    return { "UCI_AnalyseMode", false };
+    return {
+        "UCI_AnalyseMode",
+        false,
+        "Set to true if the engine is being used for analysis and is not playing a game"
+    };
 }
 
 /// @}

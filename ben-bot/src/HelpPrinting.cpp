@@ -73,6 +73,13 @@ void Engine::print_options() const
         .append_column("Default")
         .append_column("Current");
 
+    // for (const auto* option : options) {
+    //     table.new_row()
+    //     .append_column(option->get_name())
+    //     .append_column(option->get_type())
+    //     .append_column(option->get_help());
+    // }
+
     const auto& ownBook = searcher.context.openingBook.enabled;
 
     table.new_row()

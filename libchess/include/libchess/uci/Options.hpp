@@ -62,6 +62,12 @@ struct Option {
      */
     bool parse(string_view arguments);
 
+    /** Returns a textual representation of this option's type. */
+    [[nodiscard]] virtual string_view get_type() const noexcept = 0;
+
+    /** Returns the help string for this option. */
+    [[nodiscard]] virtual string_view get_help() const noexcept = 0;
+
 protected:
     // Will be called with everything in the "setoption" command after the option name
     virtual void handle_setvalue(string_view arguments) = 0;
@@ -72,7 +78,7 @@ protected:
     @ingroup uci
  */
 struct BoolOption final : Option {
-    BoolOption(string name, bool defaultValue);
+    BoolOption(string name, bool defaultValue, string helpString);
 
     using Value = bool;
 
@@ -88,6 +94,10 @@ struct BoolOption final : Option {
 
     [[nodiscard]] string get_declaration_string() const override;
 
+    [[nodiscard]] string_view get_type() const noexcept override { return "Toggle"; }
+
+    [[nodiscard]] string_view get_help() const noexcept override { return help; }
+
 private:
     void handle_setvalue(string_view arguments) override;
 
@@ -96,6 +106,8 @@ private:
     bool optionDefault { true };
 
     bool value { optionDefault };
+
+    string help;
 };
 
 /** An integer option.
@@ -106,7 +118,8 @@ struct IntOption final : Option {
     IntOption(
         string name,
         int minValue, int maxValue,
-        int defaultValue);
+        int    defaultValue,
+        string helpString);
 
     using Value = int;
 
@@ -122,6 +135,10 @@ struct IntOption final : Option {
 
     [[nodiscard]] string get_declaration_string() const override;
 
+    [[nodiscard]] string_view get_type() const noexcept override { return "Integer"; }
+
+    [[nodiscard]] string_view get_help() const noexcept override { return help; }
+
 private:
     void handle_setvalue(string_view arguments) override;
 
@@ -133,6 +150,8 @@ private:
     int optionDefault { 0 };
 
     int value { optionDefault };
+
+    string help;
 };
 
 /** A multiple-choice option that can have one of several predefined string values.
@@ -143,7 +162,8 @@ struct ComboOption final : Option {
     ComboOption(
         string              name,
         std::vector<string> values,
-        string              defaultValue);
+        string              defaultValue,
+        string              helpString);
 
     using Value = string_view;
 
@@ -156,6 +176,10 @@ struct ComboOption final : Option {
 
     [[nodiscard]] string get_declaration_string() const override;
 
+    [[nodiscard]] string_view get_type() const noexcept override { return "Multichoice"; }
+
+    [[nodiscard]] string_view get_help() const noexcept override { return help; }
+
 private:
     void handle_setvalue(string_view arguments) override;
 
@@ -166,6 +190,8 @@ private:
     string optionDefault;
 
     string value { optionDefault };
+
+    string help;
 };
 
 /** An option that can have any arbitrary string value.
@@ -174,7 +200,7 @@ private:
     @ingroup cli
  */
 struct StringOption final : Option {
-    StringOption(string name, string defaultValue);
+    StringOption(string name, string defaultValue, string helpString);
 
     using Value = string_view;
 
@@ -184,12 +210,18 @@ struct StringOption final : Option {
 
     [[nodiscard]] string get_declaration_string() const override;
 
+    [[nodiscard]] string_view get_type() const noexcept override { return "String"; }
+
+    [[nodiscard]] string_view get_help() const noexcept override { return help; }
+
 private:
     void handle_setvalue(string_view arguments) override;
 
     string optionName;
 
     string value;
+
+    string help;
 };
 
 /** A triggerable action.
@@ -199,7 +231,7 @@ private:
 struct Action final : Option {
     using Callback = std::function<void()>;
 
-    Action(string name, Callback&& action);
+    Action(string name, Callback&& action, string helpString);
 
     using Value = void;
 
@@ -207,12 +239,18 @@ struct Action final : Option {
 
     [[nodiscard]] string get_declaration_string() const override;
 
+    [[nodiscard]] string_view get_type() const noexcept override { return "Button"; }
+
+    [[nodiscard]] string_view get_help() const noexcept override { return help; }
+
 private:
     void handle_setvalue(string_view arguments) override;
 
     string optionName;
 
     Callback callback;
+
+    string help;
 };
 
 } // namespace chess::uci

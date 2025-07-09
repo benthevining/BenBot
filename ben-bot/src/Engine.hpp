@@ -85,7 +85,8 @@ private:
 
     uci::Action clearTT {
         "Clear Hash",
-        [this] { searcher.context.reset(); }
+        [this] { searcher.context.reset(); },
+        "Press to clear the transposition table"
     };
 
     std::array<uci::Option*, 2uz> options {
