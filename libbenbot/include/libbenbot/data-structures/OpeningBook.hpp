@@ -26,6 +26,7 @@
 #include <libchess/uci/DefaultOptions.hpp>
 #include <libchess/uci/Options.hpp>
 #include <optional>
+#include <print>
 #include <random>
 #include <span>
 #include <unordered_map>
@@ -68,6 +69,15 @@ public:
 
     /** Prunes duplicate moves from the database. */
     void prune();
+
+    void print_stats() const
+    {
+        std::println("Num stored positions: {}", lines.size());
+
+        const Position startPos;
+
+        std::println("Num moves from start pos: {}", get_moves(startPos).size());
+    }
 
 private:
     void add_pgn_moves(

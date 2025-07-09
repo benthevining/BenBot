@@ -93,8 +93,14 @@ void Engine::load_book_moves(const string_view pgnText)
 {
     wait();
 
-    for (const auto& game : chess::notation::parse_all_pgns(pgnText))
+    const auto games = chess::notation::parse_all_pgns(pgnText);
+
+    std::println("Found {} PGNs", games.size());
+
+    for (const auto& game : games)
         searcher.context.openingBook.book.add_from_pgn(game, true);
+
+    searcher.context.openingBook.book.print_stats();
 }
 
 void Engine::load_book_file(const path& file)
