@@ -14,6 +14,7 @@
 
 #include "TextTable.hpp"
 #include <algorithm>
+#include <ranges>
 #include <span>
 #include <string>
 #include <vector>
@@ -42,13 +43,36 @@ TextTable& TextTable::new_row()
     return *this;
 }
 
+namespace {
+    constexpr string_view COLUMN_SEPARATOR { " | " };
+
+    [[nodiscard]] string make_header_sep_row(
+        const std::span<const size_t> widths)
+    {
+        string result;
+
+        for (const auto width : widths.first(widths.size() - 1uz)) {
+            result.append(width, '-');
+            result.append(COLUMN_SEPARATOR);
+        }
+
+        result.append(widths.back(), '-');
+
+        return result;
+    }
+} // namespace
+
 string TextTable::to_string() const
 {
     const auto widths = get_column_widths();
 
-    string result;
+    auto result = rows.front().to_string(widths);
+    result.append(1uz, '\n');
 
-    for (const auto& row : rows) {
+    result.append(make_header_sep_row(widths));
+    result.append(1uz, '\n');
+
+    for (const auto& row : rows | std::views::drop(1uz)) {
         result.append(row.to_string(widths));
         result.append(1uz, '\n');
     }
@@ -91,7 +115,7 @@ string TextTable::Row::to_string(
 
     for (const auto width : widths) {
         if (index > 0uz)
-            result.append(1uz, '|');
+            result.append(COLUMN_SEPARATOR);
 
         string padded;
 
