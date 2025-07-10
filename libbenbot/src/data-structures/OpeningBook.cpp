@@ -25,6 +25,17 @@ namespace chess::search {
 
 using notation::GameRecord;
 
+void OpeningBook::add_from_pgn(
+    const std::string_view pgnText,
+    const bool             includeVariations)
+{
+    for (const auto& game : notation::parse_all_pgns(pgnText))
+        add_pgn_moves(game.moves, game.startingPosition, includeVariations);
+
+    prune();
+    print_stats();
+}
+
 void OpeningBook::add_pgn_moves(
     const std::span<const GameRecord::Move> moves,
     Position position, const bool includeVariations)

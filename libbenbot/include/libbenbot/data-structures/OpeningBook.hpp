@@ -29,6 +29,7 @@
 #include <print>
 #include <random>
 #include <span>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -52,14 +53,12 @@ public:
      */
     [[nodiscard]] std::span<const Move> get_moves(const Position& position) const;
 
-    /** Adds moves from a PGN file. */
+    /** Adds moves from a PGN file.
+        The text may contain multiple PGN files separated by at least 1 newline.
+     */
     void add_from_pgn(
-        const notation::GameRecord& game,
-        const bool                  includeVariations = true)
-    {
-        add_pgn_moves(game.moves, game.startingPosition, includeVariations);
-        prune();
-    }
+        std::string_view pgnText,
+        bool             includeVariations = true);
 
     /** Writes the openings database as a set of PGNs.
         Each root move from the starting position is given its own PGN file,
