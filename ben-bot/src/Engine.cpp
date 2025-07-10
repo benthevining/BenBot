@@ -23,17 +23,18 @@
 #include <iterator>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Magics.hpp>
+#include <libchess/util/Strings.hpp>
 #include <print>
 #include <string>
 #include <string_view>
 
 namespace ben_bot {
 
-using Path = std::filesystem::path;
-
 namespace {
-    [[nodiscard]] std::string load_file_as_string(const Path& file)
+    [[nodiscard]] std::string load_file_as_string(path file)
     {
+        file = absolute(file);
+
         std::ifstream input { file };
 
         input.exceptions(
@@ -52,9 +53,8 @@ void Engine::new_game(const bool firstCall)
     if (firstCall) {
         chess::moves::magics::init();
 
-        // load embedded book data into opening book data structure
-        searcher.context.openingBook.book.add_from_json(
-            get_opening_book_json_text());
+        searcher.context.openingBook.book.add_from_pgn(
+            get_opening_book_pgn_text());
     }
 }
 
@@ -74,18 +74,27 @@ void Engine::handle_custom_command(
     std::println("Type 'help' for a list of supported commands");
 }
 
-void Engine::load_book_file(const Path& file)
-try {
+void Engine::load_book_file(const string_view arguments)
+{
+    const auto [firstWord, rest] = chess::util::split_at_first_space(arguments);
+
+    const path file { firstWord };
+
+    const bool discardVariations = chess::util::trim(rest) == "novars";
+
     wait();
 
-    searcher.context.openingBook.book.add_from_json(
-        load_file_as_string(file));
-} catch (const std::exception& except) {
-    std::println(std::cerr,
-        "Error reading from opening book file at path: {}",
-        file.string());
+    try {
+        searcher.context.openingBook.book.add_from_pgn(
+            load_file_as_string(file),
+            ! discardVariations);
+    } catch (const std::exception& except) {
+        std::println(std::cerr,
+            "Error reading from opening book file at path: {}",
+            file.string());
 
-    std::println(std::cerr, "{}", except.what());
+        std::println(std::cerr, "{}", except.what());
+    }
 }
 
 void Engine::make_null_move()

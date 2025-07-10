@@ -20,7 +20,7 @@ namespace ben_bot {
 
 using std::string_view;
 
-[[nodiscard]] string_view get_opening_book_json_text();
+[[nodiscard]] string_view get_opening_book_pgn_text();
 
 [[nodiscard]] string_view get_ascii_logo();
 

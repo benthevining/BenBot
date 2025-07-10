@@ -29,6 +29,7 @@
 
 namespace ben_bot {
 
+using std::filesystem::path;
 using std::string_view;
 
 namespace uci    = chess::uci;
@@ -56,7 +57,7 @@ private:
 
     void handle_custom_command(string_view command, string_view options) override;
 
-    void load_book_file(const std::filesystem::path& file);
+    void load_book_file(string_view arguments);
 
     void make_null_move();
 
@@ -101,10 +102,10 @@ private:
         CustomCommand {
             .name   = "loadbook",
             .action = [this](const string_view args) {
-                load_book_file(std::filesystem::path { args });
+                load_book_file(args);
             },
-            .description = "Reads the given JSON file into the engine's openings database. See book.json in the ben-bot source code for an example of the format.",
-            .argsHelp = "<path>"
+            .description = "Reads the given PGN file into the engine's openings database",
+            .argsHelp = "<path> [novars]"
         },
         CustomCommand {
             .name = "showpos",

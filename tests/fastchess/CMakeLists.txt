@@ -35,6 +35,8 @@ add_custom_target (
 
 cmake_host_system_information (RESULT num_cores QUERY NUMBER_OF_PHYSICAL_CORES)
 
+set (openings_file "${libchess_SOURCE_DIR}/ben-bot/resources/book.pgn")
+
 # cmake-format: off
 add_custom_target (
     sprt
@@ -42,7 +44,7 @@ add_custom_target (
         -engine "cmd=$<TARGET_FILE:ben_bot>" name=Refactor
         -engine "cmd=${baseline_binary}" name=Baseline
         -each tc=8+0.08 -rounds 50 -repeat -concurrency "${num_cores}" -recover
-        -openings "file=${CMAKE_CURRENT_LIST_DIR}/8moves_v3.pgn" format=pgn
+        -openings "file=${openings_file}" format=pgn
         -sprt elo0=0 elo1=10 alpha=0.05 beta=0.05
     WORKING_DIRECTORY "$<TARGET_FILE_DIR:ben_bot>"
     COMMENT "Running SPRT test..."

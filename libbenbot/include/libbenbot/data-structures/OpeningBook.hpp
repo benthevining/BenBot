@@ -22,9 +22,11 @@
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
+#include <libchess/notation/PGN.hpp>
 #include <libchess/uci/DefaultOptions.hpp>
 #include <libchess/uci/Options.hpp>
 #include <optional>
+#include <print>
 #include <random>
 #include <span>
 #include <string_view>
@@ -51,24 +53,20 @@ public:
      */
     [[nodiscard]] std::span<const Move> get_moves(const Position& position) const;
 
-    /** Adds all lines from a JSON text.
-
-      The format of the JSON should be:
-      @code{.json}
-      [
-        {
-          "comment": "optional",
-          "lines": [
-            "UCI moves..."
-          ]
-        }
-      ]
-      @endcode
+    /** Adds moves from a PGN file.
+        The text may contain multiple PGN files separated by at least 1 newline.
      */
-    void add_from_json(std::string_view json);
+    void add_from_pgn(
+        std::string_view pgnText,
+        bool             includeVariations = true);
+
+    /** Prunes duplicate moves from the database. */
+    void prune();
 
 private:
-    void add_line(std::string_view line);
+    void add_pgn_moves(
+        std::span<const notation::GameRecord::Move> moves,
+        Position position, bool includeVariations);
 
     std::unordered_map<Position::Hash, std::vector<Move>> lines;
 };
@@ -94,7 +92,7 @@ struct OpeningBookContext final {
     [[nodiscard]] std::optional<Move> get_move(const Position& position);
 
 private:
-    std::mt19937_64 rng;
+    std::mt19937_64 rng { std::random_device {}() };
 
     std::uniform_int_distribution<size_t> dist { 0uz };
 };
