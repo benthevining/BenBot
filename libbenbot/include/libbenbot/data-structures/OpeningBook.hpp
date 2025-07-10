@@ -60,32 +60,13 @@ public:
         std::string_view pgnText,
         bool             includeVariations = true);
 
-    /** Writes the openings database as a set of PGNs.
-        Each root move from the starting position is given its own PGN file,
-        with variations being used to consolidate them from there.
-     */
-    [[nodiscard]] std::vector<notation::GameRecord> to_pgns() const;
-
     /** Prunes duplicate moves from the database. */
     void prune();
-
-    void print_stats() const
-    {
-        std::println("Num stored positions: {}", lines.size());
-
-        const Position startPos;
-
-        std::println("Num moves from start pos: {}", get_moves(startPos).size());
-    }
 
 private:
     void add_pgn_moves(
         std::span<const notation::GameRecord::Move> moves,
         Position position, bool includeVariations);
-
-    void add_next_position(
-        const Position&       position,
-        notation::GameRecord& game) const;
 
     std::unordered_map<Position::Hash, std::vector<Move>> lines;
 };
@@ -111,7 +92,7 @@ struct OpeningBookContext final {
     [[nodiscard]] std::optional<Move> get_move(const Position& position);
 
 private:
-    std::mt19937_64 rng;
+    std::mt19937_64 rng { std::random_device {}() };
 
     std::uniform_int_distribution<size_t> dist { 0uz };
 };

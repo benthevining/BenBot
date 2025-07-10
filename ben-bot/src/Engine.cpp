@@ -23,7 +23,6 @@
 #include <iterator>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Magics.hpp>
-#include <libchess/notation/PGN.hpp>
 #include <print>
 #include <string>
 #include <string_view>
@@ -43,21 +42,6 @@ namespace {
         using Iterator = std::istreambuf_iterator<char>;
 
         return { Iterator { input }, Iterator {} };
-    }
-
-    void overwrite_file(path file, const string_view content)
-    {
-        file = absolute(file);
-
-        // need to make sure the dest directory exists
-        std::filesystem::create_directories(file.parent_path());
-
-        std::ofstream output { file };
-
-        output.exceptions(
-            std::ios_base::badbit | std::ios_base::failbit);
-
-        output << content;
     }
 } // namespace
 
@@ -103,26 +87,6 @@ try {
 } catch (const std::exception& except) {
     std::println(std::cerr,
         "Error reading from opening book file at path: {}",
-        file.string());
-
-    std::println(std::cerr, "{}", except.what());
-}
-
-void Engine::dump_book_to_file(const path& file) const
-try {
-    searcher.context.wait(); // NB. the virtual wait() function is not const
-
-    std::string fileContent;
-
-    for (const auto& game : searcher.context.openingBook.book.to_pgns()) {
-        fileContent.append(chess::notation::to_pgn(game));
-        fileContent.append(2uz, '\n');
-    }
-
-    overwrite_file(file, fileContent);
-} catch (const std::exception& except) {
-    std::println(std::cerr,
-        "Error writing opening book to file at path: {}",
         file.string());
 
     std::println(std::cerr, "{}", except.what());

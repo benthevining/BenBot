@@ -59,7 +59,6 @@ private:
 
     void load_book_moves(string_view pgnText);
     void load_book_file(const path& file);
-    void dump_book_to_file(const path& file) const;
 
     void make_null_move();
 
@@ -100,21 +99,13 @@ private:
     };
 
     // clang-format off
-    std::array<CustomCommand, 6uz> customCommands {
+    std::array<CustomCommand, 5uz> customCommands {
         CustomCommand {
             .name   = "loadbook",
             .action = [this](const string_view args) {
                 load_book_file(path { args });
             },
             .description = "Reads the given PGN file into the engine's openings database. The file may contain multiple PGNs separated by at least one blank line.",
-            .argsHelp = "<path>"
-        },
-        CustomCommand {
-            .name = "dumpbook",
-            .action = [this](const string_view args) {
-                dump_book_to_file(path { args });
-            },
-            .description = "Writes the engine's openings database to a PGN file at the given path.",
             .argsHelp = "<path>"
         },
         CustomCommand {
