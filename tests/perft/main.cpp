@@ -149,8 +149,6 @@ namespace {
         if (! options.jsonOutputPath.has_value())
             return;
 
-        const auto& path = *options.jsonOutputPath;
-
         nlohmann::json json;
 
         json["starting_fen"]        = notation::to_fen(options.startingPosition);
@@ -168,7 +166,9 @@ namespace {
         result_json["checkmates"]  = result.checkmates;
         result_json["stalemates"]  = result.stalemates;
 
-        std::filesystem::create_directories(path.parent_path());
+        const auto& path = *options.jsonOutputPath;
+
+        create_directories(path.parent_path());
 
         std::ofstream output { path };
 
@@ -206,7 +206,7 @@ namespace {
     template <bool IsRoot = true>
     [[nodiscard]] PerftResult perft(
         const size_t          depth,
-        const game::Position& startingPosition = {}) // NOLINT(readability-function-cognitive-complexity)
+        const game::Position& startingPosition)
     {
         if (depth == 0uz)
             return { .nodes = 1uz };

@@ -78,7 +78,7 @@ try {
 
     json["generated"] = movesJSON;
 
-    std::filesystem::create_directories(outputFile.parent_path());
+    create_directories(outputFile.parent_path());
 
     std::ofstream output { outputFile };
 

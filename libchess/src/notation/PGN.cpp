@@ -380,8 +380,6 @@ std::vector<GameRecord> parse_all_pgns(string_view fileContent)
 
     fileContent = util::trim(fileContent);
 
-    const auto origText = fileContent;
-
     while (! fileContent.empty()) {
         // the move text of this PGN starts at the first line not starting in '['
         const auto moveTextStart = find_next_line<false>(fileContent);
