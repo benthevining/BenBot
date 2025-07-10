@@ -52,9 +52,9 @@ std::vector<GameRecord> OpeningBook::to_pgns() const
 
         game.moves.emplace_back(rootMove);
 
-        // add_next_position(
-        //     after_move(position, rootMove),
-        //     game);
+        add_next_position(
+            after_move(position, rootMove),
+            game);
 
         pgns.emplace_back(std::move(game));
     }
