@@ -39,6 +39,8 @@ void OpeningBook::add_pgn_moves(
 
         position.make_move(moveData.move);
     }
+
+
 }
 
 std::vector<GameRecord> OpeningBook::to_pgns() const
