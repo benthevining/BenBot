@@ -23,6 +23,7 @@
 #include <iterator>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Magics.hpp>
+#include <libchess/util/Strings.hpp>
 #include <print>
 #include <string>
 #include <string_view>
@@ -52,7 +53,7 @@ void Engine::new_game(const bool firstCall)
     if (firstCall) {
         chess::moves::magics::init();
 
-        load_book_moves(
+        searcher.context.openingBook.book.add_from_pgn(
             get_opening_book_pgn_text());
     }
 }
@@ -73,23 +74,27 @@ void Engine::handle_custom_command(
     std::println("Type 'help' for a list of supported commands");
 }
 
-void Engine::load_book_moves(const string_view pgnText)
+void Engine::load_book_file(const string_view arguments)
 {
+    const auto [firstWord, rest] = chess::util::split_at_first_space(arguments);
+
+    const path file { firstWord };
+
+    const bool discardVariations = chess::util::trim(rest) == "novars";
+
     wait();
 
-    searcher.context.openingBook.book.add_from_pgn(pgnText);
-}
+    try {
+        searcher.context.openingBook.book.add_from_pgn(
+            load_file_as_string(file),
+            ! discardVariations);
+    } catch (const std::exception& except) {
+        std::println(std::cerr,
+            "Error reading from opening book file at path: {}",
+            file.string());
 
-void Engine::load_book_file(const path& file)
-try {
-    load_book_moves(
-        load_file_as_string(file));
-} catch (const std::exception& except) {
-    std::println(std::cerr,
-        "Error reading from opening book file at path: {}",
-        file.string());
-
-    std::println(std::cerr, "{}", except.what());
+        std::println(std::cerr, "{}", except.what());
+    }
 }
 
 void Engine::make_null_move()

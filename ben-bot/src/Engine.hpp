@@ -57,8 +57,7 @@ private:
 
     void handle_custom_command(string_view command, string_view options) override;
 
-    void load_book_moves(string_view pgnText);
-    void load_book_file(const path& file);
+    void load_book_file(string_view arguments);
 
     void make_null_move();
 
@@ -103,10 +102,10 @@ private:
         CustomCommand {
             .name   = "loadbook",
             .action = [this](const string_view args) {
-                load_book_file(path { args });
+                load_book_file(args);
             },
-            .description = "Reads the given PGN file into the engine's openings database. The file may contain multiple PGNs separated by at least one blank line.",
-            .argsHelp = "<path>"
+            .description = "Reads the given PGN file into the engine's openings database",
+            .argsHelp = "<path> [novars]"
         },
         CustomCommand {
             .name = "showpos",
