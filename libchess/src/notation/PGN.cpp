@@ -361,7 +361,7 @@ namespace {
                     return lineStart;
             }
 
-            const auto nextNewline = text.find('\n', lineStart + 1uz);
+            const auto nextNewline = text.find('\n', lineStart);
 
             if (nextNewline == string_view::npos)
                 return string_view::npos;

@@ -396,7 +396,6 @@ Bg5 Nbd7 1/2-1/2
 
     REQUIRE(games.size() == 3uz);
 
-    REQUIRE(games.front().moves.size() == 16uz);
-    REQUIRE(games[1uz].moves.size() == 16uz);
-    REQUIRE(games.back().moves.size() == 16uz);
+    for (const auto& game : games)
+        REQUIRE(game.moves.size() == 16uz);
 }
