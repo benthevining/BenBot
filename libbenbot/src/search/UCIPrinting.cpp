@@ -64,6 +64,14 @@ namespace {
     template <bool PrintBestMove>
     void print_uci_info(const Callbacks::Result& res)
     {
+        if (res.nodesSearched > 0uz) {
+            const auto ttHitPcnt = static_cast<double>(res.transpositionTableHits) / static_cast<double>(res.nodesSearched);
+
+            std::println(
+                "info string TT hits {} ({}%)",
+                res.transpositionTableHits, ttHitPcnt * 100.);
+        }
+
         std::println(
             "info depth {} score {} time {} nodes {} nps {}",
             res.depth, get_score_string(res.score), res.duration.count(),

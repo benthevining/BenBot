@@ -161,6 +161,7 @@ namespace {
 
     struct Stats final {
         size_t nodesSearched { 0uz };
+        size_t transTableHits { 0uz };
     };
 
     // searches only captures, with no depth limit, to try to
@@ -243,8 +244,10 @@ namespace {
 
         // check if this position has been searched before to at
         // least this depth and within these bounds for non-PV nodes
-        if (const auto value = transTable.probe_eval(currentPosition, depth, bounds.alpha, bounds.beta))
+        if (const auto value = transTable.probe_eval(currentPosition, depth, bounds.alpha, bounds.beta)) {
+            ++stats.transTableHits;
             return from_tt_score(*value, plyFromRoot);
+        }
 
         if (currentPosition.is_draw()) {
             transTable.store(
@@ -348,8 +351,7 @@ void Context::search()
         callbacks.search_complete({ .duration = interrupter.get_search_duration(),
             .depth                            = 1uz,
             .score                            = eval,
-            .bestMove                         = *bookMove,
-            .nodesSearched                    = 0uz });
+            .bestMove                         = *bookMove });
 
         return;
     }
@@ -419,7 +421,8 @@ void Context::search()
             .depth                               = depth,
             .score                               = bestScore,
             .bestMove                            = bestMove.value(),
-            .nodesSearched                       = stats.nodesSearched });
+            .nodesSearched                       = stats.nodesSearched,
+            .transpositionTableHits              = stats.transTableHits });
 
         if (! infinite) {
             // only 1 legal move, don't do a deeper iteration
@@ -458,7 +461,8 @@ void Context::search()
         .depth                            = depth,
         .score                            = bestScore,
         .bestMove                         = bestMove.value(),
-        .nodesSearched                    = stats.nodesSearched });
+        .nodesSearched                    = stats.nodesSearched,
+        .transpositionTableHits           = stats.transTableHits });
 }
 
 void Context::wait() const

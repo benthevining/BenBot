@@ -128,6 +128,11 @@ struct Callbacks final {
             iterative deepening loop.
          */
         size_t nodesSearched { 0uz };
+
+        /** The number of nodes for which a saved score from the transposition table
+            could be used.
+         */
+        size_t transpositionTableHits { 0uz };
     };
 
     /** Function type that accepts a single Result argument. */
