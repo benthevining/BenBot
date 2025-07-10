@@ -68,6 +68,9 @@ void OpeningBook::add_next_position(
 {
     const auto moves = get_moves(position);
 
+    if (moves.empty())
+        return;
+
     auto& moveData = game.moves.emplace_back(moves.front());
 
     for (const auto& move : moves | std::views::drop(1uz)) {
