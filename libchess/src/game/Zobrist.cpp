@@ -306,8 +306,6 @@ Hash update(
                     pos.enPassantTargetSquare.value(),
                     pos.is_white_to_move()));
         } else {
-            [[likely]];
-
             const auto capturedType = pos.their_pieces().get_piece_on(move.to);
 
             value ^= piece_key(
@@ -347,8 +345,6 @@ Hash after_null_move(const Position& pos)
         value ^= en_passant_key(square.file);
         return std::optional<int> {};
     });
-
-    // NB. it's impossible for a null move to introduce a new EP target
 
     return value;
 }

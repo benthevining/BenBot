@@ -28,6 +28,7 @@ using std::string_view;
 
 // helps to create tables of text with vertically aligned columns
 // rows can have a different number of columns; the table's size is based on the maximum number of columns
+// the first row is the header, and a separator row will be added between it and the second manually added row
 struct TextTable final {
     // appends a column to the current row
     TextTable& append_column(string_view text);

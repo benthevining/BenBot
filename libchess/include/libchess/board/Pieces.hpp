@@ -255,11 +255,8 @@ constexpr void Pieces::our_move(const moves::Move& move, const Color ourColor) n
         return;
     }
 
-    [[likely]];
-
     pieceBB ^= movementMask;
 
-    // NB. we know that if a move is a promotion, it can't be castling
     if (move.is_castling()) {
         [[unlikely]];
 
