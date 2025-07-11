@@ -50,6 +50,19 @@ namespace {
         return std::format("mate {}", mateVal);
     }
 
+    [[nodiscard]] std::string get_tt_hits_string(
+        const size_t nodesSearched, const size_t ttHits)
+    {
+        if (nodesSearched == 0uz)
+            return {};
+
+        const auto ttHitPcnt = static_cast<double>(ttHits) / static_cast<double>(nodesSearched);
+
+        return std::format(
+            " string TT hits {} ({}%)",
+            ttHits, ttHitPcnt * 100.);
+    }
+
     [[nodiscard]] size_t get_nodes_per_second(const Callbacks::Result& res)
     {
         const auto seconds = static_cast<double>(res.duration.count()) * 0.001;
@@ -64,18 +77,11 @@ namespace {
     template <bool PrintBestMove>
     void print_uci_info(const Callbacks::Result& res)
     {
-        if (res.nodesSearched > 0uz) {
-            const auto ttHitPcnt = static_cast<double>(res.transpositionTableHits) / static_cast<double>(res.nodesSearched);
-
-            std::println(
-                "info string TT hits {} ({}%)",
-                res.transpositionTableHits, ttHitPcnt * 100.);
-        }
-
         std::println(
-            "info depth {} score {} time {} nodes {} nps {}",
+            "info depth {} score {} time {} nodes {} nps {}{}",
             res.depth, get_score_string(res.score), res.duration.count(),
-            res.nodesSearched, get_nodes_per_second(res));
+            res.nodesSearched, get_nodes_per_second(res),
+            get_tt_hits_string(res.nodesSearched, res.transpositionTableHits));
 
         if constexpr (PrintBestMove) {
             std::println("bestmove {}", notation::to_uci(res.bestMove));
