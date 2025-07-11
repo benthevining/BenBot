@@ -297,8 +297,6 @@ TEST_CASE("Patterns - pawn attacks", TAGS)
 
 TEST_CASE("Patterns - knight moves", TAGS)
 {
-    using chess::board::knight_distance;
-
     SECTION("From D4")
     {
         static constexpr Square starting { File::D, Rank::Four };

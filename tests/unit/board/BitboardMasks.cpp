@@ -33,6 +33,8 @@ using chess::board::Square;
 using chess::board::file_distance;
 using chess::board::rank_distance;
 
+using magic_enum::enum_values;
+
 namespace bitboard_masks = chess::board::masks;
 
 [[nodiscard]] static constexpr auto get_squares(const chess::board::Bitboard& board)
@@ -49,8 +51,8 @@ TEST_CASE("Bitboard - dark/light square masks", TAGS)
         STATIC_REQUIRE(darkSquares.count() == 32uz);
         STATIC_REQUIRE(get_squares(darkSquares).size() == darkSquares.count());
 
-        for (const auto rank : magic_enum::enum_values<Rank>()) {
-            for (const auto file : magic_enum::enum_values<File>()) {
+        for (const auto rank : enum_values<Rank>()) {
+            for (const auto file : enum_values<File>()) {
                 const Square square { file, rank };
 
                 REQUIRE(darkSquares.test(square) == square.is_dark());
@@ -68,8 +70,8 @@ TEST_CASE("Bitboard - dark/light square masks", TAGS)
         STATIC_REQUIRE(lightSquares.count() == 32uz);
         STATIC_REQUIRE(get_squares(lightSquares).size() == lightSquares.count());
 
-        for (const auto rank : magic_enum::enum_values<Rank>()) {
-            for (const auto file : magic_enum::enum_values<File>()) {
+        for (const auto rank : enum_values<Rank>()) {
+            for (const auto file : enum_values<File>()) {
                 const Square square { file, rank };
 
                 REQUIRE(lightSquares.test(square) == square.is_light());
@@ -83,34 +85,34 @@ TEST_CASE("Bitboard - dark/light square masks", TAGS)
 
 TEST_CASE("Bitboard - file masks", TAGS)
 {
-#define TEST_FILE_MASK(str, correctFile, mask)                        \
-    SECTION(str)                                                      \
-    {                                                                 \
-        static constexpr auto board = mask;                           \
-                                                                      \
-        STATIC_REQUIRE(board.count() == 8uz);                         \
-        STATIC_REQUIRE(get_squares(board).size() == board.count());   \
-                                                                      \
-        for (const auto rank : magic_enum::enum_values<Rank>()) {     \
-            for (const auto file : magic_enum::enum_values<File>()) { \
-                const Square square { file, rank };                   \
-                                                                      \
-                const bool isCorrectFile = file == correctFile;       \
-                                                                      \
-                REQUIRE(board.test(square) == isCorrectFile);         \
-            }                                                         \
-        }                                                             \
-                                                                      \
-        for (const auto square : board.squares()) {                   \
-            REQUIRE(square.file == correctFile);                      \
-                                                                      \
-            for (const auto sq2 : board.squares()) {                  \
-                REQUIRE(file_distance(square, sq2) == 0uz);           \
-                                                                      \
-                if (square != sq2)                                    \
-                    REQUIRE(! are_on_same_diagonal(square, sq2));     \
-            }                                                         \
-        }                                                             \
+#define TEST_FILE_MASK(str, correctFile, mask)                      \
+    SECTION(str)                                                    \
+    {                                                               \
+        static constexpr auto board = mask;                         \
+                                                                    \
+        STATIC_REQUIRE(board.count() == 8uz);                       \
+        STATIC_REQUIRE(get_squares(board).size() == board.count()); \
+                                                                    \
+        for (const auto rank : enum_values<Rank>()) {               \
+            for (const auto file : enum_values<File>()) {           \
+                const Square square { file, rank };                 \
+                                                                    \
+                const bool isCorrectFile = file == correctFile;     \
+                                                                    \
+                REQUIRE(board.test(square) == isCorrectFile);       \
+            }                                                       \
+        }                                                           \
+                                                                    \
+        for (const auto square : board.squares()) {                 \
+            REQUIRE(square.file == correctFile);                    \
+                                                                    \
+            for (const auto sq2 : board.squares()) {                \
+                REQUIRE(file_distance(square, sq2) == 0uz);         \
+                                                                    \
+                if (square != sq2)                                  \
+                    REQUIRE(! are_on_same_diagonal(square, sq2));   \
+            }                                                       \
+        }                                                           \
     }
 
     TEST_FILE_MASK("A file", File::A, bitboard_masks::files::A);
@@ -127,34 +129,34 @@ TEST_CASE("Bitboard - file masks", TAGS)
 
 TEST_CASE("Bitboard - rank masks", TAGS)
 {
-#define TEST_RANK_MASK(str, correctRank, mask)                        \
-    SECTION(str)                                                      \
-    {                                                                 \
-        static constexpr auto board = mask;                           \
-                                                                      \
-        STATIC_REQUIRE(board.count() == 8uz);                         \
-        STATIC_REQUIRE(get_squares(board).size() == board.count());   \
-                                                                      \
-        for (const auto rank : magic_enum::enum_values<Rank>()) {     \
-            for (const auto file : magic_enum::enum_values<File>()) { \
-                const Square square { file, rank };                   \
-                                                                      \
-                const bool isCorrectRank = rank == correctRank;       \
-                                                                      \
-                REQUIRE(board.test(square) == isCorrectRank);         \
-            }                                                         \
-        }                                                             \
-                                                                      \
-        for (const auto square : board.squares()) {                   \
-            REQUIRE(square.rank == correctRank);                      \
-                                                                      \
-            for (const auto sq2 : board.squares()) {                  \
-                REQUIRE(rank_distance(square, sq2) == 0uz);           \
-                                                                      \
-                if (square != sq2)                                    \
-                    REQUIRE(! are_on_same_diagonal(square, sq2));     \
-            }                                                         \
-        }                                                             \
+#define TEST_RANK_MASK(str, correctRank, mask)                      \
+    SECTION(str)                                                    \
+    {                                                               \
+        static constexpr auto board = mask;                         \
+                                                                    \
+        STATIC_REQUIRE(board.count() == 8uz);                       \
+        STATIC_REQUIRE(get_squares(board).size() == board.count()); \
+                                                                    \
+        for (const auto rank : enum_values<Rank>()) {               \
+            for (const auto file : enum_values<File>()) {           \
+                const Square square { file, rank };                 \
+                                                                    \
+                const bool isCorrectRank = rank == correctRank;     \
+                                                                    \
+                REQUIRE(board.test(square) == isCorrectRank);       \
+            }                                                       \
+        }                                                           \
+                                                                    \
+        for (const auto square : board.squares()) {                 \
+            REQUIRE(square.rank == correctRank);                    \
+                                                                    \
+            for (const auto sq2 : board.squares()) {                \
+                REQUIRE(rank_distance(square, sq2) == 0uz);         \
+                                                                    \
+                if (square != sq2)                                  \
+                    REQUIRE(! are_on_same_diagonal(square, sq2));   \
+            }                                                       \
+        }                                                           \
     }
 
     TEST_RANK_MASK("Rank 1", Rank::One, bitboard_masks::ranks::ONE);
@@ -181,16 +183,16 @@ TEST_CASE("Bitboard - diagonal masks", TAGS)
 
         // there should only be 1 bit set in each rank & file
 
-        for (const auto rank : magic_enum::enum_values<Rank>()) {
+        for (const auto rank : enum_values<Rank>()) {
             REQUIRE(std::ranges::count_if(
-                        magic_enum::enum_values<File>(),
+                        enum_values<File>(),
                         [rank](File file) { return diagonal.test(Square { file, rank }); })
                     == 1uz);
         }
 
-        for (const auto file : magic_enum::enum_values<File>()) {
+        for (const auto file : enum_values<File>()) {
             REQUIRE(std::ranges::count_if(
-                        magic_enum::enum_values<Rank>(),
+                        enum_values<Rank>(),
                         [file](Rank rank) { return diagonal.test(Square { file, rank }); })
                     == 1uz);
         }
@@ -217,16 +219,16 @@ TEST_CASE("Bitboard - diagonal masks", TAGS)
 
         STATIC_REQUIRE(diagonal.count() == 8uz);
 
-        for (const auto rank : magic_enum::enum_values<Rank>()) {
+        for (const auto rank : enum_values<Rank>()) {
             REQUIRE(std::ranges::count_if(
-                        magic_enum::enum_values<File>(),
+                        enum_values<File>(),
                         [rank](File file) { return diagonal.test(Square { file, rank }); })
                     == 1uz);
         }
 
-        for (const auto file : magic_enum::enum_values<File>()) {
+        for (const auto file : enum_values<File>()) {
             REQUIRE(std::ranges::count_if(
-                        magic_enum::enum_values<Rank>(),
+                        enum_values<Rank>(),
                         [file](Rank rank) { return diagonal.test(Square { file, rank }); })
                     == 1uz);
         }
@@ -431,12 +433,12 @@ TEST_CASE("Perimeter mask", TAGS)
 
     STATIC_REQUIRE(perimeter.count() == 28uz);
 
-    for (const auto rank : magic_enum::enum_values<Rank>()) {
+    for (const auto rank : enum_values<Rank>()) {
         REQUIRE(perimeter.test(Square { File::A, rank }));
         REQUIRE(perimeter.test(Square { File::H, rank }));
     }
 
-    for (const auto file : magic_enum::enum_values<File>()) {
+    for (const auto file : enum_values<File>()) {
         REQUIRE(perimeter.test(Square { file, Rank::One }));
         REQUIRE(perimeter.test(Square { file, Rank::Eight }));
     }

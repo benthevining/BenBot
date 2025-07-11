@@ -22,6 +22,8 @@
 
 static constexpr auto TAGS { "[moves][Move]" };
 
+using magic_enum::enum_values;
+
 using chess::board::File;
 using chess::board::Rank;
 using chess::pieces::Color;
@@ -90,7 +92,7 @@ TEST_CASE("Move - promotion()", TAGS)
     {
         SECTION("White")
         {
-            for (const auto file : magic_enum::enum_values<File>()) {
+            for (const auto file : enum_values<File>()) {
                 const auto move = moves::promotion(file, Color::White);
 
                 REQUIRE(move.from.file == file);
@@ -111,7 +113,7 @@ TEST_CASE("Move - promotion()", TAGS)
 
         SECTION("Black")
         {
-            for (const auto file : magic_enum::enum_values<File>()) {
+            for (const auto file : enum_values<File>()) {
                 const auto move = moves::promotion(file, Color::Black);
 
                 REQUIRE(move.from.file == file);
@@ -133,8 +135,8 @@ TEST_CASE("Move - promotion()", TAGS)
 
     SECTION("Under promotion")
     {
-        for (const auto color : magic_enum::enum_values<Color>()) {
-            for (const auto file : magic_enum::enum_values<File>()) {
+        for (const auto color : enum_values<Color>()) {
+            for (const auto file : enum_values<File>()) {
                 for (const auto promotedType : { PieceType::Knight, PieceType::Bishop, PieceType::Rook }) {
                     const auto move = moves::promotion(file, color, promotedType);
 

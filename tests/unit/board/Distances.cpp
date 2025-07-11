@@ -27,13 +27,13 @@ using chess::board::File;
 using chess::board::Rank;
 using chess::board::Square;
 
+using magic_enum::enum_values;
+
 TEST_CASE("File distance", TAGS)
 {
-    using chess::board::file_distance;
-
     SECTION("A/B files")
     {
-        for (const auto rank : magic_enum::enum_values<Rank>()) {
+        for (const auto rank : enum_values<Rank>()) {
             const Square aFile { File::A, rank };
             const Square bFile { File::B, rank };
 
@@ -47,7 +47,7 @@ TEST_CASE("File distance", TAGS)
 
     SECTION("G/H files")
     {
-        for (const auto rank : magic_enum::enum_values<Rank>()) {
+        for (const auto rank : enum_values<Rank>()) {
             const Square gFile { File::G, rank };
             const Square HFile { File::H, rank };
 
@@ -61,7 +61,7 @@ TEST_CASE("File distance", TAGS)
 
     SECTION("A/H files")
     {
-        for (const auto rank : magic_enum::enum_values<Rank>()) {
+        for (const auto rank : enum_values<Rank>()) {
             const Square aFile { File::A, rank };
             const Square hFile { File::H, rank };
 
@@ -73,11 +73,9 @@ TEST_CASE("File distance", TAGS)
 
 TEST_CASE("Rank distance", TAGS)
 {
-    using chess::board::rank_distance;
-
     SECTION("1/2")
     {
-        for (const auto file : magic_enum::enum_values<File>()) {
+        for (const auto file : enum_values<File>()) {
             const Square rank1 { file, Rank::One };
             const Square rank2 { file, Rank::Two };
 
@@ -91,7 +89,7 @@ TEST_CASE("Rank distance", TAGS)
 
     SECTION("7/8")
     {
-        for (const auto file : magic_enum::enum_values<File>()) {
+        for (const auto file : enum_values<File>()) {
             const Square rank7 { file, Rank::Seven };
             const Square rank8 { file, Rank::Eight };
 
@@ -105,7 +103,7 @@ TEST_CASE("Rank distance", TAGS)
 
     SECTION("1/8")
     {
-        for (const auto file : magic_enum::enum_values<File>()) {
+        for (const auto file : enum_values<File>()) {
             const Square rank1 { file, Rank::One };
             const Square rank8 { file, Rank::Eight };
 
@@ -117,8 +115,6 @@ TEST_CASE("Rank distance", TAGS)
 
 TEST_CASE("Manhattan distance", TAGS)
 {
-    using chess::board::manhattan_distance;
-
     SECTION("A1/H8")
     {
         static constexpr Square a1 { File::A, Rank::One };
@@ -146,8 +142,6 @@ TEST_CASE("Manhattan distance", TAGS)
 
 TEST_CASE("Center Manhattan distance", TAGS)
 {
-    using chess::board::center_manhattan_distance;
-
     STATIC_REQUIRE(center_manhattan_distance(Square { File::D, Rank::Four }) == 0uz);
     STATIC_REQUIRE(center_manhattan_distance(Square { File::D, Rank::Five }) == 0uz);
     STATIC_REQUIRE(center_manhattan_distance(Square { File::E, Rank::Four }) == 0uz);
@@ -160,8 +154,6 @@ TEST_CASE("Center Manhattan distance", TAGS)
 
 TEST_CASE("Chebyshev distance", TAGS)
 {
-    using chess::board::chebyshev_distance;
-
     static constexpr Square a1 { File::A, Rank::One };
     static constexpr Square a8 { File::A, Rank::Eight };
     static constexpr Square h1 { File::H, Rank::One };
@@ -190,8 +182,6 @@ TEST_CASE("Chebyshev distance", TAGS)
 
 TEST_CASE("Knight distance", TAGS)
 {
-    using chess::board::knight_distance;
-
     namespace bitboard_masks = chess::board::masks;
 
     SECTION("From F5")

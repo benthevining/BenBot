@@ -58,7 +58,7 @@ TEST_CASE("Zobrist - hash changes", TAGS)
         const auto oldHash = pos.hash;
 
         for (const auto& move : generate(pos)) {
-            const auto newPos = chess::game::after_move(pos, move);
+            const auto newPos = after_move(pos, move);
 
             REQUIRE(newPos.hash != oldHash);
         }
@@ -72,7 +72,7 @@ TEST_CASE("Zobrist - hash changes", TAGS)
         const auto oldHash = pos.hash;
 
         for (const auto& move : generate(pos)) {
-            const auto newPos = chess::game::after_move(pos, move);
+            const auto newPos = after_move(pos, move);
 
             REQUIRE(newPos.hash != oldHash);
         }
