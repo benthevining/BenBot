@@ -25,7 +25,6 @@
 #include <libchess/moves/PseudoLegal.hpp>
 #include <ranges>
 #include <utility>
-#include <vector>
 
 namespace chess::moves::magics {
 
@@ -175,7 +174,7 @@ namespace {
     // the next two functions calculate indices within the MagicMoves
     // array for the given piece type, square, and occupied squares
 
-    [[nodiscard]] constexpr size_t calc_bishop_index(
+    [[nodiscard, gnu::const]] constexpr size_t calc_bishop_index(
         const BitboardIndex squareIdx, const Bitboard occupied)
     {
         const auto [mul, offset] = BISHOP_MAGICS.at(squareIdx);
@@ -185,7 +184,7 @@ namespace {
         return offset + (((occupied & mask).to_int() * mul) >> 55uz);
     }
 
-    [[nodiscard]] constexpr size_t calc_rook_index(
+    [[nodiscard, gnu::const]] constexpr size_t calc_rook_index(
         const BitboardIndex squareIdx, const Bitboard occupied)
     {
         const auto [mul, offset] = ROOK_MAGICS.at(squareIdx);
@@ -197,22 +196,19 @@ namespace {
 
     // returns the next permutation of the given set
     // used to generate all permutations of possible blockers
-    [[nodiscard]] constexpr Bitboard permute(
+    [[nodiscard, gnu::const]] constexpr Bitboard permute(
         const Bitboard set, const Bitboard subset) noexcept
     {
         return Bitboard { subset.to_int() - set.to_int() } & set;
     }
 
-    // NB. this isn't a std::array because we encountered stack overflows with MSVC
-    using MagicMoves = std::vector<Bitboard>;
+    using MagicMoves = std::array<Bitboard, 88772uz>;
 
     [[nodiscard]] constexpr MagicMoves generate_magic_moves()
     {
         MagicMoves result;
 
-        result.resize(88772uz);
-
-        for (auto i = 0; i < 64; ++i) {
+        for (auto i = 0uz; i < 64uz; ++i) {
             const auto square = Square::from_index(i);
 
             // Bishops
@@ -249,20 +245,16 @@ namespace {
         return result;
     }
 
-    // NB. the MagicMoves isn't constexpr because we currently hit every compiler's constexpr step limit
-    [[nodiscard]] const MagicMoves& get_magic_moves()
-    {
-        static const auto moves = generate_magic_moves();
-
-        return moves;
-    }
+    // NB. this array can't be constexpr because we currently
+    // hit every compiler's constexpr step limit
+    const MagicMoves MAGIC_MOVES { generate_magic_moves() };
 
 } // namespace
 
 Bitboard bishop(
     const Square& bishopPos, const Bitboard occupiedSquares, const Bitboard friendlyPieces)
 {
-    const auto moves = get_magic_moves().at(
+    const auto moves = MAGIC_MOVES.at(
         calc_bishop_index(bishopPos.index(), occupiedSquares));
 
     return moves & friendlyPieces.inverse();
@@ -271,7 +263,7 @@ Bitboard bishop(
 Bitboard rook(
     const Square& rookPos, const Bitboard occupiedSquares, const Bitboard friendlyPieces)
 {
-    const auto moves = get_magic_moves().at(
+    const auto moves = MAGIC_MOVES.at(
         calc_rook_index(rookPos.index(), occupiedSquares));
 
     return moves & friendlyPieces.inverse();
@@ -280,23 +272,15 @@ Bitboard rook(
 Bitboard queen(
     const Square& queenPos, const Bitboard occupiedSquares, const Bitboard friendlyPieces)
 {
-    // micro-optimization: call this once instead of twice here
-    static const auto& magic_moves = get_magic_moves();
-
     const auto squareIdx = queenPos.index();
 
-    const auto bishopMoves = magic_moves.at(
+    const auto bishopMoves = MAGIC_MOVES.at(
         calc_bishop_index(squareIdx, occupiedSquares));
 
-    const auto rookMoves = magic_moves.at(
+    const auto rookMoves = MAGIC_MOVES.at(
         calc_rook_index(squareIdx, occupiedSquares));
 
     return (bishopMoves | rookMoves) & friendlyPieces.inverse();
-}
-
-void init()
-{
-    [[maybe_unused]] static const auto& magic_moves = get_magic_moves();
 }
 
 } // namespace chess::moves::magics

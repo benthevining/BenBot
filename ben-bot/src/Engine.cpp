@@ -22,7 +22,6 @@
 #include <iostream>
 #include <iterator>
 #include <libchess/game/Position.hpp>
-#include <libchess/moves/Magics.hpp>
 #include <libchess/util/Strings.hpp>
 #include <print>
 #include <string>
@@ -51,8 +50,6 @@ void Engine::new_game(const bool firstCall)
     searcher.context.reset(); // clears transposition table
 
     if (firstCall) {
-        chess::moves::magics::init();
-
         searcher.context.openingBook.book.add_from_pgn(
             get_opening_book_pgn_text());
     }
