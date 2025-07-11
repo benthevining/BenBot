@@ -47,7 +47,7 @@ namespace {
 
 void Engine::new_game(const bool firstCall)
 {
-    searcher.context.reset(); // clears transposition table
+    searcher.context.clear_transposition_table(); // clears transposition table
 
     if (firstCall) {
         searcher.context.openingBook.book.add_from_pgn(

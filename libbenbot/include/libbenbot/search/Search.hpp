@@ -217,12 +217,11 @@ struct Context final {
     void abort() noexcept { exitFlag.store(true); }
 
     /** Clears the transposition table.
-        If a search is in progress, this method cancels it and blocks until it returns.
+        If a search is in progress, this method blocks until it returns.
         Invoking this method is thread-safe, even if a search was in progress.
      */
-    void reset()
+    void clear_transposition_table()
     {
-        abort();
         wait();
         transTable.clear();
     }

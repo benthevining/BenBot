@@ -88,7 +88,7 @@ private:
 
     uci::Action clearTT {
         "Clear Hash",
-        [this] { searcher.context.reset(); },
+        [this] { searcher.context.clear_transposition_table(); },
         "Press to clear the transposition table"
     };
 
