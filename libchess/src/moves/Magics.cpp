@@ -25,6 +25,7 @@
 #include <libchess/moves/PseudoLegal.hpp>
 #include <ranges>
 #include <utility>
+#include <vector>
 
 namespace chess::moves::magics {
 
@@ -202,11 +203,14 @@ namespace {
         return Bitboard { subset.to_int() - set.to_int() } & set;
     }
 
-    using MagicMoves = std::array<Bitboard, 88772uz>;
+    // NB. this isn't std::array because we encountered stack overflows when building with MSVC
+    using MagicMoves = std::vector<Bitboard>;
 
     [[nodiscard]] constexpr MagicMoves generate_magic_moves()
     {
         MagicMoves result;
+
+        result.resize(88772uz);
 
         for (auto i = 0uz; i < 64uz; ++i) {
             const auto square = Square::from_index(i);
