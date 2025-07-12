@@ -12,6 +12,8 @@
  * ======================================================================================
  */
 
+#include "libbenbot/search/Search.hpp"
+
 #include <cassert>
 #include <chrono>
 #include <cmath>
@@ -19,7 +21,6 @@
 #include <format>
 #include <iostream>
 #include <libbenbot/eval/Score.hpp>
-#include <libbenbot/search/Search.hpp>
 #include <libchess/notation/UCI.hpp>
 #include <print>
 #include <string>
@@ -55,19 +56,6 @@ namespace {
         return std::format("mate {}", mateVal);
     }
 
-    [[nodiscard]] std::string get_tt_hits_string(
-        const size_t nodesSearched, const size_t ttHits)
-    {
-        if (nodesSearched == 0uz)
-            return {};
-
-        const auto ttHitPcnt = static_cast<double>(ttHits) / static_cast<double>(nodesSearched);
-
-        return std::format(
-            " string TT hits {} ({}%)",
-            ttHits, ttHitPcnt * 100.);
-    }
-
     [[nodiscard]] size_t get_nodes_per_second(const Callbacks::Result& res)
     {
         const auto seconds = static_cast<double>(res.duration.count()) * 0.001;
@@ -79,6 +67,21 @@ namespace {
         return static_cast<size_t>(std::round(nps));
     }
 
+    [[nodiscard]] std::string get_extra_stats_string(const Callbacks::Result& res)
+    {
+        if (res.nodesSearched == 0uz)
+            return {};
+
+        auto get_pcnt = [totalNodes = static_cast<double>(res.nodesSearched)](const size_t value) {
+            return (static_cast<double>(value) / totalNodes) * 100.;
+        };
+
+        return std::format(
+            " string TT hits {} ({}%) MDP cutoffs {} ({}%)",
+            res.transpositionTableHits, get_pcnt(res.transpositionTableHits),
+            res.mdpCutoffs, get_pcnt(res.mdpCutoffs));
+    }
+
     template <bool PrintBestMove>
     void print_uci_info(const Callbacks::Result& res)
     {
@@ -86,7 +89,7 @@ namespace {
             "info depth {} score {} time {} nodes {} nps {}{}",
             res.depth, get_score_string(res.score), res.duration.count(),
             res.nodesSearched, get_nodes_per_second(res),
-            get_tt_hits_string(res.nodesSearched, res.transpositionTableHits));
+            get_extra_stats_string(res));
 
         if constexpr (PrintBestMove) {
             std::println("bestmove {}",

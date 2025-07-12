@@ -86,6 +86,8 @@ namespace {
     struct Stats final {
         size_t nodesSearched { 0uz };
         size_t transTableHits { 0uz };
+
+        size_t mdpCutoffs { 0uz }; // cutoffs due to mate distance pruning
     };
 
     // searches only captures, with no depth limit, to try to
@@ -100,8 +102,10 @@ namespace {
         if (interrupter.should_abort() || currentPosition.is_draw())
             return {};
 
-        if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot))
+        if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot)) {
+            ++stats.mdpCutoffs;
             return cutoff.value();
+        }
 
         if (currentPosition.is_checkmate())
             return Score::mate(plyFromRoot);
@@ -160,8 +164,10 @@ namespace {
         if (currentPosition.is_threefold_repetition())
             return {}; // TODO: write to TT here
 
-        if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot))
+        if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot)) {
+            ++stats.mdpCutoffs;
             return cutoff.value();
+        }
 
         // check if this position has been searched before to at
         // least this depth and within these bounds for non-PV nodes
@@ -343,7 +349,8 @@ void Context::search()
             .score                               = bestScore,
             .bestMove                            = bestMove.value(),
             .nodesSearched                       = stats.nodesSearched,
-            .transpositionTableHits              = stats.transTableHits });
+            .transpositionTableHits              = stats.transTableHits,
+            .mdpCutoffs                          = stats.mdpCutoffs });
 
         if (! infinite) {
             // only 1 legal move, don't do a deeper iteration
@@ -383,7 +390,8 @@ void Context::search()
         .score                            = bestScore,
         .bestMove                         = bestMove.value(),
         .nodesSearched                    = stats.nodesSearched,
-        .transpositionTableHits           = stats.transTableHits });
+        .transpositionTableHits           = stats.transTableHits,
+        .mdpCutoffs                       = stats.mdpCutoffs });
 }
 
 void Context::wait() const

@@ -126,6 +126,9 @@ struct Callbacks final {
             could be used.
          */
         size_t transpositionTableHits { 0uz };
+
+        /** Number of cutoffs due to mate distance pruning. */
+        size_t mdpCutoffs { 0uz };
     };
 
     /** Function type that accepts a single Result argument. */
