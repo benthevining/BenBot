@@ -1,0 +1,14 @@
+[
+  {
+    "comment": "Reti endgame study",
+    "depth": 4,
+    "fen": "7K/8/k1P5/7p/8/8/8/8 w - -",
+    "move": "Kg7"
+  },
+  {
+    "comment": "Lasker-Reichhelm position",
+    "depth": 6,
+    "fen": "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - -",
+    "move": "Kb1"
+  }
+]
