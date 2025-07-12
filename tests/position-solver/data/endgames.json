@@ -10,5 +10,29 @@
     "depth": 6,
     "fen": "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - -",
     "move": "Kb1"
+  },
+  {
+    "comment": "Saavedra position #1",
+    "depth": 4,
+    "fen": "8/2P5/1K1r4/8/8/8/8/k7 w - - 1 2",
+    "move": "Kb5"
+  },
+  {
+    "comment": "Saavedra position #2",
+    "depth": 4,
+    "fen": "8/2P5/8/1K1r4/8/8/8/k7 w - - 3 3",
+    "move": "Kb4"
+  },
+  {
+    "comment": "Saavedra position #3",
+    "depth": 4,
+    "fen": "8/2P5/8/8/1K1r4/8/8/k7 w - - 5 4",
+    "move": "Kb3"
+  },
+  {
+    "comment": "Saavedra position #4",
+    "depth": 4,
+    "fen": "8/2P5/8/8/3r4/8/2K5/k7 w - - 9 6",
+    "move": "c8=R"
   }
 ]
