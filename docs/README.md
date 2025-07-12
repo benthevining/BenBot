@@ -12,8 +12,8 @@ Library API docs are built using Doxygen. Documentation is written inline in the
 
 ### Targets
 
-* `libchess_docs`: Builds the library API documentation using Doxygen
-* `libchess_open_docs`: First builds `libchess_docs`, then opens the generated HTML documentation in your default browser
+* `ben_bot_docs`: Builds the library API documentation using Doxygen
+* `ben_bot_open_docs`: First builds `ben_bot_docs`, then opens the generated HTML documentation in your default browser
 
 ## Dependencies
 

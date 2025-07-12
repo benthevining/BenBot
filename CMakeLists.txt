@@ -17,7 +17,7 @@ project (
     VERSION 1.1.0
     LANGUAGES CXX C
     DESCRIPTION "A chess engine"
-    HOMEPAGE_URL "https://github.com/benthevining/libchess"
+    HOMEPAGE_URL "https://github.com/benthevining/BenBot"
 )
 
 option (LIBCHESS_DOCS "Build the documentation (requires Doxygen)" "${PROJECT_IS_TOP_LEVEL}")

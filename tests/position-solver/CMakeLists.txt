@@ -42,7 +42,7 @@ file (GLOB testcase_files LIST_DIRECTORIES false CONFIGURE_DEPENDS
 foreach (data_file IN LISTS testcase_files)
     cmake_path (GET data_file STEM filename)
 
-    set (test_name "libchess.position_solver.${filename}")
+    set (test_name "ben_bot.position_solver.${filename}")
 
     add_test (NAME "${test_name}" COMMAND Python::Interpreter "${generated_script}" "${data_file}")
 

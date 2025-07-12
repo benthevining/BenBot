@@ -1,10 +1,10 @@
-# libchess
+# BenBot
 
-A chess engine.
+A UCI chess engine.
 
 * Board representation and move generation is in `libchess/`
 * Evaluation and search is in `libbenbot/`
-* `ben-bot/` is the actual UCI engine executable
+* `ben-bot/` is the actual engine executable
 
 See each subdirectory's readme for details.
 

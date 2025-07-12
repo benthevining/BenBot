@@ -37,7 +37,7 @@ get_target_property (libbenbot_headers ben_bot::libbenbot HEADER_SET)
 
 # cmake-format: off
 doxygen_add_docs (
-        libchess_docs
+        ben_bot_docs
         "${DOXYGEN_USE_MDFILE_AS_MAINPAGE}" ${libchess_headers} ${libbenbot_headers}
         WORKING_DIRECTORY "${BenBot_SOURCE_DIR}"
         COMMENT "Building Doxygen documentation..."
@@ -54,8 +54,8 @@ else ()
 endif ()
 
 add_custom_target (
-    libchess_open_docs COMMAND "${open_cmd}" "${DOXYGEN_OUTPUT_DIRECTORY}/html/index.html"
+    ben_bot_open_docs COMMAND "${open_cmd}" "${DOXYGEN_OUTPUT_DIRECTORY}/html/index.html"
     COMMENT "Opening generated HTML documentation..."
 )
 
-add_dependencies (libchess_open_docs libchess_docs)
+add_dependencies (ben_bot_open_docs ben_bot_docs)
