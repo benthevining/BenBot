@@ -22,12 +22,33 @@
 #include <cassert>
 #include <cmath>   // IWYU pragma: keep - for std::abs()
 #include <cstddef> // IWYU pragma: keep - for size_t
+#include <format>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
-#include <libbenbot/eval/Evaluation.hpp>
 
 namespace chess::eval {
 
 using std::size_t;
+
+/** The maximum possible evaluation score, i.e., if the side to move
+    has mate-in-1. If the side to move is in checkmate, the evaluation
+    is ``-MATE``.
+
+    @ingroup eval
+ */
+static constexpr auto MATE { 10000000 };
+
+/** Arbitrary value used as the starting beta value for alpha/beta search.
+    This should be larger than mate, but smaller than the data type's max
+    (to avoid issues with sign flipping).
+
+    @ingroup eval
+ */
+static constexpr auto MAX { MATE * 2 };
+
+/** A neutral, or draw, score.
+    @ingroup eval
+ */
+static constexpr auto DRAW { 0 };
 
 /** An evaluation score.
     This is essentially a wrapper around an integer value, with a few helper
@@ -144,3 +165,26 @@ constexpr Score Score::from_tt(
 }
 
 } // namespace chess::eval
+
+/** A specialization of ``std::formatter`` for Score objects.
+    The formatter accepts no format arguments, and simply prints
+    the score's integer value.
+
+    @see chess::eval::Score
+    @ingroup eval
+ */
+template <>
+struct std::formatter<chess::eval::Score> final {
+    template <typename ParseContext>
+    constexpr typename ParseContext::iterator parse(ParseContext& ctx)
+    {
+        return ctx.begin();
+    }
+
+    template <typename FormatContext>
+    typename FormatContext::iterator format(
+        const chess::eval::Score& score, FormatContext& ctx) const
+    {
+        return std::format_to(ctx.out(), "{}", score.value);
+    }
+};

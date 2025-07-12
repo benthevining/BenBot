@@ -19,6 +19,7 @@
 #include <cmath>
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Material.hpp>
+#include <libbenbot/eval/Score.hpp>
 #include <libchess/board/Distances.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Masks.hpp>
@@ -277,22 +278,22 @@ namespace {
 
 } // namespace
 
-int evaluate(const Position& position)
+Score evaluate(const Position& position)
 {
     const auto endgameWeight = endgame_phase_weight(position);
 
     const auto materialScore = score_material(position);
 
-    return materialScore
-         + no_pieces_left_bonus(position)
-         + score_piece_placement(position, endgameWeight)
-         + score_rook_files(position)
-         + score_connected_rooks(position)
-         + score_king_safety(position, endgameWeight)
-         + score_squares_controlled_around_kings(position)
-         + score_endgame_mopup(position, endgameWeight, materialScore)
-         + detail::score_positional(position)
-         + detail::score_pawn_structure(position);
+    return Score { materialScore
+                   + no_pieces_left_bonus(position)
+                   + score_piece_placement(position, endgameWeight)
+                   + score_rook_files(position)
+                   + score_connected_rooks(position)
+                   + score_king_safety(position, endgameWeight)
+                   + score_squares_controlled_around_kings(position)
+                   + score_endgame_mopup(position, endgameWeight, materialScore)
+                   + detail::score_positional(position)
+                   + detail::score_pawn_structure(position) };
 }
 
 } // namespace chess::eval

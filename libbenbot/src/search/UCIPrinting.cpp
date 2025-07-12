@@ -32,8 +32,12 @@ namespace {
 
     [[nodiscard]] std::string get_score_string(const eval::Score score)
     {
-        if (! score.is_mate())
+        if (! score.is_mate()) {
+            // NB. we pass score.value directly here instead of going through
+            // Score's formatter because that extra indirection appears to cost
+            // enough time to observably cost some Elo
             return std::format("cp {}", score.value);
+        }
 
         auto plyToMate = score.ply_to_mate();
 

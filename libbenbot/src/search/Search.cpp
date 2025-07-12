@@ -36,16 +36,14 @@ namespace chess::search {
 
 using std::size_t;
 
-static constexpr auto EVAL_MAX { eval::MAX };
-
 namespace {
 
     using eval::Score;
     using EvalType = TranspositionTable::Record::EvalType;
 
     struct Bounds final {
-        Score alpha { -EVAL_MAX };
-        Score beta { EVAL_MAX };
+        Score alpha { -eval::MAX };
+        Score beta { eval::MAX };
 
         [[nodiscard]] constexpr Bounds invert() const noexcept
         {
@@ -108,7 +106,7 @@ namespace {
         if (currentPosition.is_checkmate())
             return Score::mate(plyFromRoot);
 
-        auto evaluation = Score { eval::evaluate(currentPosition) };
+        auto evaluation = eval::evaluate(currentPosition);
 
         // see if we can get a cutoff (we may not need to generate moves for this position)
         if (evaluation >= bounds.beta)
@@ -273,7 +271,7 @@ void Context::search()
 
         callbacks.search_complete({ .duration = interrupter.get_search_duration(),
             .depth                            = 1uz,
-            .score                            = Score { eval },
+            .score                            = eval,
             .bestMove                         = *bookMove });
 
         return;
