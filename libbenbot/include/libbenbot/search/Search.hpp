@@ -186,7 +186,7 @@ struct Context final {
     Options options;
 
     /** The opening book used for this search. */
-    OpeningBookContext openingBook;
+    ben_bot::OpeningBookContext openingBook;
 
     /** Performs a search.
         Results will be propagated via the ``callbacks`` that have been

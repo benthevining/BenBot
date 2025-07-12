@@ -20,15 +20,15 @@
 #include <span>
 #include <vector>
 
-namespace chess::search {
+namespace ben_bot {
 
-using notation::GameRecord;
+using chess::notation::GameRecord;
 
 void OpeningBook::add_from_pgn(
     const std::string_view pgnText,
     const bool             includeVariations)
 {
-    for (const auto& game : notation::parse_all_pgns(pgnText))
+    for (const auto& game : chess::notation::parse_all_pgns(pgnText))
         add_pgn_moves(game.moves, game.startingPosition, includeVariations);
 
     prune();
@@ -61,4 +61,4 @@ void OpeningBook::prune()
     }
 }
 
-} // namespace chess::search
+} // namespace ben_bot

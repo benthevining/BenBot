@@ -33,10 +33,10 @@
 #include <unordered_map>
 #include <vector>
 
-namespace chess::search {
+namespace ben_bot {
 
-using game::Position;
-using moves::Move;
+using chess::game::Position;
+using chess::moves::Move;
 using std::size_t;
 
 /** The opening book data structure.
@@ -65,7 +65,7 @@ public:
 
 private:
     void add_pgn_moves(
-        std::span<const notation::GameRecord::Move> moves,
+        std::span<const chess::notation::GameRecord::Move> moves,
         Position position, bool includeVariations);
 
     std::unordered_map<Position::Hash, std::vector<Move>> lines;
@@ -82,7 +82,7 @@ struct OpeningBookContext final {
     OpeningBook book;
 
     /** This parameter controls whether the engine is allowed to access its internal book. */
-    uci::BoolOption enabled { uci::default_options::own_book() };
+    chess::uci::BoolOption enabled { chess::uci::default_options::own_book() };
 
     /** Returns a book move for the given position. Returns nullopt if the book is
         disabled, or if the given position is out-of-book. If the book is enabled
@@ -139,4 +139,4 @@ inline std::optional<Move> OpeningBookContext::get_move(const Position& position
     return moves[idx];
 }
 
-} // namespace chess::search
+} // namespace ben_bot
