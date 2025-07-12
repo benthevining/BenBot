@@ -34,5 +34,11 @@
     "depth": 4,
     "fen": "8/2P5/8/8/3r4/8/2K5/k7 w - - 9 6",
     "move": "c8=R"
+  },
+  {
+    "comment": "Saavedra position #5",
+    "depth": 4,
+    "fen": "2Q5/8/8/8/3r4/8/2K5/k7 b - - 0 6",
+    "move": "Rc4+"
   }
 ]
