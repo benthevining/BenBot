@@ -32,8 +32,7 @@ namespace ben_bot {
 using std::filesystem::path;
 using std::string_view;
 
-namespace uci    = chess::uci;
-namespace search = chess::search;
+namespace uci = chess::uci;
 
 class Engine final : public uci::EngineBase {
 public:

@@ -21,7 +21,7 @@
 #include <optional>
 #include <type_traits>
 
-namespace chess::search {
+namespace ben_bot::search {
 
 using Milliseconds = std::chrono::milliseconds;
 
@@ -130,4 +130,4 @@ private:
     };
 }
 
-} // namespace chess::search
+} // namespace ben_bot::search

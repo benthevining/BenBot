@@ -50,7 +50,7 @@ try {
 
     const auto depthString = args.front();
 
-    namespace search = chess::search;
+    namespace search = ben_bot::search;
 
     search::Context context {
         search::Callbacks {

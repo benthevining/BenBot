@@ -49,10 +49,10 @@ struct GoCommandOptions;
 
     @ingroup search
  */
-namespace chess::search {
+namespace ben_bot::search {
 
-using game::Position;
-using moves::Move;
+using chess::game::Position;
+using chess::moves::Move;
 using std::size_t;
 
 using Milliseconds = std::chrono::milliseconds;
@@ -83,7 +83,7 @@ struct Options final {
     std::vector<Move> movesToSearch;
 
     /** Updates the values in this options struct with the UCI "go" command options. */
-    void update_from(uci::GoCommandOptions&& goOptions);
+    void update_from(chess::uci::GoCommandOptions&& goOptions);
 
     /** Returns true if this search has any bounds other than depth. */
     [[nodiscard]] bool is_bounded() const noexcept
@@ -111,7 +111,7 @@ struct Callbacks final {
         size_t depth { 0uz };
 
         /** The evaluation of the position resulting from playing the best move. */
-        ben_bot::eval::Score score;
+        eval::Score score;
 
         /** The best move found in the position. */
         Move bestMove;
@@ -186,7 +186,7 @@ struct Context final {
     Options options;
 
     /** The opening book used for this search. */
-    ben_bot::OpeningBookContext openingBook;
+    OpeningBookContext openingBook;
 
     /** Performs a search.
         Results will be propagated via the ``callbacks`` that have been
@@ -232,9 +232,9 @@ private:
 
     std::atomic_bool activeFlag { false };
 
-    ben_bot::TranspositionTable transTable;
+    TranspositionTable transTable;
 
     Callbacks callbacks;
 };
 
-} // namespace chess::search
+} // namespace ben_bot::search

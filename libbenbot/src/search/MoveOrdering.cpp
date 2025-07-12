@@ -27,25 +27,23 @@
 #include <span>
 #include <utility>
 
-namespace chess::search::detail {
+namespace ben_bot::search::detail {
 
 namespace {
 
-    using board::Bitboard;
-    using pieces::Color;
-    using PieceType = pieces::Type;
+    using chess::board::Bitboard;
+    using chess::pieces::Color;
+    using PieceType = chess::pieces::Type;
 
     [[nodiscard, gnu::const]] Bitboard get_opponent_pawn_attacks(const Position& position) noexcept
     {
-        using moves::patterns::pawn_attacks;
+        using chess::moves::patterns::pawn_attacks;
 
         if (position.is_white_to_move())
             return pawn_attacks<Color::Black>(position.their_pieces().pawns);
 
         return pawn_attacks<Color::White>(position.their_pieces().pawns);
     }
-
-    namespace eval = ben_bot::eval;
 
     // higher scored moves will be searched first
     [[nodiscard, gnu::const]] int move_ordering_score(
@@ -148,4 +146,4 @@ void order_moves_for_q_search(
         });
 }
 
-} // namespace chess::search::detail
+} // namespace ben_bot::search::detail

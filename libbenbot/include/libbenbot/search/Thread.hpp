@@ -29,7 +29,7 @@ namespace chess::uci {
 struct GoCommandOptions;
 } // namespace chess::uci
 
-namespace chess::search {
+namespace ben_bot::search {
 
 /** A worker thread that can be used to execute a search.
 
@@ -65,7 +65,7 @@ struct Thread final {
     /** Sets the position to be searched by the next search invocation.
         This method blocks waiting for any previously executing search to complete.
      */
-    void set_position(const Position& pos)
+    void set_position(const chess::game::Position& pos)
     {
         context.wait();
 
@@ -76,7 +76,7 @@ struct Thread final {
         This method returns immediately, and the actual search will be performed by
         a background thread.
      */
-    void start(uci::GoCommandOptions&& options)
+    void start(chess::uci::GoCommandOptions&& options)
     {
         context.wait(); // shouldn't have been searching, but better safe than sorry
 
@@ -102,4 +102,4 @@ private:
     std::atomic_bool startSearch { false };
 };
 
-} // namespace chess::search
+} // namespace ben_bot::search

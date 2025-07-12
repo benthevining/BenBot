@@ -32,18 +32,18 @@
 #include <utility>
 #include <vector>
 
-namespace chess::search {
+namespace ben_bot::search {
 
 using std::size_t;
 
 namespace {
 
-    using ben_bot::eval::Score;
-    using EvalType = ben_bot::TranspositionTable::Record::EvalType;
+    using eval::Score;
+    using EvalType = TranspositionTable::Record::EvalType;
 
     struct Bounds final {
-        Score alpha { -ben_bot::eval::MAX };
-        Score beta { ben_bot::eval::MAX };
+        Score alpha { -eval::MAX };
+        Score beta { eval::MAX };
 
         [[nodiscard]] constexpr Bounds invert() const noexcept
         {
@@ -106,7 +106,7 @@ namespace {
         if (currentPosition.is_checkmate())
             return Score::mate(plyFromRoot);
 
-        auto evaluation = ben_bot::eval::evaluate(currentPosition);
+        auto evaluation = eval::evaluate(currentPosition);
 
         // see if we can get a cutoff (we may not need to generate moves for this position)
         if (evaluation >= bounds.beta)
@@ -114,7 +114,7 @@ namespace {
 
         bounds.alpha = std::max(bounds.alpha, evaluation);
 
-        auto moves = moves::generate<true>(currentPosition); // captures only
+        auto moves = chess::moves::generate<true>(currentPosition); // captures only
 
         detail::order_moves_for_q_search(currentPosition, moves);
 
@@ -123,7 +123,7 @@ namespace {
 
             evaluation = -quiescence(
                 bounds.invert(),
-                game::after_move(currentPosition, move),
+                after_move(currentPosition, move),
                 plyFromRoot + 1uz, interrupter, stats);
 
             if (interrupter.was_aborted())
@@ -143,13 +143,13 @@ namespace {
     // standard alpha/beta search algorithm
     // this is called in the body of the higher-level iterative deepening loop
     [[nodiscard]] Score alpha_beta(
-        Bounds                       bounds,
-        const Position&              currentPosition,
-        const size_t                 depth,       // this is the depth left to be searched - decreases each iteration, and when this reaches 0, we call the quiescence search
-        const size_t                 plyFromRoot, // increases each iteration
-        ben_bot::TranspositionTable& transTable,
-        Interrupter&                 interrupter,
-        Stats&                       stats)
+        Bounds              bounds,
+        const Position&     currentPosition,
+        const size_t        depth,       // this is the depth left to be searched - decreases each iteration, and when this reaches 0, we call the quiescence search
+        const size_t        plyFromRoot, // increases each iteration
+        TranspositionTable& transTable,
+        Interrupter&        interrupter,
+        Stats&              stats)
     {
         if (interrupter.should_abort())
             return {};
@@ -173,18 +173,18 @@ namespace {
         if (currentPosition.is_draw()) {
             transTable.store(
                 currentPosition, { .searchedDepth = depth,
-                                     .eval        = ben_bot::eval::DRAW,
+                                     .eval        = eval::DRAW,
                                      .evalType    = EvalType::Exact });
 
             return {};
         }
 
-        auto moves = moves::generate(currentPosition);
+        auto moves = chess::moves::generate(currentPosition);
 
         if (moves.empty() && currentPosition.is_check()) {
             transTable.store(
                 currentPosition, { .searchedDepth = depth,
-                                     .eval        = -ben_bot::eval::MATE,
+                                     .eval        = -eval::MATE,
                                      .evalType    = EvalType::Exact });
 
             return Score::mate(plyFromRoot);
@@ -267,7 +267,7 @@ void Context::search()
     if (const auto bookMove = openingBook.get_move(options.position)) {
         callbacks.opening_book_hit(*bookMove);
 
-        const auto eval = ben_bot::eval::evaluate(game::after_move(options.position, *bookMove));
+        const auto eval = eval::evaluate(after_move(options.position, *bookMove));
 
         callbacks.search_complete({ .duration = interrupter.get_search_duration(),
             .depth                            = 1uz,
@@ -279,7 +279,7 @@ void Context::search()
 
     // if the movesToSearch was empty, then we search all legal moves
     if (options.movesToSearch.empty()) {
-        moves::generate(options.position, std::back_inserter(options.movesToSearch));
+        chess::moves::generate(options.position, std::back_inserter(options.movesToSearch));
 
         assert(! options.movesToSearch.empty());
     }
@@ -312,7 +312,7 @@ void Context::search()
         for (const auto& move : options.movesToSearch) {
             const auto score = -alpha_beta(
                 bounds.invert(),
-                game::after_move(options.position, move),
+                after_move(options.position, move),
                 depth, 1uz, transTable, interrupter, stats);
 
             if (interrupter.was_aborted())
@@ -392,7 +392,7 @@ void Context::wait() const
         std::this_thread::yield();
 }
 
-void Options::update_from(uci::GoCommandOptions&& goOptions)
+void Options::update_from(chess::uci::GoCommandOptions&& goOptions)
 {
     // always clear this, because if movesToSearch isn't specified, we
     // want the search algorithm to generate all legal moves instead
@@ -429,4 +429,4 @@ void Options::update_from(uci::GoCommandOptions&& goOptions)
     }
 }
 
-} // namespace chess::search
+} // namespace ben_bot::search

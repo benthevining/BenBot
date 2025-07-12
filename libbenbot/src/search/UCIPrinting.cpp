@@ -24,13 +24,13 @@
 #include <print>
 #include <string>
 
-namespace chess::search {
+namespace ben_bot::search {
 
 namespace {
 
     using std::size_t;
 
-    [[nodiscard]] std::string get_score_string(const ben_bot::eval::Score score)
+    [[nodiscard]] std::string get_score_string(const eval::Score score)
     {
         if (! score.is_mate()) {
             // NB. we pass score.value directly here instead of going through
@@ -89,7 +89,8 @@ namespace {
             get_tt_hits_string(res.nodesSearched, res.transpositionTableHits));
 
         if constexpr (PrintBestMove) {
-            std::println("bestmove {}", notation::to_uci(res.bestMove));
+            std::println("bestmove {}",
+                chess::notation::to_uci(res.bestMove));
 
             // Because these callbacks are executed on the searcher background thread,
             // without this flush here, the output may not actually be written when we
@@ -116,4 +117,4 @@ Callbacks Callbacks::make_uci_handler()
     };
 }
 
-} // namespace chess::search
+} // namespace ben_bot::search
