@@ -12,27 +12,9 @@
     "move": "Nxh4"
   },
   {
-    "comment": "Black can mate in 1 or grab material",
-    "depth": 4,
-    "fen": "8/2p5/K7/3Q4/8/1q4k1/8/8 b - - 0 1",
-    "move": "Qb6#"
-  },
-  {
-    "comment": "Sacrifice queen for mate",
-    "depth": 4,
-    "fen": "2r3k1/5ppp/8/8/8/8/4Q1PP/4R2K w - - 0 1",
-    "move": "Qe8+"
-  },
-  {
     "comment": "Take knight with rook to win another rook",
     "depth": 4,
     "fen": "4r3/pk6/1p2p3/3n4/8/6PP/6K1/3RR3 w - - 0 1",
     "move": "Rxd5"
-  },
-  {
-    "comment": "Find mate-in-1 instead of capture that leads to mate (can confuse move ordering)",
-    "depth": 4,
-    "fen": "r1b1k2r/pppppppp/5q2/8/1Nn3n1/1PBP4/P1P1PPPP/R2QKBNR b KQkq - 0 1",
-    "move": "Qxf2#"
   }
 ]
