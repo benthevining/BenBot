@@ -33,7 +33,7 @@
 #include <libchess/pieces/Colors.hpp>
 #include <utility>
 
-namespace chess::eval {
+namespace ben_bot::eval {
 
 namespace {
 
@@ -61,10 +61,10 @@ namespace {
     // - bonus for bishops on open diagonals
     // - bonus for the bishop pair that increases with fewer pawns on the board, and also a bonus for knights when there are more pawns on the board
 
-    using board::Pieces;
-    using pieces::Color;
+    using chess::board::Pieces;
+    using chess::pieces::Color;
 
-    namespace masks = board::masks;
+    namespace masks = chess::board::masks;
 
     // awards a bonus for rooks on open or half-open files
     [[nodiscard, gnu::const]] int score_rook_files(
@@ -126,7 +126,7 @@ namespace {
 
         auto score_side_king = [&position, endgameWeight,
                                    allPawns = position.whitePieces.pawns | position.blackPieces.pawns](
-                                   const Pieces& pieces, const game::CastlingRights& castlingRights,
+                                   const Pieces& pieces, const chess::game::CastlingRights& castlingRights,
                                    const Pieces& enemyPieces) {
             auto score { 0 };
 
@@ -140,7 +140,7 @@ namespace {
                      || (masks::antidiagonal(location) & allPawns).none())
                 score += OPEN_KING_PENALTY;
 
-            using board::File;
+            using chess::board::File;
 
             // king stranded in center without castling rights
             if (castlingRights.neither()
@@ -195,6 +195,8 @@ namespace {
     [[nodiscard, gnu::const]] int score_squares_controlled_around_kings(
         const Position& position) noexcept
     {
+        namespace moves = chess::moves;
+
         // We give a penalty if the opponent attacks more squares around our king than we do.
         // One detail here is that in calculating the attack sets, the defender's king isn't
         // included in determining the number of squares we defend around the king - it's more
@@ -296,4 +298,4 @@ Score evaluate(const Position& position)
                    + detail::score_pawn_structure(position) };
 }
 
-} // namespace chess::eval
+} // namespace ben_bot::eval

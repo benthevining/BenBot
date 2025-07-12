@@ -20,12 +20,13 @@
 #include <libchess/moves/Attacks.hpp>
 #include <libchess/pieces/Colors.hpp>
 
-namespace chess::eval::detail {
+namespace ben_bot::eval::detail {
 
-using game::Position;
-using pieces::Color;
+using chess::game::Position;
+using chess::pieces::Color;
 
-namespace masks = board::masks;
+namespace masks = chess::board::masks;
+namespace moves = chess::moves;
 
 [[nodiscard, gnu::const]] inline int score_center_control(
     const Position& position) noexcept
@@ -47,8 +48,8 @@ namespace masks = board::masks;
 [[nodiscard, gnu::const]] inline int score_space(
     const Position& position) noexcept
 {
-    const auto behindWhitePawns = board::fills::pawn_rear<Color::White>(position.whitePieces.pawns);
-    const auto behindBlackPawns = board::fills::pawn_rear<Color::Black>(position.blackPieces.pawns);
+    const auto behindWhitePawns = chess::board::fills::pawn_rear<Color::White>(position.whitePieces.pawns);
+    const auto behindBlackPawns = chess::board::fills::pawn_rear<Color::Black>(position.blackPieces.pawns);
 
     const auto whiteSquares
         = static_cast<int>(moves::num_squares_attacked<Color::White>(position.whitePieces, behindWhitePawns, position.blackPieces.occupied))
@@ -72,4 +73,4 @@ namespace masks = board::masks;
          + score_space(position);
 }
 
-} // namespace chess::eval::detail
+} // namespace ben_bot::eval::detail

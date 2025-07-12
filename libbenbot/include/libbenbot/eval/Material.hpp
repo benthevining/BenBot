@@ -23,10 +23,10 @@
 #include <libchess/game/Position.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
 
-namespace chess::eval {
+namespace ben_bot::eval {
 
-using game::Position;
-using PieceType = pieces::Type;
+using chess::game::Position;
+using PieceType = chess::pieces::Type;
 
 /** This namespace defines piece material values.
     @ingroup eval
@@ -109,7 +109,7 @@ namespace piece_values {
 namespace detail {
 
     [[nodiscard, gnu::const]] constexpr int count_material(
-        const board::Pieces& pieces, const bool includePawns = true) noexcept
+        const chess::board::Pieces& pieces, const bool includePawns = true) noexcept
     {
         auto total = (static_cast<int>(pieces.knights.count()) * piece_values::KNIGHT)
                    + (static_cast<int>(pieces.bishops.count()) * piece_values::BISHOP)
@@ -129,4 +129,4 @@ constexpr int score_material(const Position& position) noexcept
     return detail::count_material(position.our_pieces()) - detail::count_material(position.their_pieces());
 }
 
-} // namespace chess::eval
+} // namespace ben_bot::eval

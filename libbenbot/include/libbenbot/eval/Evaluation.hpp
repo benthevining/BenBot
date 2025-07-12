@@ -32,9 +32,9 @@ struct Position;
 /** This namespace contains functions for evaluating positions.
     @ingroup eval
  */
-namespace chess::eval {
+namespace ben_bot::eval {
 
-using game::Position;
+using chess::game::Position;
 
 /** Returns a numerical score representing the evaluation of the
     give position from the perspective of the side to move.
@@ -44,4 +44,4 @@ using game::Position;
  */
 [[nodiscard]] Score evaluate(const Position& position);
 
-} // namespace chess::eval
+} // namespace ben_bot::eval

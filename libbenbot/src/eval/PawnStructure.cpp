@@ -28,18 +28,20 @@
 #include <libchess/pieces/Colors.hpp>
 #include <magic_enum/magic_enum.hpp>
 
-namespace chess::eval::detail {
+namespace ben_bot::eval::detail {
 
-using pieces::Color;
+using chess::pieces::Color;
 
 namespace {
+
+    namespace board = chess::board;
 
     template <Color Side>
     [[nodiscard, gnu::const]] int score_side_passed_pawns(const Position& position)
     {
         using board::Rank;
 
-        static constexpr auto OtherSide = pieces::other_side<Side>();
+        static constexpr auto OtherSide = chess::pieces::other_side<Side>();
 
         static constexpr auto promotionRank = Side == Color::White ? Rank::Eight : Rank::One;
 
@@ -123,7 +125,7 @@ namespace {
 
         for (const auto pawn : ourPawns.subboards()) {
             const auto mask = board::fills::file(
-                moves::patterns::pawn_attacks<Side>(pawn));
+                chess::moves::patterns::pawn_attacks<Side>(pawn));
 
             if ((mask & ourPawns).none())
                 score -= 20;
@@ -166,7 +168,7 @@ namespace {
         const auto pawns = position.pieces_for<Side>().pawns;
 
         for (const auto pawn : pawns.subboards()) {
-            const auto attacks = moves::patterns::pawn_attacks<Side>(pawn);
+            const auto attacks = chess::moves::patterns::pawn_attacks<Side>(pawn);
 
             const auto defended = static_cast<int>((pawns & attacks).count());
 
@@ -201,4 +203,4 @@ namespace {
     return ourScore - theirScore;
 }
 
-} // namespace chess::eval::detail
+} // namespace ben_bot::eval::detail

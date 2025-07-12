@@ -22,7 +22,7 @@
 #include <span>
 #include <utility>
 
-namespace chess::eval {
+namespace ben_bot::eval {
 
 // clang-format off
 
@@ -145,14 +145,14 @@ static constexpr std::array kingEndgameTable {
 
 namespace {
 
-    using board::Pieces;
+    using chess::board::Pieces;
 
     template <bool IsBlack>
     [[nodiscard, gnu::const]] constexpr int sum_squares(
-        board::Bitboard board, const std::span<const int> table) noexcept
+        chess::board::Bitboard board, const std::span<const int> table) noexcept
     {
         if constexpr (IsBlack) {
-            board = board::flips::vertical(board);
+            board = chess::board::flips::vertical(board);
         }
 
         auto sum { 0 };
@@ -202,7 +202,7 @@ namespace {
         assert(king.count() == 1uz);
 
         if constexpr (IsBlack) {
-            king = board::flips::vertical(king);
+            king = chess::board::flips::vertical(king);
         }
 
         const auto idx = king.first();
@@ -245,4 +245,4 @@ int score_piece_placement(const Position& position, const float endgameWeight)
     return ourScore - theirScore;
 }
 
-} // namespace chess::eval
+} // namespace ben_bot::eval

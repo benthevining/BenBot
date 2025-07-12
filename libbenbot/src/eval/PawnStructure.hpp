@@ -18,10 +18,10 @@ namespace chess::game {
 struct Position;
 } // namespace chess::game
 
-namespace chess::eval::detail {
+namespace ben_bot::eval::detail {
 
-using game::Position;
+using chess::game::Position;
 
 [[nodiscard, gnu::const]] int score_pawn_structure(const Position& position);
 
-} // namespace chess::eval::detail
+} // namespace ben_bot::eval::detail

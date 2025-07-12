@@ -30,7 +30,7 @@ namespace {
 
     using std::size_t;
 
-    [[nodiscard]] std::string get_score_string(const eval::Score score)
+    [[nodiscard]] std::string get_score_string(const ben_bot::eval::Score score)
     {
         if (! score.is_mate()) {
             // NB. we pass score.value directly here instead of going through

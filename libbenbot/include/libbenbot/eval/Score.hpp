@@ -25,7 +25,7 @@
 #include <format>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 
-namespace chess::eval {
+namespace ben_bot::eval {
 
 using std::size_t;
 
@@ -109,7 +109,7 @@ struct Score final {
         return { (MAX - static_cast<int>(plyFromRoot)) * -1 };
     }
 
-    using TT = ben_bot::TranspositionTable;
+    using TT = TranspositionTable;
 
     /** Converts a value from the transposition table to a score.
         This maps the MATE constant to a ply-from-root mate score.
@@ -164,17 +164,17 @@ constexpr Score Score::from_tt(
     return { score };
 }
 
-} // namespace chess::eval
+} // namespace ben_bot::eval
 
 /** A specialization of ``std::formatter`` for Score objects.
     The formatter accepts no format arguments, and simply prints
     the score's integer value.
 
-    @see chess::eval::Score
+    @see ben_bot::eval::Score
     @ingroup eval
  */
 template <>
-struct std::formatter<chess::eval::Score> final {
+struct std::formatter<ben_bot::eval::Score> final {
     template <typename ParseContext>
     constexpr typename ParseContext::iterator parse(ParseContext& ctx)
     {
@@ -183,7 +183,7 @@ struct std::formatter<chess::eval::Score> final {
 
     template <typename FormatContext>
     typename FormatContext::iterator format(
-        const chess::eval::Score& score, FormatContext& ctx) const
+        const ben_bot::eval::Score& score, FormatContext& ctx) const
     {
         return std::format_to(ctx.out(), "{}", score.value);
     }

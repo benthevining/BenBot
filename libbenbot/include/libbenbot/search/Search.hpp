@@ -111,7 +111,7 @@ struct Callbacks final {
         size_t depth { 0uz };
 
         /** The evaluation of the position resulting from playing the best move. */
-        eval::Score score;
+        ben_bot::eval::Score score;
 
         /** The best move found in the position. */
         Move bestMove;

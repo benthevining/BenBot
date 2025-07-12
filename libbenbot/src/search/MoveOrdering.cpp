@@ -45,6 +45,8 @@ namespace {
         return pawn_attacks<Color::White>(position.their_pieces().pawns);
     }
 
+    namespace eval = ben_bot::eval;
+
     // higher scored moves will be searched first
     [[nodiscard, gnu::const]] int move_ordering_score(
         const Position& currentPosition, const Move& move,

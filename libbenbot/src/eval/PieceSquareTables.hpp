@@ -18,11 +18,11 @@ namespace chess::game {
 struct Position;
 } // namespace chess::game
 
-namespace chess::eval {
+namespace ben_bot::eval {
 
-using game::Position;
+using chess::game::Position;
 
 [[nodiscard, gnu::const]] int score_piece_placement(
     const Position& position, float endgameWeight);
 
-} // namespace chess::eval
+} // namespace ben_bot::eval

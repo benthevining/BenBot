@@ -38,12 +38,12 @@ using std::size_t;
 
 namespace {
 
-    using eval::Score;
+    using ben_bot::eval::Score;
     using EvalType = ben_bot::TranspositionTable::Record::EvalType;
 
     struct Bounds final {
-        Score alpha { -eval::MAX };
-        Score beta { eval::MAX };
+        Score alpha { -ben_bot::eval::MAX };
+        Score beta { ben_bot::eval::MAX };
 
         [[nodiscard]] constexpr Bounds invert() const noexcept
         {
@@ -106,7 +106,7 @@ namespace {
         if (currentPosition.is_checkmate())
             return Score::mate(plyFromRoot);
 
-        auto evaluation = eval::evaluate(currentPosition);
+        auto evaluation = ben_bot::eval::evaluate(currentPosition);
 
         // see if we can get a cutoff (we may not need to generate moves for this position)
         if (evaluation >= bounds.beta)
@@ -173,7 +173,7 @@ namespace {
         if (currentPosition.is_draw()) {
             transTable.store(
                 currentPosition, { .searchedDepth = depth,
-                                     .eval        = eval::DRAW,
+                                     .eval        = ben_bot::eval::DRAW,
                                      .evalType    = EvalType::Exact });
 
             return {};
@@ -184,7 +184,7 @@ namespace {
         if (moves.empty() && currentPosition.is_check()) {
             transTable.store(
                 currentPosition, { .searchedDepth = depth,
-                                     .eval        = -eval::MATE,
+                                     .eval        = -ben_bot::eval::MATE,
                                      .evalType    = EvalType::Exact });
 
             return Score::mate(plyFromRoot);
@@ -267,7 +267,7 @@ void Context::search()
     if (const auto bookMove = openingBook.get_move(options.position)) {
         callbacks.opening_book_hit(*bookMove);
 
-        const auto eval = eval::evaluate(game::after_move(options.position, *bookMove));
+        const auto eval = ben_bot::eval::evaluate(game::after_move(options.position, *bookMove));
 
         callbacks.search_complete({ .duration = interrupter.get_search_duration(),
             .depth                            = 1uz,

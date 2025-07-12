@@ -112,7 +112,7 @@ namespace {
             return;
         }
 
-        println("eval: {}", chess::eval::evaluate(pos));
+        println("eval: {}", eval::evaluate(pos));
     }
 } // namespace
 
