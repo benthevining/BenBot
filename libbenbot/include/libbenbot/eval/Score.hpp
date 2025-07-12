@@ -57,7 +57,7 @@ static constexpr auto DRAW { 0 };
     @ingroup eval
  */
 struct Score final {
-    /** The evaluaton value, in centipawns. */
+    /** The evaluation value, in centipawns. */
     int value { 0 };
 
     /** Implicitly converts this score object to its integer value.
@@ -67,13 +67,13 @@ struct Score final {
     constexpr operator int() const noexcept { return value; } // NOLINT;
 
     /** Inverts the score. */
-    [[nodiscard]] Score operator-() const noexcept { return { -value }; }
+    [[nodiscard]] constexpr Score operator-() const noexcept { return { -value }; }
 
     /// @name Mate queries
     /// @{
 
     /** Returns true if this score represents checkmate (either winning or losing). */
-    [[nodiscard]] constexpr bool is_mate() const noexcept { return std::abs(value) >= MATE; }
+    [[nodiscard]] bool is_mate() const noexcept { return std::abs(value) >= MATE; }
 
     /** Returns true if this score is a winning mate score. */
     [[nodiscard]] constexpr bool is_winning_mate() const noexcept { return value >= MATE; }
@@ -84,7 +84,7 @@ struct Score final {
     /** For a checkmate score, returns the number of plies from the root of the search
         tree to the checkmate position. This method asserts if the score is not mate.
      */
-    [[nodiscard]] constexpr size_t ply_to_mate() const noexcept
+    [[nodiscard]] size_t ply_to_mate() const noexcept
     {
         assert(is_mate());
 
