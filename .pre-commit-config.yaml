@@ -90,6 +90,7 @@ repos:
     name: Insert license header in CMake and shell files
     args: [--license-filepath=ben-bot/resources/license_header.txt, --comment-style=#, --detect-license-in-X-top-lines=16]
     files: .git|.clang|.cfg|justfile|.editorconfig
+    exclude: config/.editorconfig-checker.json
 
     # auto-fix spelling mistakes
 - repo: https://github.com/codespell-project/codespell
@@ -100,7 +101,7 @@ repos:
 
     # C++ formatting & linting
 - repo: https://github.com/pre-commit/mirrors-clang-format
-  rev: v20.1.7
+  rev: v20.1.8
   hooks:
   - id: clang-format
     args: [-style=file, -i]
