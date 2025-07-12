@@ -42,6 +42,14 @@ using game::Position;
  */
 static constexpr auto MATE { 10000000 };
 
+/** Arbitrary value used as the starting beta value for alpha/beta search.
+    This should be larger than mate, but smaller than the data type's max
+    (to avoid issues with sign flipping).
+
+    @ingroup eval
+ */
+static constexpr auto MAX { MATE * 2 };
+
 /** A neutral, or draw, score.
     @ingroup eval
  */

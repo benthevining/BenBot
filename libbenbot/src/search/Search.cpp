@@ -22,6 +22,7 @@
 #include <iterator>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
+#include <libbenbot/eval/Score.hpp>
 #include <libbenbot/search/Search.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
@@ -35,12 +36,7 @@ namespace chess::search {
 
 using std::size_t;
 
-namespace {
-    // arbitrary value used as the starting beta value
-    // this should be larger than mate, but smaller than
-    // the data type's max (to avoid issues with sign flipping)
-    constexpr auto EVAL_MAX = eval::MATE * 2;
-} // namespace
+static constexpr auto EVAL_MAX { eval::MAX };
 
 namespace detail {
 
@@ -60,74 +56,19 @@ namespace detail {
 
 namespace {
 
+    using eval::Score;
     using EvalType = TranspositionTable::Record::EvalType;
-
-    struct Score final {
-        int value { 0 };
-
-        constexpr operator int() const noexcept { return value; }
-
-        // inverts the score
-        [[nodiscard]] Score operator-() const noexcept { return { -value }; }
-
-        [[nodiscard]] constexpr bool is_winning_mate() const noexcept { return value >= eval::MATE; }
-        [[nodiscard]] constexpr bool is_losing_mate() const noexcept { return value <= -eval::MATE; }
-
-        // maps ply-from-root mate scores to the MATE constant
-        [[nodiscard]] constexpr int to_tt() const noexcept
-        {
-            if (is_losing_mate())
-                return -eval::MATE;
-
-            if (is_winning_mate())
-                return eval::MATE;
-
-            return value;
-        }
-
-        // mate scores are based on the distance from the root of the tree
-        // to the leaf (mate) node, so that the engine actually goes for mate
-        [[nodiscard, gnu::const]] static constexpr Score mate(const size_t plyFromRoot) noexcept
-        {
-            // multiply by -1 here because this score is relative to the player who got mated
-            return { (EVAL_MAX - static_cast<int>(plyFromRoot)) * -1 };
-        }
-
-        // maps the MATE constant to a ply-from-root mate score
-        [[nodiscard, gnu::const]] static constexpr Score from_tt(
-            const TranspositionTable::ProbedEval& eval,
-            const size_t                          plyFromRoot) noexcept
-        {
-            const auto [score, type] = eval;
-
-            if (type == EvalType::Exact) {
-                if (score <= -eval::MATE)
-                    return mate(plyFromRoot);
-
-                if (score >= eval::MATE)
-                    return -mate(plyFromRoot);
-            }
-
-            return { score };
-        }
-    };
 
     struct Bounds final {
         Score alpha { -EVAL_MAX };
         Score beta { EVAL_MAX };
 
-        constexpr Bounds() noexcept = default;
-
-        constexpr Bounds(const Score alphaToUse, const Score betaToUse) noexcept
-            : alpha { alphaToUse }
-            , beta { betaToUse }
-        {
-            assert(beta > alpha);
-        }
-
         [[nodiscard]] constexpr Bounds invert() const noexcept
         {
-            return { -beta, -alpha };
+            return {
+                .alpha = -beta,
+                .beta  = -alpha
+            };
         }
 
         // if an MDP cutoff is available, returns the cutoff value
