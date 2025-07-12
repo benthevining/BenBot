@@ -140,7 +140,7 @@
       "displayName": "Run perft tests with Ninja (Debug)",
       "filter": {
         "include": {
-          "name": "libchess.perft."
+          "name": "ben_bot.perft."
         }
       },
       "inherits": "base",
@@ -158,7 +158,7 @@
       "displayName": "Run rampart tests with Ninja (Debug)",
       "filter": {
         "include": {
-          "name": "libchess.rampart."
+          "name": "ben_bot.rampart."
         }
       },
       "inherits": "base",

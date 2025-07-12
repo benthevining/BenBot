@@ -8,7 +8,7 @@ Library API docs are built using Doxygen. Documentation is written inline in the
 
 ### Options
 
-* `LIBCHESS_DOCS`: this directory is not entered by CMake unless this option is on. Defaults to off unless `libchess` is the top-level CMake project.
+* `BENBOT_DOCS`: this directory is not entered by CMake unless this option is on. Defaults to off unless `BenBot` is the top-level CMake project.
 
 ### Targets
 

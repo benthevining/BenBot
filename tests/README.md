@@ -8,7 +8,7 @@ Results are tracked via the [CDash dashboard](https://my.cdash.org/index.php?pro
 
 ### Options
 
-* `LIBCHESS_TESTS`: this directory is not entered by CMake unless this option is on. Defaults to off unless `libchess` is the top-level CMake project.
+* `BENBOT_TESTS`: this directory is not entered by CMake unless this option is on. Defaults to off unless `BenBot` is the top-level CMake project.
 
 ### Targets
 
