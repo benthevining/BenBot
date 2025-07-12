@@ -26,7 +26,6 @@
 #include <libchess/uci/DefaultOptions.hpp>
 #include <libchess/uci/Options.hpp>
 #include <optional>
-#include <print>
 #include <random>
 #include <span>
 #include <string_view>
