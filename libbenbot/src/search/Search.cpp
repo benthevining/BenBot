@@ -87,6 +87,7 @@ namespace {
         size_t nodesSearched { 0uz };
         size_t transTableHits { 0uz };
 
+        size_t betaCutoffs { 0uz };
         size_t mdpCutoffs { 0uz }; // cutoffs due to mate distance pruning
     };
 
@@ -113,8 +114,10 @@ namespace {
         auto evaluation = eval::evaluate(currentPosition);
 
         // see if we can get a cutoff (we may not need to generate moves for this position)
-        if (evaluation >= bounds.beta)
+        if (evaluation >= bounds.beta) {
+            ++stats.betaCutoffs;
             return bounds.beta;
+        }
 
         bounds.alpha = std::max(bounds.alpha, evaluation);
 
@@ -135,8 +138,10 @@ namespace {
 
             ++stats.nodesSearched;
 
-            if (evaluation >= bounds.beta)
+            if (evaluation >= bounds.beta) {
+                ++stats.betaCutoffs;
                 return bounds.beta;
+            }
 
             bounds.alpha = std::max(bounds.alpha, evaluation);
         }
@@ -220,6 +225,8 @@ namespace {
                                          .eval        = bounds.beta.to_tt(),
                                          .evalType    = EvalType::Beta,
                                          .bestMove    = bestMove });
+
+                ++stats.betaCutoffs;
 
                 return bounds.beta;
             }
@@ -350,6 +357,7 @@ void Context::search()
             .bestMove                            = bestMove.value(),
             .nodesSearched                       = stats.nodesSearched,
             .transpositionTableHits              = stats.transTableHits,
+            .betaCutoffs                         = stats.betaCutoffs,
             .mdpCutoffs                          = stats.mdpCutoffs });
 
         if (! infinite) {
@@ -391,6 +399,7 @@ void Context::search()
         .bestMove                         = bestMove.value(),
         .nodesSearched                    = stats.nodesSearched,
         .transpositionTableHits           = stats.transTableHits,
+        .betaCutoffs                      = stats.betaCutoffs,
         .mdpCutoffs                       = stats.mdpCutoffs });
 }
 

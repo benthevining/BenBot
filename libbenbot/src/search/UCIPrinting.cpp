@@ -77,8 +77,9 @@ namespace {
         };
 
         return std::format(
-            " string TT hits {} ({}%) MDP cutoffs {} ({}%)",
+            " string TT hits {} ({}%) Beta cutoffs {} ({}%) MDP cutoffs {} ({}%)",
             res.transpositionTableHits, get_pcnt(res.transpositionTableHits),
+            res.betaCutoffs, get_pcnt(res.betaCutoffs),
             res.mdpCutoffs, get_pcnt(res.mdpCutoffs));
     }
 

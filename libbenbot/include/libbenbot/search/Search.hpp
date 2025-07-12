@@ -127,6 +127,9 @@ struct Callbacks final {
          */
         size_t transpositionTableHits { 0uz };
 
+        /** Number of cutoffs due to alpha-beta. */
+        size_t betaCutoffs { 0uz };
+
         /** Number of cutoffs due to mate distance pruning. */
         size_t mdpCutoffs { 0uz };
     };
