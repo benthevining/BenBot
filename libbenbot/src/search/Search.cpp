@@ -39,7 +39,7 @@ using std::size_t;
 namespace {
 
     using eval::Score;
-    using EvalType = TranspositionTable::Record::EvalType;
+    using EvalType = ben_bot::TranspositionTable::Record::EvalType;
 
     struct Bounds final {
         Score alpha { -eval::MAX };
@@ -143,13 +143,13 @@ namespace {
     // standard alpha/beta search algorithm
     // this is called in the body of the higher-level iterative deepening loop
     [[nodiscard]] Score alpha_beta(
-        Bounds              bounds,
-        const Position&     currentPosition,
-        const size_t        depth,       // this is the depth left to be searched - decreases each iteration, and when this reaches 0, we call the quiescence search
-        const size_t        plyFromRoot, // increases each iteration
-        TranspositionTable& transTable,
-        Interrupter&        interrupter,
-        Stats&              stats)
+        Bounds                       bounds,
+        const Position&              currentPosition,
+        const size_t                 depth,       // this is the depth left to be searched - decreases each iteration, and when this reaches 0, we call the quiescence search
+        const size_t                 plyFromRoot, // increases each iteration
+        ben_bot::TranspositionTable& transTable,
+        Interrupter&                 interrupter,
+        Stats&                       stats)
     {
         if (interrupter.should_abort())
             return {};

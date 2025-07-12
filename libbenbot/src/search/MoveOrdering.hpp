@@ -24,12 +24,13 @@ namespace chess::moves {
 struct Move;
 } // namespace chess::moves
 
-namespace chess::search {
+namespace ben_bot {
 class TranspositionTable;
-} // namespace chess::search
+} // namespace ben_bot
 
 namespace chess::search::detail {
 
+using ben_bot::TranspositionTable;
 using game::Position;
 using moves::Move;
 

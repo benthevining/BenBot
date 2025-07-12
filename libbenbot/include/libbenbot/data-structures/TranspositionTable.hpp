@@ -26,10 +26,10 @@
 #include <unordered_map>
 #include <utility>
 
-namespace chess::search {
+namespace ben_bot {
 
-using game::Position;
-using moves::Move;
+using chess::game::Position;
+using chess::moves::Move;
 using std::size_t;
 
 /** The transposition table data structure.
@@ -174,4 +174,4 @@ inline void TranspositionTable::store(const Position& pos, const Record& record)
     records.emplace(pos.hash, record);
 }
 
-} // namespace chess::search
+} // namespace ben_bot

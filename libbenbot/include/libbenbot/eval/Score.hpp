@@ -109,7 +109,7 @@ struct Score final {
         return { (MAX - static_cast<int>(plyFromRoot)) * -1 };
     }
 
-    using TT = search::TranspositionTable;
+    using TT = ben_bot::TranspositionTable;
 
     /** Converts a value from the transposition table to a score.
         This maps the MATE constant to a ply-from-root mate score.

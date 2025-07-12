@@ -232,7 +232,7 @@ private:
 
     std::atomic_bool activeFlag { false };
 
-    TranspositionTable transTable;
+    ben_bot::TranspositionTable transTable;
 
     Callbacks callbacks;
 };
