@@ -86,6 +86,10 @@ repos:
     name: Insert license header in CMake and shell files
     args: [--license-filepath=ben-bot/resources/license_header.txt, --comment-style=#, --detect-license-in-X-top-lines=16]
     types_or: [cmake, yaml, toml, ini, python, shell]
+  - id: insert-license
+    name: Insert license header in CMake and shell files
+    args: [--license-filepath=ben-bot/resources/license_header.txt, --comment-style=#, --detect-license-in-X-top-lines=16]
+    files: .git|.clang|.cfg|justfile|.editorconfig
 
     # auto-fix spelling mistakes
 - repo: https://github.com/codespell-project/codespell
