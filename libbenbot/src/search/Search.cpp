@@ -62,62 +62,63 @@ namespace {
 
     using EvalType = TranspositionTable::Record::EvalType;
 
-    // mate scores are based on the distance from the root of the tree
-    // to the leaf (mate) node, so that the engine actually goes for mate
-    [[nodiscard, gnu::const]] constexpr int checkmate_score(const size_t plyFromRoot) noexcept
-    {
-        // multiply by -1 here because this score is relative to the player who got mated
-        return (EVAL_MAX - static_cast<int>(plyFromRoot)) * -1;
-    }
+    struct Score final {
+        int value { 0 };
 
-    [[nodiscard, gnu::const]] constexpr bool is_winning_mate_score(const int score) noexcept
-    {
-        return score >= eval::MATE;
-    }
+        constexpr operator int() const noexcept { return value; }
 
-    [[nodiscard, gnu::const]] constexpr bool is_losing_mate_score(const int score) noexcept
-    {
-        return score <= -eval::MATE;
-    }
+        // inverts the score
+        [[nodiscard]] Score operator-() const noexcept { return { -value }; }
 
-    // maps ply-from-root mate scores to the MATE constant
-    [[nodiscard, gnu::const]] constexpr int to_tt_score(const int score) noexcept
-    {
-        if (is_losing_mate_score(score))
-            return -eval::MATE;
+        [[nodiscard]] constexpr bool is_winning_mate() const noexcept { return value >= eval::MATE; }
+        [[nodiscard]] constexpr bool is_losing_mate() const noexcept { return value <= -eval::MATE; }
 
-        if (is_winning_mate_score(score))
-            return eval::MATE;
+        // maps ply-from-root mate scores to the MATE constant
+        [[nodiscard]] constexpr int to_tt() const noexcept
+        {
+            if (is_losing_mate())
+                return -eval::MATE;
 
-        return score;
-    }
+            if (is_winning_mate())
+                return eval::MATE;
 
-    // maps the MATE constant to a ply-from-root mate score
-    [[nodiscard, gnu::const]] constexpr int from_tt_score(
-        const TranspositionTable::ProbedEval& eval,
-        const size_t                          plyFromRoot) noexcept
-    {
-        const auto [score, type] = eval;
-
-        // map MATE constant to a ply-from-root mate score
-        if (type == EvalType::Exact) {
-            if (score <= -eval::MATE)
-                return checkmate_score(plyFromRoot);
-
-            if (score >= eval::MATE)
-                return -checkmate_score(plyFromRoot);
+            return value;
         }
 
-        return score;
-    }
+        // mate scores are based on the distance from the root of the tree
+        // to the leaf (mate) node, so that the engine actually goes for mate
+        [[nodiscard, gnu::const]] static constexpr Score mate(const size_t plyFromRoot) noexcept
+        {
+            // multiply by -1 here because this score is relative to the player who got mated
+            return { (EVAL_MAX - static_cast<int>(plyFromRoot)) * -1 };
+        }
+
+        // maps the MATE constant to a ply-from-root mate score
+        [[nodiscard, gnu::const]] static constexpr Score from_tt(
+            const TranspositionTable::ProbedEval& eval,
+            const size_t                          plyFromRoot) noexcept
+        {
+            const auto [score, type] = eval;
+
+            if (type == EvalType::Exact) {
+                if (score <= -eval::MATE)
+                    return mate(plyFromRoot);
+
+                if (score >= eval::MATE)
+                    return -mate(plyFromRoot);
+            }
+
+            return { score };
+        }
+    };
 
     struct Bounds final {
-        int alpha { -EVAL_MAX };
-        int beta { EVAL_MAX };
+        Score alpha { -EVAL_MAX };
+        Score beta { EVAL_MAX };
 
         constexpr Bounds() noexcept = default;
 
-        constexpr Bounds(const int alphaToUse, const int betaToUse) noexcept
+        constexpr Bounds(const Score alphaToUse, const Score betaToUse) noexcept
             : alpha { alphaToUse }
             , beta { betaToUse }
         {
@@ -131,11 +132,11 @@ namespace {
 
         // if an MDP cutoff is available, returns the cutoff value
         // if this returns nullopt, the search should continue
-        [[nodiscard]] constexpr std::optional<int> mate_distance_pruning(const size_t plyFromRoot) noexcept
+        [[nodiscard]] constexpr std::optional<Score> mate_distance_pruning(const size_t plyFromRoot) noexcept
         {
-            const auto mateScore = checkmate_score(plyFromRoot);
+            const auto mateScore = Score::mate(plyFromRoot);
 
-            if (is_winning_mate_score(alpha)) {
+            if (alpha.is_winning_mate()) {
                 if (mateScore < beta) {
                     beta = mateScore;
 
@@ -146,7 +147,7 @@ namespace {
                 return std::nullopt;
             }
 
-            if (is_losing_mate_score(alpha)) {
+            if (alpha.is_losing_mate()) {
                 if (mateScore > alpha) {
                     alpha = mateScore;
 
@@ -166,26 +167,23 @@ namespace {
 
     // searches only captures, with no depth limit, to try to
     // improve the stability of the static evaluation function
-    [[nodiscard]] int quiescence(
+    [[nodiscard]] Score quiescence(
         Bounds          bounds,
         const Position& currentPosition,
         const size_t    plyFromRoot, // increases each iteration (recursion)
         Interrupter&    interrupter,
         Stats&          stats)
     {
-        if (interrupter.should_abort())
-            return eval::DRAW;
-
-        if (currentPosition.is_draw())
-            return eval::DRAW;
+        if (interrupter.should_abort() || currentPosition.is_draw())
+            return {};
 
         if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot))
             return cutoff.value();
 
         if (currentPosition.is_checkmate())
-            return checkmate_score(plyFromRoot);
+            return Score::mate(plyFromRoot);
 
-        auto evaluation = eval::evaluate(currentPosition);
+        auto evaluation = Score { eval::evaluate(currentPosition) };
 
         // see if we can get a cutoff (we may not need to generate moves for this position)
         if (evaluation >= bounds.beta)
@@ -206,7 +204,7 @@ namespace {
                 plyFromRoot + 1uz, interrupter, stats);
 
             if (interrupter.was_aborted())
-                return eval::DRAW;
+                return {};
 
             ++stats.nodesSearched;
 
@@ -221,7 +219,7 @@ namespace {
 
     // standard alpha/beta search algorithm
     // this is called in the body of the higher-level iterative deepening loop
-    [[nodiscard]] int alpha_beta(
+    [[nodiscard]] Score alpha_beta(
         Bounds              bounds,
         const Position&     currentPosition,
         const size_t        depth,       // this is the depth left to be searched - decreases each iteration, and when this reaches 0, we call the quiescence search
@@ -231,13 +229,13 @@ namespace {
         Stats&              stats)
     {
         if (interrupter.should_abort())
-            return eval::DRAW;
+            return {};
 
         // it's important that we do this check before probing the transposition table,
         // because the table only contains static evaluations and doesn't consider game
         // history, so its stored evaluations can't detect threefold repetition draws
         if (currentPosition.is_threefold_repetition())
-            return eval::DRAW;
+            return {}; // TODO: write to TT here
 
         if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot))
             return cutoff.value();
@@ -246,7 +244,7 @@ namespace {
         // least this depth and within these bounds for non-PV nodes
         if (const auto value = transTable.probe_eval(currentPosition, depth, bounds.alpha, bounds.beta)) {
             ++stats.transTableHits;
-            return from_tt_score(*value, plyFromRoot);
+            return Score::from_tt(*value, plyFromRoot);
         }
 
         if (currentPosition.is_draw()) {
@@ -255,7 +253,7 @@ namespace {
                                      .eval        = eval::DRAW,
                                      .evalType    = EvalType::Exact });
 
-            return eval::DRAW;
+            return {};
         }
 
         auto moves = moves::generate(currentPosition);
@@ -266,7 +264,7 @@ namespace {
                                      .eval        = -eval::MATE,
                                      .evalType    = EvalType::Exact });
 
-            return checkmate_score(plyFromRoot);
+            return Score::mate(plyFromRoot);
         }
 
         detail::order_moves_for_search(currentPosition, moves, transTable);
@@ -283,14 +281,14 @@ namespace {
                                 : -quiescence(bounds.invert(), newPosition, plyFromRoot + 1uz, interrupter, stats);
 
             if (interrupter.should_abort())
-                return eval::DRAW;
+                return {};
 
             ++stats.nodesSearched;
 
             if (eval >= bounds.beta) {
                 transTable.store(
                     currentPosition, { .searchedDepth = depth,
-                                         .eval        = to_tt_score(bounds.beta),
+                                         .eval        = bounds.beta.to_tt(),
                                          .evalType    = EvalType::Beta,
                                          .bestMove    = bestMove });
 
@@ -306,7 +304,7 @@ namespace {
 
         transTable.store(
             currentPosition, { .searchedDepth = depth,
-                                 .eval        = to_tt_score(bounds.alpha),
+                                 .eval        = bounds.alpha.to_tt(),
                                  .evalType    = evalType,
                                  .bestMove    = bestMove });
 
@@ -369,7 +367,7 @@ void Context::search()
 
     std::optional<Move> bestMove;
 
-    int bestScore { 0 };
+    Score bestScore;
 
     // iterative deepening
     auto depth = 1uz;
