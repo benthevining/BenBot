@@ -4,6 +4,6 @@
     "catch2",
     "nlohmann-json"
   ],
-  "name": "libchess",
+  "name": "BenBot",
   "version": "1.1.0"
 }

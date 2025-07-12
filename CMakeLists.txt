@@ -13,7 +13,7 @@
 cmake_minimum_required (VERSION 3.30.0 FATAL_ERROR)
 
 project (
-    libchess
+    BenBot
     VERSION 1.1.0
     LANGUAGES CXX C
     DESCRIPTION "A chess engine"

@@ -25,10 +25,10 @@ else ()
 endif ()
 
 # inputs & filepaths
-set (DOXYGEN_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/generated-docs")
-set (DOXYGEN_GENERATE_TAGFILE "${DOXYGEN_OUTPUT_DIRECTORY}/${PROJECT_NAME}.tag")
-set (DOXYGEN_STRIP_FROM_PATH "${PROJECT_SOURCE_DIR}")
-set (DOXYGEN_USE_MDFILE_AS_MAINPAGE "${PROJECT_SOURCE_DIR}/README.md")
+set (DOXYGEN_OUTPUT_DIRECTORY "${BenBot_BINARY_DIR}/generated-docs")
+set (DOXYGEN_GENERATE_TAGFILE "${DOXYGEN_OUTPUT_DIRECTORY}/BenBot.tag")
+set (DOXYGEN_STRIP_FROM_PATH "${BenBot_SOURCE_DIR}")
+set (DOXYGEN_USE_MDFILE_AS_MAINPAGE "${BenBot_SOURCE_DIR}/README.md")
 set (DOXYGEN_FILE_PATTERNS *.hpp)
 set (DOXYGEN_INCLUDE_FILE_PATTERNS *.hpp)
 
@@ -39,7 +39,7 @@ get_target_property (libbenbot_headers ben_bot::libbenbot HEADER_SET)
 doxygen_add_docs (
         libchess_docs
         "${DOXYGEN_USE_MDFILE_AS_MAINPAGE}" ${libchess_headers} ${libbenbot_headers}
-        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+        WORKING_DIRECTORY "${BenBot_SOURCE_DIR}"
         COMMENT "Building Doxygen documentation..."
         USE_STAMP_FILE
 )

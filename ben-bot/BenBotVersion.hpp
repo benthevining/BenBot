@@ -21,7 +21,7 @@
 namespace ben_bot {
 
 static constexpr std::string_view VERSION_STRING {
-    "@libchess_VERSION@"
+    "@BenBot_VERSION@"
 };
 
 } // namespace ben_bot

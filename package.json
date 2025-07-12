@@ -2,7 +2,7 @@
   "dependencies": {
     "conventional-changelog-cli": "^5.0.0"
   },
-  "name": "libchess",
+  "name": "BenBot",
   "private": true,
   "version": "1.1.0"
 }

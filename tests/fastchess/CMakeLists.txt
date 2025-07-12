@@ -35,7 +35,7 @@ add_custom_target (
 
 cmake_host_system_information (RESULT num_cores QUERY NUMBER_OF_PHYSICAL_CORES)
 
-set (openings_file "${libchess_SOURCE_DIR}/ben-bot/resources/book.pgn")
+set (openings_file "${BenBot_SOURCE_DIR}/ben-bot/resources/book.pgn")
 
 # cmake-format: off
 add_custom_target (
