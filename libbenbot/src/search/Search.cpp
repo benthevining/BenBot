@@ -38,22 +38,6 @@ using std::size_t;
 
 static constexpr auto EVAL_MAX { eval::MAX };
 
-namespace detail {
-
-    [[nodiscard, gnu::const]] bool is_mate_score(const int score) noexcept
-    {
-        return std::abs(score) >= eval::MATE;
-    }
-
-    [[nodiscard, gnu::const]] size_t ply_to_mate_from_score(const int score) noexcept
-    {
-        assert(is_mate_score(score));
-
-        return static_cast<size_t>(EVAL_MAX - std::abs(score));
-    }
-
-} // namespace detail
-
 namespace {
 
     using eval::Score;
@@ -289,7 +273,7 @@ void Context::search()
 
         callbacks.search_complete({ .duration = interrupter.get_search_duration(),
             .depth                            = 1uz,
-            .score                            = eval,
+            .score                            = Score { eval },
             .bestMove                         = *bookMove });
 
         return;
@@ -377,8 +361,8 @@ void Context::search()
             }
 
             // if we've found a mate, don't do a deeper iteration
-            if (detail::is_mate_score(bestScore)
-                && detail::ply_to_mate_from_score(bestScore) <= depth) {
+            if (bestScore.is_mate()
+                && bestScore.ply_to_mate() <= depth) {
                 break;
             }
 

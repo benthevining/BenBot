@@ -29,6 +29,7 @@
 #include <functional>
 #include <libbenbot/data-structures/OpeningBook.hpp>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
+#include <libbenbot/eval/Score.hpp>
 #include <libchess/moves/Move.hpp>
 #include <limits>
 #include <optional>
@@ -55,14 +56,6 @@ using moves::Move;
 using std::size_t;
 
 using Milliseconds = std::chrono::milliseconds;
-
-#ifndef DOXYGEN
-namespace detail {
-    [[nodiscard, gnu::const]] bool is_mate_score(int score) noexcept;
-
-    [[nodiscard, gnu::const]] size_t ply_to_mate_from_score(int score) noexcept;
-} // namespace detail
-#endif
 
 /** This struct encapsulates the parameters to the search algorithm.
 
@@ -118,7 +111,7 @@ struct Callbacks final {
         size_t depth { 0uz };
 
         /** The evaluation of the position resulting from playing the best move. */
-        int score { 0 };
+        eval::Score score;
 
         /** The best move found in the position. */
         Move bestMove;

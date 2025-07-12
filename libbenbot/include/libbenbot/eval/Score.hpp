@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <cassert>
+#include <cmath>   // IWYU pragma: keep - for std::abs()
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
@@ -46,11 +48,29 @@ struct Score final {
     /** Inverts the score. */
     [[nodiscard]] Score operator-() const noexcept { return { -value }; }
 
+    /// @name Mate queries
+    /// @{
+
+    /** Returns true if this score represents checkmate (either winning or losing). */
+    [[nodiscard]] constexpr bool is_mate() const noexcept { return std::abs(value) >= MATE; }
+
     /** Returns true if this score is a winning mate score. */
     [[nodiscard]] constexpr bool is_winning_mate() const noexcept { return value >= MATE; }
 
     /** Returns true if this score is a losing mate score. */
     [[nodiscard]] constexpr bool is_losing_mate() const noexcept { return value <= -MATE; }
+
+    /** For a checkmate score, returns the number of plies from the root of the search
+        tree to the checkmate position. This method asserts if the score is not mate.
+     */
+    [[nodiscard]] constexpr size_t ply_to_mate() const noexcept
+    {
+        assert(is_mate());
+
+        return static_cast<size_t>(MAX - std::abs(value));
+    }
+
+    /// @}
 
     /** Returns a value suitable for storing in the transposition table.
         During search, mate scores are based on ply from the root position;

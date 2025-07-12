@@ -18,6 +18,7 @@
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <format>
 #include <iostream>
+#include <libbenbot/eval/Score.hpp>
 #include <libbenbot/search/Search.hpp>
 #include <libchess/notation/UCI.hpp>
 #include <print>
@@ -29,12 +30,12 @@ namespace {
 
     using std::size_t;
 
-    [[nodiscard]] std::string get_score_string(const int score)
+    [[nodiscard]] std::string get_score_string(const eval::Score score)
     {
-        if (! detail::is_mate_score(score))
-            return std::format("cp {}", score);
+        if (! score.is_mate())
+            return std::format("cp {}", score.value);
 
-        auto plyToMate = detail::ply_to_mate_from_score(score);
+        auto plyToMate = score.ply_to_mate();
 
         if (plyToMate > 0uz)
             ++plyToMate;
