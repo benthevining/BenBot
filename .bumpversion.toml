@@ -73,11 +73,11 @@ post_commit_hooks = [
 filename = "CMakeLists.txt"
 search = """
 project (
-    libchess
+    BenBot
     VERSION {current_version}"""
 replace = """
 project (
-    libchess
+    BenBot
     VERSION {new_version}"""
 
 [[tool.bumpversion.files]]
