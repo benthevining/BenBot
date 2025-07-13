@@ -10,3 +10,9 @@ Each EPD entry must have the following operations:
 * `id`: an identifier for the position, which is printed along with the position's FEN string if a test case fails. May also be an explanatory comment describing the position.
 
 Additional operations may be specified.
+
+The test case data files contain positions from the following test suites:
+* [Bratko-Kopec Test](https://www.chessprogramming.org/Bratko-Kopec_Test)
+* [CCR One Hour Test](https://www.chessprogramming.org/CCR_One_Hour_Test)
+* [Kaufman Test](https://www.chessprogramming.org/Kaufman_Test)
+* [Louguet Chess Test II](https://www.chessprogramming.org/LCT_II) (LCT)
