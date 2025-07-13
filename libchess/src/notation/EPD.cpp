@@ -17,9 +17,11 @@
 #include <format>
 #include <libchess/notation/EPD.hpp>
 #include <libchess/util/Strings.hpp>
+#include <ranges>
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace chess::notation {
 
@@ -118,6 +120,22 @@ EPDPosition from_epd(string_view epdString)
     pos.position.refresh_zobrist();
 
     return pos;
+}
+
+std::vector<EPDPosition> parse_all_epds(const string_view fileContent)
+{
+    std::vector<EPDPosition> epds;
+
+    for (const auto line : fileContent | std::views::split('\n')) {
+        const std::string_view lineStr { line };
+
+        if (lineStr.empty())
+            break;
+
+        epds.emplace_back(from_epd(lineStr));
+    }
+
+    return epds;
 }
 
 namespace {

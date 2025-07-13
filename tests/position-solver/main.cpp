@@ -27,7 +27,6 @@
 #include <libchess/util/Strings.hpp>
 #include <optional>
 #include <print>
-#include <ranges>
 #include <span>
 #include <string>
 #include <string_view>
@@ -90,14 +89,7 @@ try {
     size_t numPassed { 0uz };
     size_t numFailed { 0uz };
 
-    for (const auto line : fileContent | std::views::split('\n')) {
-        const std::string_view lineStr { line };
-
-        if (lineStr.empty())
-            break;
-
-        const auto epd = notation::from_epd(lineStr);
-
+    for (const auto& epd : notation::parse_all_epds(fileContent)) {
         context.options.position = epd.position;
 
         // clear this so that all legal moves in the position will be searched

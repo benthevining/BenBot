@@ -23,6 +23,7 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <vector>
 
 namespace chess::notation {
 
@@ -50,8 +51,17 @@ struct EPDPosition final {
 
     @ingroup notation
     @relates EPDPosition
+    @see parse_all_epds()
  */
 [[nodiscard]] EPDPosition from_epd(std::string_view epdString);
+
+/** Parses all EPDs in a string containing one EPD per line.
+
+    @ingroup notation
+    @relates EPDPosition
+    @see from_epd()
+ */
+[[nodiscard]] std::vector<EPDPosition> parse_all_epds(std::string_view fileContent);
 
 /** Writes a position to an EPD string.
 
