@@ -15,6 +15,7 @@
 #pragma once
 
 #include <array>
+#include <cassert>
 #include <filesystem>
 #include <functional>
 #include <libbenbot/search/Search.hpp>
@@ -77,7 +78,11 @@ private:
     void ponder_hit() override
     {
         searcher.context.abort();
-        searcher.context.wait();
+
+        searcher.set_position(
+            after_move(searcher.context.options.position, ponderMove.value()));
+
+        searcher.start();
     }
 
     void abort_search() override { searcher.context.abort(); }

@@ -79,14 +79,21 @@ struct Thread final {
         This method returns immediately, and the actual search will be performed by
         a background thread.
      */
+    /// @{
     void start(chess::uci::GoCommandOptions&& options)
+    {
+        context.options.update_from(std::move(options));
+
+        start();
+    }
+
+    void start()
     {
         context.wait(); // shouldn't have been searching, but better safe than sorry
 
-        context.options.update_from(std::move(options));
-
         startSearch.store(true);
     }
+    /// @}
 
 private:
     void thread_func()
