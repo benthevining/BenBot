@@ -16,21 +16,22 @@ add_executable (ben_bot)
 
 target_link_libraries (ben_bot PRIVATE ben_bot::libbenbot ben_bot::resources)
 
-file (GLOB_RECURSE ben_bot_sources LIST_DIRECTORIES false
-      CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/src/*.hpp" "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp"
-)
+set (config_header "${CMAKE_CURRENT_LIST_DIR}/BenBotConfig.hpp")
+
+file (READ "${config_header}" config_header_content)
+list (APPEND CMAKE_CONFIGURE_DEPENDS "${config_header}")
 
 set (generated_includes "${CMAKE_CURRENT_BINARY_DIR}/generated/include/$<CONFIG>")
 set (generated_header "${generated_includes}/BenBotConfig.hpp")
 
 # we need to do string(CONFIGURE) and then file(GENERATE) because we want to expand both variable
 # references and generator expressions
-
-file (READ BenBotConfig.hpp config_header_content)
-
 string (CONFIGURE "${config_header_content}" config_header_content @ONLY)
-
 file (GENERATE OUTPUT "${generated_header}" CONTENT "${config_header_content}")
+
+file (GLOB_RECURSE ben_bot_sources LIST_DIRECTORIES false
+      CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/src/*.hpp" "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp"
+)
 
 target_sources (ben_bot PRIVATE ${ben_bot_sources} "${generated_header}")
 
