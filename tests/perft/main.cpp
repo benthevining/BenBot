@@ -13,6 +13,7 @@
  */
 
 #include <algorithm>
+#include <beman/inplace_vector/inplace_vector.hpp>
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdlib>
@@ -87,6 +88,8 @@ namespace {
             return *this;
         }
     };
+
+    constexpr auto MAX_ARGS = 4uz;
 
     void print_help(const std::string_view programName)
     {
@@ -288,7 +291,7 @@ namespace {
 
 int main(const int argc, const char** argv)
 try {
-    const std::vector<std::string_view> argStorage {
+    const beman::inplace_vector<std::string_view, chess::MAX_ARGS> argStorage {
         argv,
         std::next(argv, static_cast<std::ptrdiff_t>(argc))
     };

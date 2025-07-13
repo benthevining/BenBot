@@ -16,6 +16,7 @@
 // and a path to a JSON output file. The executable writes JSON output containing every
 // legal move in the given starting position, as well as the FEN after making the move.
 
+#include <beman/inplace_vector/inplace_vector.hpp>
 #include <cstddef> // IWYU pragma: keep - for std::ptrdiff_t
 #include <cstdlib>
 #include <exception>
@@ -34,7 +35,9 @@
 
 int main(const int argc, const char** argv)
 try {
-    const std::vector<std::string_view> argStorage {
+    static constexpr auto MAX_ARGS = 3uz;
+
+    const beman::inplace_vector<std::string_view, MAX_ARGS> argStorage {
         argv,
         std::next(argv, static_cast<std::ptrdiff_t>(argc))
     };

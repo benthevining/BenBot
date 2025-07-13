@@ -12,6 +12,7 @@
  * ======================================================================================
  */
 
+#include <beman/inplace_vector/inplace_vector.hpp>
 #include <cstddef> // IWYU pragma: keep - for std::ptrdiff_t
 #include <exception>
 #include <filesystem>
@@ -35,6 +36,9 @@
 using std::size_t;
 
 namespace {
+
+constexpr auto MAX_ARGS = 3uz;
+
 void print_usage(const std::string_view programName)
 {
     std::println("Usage:");
@@ -51,6 +55,7 @@ void print_usage(const std::string_view programName)
 
     return lines.at(lineIdx);
 }
+
 } // namespace
 
 int main(const int argc, const char** argv)
@@ -58,7 +63,7 @@ try {
     namespace notation = chess::notation;
     namespace search   = ben_bot::search;
 
-    const std::vector<std::string_view> argStorage {
+    const beman::inplace_vector<std::string_view, MAX_ARGS> argStorage {
         argv,
         std::next(argv, static_cast<std::ptrdiff_t>(argc))
     };
