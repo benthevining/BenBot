@@ -58,6 +58,7 @@ void OpeningBook::prune()
         const auto [first, last] = std::ranges::unique(moves);
 
         moves.erase(first, last);
+        moves.shrink_to_fit();
     }
 }
 

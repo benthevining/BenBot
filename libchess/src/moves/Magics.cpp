@@ -246,6 +246,8 @@ namespace {
             }
         }
 
+        result.shrink_to_fit();
+
         return result;
     }
 
