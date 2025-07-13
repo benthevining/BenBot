@@ -15,11 +15,13 @@
 #pragma once
 
 #include <array>
+#include <cassert>
 #include <filesystem>
 #include <functional>
 #include <libbenbot/search/Search.hpp>
 #include <libbenbot/search/Thread.hpp>
 #include <libchess/game/Position.hpp>
+#include <libchess/moves/Move.hpp>
 #include <libchess/uci/CommandParsing.hpp> // IWYU pragma: keep - for uci::GoCommandOptions
 #include <libchess/uci/EngineBase.hpp>
 #include <libchess/uci/Options.hpp>
@@ -65,7 +67,23 @@ private:
 
     void set_position(const chess::game::Position& pos) override { searcher.set_position(pos); }
 
-    void go(uci::GoCommandOptions&& opts) override { searcher.start(std::move(opts)); }
+    void go(uci::GoCommandOptions&& opts) override
+    {
+        if (opts.ponderMode && ! ponderOpt.get_value())
+            return;
+
+        searcher.start(std::move(opts));
+    }
+
+    void ponder_hit() override
+    {
+        searcher.context.abort();
+
+        searcher.set_position(
+            after_move(searcher.context.options.position, ponderMove.value()));
+
+        searcher.start();
+    }
 
     void abort_search() override { searcher.context.abort(); }
 
@@ -85,7 +103,21 @@ private:
 
     static void print_compiler_info();
 
-    search::Thread searcher { search::Callbacks::make_uci_handler() };
+    using Result = search::Callbacks::Result;
+
+    template <bool PrintBestMove>
+    void print_uci_info(const Result& res) const;
+
+    void print_book_hit() const;
+
+    std::optional<Move> ponderMove;
+
+    search::Thread searcher { search::Callbacks {
+        .onSearchComplete = [this](const Result& res) {
+            ponderMove = res.bestResponse;
+            print_uci_info<true>(res); },
+        .onIteration      = [this](const Result& res) { print_uci_info<false>(res); },
+        .onOpeningBookHit = [this]([[maybe_unused]] const Move& move) { print_book_hit(); } } };
 
     uci::Action clearTT {
         "Clear Hash",
@@ -93,9 +125,13 @@ private:
         "Press to clear the transposition table"
     };
 
-    std::array<uci::Option*, 2uz> options {
+    uci::BoolOption ponderOpt {
+        uci::default_options::ponder()
+    };
+
+    std::array<uci::Option*, 3uz> options {
         &searcher.context.openingBook.enabled,
-        &clearTT
+        &ponderOpt, &clearTT
     };
 
     // clang-format off
