@@ -89,7 +89,7 @@ EPDPosition from_epd(string_view epdString)
 
     if (epdString.empty()) {
         throw std::invalid_argument {
-            "Cannot parse Position from empty FEN string"
+            "Cannot parse Position from empty EPD string"
         };
     }
 

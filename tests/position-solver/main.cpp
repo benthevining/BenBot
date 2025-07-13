@@ -14,19 +14,51 @@
 
 #include <cstddef> // IWYU pragma: keep - for std::ptrdiff_t
 #include <exception>
+#include <filesystem>
+#include <fstream>
+#include <ios>
 #include <iostream>
 #include <iterator>
 #include <libbenbot/search/Search.hpp>
+#include <libchess/moves/Move.hpp>
 #include <libchess/notation/Algebraic.hpp>
+#include <libchess/notation/EPD.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/util/Strings.hpp>
+#include <optional>
 #include <print>
+#include <ranges>
 #include <span>
+#include <string>
 #include <string_view>
 #include <vector>
 
+namespace {
+
+using std::filesystem::path;
+using std::size_t;
+
+[[nodiscard]] std::string load_file_as_string(path file)
+{
+    file = absolute(file);
+
+    std::ifstream input { file };
+
+    input.exceptions(
+        std::ios_base::badbit | std::ios_base::failbit);
+
+    using Iterator = std::istreambuf_iterator<char>;
+
+    return { Iterator { input }, Iterator {} };
+}
+
+} // namespace
+
 int main(const int argc, const char** argv)
 try {
+    namespace notation = chess::notation;
+    namespace search   = ben_bot::search;
+
     const std::vector<std::string_view> argStorage {
         argv,
         std::next(argv, static_cast<std::ptrdiff_t>(argc))
@@ -38,34 +70,74 @@ try {
 
     args = args.subspan(1uz);
 
-    if (args.size() < 2uz) {
+    if (args.empty()) {
         std::println("Usage:");
-        std::println("{} <fen> <depth>", programName);
+        std::println("{} <epdPath>", programName);
         return EXIT_FAILURE;
     }
 
-    const auto fenString = args.front();
-
-    args = args.subspan(1uz);
-
-    const auto depthString = args.front();
-
-    namespace search = ben_bot::search;
+    std::optional<chess::moves::Move> foundMove;
 
     search::Context context {
         search::Callbacks {
-            .onSearchComplete = [&context](const search::Callbacks::Result& result) {
-                std::println("{}",
-                    chess::notation::to_alg(context.options.position, result.bestMove));
+            .onSearchComplete = [&foundMove](const search::Callbacks::Result& result) {
+                foundMove = result.bestMove;
             } }
     };
 
-    context.options.position = chess::notation::from_fen(fenString);
-    context.options.depth    = chess::util::int_from_string(depthString, 4uz);
+    const auto fileContent = load_file_as_string(path { args.front() });
 
-    context.search();
+    size_t numPassed { 0uz };
+    size_t numFailed { 0uz };
 
-    return EXIT_SUCCESS;
+    for (const auto line : fileContent | std::views::split('\n')) {
+        const std::string_view lineStr { line };
+
+        if (lineStr.empty())
+            break;
+
+        const auto epd = notation::from_epd(lineStr);
+
+        context.options.position = epd.position;
+
+        // clear this so that all legal moves in the position will be searched
+        context.options.movesToSearch.clear();
+
+        context.options.depth = chess::util::int_from_string(
+            epd.operations.at("depth"), 4uz);
+
+        const auto expectedMove = notation::from_alg(
+            epd.position, epd.operations.at("bm"));
+
+        foundMove.reset();
+
+        context.clear_transposition_table();
+
+        context.search();
+
+        if (foundMove.value() == expectedMove) {
+            ++numPassed;
+            continue;
+        }
+
+        ++numFailed;
+
+        std::println(std::cerr,
+            "Position failed: {} ({})",
+            notation::to_fen(epd.position),
+            epd.operations.at("comment"));
+
+        std::println(std::cerr,
+            "Expected {}, got {}",
+            notation::to_alg(epd.position, expectedMove),
+            notation::to_alg(epd.position, *foundMove));
+    }
+
+    std::println(
+        "{} test cases passed, {} test cases failed",
+        numPassed, numFailed);
+
+    return numFailed;
 } catch (const std::exception& exception) {
     std::println(std::cerr, "{}", exception.what());
     return EXIT_FAILURE;
