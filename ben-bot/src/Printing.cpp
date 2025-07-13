@@ -126,4 +126,11 @@ void Engine::print_current_position() const
     print_eval(pos);
 }
 
+void Engine::print_compiler_info()
+{
+    println(
+        "Compiled by {} version {} for {}",
+        get_compiler_name(), get_compiler_version(), get_system_name());
+}
+
 } // namespace ben_bot

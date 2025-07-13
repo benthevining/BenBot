@@ -21,9 +21,9 @@ file (GLOB_RECURSE ben_bot_sources LIST_DIRECTORIES false
 )
 
 set (generated_includes "${CMAKE_CURRENT_BINARY_DIR}/generated/include")
-set (generated_header "${generated_includes}/BenBotVersion.hpp")
+set (generated_header "${generated_includes}/BenBotConfig.hpp")
 
-configure_file (BenBotVersion.hpp "${generated_header}" @ONLY)
+configure_file (BenBotConfig.hpp "${generated_header}" @ONLY)
 
 target_sources (ben_bot PRIVATE ${ben_bot_sources} "${generated_header}")
 

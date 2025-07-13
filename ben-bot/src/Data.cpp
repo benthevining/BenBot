@@ -13,7 +13,7 @@
  */
 
 #include "Data.hpp"
-#include "BenBotVersion.hpp"
+#include "BenBotConfig.hpp"
 #include <cmrc/cmrc.hpp>
 #include <string>
 #include <string_view>
@@ -42,9 +42,27 @@ string_view get_ascii_logo()
     return get_named_resource("license_header.txt");
 }
 
+// the below functions are implemented this way because
+// this is the only TU that includes BenBotConfig.hpp
+
 string_view get_version_string()
 {
-    return VERSION_STRING;
+    return config::VERSION_STRING;
+}
+
+string_view get_compiler_name()
+{
+    return config::COMPILER_NAME;
+}
+
+string_view get_compiler_version()
+{
+    return config::COMPILER_VERSION;
+}
+
+string_view get_system_name()
+{
+    return config::SYSTEM_NAME;
 }
 
 } // namespace ben_bot

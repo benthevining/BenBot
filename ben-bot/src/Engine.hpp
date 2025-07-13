@@ -64,6 +64,8 @@ private:
     void print_options() const;
     void print_current_position() const;
 
+    static void print_compiler_info();
+
     struct CustomCommand final {
         using Callback = std::function<void(string_view)>;
 
@@ -97,7 +99,7 @@ private:
     };
 
     // clang-format off
-    std::array<CustomCommand, 5uz> customCommands {
+    std::array<CustomCommand, 6uz> customCommands {
         CustomCommand {
             .name   = "loadbook",
             .action = [this](const string_view args) {
@@ -120,6 +122,11 @@ private:
             .name = "options",
             .action = CustomCommand::void_cb([this] { print_options(); }),
             .description = "Dump current UCI option values"
+        },
+        CustomCommand {
+            .name = "compiler",
+            .action = CustomCommand::void_cb([]{ print_compiler_info(); }),
+            .description = "Print compiler info"
         },
         CustomCommand {
             .name = "help",

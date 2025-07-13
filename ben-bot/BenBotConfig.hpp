@@ -18,10 +18,24 @@
 
 #include <string_view>
 
-namespace ben_bot {
+namespace ben_bot::config {
 
-static constexpr std::string_view VERSION_STRING {
+using std::string_view;
+
+static constexpr string_view VERSION_STRING {
     "@BenBot_VERSION@"
 };
 
-} // namespace ben_bot
+static constexpr string_view COMPILER_NAME {
+    "@CMAKE_CXX_COMPILER_ID@"
+};
+
+static constexpr string_view COMPILER_VERSION {
+    "@CMAKE_CXX_COMPILER_VERSION@"
+};
+
+static constexpr string_view SYSTEM_NAME {
+    "@CMAKE_SYSTEM_NAME@"
+};
+
+} // namespace ben_bot::config
