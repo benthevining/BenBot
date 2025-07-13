@@ -15,6 +15,7 @@
 #pragma once
 
 #include <array>
+#include <atomic>
 #include <filesystem>
 #include <functional>
 #include <libbenbot/search/Search.hpp>
@@ -74,6 +75,8 @@ private:
 
     void wait() override { searcher.context.wait(); }
 
+    void set_debug(const bool shouldDebug) override { debugMode.store(shouldDebug); }
+
     [[nodiscard]] std::span<uci::Option*> get_options() override { return options; }
 
     void handle_custom_command(string_view command, string_view options) override;
@@ -95,7 +98,9 @@ private:
 
     void print_book_hit() const;
 
-    std::optional<Move> ponderMove;
+    std::optional<Move> ponderMove; // TODO: atomic?
+
+    std::atomic_bool debugMode { false };
 
     search::Thread searcher { search::Callbacks {
         .onSearchComplete = [this](const Result& res) {

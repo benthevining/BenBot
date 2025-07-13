@@ -76,9 +76,10 @@ namespace {
         return static_cast<size_t>(std::round(nps));
     }
 
-    [[nodiscard]] std::string get_extra_stats_string(const Result& res)
+    [[nodiscard]] std::string get_extra_stats_string(
+        const Result& res, const bool isDebugMode)
     {
-        if (res.nodesSearched == 0uz)
+        if ((! isDebugMode) || res.nodesSearched == 0uz)
             return {};
 
         auto get_pcnt = [totalNodes = static_cast<double>(res.nodesSearched)](const size_t value) {
@@ -111,7 +112,7 @@ void Engine::print_uci_info(const Result& res) const
         "info depth {} score {} time {} nodes {} nps {}{}",
         res.depth, get_score_string(res.score), res.duration.count(),
         res.nodesSearched, get_nodes_per_second(res),
-        get_extra_stats_string(res));
+        get_extra_stats_string(res, debugMode.load()));
 
     if constexpr (PrintBestMove) {
         println("bestmove {}{}",
@@ -132,7 +133,8 @@ template void Engine::print_uci_info<false>(const Result&) const;
 
 void Engine::print_book_hit() const
 {
-    println("info string Opening book hit!");
+    if (debugMode.load())
+        println("info string Opening book hit!");
 }
 
 void Engine::print_logo_and_version() const
@@ -208,7 +210,7 @@ void Engine::print_options() const
 }
 
 namespace {
-    void print_eval(const chess::game::Position& pos)
+    void print_eval(const Position& pos)
     {
         if (pos.is_checkmate()) {
             println("eval: #");
