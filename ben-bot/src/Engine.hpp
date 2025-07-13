@@ -15,7 +15,6 @@
 #pragma once
 
 #include <array>
-#include <cassert>
 #include <filesystem>
 #include <functional>
 #include <libbenbot/search/Search.hpp>
@@ -65,25 +64,11 @@ private:
 
     void new_game(bool firstCall) override;
 
-    void set_position(const chess::game::Position& pos) override { searcher.set_position(pos); }
+    void set_position(const Position& pos) override { searcher.set_position(pos); }
 
-    void go(uci::GoCommandOptions&& opts) override
-    {
-        if (opts.ponderMode && ! ponderOpt.get_value())
-            return;
+    void go(uci::GoCommandOptions&& opts) override;
 
-        searcher.start(std::move(opts));
-    }
-
-    void ponder_hit() override
-    {
-        searcher.context.abort();
-
-        searcher.set_position(
-            after_move(searcher.context.options.position, ponderMove.value()));
-
-        searcher.start();
-    }
+    void ponder_hit() override;
 
     void abort_search() override { searcher.context.abort(); }
 

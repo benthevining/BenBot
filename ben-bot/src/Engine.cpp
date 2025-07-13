@@ -19,6 +19,7 @@
 #include <libchess/util/Files.hpp>
 #include <libchess/util/Strings.hpp>
 #include <print>
+#include <utility>
 
 namespace ben_bot {
 
@@ -30,6 +31,24 @@ void Engine::new_game(const bool firstCall)
         searcher.context.openingBook.book.add_from_pgn(
             get_opening_book_pgn_text());
     }
+}
+
+void Engine::go(uci::GoCommandOptions&& opts)
+{
+    if (opts.ponderMode && ! ponderOpt.get_value())
+        return;
+
+    searcher.start(std::move(opts));
+}
+
+void Engine::ponder_hit()
+{
+    searcher.context.abort();
+
+    searcher.set_position(
+        after_move(searcher.context.options.position, ponderMove.value()));
+
+    searcher.start();
 }
 
 // this function implements non-standard UCI commands that we support
