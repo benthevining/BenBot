@@ -46,7 +46,9 @@ void Engine::ponder_hit()
     searcher.context.abort();
 
     searcher.set_position(
-        after_move(searcher.context.options.position, ponderMove.value()));
+        after_move(
+            searcher.context.options.position,
+            ponderMove.load().value()));
 
     searcher.start();
 }

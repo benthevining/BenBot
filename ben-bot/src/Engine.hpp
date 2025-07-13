@@ -98,13 +98,14 @@ private:
 
     void print_book_hit() const;
 
-    std::optional<Move> ponderMove; // TODO: atomic?
+    // this may not be lock-free, but we need the thread synchronization here
+    std::atomic<std::optional<Move>> ponderMove;
 
     std::atomic_bool debugMode { false };
 
     search::Thread searcher { search::Callbacks {
         .onSearchComplete = [this](const Result& res) {
-            ponderMove = res.bestResponse;
+            ponderMove.store(res.bestResponse);
             print_uci_info<true>(res); },
         .onIteration      = [this](const Result& res) { print_uci_info<false>(res); },
         .onOpeningBookHit = [this]([[maybe_unused]] const Move& move) { print_book_hit(); } } };
