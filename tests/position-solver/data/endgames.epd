@@ -1,7 +1,7 @@
-7K/8/k1P5/7p/8/8/8/8 w - - bm Kg7; depth 2; comment "Reti endgame study";
-8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - - bm Kb1; depth 5; comment "Lasker-Reichhelm position";
-8/2P5/1K1r4/8/8/8/8/k7 w - - bm Kb5; depth 3; comment "Saavedra position #1";
-8/2P5/8/1K1r4/8/8/8/k7 w - - bm Kb4; depth 3; comment "Saavedra position #2";
-8/2P5/8/8/1K1r4/8/8/k7 w - - bm Kb3; depth 4; comment "Saavedra position #3";
-8/2P5/8/8/3r4/8/2K5/k7 w - - bm c8=R; depth 3; comment "Saavedra position #4";
-2Q5/8/8/8/3r4/8/2K5/k7 b - - bm Rc4+; depth 3; comment "Saavedra position #5";
+7K/8/k1P5/7p/8/8/8/8 w - - bm Kg7; depth 2; id "Reti endgame study";
+8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - - bm Kb1; depth 5; id "Lasker-Reichhelm position";
+8/2P5/1K1r4/8/8/8/8/k7 w - - bm Kb5; depth 3; id "Saavedra position #1";
+8/2P5/8/1K1r4/8/8/8/k7 w - - bm Kb4; depth 3; id "Saavedra position #2";
+8/2P5/8/8/1K1r4/8/8/k7 w - - bm Kb3; depth 4; id "Saavedra position #3";
+8/2P5/8/8/3r4/8/2K5/k7 w - - bm c8=R; depth 3; id "Saavedra position #4";
+2Q5/8/8/8/3r4/8/2K5/k7 b - - bm Rc4+; depth 3; id "Saavedra position #5";
