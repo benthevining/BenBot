@@ -34,6 +34,25 @@ using std::string_view;
 
 namespace uci = chess::uci;
 
+struct CustomCommand final {
+    using Callback = std::function<void(string_view)>;
+
+    string_view name;
+
+    Callback action;
+
+    string_view description;
+
+    string_view argsHelp;
+
+    [[nodiscard]] static Callback void_cb(std::function<void()>&& func)
+    {
+        return [callback = std::move(func)]([[maybe_unused]] const string_view args) {
+            callback();
+        };
+    }
+};
+
 class Engine final : public uci::EngineBase {
 public:
     void print_logo_and_version() const;
@@ -65,25 +84,6 @@ private:
     void print_current_position() const;
 
     static void print_compiler_info();
-
-    struct CustomCommand final {
-        using Callback = std::function<void(string_view)>;
-
-        string_view name;
-
-        Callback action;
-
-        string_view description;
-
-        string_view argsHelp;
-
-        [[nodiscard]] static Callback void_cb(std::function<void()>&& func)
-        {
-            return [callback = std::move(func)]([[maybe_unused]] const string_view args) {
-                callback();
-            };
-        }
-    };
 
     search::Thread searcher { search::Callbacks::make_uci_handler() };
 

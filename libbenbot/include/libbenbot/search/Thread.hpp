@@ -70,6 +70,9 @@ struct Thread final {
         context.wait();
 
         context.options.position = pos;
+
+        // clear this so that all legal moves will be searched by default
+        context.options.movesToSearch.clear();
     }
 
     /** Begins searching asynchronously.
