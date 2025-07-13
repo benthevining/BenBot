@@ -21,7 +21,9 @@
 #include <format>
 #include <iostream>
 #include <libbenbot/eval/Score.hpp>
+#include <libchess/moves/Move.hpp>
 #include <libchess/notation/UCI.hpp>
+#include <optional>
 #include <print>
 #include <string>
 
@@ -29,6 +31,7 @@ namespace ben_bot::search {
 
 namespace {
 
+    using chess::moves::Move;
     using std::size_t;
 
     [[nodiscard]] std::string get_score_string(const eval::Score score)
@@ -83,6 +86,16 @@ namespace {
             res.mdpCutoffs, get_pcnt(res.mdpCutoffs));
     }
 
+    [[nodiscard]] std::string get_ponder_move_string(const std::optional<Move> ponderMove)
+    {
+        if (! ponderMove.has_value())
+            return {};
+
+        return std::format(
+            " ponder {}",
+            chess::notation::to_uci(*ponderMove));
+    }
+
     template <bool PrintBestMove>
     void print_uci_info(const Callbacks::Result& res)
     {
@@ -93,8 +106,9 @@ namespace {
             get_extra_stats_string(res));
 
         if constexpr (PrintBestMove) {
-            std::println("bestmove {}",
-                chess::notation::to_uci(res.bestMove));
+            std::println("bestmove {}{}",
+                chess::notation::to_uci(res.bestMove),
+                get_ponder_move_string(res.bestResponse));
 
             // Because these callbacks are executed on the searcher background thread,
             // without this flush here, the output may not actually be written when we

@@ -65,7 +65,18 @@ private:
 
     void set_position(const chess::game::Position& pos) override { searcher.set_position(pos); }
 
-    void go(uci::GoCommandOptions&& opts) override { searcher.start(std::move(opts)); }
+    void go(uci::GoCommandOptions&& opts) override
+    {
+        if (opts.ponderMode && ! ponderOpt.get_value())
+            return;
+
+        searcher.start(std::move(opts));
+    }
+
+    void ponder_hit() override
+    {
+        // TODO
+    }
 
     void abort_search() override { searcher.context.abort(); }
 
@@ -93,9 +104,13 @@ private:
         "Press to clear the transposition table"
     };
 
-    std::array<uci::Option*, 2uz> options {
+    uci::BoolOption ponderOpt {
+        uci::default_options::ponder()
+    };
+
+    std::array<uci::Option*, 3uz> options {
         &searcher.context.openingBook.enabled,
-        &clearTT
+        &ponderOpt, &clearTT
     };
 
     // clang-format off

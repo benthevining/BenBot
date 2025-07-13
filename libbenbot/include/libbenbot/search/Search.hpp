@@ -116,6 +116,11 @@ struct Callbacks final {
         /** The best move found in the position. */
         Move bestMove;
 
+        /** The opponent's best response to the ``bestMove``. This move is typically
+            the move that the engine would like to ponder on during the opponent's time.
+         */
+        std::optional<Move> bestResponse;
+
         /** The total number of nodes visited during this search. For depths greater
             than 1, this value includes nodes visited in shallower depths of the
             iterative deepening loop.
