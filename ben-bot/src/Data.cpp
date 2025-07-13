@@ -65,4 +65,9 @@ string_view get_system_name()
     return config::SYSTEM_NAME;
 }
 
+string_view get_build_config()
+{
+    return config::BUILD_CONFIG;
+}
+
 } // namespace ben_bot

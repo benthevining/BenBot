@@ -29,5 +29,6 @@ using std::string_view;
 [[nodiscard, gnu::const]] string_view get_compiler_name();
 [[nodiscard, gnu::const]] string_view get_compiler_version();
 [[nodiscard, gnu::const]] string_view get_system_name();
+[[nodiscard, gnu::const]] string_view get_build_config();
 
 } // namespace ben_bot

@@ -20,10 +20,17 @@ file (GLOB_RECURSE ben_bot_sources LIST_DIRECTORIES false
       CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/src/*.hpp" "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp"
 )
 
-set (generated_includes "${CMAKE_CURRENT_BINARY_DIR}/generated/include")
+set (generated_includes "${CMAKE_CURRENT_BINARY_DIR}/generated/include/$<CONFIG>")
 set (generated_header "${generated_includes}/BenBotConfig.hpp")
 
-configure_file (BenBotConfig.hpp "${generated_header}" @ONLY)
+# we need to do string(CONFIGURE) and then file(GENERATE) because we want to expand both variable
+# references and generator expressions
+
+file (READ BenBotConfig.hpp config_header_content)
+
+string (CONFIGURE "${config_header_content}" config_header_content @ONLY)
+
+file (GENERATE OUTPUT "${generated_header}" CONTENT "${config_header_content}")
 
 target_sources (ben_bot PRIVATE ${ben_bot_sources} "${generated_header}")
 

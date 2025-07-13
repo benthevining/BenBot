@@ -131,6 +131,9 @@ void Engine::print_compiler_info()
     println(
         "Compiled by {} version {} for {}",
         get_compiler_name(), get_compiler_version(), get_system_name());
+
+    println(
+        "Build configuration: {}", get_build_config());
 }
 
 } // namespace ben_bot
