@@ -173,9 +173,6 @@ struct Callbacks final {
         if (onOpeningBookHit != nullptr)
             onOpeningBookHit(move);
     }
-
-    /** Creates a set of callbacks that print UCI-compatible output. */
-    [[nodiscard]] static Callbacks make_uci_handler();
 };
 
 /** This struct encapsulates everything needed to perform a search.
