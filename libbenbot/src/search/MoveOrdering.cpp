@@ -55,26 +55,16 @@ namespace {
         namespace piece_values = eval::piece_values;
 
         static constexpr auto PV_NODE_BONUS { 15000 };       // cppcheck-suppress variableScope
-        static constexpr auto CUT_NODE_PENALTY { -15000 };   // cppcheck-suppress variableScope
+        static constexpr auto CUT_NODE_PENALTY { 15000 };    // cppcheck-suppress variableScope
         static constexpr auto CAPTURE_MULTIPLIER { 10 };     // cppcheck-suppress variableScope
         static constexpr auto PROMOTION_MULTIPLIER { 15 };   // cppcheck-suppress variableScope
         static constexpr auto CASTLING_BONUS { 30 };         // cppcheck-suppress variableScope
         static constexpr auto PAWN_CONTROLS_PENALTY { 350 }; // cppcheck-suppress variableScope
+        static constexpr auto CHECK_BONUS { 1250 };          // cppcheck-suppress variableScope
 
         // check if this move was recorded as the best move in this position
         if (bestMove.has_value() && *bestMove == move)
             return std::numeric_limits<int>::max(); // arbitrarily large score to ensure this move is ordered first
-
-        // look up stored record of resulting position after making move
-        if (const auto* record = transTable.find(after_move(currentPosition, move))) {
-            switch (record->evalType) {
-                using enum TranspositionTable::Record::EvalType;
-
-                case Exact: return PV_NODE_BONUS;
-                case Beta : return CUT_NODE_PENALTY;
-                default   : break;
-            }
-        }
 
         auto score { 0 };
 
@@ -98,6 +88,22 @@ namespace {
                 score -= PAWN_CONTROLS_PENALTY;
             }
         }
+
+        const auto posAfterMove = after_move(currentPosition, move);
+
+        // look up stored record of resulting position after making move
+        if (const auto* record = transTable.find(posAfterMove)) {
+            switch (record->evalType) {
+                using enum TranspositionTable::Record::EvalType;
+
+                case Exact: score += PV_NODE_BONUS; break;
+                case Beta : score -= CUT_NODE_PENALTY; break;
+                default   : break;
+            }
+        }
+
+        if (posAfterMove.is_check())
+            score += CHECK_BONUS;
 
         return score;
     }
