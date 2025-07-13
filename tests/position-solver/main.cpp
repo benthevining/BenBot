@@ -15,8 +15,6 @@
 #include <cstddef> // IWYU pragma: keep - for std::ptrdiff_t
 #include <exception>
 #include <filesystem>
-#include <fstream>
-#include <ios>
 #include <iostream>
 #include <iterator>
 #include <libbenbot/search/Search.hpp>
@@ -24,6 +22,7 @@
 #include <libchess/notation/Algebraic.hpp>
 #include <libchess/notation/EPD.hpp>
 #include <libchess/notation/FEN.hpp>
+#include <libchess/util/Files.hpp>
 #include <libchess/util/Strings.hpp>
 #include <optional>
 #include <print>
@@ -32,26 +31,7 @@
 #include <string_view>
 #include <vector>
 
-namespace {
-
-using std::filesystem::path;
 using std::size_t;
-
-[[nodiscard]] std::string load_file_as_string(path file)
-{
-    file = absolute(file);
-
-    std::ifstream input { file };
-
-    input.exceptions(
-        std::ios_base::badbit | std::ios_base::failbit);
-
-    using Iterator = std::istreambuf_iterator<char>;
-
-    return { Iterator { input }, Iterator {} };
-}
-
-} // namespace
 
 int main(const int argc, const char** argv)
 try {
@@ -84,7 +64,8 @@ try {
             } }
     };
 
-    const auto fileContent = load_file_as_string(path { args.front() });
+    const auto fileContent = chess::util::load_file_as_string(
+        std::filesystem::path { args.front() });
 
     size_t numPassed { 0uz };
     size_t numFailed { 0uz };
