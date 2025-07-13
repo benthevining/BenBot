@@ -98,7 +98,7 @@ try {
         std::println(std::cerr,
             "Position failed: {} ({})",
             notation::to_fen(epd.position),
-            epd.operations.at("comment"));
+            epd.operations.at("id"));
 
         std::println(std::cerr,
             "Expected {}, got {}",

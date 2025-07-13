@@ -6,5 +6,7 @@ Each EPD file may contain multiple positions, and will be executed as one CTest 
 
 Each EPD entry must have the following operations:
 * `bm`: best move, in algebraic (SAN) notation
-* `depth`: search depth. It is desirable to set this as low as possible, while still getting the correct answer.
-* `comment`: explanatory comment describing the position
+* `depth`: search depth. It is desirable to set this as low as possible, while still getting the correct answer. When adding new test positions, a good strategy is to start with depth 4; increase this if the test fails (if it still fails with a depth of 6, we likely won't find the move at any reasonable depth), and decrease this if the test passes.
+* `id`: an identifier for the position, which is printed along with the position's FEN string if a test case fails. May also be an explanatory comment describing the position.
+
+Additional operations may be specified.

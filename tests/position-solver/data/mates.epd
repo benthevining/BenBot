@@ -1,3 +1,3 @@
-8/2p5/K7/3Q4/8/1q4k1/8/8 b - - bm Qb6#; depth 2; comment "Black can mate in 1 or grab material";
-2r3k1/5ppp/8/8/8/8/4Q1PP/4R2K w - - bm Qe8+; depth 3; comment "Sacrifice queen for mate";
-r1b1k2r/pppppppp/5q2/8/1Nn3n1/1PBP4/P1P1PPPP/R2QKBNR b KQkq - bm Qxf2#; depth 2; comment "Find mate-in-1 instead of capture that leads to mate (can confuse move ordering)";
+8/2p5/K7/3Q4/8/1q4k1/8/8 b - - bm Qb6#; depth 2; id "Black can mate in 1 or grab material";
+2r3k1/5ppp/8/8/8/8/4Q1PP/4R2K w - - bm Qe8+; depth 3; id "Sacrifice queen for mate";
+r1b1k2r/pppppppp/5q2/8/1Nn3n1/1PBP4/P1P1PPPP/R2QKBNR b KQkq - bm Qxf2#; depth 2; id "Find mate-in-1 instead of capture that leads to mate (can confuse move ordering)";
