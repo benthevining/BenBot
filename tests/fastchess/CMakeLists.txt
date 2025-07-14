@@ -25,13 +25,12 @@ add_test (NAME ben_bot.uci_compliance COMMAND "${FASTCHESS_PROGRAM}" --complianc
 set (baseline_binary "$<TARGET_FILE_DIR:ben_bot>/last-$<CONFIG>")
 
 add_custom_target (
-    sprt_set_baseline
-    COMMAND "${CMAKE_COMMAND}" -E rm -rf "${baseline_binary}"
-    COMMAND "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --config "$<CONFIG>" --target ben_bot
-    COMMAND "${CMAKE_COMMAND}" -E copy "$<TARGET_FILE:ben_bot>" "${baseline_binary}"
-    COMMENT "Saving baseline binary for SPRT testing..."
-    VERBATIM USES_TERMINAL
+    sprt_set_baseline COMMAND "${CMAKE_COMMAND}" -E copy "$<TARGET_FILE:ben_bot>"
+                              "${baseline_binary}"
+    COMMENT "Saving baseline binary for SPRT testing..." VERBATIM USES_TERMINAL
 )
+
+add_dependencies (sprt_set_baseline ben_bot)
 
 cmake_host_system_information (RESULT num_cores QUERY NUMBER_OF_PHYSICAL_CORES)
 
