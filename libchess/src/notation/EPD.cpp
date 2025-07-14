@@ -126,13 +126,9 @@ std::vector<EPDPosition> parse_all_epds(const string_view fileContent)
 {
     std::vector<EPDPosition> epds;
 
-    for (const auto line : fileContent | std::views::split('\n')) {
-        const std::string_view lineStr { line };
-
-        if (lineStr.empty())
-            break;
-
-        epds.emplace_back(from_epd(lineStr));
+    for (const auto line : util::lines_view(fileContent)) {
+        if (! line.empty())
+            epds.emplace_back(from_epd(line));
     }
 
     return epds;
@@ -146,12 +142,10 @@ namespace {
         for (const auto& [key, value] : pos.operations)
             output.append(std::format(" {} \"{}\";", key, value));
 
-        using namespace std::literals::string_literals; // NOLINT
-
-        if (! pos.operations.contains("fmvn"s))
+        if (! pos.operations.contains("fmvn"))
             output.append(std::format(" fmvn {}", pos.position.fullMoveCounter));
 
-        if (! pos.operations.contains("hmvc"s))
+        if (! pos.operations.contains("hmvc"))
             output.append(std::format(" hmvc {}", pos.position.halfmoveClock));
     }
 

@@ -29,6 +29,7 @@ namespace chess::notation {
 std::string to_uci(const Move& move)
 {
     if (move.is_promotion()) {
+        [[unlikely]];
         return std::format("{}{}{}",
             move.from, move.to, pieces::to_char(*move.promotedType, false));
     }
@@ -71,8 +72,10 @@ Move from_uci(const Position& position, std::string_view text)
     result.piece = *movedType;
 
     // promotion
-    if (! text.empty())
+    if (! text.empty()) {
+        [[unlikely]];
         result.promotedType = pieces::from_string(text);
+    }
 
     return result;
 }

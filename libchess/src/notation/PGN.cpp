@@ -309,10 +309,11 @@ namespace {
             return game.get_final_position().get_result();
 
         const auto whiteScore = util::trim(text.substr(0uz, sepIdx));
-        const auto blackScore = util::trim(text.substr(sepIdx + 1uz));
 
         if (whiteScore == "1")
             return game::Result::WhiteWon;
+
+        const auto blackScore = util::trim(text.substr(sepIdx + 1uz));
 
         if (blackScore == "1")
             return game::Result::BlackWon;

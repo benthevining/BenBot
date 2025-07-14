@@ -24,6 +24,7 @@
 #include <concepts>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <iterator>
+#include <ranges>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -92,6 +93,16 @@ template <size_t MaxLen = 5uz>
 void write_integer(
     std::integral auto value,
     std::string&       output);
+
+/** Returns a range of string_views, each representing a line from the
+    input string.
+ */
+[[nodiscard]] inline auto lines_view(const string_view text)
+{
+    return text
+         | std::views::split('\n')
+         | std::views::transform([](const auto rng) { return string_view { rng }; });
+}
 
 /// @}
 

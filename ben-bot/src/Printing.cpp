@@ -34,16 +34,16 @@
 
 namespace ben_bot {
 
-using std::println;
+using Result = search::Callbacks::Result;
+using eval::Score;
 using std::size_t;
+
+using chess::notation::to_uci;
+using std::println;
 
 namespace {
 
-    using Result = search::Callbacks::Result;
-
-    using chess::notation::to_uci;
-
-    [[nodiscard]] std::string get_score_string(const eval::Score score)
+    [[nodiscard]] std::string get_score_string(const Score score)
     {
         if (! score.is_mate()) {
             // NB. we pass score.value directly here instead of going through
@@ -241,23 +241,6 @@ void Engine::print_options() const
     println("{}", table.to_string());
 }
 
-namespace {
-    void print_eval(const Position& pos)
-    {
-        if (pos.is_checkmate()) {
-            println("eval: #");
-            return;
-        }
-
-        if (pos.is_draw()) {
-            println("eval: 0");
-            return;
-        }
-
-        println("eval: {}", eval::evaluate(pos));
-    }
-} // namespace
-
 void Engine::print_current_position() const
 {
     const auto& pos = searcher.context.options.position;
@@ -265,7 +248,15 @@ void Engine::print_current_position() const
     println("{}", print_utf8(pos));
     println("{}", chess::notation::to_fen(pos));
     println();
-    print_eval(pos);
+
+    // print eval
+    if (const auto* record = searcher.context.transTable.find(pos)) {
+        const auto score = Score::from_tt({ record->eval, record->evalType }, 0uz);
+
+        println("TT hit: {}", get_score_string(score));
+    }
+
+    println("Static eval: {}", eval::evaluate(pos));
 }
 
 void Engine::print_compiler_info()
