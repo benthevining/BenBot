@@ -12,64 +12,73 @@
  * ======================================================================================
  */
 
-/** @file
-    This file provides some basic file handling utilities.
-    @ingroup util
- */
-
 #pragma once
 
+#include <cstddef> // IWYU pragma: keep - for size_t
+#include <fcntl.h>
 #include <filesystem>
-#include <memory>
-#include <string>
+#include <libchess/util/Files.hpp>
 #include <string_view>
+#include <sys/mman.h>
+#include <sys/types.h> // IWYU pragma: keep - for off_t
+#include <unistd.h>
 
 namespace chess::util {
 
-/** Loads the file's content as a string.
-    Throws an exception if the file cannot be loaded.
+using std::size_t;
 
-    @ingroup util
- */
-[[nodiscard]] std::string load_file_as_string(std::filesystem::path file);
+struct MemoryMappedFile::Pimpl final {
+    Pimpl(
+        const std::filesystem::path& file, const bool exclusive)
+        : fileSize { static_cast<size_t>(file_size(file)) }
+        , fileHandle { open(file.c_str(), O_RDONLY) }
+    {
+        if (fileHandle != -1) {
+            auto* ptr = mmap(
+                nullptr, fileSize, PROT_READ,
+                exclusive ? MAP_PRIVATE : MAP_SHARED,
+                fileHandle, static_cast<off_t>(0));
 
-/** An RAII handle to a memory-mapped file.
-    Creating this object opens the file for reading, and deleting this
-    object closes the file.
+            if (ptr != MAP_FAILED) {
+                address = ptr;
+                madvise(ptr, fileSize, MADV_SEQUENTIAL);
+            } else {
+                fileSize = 0uz;
+            }
 
-    @ingroup util
- */
-class MemoryMappedFile final {
-public:
-    /** Opens a file and maps it to an area of virtual memory for reading.
+            close(fileHandle);
+            fileHandle = 0;
+        }
+    }
 
-        The file should already exist, and should already be the size that
-        you want to work with when you call this. If the file is resized
-        after being opened, the behavior is undefined.
+    ~Pimpl()
+    {
+        if (address != nullptr)
+            munmap(address, fileSize);
 
-        Note that the entire file is not read into memory immediately - the
-        OS simply creates a virtual mapping, which will lazily pull the data
-        into memory when blocks are accessed.
+        if (fileHandle != 0)
+            close(fileHandle);
+    }
 
-        If exclusive is false, then other apps can also open the same memory
-        mapped file and use this mapping as an effective way of communicating.
-        If exclusive is true then the mapped file will be opened exclusively
-        - preventing other apps from accessing the file, which may improve the
-        performance of accessing the file.
-     */
-    explicit MemoryMappedFile(
-        const std::filesystem::path& file, bool exclusive = false);
+    Pimpl(const Pimpl&)            = delete;
+    Pimpl& operator=(const Pimpl&) = delete;
+    Pimpl(Pimpl&&)                 = delete;
+    Pimpl& operator=(Pimpl&&)      = delete;
 
-    /** Closes the file. */
-    ~MemoryMappedFile();
-
-    /** Returns a view of the file's data. */
-    [[nodiscard]] std::string_view data() const;
+    [[nodiscard]] std::string_view data() const
+    {
+        return {
+            static_cast<const char*>(address),
+            fileSize
+        };
+    }
 
 private:
-    struct Pimpl;
+    size_t fileSize;
 
-    std::unique_ptr<Pimpl> pimpl;
+    int fileHandle;
+
+    void* address { nullptr };
 };
 
 } // namespace chess::util
