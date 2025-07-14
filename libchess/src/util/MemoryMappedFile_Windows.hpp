@@ -19,11 +19,8 @@
 #endif
 
 #include <cstddef> // IWYU pragma: keep - for size_t
-#include <fileapi.h>
 #include <filesystem>
 #include <libchess/util/Files.hpp>
-#include <memoryapi.h>
-#include <winbase.h>
 #include <windows.h>
 
 namespace chess::util {
@@ -60,7 +57,7 @@ struct MemoryMappedFile::Pimpl final {
             if (mappingHandle != nullptr) {
                 address = MapViewOfFile(
                     mappingHandle, access,
-                    static_cast<DWORD>(0uz >> 32uz),
+                    static_cast<DWORD>(0uz),
                     static_cast<DWORD>(0uz),
                     static_cast<SIZE_T>(fileSize));
 
