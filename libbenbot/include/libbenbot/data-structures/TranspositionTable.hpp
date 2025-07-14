@@ -83,6 +83,12 @@ public:
     [[nodiscard]] std::optional<ProbedEval> probe_eval(
         const Position& pos, size_t depth, int alpha, int beta) const;
 
+    /** Returns the opponent's best response to the given move, if one
+        is recorded.
+     */
+    [[nodiscard]] std::optional<Move> get_best_response(
+        const Position& pos, Move move) const;
+
     /** Stores a record for a given position. */
     void store(const Position& pos, const Record& record);
 
@@ -145,6 +151,15 @@ inline auto TranspositionTable::probe_eval(
             }
         }
     }
+
+    return std::nullopt;
+}
+
+inline std::optional<Move> TranspositionTable::get_best_response(
+    const Position& pos, const Move move) const
+{
+    if (const auto* record = find(after_move(pos, move)))
+        return record->bestMove;
 
     return std::nullopt;
 }

@@ -265,17 +265,6 @@ namespace {
         std::atomic_bool& value; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
     };
 
-    [[nodiscard]] std::optional<Move> get_best_response(
-        const Position&           currentPosition,
-        const Move                bestMove,
-        const TranspositionTable& transTable)
-    {
-        if (const auto* record = transTable.find(after_move(currentPosition, bestMove)))
-            return record->bestMove;
-
-        return std::nullopt;
-    }
-
 } // namespace
 
 void Context::search()
@@ -402,7 +391,6 @@ void Context::search()
         .depth                            = depth,
         .score                            = bestScore,
         .bestMove                         = bestMove.value(),
-        .bestResponse                     = get_best_response(options.position, bestMove.value(), transTable),
         .nodesSearched                    = stats.nodesSearched,
         .transpositionTableHits           = stats.transTableHits,
         .betaCutoffs                      = stats.betaCutoffs,

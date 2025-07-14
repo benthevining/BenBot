@@ -105,7 +105,10 @@ private:
 
     search::Thread searcher { search::Callbacks {
         .onSearchComplete = [this](const Result& res) {
-            ponderMove.store(res.bestResponse);
+            ponderMove.store(
+                searcher.context.transTable.get_best_response(
+                    searcher.context.options.position, res.bestMove));
+
             print_uci_info<true>(res); },
         .onIteration      = [this](const Result& res) { print_uci_info<false>(res); },
         .onOpeningBookHit = [this]([[maybe_unused]] const Move& move) { print_book_hit(); } } };

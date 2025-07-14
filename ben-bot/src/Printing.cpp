@@ -108,6 +108,10 @@ namespace {
 template <bool PrintBestMove>
 void Engine::print_uci_info(const Result& res) const
 {
+    const auto& currPos = searcher.context.options.position;
+
+    const auto& transTable = searcher.context.transTable;
+
     println(
         "info depth {} score {} time {} nodes {} nps {}{}",
         res.depth, get_score_string(res.score), res.duration.count(),
@@ -117,7 +121,8 @@ void Engine::print_uci_info(const Result& res) const
     if constexpr (PrintBestMove) {
         println("bestmove {}{}",
             chess::notation::to_uci(res.bestMove),
-            get_ponder_move_string(res.bestResponse));
+            get_ponder_move_string(
+                transTable.get_best_response(currPos, res.bestMove)));
 
         // Because these callbacks are executed on the searcher background thread,
         // without this flush here, the output may not actually be written when we
