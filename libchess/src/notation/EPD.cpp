@@ -124,14 +124,10 @@ EPDPosition from_epd(string_view epdString)
 
 std::vector<EPDPosition> parse_all_epds(const string_view fileContent)
 {
-    std::vector<EPDPosition> epds;
-
-    for (const auto line : util::lines_view(fileContent)) {
-        if (! line.empty())
-            epds.emplace_back(from_epd(line));
-    }
-
-    return epds;
+    return util::lines_view(fileContent)
+         | std::views::filter([](const string_view line) { return ! line.empty(); })
+         | std::views::transform([](const string_view line) { return from_epd(line); })
+         | std::ranges::to<std::vector>();
 }
 
 namespace {

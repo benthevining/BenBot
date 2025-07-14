@@ -25,6 +25,7 @@
 #include <libchess/notation/PGN.hpp>
 #include <libchess/util/Strings.hpp>
 #include <optional>
+#include <ranges>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -78,17 +79,8 @@ namespace {
                 openingBracketIdx + 1uz,
                 closingBracketIdx - openingBracketIdx - 1uz);
 
-            // we assume that tag keys cannot include spaces
-            const auto spaceIdx = tagText.find(' ');
-
-            if (spaceIdx == string_view::npos) {
-                throw std::invalid_argument {
-                    std::format("Expected space in PGN tag key/value text: '{}'", tagText)
-                };
-            }
-
-            const auto tagName  = tagText.substr(0uz, spaceIdx);
-            auto       tagValue = tagText.substr(spaceIdx + 1uz);
+            // NB. we assume that tag keys cannot include spaces
+            auto [tagName, tagValue] = util::split_at_first_space(tagText);
 
             assert(! tagName.empty());
             assert(! tagValue.empty());
@@ -159,7 +151,7 @@ namespace {
     {
         assert(pgnText.front() == '$');
 
-        auto [nag, rest] = split_at_first_space_or_newline(pgnText.substr(1uz));
+        const auto [nag, rest] = split_at_first_space_or_newline(pgnText.substr(1uz));
 
         if (! output.empty()) {
             const auto value = int_from_string<std::uint_least8_t>(util::trim(nag));
@@ -442,13 +434,15 @@ namespace {
                 write_metadata_item(tag, pos->second, output);
         }
 
-        for (const auto& [key, value] : metadata)
-            if (! std::ranges::contains(sevenTagRoster, key))
-                write_metadata_item(key, value, output);
+        // write extra metadata tags not part of seven tag roster
+        for (const auto& [key, value] : metadata
+                                            | std::views::filter([](const auto& it) {
+                                                  return ! std::ranges::contains(sevenTagRoster, it.first);
+                                              })) {
+            write_metadata_item(key, value, output);
+        }
 
-        const Position startPos {};
-
-        if (startingPosition != startPos) {
+        if (startingPosition != Position {}) {
             if (! metadata.contains("FEN"s)) {
                 const auto startFEN = to_fen(startingPosition);
                 write_metadata_item("FEN", startFEN, output);
