@@ -65,7 +65,7 @@ struct Thread final {
     /** Sets the position to be searched by the next search invocation.
         This method blocks waiting for any previously executing search to complete.
      */
-    void set_position(const chess::game::Position& pos)
+    void set_position(const Position& pos)
     {
         context.wait();
 

@@ -27,8 +27,8 @@
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/uci/CommandParsing.hpp>
+#include <libchess/util/Threading.hpp>
 #include <optional>
-#include <thread>
 #include <utility>
 #include <vector>
 
@@ -398,8 +398,9 @@ void Context::search()
 
 void Context::wait() const
 {
-    while (activeFlag.load())
-        std::this_thread::yield();
+    chess::util::progressive_backoff([this] {
+        return ! activeFlag.load();
+    });
 }
 
 void Options::update_from(chess::uci::GoCommandOptions&& goOptions)
