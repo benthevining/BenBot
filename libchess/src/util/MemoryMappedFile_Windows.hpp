@@ -14,9 +14,17 @@
 
 #pragma once
 
+#ifndef WIN32_LEAN_AND_MEAN
+#    define WIN32_LEAN_AND_MEAN 1
+#endif
+
 #include <cstddef> // IWYU pragma: keep - for size_t
+#include <fileapi.h>
 #include <filesystem>
 #include <libchess/util/Files.hpp>
+#include <memoryapi.h>
+#include <winbase.h>
+#include <windows.h>
 
 namespace chess::util {
 
@@ -27,13 +35,13 @@ struct MemoryMappedFile::Pimpl final {
         const std::filesystem::path& file, const bool exclusive)
         : fileSize { static_cast<size_t>(file_size(file)) }
     {
-        DWORD accessMode { GENERIC_READ };
-        DWORD createType { OPEN_EXISTING };
-        DWORD protect { PAGE_READONLY };
-        DWORD access { FILE_MAP_READ };
+        static constexpr DWORD accessMode { GENERIC_READ };
+        static constexpr DWORD createType { OPEN_EXISTING };
+        static constexpr DWORD protect { PAGE_READONLY };
+        static constexpr DWORD access { FILE_MAP_READ };
 
-        auto handle = CreateFile(
-            file.wstring().data(),
+        auto* handle = CreateFileA(
+            file.string().c_str(), // NOLINT(build/include_what_you_use)
             accessMode,
             exclusive ? 0 : (FILE_SHARE_READ | FILE_SHARE_DELETE),
             nullptr, createType,
