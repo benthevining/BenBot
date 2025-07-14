@@ -22,6 +22,7 @@
 #include <atomic>
 #include <libbenbot/search/Search.hpp>
 #include <libchess/game/Position.hpp>
+#include <libchess/util/Threading.hpp>
 #include <thread>
 #include <utility>
 
@@ -98,11 +99,20 @@ struct Thread final {
 private:
     void thread_func()
     {
-        while (! threadShouldExit.load()) {
-            if (startSearch.exchange(false))
-                context.search();
-            else
-                std::this_thread::yield();
+        while (true) {
+            // we want to use progressive backoff to wait on the startSearch flag,
+            // but we also need to exit the PB loop if the threadShouldExit flag
+            // gets set
+            chess::util::progressive_backoff([this] {
+                return threadShouldExit.load() || startSearch.exchange(false);
+            });
+
+            if (threadShouldExit.load()) {
+                [[unlikely]];
+                return;
+            }
+
+            context.search();
         }
     }
 
