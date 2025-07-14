@@ -20,6 +20,7 @@
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <format>
 #include <iostream>
+#include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Score.hpp>
 #include <libbenbot/search/Search.hpp>
@@ -39,6 +40,8 @@ using std::size_t;
 namespace {
 
     using Result = search::Callbacks::Result;
+
+    using chess::notation::to_uci;
 
     [[nodiscard]] std::string get_score_string(const eval::Score score)
     {
@@ -76,6 +79,29 @@ namespace {
         return static_cast<size_t>(std::round(nps));
     }
 
+    // extracts the PV from the transposition table
+    [[nodiscard]] std::string get_pv_string(
+        Position position, Move bestMove, const TranspositionTable& transTable)
+    {
+        auto result = std::format("pv {}", to_uci(bestMove));
+
+        while (true) {
+            const auto nextMove = transTable.get_best_response(position, bestMove);
+
+            if (! nextMove.has_value())
+                break;
+
+            result.append(1uz, ' ');
+            result.append(to_uci(*nextMove));
+
+            position.make_move(bestMove);
+
+            bestMove = *nextMove;
+        }
+
+        return result;
+    }
+
     [[nodiscard]] std::string get_extra_stats_string(
         const Result& res, const bool isDebugMode)
     {
@@ -100,7 +126,7 @@ namespace {
 
         return std::format(
             " ponder {}",
-            chess::notation::to_uci(*ponderMove));
+            to_uci(*ponderMove));
     }
 
 } // namespace
@@ -113,14 +139,15 @@ void Engine::print_uci_info(const Result& res) const
     const auto& transTable = searcher.context.transTable;
 
     println(
-        "info depth {} score {} time {} nodes {} nps {}{}",
+        "info depth {} score {} time {} nodes {} nps {} {}{}",
         res.depth, get_score_string(res.score), res.duration.count(),
         res.nodesSearched, get_nodes_per_second(res),
+        get_pv_string(currPos, res.bestMove, transTable),
         get_extra_stats_string(res, debugMode.load()));
 
     if constexpr (PrintBestMove) {
         println("bestmove {}{}",
-            chess::notation::to_uci(res.bestMove),
+            to_uci(res.bestMove),
             get_ponder_move_string(
                 transTable.get_best_response(currPos, res.bestMove)));
 

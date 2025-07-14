@@ -337,12 +337,8 @@ void Context::search()
             }
         }
 
-        if (interrupter.was_aborted()) {
-            // we write to the transposition table below, and we want to store
-            // the last completed depth as the stored evaluation's depth
-            --depth;
+        if (interrupter.was_aborted())
             break;
-        }
 
         assert(bestMoveThisDepth.has_value());
 
@@ -384,6 +380,9 @@ void Context::search()
 
         ++depth;
     } // iterative deepening loop end
+
+    // we want to report the last completed depth
+    --depth;
 
     assert(bestMove.has_value());
 
