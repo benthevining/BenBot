@@ -35,22 +35,16 @@ void Engine::new_game(const bool firstCall)
 
 void Engine::go(uci::GoCommandOptions&& opts)
 {
-    if (opts.ponderMode && ! ponderOpt.get_value())
-        return;
+    // if (opts.ponderMode && ! ponderOpt.get_value())
+    //     return;
 
     searcher.start(std::move(opts));
 }
 
 void Engine::ponder_hit()
 {
+    searcher.context.pondering.store(false);
     searcher.context.abort();
-
-    searcher.set_position(
-        after_move(
-            searcher.context.options.position,
-            ponderMove.load().value()));
-
-    searcher.start();
 }
 
 // this function implements non-standard UCI commands that we support

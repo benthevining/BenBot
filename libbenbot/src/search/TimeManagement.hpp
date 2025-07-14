@@ -50,8 +50,10 @@ private:
 struct Interrupter final {
     Interrupter(
         std::atomic_bool&                 exitFlagToUse,
+        const std::atomic_bool&           ponderFlagToUse,
         const std::optional<Milliseconds> maxSearchTime)
         : exitFlag { exitFlagToUse }
+        , ponderFlag { ponderFlagToUse }
         , searchTime { maxSearchTime }
     {
         // make sure exit flag is false when search starts
@@ -92,13 +94,18 @@ private:
         if (exitFlag.load())
             return true;
 
+        // don't exit the search when in ponder mode
+        if (ponderFlag.load())
+            return false;
+
         if (! searchTime.has_value())
             return false;
 
         return get_search_duration() >= *searchTime;
     }
 
-    const std::atomic_bool& exitFlag; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
+    const std::atomic_bool& exitFlag;   // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
+    const std::atomic_bool& ponderFlag; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
     Timer timer;
 

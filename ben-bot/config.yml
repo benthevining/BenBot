@@ -18,7 +18,7 @@ engine:
   dir: "@CMAKE_CURRENT_BINARY_DIR@/Release"
   name: "ben_bot"
   protocol: "uci"
-  ponder: false
+  ponder: true
 
   polyglot:
     enabled: false
