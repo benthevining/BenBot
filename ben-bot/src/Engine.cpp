@@ -25,7 +25,7 @@ namespace ben_bot {
 
 void Engine::new_game(const bool firstCall)
 {
-    searcher.context.clear_transposition_table(); // clears transposition table
+    searcher.context.clear_transposition_table();
 
     if (firstCall) {
         searcher.context.openingBook.book.add_from_pgn(
@@ -35,9 +35,6 @@ void Engine::new_game(const bool firstCall)
 
 void Engine::go(uci::GoCommandOptions&& opts)
 {
-    // if (opts.ponderMode && ! ponderOpt.get_value())
-    //     return;
-
     searcher.start(std::move(opts));
 }
 
