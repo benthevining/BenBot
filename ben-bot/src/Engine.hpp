@@ -69,8 +69,6 @@ private:
 
     void go(uci::GoCommandOptions&& opts) override;
 
-    void ponder_hit() override;
-
     void abort_search() override { searcher.context.abort(); }
 
     void wait() override { searcher.context.wait(); }
@@ -98,19 +96,11 @@ private:
 
     void print_book_hit() const;
 
-    // this may not be lock-free, but we need the thread synchronization here
-    std::atomic<std::optional<Move>> ponderMove;
-
     std::atomic_bool debugMode { false };
 
     search::Thread searcher { search::Callbacks {
-        .onSearchComplete = [this](const Result& res) {
-            ponderMove.store(
-                searcher.context.transTable.get_best_response(
-                    searcher.context.options.position, res.bestMove));
-
-            print_uci_info<true>(res); },
-        .onIteration      = [this](const Result& res) { print_uci_info<false>(res); },
+        .onSearchComplete = [this](const Result& res) { print_uci_info<true>(res); },
+        .onIteration = [this](const Result& res) { print_uci_info<false>(res); },
         .onOpeningBookHit = [this]([[maybe_unused]] const Move& move) { print_book_hit(); } } };
 
     uci::Action clearTT {
@@ -119,13 +109,9 @@ private:
         "Press to clear the transposition table"
     };
 
-    uci::BoolOption ponderOpt {
-        uci::default_options::ponder()
-    };
-
-    std::array<uci::Option*, 3uz> options {
+    std::array<uci::Option*, 2uz> options {
         &searcher.context.openingBook.enabled,
-        &ponderOpt, &clearTT
+        &clearTT
     };
 
     // clang-format off

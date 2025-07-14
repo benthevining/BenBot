@@ -167,7 +167,7 @@ namespace {
         // because the table only contains static evaluations and doesn't consider game
         // history, so its stored evaluations can't detect threefold repetition draws
         if (currentPosition.is_threefold_repetition())
-            return {}; // TODO: write to TT here
+            return {};
 
         if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot)) {
             ++stats.mdpCutoffs;
@@ -420,7 +420,7 @@ void Options::update_from(chess::uci::GoCommandOptions&& goOptions)
     // search time
     if (goOptions.searchTime.has_value()) {
         searchTime = goOptions.searchTime;
-    } else if (goOptions.infinite || goOptions.ponderMode) {
+    } else if (goOptions.infinite) {
         searchTime = std::nullopt;
     } else {
         const bool isWhite = position.is_white_to_move();
