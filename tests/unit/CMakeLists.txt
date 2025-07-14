@@ -36,6 +36,12 @@ add_executable (libchess_tests)
 
 target_link_libraries (libchess_tests PRIVATE ben_bot::libchess Catch2::Catch2WithMain)
 
+target_compile_definitions (
+    libchess_tests
+    PRIVATE
+        "BENBOT_LICENSE_HEADER_FILE=\"${BenBot_SOURCE_DIR}/ben-bot/resources/license_header.txt\""
+)
+
 file (GLOB_RECURSE sources LIST_DIRECTORIES false CONFIGURE_DEPENDS
                                                   "${CMAKE_CURRENT_LIST_DIR}/*.cpp"
 )
