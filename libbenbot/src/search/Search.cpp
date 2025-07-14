@@ -384,12 +384,6 @@ void Context::search()
                 break;
             }
 
-            // if we've found a mate, don't do a deeper iteration
-            if (bestScore.is_mate()
-                && bestScore.ply_to_mate() <= depth) {
-                break;
-            }
-
             // if the iteration we just completed took as much or more time than we
             // have remaining for the search, then don't start a deeper iteration
             // because it would probably get interrupted

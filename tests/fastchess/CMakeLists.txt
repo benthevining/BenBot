@@ -27,7 +27,7 @@ set (baseline_binary "$<TARGET_FILE_DIR:ben_bot>/last-$<CONFIG>")
 add_custom_target (
     sprt_set_baseline
     COMMAND "${CMAKE_COMMAND}" -E rm -rf "${baseline_binary}"
-    COMMAND "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --config "$<CONFIG>"
+    COMMAND "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --config "$<CONFIG>" --target ben_bot
     COMMAND "${CMAKE_COMMAND}" -E copy "$<TARGET_FILE:ben_bot>" "${baseline_binary}"
     COMMENT "Saving baseline binary for SPRT testing..."
     VERBATIM USES_TERMINAL

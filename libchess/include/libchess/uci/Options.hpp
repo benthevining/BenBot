@@ -219,7 +219,7 @@ private:
 /** An option that can have any arbitrary string value.
     String options are empty by default.
 
-    @ingroup cli
+    @ingroup uci
  */
 struct StringOption final : Option {
     StringOption(string name, string defaultValue, string helpString);
