@@ -467,6 +467,8 @@ namespace detail {
 
         constexpr bool operator==(const BitboardIterator& other) const noexcept { return value == other.value; }
 
+        constexpr bool operator==(std::default_sentinel_t) const noexcept { return value == UINT64_C(0); }
+
         [[nodiscard]] constexpr value_type operator*() const noexcept
         {
             return std::countr_zero(value);
@@ -498,7 +500,7 @@ constexpr auto Bitboard::indices() const noexcept
 {
     return std::ranges::subrange {
         detail::BitboardIterator { *this },
-        detail::BitboardIterator {},
+        std::default_sentinel,
         count()
     };
 }
