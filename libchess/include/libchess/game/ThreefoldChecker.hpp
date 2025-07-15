@@ -47,7 +47,7 @@ struct ThreefoldChecker final {
 private:
     // stores a history of hash values
     // the most recent value is at front() and the oldest is at back()
-    beman::inplace_vector<HashValue, 10uz> history;
+    beman::inplace_vector<HashValue, 9uz> history;
 };
 
 /*
@@ -112,7 +112,6 @@ constexpr bool ThreefoldChecker::is_threefold() const noexcept
     // 6     | ourHashB
     // 7     | theirHashB
     // 8     | ourHashA   <-- this position seen for time #1
-    // 9     | theirHashA
 
     static constexpr auto REP_INC { 4uz };
 

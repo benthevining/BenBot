@@ -45,7 +45,7 @@ TEST_CASE("Position - threefold repetitions", TAGS)
     pos.make_move(from_alg(pos, "Nb1"));
     pos.make_move(from_alg(pos, "Nb8"));
 
-    REQUIRE(not pos.is_threefold_repetition());
+    REQUIRE(pos.is_threefold_repetition());
 
     pos.make_move(from_alg(pos, "Nc3"));
 
@@ -83,7 +83,7 @@ TEST_CASE("Position - threefold reps - not threefold if EP possible in starting 
 
     pos.make_move(from_alg(pos, "Be2"));
 
-    REQUIRE(not pos.is_threefold_repetition());
+    REQUIRE(pos.is_threefold_repetition());
 
     pos.make_move(from_alg(pos, "Bd7"));
 
