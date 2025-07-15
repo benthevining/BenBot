@@ -36,7 +36,7 @@ TEST_CASE("Bitboard - empty", TAGS)
 {
     static constexpr Bitboard empty;
 
-    STATIC_REQUIRE(! empty.any());
+    STATIC_REQUIRE(not empty.any());
     STATIC_REQUIRE(empty.none());
     STATIC_REQUIRE(empty.count() == 0uz);
     STATIC_REQUIRE(std::cmp_equal(empty.to_int(), 0));
@@ -52,7 +52,7 @@ TEST_CASE("Bitboard - all", TAGS)
     static constexpr auto all = bitboard_masks::ALL;
 
     STATIC_REQUIRE(all.any());
-    STATIC_REQUIRE(! all.none());
+    STATIC_REQUIRE(not all.none());
     STATIC_REQUIRE(all.count() == NUM_SQUARES);
 
     STATIC_REQUIRE(all.first() == 0uz);

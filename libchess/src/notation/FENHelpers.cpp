@@ -37,22 +37,26 @@ using pieces::Color;
 using std::string;
 using std::string_view;
 
+using magic_enum::enum_values;
+
 namespace {
 
     void write_rank(
-        const Position&       position,
-        const board::Rank     rank,
-        const board::Bitboard allOccupied, const board::Bitboard whitePieces,
-        string& output)
+        const Position&   position,
+        const board::Rank rank,
+        string&           output)
     {
         using util::write_integer;
 
+        const auto whitePieces = position.whitePieces.occupied;
+        const auto allOccupied = whitePieces | position.blackPieces.occupied;
+
         auto consecutiveEmpty { 0uz };
 
-        for (const auto file : magic_enum::enum_values<board::File>()) {
+        for (const auto file : enum_values<board::File>()) {
             const Square square { .file = file, .rank = rank };
 
-            if (! allOccupied.test(square)) {
+            if (not allOccupied.test(square)) {
                 ++consecutiveEmpty;
                 continue;
             }
@@ -88,12 +92,8 @@ void write_piece_positions(
     const Position& position,
     string&         output)
 {
-    const auto whitePieces = position.whitePieces.occupied;
-    const auto blackPieces = position.blackPieces.occupied;
-    const auto allOccupied = whitePieces | blackPieces;
-
-    for (const auto rank : std::views::reverse(magic_enum::enum_values<board::Rank>()))
-        write_rank(position, rank, allOccupied, whitePieces, output);
+    for (const auto rank : std::views::reverse(enum_values<board::Rank>()))
+        write_rank(position, rank, output);
 }
 
 void write_castling_rights(
@@ -101,7 +101,7 @@ void write_castling_rights(
     const game::CastlingRights& blackRights,
     string&                     output)
 {
-    if (whiteRights.neither() && blackRights.neither()) {
+    if (whiteRights.neither() and blackRights.neither()) {
         output.push_back('-');
         return;
     }
@@ -123,7 +123,8 @@ void write_en_passant_target_square(
     const std::optional<Square> targetSquare,
     string&                     output)
 {
-    if (! targetSquare.has_value()) {
+    if (not targetSquare.has_value()) {
+        [[likely]];
         output.push_back('-');
         return;
     }
@@ -190,7 +191,7 @@ namespace {
             fenFragment = fenFragment.substr(1uz);
         } while (index < rankEnd);
 
-        if (! fenFragment.empty() && fenFragment.front() == '/')
+        if (not fenFragment.empty() and fenFragment.front() == '/')
             return fenFragment.substr(1uz);
 
         return fenFragment; // NOLINT
@@ -201,7 +202,7 @@ namespace {
 void parse_piece_positions(
     string_view fenFragment, Position& position)
 {
-    for (const auto rank : std::views::reverse(magic_enum::enum_values<board::Rank>()))
+    for (const auto rank : std::views::reverse(enum_values<board::Rank>()))
         fenFragment = parse_rank(rank, fenFragment, position);
 
     position.whitePieces.refresh_occupied();

@@ -88,7 +88,7 @@ struct Options final {
     /** Returns true if this search has any bounds other than depth. */
     [[nodiscard]] bool is_bounded() const noexcept
     {
-        return searchTime.has_value() || maxNodes.has_value();
+        return searchTime.has_value() or maxNodes.has_value();
     }
 };
 

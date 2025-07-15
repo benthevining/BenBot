@@ -14,19 +14,23 @@
 
 #include "Zobrist.hpp" // NOLINT(build/include_subdir)
 #include <array>
+#include <functional>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Masks.hpp>
 #include <libchess/board/Pieces.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
+#include <libchess/pieces/Colors.hpp>
 #include <magic_enum/magic_enum.hpp>
+#include <numeric>
 #include <optional>
 #include <utility>
 
 namespace chess::game::zobrist {
 
 using board::File;
+using pieces::Color;
 
 namespace {
 
@@ -224,7 +228,40 @@ namespace {
         return PIECE_KEYS.at(index);
     }
 
+    template <Color Side>
+    [[nodiscard, gnu::const]] constexpr Hash add_piece_positions(
+        const Hash prevValue, const PieceType type, const Position& position)
+    {
+        const auto squares = position.pieces_for<Side>().get_type(type).squares();
+
+        // map squares to piece keys, then fold left applying ^= to prevValue
+        return std::transform_reduce(
+            squares.begin(), squares.end(),
+            prevValue,
+            std::bit_xor {},
+            [type](const Square square) {
+                return piece_key(type, Side, square);
+            });
+    }
+
 } // namespace
+
+Hash CastlingRightsChanges::update_hash(Hash value) const noexcept
+{
+    if (whiteKingside)
+        value ^= WHITE_KINGSIDE_CASTLE;
+
+    if (whiteQueenside)
+        value ^= WHITE_QUEENSIDE_CASTLE;
+
+    if (blackKingside)
+        value ^= BLACK_KINGSIDE_CASTLE;
+
+    if (blackQueenside)
+        value ^= BLACK_QUEENSIDE_CASTLE;
+
+    return value;
+}
 
 Hash calculate(const Position& pos)
 {
@@ -234,14 +271,8 @@ Hash calculate(const Position& pos)
         value ^= BLACK_TO_MOVE;
 
     for (const auto type : magic_enum::enum_values<PieceType>()) {
-        const auto& white = pos.whitePieces.get_type(type);
-        const auto& black = pos.blackPieces.get_type(type);
-
-        for (const auto square : white.squares())
-            value ^= piece_key(type, Color::White, square); // cppcheck-suppress useStlAlgorithm
-
-        for (const auto square : black.squares())
-            value ^= piece_key(type, Color::Black, square); // cppcheck-suppress useStlAlgorithm
+        value = add_piece_positions<Color::White>(value, type, pos);
+        value = add_piece_positions<Color::Black>(value, type, pos);
     }
 
     if (pos.whiteCastlingRights.kingside)
@@ -319,17 +350,7 @@ Hash update(
             value ^= board::masks::queenside_castle_rook_pos_mask(pos.sideToMove).to_int();
     }
 
-    if (rightsChanges.whiteKingside)
-        value ^= WHITE_KINGSIDE_CASTLE;
-
-    if (rightsChanges.whiteQueenside)
-        value ^= WHITE_QUEENSIDE_CASTLE;
-
-    if (rightsChanges.blackKingside)
-        value ^= BLACK_KINGSIDE_CASTLE;
-
-    if (rightsChanges.blackQueenside)
-        value ^= BLACK_QUEENSIDE_CASTLE;
+    value = rightsChanges.update_hash(value);
 
     return value;
 }

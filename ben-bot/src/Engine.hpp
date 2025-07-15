@@ -69,8 +69,6 @@ private:
 
     void go(uci::GoCommandOptions&& opts) override;
 
-    void ponder_hit() override;
-
     void abort_search() override { searcher.context.abort(); }
 
     void wait() override { searcher.context.wait(); }
@@ -83,11 +81,13 @@ private:
 
     void load_book_file(string_view arguments);
 
+    void run_perft(string_view arguments) const;
+
     void make_null_move();
 
     void print_help() const;
     void print_options() const;
-    void print_current_position() const;
+    void print_current_position(string_view arguments) const;
 
     static void print_compiler_info();
 
@@ -98,19 +98,11 @@ private:
 
     void print_book_hit() const;
 
-    // this may not be lock-free, but we need the thread synchronization here
-    std::atomic<std::optional<Move>> ponderMove;
-
     std::atomic_bool debugMode { false };
 
     search::Thread searcher { search::Callbacks {
-        .onSearchComplete = [this](const Result& res) {
-            ponderMove.store(
-                searcher.context.transTable.get_best_response(
-                    searcher.context.options.position, res.bestMove));
-
-            print_uci_info<true>(res); },
-        .onIteration      = [this](const Result& res) { print_uci_info<false>(res); },
+        .onSearchComplete = [this](const Result& res) { print_uci_info<true>(res); },
+        .onIteration = [this](const Result& res) { print_uci_info<false>(res); },
         .onOpeningBookHit = [this]([[maybe_unused]] const Move& move) { print_book_hit(); } } };
 
     uci::Action clearTT {
@@ -119,29 +111,24 @@ private:
         "Press to clear the transposition table"
     };
 
-    uci::BoolOption ponderOpt {
-        uci::default_options::ponder()
-    };
-
-    std::array<uci::Option*, 3uz> options {
+    std::array<uci::Option*, 2uz> options {
         &searcher.context.openingBook.enabled,
-        &ponderOpt, &clearTT
+        &clearTT
     };
 
     // clang-format off
-    std::array<CustomCommand, 6uz> customCommands {
+    std::array<CustomCommand, 7uz> customCommands {
         CustomCommand {
             .name   = "loadbook",
-            .action = [this](const string_view args) {
-                load_book_file(args);
-            },
+            .action = [this](const string_view args) { load_book_file(args); },
             .description = "Reads the given PGN file into the engine's openings database",
             .argsHelp = "<path> [novars]"
         },
         CustomCommand {
             .name = "showpos",
-            .action = CustomCommand::void_cb([this] { print_current_position(); }),
-            .description = "Prints the current position"
+            .action = [this](const string_view args){ print_current_position(args); },
+            .description = "Prints the current position",
+            .argsHelp = "[utf8]"
         },
         CustomCommand {
             .name = "makenull",
@@ -152,6 +139,12 @@ private:
             .name = "options",
             .action = CustomCommand::void_cb([this] { print_options(); }),
             .description = "Dump current UCI option values"
+        },
+        CustomCommand {
+            .name = "perft",
+            .action = [this](const string_view args) { run_perft(args); },
+            .description = "Computes perft of the current position to the given depth",
+            .argsHelp = "<N>"
         },
         CustomCommand {
             .name = "compiler",

@@ -12,8 +12,8 @@
  * ======================================================================================
  */
 
-#include "MoveOrdering.hpp"   // NOLINT(build/include_subdir)
-#include "TimeManagement.hpp" // NOLINT(build/include_subdir)
+#include "MoveOrdering.hpp"
+#include "TimeManagement.hpp"
 #include <algorithm>
 #include <atomic>
 #include <cassert>
@@ -27,8 +27,8 @@
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/uci/CommandParsing.hpp>
+#include <libchess/util/Threading.hpp>
 #include <optional>
-#include <thread>
 #include <utility>
 #include <vector>
 
@@ -100,7 +100,7 @@ namespace {
         Interrupter&    interrupter,
         Stats&          stats)
     {
-        if (interrupter.should_abort() || currentPosition.is_draw())
+        if (interrupter.should_abort() or currentPosition.is_draw())
             return {};
 
         if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot)) {
@@ -167,7 +167,7 @@ namespace {
         // because the table only contains static evaluations and doesn't consider game
         // history, so its stored evaluations can't detect threefold repetition draws
         if (currentPosition.is_threefold_repetition())
-            return {}; // TODO: write to TT here
+            return {};
 
         if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot)) {
             ++stats.mdpCutoffs;
@@ -270,7 +270,7 @@ namespace {
 void Context::search()
 {
     assert(options.depth > 0uz);
-    assert(! activeFlag.load());
+    assert(not activeFlag.load());
 
     // sets activeFlag to true while inside this function, resets it to false once function exits
     const ActiveFlagSetter activeFlagRAII { activeFlag };
@@ -297,7 +297,7 @@ void Context::search()
         assert(! options.movesToSearch.empty());
     }
 
-    const bool infinite = ! options.is_bounded();
+    const bool infinite = not options.is_bounded();
 
     Stats stats;
 
@@ -356,7 +356,7 @@ void Context::search()
             .betaCutoffs                         = stats.betaCutoffs,
             .mdpCutoffs                          = stats.mdpCutoffs });
 
-        if (! (infinite || pondering.load())) {
+        if (not (infinite or pondering.load())) {
             // only 1 legal move, don't do a deeper iteration
             if (options.movesToSearch.size() == 1uz) {
                 [[unlikely]];
@@ -398,8 +398,9 @@ void Context::search()
 
 void Context::wait() const
 {
-    while (activeFlag.load())
-        std::this_thread::yield();
+    chess::util::progressive_backoff([this] {
+        return not activeFlag.load();
+    });
 }
 
 void Options::update_from(chess::uci::GoCommandOptions&& goOptions)
@@ -408,7 +409,7 @@ void Options::update_from(chess::uci::GoCommandOptions&& goOptions)
     // want the search algorithm to generate all legal moves instead
     movesToSearch.clear();
 
-    if (! goOptions.moves.empty())
+    if (not goOptions.moves.empty())
         movesToSearch = std::move(goOptions.moves);
 
     if (goOptions.depth.has_value())

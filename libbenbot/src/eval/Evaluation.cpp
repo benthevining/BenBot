@@ -12,9 +12,9 @@
  * ======================================================================================
  */
 
-#include "PawnStructure.hpp"     // NOLINT(build/include_subdir)
-#include "PieceSquareTables.hpp" // NOLINT(build/include_subdir)
-#include "Positional.hpp"        // NOLINT(build/include_subdir)
+#include "PawnStructure.hpp"
+#include "PieceSquareTables.hpp"
+#include "Positional.hpp"
 #include <algorithm>
 #include <cmath>
 #include <libbenbot/eval/Evaluation.hpp>
@@ -136,15 +136,15 @@ namespace {
             if (position.is_file_half_open(location.file))
                 score += (OPEN_KING_PENALTY / 2);
             else if (position.is_file_open(location.file)
-                     || (masks::diagonal(location) & allPawns).none()
-                     || (masks::antidiagonal(location) & allPawns).none())
+                     or (masks::diagonal(location) & allPawns).none()
+                     or (masks::antidiagonal(location) & allPawns).none())
                 score += OPEN_KING_PENALTY;
 
             using chess::board::File;
 
             // king stranded in center without castling rights
             if (castlingRights.neither()
-                && (location.file == File::D || location.file == File::E))
+                && (location.file == File::D or location.file == File::E))
                 score += STRANDED_KING_PENALTY;
 
             // open/stranded king penalties matter less in endgame

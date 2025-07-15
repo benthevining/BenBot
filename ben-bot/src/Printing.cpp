@@ -27,6 +27,7 @@
 #include <libchess/game/Position.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/UCI.hpp>
+#include <libchess/util/Strings.hpp>
 #include <optional>
 #include <print>
 #include <string>
@@ -34,18 +35,20 @@
 
 namespace ben_bot {
 
-using std::println;
+using Result = search::Callbacks::Result;
+using eval::Score;
 using std::size_t;
+
+using chess::notation::to_uci;
+using std::println;
 
 namespace {
 
-    using Result = search::Callbacks::Result;
-
-    using chess::notation::to_uci;
-
-    [[nodiscard]] std::string get_score_string(const eval::Score score)
+    [[nodiscard]] std::string get_score_string(const Score score)
     {
-        if (! score.is_mate()) {
+        if (not score.is_mate()) {
+            [[likely]];
+
             // NB. we pass score.value directly here instead of going through
             // Score's formatter because that extra indirection appears to cost
             // enough time to observably cost some Elo
@@ -79,33 +82,10 @@ namespace {
         return static_cast<size_t>(std::round(nps));
     }
 
-    // extracts the PV from the transposition table
-    [[nodiscard]] std::string get_pv_string(
-        Position position, Move bestMove, const TranspositionTable& transTable)
-    {
-        auto result = std::format("pv {}", to_uci(bestMove));
-
-        while (true) {
-            const auto nextMove = transTable.get_best_response(position, bestMove);
-
-            if (! nextMove.has_value())
-                break;
-
-            result.append(1uz, ' ');
-            result.append(to_uci(*nextMove));
-
-            position.make_move(bestMove);
-
-            bestMove = *nextMove;
-        }
-
-        return result;
-    }
-
     [[nodiscard]] std::string get_extra_stats_string(
         const Result& res, const bool isDebugMode)
     {
-        if ((! isDebugMode) || res.nodesSearched == 0uz)
+        if ((not isDebugMode) or (res.nodesSearched == 0uz))
             return {};
 
         auto get_pcnt = [totalNodes = static_cast<double>(res.nodesSearched)](const size_t value) {
@@ -121,7 +101,7 @@ namespace {
 
     [[nodiscard]] std::string get_ponder_move_string(const std::optional<Move> ponderMove)
     {
-        if (! ponderMove.has_value())
+        if (not ponderMove.has_value())
             return {};
 
         return std::format(
@@ -134,18 +114,16 @@ namespace {
 template <bool PrintBestMove>
 void Engine::print_uci_info(const Result& res) const
 {
-    const auto& currPos = searcher.context.options.position;
-
-    const auto& transTable = searcher.context.transTable;
-
     println(
-        "info depth {} score {} time {} nodes {} nps {} {}{}",
+        "info depth {} score {} time {} nodes {} nps {}{}",
         res.depth, get_score_string(res.score), res.duration.count(),
         res.nodesSearched, get_nodes_per_second(res),
-        get_pv_string(currPos, res.bestMove, transTable),
         get_extra_stats_string(res, debugMode.load()));
 
     if constexpr (PrintBestMove) {
+        const auto& currPos    = searcher.context.options.position;
+        const auto& transTable = searcher.context.transTable;
+
         println("bestmove {}{}",
             to_uci(res.bestMove),
             get_ponder_move_string(
@@ -241,31 +219,28 @@ void Engine::print_options() const
     println("{}", table.to_string());
 }
 
-namespace {
-    void print_eval(const Position& pos)
-    {
-        if (pos.is_checkmate()) {
-            println("eval: #");
-            return;
-        }
-
-        if (pos.is_draw()) {
-            println("eval: 0");
-            return;
-        }
-
-        println("eval: {}", eval::evaluate(pos));
-    }
-} // namespace
-
-void Engine::print_current_position() const
+void Engine::print_current_position(const string_view arguments) const
 {
     const auto& pos = searcher.context.options.position;
 
-    println("{}", print_utf8(pos));
-    println("{}", chess::notation::to_fen(pos));
+    const bool utf8 = chess::util::trim(arguments) == "utf8";
+
+    println("{}",
+        utf8 ? print_utf8(pos) : print_ascii(pos));
+
     println();
-    print_eval(pos);
+    println("FEN: {}", chess::notation::to_fen(pos));
+    println("Zobrist key: {}", pos.hash);
+    println();
+
+    // print eval
+    if (const auto* record = searcher.context.transTable.find(pos)) {
+        const auto score = Score::from_tt({ record->eval, record->evalType }, 0uz);
+
+        println("TT hit: {}", get_score_string(score));
+    }
+
+    println("Static eval: {}", eval::evaluate(pos));
 }
 
 void Engine::print_compiler_info()

@@ -63,7 +63,7 @@ struct Interrupter final {
     [[nodiscard]] Milliseconds get_search_duration() const { return timer.get_duration(); }
 
     // returns time remaining until abort time, or nullopt if there's no time bound
-    [[nodiscard]] std::optional<Milliseconds> get_remaining_time() const
+    [[nodiscard]] auto get_remaining_time() const -> std::optional<Milliseconds>
     {
         return searchTime.and_then([this](const Milliseconds timeLimit) {
             return std::optional { timeLimit - get_search_duration() };
@@ -74,7 +74,7 @@ struct Interrupter final {
     // updates cached internal abort state
     [[nodiscard]] bool should_abort()
     {
-        aborted = aborted || should_trigger_abort();
+        aborted = aborted or should_trigger_abort();
 
         return aborted;
     }
@@ -88,7 +88,7 @@ private:
     [[nodiscard]] bool should_trigger_abort() const
     {
         // we don't allow aborting until at least the depth 1 search has been completed
-        if (! anyIterationCompleted)
+        if (not anyIterationCompleted)
             return false;
 
         if (exitFlag.load())
@@ -98,7 +98,7 @@ private:
         if (ponderFlag.load())
             return false;
 
-        if (! searchTime.has_value())
+        if (not searchTime.has_value())
             return false;
 
         return get_search_duration() >= *searchTime;

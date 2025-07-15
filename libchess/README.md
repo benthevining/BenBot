@@ -13,6 +13,12 @@ Include style is:
 #include <libchess/board/Square.hpp>
 ```
 
+## Design goals
+
+This library aims to avoid using global state as much as possible. The one exception to this is the magic bitboards move generation, which does require some constant arrays to be initialized at program startup. Aside from this, however, the board position is entirely object-oriented, there is no global `make_move()` function.
+
+Any code produced in the development of `BenBot` that could potentially be useful in other chess programs is put into this library. This library aims to be useful as a basis for any new engine project, or perhaps even chess GUI programs.
+
 ## CMake
 
 ### Targets

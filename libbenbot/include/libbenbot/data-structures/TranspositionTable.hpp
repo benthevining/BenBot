@@ -131,7 +131,7 @@ inline auto TranspositionTable::probe_eval(
     -> std::optional<ProbedEval>
 {
     if (const auto* record = find(pos);
-        record != nullptr && record->searchedDepth >= depth) {
+        record != nullptr and record->searchedDepth >= depth) {
         switch (record->evalType) {
             using enum Record::EvalType;
 
@@ -176,8 +176,8 @@ inline void TranspositionTable::store(const Position& pos, const Record& record)
 
         const bool shouldReplace
             = record.searchedDepth > stored.searchedDepth
-           || (stored.evalType != Record::EvalType::Exact
-               && record.evalType == Record::EvalType::Exact);
+           or (stored.evalType != Record::EvalType::Exact
+               and record.evalType == Record::EvalType::Exact);
 
         if (shouldReplace)
             stored = record;

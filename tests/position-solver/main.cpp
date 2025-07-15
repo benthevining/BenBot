@@ -45,12 +45,10 @@ void print_usage(const std::string_view programName)
     std::println("{} <epdPath> <lineIdx>", programName);
 }
 
-[[nodiscard]] std::string_view get_line(
-    const std::string_view text, const size_t lineIdx)
+[[nodiscard]] auto get_line(
+    const std::string_view text, const size_t lineIdx) -> std::string_view
 {
-    const auto lines = text
-                     | std::views::split('\n')
-                     | std::views::transform([](auto range) { return std::string_view { range }; })
+    const auto lines = chess::util::lines_view(text)
                      | std::ranges::to<std::vector>();
 
     return lines.at(lineIdx);

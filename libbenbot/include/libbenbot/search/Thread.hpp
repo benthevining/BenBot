@@ -23,6 +23,7 @@
 #include <libbenbot/search/Search.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/uci/CommandParsing.hpp>
+#include <libchess/util/Threading.hpp>
 #include <thread>
 #include <utility>
 
@@ -66,7 +67,7 @@ struct Thread final {
     /** Sets the position to be searched by the next search invocation.
         This method blocks waiting for any previously executing search to complete.
      */
-    void set_position(const chess::game::Position& pos)
+    void set_position(const Position& pos)
     {
         context.wait();
 
@@ -84,9 +85,12 @@ struct Thread final {
     void start(chess::uci::GoCommandOptions&& options)
     {
         context.pondering.store(options.ponderMode);
+      
+        context.wait(); // shouldn't have been searching, but better safe than sorry
+
         context.options.update_from(std::move(options));
 
-        start();
+        startSearch.store(true);
     }
 
     void start()
@@ -100,11 +104,20 @@ struct Thread final {
 private:
     void thread_func()
     {
-        while (! threadShouldExit.load()) {
-            if (startSearch.exchange(false))
-                context.search();
-            else
-                std::this_thread::yield();
+        while (true) {
+            // we want to use progressive backoff to wait on the startSearch flag,
+            // but we also need to exit the PB loop if the threadShouldExit flag
+            // gets set
+            chess::util::progressive_backoff([this] {
+                return threadShouldExit.load() or startSearch.exchange(false);
+            });
+
+            if (threadShouldExit.load()) {
+                [[unlikely]];
+                return;
+            }
+
+            context.search();
         }
     }
 

@@ -71,10 +71,10 @@ struct CastlingRights final {
     constexpr void their_move(const Move& move) noexcept;
 
     /** Returns true if castling either direction is possible. */
-    [[nodiscard]] constexpr bool either() const noexcept { return kingside || queenside; }
+    [[nodiscard]] constexpr bool either() const noexcept { return kingside or queenside; }
 
     /** Returns true if neither castling direction is available. */
-    [[nodiscard]] constexpr bool neither() const noexcept { return ! either(); }
+    [[nodiscard]] constexpr bool neither() const noexcept { return not either(); }
 };
 
 /*
@@ -107,8 +107,8 @@ constexpr void CastlingRights::rook_moved(const bool isKingside) noexcept
     // should lose castling rights to that side with a simple boolean indicating
     // if the move's from square is on the kingside
 
-    kingside  = kingside && ! isKingside;
-    queenside = queenside && isKingside;
+    kingside  = kingside and not isKingside;
+    queenside = queenside and isKingside;
 }
 
 constexpr void CastlingRights::our_move(const Move& move) noexcept
@@ -134,8 +134,8 @@ constexpr void CastlingRights::their_move(const Move& move) noexcept
     if (move.to.rank != backRank)
         return;
 
-    kingside  = kingside && (move.to.file != File::H);
-    queenside = queenside && (move.to.file != File::A);
+    kingside  = kingside and (move.to.file != File::H);
+    queenside = queenside and (move.to.file != File::A);
 }
 
 } // namespace chess::game

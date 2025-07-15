@@ -24,6 +24,7 @@
 #include <concepts>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <iterator>
+#include <ranges>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -93,6 +94,16 @@ void write_integer(
     std::integral auto value,
     std::string&       output);
 
+/** Returns a range of string_views, each representing a line from the
+    input string.
+ */
+[[nodiscard]] inline auto lines_view(string_view text);
+
+/** Returns a range of string_views, each representing a word from the
+    input string.
+ */
+[[nodiscard]] inline auto words_view(string_view text);
+
 /// @}
 
 /*
@@ -143,6 +154,25 @@ void write_integer(
     output.append(
         buffer.data(),
         static_cast<size_t>(std::distance(buffer.data(), result.ptr)));
+}
+
+namespace detail {
+    [[nodiscard]] inline auto split_by_delim(const string_view text, char delim)
+    {
+        return text
+             | std::views::split(delim)
+             | std::views::transform([](const auto rng) { return string_view { rng }; });
+    }
+} // namespace detail
+
+inline auto lines_view(const string_view text)
+{
+    return detail::split_by_delim(text, '\n');
+}
+
+inline auto words_view(const string_view text)
+{
+    return detail::split_by_delim(text, ' ');
 }
 
 } // namespace chess::util

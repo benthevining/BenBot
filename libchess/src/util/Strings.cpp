@@ -24,18 +24,18 @@ namespace {
 
 using std::string_view;
 
-[[nodiscard]] bool is_whitespace(const char text) noexcept
+[[nodiscard]] auto is_whitespace(const char text) noexcept -> bool
 {
     // this should take care of \r\n sequences on Windows
     return std::isspace(static_cast<unsigned char>(text)) != 0;
 }
 
-[[nodiscard]] string_view trim_start(string_view text) noexcept
+[[nodiscard]] auto trim_start(string_view text) noexcept -> string_view
 {
     auto idx { 0uz };
 
     for (const auto letter : text) {
-        if (! is_whitespace(letter)) {
+        if (not is_whitespace(letter)) {
             text.remove_prefix(idx);
             return text; // NOLINT
         }
@@ -46,10 +46,10 @@ using std::string_view;
     return {};
 }
 
-[[nodiscard]] string_view trim_end(const string_view text)
+[[nodiscard]] auto trim_end(const string_view text) -> string_view
 {
     for (auto i = text.length(); i > 0uz; --i)
-        if (! is_whitespace(text[i - 1uz]))
+        if (not is_whitespace(text[i - 1uz]))
             return text.substr(0uz, i);
 
     return {};
@@ -68,8 +68,8 @@ size_t find_matching_close_paren(const string_view input)
 {
     assert(input.front() == '(');
 
-    size_t numOpenParens { 1uz };
-    size_t numCloseParens { 0uz };
+    auto numOpenParens { 1uz };
+    auto numCloseParens { 0uz };
 
     for (auto idx = 1uz; idx < input.size(); ++idx) {
         switch (input[idx]) {

@@ -12,17 +12,24 @@
  * ======================================================================================
  */
 
-#include <catch2/catch_test_macros.hpp>
-#include <libchess/notation/Algebraic.hpp>
-#include <libchess/notation/FEN.hpp>
+#include <libchess/util/Console.hpp>
 
-static constexpr auto TAGS { "[moves][EnPassant]" };
+#ifdef WIN32
+#    ifndef WIN32_LEAN_AND_MEAN
+#        define WIN32_LEAN_AND_MEAN 1
+#    endif
 
-TEST_CASE("En passant - illegal if capture reveals check", TAGS)
+#    include <windows.h>
+#endif
+
+namespace chess::util {
+
+void enable_utf8_console_output()
 {
-    const auto position = chess::notation::from_fen("4k3/8/8/p1K1Pp1r/Pp5p/6pP/6P1/8 w - f6 0 1");
-
-    const auto move = chess::notation::from_alg(position, "exf6");
-
-    REQUIRE(not position.is_legal(move));
+#ifdef WIN32
+    // set the console's code page to UTF-8
+    SetConsoleOutputCP(CP_UTF8);
+#endif
 }
+
+} // namespace chess::util

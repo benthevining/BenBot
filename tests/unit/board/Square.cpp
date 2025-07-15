@@ -306,7 +306,7 @@ TEST_CASE("Square - is_queenside()/is_kingside()", TAGS)
             const Square square { file, rank };
 
             REQUIRE(square.is_queenside());
-            REQUIRE(! square.is_kingside());
+            REQUIRE(not square.is_kingside());
         }
     }
 
@@ -319,7 +319,7 @@ TEST_CASE("Square - is_queenside()/is_kingside()", TAGS)
             const Square square { file, rank };
 
             REQUIRE(square.is_kingside());
-            REQUIRE(! square.is_queenside());
+            REQUIRE(not square.is_queenside());
         }
     }
 }

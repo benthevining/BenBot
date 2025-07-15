@@ -24,6 +24,7 @@
 #include <iterator>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
+#include <libchess/moves/Perft.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/UCI.hpp>
 #include <libchess/util/Strings.hpp>
@@ -52,43 +53,6 @@ struct PerftOptions final {
 
 namespace {
 
-    struct PerftResult final {
-        size_t nodes { 0uz };
-
-        size_t captures { 0uz };
-
-        size_t enPassantCaptures { 0uz };
-
-        size_t castles { 0uz };
-
-        size_t promotions { 0uz };
-
-        size_t checks { 0uz };
-
-        size_t checkmates { 0uz };
-
-        size_t stalemates { 0uz };
-
-        // pair of move, num child nodes
-        using RootNodeInfo = std::pair<moves::Move, size_t>;
-
-        std::vector<RootNodeInfo> rootNodes;
-
-        constexpr PerftResult& operator+=(const PerftResult& rhs) noexcept
-        {
-            nodes += rhs.nodes;
-            captures += rhs.captures;
-            enPassantCaptures += rhs.enPassantCaptures;
-            castles += rhs.castles;
-            promotions += rhs.promotions;
-            checks += rhs.checks;
-            checkmates += rhs.checkmates;
-            stalemates += rhs.stalemates;
-
-            return *this;
-        }
-    };
-
     constexpr auto MAX_ARGS = 4uz;
 
     void print_help(const std::string_view programName)
@@ -102,7 +66,7 @@ namespace {
     {
         PerftOptions options {};
 
-        while (! args.empty()) {
+        while (not args.empty()) {
             const auto arg = args.front();
 
             args = args.subspan(1uz);
@@ -145,11 +109,11 @@ namespace {
     }
 
     void write_json_file(
-        const PerftOptions& options,
-        const PerftResult&  result,
-        const seconds       wallTime)
+        const PerftOptions&       options,
+        const moves::PerftResult& result,
+        const seconds             wallTime)
     {
-        if (! options.jsonOutputPath.has_value())
+        if (not options.jsonOutputPath.has_value())
             return;
 
         nlohmann::json json;
@@ -178,10 +142,10 @@ namespace {
         output << json.dump(1);
 
         println("Wrote JSON results to {}", path.string()); // NOLINT(build/include_what_you_use)
-        println("");
+        println();
     }
 
-    void print_root_nodes(const PerftResult& result)
+    void print_root_nodes(const moves::PerftResult& result)
     {
         for (const auto [move, numChildren] : result.rootNodes) {
             println("{} {}",
@@ -190,8 +154,8 @@ namespace {
     }
 
     void print_results(
-        const PerftResult& result,
-        const seconds      wallTime)
+        const moves::PerftResult& result,
+        const seconds             wallTime)
     {
         println("Nodes: {}", result.nodes);
         println("Captures: {}", result.captures);
@@ -202,61 +166,8 @@ namespace {
         println("Checkmates: {}", result.checkmates);
         println("Stalemates: {}", result.stalemates);
 
-        println("");
+        println();
         println("Search time: {}", wallTime);
-    }
-
-    template <bool IsRoot = true>
-    [[nodiscard]] PerftResult perft(
-        const size_t          depth,
-        const game::Position& startingPosition)
-    {
-        if (depth == 0uz)
-            return { .nodes = 1uz };
-
-        PerftResult result;
-
-        for (const auto& move : moves::generate(startingPosition)) {
-            const auto newPosition = after_move(startingPosition, move);
-
-            // we want stats only for leaf nodes
-            if (depth == 1uz) {
-                if (startingPosition.is_capture(move)) {
-                    ++result.captures;
-
-                    if (startingPosition.is_en_passant(move))
-                        ++result.enPassantCaptures;
-                }
-
-                if (move.is_castling())
-                    ++result.castles;
-
-                if (move.promotedType.has_value())
-                    ++result.promotions;
-
-                const bool isCheck = newPosition.is_check();
-
-                if (isCheck)
-                    ++result.checks;
-
-                if (! moves::any_legal_moves(newPosition)) {
-                    if (isCheck)
-                        ++result.checkmates;
-                    else
-                        ++result.stalemates;
-                }
-            }
-
-            const auto childResult = perft<false>(depth - 1uz, newPosition);
-
-            if constexpr (IsRoot) {
-                result.rootNodes.emplace_back(move, childResult.nodes);
-            }
-
-            result += childResult;
-        }
-
-        return result;
     }
 
     void run_perft(const PerftOptions& options)
@@ -266,11 +177,11 @@ namespace {
         println("Starting position:");
         println("{}", game::print_utf8(options.startingPosition));
         println("Running perft depth {}...", options.depth);
-        println("");
+        println();
 
         const auto startTime = Clock::now();
 
-        const auto result = perft(options.depth, options.startingPosition);
+        const auto result = moves::perft(options.depth, options.startingPosition);
 
         const auto endTime = Clock::now();
 
@@ -280,7 +191,7 @@ namespace {
 
         print_root_nodes(result);
 
-        println("");
+        println();
 
         print_results(result, wallTime);
     }
@@ -303,7 +214,7 @@ try {
     args = args.subspan(1uz);
 
     if (args.empty()
-        || std::ranges::contains(args, "--help")) {
+        or std::ranges::contains(args, "--help")) {
         chess::print_help(programName);
         return EXIT_FAILURE;
     }

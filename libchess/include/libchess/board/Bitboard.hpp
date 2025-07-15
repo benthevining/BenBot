@@ -283,7 +283,7 @@ formatter<chess::board::Bitboard>::parse(ParseContext& ctx)
 {
     auto it = ctx.begin();
 
-    if (it == ctx.end() || *it == '}')
+    if (it == ctx.end() or *it == '}')
         return it;
 
     do {
@@ -303,7 +303,7 @@ formatter<chess::board::Bitboard>::parse(ParseContext& ctx)
         }
 
         ++it;
-    } while (! (it == ctx.end() || *it == '}'));
+    } while (not(it == ctx.end() or *it == '}'));
 
     ctx.advance_to(it);
 
@@ -466,6 +466,8 @@ namespace detail {
         }
 
         constexpr bool operator==(const BitboardIterator& other) const noexcept { return value == other.value; }
+
+        constexpr bool operator==(std::default_sentinel_t) const noexcept { return value == UINT64_C(0); }
 
         [[nodiscard]] constexpr value_type operator*() const noexcept
         {

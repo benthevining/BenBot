@@ -30,11 +30,11 @@ TEST_CASE("UCI options - bool", TAGS)
 
     option.handle_setvalue("value false\n");
 
-    REQUIRE(! option.get_value());
+    REQUIRE(not option.get_value());
 
     option.handle_setvalue("value false");
 
-    REQUIRE(! option.get_value());
+    REQUIRE(not option.get_value());
 }
 
 TEST_CASE("UCI options - int", TAGS)

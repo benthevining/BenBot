@@ -13,8 +13,10 @@
  */
 
 #include <algorithm>
+#include <beman/inplace_vector/inplace_vector.hpp>
 #include <cassert>
 #include <format>
+#include <iterator>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
@@ -30,7 +32,6 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <vector>
 
 namespace chess::notation {
 
@@ -41,27 +42,35 @@ using std::string_view;
 
 namespace {
 
-    // returns a vector containing all legal moves for the given
-    // piece type that have the same target square as `move`
-    [[nodiscard]] std::vector<Move> get_possible_move_origins(
+    // returns a vector containing all legal moves for the
+    // given piece type that have the given target square
+    [[nodiscard]] auto get_possible_move_origins(
         const Position& position, const Square& targetSquare, const PieceType piece)
     {
-        auto pieceMoves = moves::generate_for(position, piece);
+        // we're only generating moves for one piece type, so we can
+        // avoid dynamic memory allocation by using inplace_vector
+        beman::inplace_vector<Move, 100uz> moves;
 
-        std::erase_if(pieceMoves,
-            [targetSquare](const Move& candidate) { return candidate.to != targetSquare; });
+        moves::generate_for(position, piece, std::back_inserter(moves));
 
-        return pieceMoves;
+        // erase moves not to the given target square
+        moves.erase(
+            std::ranges::remove_if(moves,
+                [targetSquare](const Move& candidate) { return candidate.to != targetSquare; })
+                .begin(),
+            moves.end());
+
+        return moves;
     }
 
     [[nodiscard]] string_view get_check_string(const Position& position, const Move& move)
     {
         const auto newPos = after_move(position, move);
 
-        if (! newPos.is_check())
+        if (not newPos.is_check())
             return {};
 
-        if (! moves::any_legal_moves(newPos))
+        if (not moves::any_legal_moves(newPos))
             return "#"; // checkmate
 
         return "+"; // check
@@ -108,14 +117,22 @@ string to_alg(const Position& position, const Move& move)
     const auto checkStr = get_check_string(position, move);
 
     if (move.is_castling()) {
-        const auto* castleStr = move.to.is_kingside() ? "O-O" : "O-O-O";
+        [[unlikely]];
 
-        return std::format("{}{}", castleStr, checkStr);
+        static constexpr string_view KINGSIDE_CASTLE { "O-O" };
+        static constexpr string_view QUEENSIDE_CASTLE { "O-O-O" };
+
+        return std::format(
+            "{}{}",
+            move.to.is_kingside() ? KINGSIDE_CASTLE : QUEENSIDE_CASTLE,
+            checkStr);
     }
 
     const bool isCapture = position.is_capture(move);
 
     if (move.is_promotion()) {
+        [[unlikely]];
+
         if (isCapture)
             return std::format("{}x{}={}{}", move.from.file, move.to, *move.promotedType, checkStr);
 
@@ -287,10 +304,11 @@ namespace {
         };
     }
 
-    [[nodiscard]] constexpr std::optional<Move> parse_pawn_capture(
+    [[nodiscard]] constexpr auto parse_pawn_capture(
         const Square& targetSquare, const string_view startingFileText, const Color color)
+        -> std::optional<Move>
     {
-        assert(! startingFileText.empty());
+        assert(not startingFileText.empty());
 
         switch (startingFileText.front()) {
             case 'a': [[fallthrough]];
@@ -331,8 +349,9 @@ namespace {
         }
     }
 
-    [[nodiscard]] constexpr std::optional<Move> parse_promotion(
+    [[nodiscard]] constexpr auto parse_promotion(
         const string_view text, const Color color)
+        -> std::optional<Move>
     {
         const auto eqSgnPos = text.find('=');
 
@@ -372,11 +391,11 @@ Move from_alg(const Position& position, string_view text)
         };
     }
 
-    if (text.back() == '+' || text.back() == '#')
+    if (text.back() == '+' or text.back() == '#')
         text.remove_suffix(1uz);
 
-    if (text.contains("O-O") || text.contains("0-0")) {
-        if (text.contains("-O-") || text.contains("-0-"))
+    if (text.contains("O-O") or text.contains("0-0")) {
+        if (text.contains("-O-") or text.contains("-0-"))
             return moves::castle_queenside(position.sideToMove);
 
         return moves::castle_kingside(position.sideToMove);
@@ -404,7 +423,7 @@ Move from_alg(const Position& position, string_view text)
     // if text is not empty, the first char is either piece type, or in the case of a
     // pawn capture, it's the file letter of the starting square
 
-    if (isCapture && ! text.empty())
+    if (isCapture and not text.empty())
         if (const auto move = parse_pawn_capture(targetSquare, text, position.sideToMove))
             return *move;
 
@@ -413,7 +432,7 @@ Move from_alg(const Position& position, string_view text)
                              : pieces::from_string(text.substr(0uz, 1uz));
 
     // trim piece type
-    if (! text.empty())
+    if (not text.empty())
         text = text.substr(1uz);
 
     return {

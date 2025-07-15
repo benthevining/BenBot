@@ -12,17 +12,20 @@
  * ======================================================================================
  */
 
-#include <catch2/catch_test_macros.hpp>
-#include <libchess/notation/Algebraic.hpp>
-#include <libchess/notation/FEN.hpp>
+/** @file
+    This file provides some utility functions related to the console input/output.
+    @ingroup util
+ */
 
-static constexpr auto TAGS { "[moves][EnPassant]" };
+#pragma once
 
-TEST_CASE("En passant - illegal if capture reveals check", TAGS)
-{
-    const auto position = chess::notation::from_fen("4k3/8/8/p1K1Pp1r/Pp5p/6pP/6P1/8 w - f6 0 1");
+namespace chess::util {
 
-    const auto move = chess::notation::from_alg(position, "exf6");
+/** Ensures that ``std::cout`` will interpret strings as UTF-8.
+    On non-Windows platforms, this is a no-op.
 
-    REQUIRE(not position.is_legal(move));
-}
+    @ingroup util
+ */
+void enable_utf8_console_output();
+
+} // namespace chess::util

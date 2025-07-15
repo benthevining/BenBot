@@ -22,6 +22,7 @@
 #include <sys/mman.h>
 #include <sys/types.h> // IWYU pragma: keep - for off_t
 #include <unistd.h>
+#include <utility>
 
 namespace chess::util {
 
@@ -62,8 +63,22 @@ struct MemoryMappedFile::Pimpl final {
 
     Pimpl(const Pimpl&)            = delete;
     Pimpl& operator=(const Pimpl&) = delete;
-    Pimpl(Pimpl&&)                 = delete;
-    Pimpl& operator=(Pimpl&&)      = delete;
+
+    Pimpl(Pimpl&& other) noexcept
+        : fileSize { std::exchange(other.fileSize, 0uz) }
+        , fileHandle { std::exchange(other.fileHandle, 0) }
+        , address { std::exchange(other.address, nullptr) }
+    {
+    }
+
+    Pimpl& operator=(Pimpl&& other) noexcept
+    {
+        fileSize   = std::exchange(other.fileSize, 0uz);
+        fileHandle = std::exchange(other.fileHandle, 0);
+        address    = std::exchange(other.address, nullptr);
+
+        return *this;
+    }
 
     [[nodiscard]] std::string_view data() const
     {

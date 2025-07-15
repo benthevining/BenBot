@@ -16,12 +16,15 @@
 #include <cstdlib>
 #include <exception>
 #include <iostream>
+#include <libchess/util/Console.hpp>
 #include <print>
 
 int main(
     [[maybe_unused]] const int    argc,
     [[maybe_unused]] const char** argv)
 try {
+    chess::util::enable_utf8_console_output();
+
     ben_bot::Engine engine;
 
     engine.print_logo_and_version();

@@ -63,17 +63,17 @@ TEST_CASE("UCI parsing - go", TAGS)
         const auto opts = parse_go_options("", startPos);
 
         REQUIRE(opts.moves.empty());
-        REQUIRE(! opts.ponderMode);
-        REQUIRE(! opts.infinite);
-        REQUIRE(! opts.whiteTimeLeft.has_value());
-        REQUIRE(! opts.blackTimeLeft.has_value());
-        REQUIRE(! opts.whiteInc.has_value());
-        REQUIRE(! opts.blackInc.has_value());
-        REQUIRE(! opts.movesToGo.has_value());
-        REQUIRE(! opts.depth.has_value());
-        REQUIRE(! opts.nodes.has_value());
-        REQUIRE(! opts.mateIn.has_value());
-        REQUIRE(! opts.searchTime.has_value());
+        REQUIRE(not opts.ponderMode);
+        REQUIRE(not opts.infinite);
+        REQUIRE(not opts.whiteTimeLeft.has_value());
+        REQUIRE(not opts.blackTimeLeft.has_value());
+        REQUIRE(not opts.whiteInc.has_value());
+        REQUIRE(not opts.blackInc.has_value());
+        REQUIRE(not opts.movesToGo.has_value());
+        REQUIRE(not opts.depth.has_value());
+        REQUIRE(not opts.nodes.has_value());
+        REQUIRE(not opts.mateIn.has_value());
+        REQUIRE(not opts.searchTime.has_value());
     }
 
     SECTION("Searchmoves")

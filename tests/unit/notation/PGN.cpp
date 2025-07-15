@@ -321,7 +321,7 @@ TEST_CASE("PGN - complex file", TAGS)
 
     REQUIRE(to_pgn(game) == pgn);
 }
-#if 0
+
 TEST_CASE("PGN - parse_all_pgns() - single PGN", TAGS)
 {
     static constexpr std::string_view fileText {
@@ -348,7 +348,7 @@ Qd2 Qxd2+ 1/2-1/2
 
     REQUIRE(games.front().moves.size() == 16uz);
 }
-#endif
+
 TEST_CASE("PGN - parse_all_pgns()", TAGS)
 {
     static constexpr std::string_view fileText {

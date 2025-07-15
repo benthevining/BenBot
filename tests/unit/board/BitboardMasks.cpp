@@ -110,7 +110,7 @@ TEST_CASE("Bitboard - file masks", TAGS)
                 REQUIRE(file_distance(square, sq2) == 0uz);         \
                                                                     \
                 if (square != sq2)                                  \
-                    REQUIRE(! are_on_same_diagonal(square, sq2));   \
+                    REQUIRE(not are_on_same_diagonal(square, sq2)); \
             }                                                       \
         }                                                           \
     }
@@ -154,7 +154,7 @@ TEST_CASE("Bitboard - rank masks", TAGS)
                 REQUIRE(rank_distance(square, sq2) == 0uz);         \
                                                                     \
                 if (square != sq2)                                  \
-                    REQUIRE(! are_on_same_diagonal(square, sq2));   \
+                    REQUIRE(not are_on_same_diagonal(square, sq2)); \
             }                                                       \
         }                                                           \
     }
@@ -277,7 +277,7 @@ TEST_CASE("Starting position masks", TAGS)
             for (const auto square : pos.squares()) {
                 REQUIRE(square.is_white_territory());
                 REQUIRE(square.rank == Rank::One);
-                REQUIRE(((square.file == File::A) || (square.file == File::H)));
+                REQUIRE(((square.file == File::A) or (square.file == File::H)));
             }
         }
 
@@ -290,7 +290,7 @@ TEST_CASE("Starting position masks", TAGS)
             for (const auto square : pos.squares()) {
                 REQUIRE(square.is_white_territory());
                 REQUIRE(square.rank == Rank::One);
-                REQUIRE(((square.file == File::B) || (square.file == File::G)));
+                REQUIRE(((square.file == File::B) or (square.file == File::G)));
             }
         }
 
@@ -303,7 +303,7 @@ TEST_CASE("Starting position masks", TAGS)
             for (const auto square : pos.squares()) {
                 REQUIRE(square.is_white_territory());
                 REQUIRE(square.rank == Rank::One);
-                REQUIRE(((square.file == File::C) || (square.file == File::F)));
+                REQUIRE(((square.file == File::C) or (square.file == File::F)));
             }
         }
 
@@ -357,7 +357,7 @@ TEST_CASE("Starting position masks", TAGS)
             for (const auto square : pos.squares()) {
                 REQUIRE(square.is_black_territory());
                 REQUIRE(square.rank == Rank::Eight);
-                REQUIRE(((square.file == File::A) || (square.file == File::H)));
+                REQUIRE(((square.file == File::A) or (square.file == File::H)));
             }
         }
 
@@ -370,7 +370,7 @@ TEST_CASE("Starting position masks", TAGS)
             for (const auto square : pos.squares()) {
                 REQUIRE(square.is_black_territory());
                 REQUIRE(square.rank == Rank::Eight);
-                REQUIRE(((square.file == File::B) || (square.file == File::G)));
+                REQUIRE(((square.file == File::B) or (square.file == File::G)));
             }
         }
 
@@ -383,7 +383,7 @@ TEST_CASE("Starting position masks", TAGS)
             for (const auto square : pos.squares()) {
                 REQUIRE(square.is_black_territory());
                 REQUIRE(square.rank == Rank::Eight);
-                REQUIRE(((square.file == File::C) || (square.file == File::F)));
+                REQUIRE(((square.file == File::C) or (square.file == File::F)));
             }
         }
 
@@ -422,8 +422,8 @@ TEST_CASE("Center mask", TAGS)
     STATIC_REQUIRE(center.count() == 4uz);
 
     for (const auto [file, rank] : center.squares()) {
-        REQUIRE(((file == File::D) || (file == File::E)));
-        REQUIRE(((rank == Rank::Four) || (rank == Rank::Five)));
+        REQUIRE(((file == File::D) or (file == File::E)));
+        REQUIRE(((rank == Rank::Four) or (rank == Rank::Five)));
     }
 }
 

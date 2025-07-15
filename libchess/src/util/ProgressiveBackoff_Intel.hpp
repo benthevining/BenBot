@@ -12,17 +12,53 @@
  * ======================================================================================
  */
 
-#include <catch2/catch_test_macros.hpp>
-#include <libchess/notation/Algebraic.hpp>
-#include <libchess/notation/FEN.hpp>
+#pragma once
 
-static constexpr auto TAGS { "[moves][EnPassant]" };
+#include <cstddef> // IWYU pragma: keep - for size_t
+#include <emmintrin.h>
+#include <functional>
+#include <thread>
 
-TEST_CASE("En passant - illegal if capture reveals check", TAGS)
+namespace chess::util {
+
+using std::size_t;
+
+template <size_t N0, size_t N1, size_t N2>
+void progressive_backoff_intel(std::function<bool()> pred)
 {
-    const auto position = chess::notation::from_fen("4k3/8/8/p1K1Pp1r/Pp5p/6pP/6P1/8 w - f6 0 1");
+    for (auto i = 0uz; i < N0; ++i) {
+        if (pred())
+            return;
+    }
 
-    const auto move = chess::notation::from_alg(position, "exf6");
+    for (auto i = 0uz; i < N1; ++i) {
+        if (pred())
+            return;
 
-    REQUIRE(not position.is_legal(move));
+        _mm_pause();
+    }
+
+    while (true) {
+        for (auto i = 0uz; i < N2; ++i) {
+            if (pred())
+                return;
+
+            // do not roll these into a loop: not every compiler unrolls it
+            _mm_pause();
+            _mm_pause();
+            _mm_pause();
+            _mm_pause();
+            _mm_pause();
+            _mm_pause();
+            _mm_pause();
+            _mm_pause();
+            _mm_pause();
+            _mm_pause();
+        }
+
+        // waiting longer than we should, let's give other threads a chance to recover
+        std::this_thread::yield();
+    }
 }
+
+} // namespace chess::util

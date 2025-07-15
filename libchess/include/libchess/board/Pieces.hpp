@@ -190,7 +190,7 @@ constexpr bool Pieces::has_bishop_pair() const noexcept
     // it's possible that we have 2 bishops of the same color
 
     return (bishops & masks::LIGHT_SQUARES).any()
-        && (bishops & masks::DARK_SQUARES).any();
+       and (bishops & masks::DARK_SQUARES).any();
 }
 
 constexpr Square Pieces::get_king_location() const noexcept
@@ -202,7 +202,7 @@ constexpr Square Pieces::get_king_location() const noexcept
 
 constexpr std::optional<PieceType> Pieces::get_piece_on(const Square square) const noexcept
 {
-    if (! occupied.test(square))
+    if (not occupied.test(square))
         return std::nullopt;
 
     static constexpr auto allTypes = magic_enum::enum_values<PieceType>();
@@ -227,7 +227,7 @@ constexpr void Pieces::capture_at(const Square square) noexcept
     const auto idx = square.index();
 
     // if we're trying to capture the king, then an illegal move has already been played
-    assert(! king.test(idx));
+    assert(not king.test(idx));
 
     pawns.unset(idx);
     knights.unset(idx);

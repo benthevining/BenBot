@@ -12,53 +12,31 @@
  * ======================================================================================
  */
 
-#include <libchess/board/Bitboard.hpp>
-#include <magic_enum/magic_enum.hpp>
-#include <ranges>
-#include <string>
-#include <string_view>
-
-namespace chess::board {
-
-/* Example output of empty board:
-
-    | | | | | | | | |
-    | | | | | | | | |
-    | | | | | | | | |
-    | | | | | | | | |
-    | | | | | | | | |
-    | | | | | | | | |
-    | | | | | | | | |
-    | | | | | | | | |
-
-    A1 is bottom left, H8 is top right
-
-    Occupied squares simply get an x inside them
+/** @file
+    This file provides some threading and synchronization utilities.
+    @ingroup util
  */
-std::string print_ascii(const Bitboard board)
-{
-    static constexpr std::string_view separator { "|" };
-    static constexpr std::string_view emptySquare { " |" };
-    static constexpr std::string_view occupiedSquare { "x|" };
 
-    std::string result;
+#pragma once
 
-    result.reserve(144uz);
+#include <functional>
 
-    for (const auto rank : std::views::reverse(magic_enum::enum_values<Rank>())) {
-        result.append(separator);
+namespace chess::util {
 
-        for (const auto file : magic_enum::enum_values<File>()) {
-            if (board.test(Square { .file = file, .rank = rank }))
-                result.append(occupiedSquare);
-            else
-                result.append(emptySquare);
-        }
+/** Blocks the calling thread until ``pred`` returns true.
+    Blocking is implemented by spinning on the predicate and
+    using a progressive backoff strategy.
 
-        result.append("\n");
-    }
+    This progressive backoff strategy avoids wasting energy,
+    and allows other threads to make progress by yielding the
+    waiting thread after a certain amount of time. This time
+    is chosen to be about 1 millisecond.
 
-    return result;
-}
+    On platforms other than x86, x86_64, or arm64, a simple
+    implementation will be used.
 
-} // namespace chess::board
+    @ingroup util
+ */
+void progressive_backoff(std::function<bool()> pred);
+
+} // namespace chess::util
