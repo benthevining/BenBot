@@ -83,6 +83,9 @@ private:
 
     void run_perft(string_view arguments) const;
 
+    void run_bench(string_view arguments);
+    void do_bench(string_view epdText);
+
     void make_null_move();
 
     void print_help() const;
@@ -117,7 +120,7 @@ private:
     };
 
     // clang-format off
-    std::array<CustomCommand, 7uz> customCommands {
+    std::array<CustomCommand, 8uz> customCommands {
         CustomCommand {
             .name   = "loadbook",
             .action = [this](const string_view args) { load_book_file(args); },
@@ -145,6 +148,12 @@ private:
             .action = [this](const string_view args) { run_perft(args); },
             .description = "Computes perft of the current position to the given depth",
             .argsHelp = "<N>"
+        },
+        CustomCommand {
+            .name = "bench",
+            .action = [this](const string_view args){ run_bench(args); },
+            .description = "Runs a search and reports total nodes and NPS",
+            .argsHelp = "[<epdPath>]"
         },
         CustomCommand {
             .name = "compiler",

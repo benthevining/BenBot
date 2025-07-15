@@ -24,6 +24,8 @@ FetchContent_MakeAvailable (cmrc)
 cmrc_add_resource_library (
         ben_bot_resources
         ALIAS ben_bot::resources
-        license_header.txt book.pgn
+        license_header.txt
+        book.pgn
+        bench.epd
 )
 # cmake-format: on

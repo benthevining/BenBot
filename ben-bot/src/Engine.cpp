@@ -17,6 +17,7 @@
 #include <exception>
 #include <iostream>
 #include <libchess/moves/Perft.hpp>
+#include <libchess/notation/EPD.hpp>
 #include <libchess/notation/UCI.hpp>
 #include <libchess/util/Files.hpp>
 #include <libchess/util/Strings.hpp>
@@ -120,6 +121,23 @@ void Engine::run_perft(const string_view arguments) const
     perft_print_root_nodes(result);
     println();
     perft_print_results(result);
+}
+
+void Engine::run_bench(string_view arguments)
+{
+    arguments = chess::util::trim(arguments);
+
+    if (arguments.empty()) {
+        do_bench(get_bench_epd_text());
+    } else {
+        do_bench(
+            chess::util::load_file_as_string(path { arguments }));
+    }
+}
+
+void Engine::do_bench(const string_view epdText)
+{
+    const auto positions = chess::notation::parse_all_epds(epdText);
 }
 
 void Engine::make_null_move()
