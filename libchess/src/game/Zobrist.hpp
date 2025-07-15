@@ -39,6 +39,8 @@ struct CastlingRightsChanges final {
     bool whiteQueenside { false };
     bool blackKingside { false };
     bool blackQueenside { false };
+
+    [[nodiscard]] Position::Hash update_hash(Position::Hash value) const noexcept;
 };
 
 [[nodiscard, gnu::const]] Position::Hash update(

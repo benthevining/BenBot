@@ -190,7 +190,7 @@ constexpr bool Pieces::has_bishop_pair() const noexcept
     // it's possible that we have 2 bishops of the same color
 
     return (bishops & masks::LIGHT_SQUARES).any()
-        && (bishops & masks::DARK_SQUARES).any();
+       and (bishops & masks::DARK_SQUARES).any();
 }
 
 constexpr Square Pieces::get_king_location() const noexcept

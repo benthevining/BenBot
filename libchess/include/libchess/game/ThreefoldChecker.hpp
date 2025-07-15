@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <beman/inplace_vector/inplace_vector.hpp>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdint> // IWYU pragma: keep - for std::uint64_t
@@ -83,9 +84,12 @@ constexpr void ThreefoldChecker::push(const HashValue newHash)
     if (history.size() < history.capacity())
         history.emplace_back(0uz);
 
-    // move all elements back
-    for (auto idx = history.size() - 1uz; idx > 0uz; --idx)
-        history.at(idx) = history.at(idx - 1uz);
+    // move the last element to the front,
+    // and move all other elements back 1
+    std::ranges::rotate(
+        history.begin(),
+        history.end() - 1,
+        history.end());
 
     history.front() = newHash;
 }

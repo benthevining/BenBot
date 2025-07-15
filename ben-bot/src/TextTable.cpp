@@ -14,6 +14,7 @@
 
 #include "TextTable.hpp"
 #include <algorithm>
+#include <numeric>
 #include <ranges>
 #include <span>
 #include <string>
@@ -82,12 +83,11 @@ string TextTable::to_string() const
 
 size_t TextTable::num_columns() const
 {
-    size_t maxColummns { 0uz };
-
-    for (const auto& row : rows)
-        maxColummns = std::max(maxColummns, row.get_columns().size()); // cppcheck-suppress useStlAlgorithm
-
-    return maxColummns;
+    return std::transform_reduce(
+        rows.begin(), rows.end(),
+        0uz,
+        [](const auto first, const auto second) { return std::max(first, second); },
+        [](const Row& row) { return row.get_columns().size(); });
 }
 
 std::vector<size_t> TextTable::get_column_widths() const

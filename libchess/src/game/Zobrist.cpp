@@ -25,7 +25,6 @@
 #include <magic_enum/magic_enum.hpp>
 #include <numeric>
 #include <optional>
-#include <ranges>
 #include <utility>
 
 namespace chess::game::zobrist {
@@ -233,16 +232,36 @@ namespace {
     [[nodiscard, gnu::const]] constexpr Hash add_piece_positions(
         const Hash prevValue, const PieceType type, const Position& position)
     {
-        const auto keys = position.pieces_for<Side>().get_type(type).squares()
-                        | std::views::transform([type](const Square square) {
-                              return piece_key(type, Side, square);
-                          });
+        const auto squares = position.pieces_for<Side>().get_type(type).squares();
 
-        return std::reduce(
-            keys.begin(), keys.end(), prevValue, std::bit_xor {});
+        // map squares to piece keys, then fold left applying ^= to prevValue
+        return std::transform_reduce(
+            squares.begin(), squares.end(),
+            prevValue,
+            std::bit_xor {},
+            [type](const Square square) {
+                return piece_key(type, Side, square);
+            });
     }
 
 } // namespace
+
+Hash CastlingRightsChanges::update_hash(Hash value) const noexcept
+{
+    if (whiteKingside)
+        value ^= WHITE_KINGSIDE_CASTLE;
+
+    if (whiteQueenside)
+        value ^= WHITE_QUEENSIDE_CASTLE;
+
+    if (blackKingside)
+        value ^= BLACK_KINGSIDE_CASTLE;
+
+    if (blackQueenside)
+        value ^= BLACK_QUEENSIDE_CASTLE;
+
+    return value;
+}
 
 Hash calculate(const Position& pos)
 {
@@ -331,17 +350,7 @@ Hash update(
             value ^= board::masks::queenside_castle_rook_pos_mask(pos.sideToMove).to_int();
     }
 
-    if (rightsChanges.whiteKingside)
-        value ^= WHITE_KINGSIDE_CASTLE;
-
-    if (rightsChanges.whiteQueenside)
-        value ^= WHITE_QUEENSIDE_CASTLE;
-
-    if (rightsChanges.blackKingside)
-        value ^= BLACK_KINGSIDE_CASTLE;
-
-    if (rightsChanges.blackQueenside)
-        value ^= BLACK_QUEENSIDE_CASTLE;
+    value = rightsChanges.update_hash(value);
 
     return value;
 }
