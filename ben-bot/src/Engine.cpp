@@ -14,9 +14,14 @@
 
 #include "Engine.hpp"
 #include "Data.hpp"
+#include <cassert>
+#include <chrono>
+#include <cmath>
 #include <exception>
 #include <iostream>
+#include <libbenbot/search/Search.hpp>
 #include <libchess/moves/Perft.hpp>
+#include <libchess/notation/EPD.hpp>
 #include <libchess/notation/UCI.hpp>
 #include <libchess/util/Files.hpp>
 #include <libchess/util/Strings.hpp>
@@ -120,6 +125,77 @@ void Engine::run_perft(const string_view arguments) const
     perft_print_root_nodes(result);
     println();
     perft_print_results(result);
+}
+
+namespace {
+
+    // We create a separate context to do bench searches, so that we don't need to
+    // mess with changing the main searcher's callbacks, or setting an "isBench"
+    // flag to be checked in the callbacks. The simplest approach is to just
+    // block in this method - this function creates a search context, executes it,
+    // and blocks waiting for the result.
+    void do_bench(
+        const string_view epdText,
+        const size_t      defaultDepth)
+    {
+        auto totalNodes { 0uz };
+
+        std::chrono::milliseconds totalTime { 0 };
+
+        search::Context benchSearcher {
+            search::Callbacks {
+                .onSearchComplete = [&totalNodes, &totalTime](const search::Callbacks::Result& res) {
+                    totalNodes += res.nodesSearched;
+                    totalTime += res.duration;
+                } }
+        };
+
+        auto posNum { 0uz };
+
+        for (const auto& position : chess::notation::parse_all_epds(epdText)) {
+            benchSearcher.options.position = position.position;
+            benchSearcher.options.movesToSearch.clear();
+
+            if (const auto it = position.operations.find("depth");
+                it != position.operations.end()) {
+                benchSearcher.options.depth = chess::util::int_from_string(it->second, defaultDepth);
+            } else {
+                benchSearcher.options.depth = defaultDepth;
+            }
+
+            println("Searching for position #{}...", posNum);
+
+            benchSearcher.search();
+            benchSearcher.wait();
+
+            ++posNum;
+        }
+
+        const auto seconds = static_cast<double>(totalTime.count()) * 0.001;
+
+        assert(seconds > 0.);
+
+        const auto nps = static_cast<double>(totalNodes) / seconds;
+
+        println("Total nodes: {}", totalNodes);
+        println("NPS: {}", static_cast<size_t>(std::round(nps)));
+    }
+
+} // namespace
+
+void Engine::run_bench(string_view arguments)
+{
+    const auto [depth, filePath] = chess::util::split_at_first_space(arguments);
+
+    const auto defaultDepth = chess::util::int_from_string(depth, 4uz);
+
+    if (filePath.empty()) {
+        do_bench(get_bench_epd_text(), defaultDepth);
+    } else {
+        do_bench(
+            chess::util::load_file_as_string(path { filePath }),
+            defaultDepth);
+    }
 }
 
 void Engine::make_null_move()
