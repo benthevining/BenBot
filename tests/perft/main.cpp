@@ -142,7 +142,7 @@ namespace {
         output << json.dump(1);
 
         println("Wrote JSON results to {}", path.string()); // NOLINT(build/include_what_you_use)
-        println("");
+        println();
     }
 
     void print_root_nodes(const moves::PerftResult& result)
@@ -166,7 +166,7 @@ namespace {
         println("Checkmates: {}", result.checkmates);
         println("Stalemates: {}", result.stalemates);
 
-        println("");
+        println();
         println("Search time: {}", wallTime);
     }
 
@@ -177,7 +177,7 @@ namespace {
         println("Starting position:");
         println("{}", game::print_utf8(options.startingPosition));
         println("Running perft depth {}...", options.depth);
-        println("");
+        println();
 
         const auto startTime = Clock::now();
 
@@ -191,7 +191,7 @@ namespace {
 
         print_root_nodes(result);
 
-        println("");
+        println();
 
         print_results(result, wallTime);
     }

@@ -81,6 +81,8 @@ private:
 
     void load_book_file(string_view arguments);
 
+    void run_perft(string_view arguments) const;
+
     void make_null_move();
 
     void print_help() const;
@@ -115,12 +117,10 @@ private:
     };
 
     // clang-format off
-    std::array<CustomCommand, 6uz> customCommands {
+    std::array<CustomCommand, 7uz> customCommands {
         CustomCommand {
             .name   = "loadbook",
-            .action = [this](const string_view args) {
-                load_book_file(args);
-            },
+            .action = [this](const string_view args) { load_book_file(args); },
             .description = "Reads the given PGN file into the engine's openings database",
             .argsHelp = "<path> [novars]"
         },
@@ -138,6 +138,12 @@ private:
             .name = "options",
             .action = CustomCommand::void_cb([this] { print_options(); }),
             .description = "Dump current UCI option values"
+        },
+        CustomCommand {
+            .name = "perft",
+            .action = [this](const string_view args) { run_perft(args); },
+            .description = "Computes perft of the current position to the given depth",
+            .argsHelp = "<N>"
         },
         CustomCommand {
             .name = "compiler",

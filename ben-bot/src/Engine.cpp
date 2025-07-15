@@ -16,12 +16,16 @@
 #include "Data.hpp"
 #include <exception>
 #include <iostream>
+#include <libchess/moves/Perft.hpp>
+#include <libchess/notation/UCI.hpp>
 #include <libchess/util/Files.hpp>
 #include <libchess/util/Strings.hpp>
 #include <print>
 #include <utility>
 
 namespace ben_bot {
+
+using std::println;
 
 void Engine::new_game(const bool firstCall)
 {
@@ -50,8 +54,8 @@ void Engine::handle_custom_command(
         return;
     }
 
-    std::println(std::cerr, "Unknown UCI command: {}", command);
-    std::println("Type 'help' for a list of supported commands");
+    println(std::cerr, "Unknown UCI command: {}", command);
+    println("Type 'help' for a list of supported commands");
 }
 
 void Engine::load_book_file(const string_view arguments)
@@ -69,12 +73,52 @@ void Engine::load_book_file(const string_view arguments)
             chess::util::load_file_as_string(file),
             not discardVariations);
     } catch (const std::exception& except) {
-        std::println(std::cerr,
+        println(std::cerr,
             "Error reading from opening book file at path: {}",
             file.string()); // NOLINT(build/include_what_you_use)
 
-        std::println(std::cerr, "{}", except.what());
+        println(std::cerr, "{}", except.what());
     }
+}
+
+namespace {
+    using chess::moves::PerftResult;
+
+    void perft_print_root_nodes(const PerftResult& result)
+    {
+        for (const auto [move, numChildren] : result.rootNodes) {
+            println("{} {}",
+                chess::notation::to_uci(move), numChildren);
+        }
+    }
+
+    void perft_print_results(const PerftResult& result)
+    {
+        println("Nodes: {}", result.nodes);
+        println("Captures: {}", result.captures);
+        println("En passant captures: {}", result.enPassantCaptures);
+        println("Castles: {}", result.castles);
+        println("Promotions: {}", result.promotions);
+        println("Checks: {}", result.checks);
+        println("Checkmates: {}", result.checkmates);
+        println("Stalemates: {}", result.stalemates);
+    }
+} // namespace
+
+void Engine::run_perft(const string_view arguments) const
+{
+    const auto depth = chess::util::int_from_string(
+        chess::util::trim(arguments),
+        4uz);
+
+    println("Running perft depth {}...", depth);
+
+    const auto result = chess::moves::perft(
+        depth, searcher.context.options.position);
+
+    perft_print_root_nodes(result);
+    println();
+    perft_print_results(result);
 }
 
 void Engine::make_null_move()
