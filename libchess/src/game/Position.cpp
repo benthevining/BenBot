@@ -23,12 +23,7 @@
 #include <libchess/moves/Move.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/pieces/Colors.hpp>
-#include <libchess/pieces/UTF8.hpp>
-#include <magic_enum/magic_enum.hpp>
 #include <optional>
-#include <ranges>
-#include <string>
-#include <string_view>
 #include <utility>
 
 namespace chess::game {
@@ -264,53 +259,6 @@ std::optional<Result> Position::get_result() const
     }
 
     return Result::WhiteWon;
-}
-
-std::string print_utf8(const Position& position)
-{
-    namespace utf8_pieces = pieces::utf8;
-
-    using board::Rank;
-    using board::Square;
-
-    static constexpr std::string_view separator { "|" };
-    static constexpr std::string_view emptySquare { " |" };
-
-    const auto& whitePieces = position.whitePieces;
-    const auto& blackPieces = position.blackPieces;
-
-    std::string result;
-
-    result.reserve(208uz);
-
-    for (const auto rank : std::views::reverse(magic_enum::enum_values<Rank>())) {
-        result.append(separator);
-
-        for (const auto file : magic_enum::enum_values<File>()) {
-            const Square square { .file = file, .rank = rank };
-
-            if (const auto piece = whitePieces.get_piece_on(square)) {
-                result.append(utf8_pieces::white::get(*piece));
-                result.append(separator);
-                continue;
-            }
-
-            if (const auto piece = blackPieces.get_piece_on(square)) {
-                result.append(utf8_pieces::black::get(*piece));
-                result.append(separator);
-            } else {
-                result.append(emptySquare);
-            }
-        }
-
-        result.append(1uz, ' ');
-        result.append(1uz, rank_to_char(rank));
-        result.append(1uz, '\n');
-    }
-
-    result.append(" a b c d e f g h");
-
-    return result;
 }
 
 } // namespace chess::game
