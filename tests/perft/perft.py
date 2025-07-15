@@ -115,3 +115,5 @@ engine.communicate()
 
 print(f'{num_passed} depths passed')
 print(f'{num_failed} depths failed')
+
+sys.exit(num_failed)
