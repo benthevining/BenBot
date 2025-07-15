@@ -112,6 +112,8 @@ namespace {
         println("Promotions: {}", result.promotions);
         println("Checks: {}", result.checks);
         println("Checkmates: {}", result.checkmates);
+
+        // NB. the python wrapper script relies on this being printed last
         println("Stalemates: {}", result.stalemates);
     }
 } // namespace
