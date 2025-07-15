@@ -17,8 +17,13 @@ Results are tracked via the [CDash dashboard](https://my.cdash.org/index.php?pro
 
 ## Dependencies
 
-* [Catch2](https://github.com/catchorg/Catch2), unit test framework
-* [nlohmann_json](https://json.nlohmann.me/), needed by `rampart` for outputting results as JSON
+### Programs
 * Python interpreter, needed for wrapper scripts
 * [fastchess](https://github.com/Disservin/fastchess), for UCI compliance testing and SPRT testing
+
+### C++ libraries
+* [Catch2](https://github.com/catchorg/Catch2), unit test framework
+* [nlohmann_json](https://json.nlohmann.me/), needed by `rampart` for outputting results as JSON
+
+### Python libraries
 * [python-chess](https://python-chess.readthedocs.io/en/latest/index.html), used by the position solver wrapper script
