@@ -10,11 +10,9 @@
 #
 # ======================================================================================
 
-add_executable (position_solver)
-
-target_link_libraries (position_solver PRIVATE ben_bot::libbenbot)
-
-target_sources (position_solver PRIVATE main.cpp)
+if (NOT TARGET Python::Interpreter)
+    return ()
+endif ()
 
 file (GLOB testcase_files LIST_DIRECTORIES false CONFIGURE_DEPENDS
                                                  "${CMAKE_CURRENT_LIST_DIR}/data/*.epd"
@@ -27,15 +25,14 @@ foreach (epd_file IN LISTS testcase_files)
 
     file (STRINGS "${epd_file}" epd_lines)
 
-    set (epd_idx 0)
+    list (LENGTH epd_lines num_epds)
 
-    foreach (epd IN LISTS epd_lines)
-        set (test_name "ben_bot.position_solver.${filename}.${epd_idx}")
+    math (EXPR num_epds "${num_epds} - 1") # because RANGE includes the end value
 
-        add_test (NAME "${test_name}" COMMAND position_solver "${epd_file}" "${epd_idx}")
-
-        set_tests_properties ("${test_name}" PROPERTIES REQUIRED_FILES "${epd_file}")
-
-        math (EXPR epd_idx "${epd_idx} + 1")
+    foreach (epd_idx RANGE "${num_epds}")
+        add_test (NAME "ben_bot.position_solver.${filename}.${epd_idx}"
+                  COMMAND Python::Interpreter "${CMAKE_CURRENT_LIST_DIR}/solver.py" "${epd_file}"
+                          "${epd_idx}" "$<TARGET_FILE:ben_bot>"
+        )
     endforeach ()
 endforeach ()
