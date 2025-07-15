@@ -62,8 +62,9 @@ namespace {
         }
     }
 
-    [[nodiscard, gnu::const]] constexpr std::optional<Square> get_en_passant_target_square(
+    [[nodiscard, gnu::const]] constexpr auto get_en_passant_target_square(
         const Move& move, const bool isWhite) noexcept
+        -> std::optional<Square>
     {
         if (move.piece != PieceType::Pawn
             or std::cmp_not_equal(rank_distance(move.from, move.to), 2uz)) {
@@ -77,8 +78,9 @@ namespace {
         };
     }
 
-    [[nodiscard]] constexpr zobrist::CastlingRightsChanges update_castling_rights(
+    [[nodiscard]] constexpr auto update_castling_rights(
         Position& pos, const bool isWhite, const Move& move) noexcept
+        -> zobrist::CastlingRightsChanges
     {
         const auto whiteOldRights { pos.whiteCastlingRights };
         const auto blackOldRights { pos.blackCastlingRights };
@@ -104,8 +106,9 @@ namespace {
         };
     }
 
-    [[nodiscard, gnu::const]] constexpr uint_least8_t tick_halfmove_clock(
+    [[nodiscard, gnu::const]] constexpr auto tick_halfmove_clock(
         const bool isPawnMove, const bool isCapture, const uint_least8_t prevValue) noexcept
+        -> uint_least8_t
     {
         if (isCapture or isPawnMove)
             return UINT8_C(0);

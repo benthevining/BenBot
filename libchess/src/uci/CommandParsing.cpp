@@ -96,8 +96,7 @@ namespace {
 
     // consumes one argument from ``options``,
     // and returns pair of the option value & the rest of the ``options`` that are left
-    [[nodiscard]] std::pair<size_t, string_view>
-    parse_int_value(const string_view options)
+    [[nodiscard]] auto parse_int_value(const string_view options) -> std::pair<size_t, string_view>
     {
         const auto [valueStr, rest] = split_at_first_space(options);
 
@@ -109,9 +108,9 @@ namespace {
 
     // consumes all the moves following the "searchmoves" token,
     // and returns the rest of the ``options`` that are left
-    [[nodiscard]] string_view parse_searchmoves(
+    [[nodiscard]] auto parse_searchmoves(
         string_view options, const Position& currentPosition,
-        std::output_iterator<moves::Move> auto outputIt)
+        std::output_iterator<moves::Move> auto outputIt) -> string_view
     {
         using namespace std::literals::string_view_literals; // NOLINT
 
