@@ -14,9 +14,11 @@
 
 #include "Engine.hpp"
 #include "Data.hpp"
+#include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <cmath>
+#include <cstddef> // IWYU pragma: keep - for size_t
 #include <exception>
 #include <iostream>
 #include <libbenbot/search/Search.hpp>
@@ -30,7 +32,11 @@
 
 namespace ben_bot {
 
+namespace util     = chess::util;
+namespace notation = chess::notation;
+
 using std::println;
+using std::size_t;
 
 void Engine::new_game(const bool firstCall)
 {
@@ -65,17 +71,17 @@ void Engine::handle_custom_command(
 
 void Engine::load_book_file(const string_view arguments)
 {
-    const auto [firstWord, rest] = chess::util::split_at_first_space(arguments);
+    const auto [firstWord, rest] = util::split_at_first_space(arguments);
 
     const path file { firstWord };
 
-    const bool discardVariations = chess::util::trim(rest) == "novars";
+    const bool discardVariations = util::trim(rest) == "novars";
 
     wait();
 
     try {
         searcher.context.openingBook.book.add_from_pgn(
-            chess::util::load_file_as_string(file),
+            util::load_file_as_string(file),
             not discardVariations);
     } catch (const std::exception& except) {
         println(std::cerr,
@@ -93,7 +99,7 @@ namespace {
     {
         for (const auto [move, numChildren] : result.rootNodes) {
             println("{} {}",
-                chess::notation::to_uci(move), numChildren);
+                notation::to_uci(move), numChildren);
         }
     }
 
@@ -112,8 +118,8 @@ namespace {
 
 void Engine::run_perft(const string_view arguments) const
 {
-    const auto depth = chess::util::int_from_string(
-        chess::util::trim(arguments),
+    const auto depth = util::int_from_string(
+        util::trim(arguments),
         4uz);
 
     println("Running perft depth {}...", depth);
@@ -152,13 +158,13 @@ namespace {
 
         auto posNum { 0uz };
 
-        for (const auto& position : chess::notation::parse_all_epds(epdText)) {
+        for (const auto& position : notation::parse_all_epds(epdText)) {
             benchSearcher.options.position = position.position;
             benchSearcher.options.movesToSearch.clear();
 
             if (const auto it = position.operations.find("depth");
                 it != position.operations.end()) {
-                benchSearcher.options.depth = chess::util::int_from_string(it->second, defaultDepth);
+                benchSearcher.options.depth = util::int_from_string(it->second, defaultDepth);
             } else {
                 benchSearcher.options.depth = defaultDepth;
             }
@@ -185,15 +191,15 @@ namespace {
 
 void Engine::run_bench(string_view arguments)
 {
-    const auto [depth, filePath] = chess::util::split_at_first_space(arguments);
+    const auto [depth, filePath] = util::split_at_first_space(arguments);
 
-    const auto defaultDepth = chess::util::int_from_string(depth, 4uz);
+    const auto defaultDepth = util::int_from_string(depth, 4uz);
 
     if (filePath.empty()) {
         do_bench(get_bench_epd_text(), defaultDepth);
     } else {
         do_bench(
-            chess::util::load_file_as_string(path { filePath }),
+            util::load_file_as_string(path { filePath }),
             defaultDepth);
     }
 }
