@@ -388,9 +388,6 @@ constexpr Position Position::empty()
 
 inline bool Position::is_threefold_repetition() const noexcept
 {
-    if (halfmoveClock < 8uz)
-        return false;
-
     return threefoldChecker.is_threefold();
 }
 
