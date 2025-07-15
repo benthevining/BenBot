@@ -10,14 +10,37 @@
 #
 # ======================================================================================
 
-# install using: pip install -r config/requirements.txt
+from pathlib import Path
+import sys
+import chess.engine
 
-# cli tools
-bump-my-version >= 1.0.2
-cmake >= 3.31.0
-ninja >= 1.11.1.3
-pre-commit >= 4.0.1
-rust-just >= 1.39.0
+TESTCASE_FILE = Path(sys.argv[1])
+LINE_IDX = int(sys.argv[2].strip())
+ENGINE_PATH = Path(sys.argv[3])
 
-# needed for test scripts
-python-chess >= 1.999
+with open(TESTCASE_FILE, 'r') as file:
+    epd_data = file.readlines()[LINE_IDX]
+
+board = chess.Board()
+
+operations = board.set_epd(epd_data)
+
+engine = chess.engine.SimpleEngine.popen_uci(ENGINE_PATH)
+
+result = engine.play(
+    board,
+    chess.engine.Limit(depth=operations['depth'])
+)
+
+engine.quit()
+
+expectedMove = operations['bm'][0]
+
+if result.move == expectedMove:
+    print('Passed!')
+    sys.exit(0)
+
+print('FAILED!')
+print(f'Expected {board.san(expectedMove)}, got {board.san(result.move)}')
+
+sys.exit(1)
