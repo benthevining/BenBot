@@ -87,7 +87,7 @@ private:
 
     void print_help() const;
     void print_options() const;
-    void print_current_position() const;
+    void print_current_position(string_view arguments) const;
 
     static void print_compiler_info();
 
@@ -126,8 +126,9 @@ private:
         },
         CustomCommand {
             .name = "showpos",
-            .action = CustomCommand::void_cb([this] { print_current_position(); }),
-            .description = "Prints the current position"
+            .action = [this](const string_view args){ print_current_position(args); },
+            .description = "Prints the current position",
+            .argsHelp = "[utf8]"
         },
         CustomCommand {
             .name = "makenull",

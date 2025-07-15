@@ -27,6 +27,7 @@
 #include <libchess/game/Position.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/UCI.hpp>
+#include <libchess/util/Strings.hpp>
 #include <optional>
 #include <print>
 #include <string>
@@ -218,11 +219,15 @@ void Engine::print_options() const
     println("{}", table.to_string());
 }
 
-void Engine::print_current_position() const
+void Engine::print_current_position(const string_view arguments) const
 {
     const auto& pos = searcher.context.options.position;
 
-    println("{}", print_utf8(pos));
+    const bool utf8 = chess::util::trim(arguments) == "utf8";
+
+    println("{}",
+        utf8 ? print_utf8(pos) : print_ascii(pos));
+
     println();
     println("FEN: {}", chess::notation::to_fen(pos));
     println("Zobrist key: {}", pos.hash);

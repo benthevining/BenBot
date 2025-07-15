@@ -356,8 +356,20 @@ private:
 
     @relates Position
     @ingroup game
+    @see print_ascii()
  */
 [[nodiscard]] std::string print_utf8(const Position& position);
+
+/** Creates an ASCII representation of the given position.
+    The returned string is meant to be interpreted visually by a human, probably for debugging purposes.
+    The board is drawn as a simple set of cells separated by ``|`` characters. Pieces are represented
+    using letters (uppercase for white, lowercase for black).
+
+    @relates Position
+    @ingroup game
+    @see print_utf8()
+ */
+[[nodiscard]] std::string print_ascii(const Position& position);
 
 /*
                          ___                           ,--,

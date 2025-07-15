@@ -15,11 +15,13 @@
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
+#include <libchess/pieces/PieceTypes.hpp>
 #include <libchess/pieces/UTF8.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <ranges>
 #include <string>
 #include <string_view>
+#include <type_traits>
 
 /* Example output of empty board:
 
@@ -54,7 +56,12 @@ namespace {
             for (const auto file : magic_enum::enum_values<board::File>()) {
                 const board::Square square { .file = file, .rank = rank };
 
-                result.append(getSquareText(square));
+                if constexpr (std::is_same_v<char, decltype(getSquareText(square))>) {
+                    result.append(1uz, getSquareText(square));
+                } else {
+                    result.append(getSquareText(square));
+                }
+
                 result.append(1uz, '|');
             }
 
@@ -88,9 +95,10 @@ namespace board {
 } // namespace board
 
 namespace game {
+    using board::Square;
+
     std::string print_utf8(const Position& position)
     {
-        using board::Square;
         namespace utf8_pieces = pieces::utf8;
 
         return generate_board_string(
@@ -105,6 +113,22 @@ namespace game {
             },
             true);
     }
+
+    std::string print_ascii(const Position& position)
+    {
+        return generate_board_string(
+            [&position](const Square& square) {
+                if (const auto piece = position.whitePieces.get_piece_on(square))
+                    return pieces::to_char(*piece, true);
+
+                if (const auto piece = position.blackPieces.get_piece_on(square))
+                    return pieces::to_char(*piece, false);
+
+                return ' ';
+            },
+            true);
+    }
+
 } // namespace game
 
 } // namespace chess
