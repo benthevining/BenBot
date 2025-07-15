@@ -53,7 +53,7 @@ TEST_CASE("Pseudo-legal - pawn pushes", TAGS)
 
             STATIC_REQUIRE(pushes.count() == 7uz);
 
-            STATIC_REQUIRE(! pushes.test(Square { File::A, Rank::Three }));
+            STATIC_REQUIRE(not pushes.test(Square { File::A, Rank::Three }));
         }
 
         SECTION("From D7")
@@ -93,7 +93,7 @@ TEST_CASE("Pseudo-legal - pawn pushes", TAGS)
 
             STATIC_REQUIRE(pushes.count() == 7uz);
 
-            STATIC_REQUIRE(! pushes.test(Square { File::C, Rank::Six }));
+            STATIC_REQUIRE(not pushes.test(Square { File::C, Rank::Six }));
         }
 
         SECTION("From E2")
@@ -427,8 +427,8 @@ TEST_CASE("Pseudo-legal - bishops", TAGS)
         REQUIRE(moves.count() == 9uz);
 
         REQUIRE(moves.test(Square { File::G, Rank::Seven }));
-        REQUIRE(! moves.test(Square { File::B, Rank::Two }));
-        REQUIRE(! moves.test(Square { File::G, Rank::One }));
+        REQUIRE(not moves.test(Square { File::B, Rank::Two }));
+        REQUIRE(not moves.test(Square { File::G, Rank::One }));
 
         REQUIRE(moves == Bitboard { 0X41221400142000 });
     }
@@ -452,8 +452,8 @@ TEST_CASE("Pseudo-legal - bishops", TAGS)
         REQUIRE(moves.count() == 7uz);
 
         REQUIRE(moves.test(Square { File::D, Rank::Three }));
-        REQUIRE(! moves.test(Square { File::C, Rank::Two }));
-        REQUIRE(! moves.test(Square { File::B, Rank::One }));
+        REQUIRE(not moves.test(Square { File::C, Rank::Two }));
+        REQUIRE(not moves.test(Square { File::B, Rank::One }));
 
         REQUIRE(moves == Bitboard { 0X10A000A010080000 });
     }

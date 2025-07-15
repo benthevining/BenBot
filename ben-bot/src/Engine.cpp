@@ -67,7 +67,7 @@ void Engine::load_book_file(const string_view arguments)
     try {
         searcher.context.openingBook.book.add_from_pgn(
             chess::util::load_file_as_string(file),
-            ! discardVariations);
+            not discardVariations);
     } catch (const std::exception& except) {
         std::println(std::cerr,
             "Error reading from opening book file at path: {}",

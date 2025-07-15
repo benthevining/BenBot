@@ -45,7 +45,9 @@ namespace {
 
     [[nodiscard]] std::string get_score_string(const Score score)
     {
-        if (! score.is_mate()) {
+        if (not score.is_mate()) {
+            [[likely]];
+
             // NB. we pass score.value directly here instead of going through
             // Score's formatter because that extra indirection appears to cost
             // enough time to observably cost some Elo
@@ -88,7 +90,7 @@ namespace {
         while (true) {
             const auto nextMove = transTable.get_best_response(position, bestMove);
 
-            if (! nextMove.has_value())
+            if (not nextMove.has_value())
                 break;
 
             result.append(1uz, ' ');
@@ -105,7 +107,7 @@ namespace {
     [[nodiscard]] std::string get_extra_stats_string(
         const Result& res, const bool isDebugMode)
     {
-        if ((! isDebugMode) || res.nodesSearched == 0uz)
+        if ((not isDebugMode) or (res.nodesSearched == 0uz))
             return {};
 
         auto get_pcnt = [totalNodes = static_cast<double>(res.nodesSearched)](const size_t value) {
@@ -121,7 +123,7 @@ namespace {
 
     [[nodiscard]] std::string get_ponder_move_string(const std::optional<Move> ponderMove)
     {
-        if (! ponderMove.has_value())
+        if (not ponderMove.has_value())
             return {};
 
         return std::format(

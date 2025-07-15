@@ -45,7 +45,7 @@ TEST_CASE("Move - castle_kingside()", TAGS)
         STATIC_REQUIRE(move.from == whiteKingStartSquare);
         STATIC_REQUIRE(move.to.rank == move.from.rank);
         STATIC_REQUIRE(move.piece == PieceType::King);
-        STATIC_REQUIRE(! move.is_promotion());
+        STATIC_REQUIRE(not move.is_promotion());
         STATIC_REQUIRE(move.is_castling());
     }
 
@@ -56,7 +56,7 @@ TEST_CASE("Move - castle_kingside()", TAGS)
         STATIC_REQUIRE(move.from == blackKingStartSquare);
         STATIC_REQUIRE(move.to.rank == move.from.rank);
         STATIC_REQUIRE(move.piece == PieceType::King);
-        STATIC_REQUIRE(! move.is_promotion());
+        STATIC_REQUIRE(not move.is_promotion());
         STATIC_REQUIRE(move.is_castling());
     }
 }
@@ -70,7 +70,7 @@ TEST_CASE("Move - castle_queenside()", TAGS)
         STATIC_REQUIRE(move.from == whiteKingStartSquare);
         STATIC_REQUIRE(move.to.rank == move.from.rank);
         STATIC_REQUIRE(move.piece == PieceType::King);
-        STATIC_REQUIRE(! move.is_promotion());
+        STATIC_REQUIRE(not move.is_promotion());
         STATIC_REQUIRE(move.is_castling());
     }
 
@@ -81,7 +81,7 @@ TEST_CASE("Move - castle_queenside()", TAGS)
         STATIC_REQUIRE(move.from == blackKingStartSquare);
         STATIC_REQUIRE(move.to.rank == move.from.rank);
         STATIC_REQUIRE(move.piece == PieceType::King);
-        STATIC_REQUIRE(! move.is_promotion());
+        STATIC_REQUIRE(not move.is_promotion());
         STATIC_REQUIRE(move.is_castling());
     }
 }
@@ -106,8 +106,8 @@ TEST_CASE("Move - promotion()", TAGS)
                 REQUIRE(*move.promotedType == PieceType::Queen);
 
                 REQUIRE(move.is_promotion());
-                REQUIRE(! move.is_under_promotion());
-                REQUIRE(! move.is_castling());
+                REQUIRE(not move.is_under_promotion());
+                REQUIRE(not move.is_castling());
             }
         }
 
@@ -127,8 +127,8 @@ TEST_CASE("Move - promotion()", TAGS)
                 REQUIRE(*move.promotedType == PieceType::Queen);
 
                 REQUIRE(move.is_promotion());
-                REQUIRE(! move.is_under_promotion());
-                REQUIRE(! move.is_castling());
+                REQUIRE(not move.is_under_promotion());
+                REQUIRE(not move.is_castling());
             }
         }
     }
@@ -149,7 +149,7 @@ TEST_CASE("Move - promotion()", TAGS)
 
                     REQUIRE(move.is_promotion());
                     REQUIRE(move.is_under_promotion());
-                    REQUIRE(! move.is_castling());
+                    REQUIRE(not move.is_castling());
                 }
             }
         }

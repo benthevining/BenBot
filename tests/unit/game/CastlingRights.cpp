@@ -38,7 +38,7 @@ TEST_CASE("Castling rights - king_moved()", TAGS)
 
     rights.king_moved();
 
-    REQUIRE(! rights.either());
+    REQUIRE(not rights.either());
 }
 
 TEST_CASE("Castling rights - rook_moved()", TAGS)
@@ -51,7 +51,7 @@ TEST_CASE("Castling rights - rook_moved()", TAGS)
     {
         rights.rook_moved(true);
 
-        REQUIRE(! rights.kingside);
+        REQUIRE(not rights.kingside);
         REQUIRE(rights.either());
     }
 
@@ -59,7 +59,7 @@ TEST_CASE("Castling rights - rook_moved()", TAGS)
     {
         rights.rook_moved(false);
 
-        REQUIRE(! rights.queenside);
+        REQUIRE(not rights.queenside);
         REQUIRE(rights.either());
     }
 }
@@ -79,7 +79,7 @@ TEST_CASE("Castling rights - lost when rook captured", TAGS)
 
         position.make_move(move);
 
-        REQUIRE(! position.whiteCastlingRights.kingside);
+        REQUIRE(not position.whiteCastlingRights.kingside);
     }
 
     SECTION("White - queenside")
@@ -92,7 +92,7 @@ TEST_CASE("Castling rights - lost when rook captured", TAGS)
 
         position.make_move(move);
 
-        REQUIRE(! position.whiteCastlingRights.queenside);
+        REQUIRE(not position.whiteCastlingRights.queenside);
     }
 
     SECTION("Black - kingside")
@@ -105,7 +105,7 @@ TEST_CASE("Castling rights - lost when rook captured", TAGS)
 
         position.make_move(move);
 
-        REQUIRE(! position.blackCastlingRights.kingside);
+        REQUIRE(not position.blackCastlingRights.kingside);
     }
 
     SECTION("Black - queenside")
@@ -118,6 +118,6 @@ TEST_CASE("Castling rights - lost when rook captured", TAGS)
 
         position.make_move(move);
 
-        REQUIRE(! position.blackCastlingRights.queenside);
+        REQUIRE(not position.blackCastlingRights.queenside);
     }
 }

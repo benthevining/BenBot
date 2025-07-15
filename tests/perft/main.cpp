@@ -102,7 +102,7 @@ namespace {
     {
         PerftOptions options {};
 
-        while (! args.empty()) {
+        while (not args.empty()) {
             const auto arg = args.front();
 
             args = args.subspan(1uz);
@@ -149,7 +149,7 @@ namespace {
         const PerftResult&  result,
         const seconds       wallTime)
     {
-        if (! options.jsonOutputPath.has_value())
+        if (not options.jsonOutputPath.has_value())
             return;
 
         nlohmann::json json;
@@ -239,7 +239,7 @@ namespace {
                 if (isCheck)
                     ++result.checks;
 
-                if (! moves::any_legal_moves(newPosition)) {
+                if (not moves::any_legal_moves(newPosition)) {
                     if (isCheck)
                         ++result.checkmates;
                     else
@@ -303,7 +303,7 @@ try {
     args = args.subspan(1uz);
 
     if (args.empty()
-        || std::ranges::contains(args, "--help")) {
+        or std::ranges::contains(args, "--help")) {
         chess::print_help(programName);
         return EXIT_FAILURE;
     }
