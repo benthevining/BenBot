@@ -61,7 +61,7 @@ Move from_uci(const Position& position, std::string_view text)
 
     const auto movedType = pieces.get_piece_on(result.from);
 
-    if (! movedType.has_value()) {
+    if (not movedType.has_value()) {
         throw std::invalid_argument {
             std::format(
                 "No piece for color {} can move from square {}",
@@ -72,7 +72,7 @@ Move from_uci(const Position& position, std::string_view text)
     result.piece = *movedType;
 
     // promotion
-    if (! text.empty()) {
+    if (not text.empty()) {
         [[unlikely]];
         result.promotedType = pieces::from_string(text);
     }

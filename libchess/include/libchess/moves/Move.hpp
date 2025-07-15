@@ -174,15 +174,15 @@ struct Move final {
 constexpr bool Move::is_under_promotion() const noexcept
 {
     return is_promotion()
-        && *promotedType != PieceType::Queen;
+       and *promotedType != PieceType::Queen;
 }
 
 constexpr bool Move::is_castling() const noexcept
 {
     return piece == PieceType::King
-        && std::cmp_greater(
-            file_distance(from, to),
-            1uz);
+       and std::cmp_greater(
+           file_distance(from, to),
+           1uz);
 }
 
 constexpr Move castle_kingside(const Color color) noexcept

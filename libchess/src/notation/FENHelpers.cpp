@@ -56,7 +56,7 @@ namespace {
         for (const auto file : enum_values<board::File>()) {
             const Square square { .file = file, .rank = rank };
 
-            if (! allOccupied.test(square)) {
+            if (not allOccupied.test(square)) {
                 ++consecutiveEmpty;
                 continue;
             }
@@ -101,7 +101,7 @@ void write_castling_rights(
     const game::CastlingRights& blackRights,
     string&                     output)
 {
-    if (whiteRights.neither() && blackRights.neither()) {
+    if (whiteRights.neither() and blackRights.neither()) {
         output.push_back('-');
         return;
     }
@@ -123,7 +123,7 @@ void write_en_passant_target_square(
     const std::optional<Square> targetSquare,
     string&                     output)
 {
-    if (! targetSquare.has_value()) {
+    if (not targetSquare.has_value()) {
         [[likely]];
         output.push_back('-');
         return;
@@ -191,7 +191,7 @@ namespace {
             fenFragment = fenFragment.substr(1uz);
         } while (index < rankEnd);
 
-        if (! fenFragment.empty() && fenFragment.front() == '/')
+        if (not fenFragment.empty() and fenFragment.front() == '/')
             return fenFragment.substr(1uz);
 
         return fenFragment; // NOLINT

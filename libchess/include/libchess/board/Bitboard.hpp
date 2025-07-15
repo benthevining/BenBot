@@ -283,7 +283,7 @@ formatter<chess::board::Bitboard>::parse(ParseContext& ctx)
 {
     auto it = ctx.begin();
 
-    if (it == ctx.end() || *it == '}')
+    if (it == ctx.end() or *it == '}')
         return it;
 
     do {
@@ -303,7 +303,7 @@ formatter<chess::board::Bitboard>::parse(ParseContext& ctx)
         }
 
         ++it;
-    } while (! (it == ctx.end() || *it == '}'));
+    } while (not(it == ctx.end() or *it == '}'));
 
     ctx.advance_to(it);
 

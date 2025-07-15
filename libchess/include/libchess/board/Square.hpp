@@ -117,7 +117,7 @@ struct Square final {
     [[nodiscard]] constexpr bool is_light() const noexcept;
 
     /** Returns true if this is a dark square. */
-    [[nodiscard]] constexpr bool is_dark() const noexcept { return ! is_light(); }
+    [[nodiscard]] constexpr bool is_dark() const noexcept { return not is_light(); }
 };
 
 /// @ingroup board
@@ -191,7 +191,7 @@ formatter<chess::board::Square>::parse(ParseContext& ctx)
 {
     auto it = ctx.begin();
 
-    if (it == ctx.end() || *it == '}')
+    if (it == ctx.end() or *it == '}')
         return it;
 
     do {
@@ -211,7 +211,7 @@ formatter<chess::board::Square>::parse(ParseContext& ctx)
         }
 
         ++it;
-    } while (! (it == ctx.end() || *it == '}'));
+    } while (not(it == ctx.end() or *it == '}'));
 
     ctx.advance_to(it);
 
@@ -275,7 +275,7 @@ constexpr bool Square::is_black_territory() const noexcept
 
 constexpr bool Square::is_light() const noexcept
 {
-    return ! util::is_even(
+    return not util::is_even(
         std::to_underlying(rank) + std::to_underlying(file));
 }
 

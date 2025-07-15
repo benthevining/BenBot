@@ -80,7 +80,7 @@ Position parse_position_options(string_view options)
 
     moves = trim(moves);
 
-    while (! moves.empty()) {
+    while (not moves.empty()) {
         const auto [firstMove, rest2] = split_at_first_space(moves);
 
         position.make_move(
@@ -123,7 +123,7 @@ namespace {
             "movestogo"sv, "depth"sv, "nodes"sv, "mate"sv, "movetime"sv
         };
 
-        while (! options.empty()) {
+        while (not options.empty()) {
             auto [firstMove, rest] = split_at_first_space(options);
 
             firstMove = trim(firstMove);
@@ -150,7 +150,7 @@ GoCommandOptions parse_go_options(
 
     GoCommandOptions ret;
 
-    while (! options.empty()) {
+    while (not options.empty()) {
         auto [firstWord, rest] = split_at_first_space(options);
 
         firstWord = trim(firstWord);

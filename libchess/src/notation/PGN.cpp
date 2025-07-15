@@ -82,8 +82,8 @@ namespace {
             // NB. we assume that tag keys cannot include spaces
             auto [tagName, tagValue] = util::split_at_first_space(tagText);
 
-            assert(! tagName.empty());
-            assert(! tagValue.empty());
+            assert(not tagName.empty());
+            assert(not tagValue.empty());
 
             // remove surrounding quotes from tag value
             if (tagValue.front() == '"')
@@ -115,7 +115,7 @@ namespace {
             throw std::invalid_argument { "Expected '}' following '{'" };
         }
 
-        if (! output.empty())
+        if (not output.empty())
             output.back().comment = pgnText.substr(1uz, closeBracketIdx - 1uz);
 
         return pgnText.substr(closeBracketIdx + 1uz);
@@ -132,13 +132,13 @@ namespace {
 
         if (newlineIdx == string_view::npos) {
             // assume that a ; comment was the last thing in the file
-            if (! output.empty())
+            if (not output.empty())
                 output.back().comment = util::trim(pgnText.substr(1uz));
 
             return {};
         }
 
-        if (! output.empty())
+        if (not output.empty())
             output.back().comment = util::trim(pgnText.substr(1uz, newlineIdx - 1uz));
 
         return pgnText.substr(newlineIdx + 1uz);
@@ -153,7 +153,7 @@ namespace {
 
         const auto [nag, rest] = split_at_first_space_or_newline(pgnText.substr(1uz));
 
-        if (! output.empty()) {
+        if (not output.empty()) {
             const auto value = int_from_string<std::uint_least8_t>(util::trim(nag));
 
             output.back().nags.emplace_back(value);
@@ -240,8 +240,8 @@ namespace {
                         continue;
                     }
 
-                    if constexpr (! IsVariation) {
-                        if (firstMove.contains('-') && util::trim(rest).empty()) {
+                    if constexpr (not IsVariation) {
+                        if (firstMove.contains('-') and util::trim(rest).empty()) {
                             // we're parsing the end of the move list, this token is the game result
                             return firstMove;
                         }
@@ -373,7 +373,7 @@ std::vector<GameRecord> parse_all_pgns(string_view fileContent)
 
     fileContent = util::trim(fileContent);
 
-    while (! fileContent.empty()) {
+    while (not fileContent.empty()) {
         // the move text of this PGN starts at the first line not starting in '['
         const auto moveTextStart = find_next_line<false>(fileContent);
 
@@ -443,12 +443,12 @@ namespace {
         }
 
         if (startingPosition != Position {}) {
-            if (! metadata.contains("FEN"s)) {
+            if (not metadata.contains("FEN"s)) {
                 const auto startFEN = to_fen(startingPosition);
                 write_metadata_item("FEN", startFEN, output);
             }
 
-            if (! metadata.contains("Setup"s))
+            if (not metadata.contains("Setup"s))
                 write_metadata_item("Setup", "1", output);
         }
     }
@@ -483,7 +483,7 @@ namespace {
             // set to false after the first move
             writeMoveNumber = false;
 
-            if (! move.comment.empty()) {
+            if (not move.comment.empty()) {
                 if (useBlockComments)
                     output.append(std::format("{{{}}} ", move.comment));
                 else
@@ -514,7 +514,7 @@ namespace {
     void write_game_result(
         const GameResult result, string& output)
     {
-        if (! result.has_value())
+        if (not result.has_value())
             return;
 
         switch (*result) {
@@ -545,7 +545,7 @@ string to_pgn(const GameRecord& game, const bool useBlockComments)
 
     write_game_result(game.result, result);
 
-    if (! result.empty() && result.back() == ' ')
+    if (! result.empty() and result.back() == ' ')
         result.pop_back();
 
     return result;

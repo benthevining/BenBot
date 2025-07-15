@@ -280,7 +280,7 @@ namespace detail {
         const Position&                 position,
         std::output_iterator<Move> auto outputIt)
     {
-        if (! position.enPassantTargetSquare.has_value())
+        if (not position.enPassantTargetSquare.has_value())
             return;
 
         const auto targetSquare = *position.enPassantTargetSquare;
@@ -309,7 +309,7 @@ namespace detail {
         const Position& position, const Bitboard allOccupied,
         std::output_iterator<Move> auto outputIt)
     {
-        if constexpr (! CapturesOnly) {
+        if constexpr (not CapturesOnly) {
             add_pawn_pushes<Side>(position, allOccupied.inverse(), outputIt);
             add_pawn_double_pushes<Side>(position, allOccupied, outputIt);
         }
@@ -513,9 +513,9 @@ namespace detail {
             static constexpr auto requiredSquares = kingside_castle_mask<Side>();
 
             const bool castlingBlocked = (requiredSquares & allOccupied).any()
-                                      || squares_attacked<OppositeColor>(theirPieces, requiredSquares, ourPieces.occupied);
+                                      or squares_attacked<OppositeColor>(theirPieces, requiredSquares, ourPieces.occupied);
 
-            if (! castlingBlocked) {
+            if (not castlingBlocked) {
                 const auto move = castle_kingside(Side);
 
                 if (position.is_legal(move))
@@ -530,9 +530,9 @@ namespace detail {
             static constexpr auto attackedMask = queenside_castle_mask<Side, false>();
 
             const bool castlingBlocked = (allOccupied & occupiedMask).any()
-                                      || squares_attacked<OppositeColor>(theirPieces, attackedMask, ourPieces.occupied);
+                                      or squares_attacked<OppositeColor>(theirPieces, attackedMask, ourPieces.occupied);
 
-            if (! castlingBlocked) {
+            if (not castlingBlocked) {
                 const auto move = castle_queenside(Side);
 
                 if (position.is_legal(move))
@@ -564,7 +564,7 @@ namespace detail {
 
         add_king_moves<Side, CapturesOnly>(position, outputIt);
 
-        if constexpr (! CapturesOnly) {
+        if constexpr (not CapturesOnly) {
             add_castling<Side>(position, allOccupied, outputIt);
         }
     }
@@ -609,7 +609,7 @@ namespace detail {
             default: // King
                 add_king_moves<Side, CapturesOnly>(position, outputIt);
 
-                if constexpr (! CapturesOnly) {
+                if constexpr (not CapturesOnly) {
                     // castling is considered a King move
                     add_castling<Side>(position, allOccupied, outputIt);
                 }
@@ -628,7 +628,7 @@ namespace detail {
         for (const auto piece : { PieceType::King, PieceType::Pawn, PieceType::Knight, PieceType::Queen, PieceType::Rook, PieceType::Bishop }) {
             generate_for_internal<Side, false>(position, piece, std::back_inserter(moves));
 
-            if (! moves.empty())
+            if (not moves.empty())
                 return true;
 
             moves.clear();

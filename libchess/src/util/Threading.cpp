@@ -50,7 +50,7 @@ void progressive_backoff(std::function<bool()> pred)
 #else
 #    warning "Not Intel or ARM, using naive implementation of progressive_backoff()"
 
-    while (! pred())
+    while (not pred())
         std::this_thread::yield();
 #endif
 }

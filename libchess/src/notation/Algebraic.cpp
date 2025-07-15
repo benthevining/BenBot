@@ -67,10 +67,10 @@ namespace {
     {
         const auto newPos = after_move(position, move);
 
-        if (! newPos.is_check())
+        if (not newPos.is_check())
             return {};
 
-        if (! moves::any_legal_moves(newPos))
+        if (not moves::any_legal_moves(newPos))
             return "#"; // checkmate
 
         return "+"; // check
@@ -307,7 +307,7 @@ namespace {
     [[nodiscard]] constexpr std::optional<Move> parse_pawn_capture(
         const Square& targetSquare, const string_view startingFileText, const Color color)
     {
-        assert(! startingFileText.empty());
+        assert(not startingFileText.empty());
 
         switch (startingFileText.front()) {
             case 'a': [[fallthrough]];
@@ -389,11 +389,11 @@ Move from_alg(const Position& position, string_view text)
         };
     }
 
-    if (text.back() == '+' || text.back() == '#')
+    if (text.back() == '+' or text.back() == '#')
         text.remove_suffix(1uz);
 
-    if (text.contains("O-O") || text.contains("0-0")) {
-        if (text.contains("-O-") || text.contains("-0-"))
+    if (text.contains("O-O") or text.contains("0-0")) {
+        if (text.contains("-O-") or text.contains("-0-"))
             return moves::castle_queenside(position.sideToMove);
 
         return moves::castle_kingside(position.sideToMove);
@@ -421,7 +421,7 @@ Move from_alg(const Position& position, string_view text)
     // if text is not empty, the first char is either piece type, or in the case of a
     // pawn capture, it's the file letter of the starting square
 
-    if (isCapture && ! text.empty())
+    if (isCapture and not text.empty())
         if (const auto move = parse_pawn_capture(targetSquare, text, position.sideToMove))
             return *move;
 
@@ -430,7 +430,7 @@ Move from_alg(const Position& position, string_view text)
                              : pieces::from_string(text.substr(0uz, 1uz));
 
     // trim piece type
-    if (! text.empty())
+    if (not text.empty())
         text = text.substr(1uz);
 
     return {

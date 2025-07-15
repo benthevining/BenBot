@@ -202,7 +202,7 @@ constexpr Square Pieces::get_king_location() const noexcept
 
 constexpr std::optional<PieceType> Pieces::get_piece_on(const Square square) const noexcept
 {
-    if (! occupied.test(square))
+    if (not occupied.test(square))
         return std::nullopt;
 
     static constexpr auto allTypes = magic_enum::enum_values<PieceType>();
@@ -227,7 +227,7 @@ constexpr void Pieces::capture_at(const Square square) noexcept
     const auto idx = square.index();
 
     // if we're trying to capture the king, then an illegal move has already been played
-    assert(! king.test(idx));
+    assert(not king.test(idx));
 
     pawns.unset(idx);
     knights.unset(idx);

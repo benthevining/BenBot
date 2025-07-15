@@ -35,7 +35,7 @@ using std::string_view;
     auto idx { 0uz };
 
     for (const auto letter : text) {
-        if (! is_whitespace(letter)) {
+        if (not is_whitespace(letter)) {
             text.remove_prefix(idx);
             return text; // NOLINT
         }
@@ -49,7 +49,7 @@ using std::string_view;
 [[nodiscard]] string_view trim_end(const string_view text)
 {
     for (auto i = text.length(); i > 0uz; --i)
-        if (! is_whitespace(text[i - 1uz]))
+        if (not is_whitespace(text[i - 1uz]))
             return text.substr(0uz, i);
 
     return {};

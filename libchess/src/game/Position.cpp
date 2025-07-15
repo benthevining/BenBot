@@ -66,7 +66,7 @@ namespace {
         const Move& move, const bool isWhite) noexcept
     {
         if (move.piece != PieceType::Pawn
-            || std::cmp_not_equal(rank_distance(move.from, move.to), 2uz)) {
+            or std::cmp_not_equal(rank_distance(move.from, move.to), 2uz)) {
             [[likely]];
             return std::nullopt;
         }
@@ -107,7 +107,7 @@ namespace {
     [[nodiscard, gnu::const]] constexpr uint_least8_t tick_halfmove_clock(
         const bool isPawnMove, const bool isCapture, const uint_least8_t prevValue) noexcept
     {
-        if (isCapture || isPawnMove)
+        if (isCapture or isPawnMove)
             return UINT8_C(0);
 
         static constexpr auto MAX_VALUE = UINT8_C(100);
@@ -141,7 +141,7 @@ void Position::make_move(const Move& move)
     enPassantTargetSquare = newEPSquare;
 
     // increment full move counter after every Black move
-    if (! isWhite)
+    if (not isWhite)
         ++fullMoveCounter;
 
     // flip side to move
@@ -162,7 +162,7 @@ void Position::make_null_move()
     enPassantTargetSquare = std::nullopt;
 
     // increment full move counter after every Black move
-    if (! isWhite)
+    if (not isWhite)
         ++fullMoveCounter;
 
     // flip side to move
@@ -186,27 +186,27 @@ void Position::refresh_zobrist()
 bool Position::is_checkmate() const
 {
     return is_check()
-        && ! moves::any_legal_moves(*this);
+       and not moves::any_legal_moves(*this);
 }
 
 bool Position::is_stalemate() const
 {
-    return ! is_check()
-        && ! moves::any_legal_moves(*this);
+    return not is_check()
+       and not moves::any_legal_moves(*this);
 }
 
 bool Position::is_fifty_move_draw() const
 {
     return std::cmp_greater_equal(halfmoveClock, 100)
-        && moves::any_legal_moves(*this); // side to move must have at least 1 legal move
+       and moves::any_legal_moves(*this); // side to move must have at least 1 legal move
 }
 
 bool Position::is_draw_by_insufficient_material() const noexcept
 {
     // even if either side has a single pawn that can't move, mate can still be possible
-    if (whitePieces.pawns.any() || blackPieces.pawns.any()
-        || whitePieces.rooks.any() || blackPieces.rooks.any()
-        || whitePieces.queens.any() || blackPieces.queens.any()) {
+    if (whitePieces.pawns.any() or blackPieces.pawns.any()
+        or whitePieces.rooks.any() or blackPieces.rooks.any()
+        or whitePieces.queens.any() or blackPieces.queens.any()) {
         [[likely]];
         return false;
     }
@@ -220,12 +220,12 @@ bool Position::is_draw_by_insufficient_material() const noexcept
     const bool whiteHasOnlyKing = numWhiteKnights + numWhiteBishops == 0uz;
     const bool blackHasOnlyKing = numBlackKnights + numBlackBishops == 0uz;
 
-    if (! (whiteHasOnlyKing || blackHasOnlyKing)) {
+    if (not(whiteHasOnlyKing or blackHasOnlyKing)) {
         [[likely]];
         return false;
     }
 
-    if (whiteHasOnlyKing && blackHasOnlyKing)
+    if (whiteHasOnlyKing and blackHasOnlyKing)
         return true;
 
     // check if side without the lone king has only 1 knight/bishop
@@ -238,13 +238,13 @@ bool Position::is_draw_by_insufficient_material() const noexcept
 
 bool Position::is_draw() const
 {
-    if (is_threefold_repetition() || is_draw_by_insufficient_material())
+    if (is_threefold_repetition() or is_draw_by_insufficient_material())
         return true;
 
     if (moves::any_legal_moves(*this))
         return std::cmp_greater_equal(halfmoveClock, 100); // fifty-move draw
 
-    return ! is_check(); // stalemate
+    return not is_check(); // stalemate
 }
 
 std::optional<Result> Position::get_result() const
@@ -252,7 +252,7 @@ std::optional<Result> Position::get_result() const
     if (is_draw())
         return Result::Draw;
 
-    if (! is_checkmate())
+    if (not is_checkmate())
         return std::nullopt;
 
     if (is_white_to_move()) {

@@ -56,18 +56,18 @@ namespace {
             key   = util::trim(key);
             value = util::trim(value);
 
-            assert(! key.empty());
-            assert(! value.empty());
+            assert(not key.empty());
+            assert(not value.empty());
 
             if (value.front() == '"')
                 value.remove_prefix(1uz);
 
-            assert(! value.empty());
+            assert(not value.empty());
 
             if (value.back() == '"')
                 value.remove_suffix(1uz);
 
-            assert(! value.empty());
+            assert(not value.empty());
 
             pos.operations[std::string { key }] = value;
 
@@ -125,7 +125,7 @@ EPDPosition from_epd(string_view epdString)
 std::vector<EPDPosition> parse_all_epds(const string_view fileContent)
 {
     return util::lines_view(fileContent)
-         | std::views::filter([](const string_view line) { return ! line.empty(); })
+         | std::views::filter([](const string_view line) { return not line.empty(); })
          | std::views::transform([](const string_view line) { return from_epd(line); })
          | std::ranges::to<std::vector>();
 }
@@ -138,10 +138,10 @@ namespace {
         for (const auto& [key, value] : pos.operations)
             output.append(std::format(" {} \"{}\";", key, value));
 
-        if (! pos.operations.contains("fmvn"))
+        if (not pos.operations.contains("fmvn"))
             output.append(std::format(" fmvn {}", pos.position.fullMoveCounter));
 
-        if (! pos.operations.contains("hmvc"))
+        if (not pos.operations.contains("hmvc"))
             output.append(std::format(" hmvc {}", pos.position.halfmoveClock));
     }
 

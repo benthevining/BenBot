@@ -408,24 +408,24 @@ inline bool Position::is_legal(const Move& move) const
 
     copy.make_move(move);
 
-    return ! copy.is_side_in_check(sideToMove);
+    return not copy.is_side_in_check(sideToMove);
 }
 
 inline bool Position::is_en_passant(const Move& move) const noexcept
 {
     return move.piece == PieceType::Pawn
-        && enPassantTargetSquare.has_value()
-        && move.to == *enPassantTargetSquare;
+       and enPassantTargetSquare.has_value()
+       and move.to == *enPassantTargetSquare;
 }
 
 inline bool Position::is_capture(const Move& move) const noexcept
 {
-    return is_en_passant(move) || their_pieces().occupied.test(move.to);
+    return is_en_passant(move) or their_pieces().occupied.test(move.to);
 }
 
 inline bool Position::is_file_open(const File file) const noexcept
 {
-    return whitePieces.is_file_half_open(file) && blackPieces.is_file_half_open(file);
+    return whitePieces.is_file_half_open(file) and blackPieces.is_file_half_open(file);
 }
 
 inline auto Position::get_open_files() const noexcept
