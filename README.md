@@ -8,6 +8,8 @@ A UCI chess engine.
 
 See each subdirectory's readme for details.
 
+Building or using `ben-bot`, `libbenbot` or `libchess` requires CMake and C++23.
+
 ## CMake options
 
 * `BENBOT_DOCS`: controls whether docs are built (defaults to off unless this is the top-level project)
