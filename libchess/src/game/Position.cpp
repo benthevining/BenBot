@@ -316,8 +316,12 @@ std::string print_utf8(const Position& position)
             }
         }
 
-        result.append("\n");
+        result.append(1uz, ' ');
+        result.append(1uz, rank_to_char(rank));
+        result.append(1uz, '\n');
     }
+
+    result.append(" a b c d e f g h");
 
     return result;
 }

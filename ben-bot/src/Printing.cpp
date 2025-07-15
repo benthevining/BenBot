@@ -223,7 +223,9 @@ void Engine::print_current_position() const
     const auto& pos = searcher.context.options.position;
 
     println("{}", print_utf8(pos));
-    println("{}", chess::notation::to_fen(pos));
+    println();
+    println("FEN: {}", chess::notation::to_fen(pos));
+    println("Zobrist key: {}", pos.hash);
     println();
 
     // print eval
