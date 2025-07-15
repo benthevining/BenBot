@@ -266,19 +266,6 @@ std::optional<Result> Position::get_result() const
     return Result::WhiteWon;
 }
 
-/* Example output of empty board:
-
-    | | | | | | | | |
-    | | | | | | | | |
-    | | | | | | | | |
-    | | | | | | | | |
-    | | | | | | | | |
-    | | | | | | | | |
-    | | | | | | | | |
-    | | | | | | | | |
-
-    A1 is bottom left, H8 is top right
- */
 std::string print_utf8(const Position& position)
 {
     namespace utf8_pieces = pieces::utf8;

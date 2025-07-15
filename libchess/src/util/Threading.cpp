@@ -16,20 +16,21 @@
 #include <libchess/util/Threading.hpp>
 #include <utility>
 
-#undef LIBCHESS_ARM
-#undef LIBCHESS_INTEL
-
-#if defined(__arm__) || defined(__arm64__)
-#    define LIBCHESS_ARM 1
+#ifndef LIBCHESS_ARM
+#    if defined(__arm__) || defined(__arm64__)
+#        define LIBCHESS_ARM 1
+#    endif
 #endif
 
-#if defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86) || defined(__x86_64__) || defined(_M_X64)
-#    define LIBCHESS_INTEL 1
+#ifndef LIBCHESS_INTEL
+#    if defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86) || defined(__x86_64__) || defined(_M_X64)
+#        define LIBCHESS_INTEL 1
+#    endif
 #endif
 
-#if LIBCHESS_ARM
+#ifdef LIBCHESS_ARM
 #    include "ProgressiveBackoff_ARM.hpp"
-#elif LIBCHESS_INTEL
+#elifdef LIBCHESS_INTEL
 #    include "ProgressiveBackoff_Intel.hpp"
 #else
 #    include <thread>
