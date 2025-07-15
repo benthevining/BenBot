@@ -16,9 +16,11 @@
 #include <array>
 #include <cassert>
 #include <cmath>
+#include <functional>
 #include <libchess/board/Flips.hpp>
 #include <libchess/board/Pieces.hpp>
 #include <libchess/game/Position.hpp>
+#include <numeric>
 #include <span>
 #include <utility>
 
@@ -155,12 +157,13 @@ namespace {
             board = chess::board::flips::vertical(board);
         }
 
-        auto sum { 0 };
+        const auto indices = board.indices();
 
-        for (const auto idx : board.indices())
-            sum += table[idx]; // cppcheck-suppress useStlAlgorithm
-
-        return sum;
+        return std::transform_reduce(
+            indices.begin(), indices.end(),
+            0,
+            std::plus {},
+            [table](const auto idx) { return table[idx]; });
     }
 
     template <bool IsBlack>
