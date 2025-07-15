@@ -104,7 +104,7 @@ private:
             // but we also need to exit the PB loop if the threadShouldExit flag
             // gets set
             chess::util::progressive_backoff([this] {
-                return threadShouldExit.load() || startSearch.exchange(false);
+                return threadShouldExit.load() or startSearch.exchange(false);
             });
 
             if (threadShouldExit.load()) {

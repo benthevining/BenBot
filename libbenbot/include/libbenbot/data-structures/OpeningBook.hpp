@@ -125,7 +125,7 @@ inline std::span<const Move> OpeningBook::get_moves(const Position& position) co
 
 inline std::optional<Move> OpeningBookContext::get_move(const Position& position)
 {
-    if (! enabled.get_value())
+    if (not enabled.get_value())
         return std::nullopt;
 
     const auto moves = book.get_moves(position);

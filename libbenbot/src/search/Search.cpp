@@ -100,7 +100,7 @@ namespace {
         Interrupter&    interrupter,
         Stats&          stats)
     {
-        if (interrupter.should_abort() || currentPosition.is_draw())
+        if (interrupter.should_abort() or currentPosition.is_draw())
             return {};
 
         if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot)) {
@@ -270,7 +270,7 @@ namespace {
 void Context::search()
 {
     assert(options.depth > 0uz);
-    assert(! activeFlag.load());
+    assert(not activeFlag.load());
 
     // sets activeFlag to true while inside this function, resets it to false once function exits
     const ActiveFlagSetter activeFlagRAII { activeFlag };
@@ -297,7 +297,7 @@ void Context::search()
         assert(! options.movesToSearch.empty());
     }
 
-    const bool infinite = ! options.is_bounded();
+    const bool infinite = not options.is_bounded();
 
     Stats stats;
 
@@ -356,7 +356,7 @@ void Context::search()
             .betaCutoffs                         = stats.betaCutoffs,
             .mdpCutoffs                          = stats.mdpCutoffs });
 
-        if (! infinite) {
+        if (not infinite) {
             // only 1 legal move, don't do a deeper iteration
             if (options.movesToSearch.size() == 1uz) {
                 [[unlikely]];
@@ -399,7 +399,7 @@ void Context::search()
 void Context::wait() const
 {
     chess::util::progressive_backoff([this] {
-        return ! activeFlag.load();
+        return not activeFlag.load();
     });
 }
 
@@ -409,7 +409,7 @@ void Options::update_from(chess::uci::GoCommandOptions&& goOptions)
     // want the search algorithm to generate all legal moves instead
     movesToSearch.clear();
 
-    if (! goOptions.moves.empty())
+    if (not goOptions.moves.empty())
         movesToSearch = std::move(goOptions.moves);
 
     if (goOptions.depth.has_value())

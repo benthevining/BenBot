@@ -63,7 +63,7 @@ namespace {
         static constexpr auto CHECK_BONUS { 1250 };          // cppcheck-suppress variableScope
 
         // check if this move was recorded as the best move in this position
-        if (bestMove.has_value() && *bestMove == move)
+        if (bestMove.has_value() and *bestMove == move)
             return std::numeric_limits<int>::max(); // arbitrarily large score to ensure this move is ordered first
 
         auto score { 0 };

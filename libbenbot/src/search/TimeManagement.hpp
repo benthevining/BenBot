@@ -72,7 +72,7 @@ struct Interrupter final {
     // updates cached internal abort state
     [[nodiscard]] bool should_abort()
     {
-        aborted = aborted || should_trigger_abort();
+        aborted = aborted or should_trigger_abort();
 
         return aborted;
     }
@@ -86,13 +86,13 @@ private:
     [[nodiscard]] bool should_trigger_abort() const
     {
         // we don't allow aborting until at least the depth 1 search has been completed
-        if (! anyIterationCompleted)
+        if (not anyIterationCompleted)
             return false;
 
         if (exitFlag.load())
             return true;
 
-        if (! searchTime.has_value())
+        if (not searchTime.has_value())
             return false;
 
         return get_search_duration() >= *searchTime;
