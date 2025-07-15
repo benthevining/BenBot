@@ -81,29 +81,6 @@ namespace {
         return static_cast<size_t>(std::round(nps));
     }
 
-    // extracts the PV from the transposition table
-    [[nodiscard]] std::string get_pv_string(
-        Position position, Move bestMove, const TranspositionTable& transTable)
-    {
-        auto result = std::format("pv {}", to_uci(bestMove));
-
-        while (true) {
-            const auto nextMove = transTable.get_best_response(position, bestMove);
-
-            if (not nextMove.has_value())
-                break;
-
-            result.append(1uz, ' ');
-            result.append(to_uci(*nextMove));
-
-            position.make_move(bestMove);
-
-            bestMove = *nextMove;
-        }
-
-        return result;
-    }
-
     [[nodiscard]] std::string get_extra_stats_string(
         const Result& res, const bool isDebugMode)
     {
@@ -136,18 +113,16 @@ namespace {
 template <bool PrintBestMove>
 void Engine::print_uci_info(const Result& res) const
 {
-    const auto& currPos = searcher.context.options.position;
-
-    const auto& transTable = searcher.context.transTable;
-
     println(
-        "info depth {} score {} time {} nodes {} nps {} {}{}",
+        "info depth {} score {} time {} nodes {} nps {}{}",
         res.depth, get_score_string(res.score), res.duration.count(),
         res.nodesSearched, get_nodes_per_second(res),
-        get_pv_string(currPos, res.bestMove, transTable),
         get_extra_stats_string(res, debugMode.load()));
 
     if constexpr (PrintBestMove) {
+        const auto& currPos    = searcher.context.options.position;
+        const auto& transTable = searcher.context.transTable;
+
         println("bestmove {}{}",
             to_uci(res.bestMove),
             get_ponder_move_string(
