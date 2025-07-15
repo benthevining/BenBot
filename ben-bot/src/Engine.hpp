@@ -83,8 +83,7 @@ private:
 
     void run_perft(string_view arguments) const;
 
-    void run_bench(string_view arguments);
-    void do_bench(string_view epdText);
+    static void run_bench(string_view arguments);
 
     void make_null_move();
 
@@ -153,7 +152,7 @@ private:
             .name = "bench",
             .action = [this](const string_view args){ run_bench(args); },
             .description = "Runs a search and reports total nodes and NPS",
-            .argsHelp = "[<epdPath>]"
+            .argsHelp = "[<depth>] [<epdPath>]"
         },
         CustomCommand {
             .name = "compiler",
