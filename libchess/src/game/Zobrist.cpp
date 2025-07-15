@@ -14,19 +14,24 @@
 
 #include "Zobrist.hpp" // NOLINT(build/include_subdir)
 #include <array>
+#include <functional>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Masks.hpp>
 #include <libchess/board/Pieces.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
+#include <libchess/pieces/Colors.hpp>
 #include <magic_enum/magic_enum.hpp>
+#include <numeric>
 #include <optional>
+#include <ranges>
 #include <utility>
 
 namespace chess::game::zobrist {
 
 using board::File;
+using pieces::Color;
 
 namespace {
 
@@ -224,6 +229,19 @@ namespace {
         return PIECE_KEYS.at(index);
     }
 
+    template <Color Side>
+    [[nodiscard, gnu::const]] constexpr Hash add_piece_positions(
+        const Hash prevValue, const PieceType type, const Position& position)
+    {
+        const auto keys = position.pieces_for<Side>().get_type(type).squares()
+                        | std::views::transform([type](const Square square) {
+                              return piece_key(type, Side, square);
+                          });
+
+        return std::reduce(
+            keys.begin(), keys.end(), prevValue, std::bit_xor {});
+    }
+
 } // namespace
 
 Hash calculate(const Position& pos)
@@ -234,14 +252,8 @@ Hash calculate(const Position& pos)
         value ^= BLACK_TO_MOVE;
 
     for (const auto type : magic_enum::enum_values<PieceType>()) {
-        const auto white = pos.whitePieces.get_type(type);
-        const auto black = pos.blackPieces.get_type(type);
-
-        for (const auto square : white.squares())
-            value ^= piece_key(type, Color::White, square); // cppcheck-suppress useStlAlgorithm
-
-        for (const auto square : black.squares())
-            value ^= piece_key(type, Color::Black, square); // cppcheck-suppress useStlAlgorithm
+        value = add_piece_positions<Color::White>(value, type, pos);
+        value = add_piece_positions<Color::Black>(value, type, pos);
     }
 
     if (pos.whiteCastlingRights.kingside)

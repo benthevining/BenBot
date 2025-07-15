@@ -500,7 +500,7 @@ constexpr auto Bitboard::indices() const noexcept
 {
     return std::ranges::subrange {
         detail::BitboardIterator { *this },
-        std::default_sentinel,
+        detail::BitboardIterator {},
         count()
     };
 }
