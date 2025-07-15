@@ -48,7 +48,7 @@ struct MemoryMappedFile::Pimpl final {
         }
 
         auto* mappingHandle = CreateFileMapping(
-            handle, nullptr, PAGE_READONLY,
+            fileHandle, nullptr, PAGE_READONLY,
             static_cast<DWORD>(fileSize >> 32uz),
             static_cast<DWORD>(fileSize),
             nullptr);
