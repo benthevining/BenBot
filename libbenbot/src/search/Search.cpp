@@ -12,8 +12,8 @@
  * ======================================================================================
  */
 
-#include "MoveOrdering.hpp"   // NOLINT(build/include_subdir)
-#include "TimeManagement.hpp" // NOLINT(build/include_subdir)
+#include "MoveOrdering.hpp"
+#include "TimeManagement.hpp"
 #include <algorithm>
 #include <atomic>
 #include <cassert>

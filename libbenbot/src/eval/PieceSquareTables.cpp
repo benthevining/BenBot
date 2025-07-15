@@ -12,7 +12,7 @@
  * ======================================================================================
  */
 
-#include "PieceSquareTables.hpp" // NOLINT(build/include_subdir)
+#include "PieceSquareTables.hpp"
 #include <array>
 #include <cassert>
 #include <cmath>

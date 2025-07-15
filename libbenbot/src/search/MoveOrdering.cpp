@@ -12,7 +12,7 @@
  * ======================================================================================
  */
 
-#include "MoveOrdering.hpp" // NOLINT(build/include_subdir)
+#include "MoveOrdering.hpp"
 #include <algorithm>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Material.hpp>

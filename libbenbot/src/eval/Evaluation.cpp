@@ -12,9 +12,9 @@
  * ======================================================================================
  */
 
-#include "PawnStructure.hpp"     // NOLINT(build/include_subdir)
-#include "PieceSquareTables.hpp" // NOLINT(build/include_subdir)
-#include "Positional.hpp"        // NOLINT(build/include_subdir)
+#include "PawnStructure.hpp"
+#include "PieceSquareTables.hpp"
+#include "Positional.hpp"
 #include <algorithm>
 #include <cmath>
 #include <libbenbot/eval/Evaluation.hpp>
