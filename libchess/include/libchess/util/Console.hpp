@@ -12,30 +12,20 @@
  * ======================================================================================
  */
 
-#include "Engine.hpp"
-#include <cstdlib>
-#include <exception>
-#include <iostream>
-#include <libchess/util/Console.hpp>
-#include <print>
+/** @file
+    This file provides some utility functions related to the console input/output.
+    @ingroup util
+ */
 
-int main(
-    [[maybe_unused]] const int    argc,
-    [[maybe_unused]] const char** argv)
-try {
-    chess::util::enable_utf8_console_output();
+#pragma once
 
-    ben_bot::Engine engine;
+namespace chess::util {
 
-    engine.print_logo_and_version();
+/** Ensures that ``std::cout`` will interpret strings as UTF-8.
+    On non-Windows platforms, this is a no-op.
 
-    engine.loop();
+    @ingroup util
+ */
+void enable_utf8_console_output();
 
-    return EXIT_SUCCESS;
-} catch (const std::exception& exception) {
-    std::println(std::cerr, "{}", exception.what());
-    return EXIT_FAILURE;
-} catch (...) {
-    std::println(std::cerr, "Error: unknown exception thrown!");
-    return EXIT_FAILURE;
-}
+} // namespace chess::util

@@ -12,30 +12,24 @@
  * ======================================================================================
  */
 
-#include "Engine.hpp"
-#include <cstdlib>
-#include <exception>
-#include <iostream>
 #include <libchess/util/Console.hpp>
-#include <print>
 
-int main(
-    [[maybe_unused]] const int    argc,
-    [[maybe_unused]] const char** argv)
-try {
-    chess::util::enable_utf8_console_output();
+#ifdef WIN32
+#    ifndef WIN32_LEAN_AND_MEAN
+#        define WIN32_LEAN_AND_MEAN 1
+#    endif
 
-    ben_bot::Engine engine;
+#    include <windows.h>
+#endif
 
-    engine.print_logo_and_version();
+namespace chess::util {
 
-    engine.loop();
-
-    return EXIT_SUCCESS;
-} catch (const std::exception& exception) {
-    std::println(std::cerr, "{}", exception.what());
-    return EXIT_FAILURE;
-} catch (...) {
-    std::println(std::cerr, "Error: unknown exception thrown!");
-    return EXIT_FAILURE;
+void enable_utf8_console_output()
+{
+#ifdef WIN32
+    // set the console's code page to UTF-8
+    SetConsoleOutputCP(CP_UTF8);
+#endif
 }
+
+} // namespace chess::util
