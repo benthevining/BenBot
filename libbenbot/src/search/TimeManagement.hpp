@@ -61,7 +61,7 @@ struct Interrupter final {
     [[nodiscard]] Milliseconds get_search_duration() const { return timer.get_duration(); }
 
     // returns time remaining until abort time, or nullopt if there's no time bound
-    [[nodiscard]] std::optional<Milliseconds> get_remaining_time() const
+    [[nodiscard]] auto get_remaining_time() const -> std::optional<Milliseconds>
     {
         return searchTime.and_then([this](const Milliseconds timeLimit) {
             return std::optional { timeLimit - get_search_duration() };

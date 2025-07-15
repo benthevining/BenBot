@@ -304,8 +304,9 @@ namespace {
         };
     }
 
-    [[nodiscard]] constexpr std::optional<Move> parse_pawn_capture(
+    [[nodiscard]] constexpr auto parse_pawn_capture(
         const Square& targetSquare, const string_view startingFileText, const Color color)
+        -> std::optional<Move>
     {
         assert(not startingFileText.empty());
 
@@ -348,8 +349,9 @@ namespace {
         }
     }
 
-    [[nodiscard]] constexpr std::optional<Move> parse_promotion(
+    [[nodiscard]] constexpr auto parse_promotion(
         const string_view text, const Color color)
+        -> std::optional<Move>
     {
         const auto eqSgnPos = text.find('=');
 
