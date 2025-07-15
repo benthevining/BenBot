@@ -234,8 +234,8 @@ Hash calculate(const Position& pos)
         value ^= BLACK_TO_MOVE;
 
     for (const auto type : magic_enum::enum_values<PieceType>()) {
-        const auto& white = pos.whitePieces.get_type(type);
-        const auto& black = pos.blackPieces.get_type(type);
+        const auto white = pos.whitePieces.get_type(type);
+        const auto black = pos.blackPieces.get_type(type);
 
         for (const auto square : white.squares())
             value ^= piece_key(type, Color::White, square); // cppcheck-suppress useStlAlgorithm

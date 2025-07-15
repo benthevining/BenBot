@@ -48,6 +48,9 @@ TEST_CASE("Position - threefold repetitions", TAGS)
     REQUIRE(! pos.is_threefold_repetition());
 
     pos.make_move(from_alg(pos, "Nc3"));
+
+    REQUIRE(pos.is_threefold_repetition());
+
     pos.make_move(from_alg(pos, "Nc6"));
 
     REQUIRE(pos.is_threefold_repetition());

@@ -19,18 +19,13 @@
 
 #pragma once
 
-#include <array>
+#include <beman/inplace_vector/inplace_vector.hpp>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdint> // IWYU pragma: keep - for std::uint64_t
 
 namespace chess::game {
 
 /** This struct keeps a history of Zobrist hash values to detect threefold repetitions.
-
-    @invariant There should always be at least one non-zero hash value in the history,
-    otherwise a history of all zero hash values would erroneously be detected as a
-    threefold repetition.
-
     @ingroup game
  */
 struct ThreefoldChecker final {
@@ -51,7 +46,7 @@ struct ThreefoldChecker final {
 private:
     // stores a history of hash values
     // the most recent value is at front() and the oldest is at back()
-    std::array<HashValue, 10uz> history {};
+    beman::inplace_vector<HashValue, 10uz> history;
 };
 
 /*
@@ -73,19 +68,21 @@ private:
 
 constexpr ThreefoldChecker::ThreefoldChecker(const HashValue initialPositionHash) noexcept
 {
-    history.front() = initialPositionHash;
+    history.emplace_back(initialPositionHash);
 }
 
 constexpr void ThreefoldChecker::reset(const HashValue initialPositionHash)
 {
-    for (auto idx = 1uz; idx < history.size(); ++idx)
-        history.at(idx) = 0uz;
-
-    history.front() = initialPositionHash;
+    history.clear();
+    history.emplace_back(initialPositionHash);
 }
 
 constexpr void ThreefoldChecker::push(const HashValue newHash)
 {
+    // make room for new element
+    if (history.size() < history.capacity())
+        history.emplace_back(0uz);
+
     // move all elements back
     for (auto idx = history.size() - 1uz; idx > 0uz; --idx)
         history.at(idx) = history.at(idx - 1uz);
@@ -95,20 +92,35 @@ constexpr void ThreefoldChecker::push(const HashValue newHash)
 
 constexpr bool ThreefoldChecker::is_threefold() const noexcept
 {
+    if (history.size() < history.capacity())
+        return false;
+
     // "A" and "B" hashes represent the moves that each player is toggling between
+    // when the history does contain a repetition, it looks like this:
+    //
+    // index | value
+    // 0     | ourHashA   <-- this position seen for time #3
+    // 1     | theirHashA
+    // 2     | ourHashB
+    // 3     | theirHashB
+    // 4     | ourHashA   <-- this position seen for time #2
+    // 5     | theirHashA
+    // 6     | ourHashB
+    // 7     | theirHashB
+    // 8     | ourHashA   <-- this position seen for time #1
+    // 9     | theirHashA
 
-    const auto ourHashA   = history.front();
-    const auto theirHashA = history[1uz];
+    static constexpr auto REP_INC { 4uz };
 
-    const auto ourHashB   = history[2uz];
-    const auto theirHashB = history[3uz];
+    for (auto idx = 0uz; idx < REP_INC; ++idx) {
+        const auto value = history[idx];
 
-    return ourHashA == history[4uz]
-        && theirHashA == history[5uz]
-        && ourHashB == history[6uz]
-        && theirHashB == history[7uz]
-        && ourHashA == history[8uz]
-        && theirHashA == history[9uz];
+        for (auto repIdx = idx + REP_INC; repIdx < history.capacity(); repIdx += REP_INC)
+            if (history[repIdx] != value)
+                return false;
+    }
+
+    return true;
 }
 
 } // namespace chess::game

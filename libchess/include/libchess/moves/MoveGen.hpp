@@ -140,26 +140,21 @@ namespace detail {
             emptySquares);
 
         // non-promoting pushes
-        {
-            const auto pushes = allPushes & NOT_PROMOTION_MASK;
+        for (const auto target : (allPushes & NOT_PROMOTION_MASK).squares()) {
+            const Move move {
+                .from = {
+                    .file = target.file,
+                    .rank = prev_pawn_rank<Side>(target.rank) },
+                .to    = target,
+                .piece = PieceType::Pawn
+            };
 
-            for (const auto target : pushes.squares()) {
-                const Move move {
-                    .from = {
-                        .file = target.file,
-                        .rank = prev_pawn_rank<Side>(target.rank) },
-                    .to    = target,
-                    .piece = PieceType::Pawn
-                };
-
-                if (position.is_legal(move))
-                    *outputIt = move;
-            }
+            if (position.is_legal(move))
+                *outputIt = move;
         }
 
-        const auto promotions = allPushes & PROMOTION_MASK;
-
-        for (const auto target : promotions.squares()) {
+        // promoting pushes
+        for (const auto target : (allPushes & PROMOTION_MASK).squares()) {
             for (const auto promotedType : possiblePromotedTypes) {
                 const Move move {
                     .from = {
