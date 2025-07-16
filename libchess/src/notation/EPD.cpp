@@ -35,19 +35,15 @@ namespace {
     void parse_operations(
         EPDPosition& pos, const string_view text)
     {
-        for (auto opString : util::split_by_delim(util::trim(text), ';')) {
-            opString = util::trim(opString);
+        auto opStrings = util::split_by_delim(util::trim(text), ';')
+                       | std::views::transform([](const string_view str) { return util::trim(str); })
+                       | std::views::filter([](const string_view str) { return not str.empty(); });
 
-            if (opString.empty())
-                continue;
-
+        for (const auto opString : opStrings) {
             auto [key, value] = util::split_at_first_space(opString);
 
             key   = util::trim(key);
             value = util::trim(value);
-
-            assert(not key.empty());
-            assert(not value.empty());
 
             if (value.front() == '"')
                 value.remove_prefix(1uz);
@@ -55,6 +51,7 @@ namespace {
             if (value.back() == '"')
                 value.remove_suffix(1uz);
 
+            assert(not key.empty());
             assert(not value.empty());
 
             pos.operations[std::string { key }] = value;
