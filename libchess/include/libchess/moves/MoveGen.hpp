@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <beman/inplace_vector/inplace_vector.hpp>
 #include <cassert>
@@ -36,6 +37,7 @@
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
 #include <ranges>
+#include <utility>
 #include <vector>
 
 namespace chess::moves {
@@ -139,22 +141,25 @@ namespace detail {
             position.pieces_for<Side>().pawns,
             emptySquares);
 
-        // non-promoting pushes
-        for (const auto target : (allPushes & NOT_PROMOTION_MASK).squares()) {
-            const Move move {
-                .from = {
-                    .file = target.file,
-                    .rank = prev_pawn_rank<Side>(target.rank) },
-                .to    = target,
-                .piece = PieceType::Pawn
-            };
+        auto nonPromotingPushes = (allPushes & NOT_PROMOTION_MASK).squares()
+                                | std::views::transform([](const Square target) {
+                                      return Move {
+                                          .from = {
+                                              .file = target.file,
+                                              .rank = prev_pawn_rank<Side>(target.rank) },
+                                          .to    = target,
+                                          .piece = PieceType::Pawn
+                                      };
+                                  })
+                                | std::views::filter([&position](const Move& move) {
+                                      return position.is_legal(move);
+                                  });
 
-            if (position.is_legal(move))
-                *outputIt = move;
-        }
+        std::ranges::copy(std::move(nonPromotingPushes), outputIt);
 
         // promoting pushes
         for (const auto target : (allPushes & PROMOTION_MASK).squares()) {
+            // NB. written using raw loops because we need to add all possible promotion types here
             for (const auto promotedType : possiblePromotedTypes) {
                 const Move move {
                     .from = {
@@ -182,18 +187,21 @@ namespace detail {
             position.pieces_for<Side>().pawns,
             allOccupied);
 
-        for (const auto targetSquare : pushes.squares()) {
-            const Move move {
-                .from = {
-                    .file = targetSquare.file,
-                    .rank = pawnStartingRank },
-                .to    = targetSquare,
-                .piece = PieceType::Pawn
-            };
+        auto doublePushes = pushes.squares()
+                          | std::views::transform([](const Square target) {
+                                return Move {
+                                    .from = {
+                                        .file = target.file,
+                                        .rank = pawnStartingRank },
+                                    .to    = target,
+                                    .piece = PieceType::Pawn
+                                };
+                            })
+                          | std::views::filter([&position](const Move& move) {
+                                return position.is_legal(move);
+                            });
 
-            if (position.is_legal(move))
-                *outputIt = move;
-        }
+        std::ranges::copy(std::move(doublePushes), outputIt);
     }
 
     template <Color Side>
@@ -224,55 +232,23 @@ namespace detail {
         const auto canRegCaptureEast = shifts::pawn_inv_capture_east<Side>(eastRegCaptures);
         const auto canRegCaptureWest = shifts::pawn_inv_capture_west<Side>(westRegCaptures);
 
-        for (const auto [starting, target] : std::views::zip(canRegCaptureEast.squares(), eastRegCaptures.squares())) {
-            const Move move {
-                .from  = starting,
-                .to    = target,
-                .piece = PieceType::Pawn
-            };
-
-            if (position.is_legal(move))
-                *outputIt = move;
-        }
-
-        for (const auto [starting, target] : std::views::zip(canRegCaptureWest.squares(), westRegCaptures.squares())) {
-            const Move move {
-                .from  = starting,
-                .to    = target,
-                .piece = PieceType::Pawn
-            };
-
-            if (position.is_legal(move))
-                *outputIt = move;
-        }
-
-        for (const auto [starting, target] : std::views::zip(canCapturePromoteEast.squares(), eastPromotionCaptures.squares())) {
-            for (const auto promotedType : possiblePromotedTypes) {
+        auto add_internal = [&position, &outputIt](const Bitboard startingSquares, const Bitboard targetSquares) {
+            for (const auto [starting, target] : std::views::zip(startingSquares.squares(), targetSquares.squares())) {
                 const Move move {
-                    .from         = starting,
-                    .to           = target,
-                    .piece        = PieceType::Pawn,
-                    .promotedType = promotedType
+                    .from  = starting,
+                    .to    = target,
+                    .piece = PieceType::Pawn
                 };
 
                 if (position.is_legal(move))
                     *outputIt = move;
             }
-        }
+        };
 
-        for (const auto [starting, target] : std::views::zip(canCapturePromoteWest.squares(), westPromotionCaptures.squares())) {
-            for (const auto promotedType : possiblePromotedTypes) {
-                const Move move {
-                    .from         = starting,
-                    .to           = target,
-                    .piece        = PieceType::Pawn,
-                    .promotedType = promotedType
-                };
-
-                if (position.is_legal(move))
-                    *outputIt = move;
-            }
-        }
+        add_internal(canRegCaptureEast, eastRegCaptures);
+        add_internal(canRegCaptureWest, westRegCaptures);
+        add_internal(canCapturePromoteEast, eastPromotionCaptures);
+        add_internal(canCapturePromoteWest, westPromotionCaptures);
     }
 
     template <Color Side>
