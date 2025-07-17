@@ -37,6 +37,7 @@
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
 #include <optional>
+#include <range/v3/view/concat.hpp>
 #include <ranges>
 #include <utility>
 #include <vector>
@@ -134,11 +135,9 @@ namespace detail {
     };
 
     template <Color Side>
-    [[nodiscard, gnu::const]] constexpr auto get_pawn_pushes(
+    [[nodiscard, gnu::const]] auto get_pawn_pushes(
         const Position& position, const Bitboard emptySquares)
     {
-        using Pushes = beman::inplace_vector<Move, 8uz>;
-
         const auto allPushes = pseudo_legal::pawn_pushes<Side>(
             position.pieces_for<Side>().pawns,
             emptySquares);
@@ -152,8 +151,7 @@ namespace detail {
                                           .to    = target,
                                           .piece = PieceType::Pawn
                                       };
-                                  })
-                                | std::ranges::to<Pushes>();
+                                  });
 
         auto promotingPushes = possiblePromotedTypes
                              | std::views::transform([pushes = (allPushes & PROMOTION_MASK).squares()](
@@ -170,17 +168,11 @@ namespace detail {
                                               };
                                           });
                                })
-                             | std::views::join
-                             | std::ranges::to<Pushes>();
+                             | std::views::join;
 
-        std::array moveLists {
+        return ranges::concat_view {
             std::move(nonPromotingPushes), std::move(promotingPushes)
         };
-
-        return std::views::join(std::move(moveLists))
-             | std::views::filter([&position](const Move& move) {
-                   return position.is_legal(move);
-               });
     }
 
     template <Color Side>
@@ -202,9 +194,6 @@ namespace detail {
                        .to    = target,
                        .piece = PieceType::Pawn
                    };
-               })
-             | std::views::filter([&position](const Move& move) {
-                   return position.is_legal(move);
                });
     }
 
@@ -228,7 +217,7 @@ namespace detail {
     }
 
     template <Color Side>
-    [[nodiscard, gnu::const]] constexpr auto get_pawn_captures(
+    [[nodiscard, gnu::const]] auto get_pawn_captures(
         const Position& position)
     {
         // We handle east & west captures separately to make set-wise operations easier.
@@ -254,34 +243,20 @@ namespace detail {
         const auto canRegCaptureEast = shifts::pawn_inv_capture_east<Side>(eastRegCaptures);
         const auto canRegCaptureWest = shifts::pawn_inv_capture_west<Side>(westRegCaptures);
 
-        // max number of possible pawn captures is 16 * 4 possible promoted types
-        using PawnCaptures = beman::inplace_vector<Move, 64uz>;
-
-        auto get_non_promoting_captures = [](const Bitboard startingBoard, const Bitboard targetBoard) {
-            return get_pawn_captures_internal(startingBoard, targetBoard)
-                 | std::ranges::to<PawnCaptures>();
-        };
-
         auto get_promotion_captures = [](const Bitboard startingBoard, const Bitboard targetBoard) {
             return possiblePromotedTypes
                  | std::views::transform([startingBoard, targetBoard](const PieceType type) {
                        return get_pawn_captures_internal(startingBoard, targetBoard, type);
                    })
-                 | std::views::join
-                 | std::ranges::to<PawnCaptures>();
+                 | std::views::join;
         };
 
-        std::array moveLists {
-            get_non_promoting_captures(canRegCaptureEast, eastRegCaptures),
-            get_non_promoting_captures(canRegCaptureWest, westRegCaptures),
+        return ranges::concat_view {
+            get_pawn_captures_internal(canRegCaptureEast, eastRegCaptures),
+            get_pawn_captures_internal(canRegCaptureWest, westRegCaptures),
             get_promotion_captures(canCapturePromoteEast, eastPromotionCaptures),
             get_promotion_captures(canCapturePromoteWest, westPromotionCaptures)
         };
-
-        return std::views::join(std::move(moveLists))
-             | std::views::filter([&position](const Move& move) {
-                   return position.is_legal(move);
-               });
     }
 
     template <Color Side>
@@ -311,34 +286,30 @@ namespace detail {
                        .piece = PieceType::Pawn
                    };
                })
-             | std::views::filter([&position](const Move& move) {
-                   return position.is_legal(move);
-               })
              | std::ranges::to<EPMoves>();
     }
 
     template <Color Side, bool CapturesOnly>
-    constexpr void add_all_pawn_moves(
-        const Position& position, const Bitboard allOccupied,
-        std::output_iterator<Move> auto outputIt)
+    [[nodiscard, gnu::const]] auto get_all_pawn_moves(
+        const Position& position, const Bitboard allOccupied)
     {
-        if constexpr (not CapturesOnly) {
-            std::ranges::copy(
+        if constexpr (CapturesOnly) {
+            return ranges::concat_view {
+                get_pawn_captures<Side>(position),
+                get_en_passant<Side>(position)
+            } | std::views::filter([position](const Move& move) {
+                return position.is_legal(move);
+            });
+        } else {
+            return ranges::concat_view {
+                get_pawn_captures<Side>(position),
+                get_en_passant<Side>(position),
                 get_pawn_pushes<Side>(position, allOccupied.inverse()),
-                outputIt);
-
-            std::ranges::copy(
-                get_pawn_double_pushes<Side>(position, allOccupied),
-                outputIt);
+                get_pawn_double_pushes<Side>(position, allOccupied)
+            } | std::views::filter([position](const Move& move) {
+                return position.is_legal(move);
+            });
         }
-
-        std::ranges::copy(
-            get_pawn_captures<Side>(position),
-            outputIt);
-
-        std::ranges::copy(
-            get_en_passant<Side>(position),
-            outputIt);
     }
 
     template <Color Side, bool CapturesOnly>
@@ -596,7 +567,9 @@ namespace detail {
         const auto allOccupied  = ourPieces.occupied | theirPieces.occupied;
         const auto emptySquares = allOccupied.inverse();
 
-        add_all_pawn_moves<Side, CapturesOnly>(position, allOccupied, outputIt);
+        std::ranges::copy(
+            get_all_pawn_moves<Side, CapturesOnly>(position, allOccupied),
+            outputIt);
 
         std::ranges::copy(
             get_knight_moves<Side, CapturesOnly>(position),
@@ -638,7 +611,9 @@ namespace detail {
 
         switch (piece) {
             case PieceType::Pawn: {
-                add_all_pawn_moves<Side, CapturesOnly>(position, allOccupied, outputIt);
+                std::ranges::copy(
+                    get_all_pawn_moves<Side, CapturesOnly>(position, allOccupied),
+                    outputIt);
                 return;
             }
 
