@@ -29,6 +29,8 @@ FetchContent_Declare (
     FIND_PACKAGE_ARGS
 )
 
+set (RANGES_CXX_STD 23)
+
 FetchContent_Declare (
     range-v3
     SYSTEM
