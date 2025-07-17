@@ -29,13 +29,24 @@ FetchContent_Declare (
     FIND_PACKAGE_ARGS
 )
 
-FetchContent_MakeAvailable (magic_enum inplace_vector)
+FetchContent_Declare (
+    range-v3
+    SYSTEM
+    GIT_REPOSITORY "https://github.com/ericniebler/range-v3.git"
+    GIT_TAG 0.12.0
+    GIT_PROGRESS ON
+    FIND_PACKAGE_ARGS 0.12.0
+)
 
-add_library (libchess STATIC include/libchess/util/Console.hpp src/util/Console.cpp)
+FetchContent_MakeAvailable (magic_enum inplace_vector range-v3)
+
+add_library (libchess STATIC)
 
 target_compile_features (libchess PUBLIC cxx_std_23)
 
-target_link_libraries (libchess PUBLIC magic_enum::magic_enum beman::inplace_vector)
+target_link_libraries (
+    libchess PUBLIC magic_enum::magic_enum beman::inplace_vector range-v3::range-v3
+)
 
 set_target_properties (
     libchess PROPERTIES CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF DEBUG_POSTFIX -d
