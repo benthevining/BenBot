@@ -256,8 +256,7 @@ namespace detail {
     {
         const auto targetSquareBoard = position.enPassantTargetSquare
                                            .transform([](const Square targetSquare) { return Bitboard::from_square(targetSquare); })
-                                           .or_else([] { return std::optional { Bitboard {} }; })
-                                           .value();
+                                           .value_or(Bitboard {});
 
         const auto startSquares = shifts::pawn_inv_capture_east<Side>(targetSquareBoard)
                                 | shifts::pawn_inv_capture_west<Side>(targetSquareBoard);
@@ -526,36 +525,26 @@ namespace detail {
         const auto allOccupied  = ourPieces.occupied | theirPieces.occupied;
         const auto emptySquares = allOccupied.inverse();
 
-        auto pawns   = get_all_pawn_moves<Side, CapturesOnly>(position, allOccupied);
-        auto knights = get_knight_moves<Side, CapturesOnly>(position);
-        auto bishops = get_bishop_moves<Side, CapturesOnly>(position, allOccupied);
-        auto rooks   = get_rook_moves<Side, CapturesOnly>(position, allOccupied);
-        auto queens  = get_queen_moves<Side, CapturesOnly>(position, allOccupied);
-        auto kings   = get_king_moves<Side, CapturesOnly>(position);
+        ranges::concat_view moves {
+            get_all_pawn_moves<Side, CapturesOnly>(position, allOccupied),
+            get_knight_moves<Side, CapturesOnly>(position),
+            get_bishop_moves<Side, CapturesOnly>(position, allOccupied),
+            get_rook_moves<Side, CapturesOnly>(position, allOccupied),
+            get_queen_moves<Side, CapturesOnly>(position, allOccupied),
+            get_king_moves<Side, CapturesOnly>(position)
+        };
 
         if constexpr (CapturesOnly) {
-            return ranges::concat_view {
-                std::move(pawns),
-                std::move(knights),
-                std::move(bishops),
-                std::move(rooks),
-                std::move(queens),
-                std::move(kings)
-            }
-                 | std::views::filter([&position](const Move& move) {
+            return std::move(moves)
+                 | std::views::filter([position](const Move& move) {
                        return position.is_legal(move);
                    });
         } else {
             return ranges::concat_view {
-                std::move(pawns),
-                std::move(knights),
-                std::move(bishops),
-                std::move(rooks),
-                std::move(queens),
-                std::move(kings),
+                std::move(moves),
                 get_castling<Side>(position, allOccupied)
             }
-                 | std::views::filter([&position](const Move& move) {
+                 | std::views::filter([position](const Move& move) {
                        return position.is_legal(move);
                    });
         }
