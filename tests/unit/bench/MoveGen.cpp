@@ -12,6 +12,7 @@
  * ======================================================================================
  */
 
+#include <algorithm>
 #include <catch2/benchmark/catch_benchmark_all.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <iterator>
@@ -191,7 +192,9 @@ TEST_CASE("Benchmarking legal move generation", TAGS)
     {
         moves.clear();
 
-        chess::moves::generate(position, std::back_inserter(moves));
+        std::ranges::copy(
+            chess::moves::generate(position),
+            std::back_inserter(moves));
 
         return moves.size();
     };

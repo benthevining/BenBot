@@ -51,23 +51,13 @@ using PieceType = pieces::Type;
 /// @{
 
 /** Generates a list of all legal moves for the side to move in the given position.
-    The list of moves is not sorted in any particular manner.
-
-    @see generate_for()
- */
-template <bool CapturesOnly = false>
-void generate(
-    const Position&                 position,
-    std::output_iterator<Move> auto outputIt);
-
-/** Generates a list of all legal moves for the side to move in the given position.
     If the side to move is in checkmate or stalemate, this returns an empty list.
     The list of moves is not sorted in any particular manner.
 
     @see generate_for()
  */
 template <bool CapturesOnly = false>
-[[nodiscard]] std::vector<Move> generate(const Position& position);
+[[nodiscard]] auto generate(const Position& position);
 
 /** Generates a list of all legal moves for only the given piece type in the given position.
 
@@ -171,7 +161,8 @@ namespace detail {
                              | std::views::join;
 
         return ranges::concat_view {
-            std::move(nonPromotingPushes), std::move(promotingPushes)
+            std::move(nonPromotingPushes),
+            std::move(promotingPushes)
         };
     }
 
@@ -263,52 +254,44 @@ namespace detail {
     [[nodiscard, gnu::const]] constexpr auto get_en_passant(
         const Position& position)
     {
-        // at most 2 captures are possible at a time
-        using EPMoves = beman::inplace_vector<Move, 2uz>;
-
-        if (not position.enPassantTargetSquare.has_value()) {
-            [[likely]];
-            return EPMoves {};
-        }
-
-        const auto targetSquare = *position.enPassantTargetSquare;
-
-        const auto targetSquareBoard = Bitboard::from_square(targetSquare);
+        const auto targetSquareBoard = position.enPassantTargetSquare
+                                           .transform([](const Square targetSquare) { return Bitboard::from_square(targetSquare); })
+                                           .or_else([] { return std::optional { Bitboard {} }; })
+                                           .value();
 
         const auto startSquares = shifts::pawn_inv_capture_east<Side>(targetSquareBoard)
                                 | shifts::pawn_inv_capture_west<Side>(targetSquareBoard);
 
         return (position.pieces_for<Side>().pawns & startSquares).squares()
-             | std::views::transform([targetSquare](const Square square) {
+             | std::views::transform([targetSquare = Square::from_index(targetSquareBoard.first())](
+                                         const Square square) {
                    return Move {
                        .from  = square,
                        .to    = targetSquare,
                        .piece = PieceType::Pawn
                    };
-               })
-             | std::ranges::to<EPMoves>();
+               });
     }
 
     template <Color Side, bool CapturesOnly>
     [[nodiscard, gnu::const]] auto get_all_pawn_moves(
         const Position& position, const Bitboard allOccupied)
     {
+        auto captures  = get_pawn_captures<Side>(position);
+        auto enPassant = get_en_passant<Side>(position);
+
         if constexpr (CapturesOnly) {
             return ranges::concat_view {
-                get_pawn_captures<Side>(position),
-                get_en_passant<Side>(position)
-            } | std::views::filter([position](const Move& move) {
-                return position.is_legal(move);
-            });
+                std::move(captures),
+                std::move(enPassant)
+            };
         } else {
             return ranges::concat_view {
-                get_pawn_captures<Side>(position),
-                get_en_passant<Side>(position),
+                std::move(captures),
+                std::move(enPassant),
                 get_pawn_pushes<Side>(position, allOccupied.inverse()),
                 get_pawn_double_pushes<Side>(position, allOccupied)
-            } | std::views::filter([position](const Move& move) {
-                return position.is_legal(move);
-            });
+            };
         }
     }
 
@@ -337,10 +320,7 @@ namespace detail {
                               };
                           });
                })
-             | std::views::join
-             | std::views::filter([&position](const Move& move) {
-                   return position.is_legal(move);
-               });
+             | std::views::join;
     }
 
     template <Color Side, bool CapturesOnly>
@@ -370,10 +350,7 @@ namespace detail {
                               };
                           });
                })
-             | std::views::join
-             | std::views::filter([&position](const Move& move) {
-                   return position.is_legal(move);
-               });
+             | std::views::join;
     }
 
     template <Color Side, bool CapturesOnly>
@@ -403,10 +380,7 @@ namespace detail {
                               };
                           });
                })
-             | std::views::join
-             | std::views::filter([&position](const Move& move) {
-                   return position.is_legal(move);
-               });
+             | std::views::join;
     }
 
     template <Color Side, bool CapturesOnly>
@@ -436,10 +410,7 @@ namespace detail {
                               };
                           });
                })
-             | std::views::join
-             | std::views::filter([&position](const Move& move) {
-                   return position.is_legal(move);
-               });
+             | std::views::join;
     }
 
     template <Color Side, bool CapturesOnly>
@@ -462,9 +433,6 @@ namespace detail {
                        .to    = targetSquare,
                        .piece = PieceType::King
                    };
-               })
-             | std::views::filter([&position](const Move& move) {
-                   return position.is_legal(move);
                });
     }
 
@@ -528,12 +496,8 @@ namespace detail {
             const bool castlingBlocked = (requiredSquares & allOccupied).any()
                                       or squares_attacked<OppositeColor>(theirPieces, requiredSquares, ourPieces.occupied);
 
-            if (not castlingBlocked) {
-                const auto move = castle_kingside(Side);
-
-                if (position.is_legal(move))
-                    moves.emplace_back(move);
-            }
+            if (not castlingBlocked)
+                moves.emplace_back(castle_kingside(Side));
         }
 
         if (rights.queenside) {
@@ -545,21 +509,16 @@ namespace detail {
             const bool castlingBlocked = (allOccupied & occupiedMask).any()
                                       or squares_attacked<OppositeColor>(theirPieces, attackedMask, ourPieces.occupied);
 
-            if (not castlingBlocked) {
-                const auto move = castle_queenside(Side);
-
-                if (position.is_legal(move))
-                    moves.emplace_back(move);
-            }
+            if (not castlingBlocked)
+                moves.emplace_back(castle_queenside(Side));
         }
 
         return moves;
     }
 
     template <Color Side, bool CapturesOnly>
-    void generate_internal(
-        const Position&                 position,
-        std::output_iterator<Move> auto outputIt)
+    [[nodiscard, gnu::const]] auto get_all(
+        const Position& position)
     {
         const auto& ourPieces   = position.pieces_for<Side>();
         const auto& theirPieces = position.pieces_for<pieces::other_side<Side>()>();
@@ -567,34 +526,38 @@ namespace detail {
         const auto allOccupied  = ourPieces.occupied | theirPieces.occupied;
         const auto emptySquares = allOccupied.inverse();
 
-        std::ranges::copy(
-            get_all_pawn_moves<Side, CapturesOnly>(position, allOccupied),
-            outputIt);
+        auto pawns   = get_all_pawn_moves<Side, CapturesOnly>(position, allOccupied);
+        auto knights = get_knight_moves<Side, CapturesOnly>(position);
+        auto bishops = get_bishop_moves<Side, CapturesOnly>(position, allOccupied);
+        auto rooks   = get_rook_moves<Side, CapturesOnly>(position, allOccupied);
+        auto queens  = get_queen_moves<Side, CapturesOnly>(position, allOccupied);
+        auto kings   = get_king_moves<Side, CapturesOnly>(position);
 
-        std::ranges::copy(
-            get_knight_moves<Side, CapturesOnly>(position),
-            outputIt);
-
-        std::ranges::copy(
-            get_bishop_moves<Side, CapturesOnly>(position, allOccupied),
-            outputIt);
-
-        std::ranges::copy(
-            get_rook_moves<Side, CapturesOnly>(position, allOccupied),
-            outputIt);
-
-        std::ranges::copy(
-            get_queen_moves<Side, CapturesOnly>(position, allOccupied),
-            outputIt);
-
-        std::ranges::copy(
-            get_king_moves<Side, CapturesOnly>(position),
-            outputIt);
-
-        if constexpr (not CapturesOnly) {
-            std::ranges::copy(
-                get_castling<Side>(position, allOccupied),
-                outputIt);
+        if constexpr (CapturesOnly) {
+            return ranges::concat_view {
+                std::move(pawns),
+                std::move(knights),
+                std::move(bishops),
+                std::move(rooks),
+                std::move(queens),
+                std::move(kings)
+            }
+                 | std::views::filter([&position](const Move& move) {
+                       return position.is_legal(move);
+                   });
+        } else {
+            return ranges::concat_view {
+                std::move(pawns),
+                std::move(knights),
+                std::move(bishops),
+                std::move(rooks),
+                std::move(queens),
+                std::move(kings),
+                get_castling<Side>(position, allOccupied)
+            }
+                 | std::views::filter([&position](const Move& move) {
+                       return position.is_legal(move);
+                   });
         }
     }
 
@@ -612,48 +575,69 @@ namespace detail {
         switch (piece) {
             case PieceType::Pawn: {
                 std::ranges::copy(
-                    get_all_pawn_moves<Side, CapturesOnly>(position, allOccupied),
+                    get_all_pawn_moves<Side, CapturesOnly>(position, allOccupied)
+                        | std::views::filter([&position](const Move& move) {
+                              return position.is_legal(move);
+                          }),
                     outputIt);
                 return;
             }
 
             case PieceType::Knight: {
                 std::ranges::copy(
-                    get_knight_moves<Side, CapturesOnly>(position),
+                    get_knight_moves<Side, CapturesOnly>(position)
+                        | std::views::filter([&position](const Move& move) {
+                              return position.is_legal(move);
+                          }),
                     outputIt);
                 return;
             }
 
             case PieceType::Bishop: {
                 std::ranges::copy(
-                    get_bishop_moves<Side, CapturesOnly>(position, allOccupied),
+                    get_bishop_moves<Side, CapturesOnly>(position, allOccupied)
+                        | std::views::filter([&position](const Move& move) {
+                              return position.is_legal(move);
+                          }),
                     outputIt);
                 return;
             }
 
             case PieceType::Rook: {
                 std::ranges::copy(
-                    get_rook_moves<Side, CapturesOnly>(position, allOccupied),
+                    get_rook_moves<Side, CapturesOnly>(position, allOccupied)
+                        | std::views::filter([&position](const Move& move) {
+                              return position.is_legal(move);
+                          }),
                     outputIt);
                 return;
             }
 
             case PieceType::Queen: {
                 std::ranges::copy(
-                    get_queen_moves<Side, CapturesOnly>(position, allOccupied),
+                    get_queen_moves<Side, CapturesOnly>(position, allOccupied)
+                        | std::views::filter([&position](const Move& move) {
+                              return position.is_legal(move);
+                          }),
                     outputIt);
                 return;
             }
 
             default: // King
                 std::ranges::copy(
-                    get_king_moves<Side, CapturesOnly>(position),
+                    get_king_moves<Side, CapturesOnly>(position)
+                        | std::views::filter([&position](const Move& move) {
+                              return position.is_legal(move);
+                          }),
                     outputIt);
 
                 if constexpr (not CapturesOnly) {
                     // castling is considered a King move
                     std::ranges::copy(
-                        get_castling<Side>(position, allOccupied),
+                        get_castling<Side>(position, allOccupied)
+                            | std::views::filter([&position](const Move& move) {
+                                  return position.is_legal(move);
+                              }),
                         outputIt);
                 }
         }
@@ -684,24 +668,15 @@ namespace detail {
 #endif // DOXYGEN
 
 template <bool CapturesOnly>
-void generate(
-    const Position&                 position,
-    std::output_iterator<Move> auto outputIt)
+auto generate(const Position& position)
 {
-    if (position.is_white_to_move())
-        detail::generate_internal<Color::White, CapturesOnly>(position, outputIt);
-    else
-        detail::generate_internal<Color::Black, CapturesOnly>(position, outputIt);
-}
+    if (position.is_white_to_move()) {
+        return detail::get_all<Color::White, CapturesOnly>(position)
+             | std::ranges::to<std::vector>();
+    }
 
-template <bool CapturesOnly>
-std::vector<Move> generate(const Position& position)
-{
-    std::vector<Move> moves;
-
-    generate<CapturesOnly>(position, std::back_inserter(moves));
-
-    return moves;
+    return detail::get_all<Color::Black, CapturesOnly>(position)
+         | std::ranges::to<std::vector>();
 }
 
 template <bool CapturesOnly>

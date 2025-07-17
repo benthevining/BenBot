@@ -19,7 +19,6 @@
 #include <cassert>
 #include <cmath>   // IWYU pragma: keep - for std::abs()
 #include <cstddef> // IWYU pragma: keep - for size_t
-#include <iterator>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Score.hpp>
@@ -292,7 +291,7 @@ void Context::search()
 
     // if the movesToSearch was empty, then we search all legal moves
     if (options.movesToSearch.empty()) {
-        chess::moves::generate(options.position, std::back_inserter(options.movesToSearch));
+        options.movesToSearch = chess::moves::generate(options.position);
 
         assert(! options.movesToSearch.empty());
     }
