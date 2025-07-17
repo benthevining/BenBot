@@ -93,7 +93,7 @@ public:
 
     /** Copy constructor. */
     inplace_any(const inplace_any& other) // NOLINT
-        : dispatcher(other.dispatcher)
+        : dispatcher { other.dispatcher }
     {
         if (other.has_value()) {
             assert(dispatcher != nullptr);
@@ -104,7 +104,7 @@ public:
 
     /** Move constructor. */
     inplace_any(inplace_any&& other) noexcept // NOLINT
-        : dispatcher(other.dispatcher)
+        : dispatcher { other.dispatcher }
     {
         if (other.has_value()) {
             assert(dispatcher != nullptr);
@@ -455,6 +455,23 @@ void swap(inplace_any<S, A>& first, inplace_any<S, A>& second) noexcept
 {
     first.swap(second);
 }
+
+/*
+                         ___                           ,--,
+      ,---,            ,--.'|_                ,--,   ,--.'|
+    ,---.'|            |  | :,'             ,--.'|   |  | :
+    |   | :            :  : ' :             |  |,    :  : '    .--.--.
+    |   | |   ,---.  .;__,'  /    ,--.--.   `--'_    |  ' |   /  /    '
+  ,--.__| |  /     \ |  |   |    /       \  ,' ,'|   '  | |  |  :  /`./
+ /   ,'   | /    /  |:__,'| :   .--.  .-. | '  | |   |  | :  |  :  ;_
+.   '  /  |.    ' / |  '  : |__  \__\/: . . |  | :   '  : |__ \  \    `.
+'   ; |:  |'   ;   /|  |  | '.'| ," .--.; | '  : |__ |  | '.'| `----.   \
+|   | '/  ''   |  / |  ;  :    ;/  /  ,.  | |  | '.'|;  :    ;/  /`--'  /__  ___  ___
+|   :    :||   :    |  |  ,   /;  :   .'   \;  :    ;|  ,   /'--'.     /  .\/  .\/  .\
+ \   \  /   \   \  /    ---`-' |  ,     .-./|  ,   /  ---`-'   `--'---'\  ; \  ; \  ; |
+  `----'     `----'             `--`---'     ---`-'                     `--" `--" `--"
+
+ */
 
 template <size_t S, size_t A>
 auto inplace_any<S, A>::operator=(const inplace_any& other) -> inplace_any&
