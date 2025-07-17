@@ -1,8 +1,17 @@
 {
   "dependencies": [
-    "magic-enum",
-    "catch2",
-    "nlohmann-json"
+    {
+      "name": "magic-enum",
+      "version>=": "0.9.7"
+    },
+    {
+      "name": "catch2",
+      "version>=": "3.8.1"
+    },
+    {
+      "name": "nlohmann-json",
+      "version>=": "3.12.0"
+    }
   ],
   "name": "BenBot",
   "version": "1.2.0"

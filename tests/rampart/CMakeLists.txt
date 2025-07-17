@@ -14,10 +14,10 @@ FetchContent_Declare (
     nlohmann_json
     SYSTEM
     GIT_REPOSITORY "https://github.com/nlohmann/json.git"
-    GIT_TAG v3.11.3
+    GIT_TAG v3.12.0
     GIT_SHALLOW ON
     GIT_PROGRESS ON
-    FIND_PACKAGE_ARGS 3.11.3
+    FIND_PACKAGE_ARGS 3.12.0
 )
 
 FetchContent_MakeAvailable (nlohmann_json)
