@@ -22,6 +22,7 @@
 #include <cassert>
 #include <concepts>
 #include <cstddef>
+#include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
 #include <format>
 #include <memory>
 #include <new>
@@ -59,9 +60,6 @@ namespace detail {
 
 /** A type-erasing object wrapper similar to ``std::any``, but uses stack memory instead of heap allocations.
 
-    Note that this object can only hold types that are copy-constructible and move-constructible (though they
-    don't have to be copy- or move-assignable).
-
     @tparam Size Maximum size of the object that the inplace_any can hold.
     @tparam Alignment Maximum alignment of the object that the inplace_any can hold.
 
@@ -81,7 +79,6 @@ public:
         using Decayed = std::decay_t<T>;
 
         return sizeof(Decayed) <= Size and alignof(Decayed) <= Alignment
-           /*and std::move_constructible<Decayed>*/
            and not std::is_void_v<Decayed>;
     }
 
@@ -103,7 +100,10 @@ public:
         }
     }
 
-    /** Move constructor. */
+    /** Move constructor.
+        If the ``other`` object contains a non-movable type, this calls its
+        copy constructor.
+     */
     inplace_any(inplace_any&& other) noexcept // NOLINT
         : dispatcher { other.dispatcher }
     {
@@ -360,15 +360,17 @@ private:
 
     template <typename T>
     static void call_method_on_object(std::byte* obj, Func func, inplace_any* arg)
-        noexcept(std::copy_constructible<T>
+        noexcept((std::copy_constructible<T> or std::move_constructible<T>)
                  and detail::is_nothrow_copyable<T>()
                  and detail::is_nothrow_movable<T>()
                  and std::is_nothrow_swappable_v<T>);
 
     template <typename T>
-    static void call_destructor(std::byte* obj) noexcept // std::destroy_at isn't noexcept for some reason, but a type that throws from its destructor is probably ill-formed
+    static void call_destructor([[maybe_unused]] std::byte* obj) noexcept // std::destroy_at isn't noexcept for some reason, but a type that throws from its destructor is probably ill-formed
     {
-        std::destroy_at(std::launder(reinterpret_cast<T*>(obj))); // NOLINT
+        if constexpr (std::destructible<T>) {
+            std::destroy_at(std::launder(reinterpret_cast<T*>(obj))); // NOLINT
+        }
     }
 
     template <typename T>
@@ -389,7 +391,7 @@ private:
     template <typename T>
     static void call_copy_assign(std::byte* obj, const inplace_any* arg)
         noexcept(std::is_nothrow_copy_assignable_v<T>)
-        requires std::copyable<T>
+        requires std::is_copy_assignable_v<T>
     {
         assert(arg != nullptr);
         assert(arg->holds_type<T>());
@@ -404,6 +406,7 @@ private:
     template <typename T>
     static void call_move_construct(std::byte* obj, inplace_any* arg)
         noexcept(std::is_nothrow_move_constructible_v<T>)
+        requires std::move_constructible<T>
     {
         assert(arg != nullptr);
         assert(arg->holds_type<T>());
@@ -418,7 +421,7 @@ private:
     template <typename T>
     static void call_move_assign(std::byte* obj, inplace_any* arg)
         noexcept(std::is_nothrow_move_assignable_v<T>)
-        requires std::movable<T>
+        requires std::is_move_assignable_v<T>
     {
         assert(arg != nullptr);
         assert(arg->holds_type<T>());
@@ -586,7 +589,7 @@ template <size_t S, size_t A>
 template <typename T>
 void inplace_any<S, A>::call_method_on_object(
     std::byte* obj, const Func func, inplace_any* arg)
-    noexcept(std::copy_constructible<T>
+    noexcept((std::copy_constructible<T> or std::move_constructible<T>)
              and detail::is_nothrow_copyable<T>()
              and detail::is_nothrow_movable<T>()
              and std::is_nothrow_swappable_v<T>)
@@ -597,12 +600,8 @@ void inplace_any<S, A>::call_method_on_object(
     assert(obj != nullptr);
 
     switch (func) {
-        case (Func::Destruct): {
-            if constexpr (std::is_destructible_v<T>) {
-                call_destructor<T>(obj);
-            }
-            return;
-        }
+        case (Func::Destruct):
+            return call_destructor<T>(obj);
 
         case (Func::Swap):
             return call_swap<T>(obj, arg);
@@ -617,18 +616,23 @@ void inplace_any<S, A>::call_method_on_object(
             }
         }
 
-        case (Func::MoveConstruct):
-            return call_move_construct<T>(obj, arg);
+        case (Func::MoveConstruct): {
+            if constexpr (std::move_constructible<T>) {
+                return call_move_construct<T>(obj, arg);
+            } else {
+                return call_copy_construct<T>(obj, arg);
+            }
+        }
 
         case (Func::CopyAssign): {
             // copy-assign if supported, otherwise destroy & copy-construct
-            if constexpr (std::copyable<T>) {
+            if constexpr (std::is_copy_assignable_v<T>) {
                 call_copy_assign<T>(obj, arg);
             } else {
                 call_destructor<T>(obj);
 
                 if constexpr (std::copy_constructible<T>) {
-                    return call_copy_construct<T>(obj, arg);
+                    call_copy_construct<T>(obj, arg);
                 } else {
                     throw std::logic_error {
                         "Error - cannot copy construct non-copyable object!"
@@ -641,11 +645,16 @@ void inplace_any<S, A>::call_method_on_object(
 
         case (Func::MoveAssign): {
             // move-assign if supported, otherwise destroy & move-construct
-            if constexpr (std::movable<T>) {
+            if constexpr (std::is_move_assignable_v<T>) {
                 call_move_assign<T>(obj, arg);
             } else {
                 call_destructor<T>(obj);
-                call_move_construct<T>(obj, arg);
+
+                if constexpr (std::is_move_constructible_v<T>) {
+                    call_move_construct<T>(obj, arg);
+                } else {
+                    call_copy_construct<T>(obj, arg);
+                }
             }
 
             return;

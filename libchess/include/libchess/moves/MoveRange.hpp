@@ -21,6 +21,7 @@
 
 #include <cassert>
 #include <cstddef>
+#include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
 #include <iterator>
 #include <libchess/moves/Move.hpp>
 #include <libchess/util/inplace_any.hpp>
@@ -58,12 +59,14 @@ public:
     struct IteratorTag { };
     struct SentinelTag { };
 
-    template <typename It, typename Tag>
+    template <typename It, typename Tag, typename Sentinel>
     explicit MoveRangeIterator(
-        It&& it, [[maybe_unused]] TypeTag<Tag> placeholder) noexcept
+        It&&                               it,
+        [[maybe_unused]] TypeTag<Tag>      isSentinel,
+        [[maybe_unused]] TypeTag<Sentinel> sentinelType) noexcept
         requires(not std::is_same_v<MoveRangeIterator, std::decay_t<It>>)
         : holder(std::forward<It>(it))
-        , dispatcher(&call_method_on_iterator<It, std::is_same_v<Tag, SentinelTag>>)
+        , dispatcher(&call_method_on_iterator<It, std::is_same_v<Tag, SentinelTag>, Sentinel>)
     {
         static_assert(
             Holder::can_store<It>(),
@@ -81,23 +84,23 @@ public:
         return holder.get<It>();
     }
 
-    [[nodiscard]] value_type operator*() const noexcept;
+    [[nodiscard]] value_type operator*() const;
 
-    MoveRangeIterator& operator++() noexcept
+    MoveRangeIterator& operator++()
     {
         assert(dispatcher != nullptr);
         dispatcher(holder, Func::Increment, nullptr, nullptr);
         return *this;
     }
 
-    [[nodiscard]] MoveRangeIterator operator++(int) noexcept
+    [[nodiscard]] MoveRangeIterator operator++(int)
     {
         auto tmp = *this;
         operator++();
         return tmp;
     }
 
-    bool operator==(const MoveRangeIterator& other) const noexcept;
+    bool operator==(const MoveRangeIterator& other) const;
 
 private:
     enum class Func : std::uint_least8_t {
@@ -108,7 +111,7 @@ private:
 
     using DispatchFunc = void(Holder&, Func, std::byte*, const std::byte*);
 
-    template <typename Iterator, bool IsSentinel>
+    template <typename Iterator, bool IsSentinel, typename Sentinel>
     static void call_method_on_iterator(
         Holder& itHolder, Func opCode, std::byte* ret, const std::byte* arg);
 
@@ -151,7 +154,7 @@ struct MoveRange final {
 private:
     using Holder = util::inplace_any<4096uz, alignof(std::max_align_t)>;
 
-    enum class Func {
+    enum class Func : std::uint_least8_t {
         Begin,
         End
     };
@@ -186,7 +189,9 @@ private:
 
  */
 
-template <typename Iterator, bool IsSentinel>
+// when IsSentinel is true, Iterator is actually the range's sentinel type
+// and Sentinel is the range's iterator type
+template <typename Iterator, bool IsSentinel, typename Sentinel>
 void MoveRangeIterator::call_method_on_iterator(
     Holder& itHolder, const Func opCode, std::byte* ret, const std::byte* arg)
 {
@@ -221,26 +226,29 @@ void MoveRangeIterator::call_method_on_iterator(
             const auto& otherIt = *reinterpret_cast<const MoveRangeIterator*>(arg); // NOLINT
 
             if constexpr (IsSentinel) {
-                boolRet = otherIt.holder.holds_type<Iterator>();
-            } else {
                 if (otherIt.holder.holds_type<Iterator>()) {
-                    const auto& otherBase = otherIt.holder.get<Iterator>();
-
-                    // TODO!
-                    // boolRet = it == otherBase;
-                    // } else if (otherIt.holder.holds_type<Sentinel>()) {
-                    //     const auto& otherIt = otherBufIt.holder.get<Sentinel>();
-                    //
-                    //     boolRet = it == otherIt;
-                } else {
-                    boolRet = false;
+                    boolRet = true;
+                    return;
                 }
+
+                auto& other = otherIt.holder.get<Sentinel>();
+
+                boolRet = other == it;
+            } else {
+                if (not otherIt.holder.holds_type<Sentinel>()) {
+                    boolRet = false;
+                    return;
+                }
+
+                auto& sentinel = otherIt.holder.get<Sentinel>();
+
+                boolRet = it == sentinel;
             }
         }
     }
 }
 
-inline bool MoveRangeIterator::operator==(const MoveRangeIterator& other) const noexcept
+inline bool MoveRangeIterator::operator==(const MoveRangeIterator& other) const
 {
     if (holder.empty() && other.holder.empty())
         return true; // both iterators are null
@@ -256,7 +264,7 @@ inline bool MoveRangeIterator::operator==(const MoveRangeIterator& other) const 
     return ret;
 }
 
-inline auto MoveRangeIterator::operator*() const noexcept -> value_type
+inline auto MoveRangeIterator::operator*() const -> value_type
 {
     assert(dispatcher != nullptr);
 
@@ -277,13 +285,15 @@ auto MoveRange::call_method_on_range(
         case Func::Begin:
             return iterator {
                 std::ranges::begin(range),
-                iterator::TypeTag<iterator::IteratorTag> {}
+                iterator::TypeTag<iterator::IteratorTag> {},
+                iterator::TypeTag<std::ranges::sentinel_t<Range>> {}
             };
 
         case Func::End:
             return iterator {
                 std::ranges::end(range),
-                iterator::TypeTag<iterator::SentinelTag> {}
+                iterator::TypeTag<iterator::SentinelTag> {},
+                iterator::TypeTag<std::ranges::iterator_t<Range>> {}
             };
 
         default:
