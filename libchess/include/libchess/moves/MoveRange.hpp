@@ -146,6 +146,8 @@ struct MoveRange final {
     [[nodiscard]] iterator begin() { return get_iterator(Func::Begin); }
     [[nodiscard]] iterator end() { return get_iterator(Func::End); }
 
+    [[nodiscard]] bool empty() const { return std::ranges::empty(*this); }
+
 private:
     using Holder = util::inplace_any<4096uz, alignof(std::max_align_t)>;
 
