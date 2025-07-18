@@ -12,6 +12,7 @@
  * ======================================================================================
  */
 
+#include <algorithm>
 #include <array>
 #include <beman/inplace_vector/inplace_vector.hpp>
 #include <libchess/board/Bitboard.hpp>
@@ -26,6 +27,7 @@
 #include <libchess/moves/MoveRange.hpp>
 #include <libchess/moves/PseudoLegal.hpp>
 #include <libchess/pieces/Colors.hpp>
+#include <magic_enum/magic_enum.hpp>
 #include <optional>
 #include <range/v3/view/concat.hpp>
 #include <ranges>
@@ -589,16 +591,11 @@ namespace {
     template <Color Side>
     [[nodiscard]] bool any_legal_moves_internal(const Position& position)
     {
-        // as an optimization, check for king moves first, because in a double check,
-        // a king move would be the only valid response
-        for (const auto piece : { PieceType::King, PieceType::Pawn, PieceType::Knight, PieceType::Queen, PieceType::Rook, PieceType::Bishop }) {
-            const auto moves = generate_for_internal<Side, false>(position, piece);
-
-            if (not moves.empty())
-                return true;
-        }
-
-        return false;
+        return std::ranges::any_of(
+            magic_enum::enum_values<PieceType>(),
+            [&position](const PieceType type) {
+                return not generate_for_internal<Side, false>(position, type).empty();
+            });
     }
 
 } // namespace

@@ -31,7 +31,6 @@
 #include <libchess/util/Threading.hpp>
 #include <optional>
 #include <utility>
-#include <vector>
 
 namespace ben_bot::search {
 
@@ -123,8 +122,7 @@ namespace {
         bounds.alpha = std::max(bounds.alpha, evaluation);
 
         // captures only
-        auto moves = chess::moves::generate<true>(currentPosition)
-                   | std::ranges::to<beman::inplace_vector<Move, 200uz>>();
+        auto moves = chess::moves::generate<true>(currentPosition).to_vec();
 
         detail::order_moves_for_q_search(currentPosition, moves);
 
@@ -193,8 +191,7 @@ namespace {
             return {};
         }
 
-        auto moves = chess::moves::generate(currentPosition)
-                   | std::ranges::to<std::vector>();
+        auto moves = chess::moves::generate(currentPosition).to_vec();
 
         if (moves.empty() && currentPosition.is_check()) {
             transTable.store(

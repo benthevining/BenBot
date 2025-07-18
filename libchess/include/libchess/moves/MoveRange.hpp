@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <beman/inplace_vector/inplace_vector.hpp>
 #include <cassert>
 #include <cstddef>
 #include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
@@ -32,6 +33,8 @@
 #include <utility>
 
 namespace chess::moves {
+
+using std::size_t;
 
 /** A type-erased iterator whose value type is Move, and may wrap any type of iterator whose value
     type is Move.
@@ -65,8 +68,8 @@ public:
         [[maybe_unused]] TypeTag<Tag>      isSentinel,
         [[maybe_unused]] TypeTag<Sentinel> sentinelType) noexcept
         requires(not std::is_same_v<MoveRangeIterator, std::decay_t<It>>)
-        : holder(std::forward<It>(it))
-        , dispatcher(&call_method_on_iterator<It, std::is_same_v<Tag, SentinelTag>, Sentinel>)
+        : holder { std::forward<It>(it) }
+        , dispatcher { &call_method_on_iterator<It, std::is_same_v<Tag, SentinelTag>, Sentinel> }
     {
         static_assert(
             Holder::can_store<It>(),
@@ -150,6 +153,16 @@ struct MoveRange final {
     [[nodiscard]] iterator end() { return get_iterator(Func::End); }
 
     [[nodiscard]] bool empty() const { return std::ranges::empty(*this); }
+
+    template <size_t MaxMoves = 218uz>
+    [[nodiscard]] auto to_vec() &&
+    {
+        using Vec = beman::inplace_vector<Move, MaxMoves>;
+
+        return std::move(*this)
+             | std::views::take(MaxMoves)
+             | std::ranges::to<Vec>();
+    }
 
 private:
     using Holder = util::inplace_any<4096uz, alignof(std::max_align_t)>;
