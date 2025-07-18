@@ -81,8 +81,7 @@ public:
         using Decayed = std::decay_t<T>;
 
         return sizeof(Decayed) <= Size and alignof(Decayed) <= Alignment
-           and std::is_destructible_v<Decayed>
-           and std::copy_constructible<Decayed> and std::move_constructible<Decayed>
+           /*and std::move_constructible<Decayed>*/
            and not std::is_void_v<Decayed>;
     }
 
@@ -91,7 +90,9 @@ public:
     /** Creates an empty inplace_any object. */
     constexpr inplace_any() noexcept = default;
 
-    /** Copy constructor. */
+    /** Copy constructor.
+        If the ``other`` object contains a non-copyable type, this will throw.
+     */
     inplace_any(const inplace_any& other) // NOLINT
         : dispatcher { other.dispatcher }
     {
@@ -133,7 +134,9 @@ public:
 
     /// @name Assignment operators
     ///@{
-    /** Copy assignment operator. */
+    /** Copy assignment operator.
+        If the ``other`` object contains a non-copyable type, this will throw.
+     */
     inplace_any& operator=(const inplace_any& other);
 
     /** Move assignment operator. */
@@ -357,7 +360,8 @@ private:
 
     template <typename T>
     static void call_method_on_object(std::byte* obj, Func func, inplace_any* arg)
-        noexcept(detail::is_nothrow_copyable<T>()
+        noexcept(std::copy_constructible<T>
+                 and detail::is_nothrow_copyable<T>()
                  and detail::is_nothrow_movable<T>()
                  and std::is_nothrow_swappable_v<T>);
 
@@ -370,6 +374,7 @@ private:
     template <typename T>
     static void call_copy_construct(std::byte* obj, const inplace_any* arg)
         noexcept(std::is_nothrow_copy_constructible_v<T>)
+        requires std::copy_constructible<T>
     {
         assert(arg != nullptr);
         assert(arg->holds_type<T>());
@@ -581,7 +586,8 @@ template <size_t S, size_t A>
 template <typename T>
 void inplace_any<S, A>::call_method_on_object(
     std::byte* obj, const Func func, inplace_any* arg)
-    noexcept(detail::is_nothrow_copyable<T>()
+    noexcept(std::copy_constructible<T>
+             and detail::is_nothrow_copyable<T>()
              and detail::is_nothrow_movable<T>()
              and std::is_nothrow_swappable_v<T>)
 {
@@ -591,14 +597,25 @@ void inplace_any<S, A>::call_method_on_object(
     assert(obj != nullptr);
 
     switch (func) {
-        case (Func::Destruct):
-            return call_destructor<T>(obj);
+        case (Func::Destruct): {
+            if constexpr (std::is_destructible_v<T>) {
+                call_destructor<T>(obj);
+            }
+            return;
+        }
 
         case (Func::Swap):
             return call_swap<T>(obj, arg);
 
-        case (Func::CopyConstruct):
-            return call_copy_construct<T>(obj, arg);
+        case (Func::CopyConstruct): {
+            if constexpr (std::copy_constructible<T>) {
+                return call_copy_construct<T>(obj, arg);
+            } else {
+                throw std::logic_error {
+                    "Error - cannot copy construct non-copyable object!"
+                };
+            }
+        }
 
         case (Func::MoveConstruct):
             return call_move_construct<T>(obj, arg);
@@ -609,7 +626,14 @@ void inplace_any<S, A>::call_method_on_object(
                 call_copy_assign<T>(obj, arg);
             } else {
                 call_destructor<T>(obj);
-                call_copy_construct<T>(obj, arg);
+
+                if constexpr (std::copy_constructible<T>) {
+                    return call_copy_construct<T>(obj, arg);
+                } else {
+                    throw std::logic_error {
+                        "Error - cannot copy construct non-copyable object!"
+                    };
+                }
             }
 
             return;

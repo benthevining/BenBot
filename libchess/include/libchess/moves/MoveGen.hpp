@@ -33,6 +33,7 @@
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Magics.hpp>
 #include <libchess/moves/Move.hpp>
+#include <libchess/moves/MoveRange.hpp>
 #include <libchess/moves/PseudoLegal.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
@@ -516,7 +517,7 @@ namespace detail {
     }
 
     template <Color Side, bool CapturesOnly>
-    [[nodiscard, gnu::const]] auto get_all(
+    [[nodiscard, gnu::const]] MoveRange get_all(
         const Position& position)
     {
         const auto& ourPieces   = position.pieces_for<Side>();
@@ -535,18 +536,17 @@ namespace detail {
         };
 
         if constexpr (CapturesOnly) {
-            return std::move(moves)
-                 | std::views::filter([position](const Move& move) {
-                       return position.is_legal(move);
-                   });
+            return MoveRange { std::move(moves)
+                               | std::views::filter([position](const Move& move) {
+                                     return position.is_legal(move);
+                                 }) };
         } else {
-            return ranges::concat_view {
-                std::move(moves),
-                get_castling<Side>(position, allOccupied)
-            }
-                 | std::views::filter([position](const Move& move) {
-                       return position.is_legal(move);
-                   });
+            return MoveRange { ranges::concat_view {
+                                   std::move(moves),
+                                   get_castling<Side>(position, allOccupied) }
+                               | std::views::filter([position](const Move& move) {
+                                     return position.is_legal(move);
+                                 }) };
         }
     }
 
@@ -659,13 +659,10 @@ namespace detail {
 template <bool CapturesOnly>
 auto generate(const Position& position)
 {
-    if (position.is_white_to_move()) {
-        return detail::get_all<Color::White, CapturesOnly>(position)
-             | std::ranges::to<std::vector>();
-    }
+    if (position.is_white_to_move())
+        return detail::get_all<Color::White, CapturesOnly>(position);
 
-    return detail::get_all<Color::Black, CapturesOnly>(position)
-         | std::ranges::to<std::vector>();
+    return detail::get_all<Color::Black, CapturesOnly>(position);
 }
 
 template <bool CapturesOnly>

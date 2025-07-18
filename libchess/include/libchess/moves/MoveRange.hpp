@@ -26,6 +26,7 @@
 #include <libchess/util/inplace_any.hpp>
 #include <memory>
 #include <ranges>
+#include <stdexcept>
 #include <type_traits>
 #include <utility>
 
@@ -38,7 +39,7 @@ namespace chess::moves {
     @see MoveRange
  */
 class MoveRangeIterator final {
-    using Holder = util::inplace_any<64uz, alignof(std::max_align_t)>;
+    using Holder = util::inplace_any<1024uz, alignof(std::max_align_t)>;
 
 public:
     using iterator_category = std::input_iterator_tag;
@@ -50,19 +51,23 @@ public:
 
     MoveRangeIterator() noexcept = default;
 
-    template <typename It>
-    explicit MoveRangeIterator(It&& it) noexcept
+    // trick to get around not being able to specify constructor template arguments
+    template <typename Type>
+    struct TypeTag final { };
+
+    struct IteratorTag { };
+    struct SentinelTag { };
+
+    template <typename It, typename Tag>
+    explicit MoveRangeIterator(
+        It&& it, [[maybe_unused]] TypeTag<Tag> placeholder) noexcept
         requires(not std::is_same_v<MoveRangeIterator, std::decay_t<It>>)
         : holder(std::forward<It>(it))
-        , dispatcher(&call_method_on_iterator<It>)
+        , dispatcher(&call_method_on_iterator<It, std::is_same_v<Tag, SentinelTag>>)
     {
         static_assert(
             Holder::can_store<It>(),
             "If you hit this, you may need to increase the storage space size in MoveRangeIterator");
-
-        static_assert(
-            std::is_base_of_v<iterator_category, typename std::iterator_traits<It>::iterator_category>,
-            "It must be at least an input iterator");
     }
 
     /** This method can be used to retrieve the underlying wrapped iterator type.
@@ -94,32 +99,18 @@ public:
 
     bool operator==(const MoveRangeIterator& other) const noexcept;
 
-    bool operator<(const MoveRangeIterator& other) const noexcept { return get_bool_result(other, Func::LessThan); }
-    bool operator<=(const MoveRangeIterator& other) const noexcept { return get_bool_result(other, Func::LessThanEqualTo); }
-    bool operator>(const MoveRangeIterator& other) const noexcept { return get_bool_result(other, Func::GreaterThan); }
-    bool operator>=(const MoveRangeIterator& other) const noexcept { return get_bool_result(other, Func::GreaterThanEqualTo); }
-
 private:
     enum class Func : std::uint_least8_t {
-        Increment,         // ++
-        Dereference,       // *
-        AreEqual,          // ==
-        LessThan,          // <
-        LessThanEqualTo,   // <=
-        GreaterThan,       // >
-        GreaterThanEqualTo // >=
+        Increment,   // ++
+        Dereference, // *
+        AreEqual     // ==
     };
 
     using DispatchFunc = void(Holder&, Func, std::byte*, const std::byte*);
 
-    template <typename Iterator>
+    template <typename Iterator, bool IsSentinel>
     static void call_method_on_iterator(
         Holder& itHolder, Func opCode, std::byte* ret, const std::byte* arg);
-
-    template <typename Iterator>
-    static void call_bool_method_on_iterator_pair(const Iterator& it, Func opCode, std::byte* ret, const std::byte* arg);
-
-    [[nodiscard]] bool get_bool_result(const MoveRangeIterator& other, Func opCode) const noexcept;
 
     // mutable to avoid const_cast when we need to pass this into the dispatch func from const member funcs
     mutable Holder holder;
@@ -156,7 +147,7 @@ struct MoveRange final {
     [[nodiscard]] iterator end() { return get_iterator(Func::End); }
 
 private:
-    using Holder = util::inplace_any<128uz, alignof(std::max_align_t)>;
+    using Holder = util::inplace_any<4096uz, alignof(std::max_align_t)>;
 
     enum class Func {
         Begin,
@@ -193,70 +184,74 @@ private:
 
  */
 
-template <typename Iterator>
-void MoveRangeIterator::call_method_on_iterator(Holder& itHolder, Func opCode, std::byte* ret, const std::byte* arg)
+template <typename Iterator, bool IsSentinel>
+void MoveRangeIterator::call_method_on_iterator(
+    Holder& itHolder, const Func opCode, std::byte* ret, const std::byte* arg)
 {
     auto& it = itHolder.get<Iterator>();
 
     switch (opCode) {
-        case (Func::Increment):
-            ++it;
-            return;
-
-        case (Func::Dereference): {
-            assert(ret != nullptr);
-            std::construct_at(reinterpret_cast<value_type*>(ret), *it); // NOLINT
+        case (Func::Increment): {
+            if constexpr (IsSentinel) {
+                throw std::logic_error { "Cannot increment sentinel!" };
+            } else {
+                ++it;
+            }
             return;
         }
 
-        case (Func::AreEqual)       : [[fallthrough]];
-        case (Func::LessThan)       : [[fallthrough]];
-        case (Func::LessThanEqualTo): [[fallthrough]];
-        case (Func::GreaterThan)    : [[fallthrough]];
-        case (Func::GreaterThanEqualTo):
-            return call_bool_method_on_iterator_pair(it, opCode, ret, arg);
+        case (Func::Dereference): {
+            if constexpr (IsSentinel) {
+                throw std::logic_error { "Cannot dereference sentinel!" };
+            } else {
+                assert(ret != nullptr);
+                std::construct_at(reinterpret_cast<value_type*>(ret), *it); // NOLINT
+            }
+            return;
+        }
+
+        case (Func::AreEqual): {
+            assert(ret != nullptr);
+            assert(arg != nullptr);
+
+            auto& boolRet = *reinterpret_cast<bool*>(ret); // NOLINT
+
+            const auto& otherIt = *reinterpret_cast<const MoveRangeIterator*>(arg); // NOLINT
+
+            if constexpr (IsSentinel) {
+                boolRet = otherIt.holder.holds_type<Iterator>();
+            } else {
+                if (otherIt.holder.holds_type<Iterator>()) {
+                    const auto& otherBase = otherIt.holder.get<Iterator>();
+
+                    // TODO!
+                    // boolRet = it == otherBase;
+                    // } else if (otherIt.holder.holds_type<Sentinel>()) {
+                    //     const auto& otherIt = otherBufIt.holder.get<Sentinel>();
+                    //
+                    //     boolRet = it == otherIt;
+                } else {
+                    boolRet = false;
+                }
+            }
+        }
     }
 }
 
-template <typename Iterator>
-void MoveRangeIterator::call_bool_method_on_iterator_pair(
-    const Iterator&  it,
-    const Func       opCode,
-    std::byte*       ret,
-    const std::byte* arg)
+inline bool MoveRangeIterator::operator==(const MoveRangeIterator& other) const noexcept
 {
-    assert(ret != nullptr);
-    assert(arg != nullptr);
+    if (holder.empty() && other.holder.empty())
+        return true; // both iterators are null
 
-    auto& boolRet = *reinterpret_cast<bool*>(ret); // NOLINT
+    assert(dispatcher != nullptr);
 
-    const auto& otherBufIt = *reinterpret_cast<const MoveRangeIterator*>(arg); // NOLINT
-    const auto& otherIt    = otherBufIt.holder.get<Iterator>();
+    bool ret { false };
 
-    switch (opCode) {
-        case (Func::AreEqual):
-            boolRet = it == otherIt;
-            return;
+    dispatcher(holder, Func::AreEqual,
+        reinterpret_cast<std::byte*>(&ret),          // NOLINT
+        reinterpret_cast<const std::byte*>(&other)); // NOLINT
 
-        case (Func::LessThan):
-            boolRet = it < otherIt;
-            return;
-
-        case (Func::LessThanEqualTo):
-            boolRet = it <= otherIt;
-            return;
-
-        case (Func::GreaterThan):
-            boolRet = it > otherIt;
-            return;
-
-        case (Func::GreaterThanEqualTo):
-            boolRet = it >= otherIt;
-            return;
-
-        default:
-            std::unreachable();
-    }
+    return ret;
 }
 
 inline auto MoveRangeIterator::operator*() const noexcept -> value_type
@@ -278,17 +273,23 @@ auto MoveRange::call_method_on_range(
 
     switch (opCode) {
         case Func::Begin:
-            return iterator { std::ranges::begin(range) };
+            return iterator {
+                std::ranges::begin(range),
+                iterator::TypeTag<iterator::IteratorTag> {}
+            };
 
         case Func::End:
-            return iterator { std::ranges::end(range) };
+            return iterator {
+                std::ranges::end(range),
+                iterator::TypeTag<iterator::SentinelTag> {}
+            };
 
         default:
             std::unreachable();
     }
 }
 
-inline auto MoveRange::get_iterator(Func opCode) -> iterator
+inline auto MoveRange::get_iterator(const Func opCode) -> iterator
 {
     assert(dispatcher != nullptr);
     return dispatcher(range, opCode);
