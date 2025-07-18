@@ -16,9 +16,11 @@
 #include "TimeManagement.hpp"
 #include <algorithm>
 #include <atomic>
+#include <beman/inplace_vector/inplace_vector.hpp>
 #include <cassert>
 #include <cmath>   // IWYU pragma: keep - for std::abs()
 #include <cstddef> // IWYU pragma: keep - for size_t
+#include <iterator>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Score.hpp>
@@ -120,7 +122,9 @@ namespace {
 
         bounds.alpha = std::max(bounds.alpha, evaluation);
 
-        auto moves = chess::moves::generate<true>(currentPosition); // captures only
+        // captures only
+        auto moves = chess::moves::generate<true>(currentPosition)
+                   | std::ranges::to<beman::inplace_vector<Move, 200uz>>();
 
         detail::order_moves_for_q_search(currentPosition, moves);
 
@@ -189,7 +193,8 @@ namespace {
             return {};
         }
 
-        auto moves = chess::moves::generate(currentPosition);
+        auto moves = chess::moves::generate(currentPosition)
+                   | std::ranges::to<std::vector>();
 
         if (moves.empty() && currentPosition.is_check()) {
             transTable.store(
@@ -291,7 +296,9 @@ void Context::search()
 
     // if the movesToSearch was empty, then we search all legal moves
     if (options.movesToSearch.empty()) {
-        options.movesToSearch = chess::moves::generate(options.position);
+        std::ranges::copy(
+            chess::moves::generate(options.position),
+            std::back_inserter(options.movesToSearch));
 
         assert(! options.movesToSearch.empty());
     }
