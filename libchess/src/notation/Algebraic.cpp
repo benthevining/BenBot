@@ -16,7 +16,6 @@
 #include <beman/inplace_vector/inplace_vector.hpp>
 #include <cassert>
 #include <format>
-#include <iterator>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
@@ -28,6 +27,7 @@
 #include <libchess/pieces/PieceTypes.hpp>
 #include <libchess/util/Strings.hpp>
 #include <optional>
+#include <ranges>
 #include <span>
 #include <stdexcept>
 #include <string>
@@ -47,20 +47,11 @@ namespace {
     [[nodiscard]] auto get_possible_move_origins(
         const Position& position, const Square& targetSquare, const PieceType piece)
     {
-        // we're only generating moves for one piece type, so we can
-        // avoid dynamic memory allocation by using inplace_vector
-        beman::inplace_vector<Move, 100uz> moves;
-
-        moves::generate_for(position, piece, std::back_inserter(moves));
-
-        // erase moves not to the given target square
-        moves.erase(
-            std::ranges::remove_if(moves,
-                [targetSquare](const Move& candidate) { return candidate.to != targetSquare; })
-                .begin(),
-            moves.end());
-
-        return moves;
+        return moves::generate_for(position, piece)
+             | std::views::filter([targetSquare](const Move& move) {
+                   return move.to == targetSquare;
+               })
+             | std::ranges::to<beman::inplace_vector<Move, 100uz>>();
     }
 
     [[nodiscard]] string_view get_check_string(const Position& position, const Move& move)
