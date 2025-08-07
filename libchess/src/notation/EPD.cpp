@@ -33,40 +33,25 @@ using util::int_from_string;
 namespace {
 
     void parse_operations(
-        EPDPosition& pos, string_view text)
+        EPDPosition& pos, const string_view text)
     {
-        while (true) {
-            text = util::trim(text);
+        auto opStrings = util::split_by_delim(util::trim(text), ';')
+                       | std::views::transform([](const string_view str) { return util::trim(str); })
+                       | std::views::filter([](const string_view str) { return not str.empty(); });
 
-            if (text.empty())
-                return;
-
-            const auto nextSemi = text.find(';');
-
-            if (nextSemi == string_view::npos) {
-                throw std::invalid_argument {
-                    std::format("Expected ; in EPD operation: {}", text)
-                };
-            }
-
-            const auto thisOperation = text.substr(0, nextSemi);
-
-            auto [key, value] = util::split_at_first_space(thisOperation);
+        for (const auto opString : opStrings) {
+            auto [key, value] = util::split_at_first_space(opString);
 
             key   = util::trim(key);
             value = util::trim(value);
 
-            assert(not key.empty());
-            assert(not value.empty());
-
             if (value.front() == '"')
                 value.remove_prefix(1uz);
-
-            assert(not value.empty());
 
             if (value.back() == '"')
                 value.remove_suffix(1uz);
 
+            assert(not key.empty());
             assert(not value.empty());
 
             pos.operations[std::string { key }] = value;
@@ -76,8 +61,6 @@ namespace {
             } else if (key == "hmvc") {
                 pos.position.halfmoveClock = int_from_string(value, pos.position.halfmoveClock);
             }
-
-            text.remove_prefix(nextSemi + 1uz);
         }
     }
 

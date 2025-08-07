@@ -36,13 +36,18 @@ engine = subprocess.Popen(
 )
 
 engine.stdin.write('uci\n')
-engine.stdin.write('ucinewgame\n')
-engine.stdin.write(f'position {startingFEN}\n')
 
 # skip greeting & info/options output
 for line in engine.stdout:
     if line.strip() == 'uciok':
         break
+
+engine.stdin.write('ucinewgame\n')
+engine.stdin.write('isready\n')
+
+engine.stdout.readline() # "readyok" response
+
+engine.stdin.write(f'position fen {startingFEN}\n')
 
 def get_result_lines(stdout):
     lines = []

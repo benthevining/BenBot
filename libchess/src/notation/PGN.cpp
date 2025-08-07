@@ -24,6 +24,7 @@
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/PGN.hpp>
 #include <libchess/util/Strings.hpp>
+#include <numeric>
 #include <optional>
 #include <ranges>
 #include <stdexcept>
@@ -37,12 +38,12 @@ namespace chess::notation {
 
 Position GameRecord::get_final_position() const
 {
-    auto position { startingPosition };
-
-    for (const auto& move : moves)
-        position.make_move(move.move);
-
-    return position;
+    return std::accumulate(
+        moves.begin(), moves.end(),
+        startingPosition,
+        [](const Position& pos, const Move& move) {
+            return after_move(pos, move.move);
+        });
 }
 
 namespace {

@@ -94,15 +94,26 @@ void write_integer(
     std::integral auto value,
     std::string&       output);
 
+/** Returns a range of string_views created by splitting the input
+    text at the given delimiter.
+
+    @see lines_view(), words_view()
+ */
+[[nodiscard]] auto split_by_delim(string_view text, char delim);
+
 /** Returns a range of string_views, each representing a line from the
     input string.
+
+    @see words_view(), split_by_delim()
  */
-[[nodiscard]] inline auto lines_view(string_view text);
+[[nodiscard]] auto lines_view(string_view text);
 
 /** Returns a range of string_views, each representing a word from the
     input string.
+
+    @see lines_view(), split_by_delim()
  */
-[[nodiscard]] inline auto words_view(string_view text);
+[[nodiscard]] auto words_view(string_view text);
 
 /// @}
 
@@ -156,23 +167,21 @@ void write_integer(
         static_cast<size_t>(std::distance(buffer.data(), result.ptr)));
 }
 
-namespace detail {
-    [[nodiscard]] inline auto split_by_delim(const string_view text, char delim)
-    {
-        return text
-             | std::views::split(delim)
-             | std::views::transform([](const auto rng) { return string_view { rng }; });
-    }
-} // namespace detail
+inline auto split_by_delim(string_view text, char delim)
+{
+    return text
+         | std::views::split(delim)
+         | std::views::transform([](const auto rng) { return string_view { rng }; });
+}
 
 inline auto lines_view(const string_view text)
 {
-    return detail::split_by_delim(text, '\n');
+    return split_by_delim(text, '\n');
 }
 
 inline auto words_view(const string_view text)
 {
-    return detail::split_by_delim(text, ' ');
+    return split_by_delim(text, ' ');
 }
 
 } // namespace chess::util

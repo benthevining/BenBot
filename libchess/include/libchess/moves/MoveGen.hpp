@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <beman/inplace_vector/inplace_vector.hpp>
 #include <cassert>
@@ -35,7 +36,9 @@
 #include <libchess/moves/PseudoLegal.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
+#include <optional>
 #include <ranges>
+#include <utility>
 #include <vector>
 
 namespace chess::moves {
@@ -131,50 +134,58 @@ namespace detail {
     };
 
     template <Color Side>
-    constexpr void add_pawn_pushes(
-        const Position& position, const Bitboard emptySquares,
-        std::output_iterator<Move> auto outputIt)
+    [[nodiscard, gnu::const]] constexpr auto get_pawn_pushes(
+        const Position& position, const Bitboard emptySquares)
     {
+        using Pushes = beman::inplace_vector<Move, 8uz>;
+
         const auto allPushes = pseudo_legal::pawn_pushes<Side>(
             position.pieces_for<Side>().pawns,
             emptySquares);
 
-        // non-promoting pushes
-        for (const auto target : (allPushes & NOT_PROMOTION_MASK).squares()) {
-            const Move move {
-                .from = {
-                    .file = target.file,
-                    .rank = prev_pawn_rank<Side>(target.rank) },
-                .to    = target,
-                .piece = PieceType::Pawn
-            };
+        auto nonPromotingPushes = (allPushes & NOT_PROMOTION_MASK).squares()
+                                | std::views::transform([](const Square target) {
+                                      return Move {
+                                          .from = {
+                                              .file = target.file,
+                                              .rank = prev_pawn_rank<Side>(target.rank) },
+                                          .to    = target,
+                                          .piece = PieceType::Pawn
+                                      };
+                                  })
+                                | std::ranges::to<Pushes>();
 
-            if (position.is_legal(move))
-                *outputIt = move;
-        }
+        auto promotingPushes = possiblePromotedTypes
+                             | std::views::transform([pushes = (allPushes & PROMOTION_MASK).squares()](
+                                                         const PieceType promotedType) {
+                                   return pushes
+                                        | std::views::transform([promotedType](const Square target) {
+                                              return Move {
+                                                  .from = {
+                                                      .file = target.file,
+                                                      .rank = prev_pawn_rank<Side>(target.rank) },
+                                                  .to           = target,
+                                                  .piece        = PieceType::Pawn,
+                                                  .promotedType = promotedType
+                                              };
+                                          });
+                               })
+                             | std::views::join
+                             | std::ranges::to<Pushes>();
 
-        // promoting pushes
-        for (const auto target : (allPushes & PROMOTION_MASK).squares()) {
-            for (const auto promotedType : possiblePromotedTypes) {
-                const Move move {
-                    .from = {
-                        .file = target.file,
-                        .rank = prev_pawn_rank<Side>(target.rank) },
-                    .to           = target,
-                    .piece        = PieceType::Pawn,
-                    .promotedType = promotedType
-                };
+        std::array moveLists {
+            std::move(nonPromotingPushes), std::move(promotingPushes)
+        };
 
-                if (position.is_legal(move))
-                    *outputIt = move;
-            }
-        }
+        return std::views::join(std::move(moveLists))
+             | std::views::filter([&position](const Move& move) {
+                   return position.is_legal(move);
+               });
     }
 
     template <Color Side>
-    constexpr void add_pawn_double_pushes(
-        const Position& position, const Bitboard allOccupied,
-        std::output_iterator<Move> auto outputIt)
+    [[nodiscard, gnu::const]] constexpr auto get_pawn_double_pushes(
+        const Position& position, const Bitboard allOccupied)
     {
         static constexpr auto pawnStartingRank = Side == Color::White ? Rank::Two : Rank::Seven;
 
@@ -182,24 +193,43 @@ namespace detail {
             position.pieces_for<Side>().pawns,
             allOccupied);
 
-        for (const auto targetSquare : pushes.squares()) {
-            const Move move {
-                .from = {
-                    .file = targetSquare.file,
-                    .rank = pawnStartingRank },
-                .to    = targetSquare,
-                .piece = PieceType::Pawn
-            };
+        return pushes.squares()
+             | std::views::transform([](const Square target) {
+                   return Move {
+                       .from = {
+                           .file = target.file,
+                           .rank = pawnStartingRank },
+                       .to    = target,
+                       .piece = PieceType::Pawn
+                   };
+               })
+             | std::views::filter([&position](const Move& move) {
+                   return position.is_legal(move);
+               });
+    }
 
-            if (position.is_legal(move))
-                *outputIt = move;
-        }
+    [[nodiscard, gnu::const]] constexpr auto get_pawn_captures_internal(
+        const Bitboard           startingBoard,
+        const Bitboard           targetBoard,
+        std::optional<PieceType> promotedType = std::nullopt)
+    {
+        return std::views::zip(
+                   startingBoard.squares(), targetBoard.squares())
+             | std::views::transform([promotedType](const auto& tuple) {
+                   const auto [starting, target] = tuple;
+
+                   return Move {
+                       .from         = starting,
+                       .to           = target,
+                       .piece        = PieceType::Pawn,
+                       .promotedType = promotedType
+                   };
+               });
     }
 
     template <Color Side>
-    constexpr void add_pawn_captures(
-        const Position&                 position,
-        std::output_iterator<Move> auto outputIt)
+    [[nodiscard, gnu::const]] constexpr auto get_pawn_captures(
+        const Position& position)
     {
         // We handle east & west captures separately to make set-wise operations easier.
         // This way, there is always a 1-1 relationship between a target square and a
@@ -224,64 +254,47 @@ namespace detail {
         const auto canRegCaptureEast = shifts::pawn_inv_capture_east<Side>(eastRegCaptures);
         const auto canRegCaptureWest = shifts::pawn_inv_capture_west<Side>(westRegCaptures);
 
-        for (const auto [starting, target] : std::views::zip(canRegCaptureEast.squares(), eastRegCaptures.squares())) {
-            const Move move {
-                .from  = starting,
-                .to    = target,
-                .piece = PieceType::Pawn
-            };
+        // max number of possible pawn captures is 16 * 4 possible promoted types
+        using PawnCaptures = beman::inplace_vector<Move, 64uz>;
 
-            if (position.is_legal(move))
-                *outputIt = move;
-        }
+        auto get_non_promoting_captures = [](const Bitboard startingBoard, const Bitboard targetBoard) {
+            return get_pawn_captures_internal(startingBoard, targetBoard)
+                 | std::ranges::to<PawnCaptures>();
+        };
 
-        for (const auto [starting, target] : std::views::zip(canRegCaptureWest.squares(), westRegCaptures.squares())) {
-            const Move move {
-                .from  = starting,
-                .to    = target,
-                .piece = PieceType::Pawn
-            };
+        auto get_promotion_captures = [](const Bitboard startingBoard, const Bitboard targetBoard) {
+            return possiblePromotedTypes
+                 | std::views::transform([startingBoard, targetBoard](const PieceType type) {
+                       return get_pawn_captures_internal(startingBoard, targetBoard, type);
+                   })
+                 | std::views::join
+                 | std::ranges::to<PawnCaptures>();
+        };
 
-            if (position.is_legal(move))
-                *outputIt = move;
-        }
+        std::array moveLists {
+            get_non_promoting_captures(canRegCaptureEast, eastRegCaptures),
+            get_non_promoting_captures(canRegCaptureWest, westRegCaptures),
+            get_promotion_captures(canCapturePromoteEast, eastPromotionCaptures),
+            get_promotion_captures(canCapturePromoteWest, westPromotionCaptures)
+        };
 
-        for (const auto [starting, target] : std::views::zip(canCapturePromoteEast.squares(), eastPromotionCaptures.squares())) {
-            for (const auto promotedType : possiblePromotedTypes) {
-                const Move move {
-                    .from         = starting,
-                    .to           = target,
-                    .piece        = PieceType::Pawn,
-                    .promotedType = promotedType
-                };
-
-                if (position.is_legal(move))
-                    *outputIt = move;
-            }
-        }
-
-        for (const auto [starting, target] : std::views::zip(canCapturePromoteWest.squares(), westPromotionCaptures.squares())) {
-            for (const auto promotedType : possiblePromotedTypes) {
-                const Move move {
-                    .from         = starting,
-                    .to           = target,
-                    .piece        = PieceType::Pawn,
-                    .promotedType = promotedType
-                };
-
-                if (position.is_legal(move))
-                    *outputIt = move;
-            }
-        }
+        return std::views::join(std::move(moveLists))
+             | std::views::filter([&position](const Move& move) {
+                   return position.is_legal(move);
+               });
     }
 
     template <Color Side>
-    constexpr void add_en_passant(
-        const Position&                 position,
-        std::output_iterator<Move> auto outputIt)
+    [[nodiscard, gnu::const]] constexpr auto get_en_passant(
+        const Position& position)
     {
-        if (not position.enPassantTargetSquare.has_value())
-            return;
+        // at most 2 captures are possible at a time
+        using EPMoves = beman::inplace_vector<Move, 2uz>;
+
+        if (not position.enPassantTargetSquare.has_value()) {
+            [[likely]];
+            return EPMoves {};
+        }
 
         const auto targetSquare = *position.enPassantTargetSquare;
 
@@ -290,18 +303,18 @@ namespace detail {
         const auto startSquares = shifts::pawn_inv_capture_east<Side>(targetSquareBoard)
                                 | shifts::pawn_inv_capture_west<Side>(targetSquareBoard);
 
-        const auto eligiblePawns = position.pieces_for<Side>().pawns & startSquares;
-
-        for (const auto square : eligiblePawns.squares()) {
-            const Move move {
-                .from  = square,
-                .to    = targetSquare,
-                .piece = PieceType::Pawn
-            };
-
-            if (position.is_legal(move))
-                *outputIt = move;
-        }
+        return (position.pieces_for<Side>().pawns & startSquares).squares()
+             | std::views::transform([targetSquare](const Square square) {
+                   return Move {
+                       .from  = square,
+                       .to    = targetSquare,
+                       .piece = PieceType::Pawn
+                   };
+               })
+             | std::views::filter([&position](const Move& move) {
+                   return position.is_legal(move);
+               })
+             | std::ranges::to<EPMoves>();
     }
 
     template <Color Side, bool CapturesOnly>
@@ -310,129 +323,157 @@ namespace detail {
         std::output_iterator<Move> auto outputIt)
     {
         if constexpr (not CapturesOnly) {
-            add_pawn_pushes<Side>(position, allOccupied.inverse(), outputIt);
-            add_pawn_double_pushes<Side>(position, allOccupied, outputIt);
+            std::ranges::copy(
+                get_pawn_pushes<Side>(position, allOccupied.inverse()),
+                outputIt);
+
+            std::ranges::copy(
+                get_pawn_double_pushes<Side>(position, allOccupied),
+                outputIt);
         }
 
-        add_pawn_captures<Side>(position, outputIt);
-        add_en_passant<Side>(position, outputIt);
+        std::ranges::copy(
+            get_pawn_captures<Side>(position),
+            outputIt);
+
+        std::ranges::copy(
+            get_en_passant<Side>(position),
+            outputIt);
     }
 
     template <Color Side, bool CapturesOnly>
-    constexpr void add_knight_moves(
-        const Position&                 position,
-        std::output_iterator<Move> auto outputIt)
+    [[nodiscard, gnu::const]] constexpr auto get_knight_moves(
+        const Position& position)
     {
         const auto& ourPieces = position.pieces_for<Side>();
 
-        for (const auto knightPos : ourPieces.knights.subboards()) {
-            auto knightMoves = pseudo_legal::knight(knightPos, ourPieces.occupied);
+        return ourPieces.knights.subboards()
+             | std::views::transform([ourOccupied      = ourPieces.occupied,
+                                         theirOccupied = position.pieces_for<pieces::other_side<Side>()>().occupied](
+                                         const Bitboard knightPos) {
+                   auto knightMoves = pseudo_legal::knight(knightPos, ourOccupied);
 
-            if constexpr (CapturesOnly) {
-                knightMoves &= position.pieces_for<pieces::other_side<Side>()>().occupied;
-            }
+                   if constexpr (CapturesOnly) {
+                       knightMoves &= theirOccupied;
+                   }
 
-            for (const auto targetSquare : knightMoves.squares()) {
-                const Move move {
-                    .from  = Square::from_index(knightPos.first()),
-                    .to    = targetSquare,
-                    .piece = PieceType::Knight
-                };
-
-                if (position.is_legal(move))
-                    *outputIt = move;
-            }
-        }
+                   return knightMoves.squares()
+                        | std::views::transform([knightPos](const Square targetSquare) {
+                              return Move {
+                                  .from  = Square::from_index(knightPos.first()),
+                                  .to    = targetSquare,
+                                  .piece = PieceType::Knight
+                              };
+                          });
+               })
+             | std::views::join
+             | std::views::filter([&position](const Move& move) {
+                   return position.is_legal(move);
+               });
     }
 
     template <Color Side, bool CapturesOnly>
-    void add_bishop_moves(
-        const Position&                 position,
-        const Bitboard                  occupiedSquares,
-        std::output_iterator<Move> auto outputIt)
+    [[nodiscard, gnu::const]] auto get_bishop_moves(
+        const Position& position,
+        const Bitboard  occupiedSquares)
     {
         const auto& ourPieces = position.pieces_for<Side>();
 
-        for (const auto bishopPos : ourPieces.bishops.squares()) {
-            auto bishopMoves = magics::bishop(bishopPos, occupiedSquares, ourPieces.occupied);
+        return ourPieces.bishops.squares()
+             | std::views::transform([occupiedSquares,
+                                         ourOccupied   = ourPieces.occupied,
+                                         theirOccupied = position.pieces_for<pieces::other_side<Side>()>().occupied](
+                                         const Square bishopPos) {
+                   auto bishopMoves = magics::bishop(bishopPos, occupiedSquares, ourOccupied);
 
-            if constexpr (CapturesOnly) {
-                bishopMoves &= position.pieces_for<pieces::other_side<Side>()>().occupied;
-            }
+                   if constexpr (CapturesOnly) {
+                       bishopMoves &= theirOccupied;
+                   }
 
-            for (const auto targetSquare : bishopMoves.squares()) {
-                const Move move {
-                    .from  = bishopPos,
-                    .to    = targetSquare,
-                    .piece = PieceType::Bishop
-                };
-
-                if (position.is_legal(move))
-                    *outputIt = move;
-            }
-        }
+                   return bishopMoves.squares()
+                        | std::views::transform([bishopPos](const Square targetSquare) {
+                              return Move {
+                                  .from  = bishopPos,
+                                  .to    = targetSquare,
+                                  .piece = PieceType::Bishop
+                              };
+                          });
+               })
+             | std::views::join
+             | std::views::filter([&position](const Move& move) {
+                   return position.is_legal(move);
+               });
     }
 
     template <Color Side, bool CapturesOnly>
-    void add_rook_moves(
-        const Position&                 position,
-        const Bitboard                  occupiedSquares,
-        std::output_iterator<Move> auto outputIt)
+    [[nodiscard, gnu::const]] auto get_rook_moves(
+        const Position& position,
+        const Bitboard  occupiedSquares)
     {
         const auto& ourPieces = position.pieces_for<Side>();
 
-        for (const auto rookPos : ourPieces.rooks.squares()) {
-            auto rookMoves = magics::rook(rookPos, occupiedSquares, ourPieces.occupied);
+        return ourPieces.rooks.squares()
+             | std::views::transform([occupiedSquares,
+                                         ourOccupied   = ourPieces.occupied,
+                                         theirOccupied = position.pieces_for<pieces::other_side<Side>()>().occupied](
+                                         const Square rookPos) {
+                   auto rookMoves = magics::rook(rookPos, occupiedSquares, ourOccupied);
 
-            if constexpr (CapturesOnly) {
-                rookMoves &= position.pieces_for<pieces::other_side<Side>()>().occupied;
-            }
+                   if constexpr (CapturesOnly) {
+                       rookMoves &= theirOccupied;
+                   }
 
-            for (const auto targetSquare : rookMoves.squares()) {
-                const Move move {
-                    .from  = rookPos,
-                    .to    = targetSquare,
-                    .piece = PieceType::Rook
-                };
-
-                if (position.is_legal(move))
-                    *outputIt = move;
-            }
-        }
+                   return rookMoves.squares()
+                        | std::views::transform([rookPos](const Square targetSquare) {
+                              return Move {
+                                  .from  = rookPos,
+                                  .to    = targetSquare,
+                                  .piece = PieceType::Rook
+                              };
+                          });
+               })
+             | std::views::join
+             | std::views::filter([&position](const Move& move) {
+                   return position.is_legal(move);
+               });
     }
 
     template <Color Side, bool CapturesOnly>
-    void add_queen_moves(
-        const Position&                 position,
-        const Bitboard                  occupiedSquares,
-        std::output_iterator<Move> auto outputIt)
+    [[nodiscard, gnu::const]] auto get_queen_moves(
+        const Position& position,
+        const Bitboard  occupiedSquares)
     {
         const auto& ourPieces = position.pieces_for<Side>();
 
-        for (const auto queenPos : ourPieces.queens.squares()) {
-            auto queenMoves = magics::queen(queenPos, occupiedSquares, ourPieces.occupied);
+        return ourPieces.queens.squares()
+             | std::views::transform([occupiedSquares,
+                                         ourOccupied   = ourPieces.occupied,
+                                         theirOccupied = position.pieces_for<pieces::other_side<Side>()>().occupied](
+                                         const Square queenPos) {
+                   auto queenMoves = magics::queen(queenPos, occupiedSquares, ourOccupied);
 
-            if constexpr (CapturesOnly) {
-                queenMoves &= position.pieces_for<pieces::other_side<Side>()>().occupied;
-            }
+                   if constexpr (CapturesOnly) {
+                       queenMoves &= theirOccupied;
+                   }
 
-            for (const auto targetSquare : queenMoves.squares()) {
-                const Move move {
-                    .from  = queenPos,
-                    .to    = targetSquare,
-                    .piece = PieceType::Queen
-                };
-
-                if (position.is_legal(move))
-                    *outputIt = move;
-            }
-        }
+                   return queenMoves.squares()
+                        | std::views::transform([queenPos](const Square targetSquare) {
+                              return Move {
+                                  .from  = queenPos,
+                                  .to    = targetSquare,
+                                  .piece = PieceType::Queen
+                              };
+                          });
+               })
+             | std::views::join
+             | std::views::filter([&position](const Move& move) {
+                   return position.is_legal(move);
+               });
     }
 
     template <Color Side, bool CapturesOnly>
-    constexpr void add_king_moves(
-        const Position&                 position,
-        std::output_iterator<Move> auto outputIt)
+    [[nodiscard, gnu::const]] constexpr auto get_king_moves(
+        const Position& position)
     {
         const auto& ourPieces = position.pieces_for<Side>();
 
@@ -442,18 +483,18 @@ namespace detail {
             kingMoves &= position.pieces_for<pieces::other_side<Side>()>().occupied;
         }
 
-        const auto kingSquare = ourPieces.get_king_location();
-
-        for (const auto targetSquare : kingMoves.squares()) {
-            const Move move {
-                .from  = kingSquare,
-                .to    = targetSquare,
-                .piece = PieceType::King
-            };
-
-            if (position.is_legal(move))
-                *outputIt = move;
-        }
+        return kingMoves.squares()
+             | std::views::transform([kingSquare = ourPieces.get_king_location()](
+                                         const Square targetSquare) {
+                   return Move {
+                       .from  = kingSquare,
+                       .to    = targetSquare,
+                       .piece = PieceType::King
+                   };
+               })
+             | std::views::filter([&position](const Move& move) {
+                   return position.is_legal(move);
+               });
     }
 
     // the two functions below are masks containing the set of squares that
@@ -492,13 +533,14 @@ namespace detail {
     }
 
     template <Color Side>
-    constexpr void add_castling(
-        const Position& position, const Bitboard allOccupied,
-        std::output_iterator<Move> auto outputIt)
+    [[nodiscard, gnu::const]] constexpr auto get_castling(
+        const Position& position, const Bitboard allOccupied)
     {
+        beman::inplace_vector<Move, 2uz> moves;
+
         // castling out of check is not allowed
         if (position.is_check())
-            return;
+            return moves;
 
         const auto& rights = Side == Color::White ? position.whiteCastlingRights : position.blackCastlingRights;
 
@@ -519,7 +561,7 @@ namespace detail {
                 const auto move = castle_kingside(Side);
 
                 if (position.is_legal(move))
-                    *outputIt = move;
+                    moves.emplace_back(move);
             }
         }
 
@@ -536,9 +578,11 @@ namespace detail {
                 const auto move = castle_queenside(Side);
 
                 if (position.is_legal(move))
-                    *outputIt = move;
+                    moves.emplace_back(move);
             }
         }
+
+        return moves;
     }
 
     template <Color Side, bool CapturesOnly>
@@ -554,18 +598,30 @@ namespace detail {
 
         add_all_pawn_moves<Side, CapturesOnly>(position, allOccupied, outputIt);
 
-        add_knight_moves<Side, CapturesOnly>(position, outputIt);
+        std::ranges::copy(
+            get_knight_moves<Side, CapturesOnly>(position),
+            outputIt);
 
-        add_bishop_moves<Side, CapturesOnly>(position, allOccupied, outputIt);
+        std::ranges::copy(
+            get_bishop_moves<Side, CapturesOnly>(position, allOccupied),
+            outputIt);
 
-        add_rook_moves<Side, CapturesOnly>(position, allOccupied, outputIt);
+        std::ranges::copy(
+            get_rook_moves<Side, CapturesOnly>(position, allOccupied),
+            outputIt);
 
-        add_queen_moves<Side, CapturesOnly>(position, allOccupied, outputIt);
+        std::ranges::copy(
+            get_queen_moves<Side, CapturesOnly>(position, allOccupied),
+            outputIt);
 
-        add_king_moves<Side, CapturesOnly>(position, outputIt);
+        std::ranges::copy(
+            get_king_moves<Side, CapturesOnly>(position),
+            outputIt);
 
         if constexpr (not CapturesOnly) {
-            add_castling<Side>(position, allOccupied, outputIt);
+            std::ranges::copy(
+                get_castling<Side>(position, allOccupied),
+                outputIt);
         }
     }
 
@@ -587,31 +643,43 @@ namespace detail {
             }
 
             case PieceType::Knight: {
-                add_knight_moves<Side, CapturesOnly>(position, outputIt);
+                std::ranges::copy(
+                    get_knight_moves<Side, CapturesOnly>(position),
+                    outputIt);
                 return;
             }
 
             case PieceType::Bishop: {
-                add_bishop_moves<Side, CapturesOnly>(position, allOccupied, outputIt);
+                std::ranges::copy(
+                    get_bishop_moves<Side, CapturesOnly>(position, allOccupied),
+                    outputIt);
                 return;
             }
 
             case PieceType::Rook: {
-                add_rook_moves<Side, CapturesOnly>(position, allOccupied, outputIt);
+                std::ranges::copy(
+                    get_rook_moves<Side, CapturesOnly>(position, allOccupied),
+                    outputIt);
                 return;
             }
 
             case PieceType::Queen: {
-                add_queen_moves<Side, CapturesOnly>(position, allOccupied, outputIt);
+                std::ranges::copy(
+                    get_queen_moves<Side, CapturesOnly>(position, allOccupied),
+                    outputIt);
                 return;
             }
 
             default: // King
-                add_king_moves<Side, CapturesOnly>(position, outputIt);
+                std::ranges::copy(
+                    get_king_moves<Side, CapturesOnly>(position),
+                    outputIt);
 
                 if constexpr (not CapturesOnly) {
                     // castling is considered a King move
-                    add_castling<Side>(position, allOccupied, outputIt);
+                    std::ranges::copy(
+                        get_castling<Side>(position, allOccupied),
+                        outputIt);
                 }
         }
     }

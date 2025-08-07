@@ -179,7 +179,6 @@ namespace {
             println("Searching for position #{}...", posNum);
 
             benchSearcher.search();
-            benchSearcher.wait();
 
             ++posNum;
         }
@@ -196,7 +195,7 @@ namespace {
 
 } // namespace
 
-void Engine::run_bench(string_view arguments)
+void Engine::run_bench(const string_view arguments)
 {
     const auto [depth, filePath] = util::split_at_first_space(arguments);
 
