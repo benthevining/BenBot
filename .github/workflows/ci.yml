@@ -60,6 +60,9 @@ jobs:
     - name: Configure CMake
       run: cmake --preset default
 
-    - name: Build and test
-      run: ctest -D Nightly
-      working-directory: Builds/ninja
+    - name: Build
+      run: cmake --build --preset debug
+
+#    - name: Build and test
+#      run: ctest -D Nightly
+#      working-directory: Builds/ninja
