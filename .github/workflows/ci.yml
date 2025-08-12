@@ -51,10 +51,6 @@ jobs:
 
     - uses: seanmiddleditch/gha-setup-ninja@master
 
-#    - name: Select Xcode version
-#      if: ${{ runner.os == 'macOS' }}
-#      run: sudo xcode-select -switch /Applications/Xcode_16.4.app
-
     - name: Checkout code
       uses: actions/checkout@v5
       with:
