@@ -49,13 +49,16 @@ jobs:
 
     steps:
 
+    - uses: seanmiddleditch/gha-setup-ninja@master
+
+    - uses: KyleMayes/install-llvm-action@v2
+      with:
+        version: 20.1.3
+
     - name: Checkout code
       uses: actions/checkout@v5
       with:
         fetch-depth: 1
-
-      # install Ninja
-    - uses: seanmiddleditch/gha-setup-ninja@master
 
     - name: Configure CMake
       run: cmake --preset default -D CMAKE_CXX_COMPILER=clang++
@@ -64,5 +67,5 @@ jobs:
       run: cmake --build --preset debug
 
 #    - name: Build and test
-#      run: ctest -D Nightly
+#      run: ctest -D Nightly -C Debug
 #      working-directory: Builds/ninja
