@@ -126,13 +126,15 @@ repos:
     args: [--config-files, config/.cmake-format.json]
 
     # validate CMake presets
-# - repo: https://github.com/python-jsonschema/check-jsonschema
-#   rev: 0.33.0
-#   hooks:
-#   - id: check-jsonschema
-#     name: Validate CMake presets
-#     args: [--schemafile, 'https://cmake.org/cmake/help/latest/_downloads/3e2d73bff478d88a7de0de736ba5e361/schema.json']
-#     files: CMakePresets.json
+- repo: https://github.com/python-jsonschema/check-jsonschema
+  rev: 0.33.0
+  hooks:
+  - id: check-dependabot
+  - id: check-github-workflows
+  - id: check-jsonschema
+    name: Validate CMake presets
+    args: [--schemafile, 'https://cmake.org/cmake/help/latest/_downloads/3e2d73bff478d88a7de0de736ba5e361/schema.json']
+    files: CMakePresets.json
 
     # format justfile
 - repo: local
