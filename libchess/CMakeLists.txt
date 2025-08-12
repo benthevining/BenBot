@@ -41,6 +41,11 @@ set_target_properties (
     libchess PROPERTIES CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF DEBUG_POSTFIX -d
 )
 
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+    # needed for declaring large arrays of Zobrist keys
+    target_compile_options (libchess PRIVATE -fbracket-depth=767)
+endif ()
+
 file (GLOB_RECURSE libchess_headers LIST_DIRECTORIES false
       CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/include/libchess/*.hpp"
 )
