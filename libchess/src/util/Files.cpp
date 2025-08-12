@@ -22,7 +22,7 @@
 #include <string>
 #include <string_view>
 
-#ifdef WIN32
+#ifdef _WIN32
 #    include "MemoryMappedFile_Windows.hpp"
 #else
 #    include "MemoryMappedFile_Posix.hpp"
