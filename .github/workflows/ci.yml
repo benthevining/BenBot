@@ -59,9 +59,6 @@ jobs:
     - name: Configure CMake
       run: cmake --preset default -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_C_COMPILER=clang
 
-    - name: Build
-      run: cmake --build --preset debug
-
-#    - name: Build and test
-#      run: ctest -D Nightly -C Debug
-#      working-directory: Builds/ninja
+    - name: Build and test
+      run: ctest -D Nightly -C Debug
+      working-directory: Builds/ninja
