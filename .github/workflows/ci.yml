@@ -36,6 +36,9 @@ jobs:
 
     if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
 
+    env:
+      CONFIG: Release
+
     strategy:
       fail-fast: false
       matrix:
@@ -51,6 +54,9 @@ jobs:
 
     - uses: seanmiddleditch/gha-setup-ninja@master
 
+    - name: Install Python dependencies
+      run: pip install --upgrade python-chess
+
     - name: Checkout code
       uses: actions/checkout@v5
       with:
@@ -60,5 +66,5 @@ jobs:
       run: cmake --preset default -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_C_COMPILER=clang
 
     - name: Build and test
-      run: ctest -D Nightly -C Debug
+      run: ctest -D Nightly -C ${{ env.CONFIG }}
       working-directory: Builds/ninja
