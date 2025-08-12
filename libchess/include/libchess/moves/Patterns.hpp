@@ -126,10 +126,10 @@ constexpr Bitboard knight(const Bitboard starting) noexcept
 {
     namespace file_masks = board::masks::files;
 
-    static constexpr auto notAFile  = file_masks::A.inverse();
-    static constexpr auto notHFile  = file_masks::H.inverse();
-    static constexpr auto notABFile = (file_masks::A | file_masks::B).inverse();
-    static constexpr auto notGHFile = (file_masks::G | file_masks::H).inverse();
+    constexpr auto notAFile  = file_masks::A.inverse();
+    constexpr auto notHFile  = file_masks::H.inverse();
+    constexpr auto notABFile = (file_masks::A | file_masks::B).inverse();
+    constexpr auto notGHFile = (file_masks::G | file_masks::H).inverse();
 
     Bitboard moves;
 
