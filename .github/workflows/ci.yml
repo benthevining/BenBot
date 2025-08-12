@@ -58,7 +58,7 @@ jobs:
     - uses: seanmiddleditch/gha-setup-ninja@master
 
     - name: Configure CMake
-      run: cmake --preset default
+      run: cmake --preset default -D CMAKE_CXX_COMPILER=clang++
 
     - name: Build
       run: cmake --build --preset debug
