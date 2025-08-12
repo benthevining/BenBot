@@ -48,7 +48,7 @@ jobs:
 
     name: Build (${{ matrix.os }})
 
-    timeout-minutes: 30
+    timeout-minutes: 20
 
     steps:
 
