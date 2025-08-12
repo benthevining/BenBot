@@ -16,7 +16,6 @@ FetchContent_Declare (
     GIT_REPOSITORY "https://github.com/Neargye/magic_enum.git"
     GIT_TAG v0.9.7
     GIT_SHALLOW ON
-    GIT_PROGRESS ON
     FIND_PACKAGE_ARGS 0.9.7
 )
 
@@ -25,7 +24,6 @@ FetchContent_Declare (
     SYSTEM
     GIT_REPOSITORY "https://github.com/bemanproject/inplace_vector.git"
     GIT_TAG origin/main
-    GIT_PROGRESS ON
     FIND_PACKAGE_ARGS
 )
 
