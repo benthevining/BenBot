@@ -53,7 +53,7 @@ jobs:
     steps:
 
     - name: Install Python dependencies
-      run: python -m pip install --upgrade python-chess
+      run: python3 -m pip install --upgrade python-chess
 
     - name: Checkout code
       uses: actions/checkout@v5
