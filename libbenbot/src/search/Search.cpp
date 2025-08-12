@@ -356,7 +356,7 @@ void Context::search()
             .betaCutoffs                         = stats.betaCutoffs,
             .mdpCutoffs                          = stats.mdpCutoffs });
 
-        if (not (infinite or pondering.load())) {
+        if (not(infinite or pondering.load())) {
             // only 1 legal move, don't do a deeper iteration
             if (options.movesToSearch.size() == 1uz) {
                 [[unlikely]];

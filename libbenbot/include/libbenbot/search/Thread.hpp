@@ -85,7 +85,7 @@ struct Thread final {
     void start(chess::uci::GoCommandOptions&& options)
     {
         context.pondering.store(options.ponderMode);
-      
+
         context.wait(); // shouldn't have been searching, but better safe than sorry
 
         context.options.update_from(std::move(options));
