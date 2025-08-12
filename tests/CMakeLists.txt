@@ -10,7 +10,7 @@
 #
 # ======================================================================================
 
-find_package (Python COMPONENTS Interpreter)
+find_package (Python 3 COMPONENTS Interpreter)
 
 configure_file (CTestCustom.cmake "${PROJECT_BINARY_DIR}/CTestCustom.cmake" @ONLY)
 

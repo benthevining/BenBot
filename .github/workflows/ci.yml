@@ -52,13 +52,8 @@ jobs:
 
     steps:
 
-    - uses: actions/setup-python@v5
-
     - name: Install Python dependencies
       run: python -m pip install --upgrade python-chess
-
-    - name: Check python deps
-      run: python -c "import chess.engine"
 
     - name: Checkout code
       uses: actions/checkout@v5
