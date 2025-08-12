@@ -220,4 +220,4 @@ repos:
 ci:
   autofix_commit_msg: 'chore: pre-commit autofix'
   autoupdate_commit_msg: 'chore(deps): pre-commit autoupdate'
-  skip: [format_justfile] # just executable won't be present in CI
+  skip: [format_justfile, check-jsonschema] # just executable won't be present in CI, and CI runners can't download JSON schema files
