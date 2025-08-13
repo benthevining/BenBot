@@ -128,10 +128,10 @@ constexpr Bitboard south(Bitboard starting) noexcept
 
 constexpr Bitboard east(Bitboard starting) noexcept
 {
-    static constexpr auto notAFile = masks::files::A.inverse();
+    constexpr auto notAFile = masks::files::A.inverse();
 
-    static constexpr auto mask1 = notAFile & (notAFile << 1uz);
-    static constexpr auto mask2 = mask1 & (mask1 << 2uz);
+    constexpr auto mask1 = notAFile & (notAFile << 1uz);
+    constexpr auto mask2 = mask1 & (mask1 << 2uz);
 
     starting |= notAFile & (starting << 1uz);
     starting |= mask1 & (starting << 2uz);
@@ -142,10 +142,10 @@ constexpr Bitboard east(Bitboard starting) noexcept
 
 constexpr Bitboard west(Bitboard starting) noexcept
 {
-    static constexpr auto notHFile = masks::files::H.inverse();
+    constexpr auto notHFile = masks::files::H.inverse();
 
-    static constexpr auto mask1 = notHFile & (notHFile >> 1uz);
-    static constexpr auto mask2 = mask1 & (mask1 >> 2uz);
+    constexpr auto mask1 = notHFile & (notHFile >> 1uz);
+    constexpr auto mask2 = mask1 & (mask1 >> 2uz);
 
     starting |= notHFile & (starting >> 1uz);
     starting |= mask1 & (starting >> 2uz);
@@ -156,10 +156,10 @@ constexpr Bitboard west(Bitboard starting) noexcept
 
 constexpr Bitboard northeast(Bitboard starting) noexcept
 {
-    static constexpr auto notAFile = masks::files::A.inverse();
+    constexpr auto notAFile = masks::files::A.inverse();
 
-    static constexpr auto mask1 = notAFile & (notAFile << 9uz);
-    static constexpr auto mask2 = mask1 & (mask1 << 18uz);
+    constexpr auto mask1 = notAFile & (notAFile << 9uz);
+    constexpr auto mask2 = mask1 & (mask1 << 18uz);
 
     starting |= notAFile & (starting << 9uz);
     starting |= mask1 & (starting << 18uz);
@@ -170,10 +170,10 @@ constexpr Bitboard northeast(Bitboard starting) noexcept
 
 constexpr Bitboard southeast(Bitboard starting) noexcept
 {
-    static constexpr auto notAFile = masks::files::A.inverse();
+    constexpr auto notAFile = masks::files::A.inverse();
 
-    static constexpr auto mask1 = notAFile & (notAFile >> 7uz);
-    static constexpr auto mask2 = mask1 & (mask1 >> 14uz);
+    constexpr auto mask1 = notAFile & (notAFile >> 7uz);
+    constexpr auto mask2 = mask1 & (mask1 >> 14uz);
 
     starting |= notAFile & (starting >> 7uz);
     starting |= mask1 & (starting >> 14uz);
@@ -184,10 +184,10 @@ constexpr Bitboard southeast(Bitboard starting) noexcept
 
 constexpr Bitboard northwest(Bitboard starting) noexcept
 {
-    static constexpr auto notHFile = masks::files::H.inverse();
+    constexpr auto notHFile = masks::files::H.inverse();
 
-    static constexpr auto mask1 = notHFile & (notHFile << 7uz);
-    static constexpr auto mask2 = mask1 & (mask1 << 14uz);
+    constexpr auto mask1 = notHFile & (notHFile << 7uz);
+    constexpr auto mask2 = mask1 & (mask1 << 14uz);
 
     starting |= notHFile & (starting << 7uz);
     starting |= mask1 & (starting << 14uz);
@@ -198,10 +198,10 @@ constexpr Bitboard northwest(Bitboard starting) noexcept
 
 constexpr Bitboard southwest(Bitboard starting) noexcept
 {
-    static constexpr auto notHFile = masks::files::H.inverse();
+    constexpr auto notHFile = masks::files::H.inverse();
 
-    static constexpr auto mask1 = notHFile & (notHFile >> 9uz);
-    static constexpr auto mask2 = mask1 & (mask1 >> 18uz);
+    constexpr auto mask1 = notHFile & (notHFile >> 9uz);
+    constexpr auto mask2 = mask1 & (mask1 >> 18uz);
 
     starting |= notHFile & (starting >> 9uz);
     starting |= mask1 & (starting >> 18uz);

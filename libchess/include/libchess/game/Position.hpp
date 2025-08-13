@@ -323,7 +323,7 @@ struct Position final {
         ``blackPieces.refresh_occupied()``, and ``refresh_zobrist()`` to update
         all relevant cached state.
      */
-    [[nodiscard]] static constexpr Position empty();
+    [[nodiscard]] static Position empty();
 
 private:
     [[nodiscard]] bool is_side_in_check(Color side) const noexcept;
@@ -388,7 +388,7 @@ private:
 
  */
 
-constexpr Position Position::empty()
+inline Position Position::empty()
 {
     Position pos;
 

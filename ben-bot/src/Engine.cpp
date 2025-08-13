@@ -129,9 +129,9 @@ void Engine::run_perft(const string_view arguments) const
     const auto result = chess::moves::perft(
         depth, searcher.context.options.position);
 
-    println();
+    println("");
     perft_print_root_nodes(result);
-    println();
+    println("");
     perft_print_results(result);
 }
 
