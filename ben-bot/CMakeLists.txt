@@ -39,6 +39,8 @@ source_group (TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${ben_bot_sources})
 
 target_include_directories (ben_bot PRIVATE "${CMAKE_CURRENT_LIST_DIR}/src" "${generated_includes}")
 
+add_executable (ben_bot::ben_bot ALIAS ben_bot)
+
 #
 
 set (lichess_bot_dir "${PROJECT_SOURCE_DIR}/lichess-bot")

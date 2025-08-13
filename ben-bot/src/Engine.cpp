@@ -182,10 +182,15 @@ namespace {
 
         assert(seconds > 0.);
 
-        const auto nps = static_cast<double>(totalNodes) / seconds;
+        const auto nps = static_cast<size_t>(std::round(
+            static_cast<double>(totalNodes) / seconds));
 
         println("Total nodes: {}", totalNodes);
-        println("NPS: {}", static_cast<size_t>(std::round(nps)));
+        println("NPS: {}", nps);
+
+        println(
+            R"-(<DartMeasurement name="Nodes per second" type="numeric/integer">{}</DartMeasurement>)-",
+            nps);
     }
 
 } // namespace
