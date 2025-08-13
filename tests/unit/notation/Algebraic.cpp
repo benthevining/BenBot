@@ -21,6 +21,8 @@
 #include <libchess/notation/Algebraic.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
+#include <ranges>
+#include <vector>
 
 static constexpr auto TAGS { "[notation][Algebraic]" };
 
@@ -162,7 +164,8 @@ TEST_CASE("Algebraic notation - piece moves", TAGS)
             REQUIRE(position.is_check());
             REQUIRE(not position.is_checkmate());
 
-            const auto legalMoves = chess::moves::generate(position);
+            const auto legalMoves = chess::moves::generate(position)
+                                  | std::ranges::to<std::vector>();
 
             REQUIRE(legalMoves.size() == 1uz);
 

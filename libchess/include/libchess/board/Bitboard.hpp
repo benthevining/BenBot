@@ -460,7 +460,7 @@ namespace detail {
 
         constexpr BitboardIterator() = default;
 
-        explicit constexpr BitboardIterator(const Bitboard& bitboard)
+        explicit constexpr BitboardIterator(const Bitboard bitboard)
             : value { bitboard.to_int() }
         {
         }

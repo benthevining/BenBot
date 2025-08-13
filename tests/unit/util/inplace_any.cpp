@@ -12,48 +12,61 @@
  * ======================================================================================
  */
 
-/** @file
-    This file provides move generation functions.
-    @ingroup moves
- */
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_all.hpp>
+#include <libchess/util/inplace_any.hpp>
+#include <list>
+#include <utility>
+#include <vector>
 
-#pragma once
+TEST_CASE("inplace_any", "[util]")
+{
+    static constexpr auto Size = 256UL;
 
-#include <libchess/game/Position.hpp>
-#include <libchess/moves/MoveRange.hpp>
-#include <libchess/pieces/PieceTypes.hpp>
+    chess::util::inplace_any<Size> any;
 
-namespace chess::moves {
+    REQUIRE(any.empty());
+    REQUIRE(! any.has_value());
+    REQUIRE(any.try_get<float>() == nullptr);
 
-using game::Position;
-using PieceType = pieces::Type;
+    any.emplace<float>(1.f);
 
-/// @ingroup moves
-/// @{
+    REQUIRE(any.has_value());
+    REQUIRE(! any.empty());
+    REQUIRE(any.try_get<float>() != nullptr);
 
-/** Generates a list of all legal moves for the side to move in the given position.
-    If the side to move is in checkmate or stalemate, this returns an empty list.
-    The list of moves is not sorted in any particular manner.
+    REQUIRE_THAT(any.get<float>(),
+        Catch::Matchers::WithinAbs(1.f, 0.000000001f));
 
-    @see generate_for()
- */
-template <bool CapturesOnly = false>
-[[nodiscard]] MoveRange generate(const Position& position);
+    any.reset();
 
-/** Generates a list of all legal moves for only the given piece type in the given position.
+    REQUIRE(any.empty());
 
-    Generating King moves will include castling. Generating pawn moves will include all
-    pushes, double pushes, captures, promotions, and en passant captures.
+    any = 5;
 
-    @see generate()
- */
-template <bool CapturesOnly = false>
-[[nodiscard]] MoveRange generate_for(
-    const Position& position, PieceType piece);
+    REQUIRE(any.get<int>() == 5);
 
-/** Returns true if the side to move has any legal moves in the given position. */
-[[nodiscard]] bool any_legal_moves(const Position& position);
+    std::vector<double> vec;
 
-/// @}
+    const auto vecType = std::type_index { typeid(vec) };
 
-} // namespace chess::moves
+    any = std::move(vec);
+
+    REQUIRE(any.get_stored_type() == vecType);
+
+    chess::util::inplace_any<Size> other;
+
+    using List = std::list<int>;
+
+    other.emplace<List>();
+
+    REQUIRE(other.has_value());
+
+    auto& list = other.get<List>();
+
+    list.emplace_back(22);
+
+    any = std::move(other);
+
+    REQUIRE(any.holds_type<List>());
+}

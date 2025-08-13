@@ -28,4 +28,5 @@ Any code produced in the development of `BenBot` that could potentially be usefu
 ## Dependencies
 
 * [magic_enum](https://github.com/Neargye/magic_enum), for easy serialization & stringification of enums
-* [inplace_vector](https://github.com/bemanproject/inplace_vector/tree/main), to help avoid dynamic allocations where possible
+* [inplace_vector](https://github.com/bemanproject/inplace_vector/tree/main), to help avoid dynamic allocations where possible (only needed until C++26's `std::inplace_vector` becomes available)
+* [range-v3](https://github.com/ericniebler/range-v3/), for some ranges algorithms (only needed until the rest of C++23's `std::ranges` becomes available)

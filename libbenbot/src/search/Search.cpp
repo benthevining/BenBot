@@ -16,6 +16,7 @@
 #include "TimeManagement.hpp"
 #include <algorithm>
 #include <atomic>
+#include <beman/inplace_vector/inplace_vector.hpp>
 #include <cassert>
 #include <cmath>   // IWYU pragma: keep - for std::abs()
 #include <cstddef> // IWYU pragma: keep - for size_t
@@ -30,7 +31,6 @@
 #include <libchess/util/Threading.hpp>
 #include <optional>
 #include <utility>
-#include <vector>
 
 namespace ben_bot::search {
 
@@ -121,7 +121,8 @@ namespace {
 
         bounds.alpha = std::max(bounds.alpha, evaluation);
 
-        auto moves = chess::moves::generate<true>(currentPosition); // captures only
+        // captures only
+        auto moves = chess::moves::generate<true>(currentPosition).to_vec();
 
         detail::order_moves_for_q_search(currentPosition, moves);
 
@@ -190,7 +191,7 @@ namespace {
             return {};
         }
 
-        auto moves = chess::moves::generate(currentPosition);
+        auto moves = chess::moves::generate(currentPosition).to_vec();
 
         if (moves.empty() && currentPosition.is_check()) {
             transTable.store(
@@ -292,7 +293,9 @@ void Context::search()
 
     // if the movesToSearch was empty, then we search all legal moves
     if (options.movesToSearch.empty()) {
-        chess::moves::generate(options.position, std::back_inserter(options.movesToSearch));
+        std::ranges::copy(
+            chess::moves::generate(options.position),
+            std::back_inserter(options.movesToSearch));
 
         assert(! options.movesToSearch.empty());
     }
