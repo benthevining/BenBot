@@ -47,7 +47,7 @@ void progressive_backoff(std::function<bool()> pred)
 #elifdef LIBCHESS_INTEL
     // approx. 5x5 ns (= 25 ns), 10x40 ns (= 400 ns), and 3000x350 ns (~ 1 ms),
     // respectively, when measured on a 2.9 GHz Intel i9
-    progressive_backoff_intel<5uz, 10uz, 3000uz>(std::move(pred));
+    progressive_backoff_intel<5uz, 10uz, 3000uz>(std::move(pred)); // cppcheck-suppress accessMoved
 #else
 #    warning "Not Intel or ARM, using naive implementation of progressive_backoff()"
 
