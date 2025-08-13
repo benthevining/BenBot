@@ -24,6 +24,8 @@ defaults:
 
 permissions:
   contents: read
+  checks: write
+  pull-requests: write
 
 jobs:
   build_and_test:
@@ -51,5 +53,16 @@ jobs:
       run: cmake --preset default -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_C_COMPILER=clang
 
     - name: Build and test
-      run: ctest -D ${{ inputs.dashboard_type }} -C ${{ matrix.config }}
+      run: ctest -D ${{ inputs.dashboard_type }} -C ${{ matrix.config }} --output-junit junit.xml
       working-directory: Builds/ninja
+
+    - name: Upload JUnit report
+      uses: mikepenz/action-junit-report@v5
+      if: always() && github.event_name == 'pull_request'
+      with:
+        report_paths: 'Builds/ninja/junit.xml'
+        exclude_sources: Builds/
+        flaky_summary: true
+        include_time_in_summary: true
+        simplified_summary: true
+        comment: true
