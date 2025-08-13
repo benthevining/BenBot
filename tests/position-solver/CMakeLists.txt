@@ -21,7 +21,7 @@ execute_process (
 )
 
 if (NOT "${python_chess_found}" EQUAL 0)
-    message (FATAL_ERROR "python-chess module not found!")
+    message (VERBOSE "python-chess module not found, not adding position solver tests")
     return ()
 endif ()
 

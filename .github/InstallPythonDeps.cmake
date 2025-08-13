@@ -16,6 +16,8 @@ a different version than CMake will find. I addressed this issue by also using t
 CMake find module for locating the python executable used to install dependencies.
 ]]
 
+cmake_minimum_required (VERSION 3.30.0 FATAL_ERROR)
+
 find_package (Python 3.9 COMPONENTS Interpreter REQUIRED)
 
 execute_process (
