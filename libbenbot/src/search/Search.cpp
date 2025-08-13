@@ -434,8 +434,6 @@ void Options::update_from(chess::uci::GoCommandOptions&& goOptions)
                 *timeLeft,
                 isWhite ? goOptions.whiteInc : goOptions.blackInc,
                 goOptions.movesToGo);
-        } else {
-            assert(false); // TODO: ??
         }
     }
 }

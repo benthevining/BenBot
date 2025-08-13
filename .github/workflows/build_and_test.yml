@@ -35,6 +35,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     name: Build and test (${{ matrix.os }} - ${{ matrix.config }} - ${{ inputs.dashboard_type }})
     timeout-minutes: 30
+    env:
+      CMAKE_BUILD_PARALLEL_LEVEL: 8
+      CTEST_PARALLEL_LEVEL: 0
     steps:
     - name: Checkout code
       uses: actions/checkout@v5

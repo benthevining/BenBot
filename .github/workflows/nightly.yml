@@ -19,10 +19,6 @@ on:
   schedule:
   - cron: "0 1 * * *"
 
-concurrency:
-  group: ${{ github.workflow }}.${{ github.ref }}
-  cancel-in-progress: true
-
 defaults:
   run:
     shell: bash
@@ -32,7 +28,6 @@ permissions:
 
 jobs:
   ci:
-    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
     uses: ./.github/workflows/build_and_test.yml
     with:
       dashboard_type: Nightly
