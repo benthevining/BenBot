@@ -17,6 +17,7 @@ endif ()
 # check if the python-chess module can be imported
 execute_process (
     COMMAND "${Python_EXECUTABLE}" -c "import chess.engine" RESULT_VARIABLE python_chess_found
+    OUTPUT_QUIET ERROR_QUIET
 )
 
 if (NOT "${python_chess_found}" EQUAL 0)
