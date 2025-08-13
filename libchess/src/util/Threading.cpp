@@ -40,14 +40,14 @@ namespace chess::util {
 
 void progressive_backoff(std::function<bool()> pred)
 {
-#if LIBCHESS_ARM
+#ifdef LIBCHESS_ARM
     // approx. 2x10 ns (= 20 ns) and 750x1333 ns (~ 1 ms), respectively, on an
     // Apple Silicon Mac or an armv8 based phone.
     progressive_backoff_arm<2uz, 750uz>(std::move(pred));
-#elif LIBCHESS_INTEL
+#elifdef LIBCHESS_INTEL
     // approx. 5x5 ns (= 25 ns), 10x40 ns (= 400 ns), and 3000x350 ns (~ 1 ms),
     // respectively, when measured on a 2.9 GHz Intel i9
-    progressive_backoff_intel<5uz, 10uz, 3000uz>(std::move(pred));
+    progressive_backoff_intel<5uz, 10uz, 3000uz>(std::move(pred)); // cppcheck-suppress accessMoved
 #else
 #    warning "Not Intel or ARM, using naive implementation of progressive_backoff()"
 
