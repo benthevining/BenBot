@@ -107,12 +107,20 @@ struct EngineBase {
     /** Runs the engine's event loop.
         This function blocks while reading from stdin. The calling thread becomes the
         engine's "main thread".
+
+        @see handle_command()
      */
     void loop();
 
-private:
+    /** Handles a UCI command.
+        Typically you will not call this directly, you'll just invoke ``loop()``, but this
+        method can be used to manually invoke UCI commands if needed.
+
+        @see loop()
+     */
     void handle_command(string_view command);
 
+private:
     void respond_to_uci();
 
     void handle_setoption(string_view arguments);
