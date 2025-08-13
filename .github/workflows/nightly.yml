@@ -10,13 +10,14 @@
 #
 # ======================================================================================
 
-name: CI
+name: Nightly
 
-run-name: CI (${{ github.actor }})
+run-name: Nightly (${{ github.actor }})
 
 on:
   workflow_dispatch:
-  push:
+  schedule:
+  - cron: "0 1 * * *"
 
 concurrency:
   group: ${{ github.workflow }}.${{ github.ref }}
@@ -34,4 +35,4 @@ jobs:
     if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
     uses: ./.github/workflows/build_and_test.yml
     with:
-      dashboard_type: Experimental
+      dashboard_type: Nightly
