@@ -17,11 +17,7 @@ run-name: Nightly (${{ github.actor }})
 on:
   workflow_dispatch:
   schedule:
-  - cron: "0 1 * * *"
-
-defaults:
-  run:
-    shell: bash
+  - cron: '0 1 * * *'
 
 permissions:
   contents: read

@@ -17,14 +17,13 @@ run-name: CI (${{ github.actor }})
 on:
   workflow_dispatch:
   push:
+    branches: [main]
+  pull_request:
+    types: [opened, reopened, synchronize]
 
 concurrency:
   group: ${{ github.workflow }}.${{ github.ref }}
   cancel-in-progress: true
-
-defaults:
-  run:
-    shell: bash
 
 permissions:
   contents: read

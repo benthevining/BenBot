@@ -58,7 +58,7 @@ jobs:
 
     - name: Upload JUnit report
       uses: mikepenz/action-junit-report@v5
-      if: always() && github.event_name == 'pull_request'
+      if: always()
       with:
         report_paths: 'Builds/ninja/junit.xml'
         exclude_sources: Builds/
