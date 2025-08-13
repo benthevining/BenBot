@@ -14,6 +14,16 @@ if (NOT TARGET Python::Interpreter)
     return ()
 endif ()
 
+# check if the python-chess module can be imported
+execute_process (
+    COMMAND "${Python_EXECUTABLE}" -c "import chess.engine" RESULT_VARIABLE python_chess_found
+)
+
+if (NOT "${python_chess_found}" EQUAL 0)
+    message (FATAL_ERROR "python-chess module not found!")
+    return ()
+endif ()
+
 file (GLOB testcase_files LIST_DIRECTORIES false CONFIGURE_DEPENDS
                                                  "${CMAKE_CURRENT_LIST_DIR}/data/*.epd"
 )
