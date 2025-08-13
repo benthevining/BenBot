@@ -49,7 +49,7 @@ namespace {
     {
         // we're only generating moves for one piece type, so we can
         // avoid dynamic memory allocation by using inplace_vector
-        beman::inplace_vector<Move, 100uz> moves;
+        beman::inplace_vector<Move, 200uz> moves;
 
         moves::generate_for(position, piece, std::back_inserter(moves));
 
