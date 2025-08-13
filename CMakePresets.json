@@ -54,10 +54,6 @@
         "DOXYGEN_WARN_LOGFILE": {
           "type": "FILEPATH",
           "value": "${sourceDir}/logs/Doxygen.log"
-        },
-        "FETCHCONTENT_QUIET": {
-          "type": "BOOL",
-          "value": "OFF"
         }
       },
       "displayName": "Build with Ninja",

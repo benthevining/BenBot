@@ -24,6 +24,9 @@ option (BENBOT_DOCS "Build the documentation (requires Doxygen)" "${PROJECT_IS_T
 
 option (BENBOT_TESTS "Build the tests" "${PROJECT_IS_TOP_LEVEL}")
 
+set (CMAKE_CXX_STANDARD 23)
+set (CMAKE_CXX_STANDARD_REQUIRED ON)
+
 include (FetchContent)
 
 add_subdirectory (libchess)

@@ -160,12 +160,12 @@ void Engine::print_help() const
 {
     print_logo_and_version();
 
-    println();
+    println("");
 
     println(
         "All standard UCI commands are supported, as well as the following non-standard commands:");
 
-    println();
+    println("");
 
     TextTable table;
 
@@ -183,9 +183,9 @@ void Engine::print_help() const
 
 void Engine::print_options() const
 {
-    println();
+    println("");
     println("The following UCI options are supported:");
-    println();
+    println("");
 
     TextTable table;
 
@@ -228,10 +228,10 @@ void Engine::print_current_position(const string_view arguments) const
     println("{}",
         utf8 ? print_utf8(pos) : print_ascii(pos));
 
-    println();
+    println("");
     println("FEN: {}", chess::notation::to_fen(pos));
     println("Zobrist key: {}", pos.hash);
-    println();
+    println("");
 
     // print eval
     if (const auto* record = searcher.context.transTable.find(pos)) {
