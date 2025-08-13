@@ -137,7 +137,7 @@ namespace detail {
     [[nodiscard, gnu::const]] constexpr auto get_pawn_pushes(
         const Position& position, const Bitboard emptySquares)
     {
-        using Pushes = beman::inplace_vector<Move, 8uz>;
+        using Pushes = beman::inplace_vector<Move, 32uz>;
 
         const auto allPushes = pseudo_legal::pawn_pushes<Side>(
             position.pieces_for<Side>().pawns,
