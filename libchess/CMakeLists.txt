@@ -16,7 +16,6 @@ FetchContent_Declare (
     GIT_REPOSITORY "https://github.com/Neargye/magic_enum.git"
     GIT_TAG v0.9.7
     GIT_SHALLOW ON
-    GIT_PROGRESS ON
     FIND_PACKAGE_ARGS 0.9.7
 )
 
@@ -25,7 +24,6 @@ FetchContent_Declare (
     SYSTEM
     GIT_REPOSITORY "https://github.com/bemanproject/inplace_vector.git"
     GIT_TAG origin/main
-    GIT_PROGRESS ON
     FIND_PACKAGE_ARGS
 )
 
@@ -40,6 +38,11 @@ target_link_libraries (libchess PUBLIC magic_enum::magic_enum beman::inplace_vec
 set_target_properties (
     libchess PROPERTIES CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF DEBUG_POSTFIX -d
 )
+
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+    # needed for declaring large arrays of Zobrist keys
+    target_compile_options (libchess PRIVATE -fbracket-depth=767)
+endif ()
 
 file (GLOB_RECURSE libchess_headers LIST_DIRECTORIES false
       CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/include/libchess/*.hpp"

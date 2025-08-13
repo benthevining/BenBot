@@ -11,11 +11,7 @@
 # ======================================================================================
 
 FetchContent_Declare (
-    cmrc
-    SYSTEM
-    GIT_REPOSITORY "https://github.com/vector-of-bool/cmrc.git"
-    GIT_TAG origin/master
-    GIT_PROGRESS ON
+    cmrc SYSTEM GIT_REPOSITORY "https://github.com/vector-of-bool/cmrc.git" GIT_TAG origin/master
 )
 
 FetchContent_MakeAvailable (cmrc)

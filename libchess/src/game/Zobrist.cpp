@@ -45,7 +45,7 @@ namespace {
 
     [[nodiscard, gnu::const]] constexpr Hash en_passant_key(const File file)
     {
-        static constexpr std::array values {
+        constexpr std::array values {
             0xa72780f845e9076dULL,
             0xfcc6f885b6c115dcULL,
             0x45b7a9a39104160cULL,

@@ -181,7 +181,7 @@ constexpr Rank rank_from_char(const char character)
 
 constexpr char rank_to_char(const Rank rank) noexcept
 {
-    static constexpr std::string_view ranks { "12345678" };
+    constexpr std::string_view ranks { "12345678" };
 
     return ranks[std::to_underlying(rank)];
 }

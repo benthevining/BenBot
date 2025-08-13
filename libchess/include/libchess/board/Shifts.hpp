@@ -118,42 +118,42 @@ constexpr Bitboard south(const Bitboard board) noexcept
 
 constexpr Bitboard east(const Bitboard board) noexcept
 {
-    static constexpr auto notHFile = masks::files::H.inverse();
+    constexpr auto notHFile = masks::files::H.inverse();
 
     return (board & notHFile) << 1uz;
 }
 
 constexpr Bitboard west(const Bitboard board) noexcept
 {
-    static constexpr auto notAFile = masks::files::A.inverse();
+    constexpr auto notAFile = masks::files::A.inverse();
 
     return (board & notAFile) >> 1uz;
 }
 
 constexpr Bitboard northeast(const Bitboard board) noexcept
 {
-    static constexpr auto notHFile = masks::files::H.inverse();
+    constexpr auto notHFile = masks::files::H.inverse();
 
     return (board & notHFile) << 9uz;
 }
 
 constexpr Bitboard northwest(const Bitboard board) noexcept
 {
-    static constexpr auto notAFile = masks::files::A.inverse();
+    constexpr auto notAFile = masks::files::A.inverse();
 
     return (board & notAFile) << 7uz;
 }
 
 constexpr Bitboard southeast(const Bitboard board) noexcept
 {
-    static constexpr auto notHFile = masks::files::H.inverse();
+    constexpr auto notHFile = masks::files::H.inverse();
 
     return (board & notHFile) >> 7uz;
 }
 
 constexpr Bitboard southwest(const Bitboard board) noexcept
 {
-    static constexpr auto notAFile = masks::files::A.inverse();
+    constexpr auto notAFile = masks::files::A.inverse();
 
     return (board & notAFile) >> 9uz;
 }

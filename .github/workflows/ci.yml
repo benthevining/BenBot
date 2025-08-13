@@ -10,54 +10,59 @@
 #
 # ======================================================================================
 
-FetchContent_Declare (
-    nlohmann_json
-    SYSTEM
-    GIT_REPOSITORY "https://github.com/nlohmann/json.git"
-    GIT_TAG v3.12.0
-    GIT_SHALLOW ON
-    FIND_PACKAGE_ARGS 3.12.0
-)
+name: CI
 
-FetchContent_MakeAvailable (nlohmann_json)
+run-name: CI (${{ github.actor }})
 
-add_executable (rampart)
+on:
+  workflow_dispatch:
+  push:
+  pull_request:
 
-target_link_libraries (rampart PRIVATE ben_bot::libchess nlohmann_json::nlohmann_json)
+concurrency:
+  group: ${{ github.workflow }}.${{ github.ref }}
+  cancel-in-progress: true
 
-target_sources (rampart PRIVATE main.cpp)
+defaults:
+  run:
+    shell: bash
 
-if (NOT TARGET Python::Interpreter)
-    return ()
-endif ()
+permissions:
+  contents: read
 
-set (generated_script "${CMAKE_CURRENT_BINARY_DIR}/RunRampart$<CONFIG>.py")
+jobs:
 
-# cmake-format: off
-file (
-    GENERATE
-    OUTPUT "${generated_script}"
-    INPUT RunRampart.py
-    TARGET rampart
-    FILE_PERMISSIONS
-        OWNER_READ OWNER_EXECUTE
-        GROUP_READ GROUP_EXECUTE
-        WORLD_READ WORLD_EXECUTE
-)
-# cmake-format: on
+  ci:
 
-file (GLOB testcase_files LIST_DIRECTORIES false CONFIGURE_DEPENDS
-                                                 "${CMAKE_CURRENT_LIST_DIR}/data/*.json"
-)
+    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
 
-foreach (data_file IN LISTS testcase_files)
-    cmake_path (GET data_file STEM filename)
+    env:
+      CONFIG: Release
 
-    set (test_name "ben_bot.rampart.${filename}")
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-15]
 
-    add_test (NAME "${test_name}" COMMAND Python::Interpreter "${generated_script}" "${data_file}"
-                                          "${CMAKE_CURRENT_BINARY_DIR}/results/$<CONFIG>"
-    )
+    runs-on: ${{ matrix.os }}
 
-    set_tests_properties ("${test_name}" PROPERTIES REQUIRED_FILES "${data_file}")
-endforeach ()
+    name: Build (${{ matrix.os }})
+
+    timeout-minutes: 20
+
+    steps:
+
+    - name: Checkout code
+      uses: actions/checkout@v5
+      with:
+        fetch-depth: 1
+
+    - name: Install Python dependencies
+      run: cmake -P .github/InstallPythonDeps.cmake
+
+    - name: Configure CMake
+      run: cmake --preset default -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_C_COMPILER=clang
+
+    - name: Build and test
+      run: ctest -D Nightly -C ${{ env.CONFIG }}
+      working-directory: Builds/ninja
