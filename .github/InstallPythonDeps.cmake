@@ -10,59 +10,16 @@
 #
 # ======================================================================================
 
-name: CI
+#[[
+On the Windows CI runner, if we just call python3 from the command line, it uses
+a different version than CMake will find. I addressed this issue by also using the
+CMake find module for locating the python executable used to install dependencies.
+]]
 
-run-name: CI (${{ github.actor }})
+find_package (Python 3.9 COMPONENTS Interpreter REQUIRED)
 
-on:
-  workflow_dispatch:
-  push:
-  pull_request:
-
-concurrency:
-  group: ${{ github.workflow }}.${{ github.ref }}
-  cancel-in-progress: true
-
-defaults:
-  run:
-    shell: bash
-
-permissions:
-  contents: read
-
-jobs:
-
-  ci:
-
-    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
-
-    env:
-      CONFIG: Release
-
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-15]
-
-    runs-on: ${{ matrix.os }}
-
-    name: Build (${{ matrix.os }})
-
-    timeout-minutes: 20
-
-    steps:
-
-    - name: Checkout code
-      uses: actions/checkout@v5
-      with:
-        fetch-depth: 1
-
-    - name: Install Python dependencies
-      run: cmake -P .github/InstallPythonDeps.cmake
-
-    - name: Configure CMake
-      run: cmake --preset default -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_C_COMPILER=clang
-
-    - name: Build and test
-      run: ctest -D Nightly -C ${{ env.CONFIG }}
-      working-directory: Builds/ninja
+execute_process (
+    COMMAND "${Python_EXECUTABLE}" -m pip install --break-system-packages --upgrade python-chess
+            COMMAND_ECHO STDOUT OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_STRIP_TRAILING_WHITESPACE
+                                COMMAND_ERROR_IS_FATAL ANY
+)
