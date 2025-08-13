@@ -32,13 +32,6 @@ permissions:
 jobs:
   ci:
     if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-15]
-    name: Build (${{ matrix.os }})
     uses: ./.github/workflows/build_and_test.yml
     with:
-      os: ${{ matrix.os }}
-      configuration: Release
-      dashboard_type: Nightly
+      dashboard_type: Experimental

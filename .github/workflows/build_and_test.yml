@@ -10,21 +10,9 @@
 #
 # ======================================================================================
 
-name: Build and test
-
-run-name: Build and test (${{ github.actor }})
-
 on:
   workflow_call:
     inputs:
-      os:
-        description: OS to run on
-        required: true
-        type: string
-      configuration:
-        description: Build configuration
-        required: true
-        type: string
       dashboard_type:
         description: Type of CTest dashboard to run (Nightly, Experimental, or Continuous)
         required: true
@@ -39,8 +27,13 @@ permissions:
 
 jobs:
   build_and_test:
-    runs-on: ${{ inputs.os }}
-    name: Build and test (${{ inputs.os }} - ${{ inputs.configuration }} - ${{ inputs.dashboard_type }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-15]
+        config: [Debug, Release]
+    runs-on: ${{ matrix.os }}
+    name: Build and test (${{ matrix.os }} - ${{ matrix.config }} - ${{ inputs.dashboard_type }})
     timeout-minutes: 30
     steps:
     - name: Checkout code
@@ -55,5 +48,5 @@ jobs:
       run: cmake --preset default -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_C_COMPILER=clang
 
     - name: Build and test
-      run: ctest -D ${{ inputs.dashboard_type }} -C ${{ inputs.configuration }}
+      run: ctest -D ${{ inputs.dashboard_type }} -C ${{ matrix.config }}
       working-directory: Builds/ninja
