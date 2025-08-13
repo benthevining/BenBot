@@ -10,7 +10,7 @@
 #
 # ======================================================================================
 
-find_package (Python 3 COMPONENTS Interpreter)
+find_package (Python 3.9 COMPONENTS Interpreter)
 
 if (NOT TARGET Python::Interpreter)
     message (VERBOSE "Python interpreter not found, not adding all test cases")
