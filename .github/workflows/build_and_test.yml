@@ -42,6 +42,7 @@ jobs:
       CTEST_PARALLEL_LEVEL: 0
       BUILD_DIR: Builds/ninja
       DEPLOY_DIR: deploy
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v5

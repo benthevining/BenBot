@@ -31,9 +31,10 @@ jobs:
     timeout-minutes: 10
     env:
       BUILD_DIR: Builds/ninja
+
     steps:
-    - name: Install Doxygen
-      run: sudo apt install doxygen
+    - name: Install dependencies
+      run: sudo apt install doxygen graphviz
 
     - name: Checkout code
       uses: actions/checkout@v5
