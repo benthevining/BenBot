@@ -57,12 +57,15 @@ jobs:
       working-directory: Builds/ninja
 
     - name: Upload JUnit report
-      uses: mikepenz/action-junit-report@v5
+      uses: mikepenz/action-junit-report@6246d24 # pin v5
       if: always()
       with:
         report_paths: 'Builds/ninja/junit.xml'
         exclude_sources: Builds/
+        check_annotations: true
         flaky_summary: true
         include_time_in_summary: true
         simplified_summary: true
         comment: true
+        skip_comment_without_tests: true
+        updateComment: false
