@@ -187,10 +187,15 @@ namespace {
 
         assert(seconds > 0.);
 
-        const auto nps = static_cast<double>(totalNodes) / seconds;
+        const auto nps = static_cast<size_t>(std::round(
+            static_cast<double>(totalNodes) / seconds));
 
         println("Total nodes: {}", totalNodes);
-        println("NPS: {}", static_cast<size_t>(std::round(nps)));
+        println("NPS: {}", nps);
+
+        println(
+            R"-(<DartMeasurement name="Nodes per second" type="numeric/integer">{}</DartMeasurement>)-",
+            nps);
     }
 
 } // namespace
@@ -199,7 +204,7 @@ void Engine::run_bench(const string_view arguments)
 {
     const auto [depth, filePath] = util::split_at_first_space(arguments);
 
-    const auto defaultDepth = util::int_from_string(depth, 4uz);
+    const auto defaultDepth = util::int_from_string(depth, 3uz);
 
     if (filePath.empty()) {
         do_bench(get_bench_epd_text(), defaultDepth);
