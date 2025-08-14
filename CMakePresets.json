@@ -2,16 +2,17 @@
   "buildPresets": [
     {
       "configuration": "Debug",
-      "configurePreset": "default",
-      "displayName": "Build with Ninja (Debug)",
+      "configurePreset": "clang",
+      "displayName": "Build with Ninja/Clang (Debug)",
       "jobs": 8,
-      "name": "debug"
+      "name": "clang-debug"
     },
     {
       "configuration": "Release",
-      "displayName": "Build with Ninja (Release)",
-      "inherits": "debug",
-      "name": "release"
+      "configurePreset": "clang",
+      "displayName": "Build with Ninja/Clang (Release)",
+      "jobs": 8,
+      "name": "clang-release"
     }
   ],
   "cmakeMinimumRequired": {
@@ -21,7 +22,7 @@
   },
   "configurePresets": [
     {
-      "binaryDir": "${fileDir}/Builds/ninja",
+      "binaryDir": "${fileDir}/Builds/${presetName}",
       "cacheVariables": {
         "BUILD_SHARED_LIBS": {
           "type": "BOOL",
@@ -56,9 +57,8 @@
           "value": "${sourceDir}/logs/Doxygen.log"
         }
       },
-      "displayName": "Build with Ninja",
-      "generator": "Ninja Multi-Config",
-      "name": "default",
+      "hidden": true,
+      "name": "base",
       "warnings": {
         "deprecated": false,
         "dev": false,
@@ -66,105 +66,33 @@
         "uninitialized": false,
         "unusedCli": false
       }
-    }
-  ],
-  "testPresets": [
-    {
-      "execution": {
-        "enableFailover": true,
-        "jobs": 8,
-        "noTestsAction": "error",
-        "scheduleRandom": true
-      },
-      "hidden": true,
-      "name": "base",
-      "output": {
-        "labelSummary": true,
-        "outputJUnitFile": "${fileDir}/logs/ctest/${presetName}/latest.junit",
-        "outputLogFile": "${fileDir}/logs/ctest/${presetName}/latest.log",
-        "outputOnFailure": true,
-        "shortProgress": true,
-        "testOutputTruncation": "middle"
-      }
     },
     {
-      "configuration": "Debug",
-      "configurePreset": "default",
-      "displayName": "Run unit tests with Ninja (Debug)",
-      "filter": {
-        "include": {
-          "name": "libchess.unit."
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": {
+          "type": "STRING",
+          "value": "clang++"
+        },
+        "CMAKE_C_COMPILER": {
+          "type": "STRING",
+          "value": "clang"
         }
       },
+      "displayName": "Build with Ninja & Clang",
+      "generator": "Ninja Multi-Config",
       "inherits": "base",
-      "name": "unit-debug"
+      "name": "clang"
     },
     {
-      "configuration": "Release",
-      "displayName": "Run unit tests with Ninja (Release)",
-      "inherits": "unit-debug",
-      "name": "unit-release"
-    },
-    {
-      "configuration": "Debug",
-      "configurePreset": "default",
-      "displayName": "Run benchmarks with Ninja (Debug)",
-      "execution": {
-        "enableFailover": false,
-        "jobs": 1
+      "condition": {
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows",
+        "type": "equals"
       },
-      "filter": {
-        "include": {
-          "name": "libchess.bench."
-        }
-      },
+      "displayName": "Build with MSVC",
+      "generator": "Visual Studio 17 2022",
       "inherits": "base",
-      "name": "bench-debug",
-      "output": {
-        "verbosity": "verbose"
-      }
-    },
-    {
-      "configuration": "Release",
-      "displayName": "Run benchmarks with Ninja (Release)",
-      "inherits": "bench-debug",
-      "name": "bench-release"
-    },
-    {
-      "configuration": "Debug",
-      "configurePreset": "default",
-      "displayName": "Run perft tests with Ninja (Debug)",
-      "filter": {
-        "include": {
-          "name": "ben_bot.perft."
-        }
-      },
-      "inherits": "base",
-      "name": "perft-debug"
-    },
-    {
-      "configuration": "Release",
-      "displayName": "Run perft tests with Ninja (Release)",
-      "inherits": "perft-debug",
-      "name": "perft-release"
-    },
-    {
-      "configuration": "Debug",
-      "configurePreset": "default",
-      "displayName": "Run rampart tests with Ninja (Debug)",
-      "filter": {
-        "include": {
-          "name": "ben_bot.rampart."
-        }
-      },
-      "inherits": "base",
-      "name": "rampart-debug"
-    },
-    {
-      "configuration": "Release",
-      "displayName": "Run rampart tests with Ninja (Release)",
-      "inherits": "rampart-debug",
-      "name": "rampart-release"
+      "name": "msvc"
     }
   ],
   "version": 6
