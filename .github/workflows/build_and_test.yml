@@ -40,6 +40,7 @@ jobs:
     env:
       CMAKE_BUILD_PARALLEL_LEVEL: 8
       CTEST_PARALLEL_LEVEL: 0
+      BUILD_DIR: Builds/ninja
     steps:
     - name: Checkout code
       uses: actions/checkout@v5
@@ -54,14 +55,14 @@ jobs:
 
     - name: Build and test
       run: ctest -D ${{ inputs.dashboard_type }} -C ${{ matrix.config }} --output-junit junit.xml
-      working-directory: Builds/ninja
+      working-directory: ${{ env.BUILD_DIR }}
 
     - name: Upload JUnit report
       uses: mikepenz/action-junit-report@6246d2426ab5545e5ec212f995f3981825def42b # pin v5
       if: always() && github.event_name == 'pull_request'
       with:
-        report_paths: 'Builds/ninja/junit.xml'
-        exclude_sources: Builds/
+        report_paths: ${{ env.BUILD_DIR }}/junit.xml
+        exclude_sources: ${{ env.BUILD_DIR }}
         check_annotations: true
         flaky_summary: true
         include_time_in_summary: true
