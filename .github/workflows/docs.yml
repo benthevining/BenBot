@@ -10,13 +10,12 @@
 #
 # ======================================================================================
 
+name: Docs
+
 on:
-  workflow_call:
-    inputs:
-      dashboard_type:
-        description: Type of CTest dashboard to run (Nightly, Experimental, or Continuous)
-        required: true
-        type: string
+  workflow_dispatch:
+  push:
+    branches: [main]
 
 defaults:
   run:
@@ -24,62 +23,45 @@ defaults:
 
 permissions:
   contents: read
-  checks: write
-  pull-requests: write
 
 jobs:
-  build_and_test:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-15]
-        config: [Debug, Release]
-    runs-on: ${{ matrix.os }}
-    name: Build and test (${{ matrix.os }} - ${{ matrix.config }} - ${{ inputs.dashboard_type }})
-    timeout-minutes: 30
+  build:
+    runs-on: ubuntu-latest
+    name: Build docs
+    timeout-minutes: 10
     env:
-      CMAKE_BUILD_PARALLEL_LEVEL: 8
-      CTEST_PARALLEL_LEVEL: 0
       BUILD_DIR: Builds/ninja
-      DEPLOY_DIR: deploy
     steps:
     - name: Checkout code
       uses: actions/checkout@v5
       with:
         fetch-depth: 1
 
-    - name: Install Python dependencies
-      run: cmake -P .github/InstallPythonDeps.cmake
-
     - name: Configure CMake
-      run: cmake --preset default -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_C_COMPILER=clang -D BENBOT_DOCS=OFF
+      run: cmake --preset default -D BENBOT_TESTS=OFF
 
-    - name: Build and test
-      run: ctest -D ${{ inputs.dashboard_type }} -C ${{ matrix.config }} --output-junit junit.xml
-      working-directory: ${{ env.BUILD_DIR }}
-
-    - name: Upload JUnit report
-      uses: mikepenz/action-junit-report@6246d2426ab5545e5ec212f995f3981825def42b # pin v5
-      if: always() && github.event_name == 'pull_request'
-      with:
-        report_paths: ${{ env.BUILD_DIR }}/junit.xml
-        exclude_sources: ${{ env.BUILD_DIR }}
-        check_annotations: true
-        flaky_summary: true
-        include_time_in_summary: true
-        simplified_summary: true
-        comment: true
-        skip_comment_without_tests: true
-        updateComment: false
-
-    - name: Run cmake install
-      if: always() && matrix.config == 'Release'
-      run: cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.DEPLOY_DIR }} --component ben_bot --config ${{ matrix.config }}
+    - name: Build docs
+      run: cmake --build ${{ env.BUILD_DIR }} --target ben_bot_docs
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      if: always() && matrix.config == 'Release'
+      id: deployment
+      uses: actions/upload-pages-artifact@v3
       with:
-        name: BenBot-${{ matrix.os }}
-        path: ${{ env.DEPLOY_DIR }}
-        if-no-files-found: error
+        name: BenBot_docs
+        path: ${{ env.BUILD_DIR }}/generated-docs/html
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+      with:
+        artifact_name: BenBot_docs
