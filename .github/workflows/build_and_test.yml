@@ -35,6 +35,13 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-15]
         config: [Debug, Release]
         preset: [clang]
+        include:
+        - os: windows-latest
+          preset: msvc
+          config: Debug
+        - os: windows-latest
+          preset: msvc
+          config: Release
     runs-on: ${{ matrix.os }}
     name: Build and test (${{ matrix.os }}.${{ matrix.preset }}.${{ matrix.config }}.${{ inputs.dashboard_type }})
     timeout-minutes: 30

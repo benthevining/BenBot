@@ -82,6 +82,17 @@
       "generator": "Ninja Multi-Config",
       "inherits": "base",
       "name": "clang"
+    },
+    {
+      "condition": {
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows",
+        "type": "equals"
+      },
+      "displayName": "Build with MSVC",
+      "generator": "Visual Studio 17 2022",
+      "inherits": "base",
+      "name": "msvc"
     }
   ],
   "version": 6
