@@ -84,6 +84,22 @@
       "name": "clang"
     },
     {
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": {
+          "type": "STRING",
+          "value": "g++"
+        },
+        "CMAKE_C_COMPILER": {
+          "type": "STRING",
+          "value": "gcc"
+        }
+      },
+      "displayName": "Build with Ninja & GCC",
+      "generator": "Ninja Multi-Config",
+      "inherits": "base",
+      "name": "gcc"
+    },
+    {
       "condition": {
         "lhs": "${hostSystemName}",
         "rhs": "Windows",
