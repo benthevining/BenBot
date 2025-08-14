@@ -40,6 +40,10 @@
           "type": "BOOL",
           "value": "ON"
         },
+        "CMAKE_PROJECT_INCLUDE": {
+          "type": "FILEPATH",
+          "value": "${sourceDir}/config/Warnings.cmake"
+        },
         "CTEST_NO_TESTS_ACTION": {
           "type": "STRING",
           "value": "error"
