@@ -36,13 +36,14 @@ jobs:
         config: [Debug, Release]
         preset: [clang]
     runs-on: ${{ matrix.os }}
-    name: Build and test (${{ matrix.os }} - ${{ matrix.preset }} - ${{ matrix.config }} - ${{ inputs.dashboard_type }})
     timeout-minutes: 30
     env:
       CMAKE_BUILD_PARALLEL_LEVEL: 8
       CTEST_PARALLEL_LEVEL: 0
       BUILD_DIR: Builds/${{ matrix.preset }}
       DEPLOY_DIR: deploy
+      BUILD_ID: ${{ matrix.os }}.${{ matrix.preset }}.${{ matrix.config }}
+    name: Build and test (${{ env.BUILD_ID }}.${{ inputs.dashboard_type }})
 
     steps:
     - name: Checkout code
@@ -56,7 +57,7 @@ jobs:
     - name: Configure CMake
       env:
         BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
-      run: cmake --preset ${{ matrix.preset }} -D BENBOT_DOCS=OFF -D BUILDNAME=${{ matrix.os }}.${{ env.BRANCH_NAME }}.${{ matrix.config }}
+      run: cmake --preset ${{ matrix.preset }} -D BENBOT_DOCS=OFF -D BUILDNAME=${{ env.BRANCH_NAME }}.${{ env.BUILD_ID }}
 
     - name: Build and test
       run: ctest -D ${{ inputs.dashboard_type }} -C ${{ matrix.config }} --output-junit junit.xml
