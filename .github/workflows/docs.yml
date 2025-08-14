@@ -30,7 +30,7 @@ jobs:
     name: Build docs
     timeout-minutes: 10
     env:
-      BUILD_DIR: Builds/ninja
+      BUILD_DIR: Builds/clang
 
     steps:
     - name: Install dependencies
@@ -42,7 +42,7 @@ jobs:
         fetch-depth: 1
 
     - name: Configure CMake
-      run: cmake --preset default -D BENBOT_TESTS=OFF
+      run: cmake --preset clang -D BENBOT_TESTS=OFF
 
     - name: Build docs
       run: cmake --build ${{ env.BUILD_DIR }} --target ben_bot_docs
