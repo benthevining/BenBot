@@ -9,7 +9,7 @@
     @li All communication is done via standard input and output with text commands.
     @li The engine should boot and wait for input from the GUI. The engine should wait for the @c isready or @c setoption command to set up its internal parameters as the boot process should be as quick as possible.
     @li The engine must always be able to process input from stdin, even while thinking.
-    @li All command strings the engine receives will end with @c \n, also all commands the GUI receives should end with @c \n. Note: @c \n can be @c 0x0d or @c 0x0a0d or any combination depending on your OS. If you use Engine and GUI in the same OS this should be no problem if you communicate in text mode, but be aware of this when for example running a Linux engine in a Windows GUI.
+    @li All command strings the engine receives will end with ```\n``, also all commands the GUI receives should end with ```\n``. Note: ```\n`` can be @c 0x0d or @c 0x0a0d or any combination depending on your OS. If you use Engine and GUI in the same OS this should be no problem if you communicate in text mode, but be aware of this when for example running a Linux engine in a Windows GUI.
     @li Arbitrary white space between tokens is allowed. Example: ``debug on\n`` and  ``   debug     on  \n`` and ``\t  debug \t  \t\ton\t  \n`` all set the debug mode of the engine on.
     @li The engine will always be in forced mode which means it should never start calculating or pondering without receiving a @c go command first.
     @li Before the engine is asked to search on a position, there will always be a position command to tell the engine about the current position.
@@ -62,8 +62,8 @@
     This is sent to the engine when the user wants to change the internal parameters of the engine.
     For the "button" type no value is needed.
     One string will be sent for each parameter and this will only be sent when the engine is waiting.
-    The name and value of the option in <id> should not be case sensitive and can include spaces.
-    The substrings "value" and "name" should be avoided in <id> and <x> to allow unambiguous parsing, for example do not use <name> = "draw value".
+    The name and value of the option in ``<id>`` should not be case sensitive and can include spaces.
+    The substrings "value" and "name" should be avoided in ``<id>`` and ``<x>`` to allow unambiguous parsing, for example do not use ``<name>`` = "draw value".
     Here are some strings for the example below:
     @li ``setoption name Nullmove value true\n``
     @li ``setoption name Selectivity value 3\n``
@@ -78,8 +78,8 @@
 
     The following tokens are allowed:
     @li ``later``: the user doesn't want to register the engine now.
-    @li ``name <x>``: the engine should be registered with the name <x>
-    @li ``code <y>``: the engine should be registered with the code <y>
+    @li ``name <x>``: the engine should be registered with the name ``<x>``
+    @li ``code <y>``: the engine should be registered with the code ``<y>``
 
     Examples:
     @li ``register later``
@@ -175,7 +175,7 @@
 
     ``bestmove <move1> [ponder <move2>]``
 
-    The engine has stopped searching and found the move <move> best in this position.
+    The engine has stopped searching and found the move ``<move>`` best in this position.
     The engine can send the move it likes to ponder on. The engine must not start pondering automatically.
     This command must always be sent if the engine stops searching, also in pondering mode if there is a
     @c stop command, so for every @c go command a @c bestmove command is needed!
@@ -232,7 +232,7 @@
     @li ``depth <x>``: search depth in plies
     @li ``seldepth <x>``: selective search depth in plies, if the engine sends seldepth there must also be a @c depth present in the same string.
     @li ``time <x>``: the time searched in ms, this should be sent together with the pv.
-    @l ``nodes <x>``: x nodes searched, the engine should send this info regularly
+    @li ``nodes <x>``: x nodes searched, the engine should send this info regularly
     @li ``pv <move1> ... <movei>``: the best line found
     @li ``multipv <num>``: this for the multi pv mode. For the best move/pv add ``multipv 1`` in the string when you send the pv. In k-best mode always send all k variants in k strings together.
     @li ``score [cp <x>]|[mate <y>]|[lowerbound]|[upperbound]``: ``cp`` is the score from the engine's point of view in centipawns. ``mate`` is mate in y moves, not plies. If the engine is getting mated use negative values for y. ``lowerbound`` means the score is just a lower bound. ``upperbound`` means the score is just an upper bound.
@@ -243,9 +243,9 @@
     @li ``tbhits <x>``: x positions where found in the endgame table bases
     @li ``sbhits <x>``: x positions where found in the shredder endgame databases
     @li ``cpuload <x>``: the cpu usage of the engine is x permill.
-    @li ``string <str>``: any string str which will be displayed be the engine, if there is a string command the rest of the line will be interpreted as <str>.
-    @li ``refutation <move1> <move2> ... <movei>``: move <move1> is refuted by the line <move2> ... <movei>, i can be any number >= 1. Example: after move d1h5 is searched, the engine can send ``info refutation d1h5 g6h5`` if g6h5 is the best answer after d1h5 or if g6h5 refutes the move d1h5. If there is no refutation for d1h5 found, the engine should just send ``info refutation d1h5``. The engine should only send this if the option "UCI_ShowRefutations" is set to true.
-    @li ``currline <cpunr> <move1> ... <movei>``: this is the current line the engine is calculating. <cpunr> is the number of the cpu if the engine is running on more than one cpu. <cpunr> = 1,2,3.... if the engine is just using one cpu, <cpunr> can be omitted. If <cpunr> is greater than 1, always send all k lines in k strings together. The engine should only send this if the option "UCI_ShowCurrLine" is set to true.
+    @li ``string <str>``: any string str which will be displayed be the engine, if there is a string command the rest of the line will be interpreted as ``<str>``.
+    @li ``refutation <move1> <move2> ... <movei>``: move ``<move1>`` is refuted by the line ``<move2> ... <movei>``, i can be any number >= 1. Example: after move d1h5 is searched, the engine can send ``info refutation d1h5 g6h5`` if g6h5 is the best answer after d1h5 or if g6h5 refutes the move d1h5. If there is no refutation for d1h5 found, the engine should just send ``info refutation d1h5``. The engine should only send this if the option "UCI_ShowRefutations" is set to true.
+    @li ``currline <cpunr> <move1> ... <movei>``: this is the current line the engine is calculating. ``<cpunr>`` is the number of the cpu if the engine is running on more than one cpu. ``<cpunr> = 1,2,3....``. If the engine is just using one cpu, ``<cpunr>`` can be omitted. If ``<cpunr>`` is greater than 1, always send all k lines in k strings together. The engine should only send this if the option "UCI_ShowCurrLine" is set to true.
 
     @subsection cmd_option option
 
@@ -258,7 +258,7 @@
     For all allowed combinations see the examples below, as some combinations of this tokens don't make sense.
     One string will be sent for each parameter.
 
-    @li ``name <id>``: The option has the name id. Certain options have a fixed value for <id>, which means that the semantics of this option is fixed. Usually those options should not be displayed in the normal engine options window of the GUI but get a special treatment. "Pondering" for example should be set automatically when pondering is enabled or disabled in the GUI options. The same for "UCI_AnalyseMode" which should also be set automatically by the GUI. All those certain options have the prefix "UCI_" except for the first 6 options below. If the GUI gets an unknown Option with the prefix "UCI_", it should just ignore it and not display it in the engine's options dialog.
+    @li ``name <id>``: The option has the name id. Certain options have a fixed value for ``<id>``, which means that the semantics of this option is fixed. Usually those options should not be displayed in the normal engine options window of the GUI but get a special treatment. "Pondering" for example should be set automatically when pondering is enabled or disabled in the GUI options. The same for "UCI_AnalyseMode" which should also be set automatically by the GUI. All those certain options have the prefix "UCI_" except for the first 6 options below. If the GUI gets an unknown Option with the prefix "UCI_", it should just ignore it and not display it in the engine's options dialog.
     @li ``type <t>``: The option has type t. There are 5 different types of options the engine can send: @c check (a checkbox that can either be true or false), @c spin (a spin wheel that can be an integer in a certain range), @c combo (a combo box that can have different predefined strings as a value), @c button (a button that can be pressed to send a command to the engine), @c string (a text field that has a string as a value, an empty string has the value "<empty>")
     @li ``default <x>``: the default value of this parameter is x
     @li ``min <x>``: the minimum value of this parameter is x
@@ -274,21 +274,21 @@
 
     @subsubsection uci_default_options Default options
 
-    @li <id> = Hash, type is spin: The value in MB for memory for hash tables can be changed, this should be answered with the first @c setoptions command at program boot if the engine has sent the appropriate ``option name Hash`` command, which should be supported by all engines! So the engine should use a very small hash first as default.
-    @li <id> = NalimovPath, type string: This is the path on the hard disk to the Nalimov compressed format. Multiple directories can be concatenated with ";"
-    @li <id> = NalimovCache, type spin: This is the size in MB for the cache for the nalimov table bases. These last two options should also be present in the initial options exchange dialog when the engine is booted if the engine supports it
-    @li <id> = Ponder, type check: This means that the engine is able to ponder. The GUI will send this whenever pondering is possible or not. Note: The engine should not start pondering on its own if this is enabled, this option is only needed because the engine might change its time management algorithm when pondering is allowed.
-    @li <id> = OwnBook, type check: This means that the engine has its own book which is accessed by the engine itself. If this is set, the engine takes care of the opening book and the GUI will never execute a move out of its book for the engine. If this is set to false by the GUI, the engine should not access its own book.
-    @li <id> = MultiPV, type spin: the engine supports multi best line or k-best mode. the default value is 1
-    @li <id> = UCI_ShowCurrLine, type check, should be false by default, the engine can show the current line it is calculating. See ``info currline`` above.
-    @li <id> = UCI_ShowRefutations, type check, should be false by default, the engine can show a move and its refutation in a line. see ``info refutations`` above.
-    @li <id> = UCI_LimitStrength, type check, should be false by default, The engine is able to limit its strength to a specific Elo number, This should always be implemented together with "UCI_Elo".
-    @li <id> = UCI_Elo, type spin: The engine can limit its strength in Elo within this interval. If UCI_LimitStrength is set to false, this value should be ignored. If UCI_LimitStrength is set to true, the engine should play with this specific strength. This should always be implemented together with "UCI_LimitStrength".
-    @li <id> = UCI_AnalyseMode, type check: The engine wants to behave differently when analysing or playing a game. For example when playing it can use some kind of learning. This is set to false if the engine is playing a game, otherwise it is true.
-    @li <id> = UCI_Opponent, type string: With this command the GUI can send the name, title, elo and if the engine is playing a human or computer to the engine. The format of the string has to be ``[GM|IM|FM|WGM|WIM|none] [<elo>|none] [computer|human] <name>``. Examples: ``setoption name UCI_Opponent value GM 2800 human Gary Kasparov``, or ``setoption name UCI_Opponent value none none computer Shredder``
-    @li <id> = UCI_EngineAbout, type string: With this command, the engine tells the GUI information about itself, for example a license text, usually it doesn't make sense that the GUI changes this text with the setoption command. Example: ``option name UCI_EngineAbout type string default Shredder by Stefan Meyer-Kahlen, see www.shredderchess.com``
-    @li <id> = UCI_ShredderbasesPath, type string: this is either the path to the folder on the hard disk containing the Shredder endgame databases or the path and filename of one Shredder endgame database.
-    @li <id> = UCI_SetPositionValue, type string: the GUI can send this to the engine to tell the engine to use a certain value in centipawns from white's point of view if evaluating this specific position. The string can have the formats: ``<value> + <fen> | clear + <fen> | clearall``
+    @li Hash, type is spin: The value in MB for memory for hash tables can be changed, this should be answered with the first @c setoptions command at program boot if the engine has sent the appropriate ``option name Hash`` command, which should be supported by all engines! So the engine should use a very small hash first as default.
+    @li NalimovPath, type string: This is the path on the hard disk to the Nalimov compressed format. Multiple directories can be concatenated with ";"
+    @li NalimovCache, type spin: This is the size in MB for the cache for the nalimov table bases. These last two options should also be present in the initial options exchange dialog when the engine is booted if the engine supports it
+    @li Ponder, type check: This means that the engine is able to ponder. The GUI will send this whenever pondering is possible or not. Note: The engine should not start pondering on its own if this is enabled, this option is only needed because the engine might change its time management algorithm when pondering is allowed.
+    @li OwnBook, type check: This means that the engine has its own book which is accessed by the engine itself. If this is set, the engine takes care of the opening book and the GUI will never execute a move out of its book for the engine. If this is set to false by the GUI, the engine should not access its own book.
+    @li MultiPV, type spin: the engine supports multi best line or k-best mode. the default value is 1
+    @li UCI_ShowCurrLine, type check, should be false by default, the engine can show the current line it is calculating. See ``info currline`` above.
+    @li UCI_ShowRefutations, type check, should be false by default, the engine can show a move and its refutation in a line. see ``info refutations`` above.
+    @li UCI_LimitStrength, type check, should be false by default, The engine is able to limit its strength to a specific Elo number, This should always be implemented together with "UCI_Elo".
+    @li UCI_Elo, type spin: The engine can limit its strength in Elo within this interval. If UCI_LimitStrength is set to false, this value should be ignored. If UCI_LimitStrength is set to true, the engine should play with this specific strength. This should always be implemented together with "UCI_LimitStrength".
+    @li UCI_AnalyseMode, type check: The engine wants to behave differently when analysing or playing a game. For example when playing it can use some kind of learning. This is set to false if the engine is playing a game, otherwise it is true.
+    @li UCI_Opponent, type string: With this command the GUI can send the name, title, elo and if the engine is playing a human or computer to the engine. The format of the string has to be ``[GM|IM|FM|WGM|WIM|none] [<elo>|none] [computer|human] <name>``. Examples: ``setoption name UCI_Opponent value GM 2800 human Gary Kasparov``, or ``setoption name UCI_Opponent value none none computer Shredder``
+    @li UCI_EngineAbout, type string: With this command, the engine tells the GUI information about itself, for example a license text, usually it doesn't make sense that the GUI changes this text with the setoption command. Example: ``option name UCI_EngineAbout type string default Shredder by Stefan Meyer-Kahlen, see www.shredderchess.com``
+    @li UCI_ShredderbasesPath, type string: this is either the path to the folder on the hard disk containing the Shredder endgame databases or the path and filename of one Shredder endgame database.
+    @li UCI_SetPositionValue, type string: the GUI can send this to the engine to tell the engine to use a certain value in centipawns from white's point of view if evaluating this specific position. The string can have the formats: ``<value> + <fen> | clear + <fen> | clearall``
 
     @section uci_examples Examples
 
