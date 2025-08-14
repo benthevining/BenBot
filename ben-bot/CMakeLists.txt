@@ -43,9 +43,7 @@ add_executable (ben_bot::ben_bot ALIAS ben_bot)
 
 #
 
-install (TARGETS ben_bot COMPONENT ben_bot RUNTIME_DEPENDENCIES
-         FRAMEWORK DESTINATION Library/Frameworks
-)
+install (TARGETS ben_bot COMPONENT ben_bot)
 
 include (CPackComponent)
 

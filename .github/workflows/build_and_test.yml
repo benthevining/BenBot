@@ -75,7 +75,7 @@ jobs:
 
     - name: Run cmake install
       if: always() && matrix.config == 'Release'
-      run: cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.DEPLOY_DIR }} --component ben_bot
+      run: cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.DEPLOY_DIR }} --component ben_bot --config ${{ matrix.config }}
 
     - name: Zip install tree
       if: always() && matrix.config == 'Release'
