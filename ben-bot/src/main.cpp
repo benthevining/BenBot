@@ -46,13 +46,10 @@ int main(const int argc, const char** argv)
 try {
     chess::util::enable_utf8_console_output();
 
-    ben_bot::Engine engine;
-
-    engine.print_logo_and_version();
-
     // handle command line args
     // we process any args as a one-shot UCI command line
     // --no-loop can also be given to make the engine exit after processing the given CLI command
+    // --no-logo will suppress the logo & version normally printed at startup
 
     static constexpr auto MAX_ARGS = 128uz;
 
@@ -66,22 +63,33 @@ try {
     // consume program name
     args = args.subspan(1uz);
 
-    // check for --no-loop token, consume it if found
-    const auto noLoop = [&args] {
-        static constexpr string_view NO_LOOP_TOKEN { "--no-loop" };
+    // returns true if token is present in argument list, and consumes it if so
+    auto check_for_arg = [&args](const string_view token) {
+        if (args.empty())
+            return false;
 
-        if (args.front() == NO_LOOP_TOKEN) {
+        if (args.front() == token) {
             args = args.subspan(1uz);
             return true;
         }
 
-        if (args.back() == NO_LOOP_TOKEN) {
+        if (args.back() == token) {
             args = args.first(args.size() - 1uz);
             return true;
         }
 
         return false;
-    }();
+    };
+
+    const auto noLoop = check_for_arg("--no-loop");
+    const auto noLogo = check_for_arg("--no-logo");
+
+    ben_bot::Engine engine;
+
+    if (not noLogo) {
+        [[likely]];
+        engine.print_logo_and_version();
+    }
 
     if (not args.empty())
         engine.handle_command(concat_strings(args));
