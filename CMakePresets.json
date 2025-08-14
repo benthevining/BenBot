@@ -100,6 +100,12 @@
       "name": "gcc"
     },
     {
+      "cacheVariables": {
+        "CMAKE_MSVC_RUNTIME_LIBRARY": {
+          "type": "STRING",
+          "value": "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+        }
+      },
       "condition": {
         "lhs": "${hostSystemName}",
         "rhs": "Windows",
