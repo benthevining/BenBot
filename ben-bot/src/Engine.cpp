@@ -199,7 +199,7 @@ void Engine::run_bench(const string_view arguments)
 {
     const auto [depth, filePath] = util::split_at_first_space(arguments);
 
-    const auto defaultDepth = util::int_from_string(depth, 4uz);
+    const auto defaultDepth = util::int_from_string(depth, 3uz);
 
     if (filePath.empty()) {
         do_bench(get_bench_epd_text(), defaultDepth);
