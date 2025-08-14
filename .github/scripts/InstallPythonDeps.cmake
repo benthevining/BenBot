@@ -20,8 +20,11 @@ cmake_minimum_required (VERSION 3.30.0 FATAL_ERROR)
 
 find_package (Python 3.9 COMPONENTS Interpreter REQUIRED)
 
+# cmake-format: off
 execute_process (
     COMMAND "${Python_EXECUTABLE}" -m pip install --break-system-packages --upgrade python-chess
-            COMMAND_ECHO STDOUT OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_STRIP_TRAILING_WHITESPACE
-                                COMMAND_ERROR_IS_FATAL ANY
+    COMMAND_ECHO STDOUT
+    OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_STRIP_TRAILING_WHITESPACE
+    COMMAND_ERROR_IS_FATAL ANY
 )
+# cmake-format: on
