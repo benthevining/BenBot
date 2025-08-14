@@ -40,6 +40,8 @@ jobs:
     env:
       CMAKE_BUILD_PARALLEL_LEVEL: 8
       CTEST_PARALLEL_LEVEL: 0
+      BUILD_DIR: Builds/ninja
+      DEPLOY_DIR: deploy
     steps:
     - name: Checkout code
       uses: actions/checkout@v5
@@ -50,18 +52,18 @@ jobs:
       run: cmake -P .github/InstallPythonDeps.cmake
 
     - name: Configure CMake
-      run: cmake --preset default -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_C_COMPILER=clang
+      run: cmake --preset default -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_C_COMPILER=clang -D BENBOT_DOCS=OFF
 
     - name: Build and test
       run: ctest -D ${{ inputs.dashboard_type }} -C ${{ matrix.config }} --output-junit junit.xml
-      working-directory: Builds/ninja
+      working-directory: ${{ env.BUILD_DIR }}
 
     - name: Upload JUnit report
       uses: mikepenz/action-junit-report@6246d2426ab5545e5ec212f995f3981825def42b # pin v5
-      if: always()
+      if: always() && github.event_name == 'pull_request'
       with:
-        report_paths: 'Builds/ninja/junit.xml'
-        exclude_sources: Builds/
+        report_paths: ${{ env.BUILD_DIR }}/junit.xml
+        exclude_sources: ${{ env.BUILD_DIR }}
         check_annotations: true
         flaky_summary: true
         include_time_in_summary: true
@@ -69,3 +71,15 @@ jobs:
         comment: true
         skip_comment_without_tests: true
         updateComment: false
+
+    - name: Run cmake install
+      if: always() && matrix.config == 'Release'
+      run: cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.DEPLOY_DIR }} --component ben_bot --config ${{ matrix.config }}
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      if: always() && matrix.config == 'Release'
+      with:
+        name: BenBot-${{ matrix.os }}
+        path: ${{ env.DEPLOY_DIR }}
+        if-no-files-found: error
