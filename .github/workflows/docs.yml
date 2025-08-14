@@ -32,6 +32,9 @@ jobs:
     env:
       BUILD_DIR: Builds/ninja
     steps:
+    - name: Install Doxygen
+      run: sudo apt install doxygen
+
     - name: Checkout code
       uses: actions/checkout@v5
       with:
@@ -51,14 +54,14 @@ jobs:
         path: ${{ env.BUILD_DIR }}/generated-docs/html
 
   deploy:
+    runs-on: ubuntu-latest
+    needs: build
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     permissions:
       pages: write
       id-token: write
-    runs-on: ubuntu-latest
-    needs: build
     steps:
     - name: Deploy to GitHub Pages
       id: deployment
