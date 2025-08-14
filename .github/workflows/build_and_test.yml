@@ -41,6 +41,8 @@ jobs:
       CMAKE_BUILD_PARALLEL_LEVEL: 8
       CTEST_PARALLEL_LEVEL: 0
       BUILD_DIR: Builds/ninja
+      DEPLOY_DIR: deploy
+      DEPLOY_ZIP: BenBot.zip
     steps:
     - name: Checkout code
       uses: actions/checkout@v5
@@ -70,3 +72,19 @@ jobs:
         comment: true
         skip_comment_without_tests: true
         updateComment: false
+
+    - name: Run cmake install
+      if: always() && matrix.config == 'Release'
+      run: cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.DEPLOY_DIR }} --component ben_bot
+
+    - name: Zip install tree
+      if: always() && matrix.config == 'Release'
+      run: cmake -E tar c ${{ env.DEPLOY_ZIP }} ${{ env.DEPLOY_DIR }}
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      if: always() && matrix.config == 'Release'
+      with:
+        name: BenBot-${{ matrix.os }}
+        path: ${{ env.DEPLOY_ZIP }}
+        if-no-files-found: error
