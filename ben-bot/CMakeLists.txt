@@ -43,6 +43,14 @@ add_executable (ben_bot::ben_bot ALIAS ben_bot)
 
 #
 
+install (TARGETS ben_bot COMPONENT ben_bot)
+
+include (CPackComponent)
+
+cpack_add_component (ben_bot DISPLAY_NAME BenBot DESCRIPTION "BenBot UCI chess engine")
+
+#
+
 set (lichess_bot_dir "${PROJECT_SOURCE_DIR}/lichess-bot")
 
 if (IS_DIRECTORY "${lichess_bot_dir}")
