@@ -87,11 +87,11 @@
       "cacheVariables": {
         "CMAKE_CXX_COMPILER": {
           "type": "STRING",
-          "value": "g++"
+          "value": "g++-14"
         },
         "CMAKE_C_COMPILER": {
           "type": "STRING",
-          "value": "gcc"
+          "value": "gcc-14"
         }
       },
       "displayName": "Build with Ninja & GCC",
