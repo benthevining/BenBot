@@ -47,6 +47,9 @@ jobs:
     - name: Build docs
       run: cmake --build ${{ env.BUILD_DIR }} --target ben_bot_docs
 
+    - name: Report Doxygen warnings
+      run: cmake -E cat logs/Doxygen.log
+
     - name: Upload artifact
       id: deployment
       uses: actions/upload-pages-artifact@v3
