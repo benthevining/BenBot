@@ -55,8 +55,7 @@ jobs:
 
     - name: Configure CMake
       env:
-        BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
-        BUILD_NAME: ${{ env.BRANCH_NAME }}.${{ matrix.os }}.${{ matrix.preset }}.${{ matrix.config }}
+        BUILD_NAME: ${{ github.head_ref || github.ref_name }}.${{ matrix.os }}.${{ matrix.preset }}.${{ matrix.config }}
       run: cmake --preset ${{ matrix.preset }} -D BENBOT_DOCS=OFF -D BUILDNAME=${{ env.BUILD_NAME }}
 
     - name: Build and test
