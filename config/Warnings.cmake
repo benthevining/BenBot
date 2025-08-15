@@ -60,9 +60,6 @@ add_compile_options (
     -Wextra
     -Wformat
     -Wformat=2
-    -Wno-missing-field-initializers
-    -Wno-missing-designated-field-initializers
-    -Wno-unknown-pragmas
     -Woverloaded-virtual
     -Wimplicit-fallthrough
     -Wpedantic
@@ -76,8 +73,6 @@ add_compile_options (
     -Wunused-parameter
     -Wnon-virtual-dtor
     -Wzero-as-null-pointer-constant
-    -Wno-ignored-qualifiers
-    -Wno-unknown-attributes
 )
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
@@ -95,6 +90,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
         -Wshift-sign-overflow
         -Wshorten-64-to-32
         -Wunused-variable
+        -Wno-missing-designated-field-initializers
     )
 elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
     add_compile_options (
