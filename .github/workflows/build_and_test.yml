@@ -96,12 +96,13 @@ jobs:
 
     - name: Run cmake install
       if: always() && matrix.config == 'Release'
-      run: cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.DEPLOY_DIR }} --component ben_bot --config ${{ matrix.config }}
+      run: cmake --install . --prefix ${{ env.DEPLOY_DIR }} --component ben_bot --config ${{ matrix.config }}
+      working-directory: ${{ env.BUILD_DIR }}
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       if: always() && matrix.config == 'Release'
       with:
         name: BenBot-${{ matrix.os }}-${{ matrix.preset }}
-        path: ${{ env.DEPLOY_DIR }}
+        path: ${{ env.DEPLOY_DIR }}/**
         if-no-files-found: error

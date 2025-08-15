@@ -31,7 +31,6 @@ permissions:
 jobs:
 
   build:
-    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
     runs-on: ubuntu-latest
     name: Build docs
     timeout-minutes: 10
@@ -49,7 +48,8 @@ jobs:
       run: cmake --preset clang -D BENBOT_TESTS=OFF
 
     - name: Build docs
-      run: cmake --build ${{ env.BUILD_DIR }} --target ben_bot_docs
+      run: cmake --build . --target ben_bot_docs
+      working-directory: ${{ env.BUILD_DIR }}
 
     - name: Report Doxygen warnings
       if: always()
@@ -58,7 +58,6 @@ jobs:
         cmake -E cat logs/Doxygen.log >> $GITHUB_STEP_SUMMARY
 
     - name: Upload artifact
-      id: deployment
       uses: actions/upload-pages-artifact@v3
       with:
         name: BenBot_docs

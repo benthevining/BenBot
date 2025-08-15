@@ -117,7 +117,8 @@ jobs:
       working-directory: ${{ env.BUILD_DIR }}
 
     - name: Run cmake install
-      run: cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.DEPLOY_DIR }} --component ben_bot --config ${{ matrix.config }}
+      run: cmake --install . --prefix ${{ env.DEPLOY_DIR }} --component ben_bot --config ${{ matrix.config }}
+      working-directory: ${{ env.BUILD_DIR }}
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
@@ -126,8 +127,43 @@ jobs:
         path: ${{ env.DEPLOY_DIR }}/**
         if-no-files-found: error
 
+  build_docs:
+    needs: bump_version
+    runs-on: ubuntu-latest
+    name: Build docs
+    timeout-minutes: 10
+    env:
+      BUILD_DIR: Builds/clang
+      ZIP_NAME: BenBot-docs.zip
+
+    steps:
+    - name: Install dependencies
+      run: sudo apt install doxygen graphviz
+
+    - name: Checkout code
+      uses: actions/checkout@v5
+      with:
+        ref: ${{ needs.bump_version.outputs.tag_name }}
+
+    - name: Configure CMake
+      run: cmake --preset clang -D BENBOT_TESTS=OFF
+
+    - name: Build docs
+      run: cmake --build . --target ben_bot_docs
+      working-directory: ${{ env.BUILD_DIR }}
+
+    - name: Create zip
+      run: cmake -E tar cz --format=zip ${{ env.ZIP_NAME }} ${{ env.BUILD_DIR }}/generated-docs/html
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: BenBot-docs
+        path: ${{ env.ZIP_NAME }}
+        if-no-files-found: error
+
   create_release:
-    needs: [bump_version, build]
+    needs: [bump_version, build, build_docs]
     runs-on: ubuntu-latest
     name: Create GitHub release
     timeout-minutes: 10
