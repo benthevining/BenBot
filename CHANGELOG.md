@@ -387,3 +387,18 @@
 ### Bug Fixes
 
 * actions ([89c7715](https://github.com/benthevining/BenBot/commit/89c771504088b731e363ca7f0a01e554b09171c5))
+## [1.2.14](https://github.com/benthevining/BenBot/compare/v1.2.13...v1.2.14) (2025-08-15)
+
+### Features
+
+* msvc build presets ([4536ff1](https://github.com/benthevining/BenBot/commit/4536ff1fa02fb6c8533aa9d4a1fa713a06af0012))
+
+### Bug Fixes
+
+* actions commit SHAs ([f7f01ea](https://github.com/benthevining/BenBot/commit/f7f01ea5d5767222ce1cda2cd7ac40d06d3aff0a))
+* bug with Zobrist hash value being used uninitialized ([ba5e56e](https://github.com/benthevining/BenBot/commit/ba5e56e1ba0ec7a8b6f69feecb39da378ba60967))
+* fixing some warnings ([d791574](https://github.com/benthevining/BenBot/commit/d791574be131de4a49c22a283731d38933adf43c))
+* precommit ci ([f6aa40e](https://github.com/benthevining/BenBot/commit/f6aa40e798c9c9e841ec36aa23bc039932af62c2))
+* python-chess timeouts ([#224](https://github.com/benthevining/BenBot/issues/224)) ([d9af53d](https://github.com/benthevining/BenBot/commit/d9af53d3fd3a8a0b2e89d5adab2973888fa3cd5a))
+* warnings ([be585b0](https://github.com/benthevining/BenBot/commit/be585b0f5e630efa4a09d2a550950849745baa1e))
+* warnings ([d995288](https://github.com/benthevining/BenBot/commit/d995288c3eb210e282c8859d921e61a6009c1c94))
