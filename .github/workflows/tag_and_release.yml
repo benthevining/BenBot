@@ -69,8 +69,8 @@ jobs:
     - name: Write new version to output
       id: write_version
       run: |
-        echo "new_version=" >> "$GITHUB_OUTPUT"
-        bump-my-version show --increment ${{ inputs.version_part }} new_version >> "$GITHUB_OUTPUT"
+        new_version=$(bump-my-version show --increment ${{ inputs.version_part }} new_version)
+        echo "new_version=$new_version" >> "$GITHUB_OUTPUT"
 
     - name: Bump version & create tag
       run: bump-my-version bump --verbose ${{ inputs.version_part }}
