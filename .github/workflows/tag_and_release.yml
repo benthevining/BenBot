@@ -10,7 +10,7 @@
 #
 # ======================================================================================
 
-name: Bump version
+name: Bump version, create tag & release
 
 on:
   workflow_dispatch:
@@ -30,6 +30,8 @@ defaults:
 
 permissions:
   contents: write
+  checks: write
+  pull-requests: write
 
 jobs:
   bump_version:
@@ -64,5 +66,42 @@ jobs:
         git_commit_gpgsign: true
         git_tag_gpgsign: true
 
+    - name: Write new version to output
+      id: write_version
+      run: |
+        echo "new_version=" >> "$GITHUB_OUTPUT"
+        bump-my-version show --increment ${{ inputs.version_part }} new_version >> "$GITHUB_OUTPUT"
+
     - name: Bump version & create tag
       run: bump-my-version bump --verbose ${{ inputs.version_part }}
+
+    outputs:
+      tag_name: v${{ steps.write_version.outputs.new_version }}
+
+  build:
+    needs: bump_version
+    uses: ./.github/workflows/build_and_test.yml
+    with:
+      skip_tests: true
+
+  create_release:
+    needs: [bump_version, build]
+    runs-on: ubuntu-latest
+    name: Create GitHub release
+    timeout-minutes: 10
+
+    steps:
+    - name: Download artifacts
+      id: download
+      uses: actions/download-artifact@v5
+      with:
+        pattern: BenBot-*
+
+    - name: Create release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: v${{ needs.bump_version.outputs.tag_name }}
+        files: ${{ steps.download.outputs.download-path }}/*
+        fail_on_unmatched_files: true
+        generate_release_notes: true
+        make_latest: true
