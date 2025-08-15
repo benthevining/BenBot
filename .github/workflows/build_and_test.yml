@@ -17,8 +17,14 @@ on:
     inputs:
       dashboard_type:
         description: Type of CTest dashboard to run (Nightly, Experimental, or Continuous)
-        required: true
         type: string
+        required: false
+        default: Experimental
+      skip_tests:
+        description: Only build, skip running tests
+        required: false
+        type: boolean
+        default: false
 
 defaults:
   run:
@@ -77,12 +83,18 @@ jobs:
       run: cmake --preset ${{ matrix.preset }} -D BENBOT_DOCS=OFF -D BUILDNAME=${{ env.BUILD_NAME }}
 
     - name: Build and test
+      if: true && ! inputs.skip_tests
       run: ctest -D ${{ inputs.dashboard_type }} -C ${{ matrix.config }} --output-junit junit.xml
+      working-directory: ${{ env.BUILD_DIR }}
+
+    - name: Build
+      if: inputs.skip_tests
+      run: cmake --build . --config ${{ matrix.config }}
       working-directory: ${{ env.BUILD_DIR }}
 
     - name: Upload JUnit report
       uses: mikepenz/action-junit-report@6246d2426ab5545e5ec212f995f3981825def42b # pin v5
-      if: always() && github.event_name == 'pull_request'
+      if: always() && ! inputs.skip_tests && github.event_name == 'pull_request'
       with:
         report_paths: ${{ env.BUILD_DIR }}/junit.xml
         exclude_sources: ${{ env.BUILD_DIR }}

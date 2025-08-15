@@ -73,7 +73,7 @@ jobs:
     needs: bump_version
     uses: ./.github/workflows/build_and_test.yml
     with:
-      dashboard_type: Experimental
+      skip_tests: true
 
   create_release:
     needs: build_and_test

@@ -14,7 +14,7 @@ This action builds the Doxygen documentation and deploys it to GitHub pages. Thi
 
 ## `tag_and_release.yml`
 
-This action bumps the project version, creates a git tag, executes tests, and creates a GitHub release. This action is never automatically triggered, it must be run manually.
+This action bumps the project version, creates a git tag, runs a build, and creates a GitHub release. This action is never automatically triggered, it must be run manually.
 
 ## `build_and_test.yml`
 

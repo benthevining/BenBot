@@ -50,7 +50,7 @@ pre_commit_hooks = [
     "git add ."
 ]
 commit_args = "--no-verify -S"
-message = "Bump version: {current_version} → {new_version}"
+message = "Bump version: {current_version} → {new_version} [skip ci]"
 
 # tag
 tag = true
