@@ -334,3 +334,8 @@
 * WIN32 platform detection ([c6d3401](https://github.com/benthevining/BenBot/commit/c6d34011caf9dbfa33e5c960748aab4c5cb4d67b))
 * Windows build of memory mapped file class ([3ffa826](https://github.com/benthevining/BenBot/commit/3ffa826f9115103347eccc69a78de340fec1367e))
 * Windows build of memory mapped file class ([4234deb](https://github.com/benthevining/BenBot/commit/4234debfff1adb7a81f5718374fc495e43a740a7))
+## [1.2.2](https://github.com/benthevining/BenBot/compare/v1.2.1...v1.2.2) (2025-08-15)
+
+### Bug Fixes
+
+* action to tag & release ([#239](https://github.com/benthevining/BenBot/issues/239)) ([8c73744](https://github.com/benthevining/BenBot/commit/8c73744a5559c15bdd0bf8ba3ba8f4b191d2b6a8))
