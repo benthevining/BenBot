@@ -12,6 +12,10 @@ Similar to `ci.yml`, except this action runs on a schedule every night, and CDas
 
 This action builds the Doxygen documentation and deploys it to GitHub pages. This action is triggered by every push to `main`, unless the commit message contains `[skip ci]`.
 
+## `tag_and_release.yml`
+
+This action bumps the project version, creates a git tag, executes tests, and creates a GitHub release. This action is never automatically triggered, it must be run manually.
+
 ## `build_and_test.yml`
 
 Internal action that actually executes the build matrix.
