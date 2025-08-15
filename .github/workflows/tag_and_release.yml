@@ -124,7 +124,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: BenBot-${{ matrix.os }}-${{ matrix.preset }}
-        path: ${{ env.DEPLOY_DIR }}/**
+        path: ${{ env.DEPLOY_DIR }}
         if-no-files-found: error
 
   build_docs:
@@ -153,7 +153,7 @@ jobs:
       working-directory: ${{ env.BUILD_DIR }}
 
     - name: Create zip
-      run: cmake -E tar cz ${{ env.ZIP_NAME }} --format=zip ${{ env.BUILD_DIR }}/generated-docs/html
+      run: cmake -E tar c ${{ env.ZIP_NAME }} --format=zip ${{ env.BUILD_DIR }}/generated-docs/html
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4

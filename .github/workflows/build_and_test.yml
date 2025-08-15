@@ -104,5 +104,5 @@ jobs:
       if: always() && matrix.config == 'Release'
       with:
         name: BenBot-${{ matrix.os }}-${{ matrix.preset }}
-        path: ${{ env.DEPLOY_DIR }}/**
+        path: ${{ env.DEPLOY_DIR }}
         if-no-files-found: error
