@@ -52,7 +52,9 @@ jobs:
       run: cmake --build ${{ env.BUILD_DIR }} --target ben_bot_docs
 
     - name: Report Doxygen warnings
-      run: cmake -E cat logs/Doxygen.log
+      run: |
+        echo "# Doxygen warnings\n" >> $GITHUB_STEP_SUMMARY
+        cmake -E cat logs/Doxygen.log >> $GITHUB_STEP_SUMMARY
 
     - name: Upload artifact
       id: deployment
