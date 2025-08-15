@@ -172,6 +172,8 @@ void Position::make_null_move()
 Position::Position()
 {
     hash = zobrist::calculate(*this); // NOLINT(cppcoreguidelines-prefer-member-initializer)
+
+    threefoldChecker.reset(hash);
 }
 
 void Position::refresh_zobrist()
