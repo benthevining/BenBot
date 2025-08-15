@@ -53,6 +53,7 @@ jobs:
       run: cmake --build ${{ env.BUILD_DIR }} --target ben_bot_docs
 
     - name: Report Doxygen warnings
+      if: always()
       run: |
         echo "# Doxygen warnings" >> $GITHUB_STEP_SUMMARY
         cmake -E cat logs/Doxygen.log >> $GITHUB_STEP_SUMMARY
