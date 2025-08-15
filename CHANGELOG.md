@@ -377,3 +377,8 @@
 ### Bug Fixes
 
 * actions ([93703f3](https://github.com/benthevining/BenBot/commit/93703f3676d55866540ab85961292a16f5e5d33b))
+## [1.2.12](https://github.com/benthevining/BenBot/compare/v1.2.11...v1.2.12) (2025-08-15)
+
+### Bug Fixes
+
+* actions ([3c94ccb](https://github.com/benthevining/BenBot/commit/3c94ccbf4d5773d3e5b25930ca0cd44ff59e6864))
