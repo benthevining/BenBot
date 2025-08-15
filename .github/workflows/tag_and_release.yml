@@ -29,7 +29,7 @@ defaults:
     shell: bash
 
 permissions:
-  contents: read
+  contents: write
   checks: write
   pull-requests: write
 
@@ -78,8 +78,6 @@ jobs:
     runs-on: ubuntu-latest
     name: Create GitHub release
     timeout-minutes: 10
-    permissions:
-      contents: write
 
     steps:
     - name: Download artifacts
