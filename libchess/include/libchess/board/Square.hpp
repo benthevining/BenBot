@@ -246,7 +246,8 @@ constexpr Square Square::from_index(const BitboardIndex index) noexcept
 
 constexpr BitboardIndex Square::index() const noexcept
 {
-    return (std::to_underlying(rank) << static_cast<BitboardIndex>(3)) + std::to_underlying(file);
+    return static_cast<BitboardIndex>(
+        (static_cast<int>(rank) << 3) + static_cast<int>(file));
 }
 
 constexpr bool Square::is_queenside() const noexcept

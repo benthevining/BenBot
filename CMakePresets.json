@@ -13,6 +13,30 @@
       "displayName": "Build with Ninja/Clang (Release)",
       "jobs": 8,
       "name": "clang-release"
+    },
+    {
+      "condition": {
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows",
+        "type": "equals"
+      },
+      "configuration": "Debug",
+      "configurePreset": "msvc",
+      "displayName": "Build with MSVC (Debug)",
+      "jobs": 8,
+      "name": "msvc-debug",
+      "nativeToolOptions": [
+        "-fileLogger",
+        "-flp1:logfile=${sourceDir}/logs/build/${presetName}-errors.txt;errorsonly",
+        "-flp2:logfile=${sourceDir}/logs/build/${presetName}-warnings.txt;warningsonly",
+        "-terminalLogger:on"
+      ]
+    },
+    {
+      "configuration": "Release",
+      "displayName": "Build with MSVC (Release)",
+      "inherits": "msvc-debug",
+      "name": "msvc-release"
     }
   ],
   "cmakeMinimumRequired": {
@@ -39,6 +63,10 @@
         "CMAKE_OPTIMIZE_DEPENDENCIES": {
           "type": "BOOL",
           "value": "ON"
+        },
+        "CMAKE_PROJECT_INCLUDE": {
+          "type": "FILEPATH",
+          "value": "${sourceDir}/config/Warnings.cmake"
         },
         "CTEST_NO_TESTS_ACTION": {
           "type": "STRING",

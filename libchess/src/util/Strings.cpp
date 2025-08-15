@@ -83,6 +83,8 @@ size_t find_matching_close_paren(const string_view input)
 
                 if (numOpenParens == numCloseParens)
                     return idx;
+
+                continue;
             }
 
             default: continue;

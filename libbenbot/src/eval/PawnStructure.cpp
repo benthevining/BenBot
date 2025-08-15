@@ -88,7 +88,7 @@ namespace {
                 10000, 100, 85, 70, 60, 50, 35
             };
 
-            score += bonuses.at(squaresFromPromoting);
+            score += bonuses.at(static_cast<size_t>(squaresFromPromoting));
 
             // penalty for enemy king on promotion square
             // this is intended to help the engine reduce the draw rate in king/pawn endgames,
