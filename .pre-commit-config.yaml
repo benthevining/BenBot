@@ -188,6 +188,13 @@ repos:
   - id: pretty-format-yaml
     args: [--autofix, --preserve-quotes]
 
+# check for dead links in markdown
+- repo: https://github.com/AlexanderDokuchaev/md-dead-link-check
+  rev: "v1.2.0"
+  hooks:
+  - id: md-dead-link-check
+    args: [--config, config/link-checker.toml]
+
     # check editorconfig rules
 - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
   rev: 3.4.0
