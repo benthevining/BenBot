@@ -31,6 +31,7 @@ permissions:
   pull-requests: write
 
 jobs:
+
   ci:
     if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
     uses: ./.github/workflows/build_and_test.yml

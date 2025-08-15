@@ -10,13 +10,15 @@
 #
 # ======================================================================================
 
+name: Build & test (internal)
+
 on:
   workflow_call:
     inputs:
       dashboard_type:
         description: Type of CTest dashboard to run (Nightly, Experimental, or Continuous)
-        required: true
         type: string
+        required: true
 
 defaults:
   run:
@@ -28,31 +30,50 @@ permissions:
   pull-requests: write
 
 jobs:
+
   build_and_test:
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-15]
         config: [Debug, Release]
+        preset: [clang]
+        include:
+        - os: windows-latest
+          preset: msvc
+          config: Debug
+        - os: windows-latest
+          preset: msvc
+          config: Release
+        - os: ubuntu-latest
+          preset: gcc
+          config: Debug
+        - os: ubuntu-latest
+          preset: gcc
+          config: Release
     runs-on: ${{ matrix.os }}
-    name: Build and test (${{ matrix.os }} - ${{ matrix.config }} - ${{ inputs.dashboard_type }})
-    timeout-minutes: 30
+    name: Build and test (${{ matrix.os }}.${{ matrix.preset }}.${{ matrix.config }}.${{ inputs.dashboard_type }})
+    timeout-minutes: 45
     env:
+      CMAKE_OSX_ARCHITECTURES: arm64;x86_64
       CMAKE_BUILD_PARALLEL_LEVEL: 8
       CTEST_PARALLEL_LEVEL: 0
-      BUILD_DIR: Builds/ninja
+      CTEST_NO_TESTS_ACTION: error
+      CTEST_OUTPUT_ON_FAILURE: 1
+      BUILD_DIR: Builds/${{ matrix.preset }}
       DEPLOY_DIR: deploy
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v5
-      with:
-        fetch-depth: 1
 
     - name: Install Python dependencies
-      run: cmake -P .github/InstallPythonDeps.cmake
+      run: cmake -P .github/scripts/InstallPythonDeps.cmake
 
     - name: Configure CMake
-      run: cmake --preset default -D CMAKE_CXX_COMPILER=clang++ -D CMAKE_C_COMPILER=clang -D BENBOT_DOCS=OFF
+      env:
+        BUILD_NAME: ${{ github.head_ref || github.ref_name }}.${{ matrix.os }}.${{ matrix.preset }}.${{ matrix.config }}
+      run: cmake --preset ${{ matrix.preset }} -D BENBOT_DOCS=OFF -D BUILDNAME=${{ env.BUILD_NAME }}
 
     - name: Build and test
       run: ctest -D ${{ inputs.dashboard_type }} -C ${{ matrix.config }} --output-junit junit.xml
@@ -65,6 +86,7 @@ jobs:
         report_paths: ${{ env.BUILD_DIR }}/junit.xml
         exclude_sources: ${{ env.BUILD_DIR }}
         check_annotations: true
+        detailed_summary: true
         flaky_summary: true
         include_time_in_summary: true
         simplified_summary: true
@@ -80,6 +102,6 @@ jobs:
       uses: actions/upload-artifact@v4
       if: always() && matrix.config == 'Release'
       with:
-        name: BenBot-${{ matrix.os }}
+        name: BenBot-${{ matrix.os }}-${{ matrix.preset }}
         path: ${{ env.DEPLOY_DIR }}
         if-no-files-found: error

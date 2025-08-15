@@ -250,3 +250,155 @@
 * updating bumpversion config ([d06ee1b](https://github.com/benthevining/BenBot/commit/d06ee1b0ffa6c0c5982110dbba23d85c0a3fe7fe))
 * when aborting search, only using result from last completed depth ([d9bcf57](https://github.com/benthevining/BenBot/commit/d9bcf572d285aaf8fe9f187b1e46f8c550808e9d))
 * Zobrist hashing bug ([#124](https://github.com/benthevining/BenBot/issues/124)) ([5f17f8c](https://github.com/benthevining/BenBot/commit/5f17f8cd2769b710bcaa796206c8182e363572ca))
+## [1.2.1](https://github.com/benthevining/BenBot/compare/v1.2.0...v1.2.1) (2025-08-15)
+
+### Features
+
+* --no-logo option ([ac58c83](https://github.com/benthevining/BenBot/commit/ac58c83100313118dd45f8e5dbe6faa211df00dd))
+* action to tag & release ([#239](https://github.com/benthevining/BenBot/issues/239)) ([a32ca7f](https://github.com/benthevining/BenBot/commit/a32ca7f5141ea05567c53518ccbe8c90e0041006))
+* ben-bot now has a perft command ([#170](https://github.com/benthevining/BenBot/issues/170)) ([850dd55](https://github.com/benthevining/BenBot/commit/850dd5595f1e28848fa88be1a393bf824e4001fa))
+* command to display compiler info ([#185](https://github.com/benthevining/BenBot/issues/185)) ([874cb51](https://github.com/benthevining/BenBot/commit/874cb516f061ea1ef55841537d48b4a87f59f320))
+* compiler info command now displays build configuration name ([#185](https://github.com/benthevining/BenBot/issues/185)) ([388b15e](https://github.com/benthevining/BenBot/commit/388b15e777f66872c1cc14ef7c2bb1524b991176))
+* creating install rules & component for BenBot ([3f278df](https://github.com/benthevining/BenBot/commit/3f278df7f0a503118e680b18dec55486f4920169))
+* deploying Github pages via actions ([82ed6f3](https://github.com/benthevining/BenBot/commit/82ed6f34f6bf2c4c94ebe2f0ba5e1f24db125475))
+* function to enable UTF-8 console output on Windows ([#195](https://github.com/benthevining/BenBot/issues/195)) ([2d2bedc](https://github.com/benthevining/BenBot/commit/2d2bedce8a63eb9ec3a57e547bdaa9f85beb27ab))
+* gcc preset ([948ec72](https://github.com/benthevining/BenBot/commit/948ec72b76f0d3a53b191eb5620a3540e235d252))
+* implemented bench command ([#129](https://github.com/benthevining/BenBot/issues/129)) ([da89645](https://github.com/benthevining/BenBot/commit/da89645161220631185d3503b8e1c2918fc539d0))
+* implemented debug mode options ([#190](https://github.com/benthevining/BenBot/issues/190)) ([5b6ff2f](https://github.com/benthevining/BenBot/commit/5b6ff2f5d0abf44dc7a44b20be3f7347370c9f08))
+* initial commit of bench command ([#129](https://github.com/benthevining/BenBot/issues/129)) ([7fd1743](https://github.com/benthevining/BenBot/commit/7fd17439655f40711830f5e3d2d5bd378511a224))
+* initial commit of pondering ([cdc87eb](https://github.com/benthevining/BenBot/commit/cdc87eb7d89b387be4cd76a123b776b229a73b32))
+* JUnit reports on PRs ([be8a033](https://github.com/benthevining/BenBot/commit/be8a033d43a0d08341825ef59edcabb7394a7685))
+* memory-mapped file class ([c9a8999](https://github.com/benthevining/BenBot/commit/c9a899992e2d3ce7ed6da539f834c4ebce0cca17))
+* msvc preset ([7890418](https://github.com/benthevining/BenBot/commit/789041858c619eb7e1c07e9d576692261c23a8cb))
+* parse_all_epds() function in libchess ([3825f65](https://github.com/benthevining/BenBot/commit/3825f6506996de7f9e4bf99933d2259780d97adf))
+* printing board as ASCII by default, with option to print as UTF8 ([3630d64](https://github.com/benthevining/BenBot/commit/3630d64800977d51f6daea5d00f16c6e194c42b0))
+* printing PV ([#159](https://github.com/benthevining/BenBot/issues/159)) ([5a824fb](https://github.com/benthevining/BenBot/commit/5a824fbccffdd59383ffab3783fc5eeb6c704d1e))
+* progressive backoff function ([a9fee64](https://github.com/benthevining/BenBot/commit/a9fee6443e37b963efa5d5a830f33f98648231ac))
+* progressive_backoff() function ([4883782](https://github.com/benthevining/BenBot/commit/4883782833842a5a1d63c8a99d48a9f1c87c27b2))
+* uploading artifact from action ([7866b9c](https://github.com/benthevining/BenBot/commit/7866b9c4fdcb06ec7f6e75ac7d1b4706fed71d6c))
+* uploading artifact from action ([1ea677b](https://github.com/benthevining/BenBot/commit/1ea677b14002ffb1e3d2a00cb575b1abbf36f9c6))
+
+### Bug Fixes
+
+* action to tag & release ([#239](https://github.com/benthevining/BenBot/issues/239)) ([4c43ab3](https://github.com/benthevining/BenBot/commit/4c43ab3eec82731d432cfba6c0225ba47c1070dd))
+* action to tag & release ([#239](https://github.com/benthevining/BenBot/issues/239)) ([65c8b1c](https://github.com/benthevining/BenBot/commit/65c8b1cdce62d222b4a2838f739d52d027a31dbd))
+* action to tag & release ([#239](https://github.com/benthevining/BenBot/issues/239)) ([6ecb584](https://github.com/benthevining/BenBot/commit/6ecb584919c440b109da312c69b9a1deeff76ff7))
+* action to tag & release ([#239](https://github.com/benthevining/BenBot/issues/239)) ([5f70c5f](https://github.com/benthevining/BenBot/commit/5f70c5f235460ff85663d9969502d47a21d6f2bf))
+* action to tag & release ([#239](https://github.com/benthevining/BenBot/issues/239)) ([a7acd2a](https://github.com/benthevining/BenBot/commit/a7acd2a49fea162793ab590c8c39c4466d03ecb1))
+* action to tag & release ([#239](https://github.com/benthevining/BenBot/issues/239)) ([5b44228](https://github.com/benthevining/BenBot/commit/5b44228958b7184cb230e1ce38ffc2da67970669))
+* action to tag & release ([#239](https://github.com/benthevining/BenBot/issues/239)) ([7ba6b3a](https://github.com/benthevining/BenBot/commit/7ba6b3aa9dd63ae08b70db00fa1f2cd5d3ddf900))
+* actions ([78d2083](https://github.com/benthevining/BenBot/commit/78d2083da08dcb422b5ef7334400460fbe0931e8))
+* actions ([0181e82](https://github.com/benthevining/BenBot/commit/0181e82f162572005b24b5200bd6d8830bb52814))
+* actions ([8cc4ed7](https://github.com/benthevining/BenBot/commit/8cc4ed78fb0d066c8c4e844ad1446689e6f0c819))
+* actions ([8450894](https://github.com/benthevining/BenBot/commit/8450894f0005330ecb981369f9b4b518093bf151))
+* actions ([3719973](https://github.com/benthevining/BenBot/commit/371997341581f361e8ff9c4b3c2909e14224f667))
+* actions ([7b1af37](https://github.com/benthevining/BenBot/commit/7b1af3754dc5a9aff9b454bc2faf229ed64c8726))
+* actions ([781ee07](https://github.com/benthevining/BenBot/commit/781ee0716bfef4ec0209a2d71ea86c577f3a466f))
+* actions ([04c2db2](https://github.com/benthevining/BenBot/commit/04c2db27af7e6ea9a5c138f5ffb4f6b8545c4d33))
+* actions ([e116810](https://github.com/benthevining/BenBot/commit/e1168107899518105e7eb37278dfc03d6cb6d641))
+* actions ([ab9cda8](https://github.com/benthevining/BenBot/commit/ab9cda8ccf214ad071fce3fd5c9e04792c4f8d3c))
+* actions ([e53dc49](https://github.com/benthevining/BenBot/commit/e53dc496adf66e6376f333ec005320a0ee337367))
+* actions ([1471d6f](https://github.com/benthevining/BenBot/commit/1471d6f556708883e255c7b7a4fc90aec7c94db3))
+* actions ([aff41c9](https://github.com/benthevining/BenBot/commit/aff41c942d39881b08b2f248a17389b7e831d149))
+* actions ([526ed7c](https://github.com/benthevining/BenBot/commit/526ed7cd95c6889636c08ec41a050086f0717154))
+* actions ([7bf1fa6](https://github.com/benthevining/BenBot/commit/7bf1fa62583d1beeda70f9fe8babfb9c4e4246e5))
+* actions ([0b8078a](https://github.com/benthevining/BenBot/commit/0b8078a449a638d5ee9a2af871894ffe4d225a7b))
+* actions ([3111ada](https://github.com/benthevining/BenBot/commit/3111adad3144d2d7061cba9da4379d87f46cc3e2))
+* actions ([2eb7227](https://github.com/benthevining/BenBot/commit/2eb7227960fa999bc1acb85c970d5464a3049015))
+* actions ([2008a44](https://github.com/benthevining/BenBot/commit/2008a4468375199256c14cc87e9ed0ce8c711c28))
+* assertion failure in position solver tests ([b5ebebe](https://github.com/benthevining/BenBot/commit/b5ebebea4e073186102b62b3369294c1b9c004f9))
+* bad_alloc error in rampart tests ([#217](https://github.com/benthevining/BenBot/issues/217)) ([1f804d7](https://github.com/benthevining/BenBot/commit/1f804d7d013ecc4fbef215f0621ee1a78886e4a3))
+* checking for python-chess module in cmake ([63a5d53](https://github.com/benthevining/BenBot/commit/63a5d5391f09a700708db61ebc62ab03af02ce01))
+* constexpr fixes ([443ab85](https://github.com/benthevining/BenBot/commit/443ab85568b8b318473bb44a9338853767a0310f))
+* cppcheck ([bbce197](https://github.com/benthevining/BenBot/commit/bbce197bf75e323531458a86c78c48d221f887ad))
+* docs build ([89138b9](https://github.com/benthevining/BenBot/commit/89138b9df596f73664046bafa20221cf56cacd1d))
+* docs build ([e14f543](https://github.com/benthevining/BenBot/commit/e14f543a38dcc491a3ba5a41e852df51a94ac3a4))
+* engine now stores pondermove in atomic ([21e8ad9](https://github.com/benthevining/BenBot/commit/21e8ad982a2f6c7ac8b0ad5186d5a6768939b017))
+* gcc preset ([223f132](https://github.com/benthevining/BenBot/commit/223f132d8f28326a644ac233e624d56ad532213a))
+* implemented ponderhit command ([514cf11](https://github.com/benthevining/BenBot/commit/514cf1127d4bb528d49f04a9eb92b8861b8b2146))
+* JUnit reports on PRs ([179f37c](https://github.com/benthevining/BenBot/commit/179f37c6d182e565c7447c561790ef691e06eb36))
+* JUnit reports on PRs ([6b9048f](https://github.com/benthevining/BenBot/commit/6b9048f89cc07058c70ed02bfe8643ee64425ce3))
+* JUnit reports on PRs ([492d8ff](https://github.com/benthevining/BenBot/commit/492d8ffb87e8bac3a1331c767825749d4859fb6b))
+* JUnit reports on PRs ([8542f4b](https://github.com/benthevining/BenBot/commit/8542f4b6011045f836eb3c01ad9f034dd7eb1334))
+* JUnit reports on PRs ([4423833](https://github.com/benthevining/BenBot/commit/44238338c022f887f7eb28629350b78bbc79920d))
+* JUnit reports only for PRs ([fe9e21d](https://github.com/benthevining/BenBot/commit/fe9e21de670d557e40d5f18b1fd370783e443fb4))
+* MSVC memory mapped file fix ([ed3643b](https://github.com/benthevining/BenBot/commit/ed3643bf7735dcea0df9ef56109a4ae440e4de1f))
+* not printing PV for now (appears to be very slow) ([a6bfbf8](https://github.com/benthevining/BenBot/commit/a6bfbf858b62cad86f5dbf8298814378c82d7cfc))
+* perft test script ([b319584](https://github.com/benthevining/BenBot/commit/b319584d9ba328cf3bad15a221ba19d46cee15bf))
+* pre-commit ([6fc7a0d](https://github.com/benthevining/BenBot/commit/6fc7a0de0d1fc991f630a724f976369aa95a3421))
+* pre-commit CI config ([12f4495](https://github.com/benthevining/BenBot/commit/12f4495b798e60c0bb4d7af5c7cd1f83034448a3))
+* removed pondering for now ([71a063c](https://github.com/benthevining/BenBot/commit/71a063c1e531f59b9159d5ad5d29ced0dff7cf85))
+* shrinking vectors when possible ([6d848e8](https://github.com/benthevining/BenBot/commit/6d848e84991882c904e638c653668a2112a997f1))
+* specifying C++23 for CI builds ([4157674](https://github.com/benthevining/BenBot/commit/41576749fac619b67ed93e878b1f826d8e1b8ef0))
+* threefold checker ([#161](https://github.com/benthevining/BenBot/issues/161)) ([1e5e944](https://github.com/benthevining/BenBot/commit/1e5e944d7c47921da58cabc4bc7218517f06414e))
+* WIN32 platform detection ([c6d3401](https://github.com/benthevining/BenBot/commit/c6d34011caf9dbfa33e5c960748aab4c5cb4d67b))
+* Windows build of memory mapped file class ([3ffa826](https://github.com/benthevining/BenBot/commit/3ffa826f9115103347eccc69a78de340fec1367e))
+* Windows build of memory mapped file class ([4234deb](https://github.com/benthevining/BenBot/commit/4234debfff1adb7a81f5718374fc495e43a740a7))
+## [1.2.2](https://github.com/benthevining/BenBot/compare/v1.2.1...v1.2.2) (2025-08-15)
+
+### Bug Fixes
+
+* action to tag & release ([#239](https://github.com/benthevining/BenBot/issues/239)) ([8c73744](https://github.com/benthevining/BenBot/commit/8c73744a5559c15bdd0bf8ba3ba8f4b191d2b6a8))
+## [1.2.3](https://github.com/benthevining/BenBot/compare/v1.2.2...v1.2.3) (2025-08-15)
+
+### Bug Fixes
+
+* action to tag & release ([#239](https://github.com/benthevining/BenBot/issues/239)) ([a560903](https://github.com/benthevining/BenBot/commit/a56090327f8f431bfa7a7c5ad3f39106cab51a1a))
+## [1.2.4](https://github.com/benthevining/BenBot/compare/v1.2.3...v1.2.4) (2025-08-15)
+
+### Bug Fixes
+
+* action to tag & release ([#239](https://github.com/benthevining/BenBot/issues/239)) ([ed5d32f](https://github.com/benthevining/BenBot/commit/ed5d32f2fcc047bab8d58f0682cf67e32e8b72fb))
+## [1.2.5](https://github.com/benthevining/BenBot/compare/v1.2.4...v1.2.5) (2025-08-15)
+
+### Bug Fixes
+
+* action to tag & release ([#239](https://github.com/benthevining/BenBot/issues/239)) ([895616f](https://github.com/benthevining/BenBot/commit/895616fd9b6659ca7b8888914519899bce1d17c0))
+* action to tag & release ([#239](https://github.com/benthevining/BenBot/issues/239)) ([eefc214](https://github.com/benthevining/BenBot/commit/eefc214b2701bba4ec949d9644531d76e0fcbf07))
+## [1.2.6](https://github.com/benthevining/BenBot/compare/v1.2.5...v1.2.6) (2025-08-15)
+## [1.2.7](https://github.com/benthevining/BenBot/compare/v1.2.6...v1.2.7) (2025-08-15)
+
+### Bug Fixes
+
+* tag & release action ([#239](https://github.com/benthevining/BenBot/issues/239)) ([c16ba13](https://github.com/benthevining/BenBot/commit/c16ba1384a20befe2621415886785277d3016794))
+## [1.2.8](https://github.com/benthevining/BenBot/compare/v1.2.7...v1.2.8) (2025-08-15)
+
+### Bug Fixes
+
+* tag & release action ([#239](https://github.com/benthevining/BenBot/issues/239)) ([743ea25](https://github.com/benthevining/BenBot/commit/743ea25bfffa5ffa1e0c97a4b91637fcc237b6a2))
+## [1.2.9](https://github.com/benthevining/BenBot/compare/v1.2.8...v1.2.9) (2025-08-15)
+
+### Bug Fixes
+
+* tag & release action ([#239](https://github.com/benthevining/BenBot/issues/239)) ([135ce9c](https://github.com/benthevining/BenBot/commit/135ce9c0070e35783de3c0ae45cacd96cdc04262))
+## [1.2.10](https://github.com/benthevining/BenBot/compare/v1.2.9...v1.2.10) (2025-08-15)
+## [1.2.11](https://github.com/benthevining/BenBot/compare/v1.2.10...v1.2.11) (2025-08-15)
+
+### Bug Fixes
+
+* actions ([93703f3](https://github.com/benthevining/BenBot/commit/93703f3676d55866540ab85961292a16f5e5d33b))
+## [1.2.12](https://github.com/benthevining/BenBot/compare/v1.2.11...v1.2.12) (2025-08-15)
+
+### Bug Fixes
+
+* actions ([3c94ccb](https://github.com/benthevining/BenBot/commit/3c94ccbf4d5773d3e5b25930ca0cd44ff59e6864))
+## [1.2.13](https://github.com/benthevining/BenBot/compare/v1.2.12...v1.2.13) (2025-08-15)
+
+### Bug Fixes
+
+* actions ([89c7715](https://github.com/benthevining/BenBot/commit/89c771504088b731e363ca7f0a01e554b09171c5))
+## [1.2.14](https://github.com/benthevining/BenBot/compare/v1.2.13...v1.2.14) (2025-08-15)
+
+### Features
+
+* msvc build presets ([4536ff1](https://github.com/benthevining/BenBot/commit/4536ff1fa02fb6c8533aa9d4a1fa713a06af0012))
+
+### Bug Fixes
+
+* actions commit SHAs ([f7f01ea](https://github.com/benthevining/BenBot/commit/f7f01ea5d5767222ce1cda2cd7ac40d06d3aff0a))
+* bug with Zobrist hash value being used uninitialized ([ba5e56e](https://github.com/benthevining/BenBot/commit/ba5e56e1ba0ec7a8b6f69feecb39da378ba60967))
+* fixing some warnings ([d791574](https://github.com/benthevining/BenBot/commit/d791574be131de4a49c22a283731d38933adf43c))
+* precommit ci ([f6aa40e](https://github.com/benthevining/BenBot/commit/f6aa40e798c9c9e841ec36aa23bc039932af62c2))
+* python-chess timeouts ([#224](https://github.com/benthevining/BenBot/issues/224)) ([d9af53d](https://github.com/benthevining/BenBot/commit/d9af53d3fd3a8a0b2e89d5adab2973888fa3cd5a))
+* warnings ([be585b0](https://github.com/benthevining/BenBot/commit/be585b0f5e630efa4a09d2a550950849745baa1e))
+* warnings ([d995288](https://github.com/benthevining/BenBot/commit/d995288c3eb210e282c8859d921e61a6009c1c94))

@@ -132,8 +132,8 @@ private:
     assert(movesToGo > 0uz);
 
     return Milliseconds {
-        (timeRemaining.count() / movesToGo)
-        + (inc.count() / (movesToGo / 10uz))
+        (static_cast<size_t>(timeRemaining.count()) / movesToGo)
+        + (static_cast<size_t>(inc.count()) / (movesToGo / 10uz))
     };
 }
 

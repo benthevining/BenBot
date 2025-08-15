@@ -124,9 +124,9 @@ string ComboOption::get_declaration_string() const
         "option name {} type combo default {}",
         optionName, optionDefault);
 
-    for (const auto& value : possibleValues)
+    for (const auto& val : possibleValues)
         result.append(
-            std::format(" var {}", value));
+            std::format(" var {}", val));
 
     return result;
 }

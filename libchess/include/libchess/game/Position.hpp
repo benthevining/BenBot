@@ -328,7 +328,7 @@ struct Position final {
 private:
     [[nodiscard]] bool is_side_in_check(Color side) const noexcept;
 
-    ThreefoldChecker threefoldChecker { hash };
+    ThreefoldChecker threefoldChecker;
 };
 
 /** Returns a copy of the starting position with the given move applied.

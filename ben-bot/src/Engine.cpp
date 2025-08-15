@@ -60,13 +60,13 @@ void Engine::ponder_hit()
 
 // this function implements non-standard UCI commands that we support
 void Engine::handle_custom_command(
-    const string_view command, const string_view options)
+    const string_view command, const string_view opts)
 {
     if (const auto it = std::ranges::find_if(
             customCommands,
             [command](const CustomCommand& cmd) { return cmd.name == command; });
         it != customCommands.end()) {
-        it->action(options);
+        it->action(opts);
         return;
     }
 

@@ -32,6 +32,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <utility>
 
 namespace chess::notation {
 
@@ -90,16 +91,18 @@ namespace {
 
         const auto originSquare = move.from;
 
-        if (std::ranges::count_if(pieceMoves,
-                [file = originSquare.file](const Move& candidate) { return candidate.from.file == file; })
-            == 1uz) {
+        if (std::cmp_equal(
+                std::ranges::count_if(pieceMoves,
+                    [file = originSquare.file](const Move& candidate) { return candidate.from.file == file; }),
+                1)) {
             // file of departure is unique, use it to disambiguate
             return std::format("{}", originSquare.file);
         }
 
-        if (std::ranges::count_if(pieceMoves,
-                [rank = originSquare.rank](const Move& candidate) { return candidate.from.rank == rank; })
-            == 1uz) {
+        if (std::cmp_equal(
+                std::ranges::count_if(pieceMoves,
+                    [rank = originSquare.rank](const Move& candidate) { return candidate.from.rank == rank; }),
+                1)) {
             // rank of departure is unique, use it to disambiguate
             return std::format("{}", originSquare.rank);
         }
@@ -165,8 +168,9 @@ namespace {
     {
         auto moveStartsOnFile = [file](const Move& move) { return move.from.file == file; };
 
-        if (std::ranges::count_if(possibleOrigins, moveStartsOnFile)
-            > 1uz) {
+        if (std::cmp_greater(
+                std::ranges::count_if(possibleOrigins, moveStartsOnFile),
+                1)) {
             throw std::invalid_argument {
                 std::format(
                     "Disambiguation given file {}, but multiple pieces of this type can move to the target square from this file!",
@@ -192,8 +196,9 @@ namespace {
     {
         auto moveStartsOnRank = [rank](const Move& move) { return move.from.rank == rank; };
 
-        if (std::ranges::count_if(possibleOrigins, moveStartsOnRank)
-            > 1uz) {
+        if (std::cmp_greater(
+                std::ranges::count_if(possibleOrigins, moveStartsOnRank),
+                1)) {
             throw std::invalid_argument {
                 std::format(
                     "Disambiguation given rank {}, but multiple pieces of this type can move to the target square from this rank!",

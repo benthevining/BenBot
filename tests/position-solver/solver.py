@@ -25,7 +25,9 @@ board = chess.Board()
 
 operations = board.set_epd(epd_data)
 
-engine = chess.engine.SimpleEngine.popen_uci(ENGINE_PATH)
+engine = chess.engine.SimpleEngine.popen_uci(
+    ENGINE_PATH, timeout=None
+)
 
 result = engine.play(
     board,

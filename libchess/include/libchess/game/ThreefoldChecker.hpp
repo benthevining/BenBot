@@ -32,9 +32,6 @@ namespace chess::game {
 struct ThreefoldChecker final {
     using HashValue = std::uint64_t;
 
-    /** Creates a history containing the given initial hash value. */
-    explicit constexpr ThreefoldChecker(HashValue initialPositionHash) noexcept;
-
     /** Clears the history, inserting a single hash value. */
     constexpr void reset(HashValue initialPositionHash);
 
@@ -66,11 +63,6 @@ private:
   `----'     `----'             `--`---'     ---`-'                     `--" `--" `--"
 
  */
-
-constexpr ThreefoldChecker::ThreefoldChecker(const HashValue initialPositionHash) noexcept
-{
-    history.emplace_back(initialPositionHash);
-}
 
 constexpr void ThreefoldChecker::reset(const HashValue initialPositionHash)
 {

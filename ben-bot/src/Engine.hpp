@@ -77,7 +77,7 @@ private:
 
     [[nodiscard]] std::span<uci::Option*> get_options() override { return options; }
 
-    void handle_custom_command(string_view command, string_view options) override;
+    void handle_custom_command(string_view command, string_view opts) override;
 
     void load_book_file(string_view arguments);
 
@@ -150,7 +150,7 @@ private:
         },
         CustomCommand {
             .name = "bench",
-            .action = [this](const string_view args){ run_bench(args); },
+            .action = [](const string_view args){ run_bench(args); },
             .description = "Runs a search and reports total nodes and NPS",
             .argsHelp = "[<depth>] [<epdPath>]"
         },

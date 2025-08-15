@@ -65,7 +65,7 @@ repos:
     # local scripts
 - repo: local
   hooks:
-      # create build directory for cppcheck & logs directory for clang-tidy
+      # create build directory for cppcheck & logs directory
   - id: cppcheck-build-dir
     name: Create cache dir for cppcheck
     entry: cmake -E make_directory Builds/cppcheck/ logs/
@@ -90,7 +90,7 @@ repos:
     name: Insert license header in CMake and shell files
     args: [--license-filepath=ben-bot/resources/license_header.txt, --comment-style=#, --detect-license-in-X-top-lines=16]
     files: .git|.clang|.cfg|justfile|.editorconfig|requirements.txt
-    exclude: config/.editorconfig-checker.json
+    exclude: config/.editorconfig-checker.json|.md
 
     # auto-fix spelling mistakes
 - repo: https://github.com/codespell-project/codespell
@@ -104,8 +104,8 @@ repos:
   rev: v20.1.8
   hooks:
   - id: clang-format
-    args: [-style=file, -i]
-    types_or: [c++]
+    exclude_types: [json]
+    additional_dependencies: [clang-format>=20.1.8]
 - repo: https://github.com/pocc/pre-commit-hooks
   rev: v1.3.5
   hooks:
@@ -125,7 +125,6 @@ repos:
   - id: cmake-lint
     args: [--config-files, config/.cmake-format.json]
 
-    # validate CMake presets
 - repo: https://github.com/python-jsonschema/check-jsonschema
   rev: 0.33.2
   hooks:
@@ -188,9 +187,16 @@ repos:
   - id: pretty-format-yaml
     args: [--autofix, --preserve-quotes]
 
+# check for dead links in markdown
+- repo: https://github.com/AlexanderDokuchaev/md-dead-link-check
+  rev: "v1.2.0"
+  hooks:
+  - id: md-dead-link-check
+    args: [--config, config/link-checker.toml]
+
     # check editorconfig rules
 - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
-  rev: 3.2.1
+  rev: 3.4.0
   hooks:
   - id: editorconfig-checker
     args: [-config, config/.editorconfig-checker.json]
@@ -209,15 +215,8 @@ repos:
           #   hooks:
         #   - id: sign-commit
 
-    # manual-only hooks
-- repo: https://github.com/codingjoe/relint
-  rev: 3.3.1
-  hooks:
-  - id: relint
-    args: [-c, config/.relint.yml]
-    stages: [manual]
-
 ci:
   autofix_commit_msg: 'chore: pre-commit autofix'
   autoupdate_commit_msg: 'chore(deps): pre-commit autoupdate'
-  skip: [format_justfile, check-jsonschema] # just executable won't be present in CI, and CI runners can't download JSON schema files
+  # just executable won't be present in CI, and CI hooks can't connect to the internet
+  skip: [format_justfile, check-jsonschema, md-dead-link-check]

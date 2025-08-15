@@ -593,8 +593,7 @@ namespace detail {
         const auto& ourPieces   = position.pieces_for<Side>();
         const auto& theirPieces = position.pieces_for<pieces::other_side<Side>()>();
 
-        const auto allOccupied  = ourPieces.occupied | theirPieces.occupied;
-        const auto emptySquares = allOccupied.inverse();
+        const auto allOccupied = ourPieces.occupied | theirPieces.occupied;
 
         add_all_pawn_moves<Side, CapturesOnly>(position, allOccupied, outputIt);
 
@@ -633,8 +632,7 @@ namespace detail {
         const auto& ourPieces   = position.pieces_for<Side>();
         const auto& theirPieces = position.pieces_for<pieces::other_side<Side>()>();
 
-        const auto allOccupied  = ourPieces.occupied | theirPieces.occupied;
-        const auto emptySquares = allOccupied.inverse();
+        const auto allOccupied = ourPieces.occupied | theirPieces.occupied;
 
         switch (piece) {
             case PieceType::Pawn: {
