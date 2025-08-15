@@ -53,6 +53,11 @@ void Engine::go(uci::GoCommandOptions&& opts)
     searcher.start(std::move(opts));
 }
 
+void Engine::ponder_hit()
+{
+    searcher.context.pondering.store(false);
+}
+
 // this function implements non-standard UCI commands that we support
 void Engine::handle_custom_command(
     const string_view command, const string_view opts)

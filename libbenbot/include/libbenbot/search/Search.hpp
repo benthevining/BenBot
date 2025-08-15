@@ -233,6 +233,9 @@ struct Context final {
      */
     void wait() const;
 
+    /** This flag should be set to true during a ponder-mode search, and false otherwise. */
+    std::atomic_bool pondering { false };
+
 private:
     std::atomic_bool exitFlag { false };
 
