@@ -15,6 +15,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators_range.hpp>
 #include <format>
+#include <libchess/board/BitboardIndex.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
@@ -22,6 +23,7 @@
 
 static constexpr auto TAGS { "[board][Square]" };
 
+using chess::board::BitboardIndex;
 using chess::board::File;
 using chess::board::Rank;
 using chess::board::Square;
@@ -280,7 +282,7 @@ TEST_CASE("Square - is_white_territory()/is_black_territory()", TAGS)
     {
         const auto index = GENERATE(gen::range(0uz, 32uz));
 
-        const auto square = Square::from_index(index);
+        const auto square = Square::from_index(static_cast<BitboardIndex>(index));
 
         REQUIRE(square.is_white_territory());
     }
@@ -289,7 +291,7 @@ TEST_CASE("Square - is_white_territory()/is_black_territory()", TAGS)
     {
         const auto index = GENERATE(gen::range(32uz, 64uz));
 
-        const auto square = Square::from_index(index);
+        const auto square = Square::from_index(static_cast<BitboardIndex>(index));
 
         REQUIRE(square.is_black_territory());
     }

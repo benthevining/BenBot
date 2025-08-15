@@ -176,23 +176,25 @@ namespace {
     // array for the given piece type, square, and occupied squares
 
     [[nodiscard, gnu::const]] constexpr size_t calc_bishop_index(
-        const BitboardIndex squareIdx, const Bitboard occupied)
+        const size_t squareIdx, const Bitboard occupied)
     {
         const auto [mul, offset] = BISHOP_MAGICS.at(squareIdx);
 
         const auto mask = BISHOP_MASKS.at(squareIdx);
 
-        return offset + (((occupied & mask).to_int() * mul) >> 55uz);
+        return static_cast<size_t>(offset)
+             + (((occupied & mask).to_int() * mul) >> 55uz);
     }
 
     [[nodiscard, gnu::const]] constexpr size_t calc_rook_index(
-        const BitboardIndex squareIdx, const Bitboard occupied)
+        const size_t squareIdx, const Bitboard occupied)
     {
         const auto [mul, offset] = ROOK_MAGICS.at(squareIdx);
 
         const auto mask = ROOK_MASKS.at(squareIdx);
 
-        return offset + (((occupied & mask).to_int() * mul) >> 52uz);
+        return static_cast<size_t>(offset)
+             + (((occupied & mask).to_int() * mul) >> 52uz);
     }
 
     // returns the next permutation of the given set
@@ -213,7 +215,7 @@ namespace {
         result.resize(88772uz);
 
         for (auto i = 0uz; i < 64uz; ++i) {
-            const auto square = Square::from_index(i);
+            const auto square = Square::from_index(static_cast<BitboardIndex>(i));
 
             // Bishops
             {

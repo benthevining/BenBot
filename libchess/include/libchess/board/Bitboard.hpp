@@ -70,7 +70,7 @@ struct Bitboard final {
     [[nodiscard]] constexpr bool none() const noexcept { return value == UINT64_C(0); }
 
     /** Returns the number of bits that are set. */
-    [[nodiscard]] constexpr size_t count() const noexcept { return std::popcount(value); }
+    [[nodiscard]] constexpr size_t count() const noexcept { return static_cast<size_t>(std::popcount(value)); }
 
     /** Returns true if there is a piece on the given square. */
     [[nodiscard]] constexpr bool test(const Square square) const noexcept { return test(square.index()); }
@@ -471,7 +471,7 @@ namespace detail {
 
         [[nodiscard]] constexpr value_type operator*() const noexcept
         {
-            return std::countr_zero(value);
+            return static_cast<value_type>(std::countr_zero(value));
         }
 
         constexpr BitboardIterator& operator++() noexcept
