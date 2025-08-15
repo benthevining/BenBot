@@ -61,6 +61,8 @@ jobs:
       with:
         gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
         passphrase: ${{ secrets.GPG_PASSPHRASE }}
+        git_config_global: true
+        git_user_signingkey: true
 
     - name: Bump version & create tag
       run: bump-my-version bump --verbose ${{ inputs.version_part }}
