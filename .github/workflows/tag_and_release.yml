@@ -123,7 +123,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: BenBot-${{ matrix.os }}-${{ matrix.preset }}
-        path: ${{ env.DEPLOY_DIR }}
+        path: ${{ env.DEPLOY_DIR }}/**
         if-no-files-found: error
 
   create_release:
@@ -137,7 +137,7 @@ jobs:
       id: download
       uses: actions/download-artifact@v5
       with:
-        pattern: BenBot-*
+        merge-multiple: true
         path: artifacts
 
     - name: Create release
