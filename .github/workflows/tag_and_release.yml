@@ -100,8 +100,8 @@ jobs:
     env:
       CMAKE_OSX_ARCHITECTURES: arm64;x86_64
       CMAKE_BUILD_PARALLEL_LEVEL: 8
-      BUILD_DIR: ${{ github.workspace }}/Builds/${{ matrix.preset }}
-      DEPLOY_DIR: ${{ github.workspace }}/deploy
+      BUILD_DIR: Builds/${{ matrix.preset }}
+      DEPLOY_DIR: deploy
 
     steps:
     - name: Checkout code
@@ -117,8 +117,7 @@ jobs:
       working-directory: ${{ env.BUILD_DIR }}
 
     - name: Run cmake install
-      run: cmake --install . --prefix ${{ env.DEPLOY_DIR }} --component ben_bot --config ${{ matrix.config }}
-      working-directory: ${{ env.BUILD_DIR }}
+      run: cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.DEPLOY_DIR }} --component ben_bot --config ${{ matrix.config }}
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
@@ -133,8 +132,8 @@ jobs:
     name: Build docs
     timeout-minutes: 10
     env:
-      BUILD_DIR: ${{ github.workspace }}/Builds/clang
-      ZIP_NAME: ${{ github.workspace }}/BenBot-docs.zip
+      BUILD_DIR: Builds/clang
+      ZIP_NAME: BenBot-docs.zip
 
     steps:
     - name: Install dependencies

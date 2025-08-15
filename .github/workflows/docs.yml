@@ -12,6 +12,8 @@
 
 name: Docs
 
+run-name: Build docs
+
 on:
   workflow_dispatch:
   push:
@@ -35,7 +37,7 @@ jobs:
     name: Build docs
     timeout-minutes: 10
     env:
-      BUILD_DIR: ${{ github.workspace }}/Builds/clang
+      BUILD_DIR: Builds/clang
 
     steps:
     - name: Install dependencies
