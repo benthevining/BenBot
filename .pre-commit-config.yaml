@@ -216,14 +216,6 @@ repos:
           #   hooks:
         #   - id: sign-commit
 
-    # manual-only hooks
-- repo: https://github.com/codingjoe/relint
-  rev: 3.3.1
-  hooks:
-  - id: relint
-    args: [-c, config/.relint.yml]
-    stages: [manual]
-
 ci:
   autofix_commit_msg: 'chore: pre-commit autofix'
   autoupdate_commit_msg: 'chore(deps): pre-commit autoupdate'
