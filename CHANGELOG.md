@@ -344,3 +344,8 @@
 ### Bug Fixes
 
 * action to tag & release ([#239](https://github.com/benthevining/BenBot/issues/239)) ([a560903](https://github.com/benthevining/BenBot/commit/a56090327f8f431bfa7a7c5ad3f39106cab51a1a))
+## [1.2.4](https://github.com/benthevining/BenBot/compare/v1.2.3...v1.2.4) (2025-08-15)
+
+### Bug Fixes
+
+* action to tag & release ([#239](https://github.com/benthevining/BenBot/issues/239)) ([ed5d32f](https://github.com/benthevining/BenBot/commit/ed5d32f2fcc047bab8d58f0682cf67e32e8b72fb))
