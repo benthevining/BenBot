@@ -87,6 +87,7 @@ jobs:
         report_paths: ${{ env.BUILD_DIR }}/junit.xml
         exclude_sources: ${{ env.BUILD_DIR }}
         check_annotations: true
+        detailed_summary: true
         flaky_summary: true
         include_time_in_summary: true
         simplified_summary: true
