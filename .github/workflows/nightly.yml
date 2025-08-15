@@ -25,6 +25,7 @@ permissions:
   pull-requests: write
 
 jobs:
+
   ci:
     uses: ./.github/workflows/build_and_test.yml
     with:

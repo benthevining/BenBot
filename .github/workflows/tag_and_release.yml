@@ -24,16 +24,17 @@ on:
         - 'minor'
         - 'patch'
 
+run-name: Bump version (${{ inputs.version_part }})
+
 defaults:
   run:
     shell: bash
 
 permissions:
   contents: write
-  checks: write
-  pull-requests: write
 
 jobs:
+
   bump_version:
     runs-on: ubuntu-latest
     name: Bump version & create tag
@@ -80,9 +81,50 @@ jobs:
 
   build:
     needs: bump_version
-    uses: ./.github/workflows/build_and_test.yml
-    with:
-      skip_tests: true
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-15]
+        config: [Release]
+        preset: [clang]
+        include:
+        - os: windows-latest
+          preset: msvc
+          config: Release
+        - os: ubuntu-latest
+          preset: gcc
+          config: Release
+    runs-on: ${{ matrix.os }}
+    name: Build (${{ matrix.os }}.${{ matrix.preset }})
+    timeout-minutes: 10
+    env:
+      CMAKE_OSX_ARCHITECTURES: arm64;x86_64
+      CMAKE_BUILD_PARALLEL_LEVEL: 8
+      BUILD_DIR: Builds/${{ matrix.preset }}
+      DEPLOY_DIR: deploy
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+      with:
+        ref: ${{ needs.bump_version.outputs.tag_name }}
+
+    - name: Configure CMake
+      run: cmake --preset ${{ matrix.preset }} -D BENBOT_DOCS=OFF -D BENBOT_TESTS=OFF
+
+    - name: Build
+      run: cmake --build . --config ${{ matrix.config }} --target ben_bot
+      working-directory: ${{ env.BUILD_DIR }}
+
+    - name: Run cmake install
+      run: cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.DEPLOY_DIR }} --component ben_bot --config ${{ matrix.config }}
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: BenBot-${{ matrix.os }}-${{ matrix.preset }}
+        path: ${{ env.DEPLOY_DIR }}
+        if-no-files-found: error
 
   create_release:
     needs: [bump_version, build]
@@ -100,7 +142,7 @@ jobs:
     - name: Create release
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: v${{ needs.bump_version.outputs.tag_name }}
+        tag_name: ${{ needs.bump_version.outputs.tag_name }}
         files: ${{ steps.download.outputs.download-path }}/*
         fail_on_unmatched_files: true
         generate_release_notes: true
