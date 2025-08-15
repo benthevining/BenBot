@@ -35,7 +35,7 @@ jobs:
     name: Build docs
     timeout-minutes: 10
     env:
-      BUILD_DIR: Builds/clang
+      BUILD_DIR: ${{ github.workspace }}/Builds/clang
 
     steps:
     - name: Install dependencies

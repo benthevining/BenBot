@@ -60,8 +60,8 @@ jobs:
       CTEST_PARALLEL_LEVEL: 0
       CTEST_NO_TESTS_ACTION: error
       CTEST_OUTPUT_ON_FAILURE: 1
-      BUILD_DIR: Builds/${{ matrix.preset }}
-      DEPLOY_DIR: deploy
+      BUILD_DIR: ${{ github.workspace }}/Builds/${{ matrix.preset }}
+      DEPLOY_DIR: ${{ github.workspace }}/deploy
 
     steps:
     - name: Checkout code
