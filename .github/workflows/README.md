@@ -10,7 +10,7 @@ Similar to `ci.yml`, except this action runs on a schedule every night, and CDas
 
 ## `docs.yml`
 
-This action builds the Doxygen documentation and deploys it to GitHub pages. This action is triggered by every push to `main`, unless the commit message contains `[skip ci]`.
+This action builds the Doxygen documentation and deploys it to GitHub pages. This action is triggered by every push to `main`.
 
 ## `tag_and_release.yml`
 

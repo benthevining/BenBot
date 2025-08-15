@@ -58,7 +58,7 @@ jobs:
         git config --global user.email "github-actions@users.noreply.github.com"
 
     - name: Import GPG key
-      uses: crazy-max/ghaction-import-gpg@v6
+      uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec # pin v6
       with:
         gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
         passphrase: ${{ secrets.GPG_PASSPHRASE }}
@@ -176,7 +176,7 @@ jobs:
         path: artifacts
 
     - name: Create release
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # pin v2
       with:
         tag_name: ${{ needs.bump_version.outputs.tag_name }}
         files: ${{ steps.download.outputs.download-path }}/**
