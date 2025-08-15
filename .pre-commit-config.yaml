@@ -90,7 +90,7 @@ repos:
     name: Insert license header in CMake and shell files
     args: [--license-filepath=ben-bot/resources/license_header.txt, --comment-style=#, --detect-license-in-X-top-lines=16]
     files: .git|.clang|.cfg|justfile|.editorconfig|requirements.txt
-    exclude: config/.editorconfig-checker.json
+    exclude: config/.editorconfig-checker.json|.md
 
     # auto-fix spelling mistakes
 - repo: https://github.com/codespell-project/codespell
