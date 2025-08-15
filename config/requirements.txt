@@ -12,6 +12,8 @@
 
 # install using: pip install -r config/requirements.txt
 
+--prefer-binary
+
 # cli tools
 bump-my-version >= 1.0.2
 cmake >= 3.31.0

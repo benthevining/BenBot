@@ -10,13 +10,15 @@
 #
 # ======================================================================================
 
+name: Build & test (internal)
+
 on:
   workflow_call:
     inputs:
       dashboard_type:
         description: Type of CTest dashboard to run (Nightly, Experimental, or Continuous)
-        required: true
         type: string
+        required: true
 
 defaults:
   run:
@@ -28,6 +30,7 @@ permissions:
   pull-requests: write
 
 jobs:
+
   build_and_test:
     strategy:
       fail-fast: false
@@ -63,8 +66,6 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v5
-      with:
-        fetch-depth: 1
 
     - name: Install Python dependencies
       run: cmake -P .github/scripts/InstallPythonDeps.cmake
@@ -85,6 +86,7 @@ jobs:
         report_paths: ${{ env.BUILD_DIR }}/junit.xml
         exclude_sources: ${{ env.BUILD_DIR }}
         check_annotations: true
+        detailed_summary: true
         flaky_summary: true
         include_time_in_summary: true
         simplified_summary: true

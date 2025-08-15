@@ -1,0 +1,185 @@
+# ======================================================================================
+#
+# ░▒▓███████▓▒░░▒▓████████▓▒░▒▓███████▓▒░       ░▒▓███████▓▒░ ░▒▓██████▓▒░▒▓████████▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓███████▓▒░░▒▓██████▓▒░ ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓███████▓▒░░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░ ░▒▓██████▓▒░  ░▒▓█▓▒░
+#
+# ======================================================================================
+
+name: Bump version, create tag & release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_part:
+        description: "Version part to bump"
+        required: true
+        type: choice
+        options:
+        - 'major'
+        - 'minor'
+        - 'patch'
+
+run-name: Bump version (${{ inputs.version_part }})
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: write
+
+jobs:
+
+  bump_version:
+    runs-on: ubuntu-latest
+    name: Bump version & create tag
+    timeout-minutes: 10
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+
+    - name: Install Python dependencies
+      run: python3 -m pip install --break-system-packages --upgrade bump-my-version pre-commit
+
+    - name: Install NPM dependencies
+      run: npm install
+
+    - name: Configure Git identity
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions@users.noreply.github.com"
+
+    - name: Import GPG key
+      uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec # pin v6
+      with:
+        gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+        passphrase: ${{ secrets.GPG_PASSPHRASE }}
+        git_config_global: true
+        git_user_signingkey: true
+        git_commit_gpgsign: true
+        git_tag_gpgsign: true
+
+    - name: Write new version to output
+      id: write_version
+      run: |
+        new_version=$(bump-my-version show --increment ${{ inputs.version_part }} new_version)
+        echo "new_version=$new_version" >> "$GITHUB_OUTPUT"
+
+    - name: Bump version & create tag
+      run: bump-my-version bump --verbose ${{ inputs.version_part }}
+
+    outputs:
+      tag_name: v${{ steps.write_version.outputs.new_version }}
+
+  build:
+    needs: bump_version
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-15]
+        config: [Release]
+        preset: [clang]
+        include:
+        - os: windows-latest
+          preset: msvc
+          config: Release
+        - os: ubuntu-latest
+          preset: gcc
+          config: Release
+    runs-on: ${{ matrix.os }}
+    name: Build (${{ matrix.os }}.${{ matrix.preset }})
+    timeout-minutes: 10
+    env:
+      CMAKE_OSX_ARCHITECTURES: arm64;x86_64
+      CMAKE_BUILD_PARALLEL_LEVEL: 8
+      BUILD_DIR: Builds/${{ matrix.preset }}
+      DEPLOY_DIR: deploy
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+      with:
+        ref: ${{ needs.bump_version.outputs.tag_name }}
+
+    - name: Configure CMake
+      run: cmake --preset ${{ matrix.preset }} -D BENBOT_DOCS=OFF -D BENBOT_TESTS=OFF
+
+    - name: Build
+      run: cmake --build . --config ${{ matrix.config }} --target ben_bot
+      working-directory: ${{ env.BUILD_DIR }}
+
+    - name: Run cmake install
+      run: cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.DEPLOY_DIR }} --component ben_bot --config ${{ matrix.config }}
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: BenBot-${{ matrix.os }}-${{ matrix.preset }}
+        path: ${{ env.DEPLOY_DIR }}
+        if-no-files-found: error
+
+  build_docs:
+    needs: bump_version
+    runs-on: ubuntu-latest
+    name: Build docs
+    timeout-minutes: 10
+    env:
+      BUILD_DIR: Builds/clang
+      ZIP_NAME: BenBot-docs.zip
+
+    steps:
+    - name: Install dependencies
+      run: sudo apt install doxygen graphviz
+
+    - name: Checkout code
+      uses: actions/checkout@v5
+      with:
+        ref: ${{ needs.bump_version.outputs.tag_name }}
+
+    - name: Configure CMake
+      run: cmake --preset clang -D BENBOT_TESTS=OFF
+
+    - name: Build docs
+      run: cmake --build . --target ben_bot_docs
+      working-directory: ${{ env.BUILD_DIR }}
+
+    - name: Create zip
+      run: cmake -E tar c ${{ env.ZIP_NAME }} --format=zip ${{ env.BUILD_DIR }}/generated-docs/html
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: BenBot-docs
+        path: ${{ env.ZIP_NAME }}
+        if-no-files-found: error
+
+  create_release:
+    needs: [bump_version, build, build_docs]
+    runs-on: ubuntu-latest
+    name: Create GitHub release
+    timeout-minutes: 10
+
+    steps:
+    - name: Download artifacts
+      id: download
+      uses: actions/download-artifact@v5
+      with:
+        merge-multiple: true
+        path: artifacts
+
+    - name: Create release
+      uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # pin v2
+      with:
+        tag_name: ${{ needs.bump_version.outputs.tag_name }}
+        files: ${{ steps.download.outputs.download-path }}/**
+        fail_on_unmatched_files: true
+        generate_release_notes: true
+        make_latest: true

@@ -12,6 +12,8 @@
 
 name: Docs
 
+run-name: Build docs
+
 on:
   workflow_dispatch:
   push:
@@ -29,6 +31,7 @@ permissions:
   contents: read
 
 jobs:
+
   build:
     runs-on: ubuntu-latest
     name: Build docs
@@ -42,22 +45,21 @@ jobs:
 
     - name: Checkout code
       uses: actions/checkout@v5
-      with:
-        fetch-depth: 1
 
     - name: Configure CMake
       run: cmake --preset clang -D BENBOT_TESTS=OFF
 
     - name: Build docs
-      run: cmake --build ${{ env.BUILD_DIR }} --target ben_bot_docs
+      run: cmake --build . --target ben_bot_docs
+      working-directory: ${{ env.BUILD_DIR }}
 
     - name: Report Doxygen warnings
+      if: always()
       run: |
         echo "# Doxygen warnings" >> $GITHUB_STEP_SUMMARY
         cmake -E cat logs/Doxygen.log >> $GITHUB_STEP_SUMMARY
 
     - name: Upload artifact
-      id: deployment
       uses: actions/upload-pages-artifact@v3
       with:
         name: BenBot_docs

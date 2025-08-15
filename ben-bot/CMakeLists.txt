@@ -39,6 +39,12 @@ source_group (TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${ben_bot_sources})
 
 target_include_directories (ben_bot PRIVATE "${CMAKE_CURRENT_LIST_DIR}/src" "${generated_includes}")
 
+# this is to differentiate artifacts from different builds
+set_target_properties (
+    ben_bot PROPERTIES OUTPUT_NAME
+                       "ben_bot-${BenBot_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_CXX_COMPILER_ID}"
+)
+
 add_executable (ben_bot::ben_bot ALIAS ben_bot)
 
 #
