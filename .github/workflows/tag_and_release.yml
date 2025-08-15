@@ -144,7 +144,7 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ needs.bump_version.outputs.tag_name }}
-        files: ${{ steps.download.outputs.download-path }}
+        files: ${{ steps.download.outputs.download-path }}/**
         fail_on_unmatched_files: true
         generate_release_notes: true
         make_latest: true
