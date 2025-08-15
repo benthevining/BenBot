@@ -51,6 +51,11 @@ jobs:
     - name: Install NPM dependencies
       run: npm install
 
+    - name: Configure Git identity
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
     - name: Bump version & create tag
       run: bump-my-version bump --verbose ${{ inputs.version_part }}
 
