@@ -14,8 +14,7 @@ name: Create release from tag
 
 on:
   push:
-    tags:
-    - '*'
+    tags: ['**']
 
 defaults:
   run:
