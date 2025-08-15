@@ -65,7 +65,7 @@ repos:
     # local scripts
 - repo: local
   hooks:
-      # create build directory for cppcheck & logs directory for clang-tidy
+      # create build directory for cppcheck & logs directory
   - id: cppcheck-build-dir
     name: Create cache dir for cppcheck
     entry: cmake -E make_directory Builds/cppcheck/ logs/
@@ -104,8 +104,8 @@ repos:
   rev: v20.1.8
   hooks:
   - id: clang-format
-    args: [-style=file, -i]
-    types_or: [c++]
+    exclude_types: [json]
+    additional_dependencies: [clang-format>=20.1.8]
 - repo: https://github.com/pocc/pre-commit-hooks
   rev: v1.3.5
   hooks:
@@ -125,7 +125,6 @@ repos:
   - id: cmake-lint
     args: [--config-files, config/.cmake-format.json]
 
-    # validate CMake presets
 - repo: https://github.com/python-jsonschema/check-jsonschema
   rev: 0.33.2
   hooks:
