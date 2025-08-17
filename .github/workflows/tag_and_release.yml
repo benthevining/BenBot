@@ -128,6 +128,7 @@ jobs:
     permissions:
       pages: write
       id-token: write
+      contents: read
     uses: ./.github/workflows/docs.yml
     with:
       ref: ${{ needs.bump_version.outputs.tag_name }}
