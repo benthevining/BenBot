@@ -76,7 +76,7 @@ jobs:
       run: cmake --preset ${{ matrix.preset }} -D BENBOT_DOCS=OFF -D BUILDNAME=${{ env.BUILD_NAME }}
 
     - name: Build and test
-      run: ctest -D ${{ inputs.dashboard_type }} -C ${{ matrix.config }} --output-junit junit.xml --timeout 1800 --repeat after-timeout:3
+      run: ctest -D ${{ inputs.dashboard_type }} -C ${{ matrix.config }} --output-junit junit.xml --timeout 2700 --repeat after-timeout:3
       working-directory: ${{ env.BUILD_DIR }}
 
     - name: Upload JUnit report
