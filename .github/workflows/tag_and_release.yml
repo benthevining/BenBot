@@ -125,38 +125,9 @@ jobs:
 
   build_docs:
     needs: bump_version
-    runs-on: ubuntu-latest
-    name: Build docs
-    timeout-minutes: 10
-    env:
-      BUILD_DIR: Builds/clang
-      ZIP_NAME: BenBot-docs.zip
-
-    steps:
-    - name: Install dependencies
-      run: sudo apt install doxygen graphviz
-
-    - name: Checkout code
-      uses: actions/checkout@v5
-      with:
-        ref: ${{ needs.bump_version.outputs.tag_name }}
-
-    - name: Configure CMake
-      run: cmake --preset clang -D BENBOT_TESTS=OFF
-
-    - name: Build docs
-      run: cmake --build . --target ben_bot_docs
-      working-directory: ${{ env.BUILD_DIR }}
-
-    - name: Create zip
-      run: cmake -E tar c ${{ env.ZIP_NAME }} --format=zip ${{ env.BUILD_DIR }}/generated-docs/html
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: BenBot-docs
-        path: ${{ env.ZIP_NAME }}
-        if-no-files-found: error
+    uses: ./.github/workflows/docs.yml
+    with:
+      ref: ${{ needs.bump_version.outputs.tag_name }}
 
   create_release:
     needs: [bump_version, build, build_docs]
