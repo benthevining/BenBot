@@ -402,3 +402,8 @@
 * python-chess timeouts ([#224](https://github.com/benthevining/BenBot/issues/224)) ([d9af53d](https://github.com/benthevining/BenBot/commit/d9af53d3fd3a8a0b2e89d5adab2973888fa3cd5a))
 * warnings ([be585b0](https://github.com/benthevining/BenBot/commit/be585b0f5e630efa4a09d2a550950849745baa1e))
 * warnings ([d995288](https://github.com/benthevining/BenBot/commit/d995288c3eb210e282c8859d921e61a6009c1c94))
+## [1.2.15](https://github.com/benthevining/BenBot/compare/v1.2.14...v1.2.15) (2025-08-17)
+
+### Bug Fixes
+
+* actions ([e44956e](https://github.com/benthevining/BenBot/commit/e44956e8fc350d3d17aac51dfae8bf358c37b12a))
