@@ -18,6 +18,12 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+  workflow_call:
+    inputs:
+      ref:
+        description: Git tag to checkout
+        type: string
+        required: true
 
 concurrency:
   group: ${{ github.workflow }}.${{ github.ref }}
@@ -45,6 +51,8 @@ jobs:
 
     - name: Checkout code
       uses: actions/checkout@v5
+      with:
+        ref: ${{ inputs.ref || github.ref }}
 
     - name: Configure CMake
       run: cmake --preset clang -D BENBOT_TESTS=OFF
@@ -62,7 +70,7 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       with:
-        name: BenBot_docs
+        name: BenBot-docs
         path: ${{ env.BUILD_DIR }}/generated-docs/html
 
   deploy:
@@ -79,4 +87,4 @@ jobs:
       id: deployment
       uses: actions/deploy-pages@v4
       with:
-        artifact_name: BenBot_docs
+        artifact_name: BenBot-docs
