@@ -39,6 +39,9 @@ jobs:
     runs-on: ubuntu-latest
     name: Bump version & create tag
     timeout-minutes: 10
+    environment:
+      name: bump-project-version
+      url: https://github.com/benthevining/BenBot/releases/tag/v${{ steps.write_version.outputs.new_version }}
 
     steps:
     - name: Checkout code
