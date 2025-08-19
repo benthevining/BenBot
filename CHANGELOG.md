@@ -408,3 +408,4 @@
 
 * actions ([e44956e](https://github.com/benthevining/BenBot/commit/e44956e8fc350d3d17aac51dfae8bf358c37b12a))
 ## [1.2.16](https://github.com/benthevining/BenBot/compare/v1.2.15...v1.2.16) (2025-08-17)
+## [1.2.17](https://github.com/benthevining/BenBot/compare/v1.2.16...v1.2.17) (2025-08-19)
