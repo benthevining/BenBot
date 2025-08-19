@@ -42,6 +42,7 @@
     </tab>
     <tab type="examples" visible="yes" title="" intro=""/>
     <tab type="user" url="https://my.cdash.org/index.php?project=ben-bot" title="CDash"/>
+    <tab type="user" url="https://lichess.org/@/ben-bot" title="Lichess"/>
   </navindex>
 
   <!-- Layout definition for a class page -->

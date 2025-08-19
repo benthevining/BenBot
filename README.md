@@ -10,6 +10,7 @@ See each subdirectory's readme for details.
 
 ## Links
 
+* [Lichess profile](https://lichess.org/@/ben-bot)
 * [Documentation](http://benthevining.github.io/BenBot/)
 * [CDash dashboard](https://my.cdash.org/index.php?project=ben-bot)
 * [Latest release](https://github.com/benthevining/BenBot/releases/latest)
