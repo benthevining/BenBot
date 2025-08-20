@@ -18,7 +18,7 @@ engine:
   dir: $<TARGET_FILE_DIR:ben_bot>
   name: $<TARGET_FILE_NAME:ben_bot>
   protocol: "uci"
-  ponder: false
+  ponder: true
 
   polyglot:
     enabled: false

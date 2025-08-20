@@ -275,7 +275,7 @@ void Context::search()
     // sets activeFlag to true while inside this function, resets it to false once function exits
     const ActiveFlagSetter activeFlagRAII { activeFlag };
 
-    Interrupter interrupter { exitFlag, options.searchTime };
+    Interrupter interrupter { exitFlag, pondering, options.searchTime };
 
     if (const auto bookMove = openingBook.get_move(options.position)) {
         callbacks.opening_book_hit(*bookMove);
@@ -356,7 +356,7 @@ void Context::search()
             .betaCutoffs                         = stats.betaCutoffs,
             .mdpCutoffs                          = stats.mdpCutoffs });
 
-        if (not infinite) {
+        if (not(infinite or pondering.load())) {
             // only 1 legal move, don't do a deeper iteration
             if (options.movesToSearch.size() == 1uz) {
                 [[unlikely]];
