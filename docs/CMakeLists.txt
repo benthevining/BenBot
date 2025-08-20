@@ -42,12 +42,22 @@ doxygen_add_docs (
         ben_bot_docs
         "${DOXYGEN_USE_MDFILE_AS_MAINPAGE}" "${DOXYGEN_LAYOUT_FILE}"
         "${CMAKE_CURRENT_LIST_DIR}/uci-spec.txt"
+        "${CMAKE_CURRENT_LIST_DIR}/CodeStyle.md"
         ${libchess_headers} ${libbenbot_headers}
         WORKING_DIRECTORY "${BenBot_SOURCE_DIR}"
         COMMENT "Building Doxygen documentation..."
         USE_STAMP_FILE
 )
 # cmake-format: on
+
+set (html_output_dir "${DOXYGEN_OUTPUT_DIRECTORY}/html")
+
+install (DIRECTORY "${html_output_dir}" TYPE DOC OPTIONAL EXCLUDE_FROM_ALL COMPONENT ben_bot_docs)
+
+cpack_add_component (
+    ben_bot_docs DISPLAY_NAME "BenBot docs" DESCRIPTION "BenBot Doxygen documentation"
+    GROUP ben_bot_all
+)
 
 #
 
@@ -58,7 +68,7 @@ else ()
 endif ()
 
 add_custom_target (
-    ben_bot_open_docs COMMAND "${open_cmd}" "${DOXYGEN_OUTPUT_DIRECTORY}/html/index.html"
+    ben_bot_open_docs COMMAND "${open_cmd}" "${html_output_dir}/index.html"
     COMMENT "Opening generated HTML documentation..."
 )
 

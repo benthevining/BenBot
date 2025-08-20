@@ -14,7 +14,7 @@ cmake_minimum_required (VERSION 3.30.0 FATAL_ERROR)
 
 project (
     BenBot
-    VERSION 1.2.16
+    VERSION 1.3.0
     LANGUAGES CXX C
     DESCRIPTION "A chess engine"
     HOMEPAGE_URL "https://github.com/benthevining/BenBot"
@@ -28,6 +28,11 @@ set (CMAKE_CXX_STANDARD 23)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include (FetchContent)
+include (CPackComponent)
+
+cpack_add_component_group (
+    ben_bot_all DISPLAY_NAME "BenBot" DESCRIPTION "All components of BenBot" EXPANDED BOLD_TITLE
+)
 
 add_subdirectory (libchess)
 add_subdirectory (libbenbot)

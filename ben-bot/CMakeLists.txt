@@ -51,14 +51,39 @@ add_executable (ben_bot::ben_bot ALIAS ben_bot)
 
 install (TARGETS ben_bot COMPONENT ben_bot)
 
-include (CPackComponent)
-
-cpack_add_component (ben_bot DISPLAY_NAME BenBot DESCRIPTION "BenBot UCI chess engine")
+cpack_add_component (
+    ben_bot DISPLAY_NAME BenBot DESCRIPTION "BenBot UCI chess engine" GROUP ben_bot_all
+)
 
 #
+
+file (GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/lichess-config/$<CONFIG>.yml" INPUT config.yml)
+
+set (release_config_file "${CMAKE_CURRENT_BINARY_DIR}/lichess-config/Release.yml")
 
 set (lichess_bot_dir "${PROJECT_SOURCE_DIR}/lichess-bot")
 
 if (IS_DIRECTORY "${lichess_bot_dir}")
-    configure_file (config.yml "${lichess_bot_dir}/config.yml" @ONLY)
+    file (COPY_FILE "${release_config_file}" "${lichess_bot_dir}/config.yml" ONLY_IF_DIFFERENT
+          INPUT_MAY_BE_RECENT
+    )
 endif ()
+
+#[[
+install (
+    FILES "${release_config_file}"
+    TYPE SYSCONF
+    CONFIGURATIONS Release
+    COMPONENT ben_bot_lichess
+    RENAME config.yml
+    EXCLUDE_FROM_ALL
+)
+
+cpack_add_component (
+    ben_bot_lichess
+    DISPLAY_NAME "Lichess configuration"
+    DESCRIPTION "BenBot Lichess configuration file"
+    DEPENDS ben_bot
+    GROUP ben_bot_all
+)
+]]

@@ -39,6 +39,9 @@ jobs:
     runs-on: ubuntu-latest
     name: Bump version & create tag
     timeout-minutes: 10
+    environment:
+      name: bump-project-version
+      url: https://github.com/benthevining/BenBot/releases/tag/v${{ steps.write_version.outputs.new_version }}
 
     steps:
     - name: Checkout code
@@ -51,6 +54,9 @@ jobs:
 
     - name: Install NPM dependencies
       run: npm install
+
+    - name: Install pre-commit hooks
+      run: pre-commit install --install-hooks
 
     - name: Import GPG key
       uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec # pin v6
