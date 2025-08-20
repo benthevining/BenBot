@@ -49,6 +49,16 @@ doxygen_add_docs (
 )
 # cmake-format: on
 
+set (html_output_dir "${DOXYGEN_OUTPUT_DIRECTORY}/html")
+
+install (DIRECTORY "${html_output_dir}" TYPE DOC OPTIONAL EXCLUDE_FROM_ALL COMPONENT ben_bot_docs)
+
+include (CPackComponent)
+
+cpack_add_component (
+    ben_bot_docs DISPLAY_NAME "BenBot docs" DESCRIPTION "BenBot Doxygen documentation"
+)
+
 #
 
 if (WIN32)
@@ -58,7 +68,7 @@ else ()
 endif ()
 
 add_custom_target (
-    ben_bot_open_docs COMMAND "${open_cmd}" "${DOXYGEN_OUTPUT_DIRECTORY}/html/index.html"
+    ben_bot_open_docs COMMAND "${open_cmd}" "${html_output_dir}/index.html"
     COMMENT "Opening generated HTML documentation..."
 )
 

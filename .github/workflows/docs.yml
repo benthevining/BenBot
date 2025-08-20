@@ -44,6 +44,7 @@ jobs:
     timeout-minutes: 10
     env:
       BUILD_DIR: Builds/clang
+      DEPLOY_DIR: deploy
 
     steps:
     - name: Install dependencies
@@ -65,13 +66,16 @@ jobs:
       if: always()
       run: |
         echo "# Doxygen warnings" >> $GITHUB_STEP_SUMMARY
-        cmake -E cat logs/Doxygen.log >> $GITHUB_STEP_SUMMARY
+        cat logs/Doxygen.log >> $GITHUB_STEP_SUMMARY
+
+    - name: Run CMake install
+      run: cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.DEPLOY_DIR }} --component ben_bot_docs
 
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       with:
         name: BenBot-docs
-        path: ${{ env.BUILD_DIR }}/generated-docs/html
+        path: ${{ env.DEPLOY_DIR }}/share/doc/html
 
   deploy:
     runs-on: ubuntu-latest
