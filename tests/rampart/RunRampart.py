@@ -49,7 +49,12 @@ for test_case in testcase_data['testCases']:
     print(f'Running tests on position {startFEN}')
     print(f'Output file: {output_file}')
 
-    subprocess.run(['$<TARGET_FILE:rampart>', startFEN, output_file])
+    subprocess.run(
+        ['$<TARGET_FILE:rampart>', startFEN, output_file],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT
+    )
 
     with open(output_file, 'r') as file:
         result_data = json.load(file)
