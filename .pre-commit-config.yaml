@@ -128,7 +128,6 @@ repos:
 - repo: https://github.com/python-jsonschema/check-jsonschema
   rev: 0.33.3
   hooks:
-  - id: check-dependabot
   - id: check-github-workflows
   - id: check-jsonschema
     name: Validate CMake presets
