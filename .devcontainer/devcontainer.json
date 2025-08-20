@@ -11,19 +11,11 @@
     "ghcr.io/devcontainers-community/features/llvm": {},
     "ghcr.io/devcontainers-extra/features/cmake:1": {},
     "ghcr.io/devcontainers/features/git:1": {},
-    "ghcr.io/devcontainers/features/python:1": {
-      "installTools": true,
-      "toolsToInstall": "pipenv,virtualenv"
-    },
+    "ghcr.io/devcontainers/features/python:1": {},
     "ghcr.io/gvatsal60/dev-container-features/pre-commit:1": {},
     "ghcr.io/msclock/features/vcpkg:2": {},
     "ghcr.io/schlich/devcontainer-features/just:0": {}
   },
   "image": "alpine",
-  "name": "BenBot dev",
-  "runArgs": [
-    "--cap-add=SYS_PTRACE",
-    "--security-opt",
-    "seccomp=unconfined"
-  ]
+  "name": "BenBot dev"
 }
