@@ -15,8 +15,8 @@
 url: "https://lichess.org/"
 
 engine:
-  dir: "@CMAKE_CURRENT_BINARY_DIR@/Release"
-  name: "ben_bot"
+  dir: $<TARGET_FILE_DIR:ben_bot>
+  name: $<TARGET_FILE_NAME:ben_bot>
   protocol: "uci"
   ponder: false
 
