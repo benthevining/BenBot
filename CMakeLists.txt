@@ -28,6 +28,11 @@ set (CMAKE_CXX_STANDARD 23)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include (FetchContent)
+include (CPackComponent)
+
+cpack_add_component_group (
+    ben_bot_all DISPLAY_NAME "BenBot" DESCRIPTION "All components of BenBot" EXPANDED BOLD_TITLE
+)
 
 add_subdirectory (libchess)
 add_subdirectory (libbenbot)
