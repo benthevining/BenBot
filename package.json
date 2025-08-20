@@ -1,8 +1,35 @@
 {
-  "dependencies": {
+  "author": {
+    "email": "ben.the.vining@gmail.com",
+    "name": "Ben Vining",
+    "url": "https://github.com/benthevining"
+  },
+  "bugs": {
+    "url": "https://github.com/benthevining/BenBot/issues"
+  },
+  "description": "UCI chess engine",
+  "devDependencies": {
     "conventional-changelog-cli": "^5.0.0"
   },
+  "funding": {
+    "type": "individual",
+    "url": "https://github.com/sponsors/benthevining"
+  },
+  "homepage": "https://github.com/benthevining/BenBot",
+  "keywords": [
+    "chess",
+    "uci"
+  ],
+  "license": "LGPL-2.1-only",
   "name": "BenBot",
-  "private": true,
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/benthevining/BenBot.git"
+  },
   "version": "1.3.0"
 }
