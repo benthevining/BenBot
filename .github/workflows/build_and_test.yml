@@ -53,11 +53,11 @@ jobs:
           config: Release
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }}.${{ matrix.preset }}.${{ matrix.config }}.${{ inputs.dashboard_type }}
-    timeout-minutes: 120
+    timeout-minutes: 60
     env:
       CMAKE_OSX_ARCHITECTURES: arm64;x86_64
       CMAKE_BUILD_PARALLEL_LEVEL: 8
-      CTEST_PARALLEL_LEVEL: 0
+      CTEST_PARALLEL_LEVEL: ''
       CTEST_NO_TESTS_ACTION: error
       CTEST_OUTPUT_ON_FAILURE: 1
       BUILD_DIR: Builds/${{ matrix.preset }}
@@ -76,7 +76,7 @@ jobs:
       run: cmake --preset ${{ matrix.preset }} -D BENBOT_DOCS=OFF -D BUILDNAME=${{ env.BUILD_NAME }}
 
     - name: Build and test
-      run: ctest -D ${{ inputs.dashboard_type }} -C ${{ matrix.config }} --output-junit junit.xml --timeout 2700 --repeat after-timeout:3
+      run: ctest -D ${{ inputs.dashboard_type }} -C ${{ matrix.config }} --output-junit junit.xml --schedule-random
       working-directory: ${{ env.BUILD_DIR }}
 
     - name: Upload JUnit report
