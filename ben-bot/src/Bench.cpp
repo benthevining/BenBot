@@ -14,16 +14,24 @@
 
 #include "Data.hpp"
 #include "Engine.hpp"
+#include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <cmath>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libbenbot/search/Search.hpp>
+#include <libbenbot/search/Thread.hpp>
 #include <libchess/notation/EPD.hpp>
 #include <libchess/util/Files.hpp>
 #include <libchess/util/Strings.hpp>
+#include <libchess/util/Threading.hpp>
+#include <memory>
+#include <numeric>
 #include <print>
+#include <ranges>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 namespace ben_bot {
 
@@ -31,7 +39,8 @@ using std::println;
 using std::size_t;
 using std::string_view;
 
-namespace util = chess::util;
+namespace util     = chess::util;
+namespace notation = chess::notation;
 
 namespace {
 
@@ -41,41 +50,86 @@ namespace {
     // block in this method - this function creates a search context, executes it,
     // and blocks waiting for the result.
 
+    using SearchResult = search::Callbacks::Result;
+
+    struct BenchSearcherThread final {
+        BenchSearcherThread(
+            const notation::EPDPosition& position, const size_t defaultDepth)
+        {
+            thread.set_position(position.position);
+
+            if (const auto it = position.operations.find("depth");
+                it != position.operations.end()) {
+                thread.context.options.depth = util::int_from_string(it->second, defaultDepth);
+            } else {
+                thread.context.options.depth = defaultDepth;
+            }
+
+            thread.start();
+        }
+
+        [[nodiscard]] bool finished() const noexcept { return not thread.context.in_progress(); }
+
+        [[nodiscard]] SearchResult get_result() const noexcept
+        {
+            assert(finished());
+
+            return result;
+        }
+
+    private:
+        SearchResult result {};
+
+        search::Thread thread {
+            search::Callbacks {
+                .onSearchComplete = [this](SearchResult res) {
+                    result = std::move(res);
+                } }
+        };
+    };
+
     void do_bench(
         const string_view epdText,
         const size_t      defaultDepth)
     {
-        auto totalNodes { 0uz };
+        const auto searcherThreads = notation::parse_all_epds(epdText)
+                                   | std::views::transform([defaultDepth](const notation::EPDPosition& pos) {
+                                         return std::make_unique<BenchSearcherThread>(pos, defaultDepth);
+                                     })
+                                   | std::ranges::to<std::vector>();
 
-        std::chrono::milliseconds totalTime { 0 };
+        println("Started {} searcher threads...", searcherThreads.size());
 
-        search::Context benchSearcher {
-            search::Callbacks {
-                .onSearchComplete = [&totalNodes, &totalTime](const search::Callbacks::Result& res) {
-                    totalNodes += res.nodesSearched;
-                    totalTime += res.duration;
-                } }
-        };
+        using ThreadPtr = std::unique_ptr<BenchSearcherThread>;
 
-        auto posNum { 0uz };
+        // wait for all threads to finish searching
+        util::progressive_backoff(
+            [&searcherThreads] {
+                return std::ranges::all_of(searcherThreads,
+                    [](const ThreadPtr& thread) { return thread->finished(); });
+            });
 
-        for (const auto& position : chess::notation::parse_all_epds(epdText)) {
-            benchSearcher.options.position = position.position;
-            benchSearcher.options.movesToSearch.clear();
+        const auto results = searcherThreads
+                           | std::views::transform([](const ThreadPtr& thread) {
+                                 return thread->get_result();
+                             })
+                           | std::ranges::to<std::vector>();
 
-            if (const auto it = position.operations.find("depth");
-                it != position.operations.end()) {
-                benchSearcher.options.depth = util::int_from_string(it->second, defaultDepth);
-            } else {
-                benchSearcher.options.depth = defaultDepth;
-            }
+        const auto totalNodes = std::accumulate(
+            results.begin(), results.end(),
+            0uz,
+            [](const size_t num, const SearchResult& result) {
+                return num + result.nodesSearched;
+            });
 
-            println("Searching for position #{}...", posNum);
+        using std::chrono::milliseconds;
 
-            benchSearcher.search();
-
-            ++posNum;
-        }
+        const auto totalTime = std::accumulate(
+            results.begin(), results.end(),
+            milliseconds { 0 },
+            [](const milliseconds time, const SearchResult& result) {
+                return time + result.duration;
+            });
 
         const auto seconds = static_cast<double>(totalTime.count()) * 0.001;
 
