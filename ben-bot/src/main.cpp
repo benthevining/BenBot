@@ -41,6 +41,9 @@ namespace {
     return result;
 }
 
+// we process any args as a one-shot UCI command line
+// --no-loop can also be given to make the engine exit after processing the given CLI command
+// --no-logo will suppress the logo & version normally printed at startup
 struct Arguments final {
     bool noLoop { false };
     bool noLogo { false };
@@ -93,11 +96,6 @@ struct Arguments final {
 int main(const int argc, const char** argv)
 try {
     chess::util::enable_utf8_console_output();
-
-    // handle command line args
-    // we process any args as a one-shot UCI command line
-    // --no-loop can also be given to make the engine exit after processing the given CLI command
-    // --no-logo will suppress the logo & version normally printed at startup
 
     const auto args = Arguments::parse(argc, argv);
 
