@@ -72,7 +72,7 @@ jobs:
       run: cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.DEPLOY_DIR }} --component ben_bot_docs
 
     - name: Upload artifact
-      uses: actions/upload-pages-artifact@v3
+      uses: actions/upload-pages-artifact@v4
       with:
         name: BenBot-docs
         path: ${{ env.DEPLOY_DIR }}/share/doc/html
