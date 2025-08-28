@@ -12,9 +12,9 @@
  * ======================================================================================
  */
 
-#include "Engine.hpp"
-#include "Data.hpp"
 #include <algorithm>
+#include <ben-bot/Data.hpp>
+#include <ben-bot/Engine.hpp>
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <exception>

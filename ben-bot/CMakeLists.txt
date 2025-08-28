@@ -29,15 +29,22 @@ set (generated_header "${generated_includes}/BenBotConfig.hpp")
 string (CONFIGURE "${config_header_content}" config_header_content @ONLY)
 file (GENERATE OUTPUT "${generated_header}" CONTENT "${config_header_content}")
 
-file (GLOB_RECURSE ben_bot_sources LIST_DIRECTORIES false
-      CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/src/*.hpp" "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp"
+file (GLOB_RECURSE benbot_headers LIST_DIRECTORIES false CONFIGURE_DEPENDS
+                                                         "${CMAKE_CURRENT_LIST_DIR}/include/*.hpp"
 )
 
-target_sources (ben_bot PRIVATE ${ben_bot_sources} "${generated_header}")
+file (GLOB benbot_sources LIST_DIRECTORIES false CONFIGURE_DEPENDS
+                                                 "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp"
+)
 
-source_group (TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${ben_bot_sources})
+target_sources (
+    ben_bot PRIVATE FILE_SET HEADERS BASE_DIRS include FILES ${benbot_headers}
+    PRIVATE ${benbot_sources}
+)
 
-target_include_directories (ben_bot PRIVATE "${CMAKE_CURRENT_LIST_DIR}/src" "${generated_includes}")
+source_group (TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${benbot_headers} ${benbot_sources})
+
+target_include_directories (ben_bot PRIVATE "${generated_includes}")
 
 # this is to differentiate artifacts from different builds
 set_target_properties (

@@ -12,8 +12,8 @@
  * ======================================================================================
  */
 
-#include "TextTable.hpp"
 #include <algorithm>
+#include <ben-bot/TextTable.hpp>
 #include <numeric>
 #include <ranges>
 #include <span>

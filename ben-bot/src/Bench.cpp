@@ -12,9 +12,9 @@
  * ======================================================================================
  */
 
-#include "Data.hpp"
-#include "Engine.hpp"
 #include <algorithm>
+#include <ben-bot/Data.hpp>
+#include <ben-bot/Engine.hpp>
 #include <cassert>
 #include <chrono>
 #include <cmath>
