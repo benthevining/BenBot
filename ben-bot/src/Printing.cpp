@@ -156,11 +156,20 @@ void Engine::print_logo_and_version() const
         get_name(), get_version_string(), get_author());
 }
 
-void Engine::print_help() const
+void Engine::print_help(const string_view args) const
 {
-    print_logo_and_version();
+    const bool noLogo = [args] {
+        if (args.empty())
+            return false;
 
-    println("");
+        return chess::util::trim(args) == "--no-logo";
+    }();
+
+    if (! noLogo) {
+        print_logo_and_version();
+
+        println("");
+    }
 
     println(
         "All standard UCI commands are supported, as well as the following non-standard commands:");

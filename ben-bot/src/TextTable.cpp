@@ -46,11 +46,13 @@ TextTable& TextTable::new_row()
 
 namespace {
     constexpr string_view COLUMN_SEPARATOR { " | " };
+    constexpr string_view LINE_START { "| " };
+    constexpr string_view LINE_ENDING { " |" };
 
     [[nodiscard]] string make_header_sep_row(
         const std::span<const size_t> widths)
     {
-        string result;
+        string result { LINE_START };
 
         for (const auto width : widths.first(widths.size() - 1uz)) {
             result.append(width, '-');
@@ -58,6 +60,7 @@ namespace {
         }
 
         result.append(widths.back(), '-');
+        result.append(LINE_ENDING);
 
         return result;
     }
@@ -109,7 +112,7 @@ std::vector<size_t> TextTable::get_column_widths() const
 string TextTable::Row::to_string(
     const std::span<const size_t> widths) const
 {
-    string result;
+    string result { LINE_START };
 
     size_t index { 0uz };
 
@@ -128,6 +131,8 @@ string TextTable::Row::to_string(
 
         ++index;
     }
+
+    result.append(LINE_ENDING);
 
     return result;
 }

@@ -220,7 +220,7 @@ namespace {
     [[nodiscard, gnu::const]] constexpr Hash piece_key(
         const PieceType type, const Color side, const Square& square)
     {
-        const auto typeOffset = 64uz * 2uz * std::to_underlying(type);
+        const auto typeOffset = 64uz * std::to_underlying(type) * 2uz;
         const auto sideOffset = 64uz * std::to_underlying(side);
 
         const auto index = typeOffset + sideOffset + square.index();
