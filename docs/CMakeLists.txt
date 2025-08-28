@@ -34,6 +34,31 @@ set (DOXYGEN_LAYOUT_FILE "${CMAKE_CURRENT_LIST_DIR}/DoxygenLayout.xml")
 set (DOXYGEN_FILE_PATTERNS *.hpp)
 set (DOXYGEN_INCLUDE_FILE_PATTERNS *.hpp)
 
+# generate the engine docs page
+
+set (engine_doc_page "${CMAKE_CURRENT_BINARY_DIR}/engine_docs.txt")
+
+# all files must exist at configure time when using doxygen_add_docs()'s stamp file option
+file (TOUCH "${engine_doc_page}")
+
+set (generator_script "${CMAKE_CURRENT_LIST_DIR}/GenerateEngineDocs.cmake")
+
+# cmake-format: off
+add_custom_command (
+    OUTPUT "${engine_doc_page}"
+    COMMAND "${CMAKE_COMMAND}"
+        -D "OUTPUT_FILE=${engine_doc_page}"
+        -D "ENGINE_PATH=$<TARGET_FILE:ben_bot::ben_bot>"
+        -P "${generator_script}"
+    DEPENDS ben_bot::ben_bot "${generator_script}"
+        "${CMAKE_CURRENT_LIST_DIR}/engine-docs.txt"
+    COMMENT "Generating engine docs page..."
+    VERBATIM USES_TERMINAL
+)
+# cmake-format: on
+
+#
+
 get_target_property (libchess_headers ben_bot::libchess HEADER_SET)
 get_target_property (libbenbot_headers ben_bot::libbenbot HEADER_SET)
 get_target_property (benbot_headers ben_bot::ben_bot HEADER_SET)
@@ -41,9 +66,11 @@ get_target_property (benbot_headers ben_bot::ben_bot HEADER_SET)
 # cmake-format: off
 doxygen_add_docs (
         ben_bot_docs
-        "${DOXYGEN_USE_MDFILE_AS_MAINPAGE}" "${DOXYGEN_LAYOUT_FILE}"
+        "${DOXYGEN_LAYOUT_FILE}"
+        "${DOXYGEN_USE_MDFILE_AS_MAINPAGE}"
         "${CMAKE_CURRENT_LIST_DIR}/uci-spec.txt"
         "${CMAKE_CURRENT_LIST_DIR}/CodeStyle.md"
+        "${engine_doc_page}"
         ${libchess_headers} ${libbenbot_headers} ${benbot_headers}
         WORKING_DIRECTORY "${BenBot_SOURCE_DIR}"
         COMMENT "Building Doxygen documentation..."
