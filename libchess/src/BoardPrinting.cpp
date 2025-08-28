@@ -55,7 +55,7 @@ namespace {
             for (const auto file : magic_enum::enum_values<board::File>()) {
                 const board::Square square { .file = file, .rank = rank };
 
-                if constexpr (std::is_same_v<char, decltype(getSquareText(square))>) {
+                if constexpr (std::is_same_v<char, std::invoke_result_t<Func, board::Square>>) {
                     result.append(1uz, getSquareText(square));
                 } else {
                     result.append(getSquareText(square));
@@ -83,11 +83,8 @@ namespace board {
     std::string print_ascii(const Bitboard board)
     {
         return generate_board_string(
-            [board](const Square& square) {
-                if (board.test(square))
-                    return "x";
-
-                return " ";
+            [board](const Square square) {
+                return board.test(square) ? 'x' : ' ';
             },
             false);
     }
@@ -101,7 +98,7 @@ namespace game {
         namespace utf8_pieces = pieces::utf8;
 
         return generate_board_string(
-            [&position](const Square& square) {
+            [&position](const Square square) {
                 if (const auto piece = position.whitePieces.get_piece_on(square))
                     return utf8_pieces::white::get(*piece);
 
@@ -116,7 +113,7 @@ namespace game {
     std::string print_ascii(const Position& position)
     {
         return generate_board_string(
-            [&position](const Square& square) {
+            [&position](const Square square) {
                 if (const auto piece = position.whitePieces.get_piece_on(square))
                     return pieces::to_char(*piece, true);
 
