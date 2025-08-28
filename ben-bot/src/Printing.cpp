@@ -12,9 +12,9 @@
  * ======================================================================================
  */
 
-#include "Data.hpp"
-#include "Engine.hpp"
-#include "TextTable.hpp"
+#include <ben-bot/Data.hpp>
+#include <ben-bot/Engine.hpp>
+#include <ben-bot/TextTable.hpp>
 #include <cassert>
 #include <cmath>
 #include <cstddef> // IWYU pragma: keep - for size_t

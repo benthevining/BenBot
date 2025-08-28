@@ -12,8 +12,8 @@
  * ======================================================================================
  */
 
-#include "Data.hpp"
-#include "BenBotConfig.hpp"
+#include <BenBotConfig.hpp>
+#include <ben-bot/Data.hpp>
 #include <cmrc/cmrc.hpp>
 #include <string>
 #include <string_view>

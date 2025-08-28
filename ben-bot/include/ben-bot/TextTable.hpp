@@ -26,18 +26,20 @@ using std::size_t;
 using std::string;
 using std::string_view;
 
-// helps to create tables of text with vertically aligned columns
-// rows can have a different number of columns; the table's size is based on the maximum number of columns
-// the first row is the header, and a separator row will be added between it and the second manually added row
+/** This class allows you to construct a table of text with vertically aligned columns.
+    Rows may have different numbers of columns; the table's size is based on the maximum number of columns.
+    The first row is the header, and a separator row will be added between it and the second manually added row.
+ */
 struct TextTable final {
-    // appends a column to the current row
+    /** Appends a column to the current row. */
     TextTable& append_column(string_view text);
 
-    // ends the current row
-    // subsequent calls to append_column() will write to the new row
+    /** Ends the current row.
+        Subsequent calls to ``append_column()`` will write to the new row.
+     */
     TextTable& new_row();
 
-    // concatenates all the rows in the table into a single string
+    /** Concatenates all the rows in the table into a single string, with separators between rows and columns. */
     [[nodiscard]] string to_string() const;
 
 private:

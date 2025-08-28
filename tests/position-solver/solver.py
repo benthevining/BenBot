@@ -36,6 +36,11 @@ result = engine.play(
 
 engine.quit()
 
+exit_code = engine.returncode.result(timeout=None)
+
+if exit_code != 0:
+    print(f'Engine exited with code {exit_code}')
+
 expectedMove = operations['bm'][0]
 
 if result.move == expectedMove:
