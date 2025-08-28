@@ -51,6 +51,7 @@ add_custom_command (
         -D "ENGINE_PATH=$<TARGET_FILE:ben_bot::ben_bot>"
         -P "${generator_script}"
     DEPENDS ben_bot::ben_bot "${generator_script}"
+        "${CMAKE_CURRENT_LIST_DIR}/engine-docs.txt"
     COMMENT "Generating engine docs page..."
     VERBATIM USES_TERMINAL
 )

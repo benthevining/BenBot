@@ -21,6 +21,9 @@ if (NOT DEFINED ENGINE_PATH)
 endif ()
 
 execute_process (
-    COMMAND "${ENGINE_PATH}" --no-loop --no-logo help --no-logo OUTPUT_FILE "${OUTPUT_FILE}"
-    OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ECHO STDOUT COMMAND_ERROR_IS_FATAL ANY
+    COMMAND "${ENGINE_PATH}" --no-loop --no-logo help --no-logo
+    OUTPUT_VARIABLE ENGINE_COMMANDS_HELP_TEXT OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ECHO STDOUT
+                                              COMMAND_ERROR_IS_FATAL ANY
 )
+
+configure_file ("${CMAKE_CURRENT_LIST_DIR}/engine-docs.txt" "${OUTPUT_FILE}" @ONLY)
