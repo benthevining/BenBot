@@ -103,7 +103,7 @@ private:
 
     void make_null_move();
 
-    void print_help() const;
+    void print_help(string_view args) const;
     void print_options() const;
     void print_current_position(string_view arguments) const;
 
@@ -177,8 +177,9 @@ private:
         },
         CustomCommand {
             .name = "help",
-            .action = CustomCommand::void_cb([this] { print_help(); }),
-            .description = "Display this text"
+            .action = [this] (const string_view args){ print_help(args); },
+            .description = "Display this text",
+            .argsHelp = "[--no-logo]"
         }
     };
     // clang-format on
