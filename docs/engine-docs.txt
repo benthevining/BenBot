@@ -1,9 +1,13 @@
 /** @page engine_docs Engine docs
-    This page documents details about the UCI engine executable.
+This page documents details about the UCI engine executable.
 
-    @tableofcontents{html}
+@tableofcontents{html}
 
-    @section engine_commands Commands
+@section engine_commands Commands
 
-    @ENGINE_COMMANDS_HELP_TEXT@
+@ENGINE_COMMANDS_HELP_TEXT@
+
+@section engine_options Options
+
+@ENGINE_OPTIONS_HELP_TEXT@
  */
