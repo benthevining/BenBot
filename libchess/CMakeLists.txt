@@ -29,7 +29,7 @@ FetchContent_Declare (
 
 FetchContent_MakeAvailable (magic_enum inplace_vector)
 
-add_library (libchess STATIC include/libchess/util/Console.hpp src/util/Console.cpp)
+add_library (libchess STATIC)
 
 target_compile_features (libchess PUBLIC cxx_std_23)
 
