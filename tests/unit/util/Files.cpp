@@ -23,18 +23,8 @@
 
 static constexpr auto TAGS { "[util][files]" };
 
-TEST_CASE("Memory mapped file", TAGS)
-{
-    const std::filesystem::path fileToMap {
-        BENBOT_LICENSE_HEADER_FILE
-    };
-
-    const chess::util::MemoryMappedFile mapped { fileToMap };
-
-    const auto data = mapped.data();
-
-    REQUIRE(std::string { data } == std::string {
-                R"(======================================================================================
+static constexpr auto CORRECT_FILE_CONTENT =
+    R"(======================================================================================
 
 ░▒▓███████▓▒░░▒▓████████▓▒░▒▓███████▓▒░       ░▒▓███████▓▒░ ░▒▓██████▓▒░▒▓████████▓▒░
 ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
@@ -45,5 +35,18 @@ TEST_CASE("Memory mapped file", TAGS)
 ░▒▓███████▓▒░░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░ ░▒▓██████▓▒░  ░▒▓█▓▒░
 
 ======================================================================================
-)" });
+)";
+
+static const std::filesystem::path LICENSE_HEADER_FILE { BENBOT_LICENSE_HEADER_FILE };
+
+TEST_CASE("Memory mapped file", TAGS)
+{
+    const chess::util::MemoryMappedFile mapped { LICENSE_HEADER_FILE };
+
+    REQUIRE(mapped.data() == CORRECT_FILE_CONTENT);
+}
+
+TEST_CASE("load_file_as_string()", TAGS)
+{
+    REQUIRE(chess::util::load_file_as_string(LICENSE_HEADER_FILE) == CORRECT_FILE_CONTENT);
 }
