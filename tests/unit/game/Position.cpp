@@ -297,3 +297,11 @@ TEST_CASE("Position - null move", TAGS)
 
     REQUIRE(startingPosition != afterNull);
 }
+
+TEST_CASE("Position - fifty-move draws", TAGS)
+{
+    REQUIRE(! Position {}.is_fifty_move_draw());
+
+    REQUIRE(from_fen("7k/4NK2/5r2/5BN1/8/8/8/8 w - - 103 115").is_fifty_move_draw());
+    REQUIRE(from_fen("8/7k/8/1r3KR1/5B2/8/8/8 w - - 105 122").is_fifty_move_draw());
+}
