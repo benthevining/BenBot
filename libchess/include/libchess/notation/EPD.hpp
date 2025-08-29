@@ -42,6 +42,14 @@ struct EPDPosition final {
         Values should not be quoted.
      */
     std::unordered_map<string, string> operations;
+
+    /** Returns true if the two positions have the same Zobrist hash
+        and an identical set of operations.
+     */
+    [[nodiscard]] bool operator==(const EPDPosition& other) const noexcept
+    {
+        return position == other.position && operations == other.operations;
+    }
 };
 
 /** Parses an EPD string.

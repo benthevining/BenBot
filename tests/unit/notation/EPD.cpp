@@ -41,3 +41,16 @@ TEST_CASE("EPD - operations", TAGS)
     REQUIRE(epd.operations.at("id"s) == "Crafty Test Pos.28");
     REQUIRE(epd.operations.at("c0"s) == "DB/GK Philadelphia 1996, Game 5, move 7W (Bd3)");
 }
+
+TEST_CASE("EPD - round tripping", TAGS)
+{
+    using namespace std::literals::string_literals; // NOLINT
+
+    // note that fmvn & hmvc operations will be added by to_epd() by default if not present in the input EPD
+    const auto epd1 = from_epd(
+        R"-(r1bqk2r/p1pp1ppp/2p2n2/8/1b2P3/2N5/PPP2PPP/R1BQKB1R w KQkq - bm Bd3; id "Crafty Test Pos.28"; c0 "DB/GK Philadelphia 1996, Game 5, move 7W (Bd3)"; fmvn 1; hmvc 1)-");
+
+    const auto epd2 = from_epd(to_epd(epd1));
+
+    REQUIRE(epd1 == epd2);
+}
