@@ -54,3 +54,17 @@ TEST_CASE("EPD - round tripping", TAGS)
 
     REQUIRE(epd1 == epd2);
 }
+
+TEST_CASE("EPD - parse_all_epds()", TAGS)
+{
+    using namespace std::literals::string_literals; // NOLINT
+
+    static constexpr auto epdText =
+        R"-(r1bqk2r/p1pp1ppp/2p2n2/8/1b2P3/2N5/PPP2PPP/R1BQKB1R w KQkq - bm Bd3; id "Crafty Test Pos.28"; c0 "DB/GK Philadelphia 1996, Game 5, move 7W (Bd3)";
+rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - hmvc 0; fmvn 1;
+1r4k1/4ppb1/2n1b1qp/pB4p1/1n1BP1P1/7P/2PNQPK1/3RN3 w - -)-";
+
+    const auto epds = chess::notation::parse_all_epds(epdText);
+
+    REQUIRE(epds.size() == 3uz);
+}
