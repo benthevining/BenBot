@@ -142,30 +142,27 @@ struct Square final {
 
 } // namespace chess::board
 
-namespace std {
-
 /** A formatter specialization for Square objects.
-
-    The formatter accepts the following format specifier arguments:
-    @li ``i|I``: Tells the formatter to print the bitboard bit index for this square
-    @li ``a|A``: Tells the formatter to print the algebraic notation of this square
-
-    If no arguments are specified, the formatter prints the square's algebraic notation by default.
+    The formatter accepts no arguments; squares are always printed in algebraic notation,
+    such as ``a4``, ``b2``, etc.
 
     @see chess::board::Square
     @ingroup board
  */
 template <>
-struct formatter<chess::board::Square> final {
+struct std::formatter<chess::board::Square> final {
     template <typename ParseContext>
-    constexpr typename ParseContext::iterator parse(ParseContext& ctx);
+    constexpr typename ParseContext::iterator parse(ParseContext& ctx)
+    {
+        return ctx.begin();
+    }
 
     template <typename FormatContext>
     typename FormatContext::iterator format(
-        const chess::board::Square& square, FormatContext& ctx) const;
-
-private:
-    bool asIdx { false };
+        const chess::board::Square& square, FormatContext& ctx) const
+    {
+        return std::format_to(ctx.out(), "{}{}", square.file, square.rank);
+    }
 };
 
 /*
@@ -184,53 +181,6 @@ private:
   `----'     `----'             `--`---'     ---`-'                     `--" `--" `--"
 
  */
-
-template <typename ParseContext>
-constexpr typename ParseContext::iterator
-formatter<chess::board::Square>::parse(ParseContext& ctx)
-{
-    auto it = ctx.begin();
-
-    if (it == ctx.end() or *it == '}')
-        return it;
-
-    do {
-        switch (*it) {
-            case 'i': [[fallthrough]];
-            case 'I':
-                asIdx = true;
-                break;
-
-            case 'a': [[fallthrough]];
-            case 'A':
-                asIdx = false;
-                break;
-
-            default:
-                throw std::format_error { "Unrecognized format argument" };
-        }
-
-        ++it;
-    } while (not(it == ctx.end() or *it == '}'));
-
-    ctx.advance_to(it);
-
-    return it;
-}
-
-template <typename FormatContext>
-typename FormatContext::iterator
-formatter<chess::board::Square>::format(
-    const chess::board::Square& square, FormatContext& ctx) const
-{
-    if (asIdx)
-        return std::format_to(ctx.out(), "{}", square.index());
-
-    return std::format_to(
-        ctx.out(), "{}{}", square.file, square.rank);
-}
-
-} // namespace std
 
 namespace chess::board {
 
