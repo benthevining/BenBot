@@ -288,3 +288,12 @@ TEST_CASE("Position - backward pawns", TAGS)
         REQUIRE(bBackwards.test(Square { .file = File::F, .rank = Rank::Seven }));
     }
 }
+
+TEST_CASE("Position - null move", TAGS)
+{
+    const Position startingPosition {};
+
+    const auto afterNull = after_null_move(startingPosition);
+
+    REQUIRE(startingPosition != afterNull);
+}
