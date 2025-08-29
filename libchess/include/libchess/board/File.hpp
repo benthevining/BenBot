@@ -59,7 +59,7 @@ enum class File : BitboardIndex {
     @ingroup board
     @see File
  */
-[[nodiscard]] constexpr char file_to_char(File file);
+[[nodiscard]] char file_to_char(File file);
 
 } // namespace chess::board
 
@@ -138,7 +138,7 @@ constexpr File file_from_char(char character)
     }
 }
 
-constexpr char file_to_char(const File file)
+inline char file_to_char(const File file)
 {
     const auto upperChar = magic_enum::enum_name(file).front();
 
