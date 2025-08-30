@@ -101,23 +101,6 @@ namespace {
         };
     }
 
-    [[nodiscard, gnu::const]] constexpr auto tick_halfmove_clock(
-        const bool isPawnMove, const bool isCapture, const uint_least8_t prevValue) noexcept
-        -> uint_least8_t
-    {
-        if (isCapture or isPawnMove)
-            return UINT8_C(0);
-
-        static constexpr auto MAX_VALUE = UINT8_C(100);
-
-        if (std::cmp_greater_equal(prevValue, MAX_VALUE)) {
-            [[unlikely]];
-            return MAX_VALUE;
-        }
-
-        return prevValue + UINT8_C(1);
-    }
-
 } // namespace
 
 void Position::make_move(const Move& move)
@@ -133,8 +116,14 @@ void Position::make_move(const Move& move)
 
     update_bitboards(*this, move);
 
-    halfmoveClock = tick_halfmove_clock(
-        move.piece == PieceType::Pawn, isCapture, halfmoveClock);
+    if (move.piece == PieceType::Pawn || isCapture) {
+        // reset half-move counter (for 50-move draws & threefold repetition)
+        halfmoveClock = UINT8_C(0);
+        threefoldChecker.reset(hash);
+    } else {
+        ++halfmoveClock;
+        threefoldChecker.push(hash);
+    }
 
     enPassantTargetSquare = newEPSquare;
 
@@ -144,8 +133,6 @@ void Position::make_move(const Move& move)
 
     // flip side to move
     sideToMove = isWhite ? Color::Black : Color::White;
-
-    threefoldChecker.push(hash);
 }
 
 void Position::make_null_move()
@@ -154,8 +141,8 @@ void Position::make_null_move()
 
     hash = zobrist::after_null_move(*this);
 
-    halfmoveClock = tick_halfmove_clock(
-        false, false, halfmoveClock);
+    ++halfmoveClock;
+    threefoldChecker.push(hash);
 
     enPassantTargetSquare = std::nullopt;
 
@@ -165,8 +152,6 @@ void Position::make_null_move()
 
     // flip side to move
     sideToMove = isWhite ? Color::Black : Color::White;
-
-    threefoldChecker.push(hash);
 }
 
 Position::Position()
