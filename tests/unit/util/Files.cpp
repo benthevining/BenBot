@@ -12,30 +12,27 @@
  * ======================================================================================
  */
 
+// this symbol must be defined as a quoted string,
+// the absolute path to the license header file
 #ifndef BENBOT_LICENSE_HEADER_FILE
 #    error
 #endif
 
 #include <catch2/catch_test_macros.hpp>
+#include <cmrc/cmrc.hpp>
 #include <filesystem>
 #include <libchess/util/Files.hpp>
 #include <string>
+#include <string_view>
 
 static constexpr auto TAGS { "[util][files]" };
 
-static constexpr auto CORRECT_FILE_CONTENT =
-    R"(======================================================================================
+CMRC_DECLARE(ben_bot_resources);
 
-░▒▓███████▓▒░░▒▓████████▓▒░▒▓███████▓▒░       ░▒▓███████▓▒░ ░▒▓██████▓▒░▒▓████████▓▒░
-░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
-░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
-░▒▓███████▓▒░░▒▓██████▓▒░ ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
-░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
-░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
-░▒▓███████▓▒░░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░ ░▒▓██████▓▒░  ░▒▓█▓▒░
-
-======================================================================================
-)";
+static const std::string_view CORRECT_FILE_CONTENT {
+    cmrc::ben_bot_resources::get_filesystem()
+        .open("license_header.txt")
+};
 
 static const std::filesystem::path LICENSE_HEADER_FILE { BENBOT_LICENSE_HEADER_FILE };
 

@@ -33,7 +33,9 @@ include (Catch)
 
 add_executable (libchess_tests)
 
-target_link_libraries (libchess_tests PRIVATE ben_bot::libchess Catch2::Catch2WithMain)
+target_link_libraries (
+    libchess_tests PRIVATE ben_bot::libchess Catch2::Catch2WithMain ben_bot::resources
+)
 
 target_compile_definitions (
     libchess_tests
