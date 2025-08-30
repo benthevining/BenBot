@@ -38,6 +38,8 @@ jobs:
     env:
       CMAKE_BUILD_PARALLEL_LEVEL: 8
       BUILD_DIR: Builds/clang
+      FASTCHESS_PATH: fastchess/fastchess-ubuntu-22.04
+      BASELINE_PATH: baseline/ben_bot-1.3.0-Linux-Clang
 
     steps:
     - name: Checkout code
@@ -64,11 +66,14 @@ jobs:
         zipBall: false
         out-file-path: baseline
 
+    - name: Add execution permissions
+      run: chmod --preserve-root 777 ${{ env.FASTCHESS_PATH }} ${{ env.BASELINE_PATH }}
+
     - name: Configure CMake
-      run: cmake --preset clang -D BENBOT_DOCS=OFF -D FASTCHESS_PROGRAM=fastchess/fastchess-ubuntu-22.04
+      run: cmake --preset clang -D BENBOT_DOCS=OFF -D FASTCHESS_PROGRAM=${{ env.FASTCHESS_PATH }}
 
     - name: Inject baseline binary
-      run: cmake -D BASELINE_BINARY=baseline/ben_bot-1.3.0-Linux-Clang -P ${{ env.BUILD_DIR }}/InjectSPRTBaseline-Release.cmake
+      run: cmake -D BASELINE_BINARY=${{ env.BASELINE_PATH }} -P ${{ env.BUILD_DIR }}/InjectSPRTBaseline-Release.cmake
 
     - name: Build
       run: cmake --build . --target ben_bot --config Release
