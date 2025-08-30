@@ -33,6 +33,21 @@ add_custom_target (
 
 add_dependencies (sprt_set_baseline ben_bot)
 
+if (DEFINED BENBOT_INTERNAL_SPRT_BASELINE_TO_USE)
+    if (NOT EXISTS "${BENBOT_INTERNAL_SPRT_BASELINE_TO_USE}")
+        message (
+            WARNING
+                "Injected baseline executable not found at path '${BENBOT_INTERNAL_SPRT_BASELINE_TO_USE}'!"
+        )
+    else ()
+        file (COPY_FILE "${BENBOT_INTERNAL_SPRT_BASELINE_TO_USE}"
+              "$<TARGET_FILE_DIR:ben_bot>/last-Release" ONLY_IF_DIFFERENT INPUT_MAY_BE_RECENT
+        )
+    endif ()
+endif ()
+
+#
+
 cmake_host_system_information (RESULT num_cores QUERY NUMBER_OF_PHYSICAL_CORES)
 
 set (openings_file "${BenBot_SOURCE_DIR}/ben-bot/resources/res/book.pgn")
