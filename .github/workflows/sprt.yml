@@ -57,5 +57,5 @@ jobs:
         extract: true
 
     - name: ls
-      working-directory: ${{ steps.download-fastchess.outputs.downloaded_files[0] }}
+      working-directory: fastchess
       run: ls
