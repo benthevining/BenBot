@@ -34,14 +34,15 @@ add_custom_target (
 add_dependencies (sprt_set_baseline ben_bot)
 
 if (DEFINED BENBOT_INTERNAL_SPRT_BASELINE_TO_USE)
-    if (NOT EXISTS "${BENBOT_INTERNAL_SPRT_BASELINE_TO_USE}")
+    if (EXISTS "${BENBOT_INTERNAL_SPRT_BASELINE_TO_USE}")
+        file (COPY_FILE "${BENBOT_INTERNAL_SPRT_BASELINE_TO_USE}"
+              # TODO: should be a generator expression, but need to do this at configure time?
+              "${CMAKE_CURRENT_BINARY_DIR}/Release" ONLY_IF_DIFFERENT INPUT_MAY_BE_RECENT
+        )
+    else ()
         message (
             WARNING
                 "Injected baseline executable not found at path '${BENBOT_INTERNAL_SPRT_BASELINE_TO_USE}'!"
-        )
-    else ()
-        file (COPY_FILE "${BENBOT_INTERNAL_SPRT_BASELINE_TO_USE}"
-              "$<TARGET_FILE_DIR:ben_bot>/last-Release" ONLY_IF_DIFFERENT INPUT_MAY_BE_RECENT
         )
     endif ()
 endif ()
