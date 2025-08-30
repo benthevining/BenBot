@@ -18,7 +18,7 @@
 #include <string>
 #include <string_view>
 
-CMRC_DECLARE(ben_bot_resources);
+CMRC_DECLARE(ben_bot_resources_internal);
 
 namespace ben_bot::resources {
 
@@ -27,7 +27,7 @@ using std::string_view;
 namespace {
     [[nodiscard]] string_view get_named_resource(const std::string& name)
     {
-        const auto file = cmrc::ben_bot_resources::get_filesystem()
+        const auto file = cmrc::ben_bot_resources_internal::get_filesystem()
                               .open(name);
 
         return string_view { file }; // NOLINT

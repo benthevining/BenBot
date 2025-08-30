@@ -18,13 +18,16 @@ FetchContent_MakeAvailable (cmrc)
 
 # cmake-format: off
 cmrc_add_resource_library (
-        ben_bot_resources
-        ALIAS ben_bot::resources
+        ben_bot_resources_internal
         license_header.txt
         book.pgn
         bench.epd
 )
 # cmake-format: on
+
+add_library (ben_bot_resources STATIC)
+
+target_link_libraries (ben_bot_resources PRIVATE ben_bot_resources_internal)
 
 # generate the config header that provides info such as compiler name, build config, etc.
 
@@ -47,3 +50,5 @@ target_sources (
 )
 
 target_include_directories (ben_bot_resources PRIVATE "${generated_includes}")
+
+add_library (ben_bot::resources ALIAS ben_bot_resources)
