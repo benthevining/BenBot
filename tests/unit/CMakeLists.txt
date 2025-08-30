@@ -40,7 +40,7 @@ target_link_libraries (
 target_compile_definitions (
     libchess_tests
     PRIVATE
-        "BENBOT_LICENSE_HEADER_FILE=\"${BenBot_SOURCE_DIR}/ben-bot/resources/license_header.txt\""
+        "BENBOT_LICENSE_HEADER_FILE=\"${BenBot_SOURCE_DIR}/ben-bot/resources/res/license_header.txt\""
 )
 
 file (GLOB_RECURSE sources LIST_DIRECTORIES false CONFIGURE_DEPENDS
