@@ -117,9 +117,17 @@
           "type": "STRING",
           "value": "g++-14"
         },
+        "CMAKE_CXX_FLAGS_DEBUG": {
+          "type": "STRING",
+          "value": "-g -fprofile-arcs -ftest-coverage"
+        },
         "CMAKE_C_COMPILER": {
           "type": "STRING",
           "value": "gcc-14"
+        },
+        "CMAKE_C_FLAGS_DEBUG": {
+          "type": "STRING",
+          "value": "-g -fprofile-arcs -ftest-coverage"
         }
       },
       "displayName": "Build with Ninja & GCC",

@@ -131,7 +131,7 @@ void write_en_passant_target_square(
 
     const auto [file, rank] = *targetSquare;
 
-    output.push_back(file_to_char(file, false));
+    output.push_back(file_to_char(file));
     output.push_back(rank_to_char(rank));
 }
 

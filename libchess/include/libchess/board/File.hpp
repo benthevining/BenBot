@@ -59,34 +59,30 @@ enum class File : BitboardIndex {
     @ingroup board
     @see File
  */
-[[nodiscard]] constexpr char file_to_char(File file, bool uppercase = false);
+[[nodiscard]] char file_to_char(File file);
 
 } // namespace chess::board
 
-namespace std {
-
 /** A formatter specialization for chessboard files.
-
-    The formatter accepts the following format specifier arguments:
-    @li ``u|U``: Tells the formatter to print the file as an uppercase letter
-    @li ``l|L``: Tells the formatter to print the file as a lowercase letter
-
-    If no arguments are specified, the formatter prints the rank as a lowercase letter by default.
+    The formatter accepts no arguments; files are always printed as lowercase letters.
 
     @see chess::board::File
     @ingroup board
  */
 template <>
-struct formatter<chess::board::File> final {
+struct std::formatter<chess::board::File> final {
     template <typename ParseContext>
-    constexpr typename ParseContext::iterator parse(ParseContext& ctx);
+    constexpr typename ParseContext::iterator parse(ParseContext& ctx)
+    {
+        return ctx.begin();
+    }
 
     template <typename FormatContext>
     typename FormatContext::iterator format(
-        chess::board::File file, FormatContext& ctx) const;
-
-private:
-    bool uppercase { false };
+        chess::board::File file, FormatContext& ctx) const
+    {
+        return std::format_to(ctx.out(), "{}", chess::board::file_to_char(file));
+    }
 };
 
 /*
@@ -105,49 +101,6 @@ private:
   `----'     `----'             `--`---'     ---`-'                     `--" `--" `--"
 
  */
-
-template <typename ParseContext>
-constexpr typename ParseContext::iterator
-formatter<chess::board::File>::parse(ParseContext& ctx)
-{
-    auto it = ctx.begin();
-
-    if (it == ctx.end() or *it == '}')
-        return it;
-
-    do {
-        switch (*it) {
-            case 'u': [[fallthrough]];
-            case 'U':
-                uppercase = true;
-                break;
-
-            case 'l': [[fallthrough]];
-            case 'L':
-                uppercase = false;
-                break;
-
-            default:
-                throw std::format_error { "Unrecognized format argument" };
-        }
-
-        ++it;
-    } while (not(it == ctx.end() or *it == '}'));
-
-    ctx.advance_to(it);
-
-    return it;
-}
-
-template <typename FormatContext>
-typename FormatContext::iterator
-formatter<chess::board::File>::format(
-    const chess::board::File file, FormatContext& ctx) const
-{
-    return std::format_to(ctx.out(), "{}", chess::board::file_to_char(file, uppercase));
-}
-
-} // namespace std
 
 namespace chess::board {
 
@@ -185,12 +138,9 @@ constexpr File file_from_char(char character)
     }
 }
 
-constexpr char file_to_char(const File file, const bool uppercase)
+inline char file_to_char(const File file)
 {
     const auto upperChar = magic_enum::enum_name(file).front();
-
-    if (uppercase)
-        return upperChar;
 
     return static_cast<char>(
         std::tolower(static_cast<unsigned char>(upperChar)));

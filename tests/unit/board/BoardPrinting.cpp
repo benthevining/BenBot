@@ -12,67 +12,27 @@
  * ======================================================================================
  */
 
-#include <BenBotConfig.hpp>
-#include <ben-bot/Data.hpp>
-#include <cmrc/cmrc.hpp>
-#include <string>
+#include <algorithm>
+#include <catch2/catch_test_macros.hpp>
+#include <libchess/board/Bitboard.hpp>
+#include <libchess/game/Position.hpp>
 #include <string_view>
 
-CMRC_DECLARE(ben_bot_resources);
-
-namespace ben_bot {
-
-namespace {
-    [[nodiscard]] string_view get_named_resource(const std::string& name)
-    {
-        const auto file = cmrc::ben_bot_resources::get_filesystem()
-                              .open(name);
-
-        return string_view { file }; // NOLINT
-    }
-} // namespace
-
-string_view get_opening_book_pgn_text()
+TEST_CASE("Board printing", "[board][printing]")
 {
-    return get_named_resource("book.pgn");
+    static constexpr chess::board::Bitboard bitboard;
+
+    static const chess::game::Position position;
+
+    const auto bbASCII  = print_ascii(bitboard);
+    const auto posASCII = print_ascii(position);
+    const auto posUTF8  = print_utf8(position);
+
+    // the number of pipe characters in each board string should be the same
+    auto count_pipe_chars = [](const std::string_view str) {
+        return std::ranges::count(str, '|');
+    };
+
+    REQUIRE(count_pipe_chars(bbASCII) == count_pipe_chars(posASCII));
+    REQUIRE(count_pipe_chars(posASCII) == count_pipe_chars(posUTF8));
 }
-
-string_view get_bench_epd_text()
-{
-    return get_named_resource("bench.epd");
-}
-
-string_view get_ascii_logo()
-{
-    return get_named_resource("license_header.txt");
-}
-
-// the below functions are implemented this way because
-// this is the only TU that includes BenBotConfig.hpp
-
-string_view get_version_string()
-{
-    return config::VERSION_STRING;
-}
-
-string_view get_compiler_name()
-{
-    return config::COMPILER_NAME;
-}
-
-string_view get_compiler_version()
-{
-    return config::COMPILER_VERSION;
-}
-
-string_view get_system_name()
-{
-    return config::SYSTEM_NAME;
-}
-
-string_view get_build_config()
-{
-    return config::BUILD_CONFIG;
-}
-
-} // namespace ben_bot
