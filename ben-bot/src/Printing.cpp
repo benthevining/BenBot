@@ -262,6 +262,9 @@ void Engine::print_compiler_info()
 
     println(
         "Build configuration: {}", resources::get_build_config());
+
+    println(
+        "Build date: {}", resources::get_build_time());
 }
 
 } // namespace ben_bot
