@@ -12,15 +12,18 @@
  * ======================================================================================
  */
 
-/** @defgroup benbot_data ben-bot data
-    Binary data embedded into the engine executable.
- */
-
 #pragma once
 
 #include <string_view>
 
-namespace ben_bot {
+/** @defgroup benbot_data ben-bot data
+    Binary data embedded into the engine executable.
+ */
+
+/** This namespace contains resource data embedded into the engine executable.
+    @ingroup benbot_data
+ */
+namespace ben_bot::resources {
 
 using std::string_view;
 
@@ -53,4 +56,4 @@ using std::string_view;
 
 /// @}
 
-} // namespace ben_bot
+} // namespace ben_bot::resources
