@@ -10,20 +10,16 @@
 #
 # ======================================================================================
 
-name: Docs
+name: SPRT
 
-run-name: Build docs
+run-name: Run SPRT test
 
 on:
   workflow_dispatch:
   push:
     branches: [main]
-  workflow_call:
-    inputs:
-      ref:
-        description: Git tag to checkout
-        type: string
-        required: true
+  pull_request:
+    types: [opened, reopened, synchronize]
 
 concurrency:
   group: ${{ github.workflow }}.${{ github.ref }}
@@ -38,58 +34,71 @@ permissions:
 
 jobs:
 
-  build:
+  sprt:
+    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
     runs-on: ubuntu-latest
-    name: Build docs
-    timeout-minutes: 10
+    name: Run SPRT test
+    timeout-minutes: 60
     env:
       CMAKE_BUILD_PARALLEL_LEVEL: 8
       BUILD_DIR: Builds/clang
-      DEPLOY_DIR: deploy
+      FASTCHESS_PATH: fastchess/fastchess-ubuntu-22.04
+      BASELINE_PATH: baseline/ben_bot-1.3.0-Linux-Clang
+      SPRT_OUTPUT_LOG: ${{ github.workspace }}/logs/sprt/output.log
 
     steps:
-    - name: Install dependencies
-      run: sudo apt install doxygen graphviz
-
     - name: Checkout code
       uses: actions/checkout@v5
+
+    - name: Download fastchess release
+      uses: robinraju/release-downloader@v1.12
       with:
-        ref: ${{ inputs.ref || github.ref }}
+        repository: Disservin/fastchess
+        latest: true
+        preRelease: true
+        fileName: '*-ubuntu-*'
+        tarBall: false
+        zipBall: false
+        out-file-path: fastchess
+        extract: true
+
+    - name: Download latest BenBot release
+      uses: robinraju/release-downloader@v1.12
+      with:
+        latest: true
+        fileName: '*-Linux-Clang'
+        tarBall: false
+        zipBall: false
+        out-file-path: baseline
+
+    - name: Add execution permissions
+      run: chmod --preserve-root 777 ${{ env.FASTCHESS_PATH }} ${{ env.BASELINE_PATH }}
 
     - name: Configure CMake
-      run: cmake --preset clang -D BENBOT_TESTS=OFF
+      run: cmake --preset clang -D BENBOT_DOCS=OFF -D FASTCHESS_PROGRAM=${{ env.FASTCHESS_PATH }}
 
-    - name: Build docs
-      run: cmake --build . --target ben_bot_docs
+    - name: Inject baseline binary
+      run: cmake -D BASELINE_BINARY=${{ env.BASELINE_PATH }} -P ${{ env.BUILD_DIR }}/InjectSPRTBaseline-Release.cmake
+
+    - name: Build
+      run: cmake --build . --target ben_bot --config Release
       working-directory: ${{ env.BUILD_DIR }}
 
-    - name: Report Doxygen warnings
-      if: always()
+    - name: Run SPRT test
       run: |
-        echo "# Doxygen warnings" >> $GITHUB_STEP_SUMMARY
-        cat logs/Doxygen.log >> $GITHUB_STEP_SUMMARY
+        mkdir -p ${{ github.workspace }}/logs/sprt
+        cmake --build . --target sprt --config Release | tee ${{ env.SPRT_OUTPUT_LOG }}
+      working-directory: ${{ env.BUILD_DIR }}
 
-    - name: Run CMake install
-      run: cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.DEPLOY_DIR }} --component ben_bot_docs
-
-    - name: Upload artifact
-      uses: actions/upload-pages-artifact@v4
+    - name: Upload logs
+      if: always()
+      uses: actions/upload-artifact@v4.6.2
       with:
-        name: BenBot-docs
-        path: ${{ env.DEPLOY_DIR }}/share/doc/html
+        name: sprt-logs
+        path: logs/sprt
+        if-no-files-found: error
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    permissions:
-      pages: write
-      id-token: write
-    steps:
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4
-      with:
-        artifact_name: BenBot-docs
+    - name: Report results
+      if: always()
+      run: python3 ReportSPRTResults.py ${{ env.SPRT_OUTPUT_LOG }} >> $GITHUB_STEP_SUMMARY
+      working-directory: .github/scripts

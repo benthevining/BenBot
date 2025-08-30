@@ -10,21 +10,14 @@
 #
 # ======================================================================================
 
-#[[
-On the Windows CI runner, if we just call python3 from the command line, it uses
-a different version than CMake will find. I addressed this issue by also using the
-CMake find module for locating the python executable used to install dependencies.
-]]
-
 cmake_minimum_required (VERSION 3.30.0 FATAL_ERROR)
 
-find_package (Python 3.10 COMPONENTS Interpreter REQUIRED)
+if (NOT DEFINED BASELINE_BINARY)
+    message (FATAL_ERROR "BASELINE_BINARY must be defined!")
+endif ()
 
-# cmake-format: off
-execute_process (
-    COMMAND "${Python_EXECUTABLE}" -m pip install --break-system-packages --upgrade python-chess
-    COMMAND_ECHO STDOUT
-    OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_STRIP_TRAILING_WHITESPACE
-    COMMAND_ERROR_IS_FATAL ANY
-)
-# cmake-format: on
+if (NOT EXISTS "${BASELINE_BINARY}")
+    message (FATAL_ERROR "BASELINE_BINARY does not exist at path '${BASELINE_BINARY}'!")
+endif ()
+
+file (COPY_FILE "${BASELINE_BINARY}" "@baseline_binary@" ONLY_IF_DIFFERENT INPUT_MAY_BE_RECENT)
