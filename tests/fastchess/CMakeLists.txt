@@ -33,8 +33,16 @@ add_custom_target (
 
 add_dependencies (sprt_set_baseline ben_bot)
 
+# used by the sprt ci workflow to inject the binary from the latest release as the baseline
+set (injection_script "${CMAKE_CURRENT_LIST_DIR}/InjectSPRTBaseline.cmake")
+
+file (READ "${injection_script}" script_content)
+list (APPEND CMAKE_CONFIGURE_DEPENDS "${injection_script}")
+
+string (CONFIGURE "${script_content}" script_content @ONLY)
+
 file (GENERATE OUTPUT "${BenBot_BINARY_DIR}/InjectSPRTBaseline-$<CONFIG>.cmake"
-      INPUT InjectSPRTBaseline.cmake TARGET ben_bot NEWLINE_STYLE UNIX
+      CONTENT "${script_content}" TARGET ben_bot NEWLINE_STYLE UNIX
 )
 
 #

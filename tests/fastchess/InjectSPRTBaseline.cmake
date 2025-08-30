@@ -20,6 +20,4 @@ if (NOT EXISTS "${BASELINE_BINARY}")
     message (FATAL_ERROR "BASELINE_BINARY does not exist at path '${BASELINE_BINARY}'!")
 endif ()
 
-file (COPY_FILE "${BASELINE_BINARY}" "$<TARGET_FILE_DIR:ben_bot>/last-$<CONFIG>" ONLY_IF_DIFFERENT
-      INPUT_MAY_BE_RECENT
-)
+file (COPY_FILE "${BASELINE_BINARY}" "@baseline_binary@" ONLY_IF_DIFFERENT INPUT_MAY_BE_RECENT)

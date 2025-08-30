@@ -151,10 +151,10 @@ def get_draws_emoji(draws, losses, wins):
     return get_emoji(EmojiType.NEUTRAL)
 
 def get_pcnt_emoji(pcnt):
-    if pcnt in range(0, 65):
+    if pcnt in range(0, 45):
         return get_emoji(EmojiType.NEGATIVE)
 
-    if pcnt in range(65, 85):
+    if pcnt in range(45, 55):
         return get_emoji(EmojiType.NEUTRAL)
 
     return get_emoji(EmojiType.POSITIVE)

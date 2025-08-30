@@ -81,7 +81,9 @@ jobs:
       working-directory: ${{ env.BUILD_DIR }}
 
     - name: Run SPRT test
-      run: cmake --build . --target sprt --config Release | tee ${{ env.SPRT_OUTPUT_LOG }}
+      run: |
+        mkdir ${{ github.workspace }}/logs/sprt
+        cmake --build . --target sprt --config Release | tee ${{ env.SPRT_OUTPUT_LOG }}
       working-directory: ${{ env.BUILD_DIR }}
 
     - name: Upload logs
@@ -89,7 +91,7 @@ jobs:
       uses: actions/upload-artifact@v4.6.2
       with:
         name: sprt-logs
-        path: logs/sprt/*
+        path: logs/sprt
         if-no-files-found: error
 
     - name: Report results
