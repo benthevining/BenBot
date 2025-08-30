@@ -10,52 +10,16 @@
 #
 # ======================================================================================
 
-find_program (FASTCHESS_PROGRAM NAMES fastchess fast-chess DOC "fastchess CLI executable")
+cmake_minimum_required (VERSION 3.30.0 FATAL_ERROR)
 
-if (NOT FASTCHESS_PROGRAM)
-    message (VERBOSE "fastchess not found, not creating SPRT targets")
-    return ()
+if (NOT DEFINED BASELINE_BINARY)
+    message (FATAL_ERROR "BASELINE_BINARY must be defined!")
 endif ()
 
-add_test (NAME ben_bot.uci_compliance COMMAND "${FASTCHESS_PROGRAM}" --compliance
-                                              $<TARGET_FILE:ben_bot>
+if (NOT EXISTS "${BASELINE_BINARY}")
+    message (FATAL_ERROR "BASELINE_BINARY does not exist at path '${BASELINE_BINARY}'!")
+endif ()
+
+file (COPY_FILE "${BASELINE_BINARY}" "$<TARGET_FILE_DIR:ben_bot>/last-$<CONFIG>" ONLY_IF_DIFFERENT
+      INPUT_MAY_BE_RECENT
 )
-
-#
-
-set (baseline_binary "$<TARGET_FILE_DIR:ben_bot>/last-$<CONFIG>")
-
-add_custom_target (
-    sprt_set_baseline COMMAND "${CMAKE_COMMAND}" -E copy "$<TARGET_FILE:ben_bot>"
-                              "${baseline_binary}"
-    COMMENT "Saving baseline binary for SPRT testing..." VERBATIM USES_TERMINAL
-)
-
-add_dependencies (sprt_set_baseline ben_bot)
-
-file (GENERATE OUTPUT "${BenBot_BINARY_DIR}/InjectSPRTBaseline-$<CONFIG>.cmake"
-      INPUT InjectSPRTBaseline.cmake TARGET ben_bot NEWLINE_STYLE UNIX
-)
-
-#
-
-cmake_host_system_information (RESULT num_cores QUERY NUMBER_OF_PHYSICAL_CORES)
-
-set (openings_file "${BenBot_SOURCE_DIR}/ben-bot/resources/res/book.pgn")
-
-# cmake-format: off
-add_custom_target (
-    sprt
-    COMMAND "${FASTCHESS_PROGRAM}"
-        -engine "cmd=$<TARGET_FILE:ben_bot>" name=Refactor
-        -engine "cmd=${baseline_binary}" name=Baseline
-        -each tc=8+0.08 -rounds 50 -repeat -concurrency "${num_cores}" -recover
-        -openings "file=${openings_file}" format=pgn
-        -sprt elo0=0 elo1=10 alpha=0.05 beta=0.05
-    WORKING_DIRECTORY "$<TARGET_FILE_DIR:ben_bot>"
-    COMMENT "Running SPRT test..."
-    VERBATIM USES_TERMINAL
-)
-# cmake-format: on
-
-add_dependencies (sprt ben_bot)
