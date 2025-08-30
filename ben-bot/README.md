@@ -26,5 +26,4 @@ The engine supports several non-standard UCI commands. Type `help` for a list of
 . venv/bin/activate
 python3 lichess-bot.py
 ```
-
 This will start the bot and wait for challenges via Lichess.

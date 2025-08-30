@@ -10,86 +10,52 @@
 #
 # ======================================================================================
 
-name: Docs
+name: SPRT
 
-run-name: Build docs
+run-name: Run SPRT test
 
 on:
   workflow_dispatch:
   push:
     branches: [main]
-  workflow_call:
-    inputs:
-      ref:
-        description: Git tag to checkout
-        type: string
-        required: true
+  pull_request:
+    types: [opened, reopened, synchronize]
 
 concurrency:
   group: ${{ github.workflow }}.${{ github.ref }}
   cancel-in-progress: true
-
-defaults:
-  run:
-    shell: bash
 
 permissions:
   contents: read
 
 jobs:
 
-  build:
+  sprt:
+    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
     runs-on: ubuntu-latest
-    name: Build docs
-    timeout-minutes: 10
+    name: Run SPRT test
+    timeout-minutes: 60
     env:
       CMAKE_BUILD_PARALLEL_LEVEL: 8
       BUILD_DIR: Builds/clang
-      DEPLOY_DIR: deploy
 
     steps:
-    - name: Install dependencies
-      run: sudo apt install doxygen graphviz
-
     - name: Checkout code
       uses: actions/checkout@v5
+
+    - name: Download fastchess release
+      uses: robinraju/release-downloader@v1.12
+      id: download-fastchess
       with:
-        ref: ${{ inputs.ref || github.ref }}
+        repository: Disservin/fastchess
+        latest: true
+        preRelease: true
+        fileName: '*-ubuntu-*'
+        tarBall: false
+        zipBall: false
+        out-file-path: fastchess
+        extract: true
 
-    - name: Configure CMake
-      run: cmake --preset clang -D BENBOT_TESTS=OFF
-
-    - name: Build docs
-      run: cmake --build . --target ben_bot_docs
-      working-directory: ${{ env.BUILD_DIR }}
-
-    - name: Report Doxygen warnings
-      if: always()
-      run: |
-        echo "# Doxygen warnings" >> $GITHUB_STEP_SUMMARY
-        cat logs/Doxygen.log >> $GITHUB_STEP_SUMMARY
-
-    - name: Run CMake install
-      run: cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.DEPLOY_DIR }} --component ben_bot_docs
-
-    - name: Upload artifact
-      uses: actions/upload-pages-artifact@v4
-      with:
-        name: BenBot-docs
-        path: ${{ env.DEPLOY_DIR }}/share/doc/html
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    permissions:
-      pages: write
-      id-token: write
-    steps:
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4
-      with:
-        artifact_name: BenBot-docs
+    - name: ls
+      working-directory: ${{ steps.download-fastchess.outputs.downloaded_files[0] }}
+      run: ls
