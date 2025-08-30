@@ -82,7 +82,7 @@ jobs:
 
     - name: Run SPRT test
       run: |
-        mkdir ${{ github.workspace }}/logs/sprt
+        mkdir -p ${{ github.workspace }}/logs/sprt
         cmake --build . --target sprt --config Release | tee ${{ env.SPRT_OUTPUT_LOG }}
       working-directory: ${{ env.BUILD_DIR }}
 
