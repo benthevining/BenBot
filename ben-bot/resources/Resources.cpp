@@ -13,14 +13,16 @@
  */
 
 #include <BenBotConfig.hpp>
-#include <ben-bot/Data.hpp>
+#include <ben-bot/Resources.hpp>
 #include <cmrc/cmrc.hpp>
 #include <string>
 #include <string_view>
 
 CMRC_DECLARE(ben_bot_resources);
 
-namespace ben_bot {
+namespace ben_bot::resources {
+
+using std::string_view;
 
 namespace {
     [[nodiscard]] string_view get_named_resource(const std::string& name)
@@ -75,4 +77,4 @@ string_view get_build_config()
     return config::BUILD_CONFIG;
 }
 
-} // namespace ben_bot
+} // namespace ben_bot::resources

@@ -12,8 +12,8 @@
  * ======================================================================================
  */
 
-#include <ben-bot/Data.hpp>
 #include <ben-bot/Engine.hpp>
+#include <ben-bot/Resources.hpp>
 #include <ben-bot/TextTable.hpp>
 #include <cassert>
 #include <cmath>
@@ -149,11 +149,11 @@ void Engine::print_book_hit() const
 
 void Engine::print_logo_and_version() const
 {
-    println("{}", get_ascii_logo());
+    println("{}", resources::get_ascii_logo());
 
     println(
         "{}, version {}, by {}",
-        get_name(), get_version_string(), get_author());
+        get_name(), resources::get_version_string(), get_author());
 }
 
 void Engine::print_help(const string_view args) const
@@ -256,10 +256,12 @@ void Engine::print_compiler_info()
 {
     println(
         "Compiled by {} version {} for {}",
-        get_compiler_name(), get_compiler_version(), get_system_name());
+        resources::get_compiler_name(),
+        resources::get_compiler_version(),
+        resources::get_system_name());
 
     println(
-        "Build configuration: {}", get_build_config());
+        "Build configuration: {}", resources::get_build_config());
 }
 
 } // namespace ben_bot

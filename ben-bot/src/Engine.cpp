@@ -13,8 +13,8 @@
  */
 
 #include <algorithm>
-#include <ben-bot/Data.hpp>
 #include <ben-bot/Engine.hpp>
+#include <ben-bot/Resources.hpp>
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <exception>
@@ -40,7 +40,7 @@ void Engine::new_game(const bool firstCall)
 
     if (firstCall) {
         searcher.context.openingBook.book.add_from_pgn(
-            get_opening_book_pgn_text());
+            resources::get_opening_book_pgn_text());
     }
 }
 

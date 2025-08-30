@@ -13,8 +13,8 @@
  */
 
 #include <algorithm>
-#include <ben-bot/Data.hpp>
 #include <ben-bot/Engine.hpp>
+#include <ben-bot/Resources.hpp>
 #include <cassert>
 #include <chrono>
 #include <cmath>
@@ -155,7 +155,7 @@ void Engine::run_bench(const string_view arguments)
     const auto defaultDepth = util::int_from_string(depth, 3uz);
 
     if (filePath.empty()) {
-        do_bench(get_bench_epd_text(), defaultDepth);
+        do_bench(resources::get_bench_epd_text(), defaultDepth);
     } else {
         do_bench(
             util::load_file_as_string(path { filePath }),

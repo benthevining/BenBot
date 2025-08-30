@@ -18,8 +18,8 @@
 #    error
 #endif
 
+#include <ben-bot/Resources.hpp>
 #include <catch2/catch_test_macros.hpp>
-#include <cmrc/cmrc.hpp>
 #include <filesystem>
 #include <libchess/util/Files.hpp>
 #include <string>
@@ -27,12 +27,7 @@
 
 static constexpr auto TAGS { "[util][files]" };
 
-CMRC_DECLARE(ben_bot_resources);
-
-static const std::string_view CORRECT_FILE_CONTENT {
-    cmrc::ben_bot_resources::get_filesystem()
-        .open("license_header.txt")
-};
+static const std::string_view CORRECT_FILE_CONTENT = ben_bot::resources::get_ascii_logo();
 
 static const std::filesystem::path LICENSE_HEADER_FILE { BENBOT_LICENSE_HEADER_FILE };
 

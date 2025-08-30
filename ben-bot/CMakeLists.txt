@@ -16,19 +16,6 @@ add_executable (ben_bot)
 
 target_link_libraries (ben_bot PRIVATE ben_bot::libbenbot ben_bot::resources)
 
-set (config_header "${CMAKE_CURRENT_LIST_DIR}/BenBotConfig.hpp")
-
-file (READ "${config_header}" config_header_content)
-list (APPEND CMAKE_CONFIGURE_DEPENDS "${config_header}")
-
-set (generated_includes "${CMAKE_CURRENT_BINARY_DIR}/generated/include/$<CONFIG>")
-set (generated_header "${generated_includes}/BenBotConfig.hpp")
-
-# we need to do string(CONFIGURE) and then file(GENERATE) because we want to expand both variable
-# references and generator expressions
-string (CONFIGURE "${config_header_content}" config_header_content @ONLY)
-file (GENERATE OUTPUT "${generated_header}" CONTENT "${config_header_content}")
-
 file (GLOB_RECURSE benbot_headers LIST_DIRECTORIES false CONFIGURE_DEPENDS
                                                          "${CMAKE_CURRENT_LIST_DIR}/include/*.hpp"
 )
@@ -43,8 +30,6 @@ target_sources (
 )
 
 source_group (TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${benbot_headers} ${benbot_sources})
-
-target_include_directories (ben_bot PRIVATE "${generated_includes}")
 
 # this is to differentiate artifacts from different builds
 set_target_properties (
