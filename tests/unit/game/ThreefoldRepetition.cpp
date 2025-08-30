@@ -56,6 +56,22 @@ TEST_CASE("Position - threefold repetitions", TAGS)
     REQUIRE(pos.is_threefold_repetition());
 }
 
+TEST_CASE("Threefold repetition from differing moves", TAGS)
+{
+    chess::game::Position pos {};
+
+    pos.make_move(from_alg(pos, "Nf3"));
+    pos.make_move(from_alg(pos, "Nf6"));
+    pos.make_move(from_alg(pos, "Ng1"));
+    pos.make_move(from_alg(pos, "Ng8"));
+    pos.make_move(from_alg(pos, "Nc3"));
+    pos.make_move(from_alg(pos, "Nc6"));
+    pos.make_move(from_alg(pos, "Nb1"));
+    pos.make_move(from_alg(pos, "Nb8"));
+
+    REQUIRE(pos.is_threefold_repetition());
+}
+
 TEST_CASE("Position - threefold reps - not threefold if EP possible in starting position", TAGS)
 {
     auto pos = chess::notation::from_fen(
