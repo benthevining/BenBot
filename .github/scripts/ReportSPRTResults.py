@@ -25,9 +25,9 @@ with open(LOG_FILE, 'r') as file:
 def find_last_two_fences():
     indices = []
 
-    for i in range(len(SPRT_OUTPUT) - 1, -1, -1):
-        if re.search(r"(-)+", SPRT_OUTPUT[i]):
-            indices.append(i)
+    for i, line in enumerate(reversed(SPRT_OUTPUT)):
+        if re.search(r"(--)+", line):
+            indices.append(len(SPRT_OUTPUT) - i)
             if len(indices) == 2:
                 break
 
@@ -36,17 +36,17 @@ def find_last_two_fences():
 def get_final_results_report():
     start, end = find_last_two_fences()
 
-    return SPRT_OUTPUT[start+1:end]
+    return SPRT_OUTPUT[start + 1 : end]
 
-def replace_pairs(old_values, new_values, string):
-    for old, new in zip(old_values, new_values):
-        string.replace(old, new)
-
-    return string
+RESULTS = get_final_results_report()
 
 # returns the first string that matches the given regex
 def find_first_match(regex, strings):
-    return next(str for str in strings if re.search(regex, str))
+    for str in strings:
+        if re.search(regex, str):
+            return str
+
+    return ''
 
 class EmojiType(Enum):
     NEUTRAL = 1,
@@ -58,8 +58,6 @@ def get_emoji(type):
         case EmojiType.NEUTRAL: return '🟰'
         case EmojiType.POSITIVE: return '✅'
         case EmojiType.NEGATIVE: return '❌'
-
-RESULTS = get_final_results_report()
 
 def get_elo():
     elo_line = find_first_match('Elo:', RESULTS)
@@ -160,6 +158,14 @@ def get_pcnt_emoji(pcnt):
     return get_emoji(EmojiType.POSITIVE)
 
 #
+
+def replace_pairs(old_values, new_values, string):
+    text = string
+
+    for old, new in zip(old_values, new_values):
+        text = text.replace(old, new)
+
+    return text
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 
