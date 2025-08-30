@@ -21,8 +21,8 @@
 
 #include <algorithm>
 #include <beman/inplace_vector/inplace_vector.hpp>
-#include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdint> // IWYU pragma: keep - for std::uint64_t
+#include <utility>
 
 namespace chess::game {
 
@@ -44,7 +44,7 @@ struct ThreefoldChecker final {
 private:
     // stores a history of hash values
     // the most recent value is at front() and the oldest is at back()
-    beman::inplace_vector<HashValue, 9uz> history;
+    beman::inplace_vector<HashValue, 50uz> history;
 };
 
 /*
@@ -88,34 +88,10 @@ constexpr void ThreefoldChecker::push(const HashValue newHash)
 
 constexpr bool ThreefoldChecker::is_threefold() const noexcept
 {
-    if (history.size() < history.capacity())
-        return false;
-
-    // "A" and "B" hashes represent the moves that each player is toggling between
-    // when the history does contain a repetition, it looks like this:
-    //
-    // index | value
-    // 0     | ourHashA   <-- this position seen for time #3
-    // 1     | theirHashA
-    // 2     | ourHashB
-    // 3     | theirHashB
-    // 4     | ourHashA   <-- this position seen for time #2
-    // 5     | theirHashA
-    // 6     | ourHashB
-    // 7     | theirHashB
-    // 8     | ourHashA   <-- this position seen for time #1
-
-    static constexpr auto REP_INC { 4uz };
-
-    for (auto idx = 0uz; idx < REP_INC; ++idx) {
-        const auto value = history[idx];
-
-        for (auto repIdx = idx + REP_INC; repIdx < history.capacity(); repIdx += REP_INC)
-            if (history[repIdx] != value)
-                return false;
-    }
-
-    return true;
+    // NB. the threefold repetition doesn't need to be consecutive within the history
+    return std::cmp_greater_equal(
+        std::ranges::count(history, history.front()),
+        3uz);
 }
 
 } // namespace chess::game
