@@ -15,6 +15,7 @@
 #include <BenBotConfig.hpp>
 #include <ben-bot/Resources.hpp>
 #include <cmrc/cmrc.hpp>
+#include <format>
 #include <string>
 #include <string_view>
 
@@ -25,10 +26,12 @@ namespace ben_bot::resources {
 using std::string_view;
 
 namespace {
-    [[nodiscard]] string_view get_named_resource(const std::string& name)
+    [[nodiscard]] string_view get_named_resource(const string_view name)
     {
+        const auto relPath = std::format("res/{}", name);
+
         const auto file = cmrc::ben_bot_resources_internal::get_filesystem()
-                              .open(name);
+                              .open(relPath);
 
         return string_view { file }; // NOLINT
     }

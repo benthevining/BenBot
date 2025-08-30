@@ -19,9 +19,9 @@ FetchContent_MakeAvailable (cmrc)
 # cmake-format: off
 cmrc_add_resource_library (
         ben_bot_resources_internal
-        license_header.txt
-        book.pgn
-        bench.epd
+        res/license_header.txt
+        res/book.pgn
+        res/bench.epd
 )
 # cmake-format: on
 
@@ -31,7 +31,7 @@ target_link_libraries (ben_bot_resources PRIVATE ben_bot_resources_internal)
 
 # generate the config header that provides info such as compiler name, build config, etc.
 
-set (config_header "${CMAKE_CURRENT_LIST_DIR}/BenBotConfig.hpp")
+set (config_header "${CMAKE_CURRENT_LIST_DIR}/src/BenBotConfig.hpp")
 
 file (READ "${config_header}" config_header_content)
 list (APPEND CMAKE_CONFIGURE_DEPENDS "${config_header}")
@@ -46,7 +46,7 @@ file (GENERATE OUTPUT "${generated_header}" CONTENT "${config_header_content}")
 
 target_sources (
     ben_bot_resources PUBLIC FILE_SET HEADERS BASE_DIRS include FILES include/ben-bot/Resources.hpp
-    PRIVATE Resources.cpp "${generated_header}"
+    PRIVATE src/Resources.cpp "${generated_header}"
 )
 
 target_include_directories (ben_bot_resources PRIVATE "${generated_includes}")
