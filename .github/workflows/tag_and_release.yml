@@ -151,13 +151,6 @@ jobs:
       RELEASE_NOTES_FILE: release-notes.md
 
     steps:
-    - name: Download artifacts
-      id: download
-      uses: actions/download-artifact@v5
-      with:
-        merge-multiple: false
-        path: artifacts
-
     - name: Checkout code
       uses: actions/checkout@v5
       with:
@@ -165,6 +158,13 @@ jobs:
 
     - name: Write release notes
       run: python3 .github/scripts/WriteReleaseNotes.py CHANGELOG.md ${{ env.RELEASE_NOTES_FILE }}
+
+    - name: Download artifacts
+      id: download
+      uses: actions/download-artifact@v5
+      with:
+        merge-multiple: true
+        path: artifacts
 
     - name: Create release
       uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # pin v2
