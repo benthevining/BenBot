@@ -430,3 +430,8 @@
 ### Bug Fixes
 
 * release action ([8b366f4](https://github.com/benthevining/BenBot/commit/8b366f4e280313e03e8d87a48995b3a212486db6))
+## [1.4.2](https://github.com/benthevining/BenBot/compare/v1.4.1...v1.4.2) (2025-09-02)
+
+### Bug Fixes
+
+* release action ([4482301](https://github.com/benthevining/BenBot/commit/44823013859261cc264a5a052da5d1ec56f351fa))
