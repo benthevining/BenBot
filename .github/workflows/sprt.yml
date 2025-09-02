@@ -71,6 +71,7 @@ jobs:
         echo "fastchess=$result" >> "$GITHUB_OUTPUT"
 
     - name: Download latest BenBot release
+      id: download_benbot
       uses: robinraju/release-downloader@v1.12
       with:
         latest: true
@@ -82,7 +83,7 @@ jobs:
     - name: Print BenBot filename
       id: benbot_filename
       run: |
-        path=${{ fromJson(steps.download_fastchess.outputs.downloaded_files)[0] }}
+        path=${{ fromJson(steps.download_benbot.outputs.downloaded_files)[0] }}
         echo "benbot=$path" >> "$GITHUB_OUTPUT"
 
     - name: Add execution permissions
