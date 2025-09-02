@@ -155,7 +155,7 @@ jobs:
       id: download
       uses: actions/download-artifact@v5
       with:
-        merge-multiple: true
+        merge-multiple: false
         path: artifacts
 
     - name: Checkout code
