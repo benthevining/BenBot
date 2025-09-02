@@ -66,8 +66,8 @@ jobs:
       run: |
         zip_path=${{ fromJson(steps.download_fastchess.outputs.downloaded_files)[0] }}
         filename=$(basename "$zip_path")
-        dirpath=$(dirname "$$zip_path")
-        result=$dirpath/$filename
+        dirpath=$(dirname "$zip_path")
+        result="$dirpath/$filename"
         echo "fastchess=$result" >> "$GITHUB_OUTPUT"
 
     - name: Download latest BenBot release
