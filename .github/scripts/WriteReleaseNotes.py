@@ -23,7 +23,7 @@ with open(CHANGELOG, 'r') as file:
 def find_last_version_heading():
     for idx, line in enumerate(reversed(changelog_content)):
         if re.match('^(##)+', line):
-            return len(changelog_content) - idx
+            return len(changelog_content) - idx - 1
 
     raise ValueError('Version heading (##) not found in changelog text')
 
