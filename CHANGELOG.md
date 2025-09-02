@@ -435,3 +435,8 @@
 ### Bug Fixes
 
 * release action ([4482301](https://github.com/benthevining/BenBot/commit/44823013859261cc264a5a052da5d1ec56f351fa))
+## [1.4.3](https://github.com/benthevining/BenBot/compare/v1.4.2...v1.4.3) (2025-09-02)
+
+### Bug Fixes
+
+* release notes parsing script ([#263](https://github.com/benthevining/BenBot/issues/263)) ([fd31a34](https://github.com/benthevining/BenBot/commit/fd31a3465c2e8f1e738517dd5c9b138c511e532c))
