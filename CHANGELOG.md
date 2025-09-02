@@ -440,3 +440,4 @@
 ### Bug Fixes
 
 * release notes parsing script ([#263](https://github.com/benthevining/BenBot/issues/263)) ([fd31a34](https://github.com/benthevining/BenBot/commit/fd31a3465c2e8f1e738517dd5c9b138c511e532c))
+## [1.4.4](https://github.com/benthevining/BenBot/compare/v1.4.3...v1.4.4) (2025-09-02)
