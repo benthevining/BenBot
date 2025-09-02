@@ -166,6 +166,12 @@ jobs:
         merge-multiple: true
         path: artifacts
 
+      # by default the upload-pages-artifact action used by the
+      # docs workflow will create a file named 'artifact.tar'
+    - name: Rename docs artifact
+      run: |
+        mv ${{ steps.download.outputs.download-path }}/artifact.tar ${{ steps.download.outputs.download-path }}/docs.tar
+
     - name: Create release
       uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # pin v2
       with:
