@@ -66,8 +66,8 @@ jobs:
     - name: Report Doxygen warnings
       if: always()
       run: |
-        echo "# Doxygen warnings" >> $GITHUB_STEP_SUMMARY
-        cat logs/Doxygen.log >> $GITHUB_STEP_SUMMARY
+        cmake -E echo "# Doxygen warnings" >> $GITHUB_STEP_SUMMARY
+        cmake -E cat logs/Doxygen.log >> $GITHUB_STEP_SUMMARY
 
     - name: Run CMake install
       run: cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.DEPLOY_DIR }} --component ben_bot_docs

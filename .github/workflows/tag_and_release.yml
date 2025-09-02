@@ -170,7 +170,7 @@ jobs:
       # docs workflow will create a file named 'artifact.tar'
     - name: Rename docs artifact
       run: |
-        mv ${{ steps.download.outputs.download-path }}/artifact.tar ${{ steps.download.outputs.download-path }}/docs.tar
+        cmake -E rename ${{ steps.download.outputs.download-path }}/artifact.tar ${{ steps.download.outputs.download-path }}/docs.tar
 
     - name: Create release
       uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # pin v2
