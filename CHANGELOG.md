@@ -425,3 +425,8 @@
 * test failure ([a8a8e95](https://github.com/benthevining/BenBot/commit/a8a8e95eb6faf61798a11b42a405627d5ac4ef05))
 * threefold checker ([1058ec3](https://github.com/benthevining/BenBot/commit/1058ec361dead54c7906424ba4fee3a4ec36712c))
 * threefold checker ([b837735](https://github.com/benthevining/BenBot/commit/b837735debbb098265d6a6002e8cbb11695dd939))
+## [1.4.1](https://github.com/benthevining/BenBot/compare/v1.4.0...v1.4.1) (2025-09-02)
+
+### Bug Fixes
+
+* release action ([8b366f4](https://github.com/benthevining/BenBot/commit/8b366f4e280313e03e8d87a48995b3a212486db6))
