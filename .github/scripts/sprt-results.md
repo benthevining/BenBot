@@ -1,21 +1,11 @@
 # SPRT results
 
-| ELO   |             |
-| :---: | :---------: |
-| %ELO% | %ELO_EMOJI% |
+**Elo:** %ELO% %ELO_EMOJI%
 
-| Wins   |              |
-| :----: | :----------: |
-| %WINS% | %WINS_EMOJI% |
+**Wins:** %WINS%
 
-| Losses   |                |
-| :------: | :------------: |
-| %LOSSES% | %LOSSES_EMOJI% |
+**Losses:** %LOSSES%
 
-| Draws.  |               |
-| :-----: | :-----------: |
-| %DRAWS% | %DRAWS_EMOJI% |
+**Draws:** %DRAWS%
 
-| Percent |              |
-| :-----: | :----------: |
-| %PCNT%  | %PCNT_EMOJI% |
+**Score:** %PCNT% %PCNT_EMOJI%
