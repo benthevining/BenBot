@@ -121,33 +121,6 @@ def get_result_breakdown():
         num_wins, num_losses, num_draws, pcnt
     )
 
-def get_wins_emoji(wins):
-    if wins in range(45, 55):
-        return get_emoji(EmojiType.NEUTRAL)
-
-    if wins > 50:
-        return get_emoji(EmojiType.POSITIVE)
-
-    return get_emoji(EmojiType.NEGATIVE)
-
-def get_losses_emoji(losses):
-    if losses in range(45, 55):
-        return get_emoji(EmojiType.NEUTRAL)
-
-    if losses > 50:
-        return get_emoji(EmojiType.NEGATIVE)
-
-    return get_emoji(EmojiType.POSITIVE)
-
-def get_draws_emoji(draws, losses, wins):
-    if draws < losses:
-        return get_emoji(EmojiType.NEGATIVE)
-
-    if draws > wins:
-        return get_emoji(EmojiType.POSITIVE)
-
-    return get_emoji(EmojiType.NEUTRAL)
-
 def get_pcnt_emoji(pcnt):
     if pcnt in range(0, 45):
         return get_emoji(EmojiType.NEGATIVE)
@@ -179,14 +152,10 @@ num_wins, num_losses, num_draws, pcnt = get_result_breakdown()
 print(
     replace_pairs(
         ['%ELO%', '%ELO_EMOJI%',
-         '%WINS%', '%WINS_EMOJI%',
-         '%LOSSES%', '%LOSSES_EMOJI%',
-         '%DRAWS%', '%DRAWS_EMOJI%',
+         '%WINS%', '%LOSSES%', '%DRAWS%',
          '%PCNT%', '%PCNT_EMOJI%'],
         [f'{elo}', get_elo_emoji(elo),
-         f'{num_wins}', get_wins_emoji(num_wins),
-         f'{num_losses}', get_losses_emoji(num_losses),
-         f'{num_draws}', get_draws_emoji(num_draws, num_losses, num_wins),
+         f'{num_wins}', f'{num_losses}', f'{num_draws}',
          f'{pcnt}%', get_pcnt_emoji(pcnt)],
         MD_TEMPLATE_TEXT
     )

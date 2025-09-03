@@ -410,3 +410,34 @@
 ## [1.2.16](https://github.com/benthevining/BenBot/compare/v1.2.15...v1.2.16) (2025-08-17)
 ## [1.2.17](https://github.com/benthevining/BenBot/compare/v1.2.16...v1.2.17) (2025-08-19)
 ## [1.3.0](https://github.com/benthevining/BenBot/compare/v1.2.17...v1.3.0) (2025-08-19)
+## [1.4.0](https://github.com/benthevining/BenBot/compare/v1.3.0...v1.4.0) (2025-09-02)
+
+### Features
+
+* devcontainer config ([7682a32](https://github.com/benthevining/BenBot/commit/7682a32a7ad2d142181fe231259a8840fa1b1748))
+* releases now include changelog notes in release body text ([#263](https://github.com/benthevining/BenBot/issues/263)) ([24a270c](https://github.com/benthevining/BenBot/commit/24a270c02b3881d6560163ad6a273aee536b6d0a))
+
+### Bug Fixes
+
+* constexpr error ([d759449](https://github.com/benthevining/BenBot/commit/d759449f1f9dd89b9b4c425d3d848d7e36fb32a4))
+* removed failing precommit hook ([4467e52](https://github.com/benthevining/BenBot/commit/4467e52da26d2fa6005274a35ac907f33d2f9388))
+* sprt workflow ([52626ea](https://github.com/benthevining/BenBot/commit/52626ea6db19186a9b8e4c6adcc7c6e747da6c0a))
+* test failure ([a8a8e95](https://github.com/benthevining/BenBot/commit/a8a8e95eb6faf61798a11b42a405627d5ac4ef05))
+* threefold checker ([1058ec3](https://github.com/benthevining/BenBot/commit/1058ec361dead54c7906424ba4fee3a4ec36712c))
+* threefold checker ([b837735](https://github.com/benthevining/BenBot/commit/b837735debbb098265d6a6002e8cbb11695dd939))
+## [1.4.1](https://github.com/benthevining/BenBot/compare/v1.4.0...v1.4.1) (2025-09-02)
+
+### Bug Fixes
+
+* release action ([8b366f4](https://github.com/benthevining/BenBot/commit/8b366f4e280313e03e8d87a48995b3a212486db6))
+## [1.4.2](https://github.com/benthevining/BenBot/compare/v1.4.1...v1.4.2) (2025-09-02)
+
+### Bug Fixes
+
+* release action ([4482301](https://github.com/benthevining/BenBot/commit/44823013859261cc264a5a052da5d1ec56f351fa))
+## [1.4.3](https://github.com/benthevining/BenBot/compare/v1.4.2...v1.4.3) (2025-09-02)
+
+### Bug Fixes
+
+* release notes parsing script ([#263](https://github.com/benthevining/BenBot/issues/263)) ([fd31a34](https://github.com/benthevining/BenBot/commit/fd31a3465c2e8f1e738517dd5c9b138c511e532c))
+## [1.4.4](https://github.com/benthevining/BenBot/compare/v1.4.3...v1.4.4) (2025-09-02)

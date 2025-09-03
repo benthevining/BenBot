@@ -147,14 +147,30 @@ jobs:
     runs-on: ubuntu-latest
     name: Create GitHub release
     timeout-minutes: 10
+    env:
+      RELEASE_NOTES_FILE: release-notes.md
 
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+      with:
+        ref: ${{ needs.bump_version.outputs.tag_name }}
+
+    - name: Write release notes
+      run: python3 .github/scripts/WriteReleaseNotes.py CHANGELOG.md ${{ env.RELEASE_NOTES_FILE }}
+
     - name: Download artifacts
       id: download
       uses: actions/download-artifact@v5
       with:
         merge-multiple: true
         path: artifacts
+
+      # by default the upload-pages-artifact action used by the
+      # docs workflow will create a file named 'artifact.tar'
+    - name: Rename docs artifact
+      run: |
+        cmake -E rename ${{ steps.download.outputs.download-path }}/artifact.tar ${{ steps.download.outputs.download-path }}/docs.tar
 
     - name: Create release
       uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # pin v2
@@ -163,4 +179,5 @@ jobs:
         files: ${{ steps.download.outputs.download-path }}/**
         fail_on_unmatched_files: true
         generate_release_notes: true
+        body_path: ${{ env.RELEASE_NOTES_FILE }}
         make_latest: true

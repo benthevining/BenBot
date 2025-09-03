@@ -10,44 +10,26 @@
 #
 # ======================================================================================
 
-cmake_minimum_required (VERSION 3.30.0 FATAL_ERROR)
+from pathlib import Path
+import sys
+import re
 
-project (
-    BenBot
-    VERSION 1.4.4
-    LANGUAGES CXX C
-    DESCRIPTION "A chess engine"
-    HOMEPAGE_URL "https://github.com/benthevining/BenBot"
-)
+CHANGELOG = Path(sys.argv[1])
+OUTPUT_FILE = Path(sys.argv[2])
 
-option (BENBOT_DOCS "Build the documentation (requires Doxygen)" "${PROJECT_IS_TOP_LEVEL}")
+with open(CHANGELOG, 'r') as file:
+    changelog_content = file.readlines()
 
-option (BENBOT_TESTS "Build the tests" "${PROJECT_IS_TOP_LEVEL}")
+def find_last_version_heading():
+    for idx, line in enumerate(reversed(changelog_content)):
+        if re.match('^(##)+', line):
+            return len(changelog_content) - idx - 1
 
-set (CMAKE_CXX_STANDARD 23)
-set (CMAKE_CXX_STANDARD_REQUIRED ON)
+    raise ValueError('Version heading (##) not found in changelog text')
 
-include (FetchContent)
-include (CPackComponent)
+start_line_idx = find_last_version_heading()
 
-cpack_add_component_group (
-    ben_bot_all DISPLAY_NAME "BenBot" DESCRIPTION "All components of BenBot" EXPANDED BOLD_TITLE
-)
+release_notes = changelog_content[start_line_idx:]
 
-add_subdirectory (libchess)
-add_subdirectory (libbenbot)
-add_subdirectory (ben-bot)
-
-if (BENBOT_TESTS)
-    enable_testing ()
-
-    add_subdirectory (tests)
-
-    if (PROJECT_IS_TOP_LEVEL)
-        include (CTest)
-    endif ()
-endif ()
-
-if (BENBOT_DOCS)
-    add_subdirectory (docs)
-endif ()
+with open(OUTPUT_FILE, 'w') as file:
+    file.write(''.join(release_notes))
