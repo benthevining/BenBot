@@ -23,4 +23,4 @@ with open(CONFIG_FILE, 'r') as file:
 new_content = file_content.replace('@LICHESS_TOKEN@', LICHESS_TOKEN).replace('@VERSION@', TAG_NAME[1:])
 
 with open(CONFIG_FILE, 'w') as file:
-    file.write(file_content)
+    file.write(new_content)

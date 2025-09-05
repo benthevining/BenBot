@@ -15,6 +15,12 @@ name: Deploy Lichess
 run-name: Deploy Lichess
 
 on:
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: Git tag to checkout
+        type: string
+        required: true
   workflow_call:
     inputs:
       tag_name:
