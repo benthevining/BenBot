@@ -92,7 +92,6 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
         -Wshift-sign-overflow
         -Wshorten-64-to-32
         -Wunused-variable
-        -Wno-missing-designated-field-initializers
     )
 elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
     add_compile_options (
