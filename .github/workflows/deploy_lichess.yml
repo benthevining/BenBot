@@ -15,12 +15,9 @@ name: Deploy Lichess
 run-name: Deploy Lichess
 
 on:
-  workflow_dispatch:
-  push:
-    branches: [main]
   workflow_call:
     inputs:
-      ref:
+      tag_name:
         description: Git tag to checkout
         type: string
         required: true
@@ -56,16 +53,16 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v5
       with:
-        ref: ${{ inputs.ref || github.ref }}
+        ref: ${{ inputs.tag_name }}
 
     - name: Configure config file
-      run: python3 .github/scripts/SetupLichessConfig.py lichess/config.yml ${{ secrets.LICHESS_TOKEN }}
+      run: python3 .github/scripts/SetupLichessConfig.py lichess/config.yml ${{ secrets.LICHESS_TOKEN }} ${{ inputs.tag_name }}
 
     - name: Run Docker build
       run: docker build --file lichess/Dockerfile --tag benbot:latest .
 
     - name: Tag image
-      run: docker tag benbot:latest benvining/benbot-lichess/latest
+      run: docker tag benbot:latest benvining/benbot-lichess/${{ inputs.tag_name }}
 
     - name: Push to Docker hub
-      run: docker push benvining/benbot-lichess/latest
+      run: docker push benvining/benbot-lichess/${{ inputs.tag_name }}

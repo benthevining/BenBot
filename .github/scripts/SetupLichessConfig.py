@@ -15,11 +15,12 @@ import sys
 
 CONFIG_FILE = Path(sys.argv[1])
 LICHESS_TOKEN = sys.argv[2]
+TAG_NAME = sys.argv[3]
 
 with open(CONFIG_FILE, 'r') as file:
     file_content = file.read()
 
-new_content = file_content.replace('@LICHESS_TOKEN@', LICHESS_TOKEN)
+new_content = file_content.replace('@LICHESS_TOKEN@', LICHESS_TOKEN).replace('@VERSION@', TAG_NAME[1:])
 
 with open(CONFIG_FILE, 'w') as file:
-    file.write(new_content)
+    file.write(file_content)

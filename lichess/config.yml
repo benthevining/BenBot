@@ -15,7 +15,7 @@ url: "https://lichess.org/"
 
 engine:
   dir: "./config/"
-  name: ben_bot
+  name: "ben_bot-@VERSION@-Linux-Clang"
   protocol: "uci"
   ponder: false
 
