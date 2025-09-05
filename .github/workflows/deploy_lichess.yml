@@ -61,6 +61,10 @@ jobs:
       with:
         ref: ${{ inputs.tag_name }}
 
+    - name: ls
+      run: ls
+      working-directory: .github/scripts
+
     - name: Configure config file
       run: python3 SetupLichessConfig.py ${{ github.workspace }}/lichess/config.yml ${{ secrets.LICHESS_TOKEN }} ${{ inputs.tag_name }}
       working-directory: .github/scripts
