@@ -62,7 +62,8 @@ jobs:
         ref: ${{ inputs.tag_name }}
 
     - name: Configure config file
-      run: python3 .github/scripts/SetupLichessConfig.py lichess/config.yml ${{ secrets.LICHESS_TOKEN }} ${{ inputs.tag_name }}
+      run: python3 SetupLichessConfig.py ${{ github.workspace }}/lichess/config.yml ${{ secrets.LICHESS_TOKEN }} ${{ inputs.tag_name }}
+      working-directory: .github/scripts
 
     - name: Run Docker build
       run: docker build --file lichess/Dockerfile --tag benbot:${{ inputs.tag_name }} .
