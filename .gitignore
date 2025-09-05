@@ -25,4 +25,3 @@ cmake-build-*/
 node_modules/
 .idea/
 .venv/
-lichess-bot/

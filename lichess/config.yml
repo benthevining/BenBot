@@ -10,13 +10,12 @@
 #
 # ======================================================================================
 
-# This file was configured by CMake! Any changes will be overwritten!
-
+token: "@LICHESS_TOKEN@"
 url: "https://lichess.org/"
 
 engine:
-  dir: $<TARGET_FILE_DIR:ben_bot>
-  name: $<TARGET_FILE_NAME:ben_bot>
+  dir: "./config/"
+  name: ben_bot
   protocol: "uci"
   ponder: false
 
@@ -109,7 +108,7 @@ greeting:
   hello_spectators: "Hi! I'm {me}. Type !help for a list of commands I can respond to." # Message to send to spectator chat at the start of a game
   goodbye_spectators: "Thanks for watching!" # Message to send to spectator chat at the end of a game
 
-pgn_directory: "@PROJECT_SOURCE_DIR@/logs/lichess-bot/pgn" # A directory where PGN-format records of the bot's games are kept
+# pgn_directory: "@PROJECT_SOURCE_DIR@/logs/lichess-bot/pgn" # A directory where PGN-format records of the bot's games are kept
 pgn_file_grouping: "game"        # How to group games into files. Options are "game", "opponent", and "all"
                                  #   "game" (default) - every game is written to a different file named "{White name} vs. {Black name} - {lichess game ID}.pgn"
                                  #   "opponent" - every game with a given opponent is written to a file named "{Bot name} games vs. {Opponent name}.pgn"

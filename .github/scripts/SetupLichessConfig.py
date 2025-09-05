@@ -10,39 +10,16 @@
 #
 # ======================================================================================
 
-add_subdirectory (resources)
+from pathlib import Path
+import sys
 
-add_executable (ben_bot)
+CONFIG_FILE = Path(sys.argv[1])
+LICHESS_TOKEN = sys.argv[2]
 
-target_link_libraries (ben_bot PRIVATE ben_bot::libbenbot ben_bot::resources)
+with open(CONFIG_FILE, 'r') as file:
+    file_content = file.read()
 
-file (GLOB_RECURSE benbot_headers LIST_DIRECTORIES false CONFIGURE_DEPENDS
-                                                         "${CMAKE_CURRENT_LIST_DIR}/include/*.hpp"
-)
+new_content = file_content.replace('@LICHESS_TOKEN@', LICHESS_TOKEN)
 
-file (GLOB benbot_sources LIST_DIRECTORIES false CONFIGURE_DEPENDS
-                                                 "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp"
-)
-
-target_sources (
-    ben_bot PRIVATE FILE_SET HEADERS BASE_DIRS include FILES ${benbot_headers}
-    PRIVATE ${benbot_sources}
-)
-
-source_group (TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${benbot_headers} ${benbot_sources})
-
-# this is to differentiate artifacts from different builds
-set_target_properties (
-    ben_bot PROPERTIES OUTPUT_NAME
-                       "ben_bot-${BenBot_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_CXX_COMPILER_ID}"
-)
-
-add_executable (ben_bot::ben_bot ALIAS ben_bot)
-
-#
-
-install (TARGETS ben_bot COMPONENT ben_bot)
-
-cpack_add_component (
-    ben_bot DISPLAY_NAME BenBot DESCRIPTION "BenBot UCI chess engine" GROUP ben_bot_all
-)
+with open(CONFIG_FILE, 'w') as file:
+    file.write(new_content)

@@ -85,11 +85,11 @@ repos:
   - id: insert-license
     name: Insert license header in CMake and shell files
     args: [--license-filepath=ben-bot/resources/res/license_header.txt, --comment-style=#, --detect-license-in-X-top-lines=16]
-    types_or: [cmake, yaml, toml, ini, python, shell]
+    types_or: [cmake, yaml, toml, ini, python, shell, dockerfile]
   - id: insert-license
     name: Insert license header in CMake and shell files
     args: [--license-filepath=ben-bot/resources/res/license_header.txt, --comment-style=#, --detect-license-in-X-top-lines=16]
-    files: .git|.clang|.cfg|justfile|.editorconfig|requirements.txt
+    files: .git|.clang|.cfg|justfile|.editorconfig|requirements.txt|.dockerignore
     exclude: config/.editorconfig-checker.json|.md
 
     # auto-fix spelling mistakes
