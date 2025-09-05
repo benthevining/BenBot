@@ -14,6 +14,8 @@
 
 /** @defgroup search Search
     Functions for searching to find the best move.
+
+    @ingroup libbenbot
  */
 
 /** @file

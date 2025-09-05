@@ -12,9 +12,15 @@
  * ======================================================================================
  */
 
+/** @defgroup benbot_data_structures Data structures
+    Data structures used by the search algorithm.
+
+    @ingroup libbenbot
+ */
+
 /** @file
     This file defines the opening book data structure.
-    @ingroup search
+    @ingroup benbot_data_structures
  */
 
 #pragma once
@@ -42,7 +48,7 @@ using std::size_t;
 
     This data structure maps positions to possible moves.
 
-    @ingroup search
+    @ingroup benbot_data_structures
     @see OpeningBookContext
  */
 class OpeningBook final {
@@ -73,7 +79,7 @@ private:
 /** This struct combines an opening book database with a parameter to enable/disable it,
     as well as a random number generator used for choosing between possible continuations.
 
-    @ingroup search
+    @ingroup benbot_data_structures
     @see OpeningBook
  */
 struct OpeningBookContext final {

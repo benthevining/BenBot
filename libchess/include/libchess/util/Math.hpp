@@ -14,6 +14,8 @@
 
 /** @defgroup util General utilities
     General utilities not specific to chess, but used by libchess.
+
+    @ingroup libchess
  */
 
 /** @file

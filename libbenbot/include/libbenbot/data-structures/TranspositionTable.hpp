@@ -14,7 +14,7 @@
 
 /** @file
     This file defines the transposition table data structure.
-    @ingroup search
+    @ingroup benbot_data_structures
  */
 
 #pragma once
@@ -34,7 +34,7 @@ using std::size_t;
 
 /** The transposition table data structure.
 
-    @ingroup search
+    @ingroup benbot_data_structures
  */
 class TranspositionTable final {
 public:

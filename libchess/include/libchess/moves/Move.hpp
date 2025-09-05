@@ -15,6 +15,8 @@
 /** @defgroup moves Moves
     Classes for modeling moves.
     In the search tree, positions are nodes and moves are edges between them.
+
+    @ingroup libchess
  */
 
 /** @file

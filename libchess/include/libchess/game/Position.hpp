@@ -14,6 +14,8 @@
 
 /** @defgroup game Modeling of the chess game
     Classes to model the state of a game of chess.
+
+    @ingroup libchess
  */
 
 /** @file

@@ -14,6 +14,8 @@
 
 /** @defgroup uci UCI
     Utilities for working with the Universal Chess Interface.
+
+    @ingroup libchess
  */
 
 /** @file

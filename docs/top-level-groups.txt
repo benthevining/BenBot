@@ -1,0 +1,11 @@
+/** @defgroup libchess libchess
+    A general purpose chess library and generic chess engine backend.
+ */
+
+/** @defgroup libbenbot libbenbot
+    BenBot's evaluation and search logic, implemented as a library.
+ */
+
+/** @defgroup benbot BenBot
+    Code outside the libraries, in the engine executable itself.
+ */

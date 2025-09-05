@@ -12,6 +12,11 @@
  * ======================================================================================
  */
 
+/** @file
+    This file defines the top-level engine class used by the BenBot executable.
+    @ingroup benbot
+ */
+
 #pragma once
 
 #include <array>
@@ -36,7 +41,9 @@ using std::string_view;
 
 namespace uci = chess::uci;
 
-/** A custom UCI command that the engine can respond to. */
+/** A custom UCI command that the engine can respond to.
+    @ingroup benbot
+ */
 struct CustomCommand final {
     using Callback = std::function<void(string_view)>;
 
@@ -69,7 +76,9 @@ struct CustomCommand final {
     }
 };
 
-/** The ``ben-bot`` UCI engine class. */
+/** The ``ben-bot`` UCI engine class.
+    @ingroup benbot
+ */
 class Engine final : public uci::EngineBase {
 public:
     /** Prints the engine's logo and version to ``stdout``. */

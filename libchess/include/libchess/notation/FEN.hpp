@@ -14,6 +14,8 @@
 
 /** @defgroup notation Notation
     Functions for working with various types of chess game notation.
+
+    @ingroup libchess
  */
 
 /** @file
