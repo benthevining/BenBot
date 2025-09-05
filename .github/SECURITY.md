@@ -1,6 +1,6 @@
 # Security Policy
 
-The BenBot team takes security vulnerabilities seriously and appreciates relevant bug reports. 
+The BenBot team takes security vulnerabilities seriously and appreciates relevant bug reports.
 
 ## Reporting a Vulnerability
 
