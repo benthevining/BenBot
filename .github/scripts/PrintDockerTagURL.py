@@ -27,4 +27,4 @@ output = result.stdout
 
 hash_str = output[output.find('@')+1:output.find(']')]
 
-print(f'url=https://hub.docker.com/repository/docker/benvining/benbot-lichess/tags/{TAG_NAME}/sha256:{hash_str}')
+print(f'url=https://hub.docker.com/repository/docker/benvining/benbot-lichess/tags/{TAG_NAME}/{hash_str}')
