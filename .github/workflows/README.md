@@ -4,6 +4,10 @@
 
 This action runs on every push, and when a PR is opened. It builds & runs tests, submits results to CDash (in the `Experimental` group), and uploads the engine artifacts. Include the string `[skip ci]` in your commit message to prevent this workflow from being triggered.
 
+## `deploy_lichess.yml`
+
+This action updates the Docker image used to run the lichess bot script, then deploys it to our VPS. This action is triggered by every push to `main`.
+
 ## `docs.yml`
 
 This action builds the Doxygen documentation and deploys it to GitHub pages. This action is triggered by every push to `main`.

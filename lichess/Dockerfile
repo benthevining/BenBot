@@ -10,39 +10,16 @@
 #
 # ======================================================================================
 
-add_subdirectory (resources)
+FROM lichessbotdevs/lichess-bot:alpine
 
-add_executable (ben_bot)
+RUN --mount=type=bind,source=.,target=BenBot,rw \
+  apk add --no-cache git cmake ninja clang && \
+  cd BenBot && \
+  cmake --preset clang -D BENBOT_DOCS=OFF -D BENBOT_TESTS=OFF && \
+  cmake --build Builds/clang -j4 --target ben_bot --config Release && \
+  cd .. && \
+  cmake --install BenBot/Builds/clang --prefix deploy --component ben_bot --config Release && \
+  mkdir config && \
+  mv deploy/bin/ config/
 
-target_link_libraries (ben_bot PRIVATE ben_bot::libbenbot ben_bot::resources)
-
-file (GLOB_RECURSE benbot_headers LIST_DIRECTORIES false CONFIGURE_DEPENDS
-                                                         "${CMAKE_CURRENT_LIST_DIR}/include/*.hpp"
-)
-
-file (GLOB benbot_sources LIST_DIRECTORIES false CONFIGURE_DEPENDS
-                                                 "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp"
-)
-
-target_sources (
-    ben_bot PRIVATE FILE_SET HEADERS BASE_DIRS include FILES ${benbot_headers}
-    PRIVATE ${benbot_sources}
-)
-
-source_group (TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${benbot_headers} ${benbot_sources})
-
-# this is to differentiate artifacts from different builds
-set_target_properties (
-    ben_bot PROPERTIES OUTPUT_NAME
-                       "ben_bot-${BenBot_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_CXX_COMPILER_ID}"
-)
-
-add_executable (ben_bot::ben_bot ALIAS ben_bot)
-
-#
-
-install (TARGETS ben_bot COMPONENT ben_bot)
-
-cpack_add_component (
-    ben_bot DISPLAY_NAME BenBot DESCRIPTION "BenBot UCI chess engine" GROUP ben_bot_all
-)
+COPY lichess/config.yml config/config.yml

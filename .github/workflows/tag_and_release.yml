@@ -142,6 +142,12 @@ jobs:
     with:
       ref: ${{ needs.bump_version.outputs.tag_name }}
 
+  deploy_lichess:
+    needs: bump_version
+    uses: ./.github/workflows/deploy_lichess.yml
+    with:
+      tag_name: ${{ needs.bump_version.outputs.tag_name }}
+
   create_release:
     needs: [bump_version, build, build_docs]
     runs-on: ubuntu-latest
