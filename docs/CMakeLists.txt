@@ -20,6 +20,7 @@ endif ()
 include ("${CMAKE_CURRENT_LIST_DIR}/DoxygenSettings.cmake")
 
 if (TARGET Doxygen::dot)
+    set (DOXYGEN_HAVE_DOT YES)
     set (DOXYGEN_ENABLED_SECTIONS DOT_GRAPHS)
 else ()
     unset (DOXYGEN_ENABLED_SECTIONS)
@@ -27,12 +28,14 @@ endif ()
 
 # inputs & filepaths
 set (DOXYGEN_OUTPUT_DIRECTORY "${BenBot_BINARY_DIR}/generated-docs")
-set (DOXYGEN_GENERATE_TAGFILE "${DOXYGEN_OUTPUT_DIRECTORY}/BenBot.tag")
-set (DOXYGEN_STRIP_FROM_PATH "${BenBot_SOURCE_DIR}")
 set (DOXYGEN_USE_MDFILE_AS_MAINPAGE "${BenBot_SOURCE_DIR}/README.md")
 set (DOXYGEN_LAYOUT_FILE "${CMAKE_CURRENT_LIST_DIR}/DoxygenLayout.xml")
 set (DOXYGEN_FILE_PATTERNS *.hpp)
 set (DOXYGEN_INCLUDE_FILE_PATTERNS *.hpp)
+set (DOXYGEN_STRIP_FROM_PATH "${BenBot_SOURCE_DIR}")
+set (DOXYGEN_STRIP_FROM_INC_PATH "${BenBot_SOURCE_DIR}/libchess/include"
+                                 "${BenBot_SOURCE_DIR}/libbenbot/include"
+)
 
 # generate the engine docs page
 
