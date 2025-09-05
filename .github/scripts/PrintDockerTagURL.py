@@ -10,71 +10,21 @@
 #
 # ======================================================================================
 
-name: Deploy Lichess
+import sys
+import subprocess
 
-run-name: Deploy Lichess
+TAG_NAME = sys.argv[1]
 
-on:
-  workflow_dispatch:
-    inputs:
-      tag_name:
-        description: Git tag to checkout
-        type: string
-        required: true
-  workflow_call:
-    inputs:
-      tag_name:
-        description: Git tag to checkout
-        type: string
-        required: true
+result = subprocess.run(
+    ['docker', 'inspect', '--format="{{.RepoDigests}}"', f'benvining/benbot-lichess:{TAG_NAME}'],
+    capture_output=True,
+    text=True
+)
 
-concurrency:
-  group: ${{ github.workflow }}.${{ inputs.tag_name }}
-  cancel-in-progress: true
+# string format is:
+# [benvining/benbot-lichess@sha256:9e94ea05cbc5b84509beca6c5ab54e176907cf6d5c67f81e2f977149cc086ce1]
+output = result.stdout
 
-defaults:
-  run:
-    shell: bash
+hash_str = output[output.find('@')+1:output.find(']')]
 
-permissions:
-  contents: read
-
-jobs:
-
-  build_docker:
-    runs-on: ubuntu-latest
-    name: Update lichess-bot Docker image
-    timeout-minutes: 20
-    environment:
-      name: lichess-bot-image
-      url: ${{ steps.print_url.outputs.url }}
-
-    steps:
-    - name: Login to Docker
-      uses: docker/login-action@v3
-      with:
-        username: benvining
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-    - name: Checkout code
-      uses: actions/checkout@v5
-#      with:
-#        ref: ${{ inputs.tag_name }}
-
-    - name: Configure config file
-      run: python3 SetupLichessConfig.py ${{ github.workspace }}/lichess/config.yml ${{ secrets.LICHESS_TOKEN }} ${{ inputs.tag_name }}
-      working-directory: .github/scripts
-
-    - name: Run Docker build
-      run: docker build --file lichess/Dockerfile --tag benbot:${{ inputs.tag_name }} .
-
-    - name: Tag image
-      run: docker tag benbot:${{ inputs.tag_name }} benvining/benbot-lichess:${{ inputs.tag_name }}
-
-    - name: Push to Docker hub
-      run: docker push benvining/benbot-lichess:${{ inputs.tag_name }}
-
-    - name: Print Docker tag URL
-      id: print_url
-      run: python3 PrintDockerTagURL.py ${{ inputs.tag_name }} >> $GITHUB_OUTPUT
-      working-directory: .github/scripts
+print(f'url=https://hub.docker.com/repository/docker/benvining/benbot-lichess/tags/{TAG_NAME}/sha256:{hash_str}')
