@@ -59,10 +59,10 @@ jobs:
       run: python3 .github/scripts/SetupLichessConfig.py lichess/config.yml ${{ secrets.LICHESS_TOKEN }} ${{ inputs.tag_name }}
 
     - name: Run Docker build
-      run: docker build --file lichess/Dockerfile --tag benbot:latest .
+      run: docker build --file lichess/Dockerfile --tag benbot:${{ inputs.tag_name }} .
 
     - name: Tag image
-      run: docker tag benbot:latest benvining/benbot-lichess/${{ inputs.tag_name }}
+      run: docker tag benbot:${{ inputs.tag_name }} benvining/benbot-lichess/${{ inputs.tag_name }}
 
     - name: Push to Docker hub
       run: docker push benvining/benbot-lichess/${{ inputs.tag_name }}
