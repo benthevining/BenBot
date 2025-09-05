@@ -69,7 +69,7 @@ jobs:
       run: docker build --file lichess/Dockerfile --tag benbot:${{ inputs.tag_name }} .
 
     - name: Tag image
-      run: docker tag benbot:${{ inputs.tag_name }} benvining/benbot-lichess/${{ inputs.tag_name }}
+      run: docker tag benbot:${{ inputs.tag_name }} benvining/benbot-lichess:${{ inputs.tag_name }}
 
     - name: Push to Docker hub
       run: docker push benvining/benbot-lichess:${{ inputs.tag_name }}
