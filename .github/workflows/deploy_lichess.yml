@@ -48,6 +48,9 @@ jobs:
     environment:
       name: lichess-bot-image
       url: ${{ steps.print_url.outputs.url }}
+    env:
+      LOCAL_TAG: benbot:${{ inputs.tag_name }}
+      REMOTE_TAG: benvining/benbot-lichess:${{ inputs.tag_name }}
 
     steps:
     - name: Login to Docker
@@ -66,13 +69,13 @@ jobs:
       working-directory: .github/scripts
 
     - name: Run Docker build
-      run: docker build --file lichess/Dockerfile --tag benbot:${{ inputs.tag_name }} .
+      run: docker build --file lichess/Dockerfile --tag ${{ env.LOCAL_TAG }} .
 
     - name: Tag image
-      run: docker tag benbot:${{ inputs.tag_name }} benvining/benbot-lichess:${{ inputs.tag_name }}
+      run: docker tag ${{ env.LOCAL_TAG }} ${{ env.REMOTE_TAG }}
 
     - name: Push to Docker hub
-      run: docker push benvining/benbot-lichess:${{ inputs.tag_name }}
+      run: docker push ${{ env.REMOTE_TAG }}
 
     - name: Print Docker tag URL
       id: print_url
