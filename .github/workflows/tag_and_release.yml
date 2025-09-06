@@ -144,6 +144,8 @@ jobs:
 
   deploy_lichess:
     needs: bump_version
+    permissions:
+      contents: read
     uses: ./.github/workflows/deploy_lichess.yml
     with:
       tag_name: ${{ needs.bump_version.outputs.tag_name }}
