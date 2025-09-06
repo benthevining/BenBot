@@ -62,7 +62,7 @@
         },
         "CMAKE_OPTIMIZE_DEPENDENCIES": {
           "type": "BOOL",
-          "value": "ON"
+          "value": "OFF"
         },
         "CMAKE_PROJECT_INCLUDE": {
           "type": "FILEPATH",
