@@ -230,7 +230,7 @@ jobs:
     timeout-minutes: 20
     environment:
       name: vps
-      url: https://lichess.org/@/ben-bot
+      url: https://cloud.digitalocean.com/droplets/517152619
     env:
       REMOTE_TAG: benvining/benbot-lichess:${{ needs.bump_version.outputs.tag_name }}
 
