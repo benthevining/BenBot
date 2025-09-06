@@ -540,3 +540,8 @@
 
 * release action [skip ci] ([d65a344](https://github.com/benthevining/BenBot/commit/d65a3445869d3c2b090e7d48e09e59b2413fe344))
 ## [1.4.23](https://github.com/benthevining/BenBot/compare/v1.4.22...v1.4.23) (2025-09-06)
+## [1.4.24](https://github.com/benthevining/BenBot/compare/v1.4.23...v1.4.24) (2025-09-06)
+
+### Bug Fixes
+
+* lichess-bot config [skip ci] ([7a9174e](https://github.com/benthevining/BenBot/commit/7a9174ee851db58e61d553e80cf05750e6de401d))
