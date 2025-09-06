@@ -243,3 +243,4 @@ jobs:
           docker rm benbot
           docker pull ${{ env.REMOTE_TAG }}
           docker run -d --name benbot ${{ env.REMOTE_TAG }}
+          docker image prune -a -f

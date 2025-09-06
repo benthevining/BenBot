@@ -114,9 +114,6 @@ greeting:
   hello_spectators: Hi, I'm {me}. I hope you enjoy my game! Type !help for a list of commands I can respond to.
   goodbye_spectators: Thanks for watching!
 
-pgn_directory: ./logs/pgn/
-pgn_file_grouping: game
-
 matchmaking:
   allow_matchmaking: true
   allow_during_games: true
