@@ -39,6 +39,9 @@ defaults:
 permissions:
   contents: read
 
+env:
+  REMOTE_TAG: benvining/benbot-lichess:${{ inputs.tag_name }}
+
 jobs:
 
   build_docker:
@@ -50,7 +53,6 @@ jobs:
       url: ${{ steps.print_url.outputs.url }}
     env:
       LOCAL_TAG: benbot:${{ inputs.tag_name }}
-      REMOTE_TAG: benvining/benbot-lichess:${{ inputs.tag_name }}
 
     steps:
     - name: Login to Docker
@@ -81,3 +83,26 @@ jobs:
       id: print_url
       run: python3 PrintDockerTagURL.py ${{ inputs.tag_name }} >> $GITHUB_OUTPUT
       working-directory: .github/scripts
+
+  deploy_vps:
+    runs-on: ubuntu-latest
+    needs: build_docker
+    name: Deploy Docker image to VPS
+    timeout-minutes: 20
+    environment:
+      name: vps
+      url: https://lichess.org/@/ben-bot
+
+    steps:
+    - name: Update & restart Docker image
+      uses: appleboy/ssh-action@v1
+      with:
+        host: ${{ secrets.VPS_IP_V4 }}
+        username: root
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        passphrase: ${{ secrets.SSH_PASSPHRASE }}
+        script: |
+          docker stop benbot
+          docker rm benbot
+          docker pull ${{ env.REMOTE_TAG }}
+          docker run -d --name benbot ${{ env.REMOTE_TAG }}
