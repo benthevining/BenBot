@@ -120,7 +120,7 @@ jobs:
       working-directory: ${{ env.BUILD_DIR }}
 
     - name: Run cmake install
-      run: cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.DEPLOY_DIR }} --component ben_bot --config ${{ matrix.config }}
+      run: cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.DEPLOY_DIR }} --component ben_bot --config Release
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
@@ -162,10 +162,9 @@ jobs:
       with:
         path: artifacts
 
-      # by default the upload-pages-artifact action used by the docs workflow will create a file named 'artifact.tar'
-    - name: Rename docs artifact
-      run: |
-        cmake -E rename ${{ steps.download.outputs.download-path }}/artifact.tar ${{ steps.download.outputs.download-path }}/docs.tar
+    - name: Re-zip artifacts
+      run: python3 ReZipArtifacts.py ${{ steps.download.outputs.download-path }}
+      working-directory: .github/scripts
 
     - name: Create release
       uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # pin v2
