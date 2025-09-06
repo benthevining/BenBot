@@ -21,6 +21,6 @@ RUN --mount=type=bind,source=.,target=BenBot,rw \
   cmake --install BenBot/Builds/clang --prefix deploy --component ben_bot --config Release && \
   mv deploy/bin/ config/ && \
   rm -rf deploy BenBot/Builds && \
-  apk del git cmake ninja clang
+  apk del git cmake ninja
 
 COPY lichess/config.yml config/config.yml
