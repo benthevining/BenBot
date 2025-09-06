@@ -497,3 +497,4 @@
 
 * Windows install rules [skip ci] ([5ed689e](https://github.com/benthevining/BenBot/commit/5ed689e38f36df63901fe94dc5d4e4de67b1099b))
 ## [1.4.12](https://github.com/benthevining/BenBot/compare/v1.4.11...v1.4.12) (2025-09-06)
+## [1.4.13](https://github.com/benthevining/BenBot/compare/v1.4.12...v1.4.13) (2025-09-06)
