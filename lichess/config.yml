@@ -14,7 +14,7 @@ token: "@LICHESS_TOKEN@"
 url: "https://lichess.org/"
 
 engine:
-  dir: "./config/"
+  dir: "./deploy/bin/"
   name: "ben_bot-@VERSION@-Linux-Clang"
   protocol: "uci"
   ponder: false
