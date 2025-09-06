@@ -171,6 +171,7 @@ jobs:
       working-directory: .github/scripts
 
     - name: ls
+      if: always()
       run: ls
       working-directory: ${{ steps.download.outputs.download-path }}
 
