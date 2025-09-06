@@ -491,3 +491,8 @@
 ### Bug Fixes
 
 * Windows install rules [skip ci] ([8d12c24](https://github.com/benthevining/BenBot/commit/8d12c24c8162493fb405ad504bd9a20d8bb9c4d6))
+## [1.4.11](https://github.com/benthevining/BenBot/compare/v1.4.10...v1.4.11) (2025-09-06)
+
+### Bug Fixes
+
+* Windows install rules [skip ci] ([5ed689e](https://github.com/benthevining/BenBot/commit/5ed689e38f36df63901fe94dc5d4e4de67b1099b))
