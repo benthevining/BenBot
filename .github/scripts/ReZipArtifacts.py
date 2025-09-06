@@ -22,18 +22,15 @@ for dirpath, dirnames, filenames in os.walk(DOWNLOADS_ROOT):
     for subdir_name in dirnames:
         if subdir_name == 'BenBot-docs':
             os.rename(
-                DOWNLOADS_ROOT / subdir_name / subdir_name / 'artifact.tar',
+                DOWNLOADS_ROOT / subdir_name / 'artifact.tar',
                 OUTPUT_DIR / 'BenBot-docs.tar'
             )
-            continue
-
-        subdir_path = DOWNLOADS_ROOT / subdir_name
-
-        shutil.make_archive(
-            OUTPUT_DIR / subdir_name,
-            'zip',
-            root_dir=DOWNLOADS_ROOT,
-            base_dir=subdir_name
-        )
+        else:
+            shutil.make_archive(
+                OUTPUT_DIR / subdir_name,
+                'zip',
+                root_dir=DOWNLOADS_ROOT,
+                base_dir=subdir_name
+            )
 
     break
