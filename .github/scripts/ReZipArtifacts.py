@@ -21,7 +21,12 @@ for dirpath, dirnames, filenames in os.walk(DOWNLOADS_ROOT):
     for subdir_name in dirnames:
         subdir_path = DOWNLOADS_ROOT / subdir_name
 
-        shutil.make_archive(subdir_name, 'zip', subdir_path)
+        shutil.make_archive(
+            DOWNLOADS_ROOT / subdir_name,
+            'zip',
+            root_dir=DOWNLOADS_ROOT,
+            base_dir=subdir_path
+        )
 
         shutil.rmtree(subdir_path)
 
