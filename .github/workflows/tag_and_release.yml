@@ -146,6 +146,7 @@ jobs:
     timeout-minutes: 10
     env:
       RELEASE_NOTES_FILE: release-notes.md
+      REZIPPED_ARTIFACTS: ${{ github.workspace }}/rezipped
 
     steps:
     - name: Checkout code
@@ -162,24 +163,15 @@ jobs:
       with:
         path: artifacts
 
-    - name: ls
-      run: ls
-      working-directory: ${{ steps.download.outputs.download-path }}
-
     - name: Re-zip artifacts
-      run: python3 ReZipArtifacts.py ${{ steps.download.outputs.download-path }}
+      run: python3 ReZipArtifacts.py ${{ steps.download.outputs.download-path }} ${{ env.REZIPPED_ARTIFACTS }}
       working-directory: .github/scripts
-
-    - name: ls
-      if: always()
-      run: ls
-      working-directory: ${{ steps.download.outputs.download-path }}
 
     - name: Create release
       uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # pin v2
       with:
         tag_name: ${{ needs.bump_version.outputs.tag_name }}
-        files: ${{ steps.download.outputs.download-path }}/**
+        files: ${{ env.REZIPPED_ARTIFACTS }}/**
         fail_on_unmatched_files: true
         generate_release_notes: true
         body_path: ${{ env.RELEASE_NOTES_FILE }}
