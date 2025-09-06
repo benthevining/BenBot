@@ -27,6 +27,17 @@ on:
         description: Git tag to checkout
         type: string
         required: true
+    secrets:
+      DOCKERHUB_TOKEN:
+        required: true
+      LICHESS_TOKEN:
+        required: true
+      SSH_PASSPHRASE:
+        required: true
+      SSH_PRIVATE_KEY:
+        required: true
+      VPS_IP_V4:
+        required: true
 
 concurrency:
   group: ${{ github.workflow }}.${{ inputs.tag_name }}
