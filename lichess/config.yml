@@ -11,123 +11,131 @@
 # ======================================================================================
 
 token: "@LICHESS_TOKEN@"
-url: "https://lichess.org/"
+url: https://lichess.org/
 
 engine:
-  dir: "./deploy/bin/"
+  dir: ./deploy/bin/
   name: "ben_bot-@VERSION@-Linux-Clang"
-  protocol: "uci"
+  protocol: uci
   ponder: false
+  silence_stderr: false
+  uci_options:
+    OwnBook: false
+  go_commands:
+    movetime: 20000 # 20 sec max per move
+
+  draw_or_resign:
+    resign_enabled: false
+    resign_score: -1000
+    resign_for_egtb_minus_two: true
+    resign_moves: 5
+    offer_draw_enabled: true
+    offer_draw_score: 5
+    offer_draw_for_egtb_zero: true
+    offer_draw_moves: 5
+    offer_draw_pieces: 10
 
   polyglot:
     enabled: false
 
-  draw_or_resign:
-    resign_enabled: false          # Whether or not the bot should resign.
-    resign_score: -1000            # If the score is less than or equal to this value, the bot resigns (in cp).
-    resign_for_egtb_minus_two: true # If true the bot will resign in positions where the online_egtb returns a wdl of -2.
-    resign_moves: 5                # How many moves in a row the score has to be below the resign value.
-    offer_draw_enabled: true      # Whether or not the bot should offer/accept draw.
-    offer_draw_score: 10            # If the absolute value of the score is less than or equal to this value, the bot offers/accepts draw (in cp).
-    offer_draw_for_egtb_zero: true # If true the bot will offer/accept draw in positions where the online_egtb returns a wdl of 0.
-    offer_draw_moves: 10           # How many moves in a row the absolute value of the score has to be below the draw value.
-    offer_draw_pieces: 10          # Only if the pieces on board are less than or equal to this value, the bot offers/accepts draw.
-
   online_moves:
-    max_out_of_book_moves: 10      # Stop using online opening books after they don't have a move for 'max_out_of_book_moves' positions. Doesn't apply to the online endgame tablebases.
-    max_retries: 2                 # The maximum amount of retries when getting an online move.
-    max_depth: 10                  # How many moves from the start to take from online books. Default is no limit.
+    max_out_of_book_moves: 5
+    max_retries: 2
+    max_depth: 10
     chessdb_book:
       enabled: true
+      max_time: 10
+      move_quality: best
     lichess_cloud_analysis:
       enabled: true
+      max_time: 10
+      move_quality: best
     lichess_opening_explorer:
       enabled: true
+      max_time: 10
+      move_quality: best
+      source: player
+      player_name: ben-bot
+      sort: winrate
+      min_games: 1
     online_egtb:
-      enabled: true               # Whether or not to enable online endgame tablebases.
+      enabled: true
+      max_time: 10
+      move_quality: best
 
-  lichess_bot_tbs:                 # The tablebases list here will be read by lichess-bot, not the engine.
+  lichess_bot_tbs:
     syzygy:
-      enabled: false               # Whether or not to use local syzygy endgame tablebases.
+      enabled: false
     gaviota:
-      enabled: false               # Whether or not to use local gaviota endgame tablebases.
+      enabled: false
 
-  uci_options:                     # Arbitrary UCI options passed to the engine.
-
-  silence_stderr: false            # Some engines (yes you, Leela) are very noisy.
-
-abort_time: 30                     # Time to abort a game in seconds when there is no activity.
-fake_think_time: false             # Artificially slow down the bot to pretend like it's thinking.
-rate_limiting_delay: 0             # Time (in ms) to delay after sending a move to prevent "Too Many Requests" errors.
-move_overhead: 1000                # Increase if your bot flags games too often.
-max_takebacks_accepted: 0          # The number of times to allow an opponent to take back a move in a game.
-quit_after_all_games_finish: false # If set to true, then pressing Ctrl-C to quit will only stop lichess-bot after all current games have finished.
+abort_time: 30
+fake_think_time: false
+rate_limiting_delay: 0
+move_overhead: 1000
+max_takebacks_accepted: 0
+quit_after_all_games_finish: false
 
 correspondence:
-  move_time: 60                    # Time in seconds to search in correspondence games.
-  checkin_period: 300              # How often to check for opponent moves in correspondence games after disconnecting.
-  disconnect_time: 150             # Time before disconnecting from a correspondence game.
-  ponder: false                    # Ponder in correspondence games the bot is connected to.
+  move_time: 300 # 5 mins
+  checkin_period: 300
+  disconnect_time: 300
+  ponder: false
 
-challenge:                         # Incoming challenges.
-  concurrency: 5                   # Number of games to play simultaneously.
-  sort_by: "best"                  # Possible values: "best" and "first".
-  preference: "human"              # Possible values: "none", "human", "bot".
-  accept_bot: true                 # Accepts challenges coming from other bots.
-  only_bot: false                  # Accept challenges by bots only.
-  max_increment: 20                # Maximum amount of increment to accept a challenge in seconds. The max is 180. Set to 0 for no increment.
-  min_increment: 0                 # Minimum amount of increment to accept a challenge in seconds.
-  max_base: 1800                   # Maximum amount of base time to accept a challenge in seconds. The max is 10800 (3 hours).
-  min_base: 0                      # Minimum amount of base time to accept a challenge in seconds.
-  max_days: 14                     # Maximum number of days per move to accept a challenge for a correspondence game.
-                                   # Unlimited games can be accepted by removing this field or specifying .inf
-  min_days: 1                      # Minimum number of days per move to accept a challenge for a correspondence game.
-  variants:                        # Chess variants to accept (https://lichess.org/variant).
+challenge:
+  concurrency: 3
+  sort_by: best
+  preference: human
+  accept_bot: true
+  only_bot: false
+  max_increment: 20
+  min_increment: 0
+  bullet_requires_increment: false
+  max_base: 3600
+  min_base: 30
+  max_days: 120
+  min_days: 1
+  variants:
   - standard
   - fromPosition
-  time_controls:                   # Time controls to accept (bots are not allowed to play ultraBullet).
+  time_controls:
   - bullet
   - blitz
   - rapid
   - classical
   - correspondence
-  modes:                           # Game modes to accept.
-  - casual                         # Unrated games.
-  - rated                          # Rated games - must comment if the engine doesn't try to win.
-
-  bullet_requires_increment: false # Require that bullet game challenges from bots have a non-zero increment
-  max_simultaneous_games_per_user: 5  # Maximum number of simultaneous games with the same user
+  modes:
+  - rated
+  max_simultaneous_games_per_user: 1
 
 greeting:
-  # Optional substitution keywords (include curly braces):
-  #   {opponent} to insert opponent's name
-  #   {me} to insert bot's name
-  # Any other words in curly braces will be removed.
-  hello: "Hi! I'm {me}. Good luck! Type !help for a list of commands I can respond to." # Message to send to opponent chat at the start of a game
-  goodbye: "Good game!" # Message to send to opponent chat at the end of a game
-  hello_spectators: "Hi! I'm {me}. Type !help for a list of commands I can respond to." # Message to send to spectator chat at the start of a game
-  goodbye_spectators: "Thanks for watching!" # Message to send to spectator chat at the end of a game
+  hello: Hi, I'm {me}. Good luck! Type !help for a list of commands I can respond to.
+  goodbye: Good game, {opponent}! Thanks for playing!
+  hello_spectators: Hi, I'm {me}. I hope you enjoy my game! Type !help for a list of commands I can respond to.
+  goodbye_spectators: Thanks for watching!
 
-pgn_directory: "./logs/pgn/" # A directory where PGN-format records of the bot's games are kept
-pgn_file_grouping: "game"        # How to group games into files. Options are "game", "opponent", and "all"
-                                 #   "game" (default) - every game is written to a different file named "{White name} vs. {Black name} - {lichess game ID}.pgn"
-                                 #   "opponent" - every game with a given opponent is written to a file named "{Bot name} games vs. {Opponent name}.pgn"
-                                 #   "all" - every game is written to a single file named "{Bot name} games.pgn"
+pgn_directory: ./logs/pgn/
+pgn_file_grouping: game
 
 matchmaking:
-  allow_matchmaking: true         # Set it to 'true' to challenge other bots.
-  allow_during_games: true        # Set it to 'true' to create challenges during long games.
-  challenge_variant: "random"    # If set to 'random', the bot will choose one variant from the variants enabled in 'challenge.variants'.
-  challenge_timeout: 1            # Create a challenge after being idle for 'challenge_timeout' minutes. The minimum is 1 minute.
-  challenge_initial_time:          # Initial time in seconds of the challenge (to be chosen at random).
+  allow_matchmaking: true
+  allow_during_games: true
+  challenge_variant: random
+  challenge_timeout: 5
+  challenge_initial_time:
   - 60
   - 180
   - 300
-  challenge_increment:             # Increment in seconds of the challenge (to be chosen at random).
+  - 600
+  challenge_increment:
+  - 0
   - 1
   - 2
-  opponent_rating_difference: 300  # The maximum difference in rating between the bot's rating and opponent's rating.
-  rating_preference: "low"        # One of "none", "high", "low".
-  challenge_mode: "rated"          # Set it to the mode in which challenges are sent. Possible options are 'casual', 'rated' and 'random'.
-  challenge_filter: coarse           # If a bot declines a challenge, do not issue a similar challenge to that bot. Possible options are 'none', 'coarse', and 'fine'.
-  include_challenge_block_list: false  # Do not challenge bots in the challenge: block_list in addition to the matchmaking block list.
+  challenge_days:
+  - 7
+  - 30
+  opponent_rating_difference: 300
+  rating_preference: low
+  challenge_mode: rated
+  challenge_filter: fine
+  include_challenge_block_list: true
