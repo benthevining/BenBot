@@ -51,3 +51,16 @@ endif ()
 if (BENBOT_DOCS)
     add_subdirectory (docs)
 endif ()
+
+if (PROJECT_IS_TOP_LEVEL)
+    set (CPACK_PACKAGE_VENDOR "Ben Vining")
+    set (CPACK_PACKAGE_DESCRIPTION "UCI chess engine")
+    set (CPACK_PACKAGE_FILE_NAME
+         "ben_bot-${BenBot_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_CXX_COMPILER_ID}"
+    )
+    set (CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_LIST_DIR}/LICENSE")
+    set (CPACK_STRIP_FILES TRUE)
+    set (CPACK_INSTALL_CMAKE_PROJECTS "${BenBot_BINARY_DIR}" BenBot ben_bot .)
+
+    include (CPack)
+endif ()

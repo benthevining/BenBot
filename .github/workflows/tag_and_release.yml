@@ -91,15 +91,12 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-15]
-        config: [Release]
         preset: [clang]
         include:
         - os: windows-latest
           preset: msvc
-          config: Release
         - os: ubuntu-latest
           preset: gcc
-          config: Release
     runs-on: ${{ matrix.os }}
     name: Build (${{ matrix.os }}.${{ matrix.preset }})
     timeout-minutes: 10
@@ -119,17 +116,18 @@ jobs:
       run: cmake --preset ${{ matrix.preset }} -D BENBOT_DOCS=OFF -D BENBOT_TESTS=OFF
 
     - name: Build
-      run: cmake --build . --config ${{ matrix.config }} --target ben_bot
+      run: cmake --build . --config Release --target ben_bot
       working-directory: ${{ env.BUILD_DIR }}
 
-    - name: Run cmake install
-      run: cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.DEPLOY_DIR }} --component ben_bot --config ${{ matrix.config }}
+    - name: Run CPack to generate archive
+      run: cpack -G TGZ -C Release -B ${{ github.workspace }}/deploy
+      working-directory: ${{ env.BUILD_DIR }}
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: BenBot-${{ matrix.os }}-${{ matrix.preset }}
-        path: ${{ env.DEPLOY_DIR }}
+        path: ${{ env.DEPLOY_DIR }}/*.tar.gz
         if-no-files-found: error
 
   build_docs:

@@ -45,7 +45,6 @@ add_executable (ben_bot::ben_bot ALIAS ben_bot)
 install (TARGETS ben_bot COMPONENT ben_bot
          RUNTIME_DEPENDENCIES
             PRE_EXCLUDE_REGEXES "api-ms-" "ext-ms-"
-            POST_EXCLUDE_REGEXES ".dll"
             FRAMEWORK DESTINATION Library/Frameworks
 )
 # cmake-format: on
