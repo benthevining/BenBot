@@ -16,10 +16,6 @@ Similar to `ci.yml`, except this action runs on a schedule every night, and CDas
 
 Runs an [SPRT test](https://www.chessprogramming.org/Sequential_Probability_Ratio_Test) of the given branch against the latest release using the [fastchess tool](https://github.com/Disservin/fastchess). This action runs on every push, and when a PR is opened. Include the string `[skip ci]` in your commit message to prevent this workflow from being triggered.
 
-## `stop_lichess.yml`
-
-This action can be run manually to stop the lichess-bot script running on the VPS. This action is never triggered automatically.
-
 ## `tag_and_release.yml`
 
 This action bumps the project version, creates a git tag, runs a build, and creates a GitHub release. This action is never triggered automatically.

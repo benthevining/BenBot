@@ -129,8 +129,10 @@ matchmaking:
   - 1
   - 2
   challenge_days:
+  - 1
+  - 2
+  - 5
   - 7
-  - 30
   opponent_rating_difference: 300
   rating_preference: low
   challenge_mode: rated
