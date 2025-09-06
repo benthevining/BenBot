@@ -479,3 +479,10 @@
 ### Bug Fixes
 
 * action to stop lichess bot [skip ci] ([51475c6](https://github.com/benthevining/BenBot/commit/51475c6649718e97b8904837dfcf1b6c3c59c1fc))
+## [1.4.9](https://github.com/benthevining/BenBot/compare/v1.4.8...v1.4.9) (2025-09-06)
+
+### Bug Fixes
+
+* deploy lichess action secrets [skip ci] ([661f755](https://github.com/benthevining/BenBot/commit/661f755c8dfff6b47b4ca5cdb59344674c71a338))
+* deploy lichess action secrets [skip ci] ([baf0e7b](https://github.com/benthevining/BenBot/commit/baf0e7bf1ea0d1873452ee6d497fc01d6284ffce))
+* deploy lichess action secrets [skip ci] ([2ade955](https://github.com/benthevining/BenBot/commit/2ade9559eba8cc1b27c7dd1a632bc791709c774a))
