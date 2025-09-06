@@ -19,10 +19,10 @@ engine:
   protocol: uci
   ponder: false
   silence_stderr: false
-#  uci_options:
-#    OwnBook: false
-#  go_commands:
-#    movetime: 20000 # 20 sec max per move
+  uci_options:
+    OwnBook: false
+  go_commands:
+    movetime: 20000 # 20 sec max per move
 
   draw_or_resign:
     resign_enabled: false
