@@ -10,15 +10,16 @@
 #
 # ======================================================================================
 
-FROM lichessbotdevs/lichess-bot:alpine
+FROM lichessbotdevs/lichess-bot:latest
 
 RUN --mount=type=bind,source=.,target=BenBot,rw \
-  apk add --no-cache git cmake ninja clang && \
+  apt update && \
+  apt install -y git cmake ninja-build clang && \
   cd BenBot && \
   cmake --preset clang -D BENBOT_DOCS=OFF -D BENBOT_TESTS=OFF && \
   cmake --build Builds/clang -j4 --target ben_bot --config Release && \
   cd .. && \
   cmake --install BenBot/Builds/clang --prefix deploy --component ben_bot --config Release && \
-  apk del git cmake ninja
+  apt remove -y git cmake ninja-build
 
 COPY lichess/config.yml config/config.yml
