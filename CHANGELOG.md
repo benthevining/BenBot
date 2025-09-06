@@ -486,3 +486,8 @@
 * deploy lichess action secrets [skip ci] ([661f755](https://github.com/benthevining/BenBot/commit/661f755c8dfff6b47b4ca5cdb59344674c71a338))
 * deploy lichess action secrets [skip ci] ([baf0e7b](https://github.com/benthevining/BenBot/commit/baf0e7bf1ea0d1873452ee6d497fc01d6284ffce))
 * deploy lichess action secrets [skip ci] ([2ade955](https://github.com/benthevining/BenBot/commit/2ade9559eba8cc1b27c7dd1a632bc791709c774a))
+## [1.4.10](https://github.com/benthevining/BenBot/compare/v1.4.9...v1.4.10) (2025-09-06)
+
+### Bug Fixes
+
+* Windows install rules [skip ci] ([8d12c24](https://github.com/benthevining/BenBot/commit/8d12c24c8162493fb405ad504bd9a20d8bb9c4d6))
