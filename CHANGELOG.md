@@ -474,3 +474,8 @@
 ### Features
 
 * action to stop lichess bot [skip ci] ([df55109](https://github.com/benthevining/BenBot/commit/df551099df3d7ba44a92dc2dec03e6d4b7e46464))
+## [1.4.8](https://github.com/benthevining/BenBot/compare/v1.4.7...v1.4.8) (2025-09-06)
+
+### Bug Fixes
+
+* action to stop lichess bot [skip ci] ([51475c6](https://github.com/benthevining/BenBot/commit/51475c6649718e97b8904837dfcf1b6c3c59c1fc))
