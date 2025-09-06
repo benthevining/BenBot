@@ -41,9 +41,13 @@ add_executable (ben_bot::ben_bot ALIAS ben_bot)
 
 #
 
-install (TARGETS ben_bot COMPONENT ben_bot RUNTIME_DEPENDENCIES
-         FRAMEWORK DESTINATION Library/Frameworks
+# cmake-format: off
+install (TARGETS ben_bot COMPONENT ben_bot
+         RUNTIME_DEPENDENCIES
+            PRE_EXCLUDE_REGEXES "api-ms-" "ext-ms-"
+            FRAMEWORK DESTINATION Library/Frameworks
 )
+# cmake-format: on
 
 cpack_add_component (
     ben_bot DISPLAY_NAME BenBot DESCRIPTION "BenBot UCI chess engine" GROUP ben_bot_all
