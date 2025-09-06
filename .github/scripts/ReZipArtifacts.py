@@ -23,7 +23,7 @@ for dirpath, dirnames, filenames in os.walk(DOWNLOADS_ROOT):
 
         shutil.make_archive(subdir_name, 'zip', subdir_path)
 
-        os.rmdir(subdir_path)
+        shutil.rmtree(subdir_path)
 
     break
 
@@ -32,4 +32,4 @@ docs_path = DOWNLOADS_ROOT / 'artifact'
 
 shutil.make_archive('BenBot-docs', 'zip', docs_path)
 
-os.rmdir(docs_path)
+shutil.rmtree(docs_path)
