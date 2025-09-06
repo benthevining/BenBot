@@ -499,3 +499,8 @@
 ## [1.4.12](https://github.com/benthevining/BenBot/compare/v1.4.11...v1.4.12) (2025-09-06)
 ## [1.4.13](https://github.com/benthevining/BenBot/compare/v1.4.12...v1.4.13) (2025-09-06)
 ## [1.4.14](https://github.com/benthevining/BenBot/compare/v1.4.13...v1.4.14) (2025-09-06)
+## [1.4.15](https://github.com/benthevining/BenBot/compare/v1.4.14...v1.4.15) (2025-09-06)
+
+### Bug Fixes
+
+* release action [skip ci] ([7a3ee80](https://github.com/benthevining/BenBot/commit/7a3ee80906c7607d78ceb86d0cfc4b7a2c0fab92))
