@@ -109,7 +109,7 @@ challenge:
   max_simultaneous_games_per_user: 1
 
 greeting:
-  hello: Hi, I'm {me}. Good luck! Type !help for a list of commands I can respond to.
+  hello: Hi {opponent}, I'm {me}. Good luck! Type !help for a list of commands I can respond to.
   goodbye: Good game, {opponent}! Thanks for playing!
   hello_spectators: Hi, I'm {me}. I hope you enjoy my game! Type !help for a list of commands I can respond to.
   goodbye_spectators: Thanks for watching!
