@@ -468,3 +468,4 @@
 * SPRT workflow ([d620c16](https://github.com/benthevining/BenBot/commit/d620c169299fcd08e1419f38334c9c6075cf8c94))
 * SPRT workflow ([2023a21](https://github.com/benthevining/BenBot/commit/2023a2154de746e19de8170a26302a1f217a91b6))
 * SPRT workflow ([df85114](https://github.com/benthevining/BenBot/commit/df8511438cc057676ccb140a5b5b438999dde45f))
+## [1.4.6](https://github.com/benthevining/BenBot/compare/v1.4.5...v1.4.6) (2025-09-06)
