@@ -441,3 +441,30 @@
 
 * release notes parsing script ([#263](https://github.com/benthevining/BenBot/issues/263)) ([fd31a34](https://github.com/benthevining/BenBot/commit/fd31a3465c2e8f1e738517dd5c9b138c511e532c))
 ## [1.4.4](https://github.com/benthevining/BenBot/compare/v1.4.3...v1.4.4) (2025-09-02)
+## [1.4.5](https://github.com/benthevining/BenBot/compare/v1.4.4...v1.4.5) (2025-09-06)
+
+### Features
+
+* initial commit of vps deployment ([15d05f7](https://github.com/benthevining/BenBot/commit/15d05f7828c6570e4152b83c325cc2bd0f2ad3f0))
+* integration with lichess-bot docker image ([48f55d3](https://github.com/benthevining/BenBot/commit/48f55d3c2f5a6fc569773329d9d2bf22095a425b))
+* linking to specific Docker image tag ([#270](https://github.com/benthevining/BenBot/issues/270)) ([e67f952](https://github.com/benthevining/BenBot/commit/e67f952a74186401d6bfbe74214ef488e7b5e075))
+
+### Bug Fixes
+
+* Docker container [skip ci] ([041150b](https://github.com/benthevining/BenBot/commit/041150b641b21db553e4995303f27579a9ea663c))
+* Dockerfile [skip ci] ([1ec5cfc](https://github.com/benthevining/BenBot/commit/1ec5cfcd0919b4b7974715ac2098b4675e6b0f76))
+* executable install rules ([0b47a3c](https://github.com/benthevining/BenBot/commit/0b47a3c30848aec373d8f05e29c65946763dfc5e))
+* fixed issue with fresh CMake configure attempting to copy file produced by file(GENERATE) that doesn't exist yet ([f2b313e](https://github.com/benthevining/BenBot/commit/f2b313ed0d0379a73f5234046df3621cd040d044))
+* lichess deployment script ([edef22b](https://github.com/benthevining/BenBot/commit/edef22ba4beb2b1888734decbc72c0f5e74ce656))
+* lichess deployment script ([3828a36](https://github.com/benthevining/BenBot/commit/3828a36a407624d58b1fdfcd7e65e42bdcc4edb0))
+* lichess deployment script ([de5b0da](https://github.com/benthevining/BenBot/commit/de5b0da3cea1a0fbaac72b275a9c481a6b536135))
+* lichess deployment script ([1320aac](https://github.com/benthevining/BenBot/commit/1320aac6c34801a79bc1cbbbcea62a15e3ec5826))
+* lichess deployment script ([49bcd2e](https://github.com/benthevining/BenBot/commit/49bcd2e64e76e7f371c4d310538185b8d436cb0b))
+* lichess deployment script ([2454354](https://github.com/benthevining/BenBot/commit/2454354aec9392b917e5b85298c0d40b6fb3f005))
+* lichess deployment script ([0e8c7c3](https://github.com/benthevining/BenBot/commit/0e8c7c36ccf2cdd0ff8c51f9333e24f574574cbd))
+* linking to specific Docker image tag ([#270](https://github.com/benthevining/BenBot/issues/270)) ([5e37bd9](https://github.com/benthevining/BenBot/commit/5e37bd95d2b5684dde174ef88479c63050c959a2))
+* SPRT workflow ([a1365a4](https://github.com/benthevining/BenBot/commit/a1365a435b102de80b27221cc93c7b0e67989666))
+* SPRT workflow ([032c164](https://github.com/benthevining/BenBot/commit/032c164e52cf2a52684af5dd71d91a99740b8107))
+* SPRT workflow ([d620c16](https://github.com/benthevining/BenBot/commit/d620c169299fcd08e1419f38334c9c6075cf8c94))
+* SPRT workflow ([2023a21](https://github.com/benthevining/BenBot/commit/2023a2154de746e19de8170a26302a1f217a91b6))
+* SPRT workflow ([df85114](https://github.com/benthevining/BenBot/commit/df8511438cc057676ccb140a5b5b438999dde45f))
