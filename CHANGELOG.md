@@ -529,3 +529,8 @@
 ### Bug Fixes
 
 * release action [skip ci] ([2187112](https://github.com/benthevining/BenBot/commit/21871122a950e8bacf3ab960c2b25f8ec0a48f8d))
+## [1.4.21](https://github.com/benthevining/BenBot/compare/v1.4.20...v1.4.21) (2025-09-06)
+
+### Bug Fixes
+
+* release action [skip ci] ([3c5d633](https://github.com/benthevining/BenBot/commit/3c5d633a1a1afd6dc1d1f1b7605e0a4df6b750cc))
