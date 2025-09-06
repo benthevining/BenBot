@@ -162,9 +162,17 @@ jobs:
       with:
         path: artifacts
 
+    - name: ls
+      run: ls
+      working-directory: ${{ steps.download.outputs.download-path }}
+
     - name: Re-zip artifacts
       run: python3 ReZipArtifacts.py ${{ steps.download.outputs.download-path }}
       working-directory: .github/scripts
+
+    - name: ls
+      run: ls
+      working-directory: ${{ steps.download.outputs.download-path }}
 
     - name: Create release
       uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # pin v2
