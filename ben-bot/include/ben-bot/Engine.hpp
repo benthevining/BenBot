@@ -98,6 +98,8 @@ private:
 
     void wait() override { searcher.context.wait(); }
 
+    bool is_searching() const noexcept override { return searcher.context.in_progress(); }
+
     void set_debug(const bool shouldDebug) override { debugMode.store(shouldDebug); }
 
     [[nodiscard]] std::span<uci::Option*> get_options() override { return options; }

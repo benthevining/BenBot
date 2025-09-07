@@ -64,9 +64,15 @@ struct EngineBase {
     [[nodiscard]] virtual std::span<Option*> get_options() { return {}; }
 
     /** This function will be called when the "isready" command is received,
-        and may block while waiting for background tasks to complete.
+        and may block while waiting for background tasks to complete. This
+        function should be thread-safe.
      */
     virtual void wait() { }
+
+    /** This function must return true if a search is currently in progress.
+        This function should be thread-safe.
+     */
+    [[nodiscard]] virtual bool is_searching() const noexcept = 0;
 
     /** This function will be called when the "ucinewgame" command is received.
         This should flush any game-specific data structures such as hash tables,

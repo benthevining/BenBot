@@ -39,7 +39,10 @@ void EngineBase::handle_command(std::string_view command)
     }
 
     if (command == "isready") {
-        wait();
+        // reply immediately if search is in progress
+        if (not is_searching())
+            wait();
+
         println("readyok");
         return;
     }
