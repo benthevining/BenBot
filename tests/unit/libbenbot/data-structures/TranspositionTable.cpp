@@ -12,7 +12,7 @@
  * ======================================================================================
  */
 
-// probe_eval()
+// tests for store() overwriting rules?
 
 #include <catch2/catch_test_macros.hpp>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
@@ -87,4 +87,95 @@ TEST_CASE("Transposition table - get_best_response()", TAGS)
 
     REQUIRE(bestResponse.has_value());
     REQUIRE(*bestResponse == theirMove);
+}
+
+TEST_CASE("Transposition table - probe_eval()", TAGS)
+{
+    static const chess::game::Position startPos {};
+
+    static constexpr auto DEPTH = 2uz;
+    static constexpr auto ALPHA = -2;
+    static constexpr auto BETA  = 2;
+    static constexpr auto EVAL  = 1;
+
+    TranspositionTable table;
+
+    REQUIRE(not table.probe_eval(
+                         startPos, DEPTH, ALPHA, BETA)
+            .has_value());
+
+    SECTION("Exact eval stored")
+    {
+        table.store(startPos,
+            { .searchedDepth = DEPTH,
+                .eval        = EVAL,
+                .evalType    = EvalType::Exact });
+
+        const auto probed = table.probe_eval(startPos, DEPTH, ALPHA, BETA);
+
+        REQUIRE(probed.has_value());
+
+        const auto [eval, type] = probed.value();
+
+        REQUIRE(type == EvalType::Exact);
+        REQUIRE(eval == EVAL);
+    }
+
+    SECTION("Alpha cutoff stored")
+    {
+        table.store(startPos,
+            { .searchedDepth = DEPTH,
+                .eval        = EVAL,
+                .evalType    = EvalType::Alpha });
+
+        SECTION("Probing with alpha that doesn't cutoff")
+        {
+            static constexpr auto SEARCH_ALPHA = EVAL + 1;
+
+            const auto probed = table.probe_eval(startPos, DEPTH, SEARCH_ALPHA, BETA);
+
+            REQUIRE(probed.has_value());
+
+            const auto [eval, type] = probed.value();
+
+            REQUIRE(type == EvalType::Alpha);
+            REQUIRE(eval == SEARCH_ALPHA);
+        }
+
+        SECTION("Probing with alpha that causes cutoff")
+        {
+            REQUIRE(not table.probe_eval(
+                                 startPos, DEPTH, EVAL - 1, BETA)
+                    .has_value());
+        }
+    }
+
+    SECTION("Beta cutoff stored")
+    {
+        table.store(startPos,
+            { .searchedDepth = DEPTH,
+                .eval        = EVAL,
+                .evalType    = EvalType::Beta });
+
+        SECTION("Probing with beta that doesn't cutoff")
+        {
+            static constexpr auto SEARCH_BETA = EVAL - 1;
+
+            const auto probed = table.probe_eval(startPos, DEPTH, ALPHA, SEARCH_BETA);
+
+            REQUIRE(probed.has_value());
+
+            const auto [eval, type] = probed.value();
+
+            REQUIRE(type == EvalType::Beta);
+            REQUIRE(eval == SEARCH_BETA);
+        }
+
+        SECTION("Probing with beta that causes cutoff")
+        {
+            REQUIRE(not table.probe_eval(
+                                 startPos, DEPTH, ALPHA, EVAL + 1)
+                    .has_value());
+        }
+    }
 }
