@@ -545,3 +545,8 @@
 ### Bug Fixes
 
 * lichess-bot config [skip ci] ([7a9174e](https://github.com/benthevining/BenBot/commit/7a9174ee851db58e61d553e80cf05750e6de401d))
+## [1.4.25](https://github.com/benthevining/BenBot/compare/v1.4.24...v1.4.25) (2025-09-07)
+
+### Features
+
+* id output now includes engine version ([#272](https://github.com/benthevining/BenBot/issues/272)) ([eaaf2c8](https://github.com/benthevining/BenBot/commit/eaaf2c8d40d5f6bc58e9d983bf8b68c3f0b0d79b))
