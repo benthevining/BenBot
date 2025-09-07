@@ -12,8 +12,6 @@
  * ======================================================================================
  */
 
-// tests for store() overwriting rules?
-
 #include <catch2/catch_test_macros.hpp>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libchess/game/Position.hpp>
@@ -176,6 +174,67 @@ TEST_CASE("Transposition table - probe_eval()", TAGS)
             REQUIRE(not table.probe_eval(
                                  startPos, DEPTH, ALPHA, EVAL + 1)
                     .has_value());
+        }
+    }
+}
+
+TEST_CASE("Transposition table - store() overwriting rules", TAGS)
+{
+    using Record = TranspositionTable::Record;
+
+    static const chess::game::Position startPos {};
+
+    TranspositionTable table;
+
+    const Record oldRecord {
+        .searchedDepth = 6uz,
+        .eval          = 2,
+        .evalType      = EvalType::Exact
+    };
+
+    table.store(startPos, oldRecord);
+
+    REQUIRE(*table.find(startPos) == oldRecord);
+
+    SECTION("Old eval kept if it's a greater depth than the new one")
+    {
+        const Record newRecord {
+            .searchedDepth = oldRecord.searchedDepth - 1uz,
+            .eval          = 4,
+            .evalType      = EvalType::Exact
+        };
+
+        table.store(startPos, newRecord);
+
+        REQUIRE(*table.find(startPos) == oldRecord);
+    }
+
+    SECTION("Old eval kept if it was an exact one & the new one isn't")
+    {
+        SECTION("Writing an alpha cutoff")
+        {
+            const Record newRecord {
+                .searchedDepth = oldRecord.searchedDepth,
+                .eval          = -6,
+                .evalType      = EvalType::Alpha
+            };
+
+            table.store(startPos, newRecord);
+
+            REQUIRE(*table.find(startPos) == oldRecord);
+        }
+
+        SECTION("Writing a beta cutoff")
+        {
+            const Record newRecord {
+                .searchedDepth = oldRecord.searchedDepth,
+                .eval          = 6,
+                .evalType      = EvalType::Beta
+            };
+
+            table.store(startPos, newRecord);
+
+            REQUIRE(*table.find(startPos) == oldRecord);
         }
     }
 }
