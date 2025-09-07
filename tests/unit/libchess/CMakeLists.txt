@@ -34,11 +34,11 @@ source_group (TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${sources})
 catch_discover_tests (
         libchess_tests
         EXTRA_ARGS
-        --verbosity high
-        --warn NoAssertions
-        --warn UnmatchedTestSpec
-        --colour-mode none
-        --reporter console::out=-
+            --verbosity high
+            --warn NoAssertions
+            --warn UnmatchedTestSpec
+            --colour-mode none
+            --reporter console::out=-
         TEST_PREFIX libchess.unit.
         PROPERTIES
             SKIP_REGULAR_EXPRESSION "SKIPPED:"
@@ -48,11 +48,11 @@ catch_discover_tests (
         libchess_tests
         TEST_SPEC "[!benchmark]"
         EXTRA_ARGS
-        --verbosity high
-        --warn UnmatchedTestSpec
-        --colour-mode none
-        --reporter console::out=-
-        --reporter cdash::out=-
+            --verbosity high
+            --warn UnmatchedTestSpec
+            --colour-mode none
+            --reporter console::out=-
+            --reporter cdash::out=-
         TEST_PREFIX libchess.bench.
         PROPERTIES
             SKIP_REGULAR_EXPRESSION "SKIPPED:"

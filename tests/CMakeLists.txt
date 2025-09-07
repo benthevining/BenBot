@@ -24,4 +24,4 @@ add_subdirectory (rampart)
 add_subdirectory (position-solver)
 add_subdirectory (fastchess)
 
-add_test (NAME libchess.bench.engine_nps COMMAND ben_bot::ben_bot bench --no-loop)
+add_test (NAME ben_bot.bench.engine_nps COMMAND ben_bot::ben_bot bench --no-loop)
