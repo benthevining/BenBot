@@ -61,6 +61,9 @@ jobs:
         out-file-path: fastchess
         extract: true
 
+    - name: ls
+      run: cd fastchess && ls
+
     - name: Print fastchess filename
       id: fastchess_filename
       run: |
@@ -81,14 +84,18 @@ jobs:
         out-file-path: baseline
         extract: true
 
+    - name: ls
+      run: cd baseline && ls
+
     - name: Print BenBot filename
       id: benbot_filename
       run: |
         zip_path=${{ fromJson(steps.download_benbot.outputs.downloaded_files)[0] }}
+        filename=$(basename "$zip_path" ".zip")
         dirpath=$(dirname "$zip_path")
         tag_name=${{steps.download_benbot.outputs.tag_name}}
         version_string="${tag_name:1}"
-        result="$dirpath/bin/ben_bot-$version_string-Linux-Clang"
+        result="$dirpath/$filename/bin/ben_bot-$version_string-Linux-Clang"
         echo "benbot=$result" >> "$GITHUB_OUTPUT"
 
     - name: Add execution permissions
