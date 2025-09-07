@@ -1,3 +1,3 @@
 # Unit tests
 
-This directory contains unit tests for `libchess`, which are written using Catch2. Some basic benchmarks are also included in this executable.
+This directory contains unit tests, which are written using Catch2. Some basic benchmarks are also included, using Catch2's benchmarking facilities.

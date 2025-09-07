@@ -65,6 +65,8 @@ public:
             failed low (i.e. ``score <= alpha``).
          */
         std::optional<Move> bestMove;
+
+        constexpr bool operator==(const Record& other) const noexcept = default;
     };
 
     /** Retrieves the stored record for the given position,
@@ -170,7 +172,7 @@ inline void TranspositionTable::store(const Position& pos, const Record& record)
         it != records.end()) {
         // this position was already stored in the table
         // keep the old evaluation if it was an exact one & the new one isn't,
-        // or if the new evaluation is a greater depth than the old one
+        // or if the new evaluation is a lower depth than the old one
 
         auto& stored = it->second;
 
