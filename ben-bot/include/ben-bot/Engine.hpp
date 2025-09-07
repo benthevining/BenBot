@@ -138,8 +138,9 @@ private:
         "Press to clear the transposition table"
     };
 
-    std::array<uci::Option*, 2uz> options {
+    std::array<uci::Option*, 3uz> options {
         &searcher.context.openingBook.enabled,
+        &searcher.context.openingBook.maxMoves,
         &clearTT
     };
 

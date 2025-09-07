@@ -36,6 +36,7 @@
 #include <span>
 #include <string_view>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace ben_bot {
@@ -89,6 +90,14 @@ struct OpeningBookContext final {
     /** This parameter controls whether the engine is allowed to access its internal book. */
     chess::uci::BoolOption enabled { chess::uci::default_options::own_book() };
 
+    /** This parameter controls the maximum number of moves that will be taken from the
+        internal book, if it is enabled.
+     */
+    chess::uci::IntOption maxMoves {
+        "MaxBookMoves", 1, 50, 10,
+        "Maximum number of moves that will be played from the engine's internal opening book"
+    };
+
     /** Returns a book move for the given position. Returns nullopt if the book is
         disabled, or if the given position is out-of-book. If the book is enabled
         and the openings database returns multiple possible continuations for the
@@ -132,6 +141,9 @@ inline std::span<const Move> OpeningBook::get_moves(const Position& position) co
 inline std::optional<Move> OpeningBookContext::get_move(const Position& position)
 {
     if (not enabled.get_value())
+        return std::nullopt;
+
+    if (std::cmp_greater(maxMoves.get_value(), position.fullMoveCounter))
         return std::nullopt;
 
     const auto moves = book.get_moves(position);
