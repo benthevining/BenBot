@@ -75,10 +75,11 @@ jobs:
       uses: robinraju/release-downloader@v1.12
       with:
         latest: true
-        fileName: '*-Linux-Clang'
+        fileName: BenBot-ubuntu-latest-clang.zip
         tarBall: false
         zipBall: false
         out-file-path: baseline
+        extract: true
 
     - name: Print BenBot filename
       id: benbot_filename
