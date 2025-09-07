@@ -84,8 +84,10 @@ jobs:
     - name: Print BenBot filename
       id: benbot_filename
       run: |
-        path=${{ fromJson(steps.download_benbot.outputs.downloaded_files)[0] }}
-        echo "benbot=$path" >> "$GITHUB_OUTPUT"
+        zip_path=${{ fromJson(steps.download_benbot.outputs.downloaded_files)[0] }}
+        dirpath=$(dirname "$zip_path")
+        result="$dirpath/bin/ben_bot-${${{steps.download_benbot.outputs.tag_name}}:1}-Linux-Clang"
+        echo "benbot=$result" >> "$GITHUB_OUTPUT"
 
     - name: Add execution permissions
       run: chmod --preserve-root 777 ${{ steps.fastchess_filename.outputs.fastchess }} ${{ steps.benbot_filename.outputs.benbot }}
