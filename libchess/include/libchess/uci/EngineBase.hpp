@@ -51,7 +51,10 @@ struct EngineBase {
     EngineBase& operator=(const EngineBase&) = default;
     EngineBase& operator=(EngineBase&&)      = default;
 
-    /** This must return the name of the engine. */
+    /** This must return the name of the engine.
+        The returned string may optionally contain the engine's current version,
+        such as ``BenBot 1.2.0``.
+     */
     [[nodiscard]] virtual string_view get_name() const = 0;
 
     /** This must return the name of the engine's author. */

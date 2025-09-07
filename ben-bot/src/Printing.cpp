@@ -31,6 +31,7 @@
 #include <optional>
 #include <print>
 #include <string>
+#include <string_view>
 #include <variant>
 
 namespace ben_bot {
@@ -110,6 +111,15 @@ namespace {
     }
 
 } // namespace
+
+std::string_view Engine::get_name() const
+{
+    static const auto idString {
+        std::format("BenBot {}", resources::get_version_string())
+    };
+
+    return idString;
+}
 
 template <bool PrintBestMove>
 void Engine::print_uci_info(const Result& res) const

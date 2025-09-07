@@ -85,7 +85,7 @@ public:
     void print_logo_and_version() const;
 
 private:
-    [[nodiscard]] string_view get_name() const override { return "BenBot"; }
+    [[nodiscard]] string_view get_name() const override;
     [[nodiscard]] string_view get_author() const override { return "Ben Vining"; }
 
     void new_game(bool firstCall) override;
