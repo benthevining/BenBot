@@ -27,8 +27,6 @@ cmrc_add_resource_library (
 
 add_library (ben_bot_resources STATIC)
 
-target_compile_features (ben_bot_resources PRIVATE c_std_23)
-
 target_link_libraries (ben_bot_resources PRIVATE ben_bot_resources_internal)
 
 # generate the config header that provides info such as compiler name, build config, etc.
