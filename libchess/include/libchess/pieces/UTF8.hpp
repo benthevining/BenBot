@@ -27,6 +27,7 @@
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
 #include <string_view>
+#include <utility>
 
 /** This namespace contains some UTF8 encodings of chess piece symbols.
     @ingroup utf8_pieces
@@ -72,7 +73,8 @@ namespace white {
             case Type::Rook  : return ROOK;
             case Type::Queen : return QUEEN;
             case Type::King  : return KING;
-            default          : return PAWN;
+            case Type::Pawn  : return PAWN;
+            default          : std::unreachable();
         }
     }
 
@@ -117,7 +119,8 @@ namespace black {
             case Type::Rook  : return ROOK;
             case Type::Queen : return QUEEN;
             case Type::King  : return KING;
-            default          : return PAWN;
+            case Type::Pawn  : return PAWN;
+            default          : std::unreachable();
         }
     }
 

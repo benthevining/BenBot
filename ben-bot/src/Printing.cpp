@@ -151,6 +151,16 @@ void Engine::print_uci_info(const Result& res) const
 template void Engine::print_uci_info<true>(const Result&) const;
 template void Engine::print_uci_info<false>(const Result&) const;
 
+Engine::Engine()
+    : searcher {
+        search::Callbacks {
+            .onSearchComplete = [this](const Result& res) { print_uci_info<true>(res); },
+            .onIteration = [this](const Result& res) { print_uci_info<false>(res); },
+            .onOpeningBookHit = [this]([[maybe_unused]] const Move& move) { print_book_hit(); } }
+    }
+{
+}
+
 void Engine::print_book_hit() const
 {
     if (debugMode.load())

@@ -147,10 +147,14 @@ inline auto TranspositionTable::probe_eval(
                 break;
             }
 
-            default: { // Beta
+            case Beta: {
                 if (record->eval >= beta)
                     return std::make_pair(beta, record->evalType);
+
+                break;
             }
+
+            default: std::unreachable();
         }
     }
 

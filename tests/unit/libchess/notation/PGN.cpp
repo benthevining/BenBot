@@ -21,7 +21,6 @@
 #include <libchess/game/Result.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/PGN.hpp>
-#include <string>
 #include <string_view>
 
 static constexpr auto TAGS { "[notation][PGN]" };
@@ -32,7 +31,7 @@ using chess::notation::to_pgn;
 
 TEST_CASE("PGN - block comments", TAGS)
 {
-    static const std::string pgn {
+    static constexpr std::string_view pgn {
         R"([Event "F/S Return Match"]
 [Site "Belgrade, Serbia JUG"]
 [Date "1992.11.04"]
@@ -66,7 +65,7 @@ TEST_CASE("PGN - block comments", TAGS)
 
 TEST_CASE("PGN - tolerate spaces between move number and move", TAGS)
 {
-    static const std::string pgn {
+    static constexpr std::string_view pgn {
         R"([Event "F/S Return Match"]
 [Site "Belgrade, Serbia JUG"]
 [Date "1992.11.04"]
@@ -87,7 +86,7 @@ TEST_CASE("PGN - tolerate spaces between move number and move", TAGS)
 
 TEST_CASE("PGN - multiline block comments", TAGS)
 {
-    static const std::string pgn {
+    static constexpr std::string_view pgn {
         R"([Event "F/S Return Match"]
 [Site "Belgrade, Serbia JUG"]
 [Date "1992.11.04"]
@@ -102,7 +101,7 @@ called the Ruy Lopez.} 3...a6 4.Ba4 Nf6 5.O-O Be7 6.Re1 b5 7.Bb3 d6 8.c3 O-O 9.h
 
     const auto game = from_pgn(pgn);
 
-    static const std::string comment {
+    static constexpr std::string_view comment {
         R"(This opening is
 called the Ruy Lopez.)"
     };
@@ -114,7 +113,7 @@ called the Ruy Lopez.)"
 
 TEST_CASE("PGN - line comments", TAGS)
 {
-    static const std::string pgn {
+    static constexpr std::string_view pgn {
         R"([Event "F/S Return Match"]
 [Site "Belgrade, Serbia JUG"]
 [Date "1992.11.04"]
@@ -149,7 +148,7 @@ TEST_CASE("PGN - line comments", TAGS)
 
 TEST_CASE("PGN - NAGs", TAGS)
 {
-    static const std::string pgn {
+    static constexpr std::string_view pgn {
         R"([Event "F/S Return Match"]
 [Site "Belgrade, Serbia JUG"]
 [Date "1992.11.04"]
@@ -186,7 +185,7 @@ TEST_CASE("PGN - NAGs", TAGS)
 
 TEST_CASE("PGN - NAG inside a comment", TAGS)
 {
-    static const std::string pgn {
+    static constexpr std::string_view pgn {
         R"([Event "F/S Return Match"]
 [Site "Belgrade, Serbia JUG"]
 [Date "1992.11.04"]
@@ -224,7 +223,7 @@ TEST_CASE("PGN - NAG inside a comment", TAGS)
 
 TEST_CASE("PGN - custom starting position", TAGS)
 {
-    static const std::string pgn {
+    static constexpr std::string_view pgn {
         R"(
 [FEN "5r2/4k3/8/3R2n1/2K5/8/8/8 b - - 0 1"]
 [Setup "1"]
@@ -241,7 +240,7 @@ TEST_CASE("PGN - custom starting position", TAGS)
 
 TEST_CASE("PGN - variations", TAGS)
 {
-    static const std::string pgn {
+    static constexpr std::string_view pgn {
         R"([Event "F/S Return Match"]
 [Site "Belgrade, Serbia JUG"]
 [Date "1992.11.04"]
@@ -270,7 +269,7 @@ TEST_CASE("PGN - variations", TAGS)
 
 TEST_CASE("PGN - nested variations", TAGS)
 {
-    static const std::string pgn {
+    static constexpr std::string_view pgn {
         R"([Event "F/S Return Match"]
 [Site "Belgrade, Serbia JUG"]
 [Date "1992.11.04"]
@@ -305,7 +304,7 @@ TEST_CASE("PGN - nested variations", TAGS)
 
 TEST_CASE("PGN - complex file", TAGS)
 {
-    static const std::string pgn {
+    static constexpr std::string_view pgn {
         R"([Event "Buenos Aires Sicilian"]
 [Site "Buenos Aires ARG"]
 [Date "1994.10.??"]

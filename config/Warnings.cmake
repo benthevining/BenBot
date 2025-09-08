@@ -57,6 +57,7 @@ add_compile_options (
     -Wconversion
     -Werror=format-security
     -Wextra
+    -Weverything
     -Wformat
     -Wformat=2
     -Woverloaded-virtual
@@ -72,6 +73,14 @@ add_compile_options (
     -Wunused-parameter
     -Wnon-virtual-dtor
     -Wzero-as-null-pointer-constant
+    -Wunused
+    -Wno-c++98-compat
+    -Wno-c++98-compat-pedantic
+    -Wno-c++20-compat
+    -Wno-missing-designated-field-initializers
+    -Wno-padded
+    -Wno-poison-system-directories
+    -Wno-covered-switch-default
 )
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
@@ -93,6 +102,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
     add_compile_options (
         # cmake-format: sortable
+        -Waggressive-loop-optimization
         -Wno-strict-overflow
         -Wpointer-arith
         -Wredundant-decls

@@ -38,7 +38,7 @@ using std::string_view;
 struct Option {
     Option() = default;
 
-    virtual ~Option() = default;
+    virtual ~Option();
 
     Option(const Option&)            = default;
     Option(Option&&)                 = default;

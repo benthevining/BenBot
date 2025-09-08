@@ -26,6 +26,9 @@ using std::println;
 using util::split_at_first_space;
 using util::trim;
 
+// defined out-of-line to address -Wweak-vtables
+EngineBase::~EngineBase() = default;
+
 void EngineBase::handle_command(std::string_view command)
 {
     command = trim(command);

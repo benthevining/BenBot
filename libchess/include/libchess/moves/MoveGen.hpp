@@ -668,7 +668,7 @@ namespace detail {
                 return;
             }
 
-            default: // King
+            case PieceType::King: {
                 std::ranges::copy(
                     get_king_moves<Side, CapturesOnly>(position),
                     outputIt);
@@ -679,6 +679,11 @@ namespace detail {
                         get_castling<Side>(position, allOccupied),
                         outputIt);
                 }
+
+                return;
+            }
+
+            default: std::unreachable();
         }
     }
 

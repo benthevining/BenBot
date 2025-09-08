@@ -30,6 +30,8 @@ namespace {
 struct CDashBenchmarkReporter final : Catch::StreamingReporterBase {
     using StreamingReporterBase::StreamingReporterBase;
 
+    ~CDashBenchmarkReporter() override;
+
     [[nodiscard]] static std::string getDescription()
     {
         return "Output benchmark results in CDash dashboard measurement format";
@@ -44,5 +46,8 @@ private:
             get_exec_ms(stats));
     }
 };
+
+// defined out-of-line to address -Wweak-vtables
+CDashBenchmarkReporter::~CDashBenchmarkReporter() = default;
 
 CATCH_REGISTER_REPORTER("cdash", CDashBenchmarkReporter)

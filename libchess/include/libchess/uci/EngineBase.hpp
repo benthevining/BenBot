@@ -44,7 +44,7 @@ using std::string_view;
 struct EngineBase {
     EngineBase() = default;
 
-    virtual ~EngineBase() = default;
+    virtual ~EngineBase();
 
     EngineBase(const EngineBase&)            = default;
     EngineBase(EngineBase&&)                 = default;

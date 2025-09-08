@@ -31,9 +31,9 @@ namespace {
     [[nodiscard, gnu::const]] consteval chrono::year build_year() noexcept
     {
         return chrono::year {
-            (BUILD_DATE_STR[7] - '0') * 1000
-            + (BUILD_DATE_STR[8] - '0') * 100
-            + (BUILD_DATE_STR[9] - '0') * 10
+            ((BUILD_DATE_STR[7] - '0') * 1000)
+            + ((BUILD_DATE_STR[8] - '0') * 100)
+            + ((BUILD_DATE_STR[9] - '0') * 10)
             + (BUILD_DATE_STR[10] - '0')
         };
     }

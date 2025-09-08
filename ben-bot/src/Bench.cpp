@@ -19,6 +19,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstddef> // IWYU pragma: keep - for size_t
+#include <filesystem>
 #include <libbenbot/search/Search.hpp>
 #include <libbenbot/search/Thread.hpp>
 #include <libchess/notation/EPD.hpp>
@@ -158,7 +159,7 @@ void Engine::run_bench(const string_view arguments)
         do_bench(resources::get_bench_epd_text(), defaultDepth);
     } else {
         do_bench(
-            util::load_file_as_string(path { filePath }),
+            util::load_file_as_string(std::filesystem::path { filePath }),
             defaultDepth);
     }
 }

@@ -22,6 +22,7 @@
 #include <libchess/board/Pieces.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
+#include <utility>
 
 namespace ben_bot::eval {
 
@@ -100,7 +101,8 @@ namespace piece_values {
             case PieceType::Bishop: return BISHOP;
             case PieceType::Rook  : return ROOK;
             case PieceType::Queen : return QUEEN;
-            default               : return KING;
+            case PieceType::King  : return KING;
+            default               : std::unreachable();
         }
     }
 

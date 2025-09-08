@@ -200,7 +200,7 @@ TEST_CASE("Bitboard - diagonal masks", TAGS)
         for (const auto [sq1, sq2] : std::views::zip(diagonal.squares(), diagonal.squares()))
             REQUIRE(are_on_same_diagonal(sq1, sq2));
 
-        static const auto squares = get_squares(diagonal);
+        const auto squares = get_squares(diagonal);
 
         for (auto idx = 0uz; idx < diagonal.count(); ++idx) {
             REQUIRE(file_distance(
@@ -236,7 +236,7 @@ TEST_CASE("Bitboard - diagonal masks", TAGS)
         for (const auto [sq1, sq2] : std::views::zip(diagonal.squares(), diagonal.squares()))
             REQUIRE(are_on_same_diagonal(sq1, sq2));
 
-        static const auto squares = get_squares(diagonal);
+        const auto squares = get_squares(diagonal);
 
         for (auto idx = 0uz; idx < diagonal.count(); ++idx) {
             REQUIRE(file_distance(

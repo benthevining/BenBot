@@ -527,8 +527,11 @@ namespace {
                 output.append("1-0");
                 return;
 
-            default: // Black won
+            case game::Result::BlackWon:
                 output.append("0-1");
+                return;
+
+            default: std::unreachable();
         }
     }
 

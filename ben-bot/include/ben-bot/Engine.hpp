@@ -21,12 +21,10 @@
 
 #include <array>
 #include <atomic>
-#include <filesystem>
 #include <functional>
 #include <libbenbot/search/Search.hpp>
 #include <libbenbot/search/Thread.hpp>
 #include <libchess/game/Position.hpp>
-#include <libchess/moves/Move.hpp>
 #include <libchess/uci/CommandParsing.hpp> // IWYU pragma: keep - for uci::GoCommandOptions
 #include <libchess/uci/EngineBase.hpp>
 #include <libchess/uci/Options.hpp>
@@ -36,7 +34,6 @@
 
 namespace ben_bot {
 
-using std::filesystem::path;
 using std::string_view;
 
 namespace uci = chess::uci;
@@ -81,6 +78,8 @@ struct CustomCommand final {
  */
 class Engine final : public uci::EngineBase {
 public:
+    Engine();
+
     /** Prints the engine's logo and version to ``stdout``. */
     void print_logo_and_version() const;
 
@@ -127,10 +126,7 @@ private:
 
     std::atomic_bool debugMode { false };
 
-    search::Thread searcher { search::Callbacks {
-        .onSearchComplete = [this](const Result& res) { print_uci_info<true>(res); },
-        .onIteration = [this](const Result& res) { print_uci_info<false>(res); },
-        .onOpeningBookHit = [this]([[maybe_unused]] const Move& move) { print_book_hit(); } } };
+    search::Thread searcher;
 
     uci::Action clearTT {
         "Clear Hash",

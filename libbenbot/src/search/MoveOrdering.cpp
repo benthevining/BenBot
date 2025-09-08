@@ -98,6 +98,7 @@ namespace {
 
                 case Exact: score += PV_NODE_BONUS; break;
                 case Beta : score -= CUT_NODE_PENALTY; break;
+                case Alpha: break;
                 default   : break;
             }
         }

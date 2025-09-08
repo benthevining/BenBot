@@ -50,4 +50,19 @@ target_sources (
 
 target_include_directories (ben_bot_resources PRIVATE "${generated_includes}")
 
+# warning flags
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang|GNU")
+    target_compile_options (
+        ben_bot_resources_internal
+        PRIVATE # cmake-format: sortable
+                -Wno-missing-variable-declarations -Wno-newline-eof -Wno-exit-time-destructors
+                -Wno-missing-prototypes
+    )
+
+    target_compile_options (
+        ben_bot_resources PRIVATE # cmake-format: sortable
+                                  -Wno-date-time -Wno-unreachable-code
+    )
+endif ()
+
 add_library (ben_bot::resources ALIAS ben_bot_resources)
