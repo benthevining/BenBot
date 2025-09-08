@@ -55,9 +55,6 @@ add_compile_options (
     -Wall
     -Wcast-align
     -Wconversion
-    -Werror=implicit
-    -Werror=incompatible-pointer-types
-    -Werror=int-conversion
     -Werror=format-security
     -Wextra
     -Wformat
@@ -96,7 +93,6 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
     add_compile_options (
         # cmake-format: sortable
-        -Wabi
         -Wno-strict-overflow
         -Wpointer-arith
         -Wredundant-decls
