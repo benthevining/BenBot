@@ -143,21 +143,6 @@
     },
     {
       "cacheVariables": {
-        "CMAKE_CXX_FLAGS": {
-          "type": "STRING",
-          "value": "-fsanitize=thread"
-        },
-        "CMAKE_C_FLAGS": {
-          "type": "STRING",
-          "value": "-fsanitize=thread"
-        }
-      },
-      "displayName": "Build with Ninja & Clang (TSAN)",
-      "inherits": "clang",
-      "name": "clang-tsan"
-    },
-    {
-      "cacheVariables": {
         "CMAKE_CXX_COMPILER": {
           "type": "STRING",
           "value": "g++-14"

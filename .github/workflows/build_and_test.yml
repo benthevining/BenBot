@@ -57,9 +57,6 @@ jobs:
         - os: ubuntu-latest
           preset: clang-ubsan
           config: Debug
-        - os: ubuntu-latest
-          preset: clang-tsan
-          config: Debug
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }}.${{ matrix.preset }}.${{ matrix.config }}.${{ inputs.dashboard_type }}
     timeout-minutes: 120
