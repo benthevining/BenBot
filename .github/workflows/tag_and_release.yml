@@ -88,7 +88,7 @@ jobs:
   build:
     needs: bump_version
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         os: [ubuntu-latest, windows-latest, macos-15]
         preset: [clang]
