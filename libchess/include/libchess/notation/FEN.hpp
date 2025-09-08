@@ -42,10 +42,18 @@ using game::Position;
 
 /** Returns the FEN representation of the given position.
 
+    @param position The position to serialize as a FEN string.
+    @param alwaysWriteEPSqare If true, the en passant square will be written
+    any time the last move was a pawn double-advance; if false, the en passant
+    square will only be written if the opponent has any pawns capable of
+    capturing en passant (as in X-FEN).
+
     @ingroup notation
     @see from_fen()
  */
-[[nodiscard]] std::string to_fen(const Position& position);
+[[nodiscard]] std::string to_fen(
+    const Position& position,
+    bool            alwaysWriteEPSqare = true);
 
 /** Returns a Position object encoding the given FEN string.
 

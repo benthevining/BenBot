@@ -17,7 +17,9 @@
 #include <format>
 #include <iterator>
 #include <libchess/game/Position.hpp>
+#include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/FEN.hpp>
+#include <libchess/pieces/Colors.hpp>
 #include <libchess/util/Strings.hpp>
 #include <ranges>
 #include <stdexcept>
@@ -25,9 +27,10 @@
 
 namespace chess::notation {
 
+using pieces::Color;
 using std::size_t;
 
-std::string to_fen(const Position& position)
+std::string to_fen(const Position& position, const bool alwaysWriteEPSqare)
 {
     std::string fen;
 
@@ -46,8 +49,16 @@ std::string to_fen(const Position& position)
 
     fen.push_back(' ');
 
-    fen_helpers::write_en_passant_target_square(
-        position.enPassantTargetSquare, fen);
+    const auto epMoves = position.is_white_to_move()
+                           ? moves::detail::get_en_passant<Color::White>(position)
+                           : moves::detail::get_en_passant<Color::Black>(position);
+
+    if (alwaysWriteEPSqare || not epMoves.empty()) {
+        fen_helpers::write_en_passant_target_square(
+            position.enPassantTargetSquare, fen);
+    } else {
+        fen.push_back('-');
+    }
 
     fen.push_back(' ');
 
