@@ -12,8 +12,6 @@
 
 name: SPRT
 
-run-name: Run SPRT test
-
 on:
   workflow_dispatch:
   push:
