@@ -117,7 +117,7 @@ namespace {
     {
         return chrono::day {
             (__DATE__[4] == ' ') ? static_cast<unsigned>(__DATE__[5] - '0')
-                                 : static_cast<unsigned>((__DATE__[4] - '0') * 10
+                                 : static_cast<unsigned>((__DATE__[4] - '0') * 10 // cppcheck-suppress duplicateValueTernary
                                                          + (__DATE__[5] - '0'))
         };
     }
