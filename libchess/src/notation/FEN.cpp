@@ -53,7 +53,7 @@ std::string to_fen(const Position& position, const bool alwaysWriteEPSqare)
                            ? moves::detail::get_en_passant<Color::White>(position)
                            : moves::detail::get_en_passant<Color::Black>(position);
 
-    if (alwaysWriteEPSqare || not epMoves.empty()) {
+    if (alwaysWriteEPSqare or not epMoves.empty()) {
         fen_helpers::write_en_passant_target_square(
             position.enPassantTargetSquare, fen);
     } else {
