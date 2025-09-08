@@ -550,3 +550,20 @@
 ### Features
 
 * id output now includes engine version ([#272](https://github.com/benthevining/BenBot/issues/272)) ([eaaf2c8](https://github.com/benthevining/BenBot/commit/eaaf2c8d40d5f6bc58e9d983bf8b68c3f0b0d79b))
+## [1.4.26](https://github.com/benthevining/BenBot/compare/v1.4.25...v1.4.26) (2025-09-08)
+
+### Features
+
+* parameter to control max number of book moves ([#274](https://github.com/benthevining/BenBot/issues/274)) ([2f32d9a](https://github.com/benthevining/BenBot/commit/2f32d9a5001cf7b229f0901a59975f21fee2bee8))
+
+### Bug Fixes
+
+* CodeQL python notes ([f87774b](https://github.com/benthevining/BenBot/commit/f87774b2a2a220c3520773b065972d4049fc859d))
+* cppcheck warning ([7b769e3](https://github.com/benthevining/BenBot/commit/7b769e3538cf14ca774781a8d5ec2cec06f2e59d))
+* handling isready during search ([#232](https://github.com/benthevining/BenBot/issues/232)) ([c86a376](https://github.com/benthevining/BenBot/commit/c86a376713df8c98bf9a027408c6b0ddba878c7a))
+* removed usage of gmtime() ([d42e2bf](https://github.com/benthevining/BenBot/commit/d42e2bf259f675e38b5cc3048288e80a725b4e7c))
+* security alert ([12f98a7](https://github.com/benthevining/BenBot/commit/12f98a72e37e7555fcf0fdac2e5e9fe83e63c183))
+* SPRT workflow [skip ci] ([57b31c8](https://github.com/benthevining/BenBot/commit/57b31c86057cf94937567e52020596aed91b84c8))
+* using X-FEN style printing of EP squares to fix rampart test errors ([ab07017](https://github.com/benthevining/BenBot/commit/ab0701737ad5ca19214427a71586958d3a1c96a6))
+* Windows build error ([3ab5f9e](https://github.com/benthevining/BenBot/commit/3ab5f9ee70d7b529b5191227f5ea57a65be26fc4))
+* Windows build error ([a19d7e2](https://github.com/benthevining/BenBot/commit/a19d7e27b38c560d0060d36c84daa722d3f90d31))
