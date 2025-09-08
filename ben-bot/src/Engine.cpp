@@ -34,14 +34,9 @@ namespace notation = chess::notation;
 using std::println;
 using std::size_t;
 
-void Engine::new_game(const bool firstCall)
+void Engine::new_game([[maybe_unused]] const bool firstCall)
 {
     searcher.context.clear_transposition_table();
-
-    if (firstCall) {
-        searcher.context.openingBook.book.add_from_pgn(
-            resources::get_opening_book_pgn_text());
-    }
 }
 
 void Engine::go(uci::GoCommandOptions&& opts)
@@ -63,29 +58,6 @@ void Engine::handle_custom_command(
 
     println(std::cerr, "Unknown UCI command: {}", command);
     println("Type 'help' for a list of supported commands");
-}
-
-void Engine::load_book_file(const string_view arguments)
-{
-    const auto [firstWord, rest] = util::split_at_first_space(arguments);
-
-    const path file { firstWord };
-
-    const bool discardVariations = util::trim(rest) == "novars";
-
-    wait();
-
-    try {
-        searcher.context.openingBook.book.add_from_pgn(
-            util::load_file_as_string(file),
-            not discardVariations);
-    } catch (const std::exception& except) {
-        println(std::cerr,
-            "Error reading from opening book file at path: {}",
-            file.string()); // NOLINT(build/include_what_you_use)
-
-        println(std::cerr, "{}", except.what());
-    }
 }
 
 namespace {

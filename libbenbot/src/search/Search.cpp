@@ -277,18 +277,18 @@ void Context::search()
 
     Interrupter interrupter { exitFlag, options.searchTime };
 
-    if (const auto bookMove = openingBook.get_move(options.position)) {
-        callbacks.opening_book_hit(*bookMove);
-
-        const auto eval = eval::evaluate(after_move(options.position, *bookMove));
-
-        callbacks.search_complete({ .duration = interrupter.get_search_duration(),
-            .depth                            = 1uz,
-            .score                            = eval,
-            .bestMove                         = *bookMove });
-
-        return;
-    }
+    // if (const auto bookMove = openingBook.get_move(options.position)) {
+    //     callbacks.opening_book_hit(*bookMove);
+    //
+    //     const auto eval = eval::evaluate(after_move(options.position, *bookMove));
+    //
+    //     callbacks.search_complete({ .duration = interrupter.get_search_duration(),
+    //         .depth                            = 1uz,
+    //         .score                            = eval,
+    //         .bestMove                         = *bookMove });
+    //
+    //     return;
+    // }
 
     // if the movesToSearch was empty, then we search all legal moves
     if (options.movesToSearch.empty()) {

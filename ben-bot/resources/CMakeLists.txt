@@ -20,7 +20,6 @@ FetchContent_MakeAvailable (cmrc)
 cmrc_add_resource_library (
         ben_bot_resources_internal
         res/license_header.txt
-        res/book.pgn
         res/bench.epd
 )
 # cmake-format: on

@@ -106,8 +106,6 @@ private:
 
     void handle_custom_command(string_view command, string_view opts) override;
 
-    void load_book_file(string_view arguments);
-
     void run_perft(string_view arguments) const;
 
     static void run_bench(string_view arguments);
@@ -140,20 +138,12 @@ private:
         "Press to clear the transposition table"
     };
 
-    std::array<uci::Option*, 3uz> options {
-        &searcher.context.openingBook.enabled,
-        &searcher.context.openingBook.maxMoves,
+    std::array<uci::Option*, 1uz> options {
         &clearTT
     };
 
     // clang-format off
-    std::array<CustomCommand, 8uz> customCommands {
-        CustomCommand {
-            .name   = "loadbook",
-            .action = [this](const string_view args) { load_book_file(args); },
-            .description = "Reads the given PGN file into the engine's openings database",
-            .argsHelp = "<path> [novars]"
-        },
+    std::array<CustomCommand, 7uz> customCommands {
         CustomCommand {
             .name = "showpos",
             .action = [this](const string_view args){ print_current_position(args); },
