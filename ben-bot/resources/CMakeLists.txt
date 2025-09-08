@@ -27,6 +27,8 @@ cmrc_add_resource_library (
 
 add_library (ben_bot_resources STATIC)
 
+target_compile_features (ben_bot_resources PRIVATE c_std_23)
+
 target_link_libraries (ben_bot_resources PRIVATE ben_bot_resources_internal)
 
 # generate the config header that provides info such as compiler name, build config, etc.
@@ -46,7 +48,7 @@ file (GENERATE OUTPUT "${generated_header}" CONTENT "${config_header_content}")
 
 target_sources (
     ben_bot_resources PUBLIC FILE_SET HEADERS BASE_DIRS include FILES include/ben-bot/Resources.hpp
-    PRIVATE src/Resources.cpp "${generated_header}"
+    PRIVATE src/Resources.cpp src/BuildTime.cpp "${generated_header}"
 )
 
 target_include_directories (ben_bot_resources PRIVATE "${generated_includes}")
