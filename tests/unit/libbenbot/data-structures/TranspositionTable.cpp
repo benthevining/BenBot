@@ -21,13 +21,14 @@
 static constexpr auto TAGS { "[data-structures][TranspositionTable]" };
 
 using ben_bot::TranspositionTable;
+using chess::game::Position;
 using EvalType = TranspositionTable::Record::EvalType;
 
 namespace notation = chess::notation;
 
 TEST_CASE("Transposition table - find()", TAGS)
 {
-    static const chess::game::Position startPos {};
+    static const Position startPos {};
 
     const auto pos2 = notation::from_fen("8/8/4n3/2B1k1p1/3Pn3/2K5/5R2/8 b - - 0 1");
 
@@ -55,7 +56,7 @@ TEST_CASE("Transposition table - find()", TAGS)
 
 TEST_CASE("Transposition table - get_best_response()", TAGS)
 {
-    static const chess::game::Position startPos {};
+    static const Position startPos {};
 
     const auto ourMove = notation::from_alg(startPos, "Nf3");
 
@@ -89,7 +90,7 @@ TEST_CASE("Transposition table - get_best_response()", TAGS)
 
 TEST_CASE("Transposition table - probe_eval()", TAGS)
 {
-    static const chess::game::Position startPos {};
+    static const Position startPos {};
 
     static constexpr auto DEPTH = 2uz;
     static constexpr auto ALPHA = -2;
@@ -182,7 +183,7 @@ TEST_CASE("Transposition table - store() overwriting rules", TAGS)
 {
     using Record = TranspositionTable::Record;
 
-    static const chess::game::Position startPos {};
+    static const Position startPos {};
 
     TranspositionTable table;
 
