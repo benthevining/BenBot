@@ -89,7 +89,11 @@ namespace {
     {
         std::tm ret;
 
+#ifdef _WIN32
+        gmtime_s(&ret, &time);
+#else
         gmtime_r(&time, &ret);
+#endif
 
         return ret;
     }
