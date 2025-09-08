@@ -57,7 +57,6 @@ add_compile_options (
     -Wconversion
     -Werror=format-security
     -Wextra
-    -Weverything
     -Wformat
     -Wformat=2
     -Woverloaded-virtual
@@ -98,11 +97,12 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
         -Wshift-sign-overflow
         -Wshorten-64-to-32
         -Wunused-variable
+        -Weverything
     )
 elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
     add_compile_options (
         # cmake-format: sortable
-        -Waggressive-loop-optimization
+        -Waggressive-loop-optimizations
         -Wno-strict-overflow
         -Wpointer-arith
         -Wredundant-decls
