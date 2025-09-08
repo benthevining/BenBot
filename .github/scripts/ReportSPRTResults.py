@@ -58,6 +58,7 @@ def get_emoji(type):
         case EmojiType.NEUTRAL: return '🟰'
         case EmojiType.POSITIVE: return '✅'
         case EmojiType.NEGATIVE: return '❌'
+    return ''
 
 def get_elo():
     elo_line = find_first_match('Elo:', RESULTS)
