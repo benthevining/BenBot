@@ -19,9 +19,6 @@ engine:
   protocol: uci
   ponder: false
   silence_stderr: false
-  uci_options:
-    OwnBook: true
-    MaxBookMoves: 10
   go_commands:
     movetime: 20000 # 20 sec max per move
 
