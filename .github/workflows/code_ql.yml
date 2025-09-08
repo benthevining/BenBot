@@ -36,6 +36,7 @@ permissions:
 jobs:
 
   analyze_scripts:
+    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
     strategy:
       fail-fast: false
       matrix:
@@ -61,6 +62,7 @@ jobs:
         category: "/language:${{matrix.language}}"
 
   analyze_cpp:
+    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
     runs-on: ubuntu-latest
     name: Analyze C++
     timeout-minutes: 20

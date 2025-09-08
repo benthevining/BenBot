@@ -4,6 +4,10 @@
 
 This action runs on every push, and when a PR is opened. It builds & runs tests, submits results to CDash (in the `Experimental` group), and uploads the engine artifacts. Include the string `[skip ci]` in your commit message to prevent this workflow from being triggered.
 
+## `code_ql.yml`
+
+Runs CodeQL static analysis to report security errors. Triggered by every push. Include the string `[skip ci]` in your commit message to prevent this workflow from being triggered.
+
 ## `docs.yml`
 
 This action builds the Doxygen documentation and deploys it to GitHub pages. This action is triggered by every push to `main`.
