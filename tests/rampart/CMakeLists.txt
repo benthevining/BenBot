@@ -19,7 +19,15 @@ FetchContent_Declare (
     FIND_PACKAGE_ARGS 3.12.0
 )
 
-FetchContent_MakeAvailable (nlohmann_json)
+FetchContent_Declare (
+    rampart
+    SYSTEM
+    GIT_REPOSITORY "https://github.com/schnitzi/rampart.git"
+    GIT_TAG origin/master
+    OVERRIDE_FIND_PACKAGE
+)
+
+FetchContent_MakeAvailable (nlohmann_json rampart)
 
 add_executable (rampart)
 
@@ -46,8 +54,8 @@ file (
 )
 # cmake-format: on
 
-file (GLOB testcase_files LIST_DIRECTORIES false CONFIGURE_DEPENDS
-                                                 "${CMAKE_CURRENT_LIST_DIR}/data/*.json"
+file (GLOB testcase_files LIST_DIRECTORIES false
+      CONFIGURE_DEPENDS "${rampart_SOURCE_DIR}/src/main/resources/testcases/*.json"
 )
 
 foreach (data_file IN LISTS testcase_files)
