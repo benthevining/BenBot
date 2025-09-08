@@ -87,8 +87,11 @@ namespace {
 
     [[nodiscard]] std::tm to_utc_time(const std::time_t time)
     {
-        std::tm ret;
+        std::tm ret {};
 
+        // this is written this way to avoid using the thread-unsafe function gmtime()
+        // gmtime_s() doesn't appear to be present on MacOS, and Windows's argument order
+        // is reversed from the standardized version, so the if'def is necessary here
 #ifdef _WIN32
         gmtime_s(&ret, &time);
 #else

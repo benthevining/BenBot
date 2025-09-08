@@ -85,9 +85,7 @@ jobs:
         zip_path=${{ fromJson(steps.download_benbot.outputs.downloaded_files)[0] }}
         filename=$(basename "$zip_path" ".zip")
         dirpath=$(dirname "$zip_path")
-        tag_name=${{steps.download_benbot.outputs.tag_name}}
-        version_string="${tag_name:1}"
-        result="$dirpath/$filename/bin/ben_bot-$version_string-Linux-Clang"
+        result="$dirpath/$filename/bin/ben_bot"
         echo "benbot=$result" >> "$GITHUB_OUTPUT"
 
     - name: Add execution permissions

@@ -15,7 +15,7 @@ url: https://lichess.org/
 
 engine:
   dir: ./deploy/bin/
-  name: "ben_bot-@VERSION@-Linux-Clang"
+  name: ben_bot
   protocol: uci
   ponder: false
   silence_stderr: false
