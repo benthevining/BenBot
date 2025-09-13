@@ -110,7 +110,6 @@ jobs:
         cmake -E make_directory $(dirname ${{ env.SPRT_OUTPUT_LOG }})
         cmake --build . --target sprt --config Release | tee ${{ env.SPRT_OUTPUT_LOG }}
       working-directory: ${{ env.BUILD_DIR }}
-      continue-on-error: true
 
     - name: Upload logs
       uses: actions/upload-artifact@v4
