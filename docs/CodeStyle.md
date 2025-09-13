@@ -12,13 +12,30 @@ contributors to the `BenBot` project.
 * West const. `const auto* foo` or `auto* const foo`.
 * For boolean operators `&&`, `||` and `!`, we prefer the alternate tokens `and`, `or`, and `not`. This makes the code more readable. `!` is much easier to miss than `not`.
 * Prefer to use standard library mechanisms over reinventing the wheel.
+* Always prefer brackets for initialization.
+For example, a constructor init list:
+```cpp
+MyStruct::MyStruct(const Foo& obj)
+: member{ obj }
+{}
+```
+or a local variable:
+```cpp
+static constexpr auto MY_VAR { some_func() };
+```
 
 ## CMake
 
 * CMake code **is code**. The same level of care should be taken maintaining our CMake scripts as our C++ sources.
 * Never hard-code in the project something that isn't absolutely **essential** for the project to build correctly. Most build settings can be injected via toolchain files, CMake presets, or other mechanisms.
 
+## GitHub Actions
+
+* Just as with CMake, actions workflow files should be treated as code (even though they're YAML ¯\\_(ツ)_/¯)
+* When possible, prefer `cmake -E` commands over Unix-specific commands, even for jobs that currently only run on Ubuntu or MacOS. Prefer deferring to an external script (in the `.github/scripts/` directory) over an excessive amount of bash code embedded into a workflow file.
+* Always restrict a workflow's permissions as much as possible.
+
 ## Other files
 
-* Every configuration file should have at least a brief explanatory comment mentioning what it is for, if the file format allows for comments.
+* Every configuration file and script should have at least a brief explanatory comment mentioning what it is for, if the file format allows for comments.
 * When adding new file types, add any relevant linting/formatting hooks to `.pre-commit-config.yaml`.

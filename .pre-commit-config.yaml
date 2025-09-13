@@ -13,33 +13,24 @@
 # config file for pre-commit: https://pre-commit.com/
 #
 # These hooks are run before each git commit, but can also be run on demand using
-# `pre-commit run --all-files` or `just pc`
+# `pre-commit run [--all-files]` or `just pc`
 #
 # To install the hooks to be automatically run by git when committing, run:
 # `pre-commit install --install-hooks` or `just install`
 #
-# This is the preferred way to run all of these tools -- clang-format, clang-tidy,
-# cppcheck, cmake-format, etc. -- because it is convenient to define configuration
-# for all of them in this single file, and to define the order in which they should
-# be run (we always auto-format *before* linting). In general, any tools that are
-# available as pre-commit hooks are run using pre-commit, and for these tools, any
-# configuration options settable as command-line arguments are specified in this file
-# using the `args:` key. When a tool requires configuration file(s), then if it is
-# possible to specify a custom filepath, we put the config file(s) in the `config/`
-# directory and specify that path as a command-line argument. Only if specifying a
-# custom config file is not possible do we resort to putting it in the repo root.
+# This is the preferred way to run all of these tools, because it is convenient to
+# define configuration for all of them in this single file, and to define the order
+# in which they should be run (we always auto-format *before* linting). In general,
+# any tools that are available as pre-commit hooks are run using pre-commit, and for
+# these tools, any configuration options settable as command-line arguments are
+# specified in this file using the args: key. When a tool requires configuration file(s),
+# then if it is possible to specify a custom filepath, we put the config file(s) in the
+# config/ directory and specify that path as a command-line argument. Only if specifying
+# a custom config file is not possible do we resort to putting it in the repo root.
 #
 # Note that running pre-commit may change files in the source tree. If a hook changes
 # files, the pre-commit run exits with a failure code, and if a git commit was in
 # progress, it is aborted.
-#
-# Note that clang-tidy is not run automatically, because it takes too long; it can be
-# run on-demand using:
-# `pre-commit run --hook-stage manual clang-tidy --all-files`
-#
-# clang-tidy relies on the compile commands database created by the Ninja CMake preset
-# (ie, run `cmake --preset ninja` before running clang-tidy). A log file will be written
-# to `logs/clang-tidy.log`.
 
 default_language_version:
   python: python3
@@ -83,9 +74,9 @@ repos:
     args: [--license-filepath=ben-bot/resources/res/license_header.txt, --comment-style=/*| *| */, --detect-license-in-X-top-lines=16]
     types_or: [c, c++]
   - id: insert-license
-    name: Insert license header in CMake and shell files
+    name: Insert license header in CMake files
     args: [--license-filepath=ben-bot/resources/res/license_header.txt, --comment-style=#, --detect-license-in-X-top-lines=16]
-    types_or: [cmake, yaml, toml, ini, python, shell, dockerfile]
+    types_or: [cmake, yaml, toml, ini, python, dockerfile]
   - id: insert-license
     name: Insert license header in CMake and shell files
     args: [--license-filepath=ben-bot/resources/res/license_header.txt, --comment-style=#, --detect-license-in-X-top-lines=16]
@@ -206,13 +197,6 @@ repos:
   hooks:
   - id: gitlint
     args: [--config, config/.gitlint, --msg-filename]
-
-          # sign commit
-          # TODO: doesn't work on Windows
-          # - repo: https://github.com/mattlqx/pre-commit-sign
-          #   rev: v1.2.0
-          #   hooks:
-        #   - id: sign-commit
 
 ci:
   autofix_commit_msg: 'chore: pre-commit autofix'

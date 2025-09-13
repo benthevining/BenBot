@@ -71,7 +71,7 @@ namespace {
             if constexpr (BUILD_DATE_STR[4] == ' ')
                 return static_cast<unsigned>(BUILD_DATE_STR[5] - '0');
             else
-                return static_cast<unsigned>((BUILD_DATE_STR[4] - '0') * 10 + (BUILD_DATE_STR[5] - '0'));
+                return static_cast<unsigned>(((BUILD_DATE_STR[4] - '0') * 10) + (BUILD_DATE_STR[5] - '0'));
         }();
 
         return chrono::day { dayNum };

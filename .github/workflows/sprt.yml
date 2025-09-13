@@ -39,7 +39,7 @@ jobs:
     timeout-minutes: 60
     env:
       CMAKE_BUILD_PARALLEL_LEVEL: 8
-      BUILD_DIR: Builds/clang
+      BUILD_DIR: ${{ github.workspace }}/Builds/clang
       SPRT_OUTPUT_LOG: ${{ github.workspace }}/logs/sprt/output.log
 
     steps:
@@ -52,13 +52,14 @@ jobs:
       with:
         repository: Disservin/fastchess
         latest: true
-        preRelease: true
+        preRelease: true # so far, fastchess only has prereleases
         fileName: '*-ubuntu-*'
         tarBall: false
         zipBall: false
         out-file-path: fastchess
         extract: true
 
+    # parses download_fastchess output to print the fastchess executable path to a step output
     - name: Print fastchess filename
       id: fastchess_filename
       run: |
@@ -79,6 +80,7 @@ jobs:
         out-file-path: baseline
         extract: true
 
+    # parses download_benbot output to print the ben_bot executable path to a step output
     - name: Print BenBot filename
       id: benbot_filename
       run: |
@@ -95,21 +97,23 @@ jobs:
       run: cmake --preset clang -D BENBOT_DOCS=OFF -D FASTCHESS_PROGRAM=${{ steps.fastchess_filename.outputs.fastchess }}
 
     - name: Inject baseline binary
-      run: cmake -D BASELINE_BINARY=${{ steps.benbot_filename.outputs.benbot }} -P ${{ env.BUILD_DIR }}/InjectSPRTBaseline-Release.cmake
+      run: cmake -D BASELINE_BINARY=${{ steps.benbot_filename.outputs.benbot }} -P InjectSPRTBaseline-Release.cmake
+      working-directory: ${{ env.BUILD_DIR }}
 
     - name: Build
       run: cmake --build . --target ben_bot --config Release
       working-directory: ${{ env.BUILD_DIR }}
 
     - name: Run SPRT test
+      # NB. tee needs the output directory to exist before it's invoked
       run: |
-        cmake -E make_directory ${{ github.workspace }}/logs/sprt
+        cmake -E make_directory $(dirname ${{ env.SPRT_OUTPUT_LOG }})
         cmake --build . --target sprt --config Release | tee ${{ env.SPRT_OUTPUT_LOG }}
       working-directory: ${{ env.BUILD_DIR }}
 
     - name: Upload logs
       if: always()
-      uses: actions/upload-artifact@v4.6.2
+      uses: actions/upload-artifact@v4
       with:
         name: sprt-logs
         path: logs/sprt

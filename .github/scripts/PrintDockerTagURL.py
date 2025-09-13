@@ -10,6 +10,11 @@
 #
 # ======================================================================================
 
+# This script is used to print the Dockerhub URL of a specific tag to a GHA step output variable.
+# Pipe this script's output into $GITHUB_OUTPUT.
+# This script is needed because Dockerhub image tag URLs contain the SHA of the image.
+# We obtain this via docker inspect.
+
 import sys
 import subprocess
 

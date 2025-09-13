@@ -25,13 +25,13 @@ CMake presets are provided for IDE integration, but are not mandatory.
 
 Our automated CI & releases include the following builds:
 
-|    OS    | Compiler |          Notes           |
-|:--------:|:--------:|:------------------------:|
-|  Ubuntu  |  Clang   |                          |
-|  Ubuntu  |   GCC    | Requires at least GCC 14 |
-| Windows  |  Clang   |                          |
-| Windows  |   MSVC   |                          |
-|  MacOS   |  Clang   | Builds universal binary  |
+|    OS    | Compiler |            Notes             |
+|:--------:|:--------:|:----------------------------:|
+|  Ubuntu  |  Clang   | Also built with ASAN & UBSAN |
+|  Ubuntu  |   GCC    |   Requires at least GCC 14   |
+| Windows  |  Clang   |                              |
+| Windows  |   MSVC   |                              |
+|  MacOS   |  Clang   |   Builds universal binary    |
 
 ### CMake options
 

@@ -17,8 +17,10 @@ on:
     inputs:
       dashboard_type:
         description: Type of CTest dashboard to run (Nightly, Experimental, or Continuous)
-        type: string
+        type: string # for some reason, workflow_call doesn't support choice inputs
         required: true
+
+run-name: Build & test (${{ inputs.dashboard_type }})
 
 defaults:
   run:
@@ -63,18 +65,19 @@ jobs:
     env:
       CMAKE_OSX_ARCHITECTURES: arm64;x86_64
       CMAKE_BUILD_PARALLEL_LEVEL: 8
-      CTEST_PARALLEL_LEVEL: ''
+      CTEST_PARALLEL_LEVEL: '' # empty value to make ctest detect the number of cores
       CTEST_NO_TESTS_ACTION: error
       CTEST_OUTPUT_ON_FAILURE: 1
-      BUILD_DIR: Builds/${{ matrix.preset }}
-      DEPLOY_DIR: deploy
+      BUILD_DIR: ${{ github.workspace }}/Builds/${{ matrix.preset }}
+      DEPLOY_DIR: ${{ github.workspace }}/deploy
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v5
 
     - name: Install Python dependencies
-      run: cmake -P .github/scripts/InstallPythonDeps.cmake
+      run: cmake -P InstallPythonDeps.cmake
+      working-directory: .github/scripts
 
     - name: Configure CMake
       env:
@@ -86,8 +89,8 @@ jobs:
       working-directory: ${{ env.BUILD_DIR }}
 
     - name: Upload JUnit report
-      uses: mikepenz/action-junit-report@e5453d864979a2b201453695ee1db0acac11b14b # pin v5
-      if: always() && github.event_name == 'pull_request'
+      uses: mikepenz/action-junit-report@v5
+      if: always() && github.event_name == 'pull_request' # only works when run from a PR
       with:
         report_paths: ${{ env.BUILD_DIR }}/junit.xml
         exclude_sources: ${{ env.BUILD_DIR }}
@@ -102,7 +105,8 @@ jobs:
 
     - name: Run cmake install
       if: always() && matrix.config == 'Release'
-      run: cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.DEPLOY_DIR }} --component ben_bot --config ${{ matrix.config }}
+      run: cmake --install . --prefix ${{ env.DEPLOY_DIR }} --component ben_bot --config ${{ matrix.config }}
+      working-directory: ${{ env.BUILD_DIR }}
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4

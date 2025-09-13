@@ -14,7 +14,13 @@ add_subdirectory (resources)
 
 add_executable (ben_bot)
 
+target_compile_features (ben_bot PRIVATE cxx_std_23)
+
 target_link_libraries (ben_bot PRIVATE ben_bot::libbenbot ben_bot::resources)
+
+set_target_properties (
+    ben_bot PROPERTIES CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF DEBUG_POSTFIX -d
+)
 
 file (GLOB_RECURSE benbot_headers LIST_DIRECTORIES false CONFIGURE_DEPENDS
                                                          "${CMAKE_CURRENT_LIST_DIR}/include/*.hpp"

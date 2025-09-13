@@ -10,6 +10,11 @@
 #
 # ======================================================================================
 
+# This script is used to parse the output of fastchess running an SPRT test.
+# Pipe this script's output into $GITHUB_STEP_SUMMARY.
+# This script isn't strictly necessary, it just provides a convenient summary in the GHA summary.
+# The template for the summary is read from sprt-results.md in this directory.
+
 from pathlib import Path
 import sys
 import re

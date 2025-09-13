@@ -10,13 +10,7 @@
 #
 # ======================================================================================
 
-#[=======================================================================[.rst:
-Warnings.cmake
-----------------------
-
-Including this module globally enables some default warnings.
-
-#]=======================================================================]
+# Including this module globally enables some default warnings.
 
 include_guard (GLOBAL)
 

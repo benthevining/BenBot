@@ -13,3 +13,11 @@ The test case data files contain positions from the following test suites:
 * [CCR One Hour Test](https://www.chessprogramming.org/CCR_One_Hour_Test)
 * [Kaufman Test](https://www.chessprogramming.org/Kaufman_Test)
 * [Louguet Chess Test II](https://www.chessprogramming.org/LCT_II) (LCT)
+
+## Dependencies
+
+### Programs
+* Python interpreter, needed for wrapper script
+
+### Python libraries
+* [python-chess](https://python-chess.readthedocs.io/en/latest/index.html), used by the position solver wrapper script

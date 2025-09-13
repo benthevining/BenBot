@@ -10,6 +10,10 @@
 #
 # ======================================================================================
 
+# This script is invoked before building the Doxygen docs to generate the engine docs page, using
+# the engine's help & options output to replace placeholders in the template text defined in
+# engine-docs.txt
+
 cmake_minimum_required (VERSION 3.30.0 FATAL_ERROR)
 
 if (NOT DEFINED OUTPUT_FILE)

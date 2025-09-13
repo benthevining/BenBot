@@ -10,6 +10,12 @@
 #
 # ======================================================================================
 
+# This script parses the changelog file in the repo and writes the notes for the latest
+# tag to a specified output file. The idea is that after the changelog file has been
+# updated, this script is used to extract the changelog for just the most recent release
+# into a format that can be used to populate the Github release's body.
+# python3 WriteReleaseNotes.py <changelogPath> <outputFilePath>
+
 from pathlib import Path
 import sys
 import re

@@ -10,6 +10,8 @@
 #
 # ======================================================================================
 
+# This Dockerfile expects the context to be the repo root
+
 FROM lichessbotdevs/lichess-bot:latest
 
 RUN --mount=type=bind,source=.,target=BenBot,rw \

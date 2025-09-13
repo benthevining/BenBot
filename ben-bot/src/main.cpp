@@ -14,7 +14,7 @@
 
 #include <beman/inplace_vector/inplace_vector.hpp>
 #include <ben-bot/Engine.hpp>
-#include <cstddef>
+#include <cstddef> // IWYU pragma: keep - for std::ptrdiff_t
 #include <cstdlib>
 #include <exception>
 #include <iostream>

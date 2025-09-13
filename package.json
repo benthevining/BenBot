@@ -21,7 +21,7 @@
     "uci"
   ],
   "license": "LGPL-2.1-only",
-  "name": "BenBot",
+  "name": "ben_bot",
   "os": [
     "darwin",
     "linux",
