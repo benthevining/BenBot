@@ -31,4 +31,6 @@ list (APPEND CTEST_CUSTOM_ERROR_EXCEPTION "(information:)+" "error: syntax error
 
 list (APPEND CTEST_CUSTOM_WARNING_MATCH "(style:)+")
 
-list (APPEND CTEST_CUSTOM_WARNING_EXCEPTION "(note:)+")
+list (APPEND CTEST_CUSTOM_WARNING_EXCEPTION "@CMAKE_PREFIX_PATH@" "@FETCHCONTENT_BASE_DIR@"
+      "(note:)+" "(_deps)+"
+)

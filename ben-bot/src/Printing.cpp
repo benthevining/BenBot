@@ -72,7 +72,7 @@ namespace {
         return std::format("mate {}", mateVal);
     }
 
-    [[nodiscard]] size_t get_nodes_per_second(const Result& res)
+    [[nodiscard, gnu::const]] size_t get_nodes_per_second(const Result& res)
     {
         const auto seconds = static_cast<double>(res.duration.count()) * 0.001;
 
@@ -110,6 +110,41 @@ namespace {
             to_uci(*ponderMove));
     }
 
+    template <bool PrintBestMove>
+    void print_uci_info(
+        const Result& res, const bool debugMode,
+        const search::Context& context)
+    {
+        println(
+            "info depth {} score {} time {} nodes {} nps {}{}",
+            res.depth, get_score_string(res.score), res.duration.count(),
+            res.nodesSearched, get_nodes_per_second(res),
+            get_extra_stats_string(res, debugMode));
+
+        if constexpr (PrintBestMove) {
+            const auto& currPos    = context.options.position;
+            const auto& transTable = context.transTable;
+
+            println("bestmove {}{}",
+                to_uci(res.bestMove),
+                get_ponder_move_string(
+                    transTable.get_best_response(currPos, res.bestMove)));
+
+            // Because these callbacks are executed on the searcher background thread,
+            // without this flush here, the output may not actually be written when we
+            // expect, leading to timeouts or GUIs thinking we've hung/disconnected.
+            // Because the best move is always printed last after all info output, we
+            // can do the flush only in this branch.
+            std::cout.flush();
+        }
+    }
+
+    void print_book_hit(const bool debugMode)
+    {
+        if (debugMode)
+            println("info string Opening book hit!");
+    }
+
 } // namespace
 
 std::string_view Engine::get_name() const
@@ -121,50 +156,14 @@ std::string_view Engine::get_name() const
     return idString;
 }
 
-template <bool PrintBestMove>
-void Engine::print_uci_info(const Result& res) const
-{
-    println(
-        "info depth {} score {} time {} nodes {} nps {}{}",
-        res.depth, get_score_string(res.score), res.duration.count(),
-        res.nodesSearched, get_nodes_per_second(res),
-        get_extra_stats_string(res, debugMode.load()));
-
-    if constexpr (PrintBestMove) {
-        const auto& currPos    = searcher.context.options.position;
-        const auto& transTable = searcher.context.transTable;
-
-        println("bestmove {}{}",
-            to_uci(res.bestMove),
-            get_ponder_move_string(
-                transTable.get_best_response(currPos, res.bestMove)));
-
-        // Because these callbacks are executed on the searcher background thread,
-        // without this flush here, the output may not actually be written when we
-        // expect, leading to timeouts or GUIs thinking we've hung/disconnected.
-        // Because the best move is always printed last after all info output, we
-        // can do the flush only in this branch.
-        std::cout.flush();
-    }
-}
-
-template void Engine::print_uci_info<true>(const Result&) const;
-template void Engine::print_uci_info<false>(const Result&) const;
-
 Engine::Engine()
     : searcher {
         search::Callbacks {
-            .onSearchComplete = [this](const Result& res) { print_uci_info<true>(res); },
-            .onIteration = [this](const Result& res) { print_uci_info<false>(res); },
-            .onOpeningBookHit = [this]([[maybe_unused]] const Move& move) { print_book_hit(); } }
+            .onSearchComplete = [this](const Result& res) { print_uci_info<true>(res, debugMode.load(), searcher.context); },
+            .onIteration = [this](const Result& res) { print_uci_info<false>(res, debugMode.load(), searcher.context); },
+            .onOpeningBookHit = [this]([[maybe_unused]] const Move& move) { print_book_hit(debugMode.load()); } }
     }
 {
-}
-
-void Engine::print_book_hit() const
-{
-    if (debugMode.load())
-        println("info string Opening book hit!");
 }
 
 void Engine::print_logo_and_version() const

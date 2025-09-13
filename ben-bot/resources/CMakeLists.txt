@@ -56,11 +56,16 @@ target_include_directories (ben_bot_resources PRIVATE "${generated_includes}")
 
 # warning flags
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang|GNU")
+    set (not_gnu "$<NOT:$<CXX_COMPILER_ID:GNU>>")
+    set (c_or_objc "$<COMPILE_LANGUAGE:C,OBJC>")
+
     target_compile_options (
         ben_bot_resources_internal
-        PRIVATE # cmake-format: sortable
-                -Wno-missing-variable-declarations -Wno-newline-eof -Wno-exit-time-destructors
-                -Wno-missing-prototypes
+        PRIVATE
+            # cmake-format: sortable
+            -Wno-newline-eof
+            -Wno-exit-time-destructors
+            "$<$<OR:${c_or_objc},${not_gnu}>:-Wno-missing-variable-declarations;-Wno-missing-prototypes>"
     )
 
     target_compile_options (

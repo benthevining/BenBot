@@ -12,9 +12,19 @@
  * ======================================================================================
  */
 
+#include <libchess/game/Position.hpp>
+#include <ostream>
+
+namespace chess::game {
+static std::ostream& operator<<(std::ostream& os, const Position& pos)
+{
+    os << print_ascii(pos);
+    return os;
+}
+} // namespace chess::game
+
 #include <algorithm>
 #include <catch2/catch_test_macros.hpp>
-#include <libchess/game/Position.hpp>
 #include <libchess/notation/Algebraic.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/uci/CommandParsing.hpp>

@@ -74,6 +74,7 @@ add_compile_options (
     -Wno-padded
     -Wno-poison-system-directories
     -Wno-covered-switch-default
+    -Wno-unused-macros
 )
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
