@@ -53,7 +53,7 @@ jobs:
         repository: Disservin/fastchess
         latest: true
         preRelease: true # so far, fastchess only has prereleases
-        fileName: '*-ubuntu-*'
+        fileName: '*-linux-x86-64*'
         tarBall: false
         zipBall: false
         out-file-path: fastchess

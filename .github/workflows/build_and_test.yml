@@ -113,5 +113,5 @@ jobs:
       if: always() && matrix.config == 'Release'
       with:
         name: BenBot-${{ matrix.os }}-${{ matrix.preset }}
-        path: ${{ env.DEPLOY_DIR }}
+        path: deploy # using the full path here errors on Windows due to mixed forward/backslash usage in the path
         if-no-files-found: error
