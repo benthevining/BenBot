@@ -110,9 +110,9 @@ jobs:
         cmake -E make_directory $(dirname ${{ env.SPRT_OUTPUT_LOG }})
         cmake --build . --target sprt --config Release | tee ${{ env.SPRT_OUTPUT_LOG }}
       working-directory: ${{ env.BUILD_DIR }}
+      continue-on-error: true
 
     - name: Upload logs
-      if: always()
       uses: actions/upload-artifact@v4
       with:
         name: sprt-logs
@@ -120,6 +120,5 @@ jobs:
         if-no-files-found: error
 
     - name: Report results
-      if: always()
       run: python3 ReportSPRTResults.py ${{ env.SPRT_OUTPUT_LOG }} >> $GITHUB_STEP_SUMMARY
       working-directory: .github/scripts

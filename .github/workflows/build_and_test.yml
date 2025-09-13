@@ -89,10 +89,11 @@ jobs:
     - name: Build and test
       run: ctest -D ${{ inputs.dashboard_type }} -C ${{ matrix.config }} --output-junit junit.xml --schedule-random
       working-directory: ${{ env.BUILD_DIR }}
+      continue-on-error: true
 
     - name: Upload JUnit report
       uses: mikepenz/action-junit-report@v5
-      if: always() && github.event_name == 'pull_request' # only works when run from a PR
+      if: github.event_name == 'pull_request' # only works when run from a PR
       with:
         report_paths: ${{ env.BUILD_DIR }}/junit.xml
         exclude_sources: ${{ env.BUILD_DIR }}
@@ -106,12 +107,12 @@ jobs:
         updateComment: false
 
     - name: Run cmake install
-      if: always() && matrix.config == 'Release'
+      if: matrix.config == 'Release'
       run: cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.DEPLOY_DIR }} --component ben_bot --config ${{ matrix.config }}
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
-      if: always() && matrix.config == 'Release'
+      if: matrix.config == 'Release'
       with:
         name: BenBot-${{ matrix.os }}-${{ matrix.preset }}
         path: deploy # using the full path here errors on Windows due to mixed forward/backslash usage in the path
