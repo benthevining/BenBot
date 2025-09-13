@@ -46,10 +46,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v5
 
-    - name: Get architecture
-      id: get_arch
-      run: echo "arch=$(uname -m)" >> "$GITHUB_OUTPUT"
-
     - name: Download fastchess release
       id: download_fastchess
       uses: robinraju/release-downloader@v1.12
@@ -57,7 +53,7 @@ jobs:
         repository: Disservin/fastchess
         latest: true
         preRelease: true # so far, fastchess only has prereleases
-        fileName: '*-linux-${{ steps.get_arch.outputs.arch }}*'
+        fileName: '*-linux-x86-64*'
         tarBall: false
         zipBall: false
         out-file-path: fastchess
