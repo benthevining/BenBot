@@ -12,40 +12,46 @@
  * ======================================================================================
  */
 
-#include <ben-bot/CLI.hpp>
-#include <ben-bot/Engine.hpp>
-#include <cstdlib>
-#include <exception>
-#include <iostream>
-#include <libchess/util/Console.hpp>
-#include <print>
+/** @file
+    This file defines a POD struct that encapsulates the ``ben_bot``
+    executable's CLI arguments.
 
-int main(const int argc, const char** argv)
-try {
-    chess::util::enable_utf8_console_output();
+    @ingroup benbot
+ */
 
-    const auto args = ben_bot::Arguments::parse(argc, argv);
+#pragma once
 
-    ben_bot::Engine engine;
+#include <string>
 
-    if (not args.noLogo) {
-        [[likely]];
-        engine.print_logo_and_version();
-    }
+namespace ben_bot {
 
-    if (not args.uciCommand.empty())
-        engine.handle_command(args.uciCommand);
+/** This POD struct encapsulates the ``ben_bot`` executable's command-line
+    arguments, and provides a function for parsing them.
 
-    if (not args.noLoop) {
-        [[likely]];
-        engine.loop();
-    }
+    We process any arguments to the executable as a one-shot UCI command line.
+    ``--no-loop`` can be given to make the engine exit immediately after processing
+    the given UCI command. ``--no-logo`` will suppress the logo & version normally
+    printed at startup.
 
-    return EXIT_SUCCESS;
-} catch (const std::exception& exception) {
-    std::println(std::cerr, "{}", exception.what());
-    return EXIT_FAILURE;
-} catch (...) {
-    std::println(std::cerr, "Error: unknown exception thrown!");
-    return EXIT_FAILURE;
-}
+    @ingroup benbot
+ */
+struct Arguments final {
+    /** If true, the executable should process the given UCI command and exit
+        immediately, not entering the UCI loop waiting for input.
+     */
+    bool noLoop { false };
+
+    /** If true, the executable should not print the initial logo & version output. */
+    bool noLogo { false };
+
+    /** If not empty, this is a one-shot UCI command that should be evaluated
+        after startup.
+     */
+    std::string uciCommand;
+
+    /** Parses the given command-line arguments into a populated Arguments struct. */
+    [[nodiscard]] static Arguments parse(
+        const int argc, const char** argv);
+};
+
+} // namespace ben_bot

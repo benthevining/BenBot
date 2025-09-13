@@ -14,7 +14,6 @@
 
 #include <algorithm>
 #include <ben-bot/Engine.hpp>
-#include <ben-bot/Resources.hpp>
 #include <chrono>
 #include <cstddef>  // IWYU pragma: keep - for size_t
 #include <iostream> // for cerr
