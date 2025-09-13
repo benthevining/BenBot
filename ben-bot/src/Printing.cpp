@@ -147,13 +147,9 @@ namespace {
 
 } // namespace
 
-std::string_view Engine::get_name() const
+std::string Engine::get_name() const
 {
-    static const auto idString {
-        std::format("BenBot {}", resources::get_version_string())
-    };
-
-    return idString;
+    return std::format("BenBot {}", resources::get_version_string());
 }
 
 Engine::Engine()

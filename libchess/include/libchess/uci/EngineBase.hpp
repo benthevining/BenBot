@@ -23,6 +23,7 @@
 #include <libchess/uci/CommandParsing.hpp> // IWYU pragma: keep - for GoCommandOptions
 #include <libchess/uci/Options.hpp>
 #include <span>
+#include <string>
 #include <string_view>
 
 namespace chess::uci {
@@ -55,7 +56,7 @@ struct EngineBase {
         The returned string may optionally contain the engine's current version,
         such as ``BenBot 1.2.0``.
      */
-    [[nodiscard]] virtual string_view get_name() const = 0;
+    [[nodiscard]] virtual std::string get_name() const = 0;
 
     /** This must return the name of the engine's author. */
     [[nodiscard]] virtual string_view get_author() const = 0;
