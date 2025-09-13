@@ -66,7 +66,7 @@ jobs:
         tar_path=${{ fromJson(steps.download_fastchess.outputs.downloaded_files)[0] }}
         filename=$(basename "$tar_path" ".tar")
         dirpath=$(dirname "$tar_path")
-        result="$dirpath/$filename"
+        result="$dirpath/$filename/fastchess"
         echo "fastchess=$result" >> "$GITHUB_OUTPUT"
 
     - name: Download latest BenBot release
