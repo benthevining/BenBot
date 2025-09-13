@@ -68,8 +68,8 @@ jobs:
       CTEST_PARALLEL_LEVEL: '' # empty value to make ctest detect the number of cores
       CTEST_NO_TESTS_ACTION: error
       CTEST_OUTPUT_ON_FAILURE: 1
-      BUILD_DIR: ${{ github.workspace }}/Builds/${{ matrix.preset }}
-      DEPLOY_DIR: ${{ github.workspace }}/deploy
+      BUILD_DIR: Builds/${{ matrix.preset }}
+      DEPLOY_DIR: deploy
 
     steps:
     - name: Checkout code
@@ -105,8 +105,7 @@ jobs:
 
     - name: Run cmake install
       if: always() && matrix.config == 'Release'
-      run: cmake --install . --prefix ${{ env.DEPLOY_DIR }} --component ben_bot --config ${{ matrix.config }}
-      working-directory: ${{ env.BUILD_DIR }}
+      run: cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.DEPLOY_DIR }} --component ben_bot --config ${{ matrix.config }}
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
