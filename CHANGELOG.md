@@ -578,3 +578,8 @@
 * SPRT workflow [skip ci] ([6de4b34](https://github.com/benthevining/BenBot/commit/6de4b349d58131256b998ae5305309bef1a1bbea))
 * warning flags ([162bfe2](https://github.com/benthevining/BenBot/commit/162bfe227ce30c3f50fc494f1873f086aacdeda0))
 * workflows ([f08eb44](https://github.com/benthevining/BenBot/commit/f08eb44652b300e0c40feb04dd46da9fdc513074))
+## [1.4.28](https://github.com/benthevining/BenBot/compare/v1.4.27...v1.4.28) (2025-09-13)
+
+### Bug Fixes
+
+* bump version workflow [skip ci] ([5ae9395](https://github.com/benthevining/BenBot/commit/5ae939570802e3429ef48bc544129bb6ac75e14b))
