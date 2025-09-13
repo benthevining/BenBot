@@ -567,3 +567,14 @@
 * using X-FEN style printing of EP squares to fix rampart test errors ([ab07017](https://github.com/benthevining/BenBot/commit/ab0701737ad5ca19214427a71586958d3a1c96a6))
 * Windows build error ([3ab5f9e](https://github.com/benthevining/BenBot/commit/3ab5f9ee70d7b529b5191227f5ea57a65be26fc4))
 * Windows build error ([a19d7e2](https://github.com/benthevining/BenBot/commit/a19d7e27b38c560d0060d36c84daa722d3f90d31))
+## [1.4.27](https://github.com/benthevining/BenBot/compare/v1.4.26...v1.4.27) (2025-09-13)
+
+### Bug Fixes
+
+* github workflows ([a7f16c7](https://github.com/benthevining/BenBot/commit/a7f16c743215f6afa9efdc733ab3d1c5424cc925))
+* removed spurious warning flags ([dde3e09](https://github.com/benthevining/BenBot/commit/dde3e09cc7b9ca721181f2035d4c796e9e9f829f))
+* SPRT workflow [skip ci] ([a7387ab](https://github.com/benthevining/BenBot/commit/a7387abbda64683793a58d4f1fc4d682ce21d178))
+* SPRT workflow [skip ci] ([d0d3513](https://github.com/benthevining/BenBot/commit/d0d3513ebf2e95d6dc7a29e8d7669f5084bf460d))
+* SPRT workflow [skip ci] ([6de4b34](https://github.com/benthevining/BenBot/commit/6de4b349d58131256b998ae5305309bef1a1bbea))
+* warning flags ([162bfe2](https://github.com/benthevining/BenBot/commit/162bfe227ce30c3f50fc494f1873f086aacdeda0))
+* workflows ([f08eb44](https://github.com/benthevining/BenBot/commit/f08eb44652b300e0c40feb04dd46da9fdc513074))
