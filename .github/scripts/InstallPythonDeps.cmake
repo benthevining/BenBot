@@ -23,7 +23,7 @@ find_package (Python 3.10 COMPONENTS Interpreter REQUIRED)
 # cmake-format: off
 execute_process (
     COMMAND "${Python_EXECUTABLE}" -m pip install --break-system-packages --upgrade
-        python-chess cpplint cppcheck
+        python-chess cpplint cppcheck clang-tidy
     COMMAND_ECHO STDOUT
     OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_STRIP_TRAILING_WHITESPACE
     COMMAND_ERROR_IS_FATAL ANY

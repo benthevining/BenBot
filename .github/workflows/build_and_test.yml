@@ -84,7 +84,7 @@ jobs:
     - name: Configure CMake
       env:
         BUILD_NAME: ${{ github.head_ref || github.ref_name }}.${{ matrix.os }}.${{ matrix.preset }}.${{ matrix.config }}
-      run: cmake --preset ${{ matrix.preset }} -D BENBOT_DOCS=OFF -D BUILDNAME=${{ env.BUILD_NAME }}
+      run: cmake --preset ${{ matrix.preset }} -D BENBOT_DOCS=OFF -D STATIC_ANALYSIS=ON -D BUILDNAME=${{ env.BUILD_NAME }}
 
     - name: Build and test
       run: ctest -D ${{ inputs.dashboard_type }} -C ${{ matrix.config }} --output-junit junit.xml --schedule-random
