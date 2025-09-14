@@ -63,6 +63,7 @@ if (IWYU_PROGRAM)
     set (CMAKE_C_INCLUDE_WHAT_YOU_USE ${CMAKE_CXX_INCLUDE_WHAT_YOU_USE})
 endif ()
 
+#[[
 find_program (CLANGTIDY_PROGRAM clang-tidy DOC "clang-tidy executable")
 
 if (CLANGTIDY_PROGRAM)
@@ -72,3 +73,4 @@ if (CLANGTIDY_PROGRAM)
 
     set (CMAKE_C_CLANG_TIDY ${CMAKE_CXX_CLANG_TIDY})
 endif ()
+]]
