@@ -54,3 +54,11 @@ if (CPPLINT_PROGRAM)
 
     set (CMAKE_C_CPPLINT ${CMAKE_CXX_CPPLINT})
 endif ()
+
+find_program (IWYU_PROGRAM NAMES include-what-you-use iwyu DOC "include-what-you-use executable")
+
+if (IWYU_PROGRAM)
+    set (CMAKE_CXX_INCLUDE_WHAT_YOU_USE "${IWYU_PROGRAM}" -Xiwyu --no-comments)
+
+    set (CMAKE_C_INCLUDE_WHAT_YOU_USE ${CMAKE_CXX_INCLUDE_WHAT_YOU_USE})
+endif ()
