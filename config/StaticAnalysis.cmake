@@ -20,8 +20,6 @@ if (NOT STATIC_ANALYSIS)
     return ()
 endif ()
 
-# cppcheck
-
 find_program (CPPCHECK_PROGRAM cppcheck DOC "cppcheck executable")
 
 if (CPPCHECK_PROGRAM)
@@ -47,4 +45,12 @@ if (CPPCHECK_PROGRAM)
         --suppress=duplInheritedMember
         --suppress=normalCheckLevelMaxBranches
     )
+endif ()
+
+find_program (CPPLINT_PROGRAM cpplint DOC "cpplint executable")
+
+if (CPPLINT_PROGRAM)
+    set (CMAKE_CXX_CPPLINT "${CPPLINT_PROGRAM}" --verbose=0 "--root=${CMAKE_SOURCE_DIR}")
+
+    set (CMAKE_C_CPPLINT ${CMAKE_CXX_CPPLINT})
 endif ()
