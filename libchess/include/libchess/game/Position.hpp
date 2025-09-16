@@ -134,7 +134,7 @@ struct Position final {
         function. If you manually change attributes of the position,
         call the ``refresh_zobrist()`` function to recalculate it.
      */
-    Hash hash;
+    Hash hash { 0uz };
 
     /** Returns true if the two positions have the same Zobrist hash. */
     [[nodiscard]] bool operator==(const Position& other) const noexcept
@@ -392,10 +392,12 @@ private:
 
 inline Position Position::empty()
 {
-    Position pos;
+    Position pos {};
 
     pos.whitePieces = {};
     pos.blackPieces = {};
+
+    pos.refresh_zobrist();
 
     return pos;
 }

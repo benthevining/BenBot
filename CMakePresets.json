@@ -65,8 +65,8 @@
           "value": "OFF"
         },
         "CMAKE_PROJECT_INCLUDE": {
-          "type": "FILEPATH",
-          "value": "${sourceDir}/config/Warnings.cmake"
+          "type": "STRING",
+          "value": "${sourceDir}/config/Warnings.cmake;${sourceDir}/config/StaticAnalysis.cmake"
         },
         "CTEST_NO_TESTS_ACTION": {
           "type": "STRING",

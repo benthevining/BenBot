@@ -89,7 +89,7 @@ public:
         is recorded.
      */
     [[nodiscard]] std::optional<Move> get_best_response(
-        const Position& pos, Move move) const;
+        const Position& pos, const Move& move) const;
 
     /** Stores a record for a given position. */
     void store(const Position& pos, const Record& record);
@@ -162,7 +162,7 @@ inline auto TranspositionTable::probe_eval(
 }
 
 inline std::optional<Move> TranspositionTable::get_best_response(
-    const Position& pos, const Move move) const
+    const Position& pos, const Move& move) const
 {
     if (const auto* record = find(after_move(pos, move)))
         return record->bestMove;

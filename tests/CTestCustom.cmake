@@ -22,7 +22,7 @@ set (CTEST_CUSTOM_MAXIMUM_FAILED_TEST_OUTPUT_SIZE 1000000) # 1 MB
 set (CTEST_CUSTOM_MAXIMUM_PASSED_TEST_OUTPUT_SIZE 1000000) # 1 MB
 
 list (APPEND CTEST_CUSTOM_COVERAGE_EXCLUDE # cmake-format: sortable
-      "@CMAKE_PREFIX_PATH@" "@FETCHCONTENT_BASE_DIR@" "(_cmrc)+"
+      "@CMAKE_PREFIX_PATH@" "@FETCHCONTENT_BASE_DIR@" "(_cmrc)+" "(_deps)+"
 )
 
 list (
@@ -31,13 +31,15 @@ list (
     # cmake-format: sortable
     "(information:)+"
     "error: syntax error [syntaxError]" # cppcheck false-positives for new syntax it can't parse
+    "[internalAstError]"
     "(style:)+" # style warnings shouldn't be a hard error
+    "performance:"
 )
 
 list (APPEND CTEST_CUSTOM_WARNING_MATCH # cmake-format: sortable
-      "(style:)+"
+      "(style:)+" "performance:"
 )
 
 list (APPEND CTEST_CUSTOM_WARNING_EXCEPTION # cmake-format: sortable
-      "@CMAKE_PREFIX_PATH@" "@FETCHCONTENT_BASE_DIR@" "(note:)+"
+      "@CMAKE_PREFIX_PATH@" "@FETCHCONTENT_BASE_DIR@" "(note:)+" "(_deps)+"
 )
