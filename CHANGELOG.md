@@ -583,3 +583,22 @@
 ### Bug Fixes
 
 * bump version workflow [skip ci] ([5ae9395](https://github.com/benthevining/BenBot/commit/5ae939570802e3429ef48bc544129bb6ac75e14b))
+## [1.5.0](https://github.com/benthevining/BenBot/compare/v1.4.28...v1.5.0) (2025-09-17)
+
+### Features
+
+* clang-tidy integration ([c480092](https://github.com/benthevining/BenBot/commit/c48009259bad6d774ba1cbca4c60a6697098be8e))
+* cppcheck integration ([4a06186](https://github.com/benthevining/BenBot/commit/4a0618613d49dee89450e6299f8ab685563c47c1))
+* cpplint integration ([4e8e89f](https://github.com/benthevining/BenBot/commit/4e8e89f2a2f4a7c2965a70c27778a1a41bb57e09))
+* IWYU integration ([61b2c92](https://github.com/benthevining/BenBot/commit/61b2c9211246a7e4bacebba2e8beffc4061e63fd))
+
+### Bug Fixes
+
+* actions ([a875512](https://github.com/benthevining/BenBot/commit/a8755123dde9a716e0dc9e70ce894ce4553470f2))
+* disabled clang-tidy integration ([635d49c](https://github.com/benthevining/BenBot/commit/635d49cb038d934d230b971026ffa9280a972dfc))
+* get_name() now returns a string instead of a string_view ([c559bb6](https://github.com/benthevining/BenBot/commit/c559bb642797bdda44d345921f26afc4bc9d0305))
+* get_name() now returns a string instead of a string_view ([6a018d1](https://github.com/benthevining/BenBot/commit/6a018d1459df2e50545ef974877f38d9e5967371))
+* warning ([831b9b8](https://github.com/benthevining/BenBot/commit/831b9b80411b4472a96108b3944fdb1207d7459b))
+* warnings ([091f567](https://github.com/benthevining/BenBot/commit/091f567f14768e4ab2d3054d33bbb47652de4d22))
+* warnings ([d8e15eb](https://github.com/benthevining/BenBot/commit/d8e15ebea009bfab04f9cf679890c8af51b86c10))
+* warnings ([4a86e95](https://github.com/benthevining/BenBot/commit/4a86e95e0ff84a448ec021b0f03c08b2215dcc4d))
