@@ -187,7 +187,7 @@ namespace detail {
     [[nodiscard, gnu::const]] constexpr auto get_pawn_double_pushes(
         const Position& position, const Bitboard allOccupied)
     {
-        static constexpr auto pawnStartingRank = Side == Color::White ? Rank::Two : Rank::Seven;
+        static constexpr auto pawnStartingRank = Side == Color::White ? Rank::Two : Rank::Seven; // cppcheck-suppress knownConditionTrueFalse
 
         const auto pushes = pseudo_legal::pawn_double_pushes<Side>(
             position.pieces_for<Side>().pawns,
@@ -503,7 +503,7 @@ namespace detail {
     template <Color Side>
     [[nodiscard, gnu::const]] consteval Bitboard kingside_castle_mask() noexcept
     {
-        static constexpr auto rank = Side == Color::White ? Rank::One : Rank::Eight;
+        static constexpr auto rank = Side == Color::White ? Rank::One : Rank::Eight; // cppcheck-suppress knownConditionTrueFalse
 
         Bitboard board;
 
@@ -518,7 +518,7 @@ namespace detail {
     template <Color Side, bool Occupied>
     [[nodiscard, gnu::const]] consteval Bitboard queenside_castle_mask() noexcept
     {
-        static constexpr auto rank = Side == Color::White ? Rank::One : Rank::Eight;
+        static constexpr auto rank = Side == Color::White ? Rank::One : Rank::Eight; // cppcheck-suppress knownConditionTrueFalse
 
         Bitboard board;
 
@@ -542,7 +542,7 @@ namespace detail {
         if (position.is_check())
             return moves;
 
-        const auto& rights = Side == Color::White ? position.whiteCastlingRights : position.blackCastlingRights;
+        const auto& rights = Side == Color::White ? position.whiteCastlingRights : position.blackCastlingRights; // cppcheck-suppress knownConditionTrueFalse
 
         static constexpr auto OppositeColor = pieces::other_side<Side>();
 
