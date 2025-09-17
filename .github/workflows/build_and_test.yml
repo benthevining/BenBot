@@ -17,8 +17,10 @@ on:
     inputs:
       dashboard_type:
         description: Type of CTest dashboard to run (Nightly, Experimental, or Continuous)
-        type: string
+        type: string # for some reason, workflow_call doesn't support choice inputs
         required: true
+
+run-name: Build & test (${{ inputs.dashboard_type }})
 
 defaults:
   run:
@@ -51,15 +53,23 @@ jobs:
         - os: ubuntu-latest
           preset: gcc
           config: Release
+        - os: ubuntu-latest
+          preset: clang-asan
+          config: Debug
+        - os: ubuntu-latest
+          preset: clang-ubsan
+          config: Debug
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }}.${{ matrix.preset }}.${{ matrix.config }}.${{ inputs.dashboard_type }}
     timeout-minutes: 120
     env:
       CMAKE_OSX_ARCHITECTURES: arm64;x86_64
       CMAKE_BUILD_PARALLEL_LEVEL: 8
-      CTEST_PARALLEL_LEVEL: ''
+      CTEST_PARALLEL_LEVEL: '' # empty value to make ctest detect the number of cores
       CTEST_NO_TESTS_ACTION: error
       CTEST_OUTPUT_ON_FAILURE: 1
+      # NB. Windows runners may error out if we make these absolute paths prefixed with
+      # ${{ github.workspace }}, because that may contain Windows-style backslashes
       BUILD_DIR: Builds/${{ matrix.preset }}
       DEPLOY_DIR: deploy
 
@@ -68,20 +78,21 @@ jobs:
       uses: actions/checkout@v5
 
     - name: Install Python dependencies
-      run: cmake -P .github/scripts/InstallPythonDeps.cmake
+      run: cmake -P InstallPythonDeps.cmake
+      working-directory: .github/scripts
 
     - name: Configure CMake
       env:
         BUILD_NAME: ${{ github.head_ref || github.ref_name }}.${{ matrix.os }}.${{ matrix.preset }}.${{ matrix.config }}
-      run: cmake --preset ${{ matrix.preset }} -D BENBOT_DOCS=OFF -D BUILDNAME=${{ env.BUILD_NAME }}
+      run: cmake --preset ${{ matrix.preset }} -D BENBOT_DOCS=OFF -D STATIC_ANALYSIS=ON -D BUILDNAME=${{ env.BUILD_NAME }}
 
     - name: Build and test
       run: ctest -D ${{ inputs.dashboard_type }} -C ${{ matrix.config }} --output-junit junit.xml --schedule-random
       working-directory: ${{ env.BUILD_DIR }}
 
     - name: Upload JUnit report
-      uses: mikepenz/action-junit-report@e5453d864979a2b201453695ee1db0acac11b14b # pin v5
-      if: always() && github.event_name == 'pull_request'
+      uses: mikepenz/action-junit-report@v5
+      if: always() && github.event_name == 'pull_request' # only works when run from a PR
       with:
         report_paths: ${{ env.BUILD_DIR }}/junit.xml
         exclude_sources: ${{ env.BUILD_DIR }}
@@ -103,5 +114,5 @@ jobs:
       if: always() && matrix.config == 'Release'
       with:
         name: BenBot-${{ matrix.os }}-${{ matrix.preset }}
-        path: ${{ env.DEPLOY_DIR }}
+        path: deploy # using the full path here errors on Windows due to mixed forward/backslash usage in the path
         if-no-files-found: error

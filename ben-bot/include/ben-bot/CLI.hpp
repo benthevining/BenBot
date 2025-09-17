@@ -12,33 +12,46 @@
  * ======================================================================================
  */
 
-// this symbol must be defined as a quoted string,
-// the absolute path to the license header file
-#ifndef BENBOT_LICENSE_HEADER_FILE
-#    error
-#endif
+/** @file
+    This file defines a POD struct that encapsulates the ``ben_bot``
+    executable's CLI arguments.
 
-#include <ben-bot/Resources.hpp>
-#include <catch2/catch_test_macros.hpp>
-#include <filesystem>
-#include <libchess/util/Files.hpp>
+    @ingroup benbot
+ */
+
+#pragma once
+
 #include <string>
-#include <string_view>
 
-static constexpr auto TAGS { "[util][files]" };
+namespace ben_bot {
 
-static const std::string_view CORRECT_FILE_CONTENT = ben_bot::resources::get_ascii_logo();
+/** This POD struct encapsulates the ``ben_bot`` executable's command-line
+    arguments, and provides a function for parsing them.
 
-static const std::filesystem::path LICENSE_HEADER_FILE { BENBOT_LICENSE_HEADER_FILE };
+    We process any arguments to the executable as a one-shot UCI command line.
+    ``--no-loop`` can be given to make the engine exit immediately after processing
+    the given UCI command. ``--no-logo`` will suppress the logo & version normally
+    printed at startup.
 
-TEST_CASE("Memory mapped file", TAGS)
-{
-    const chess::util::MemoryMappedFile mapped { LICENSE_HEADER_FILE };
+    @ingroup benbot
+ */
+struct Arguments final {
+    /** If true, the executable should process the given UCI command and exit
+        immediately, not entering the UCI loop waiting for input.
+     */
+    bool noLoop { false };
 
-    REQUIRE(mapped.data() == CORRECT_FILE_CONTENT);
-}
+    /** If true, the executable should not print the initial logo & version output. */
+    bool noLogo { false };
 
-TEST_CASE("load_file_as_string()", TAGS)
-{
-    REQUIRE(chess::util::load_file_as_string(LICENSE_HEADER_FILE) == CORRECT_FILE_CONTENT);
-}
+    /** If not empty, this is a one-shot UCI command that should be evaluated
+        after startup.
+     */
+    std::string uciCommand;
+
+    /** Parses the given command-line arguments into a populated Arguments struct. */
+    [[nodiscard]] static Arguments parse(
+        const int argc, const char** argv);
+};
+
+} // namespace ben_bot

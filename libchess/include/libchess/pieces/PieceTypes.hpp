@@ -14,6 +14,8 @@
 
 /** @defgroup pieces Piece types
     Classes for working with the various chess piece types, and associated information.
+
+    @ingroup libchess
  */
 
 /** @file

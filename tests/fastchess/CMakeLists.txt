@@ -49,7 +49,7 @@ file (GENERATE OUTPUT "${BenBot_BINARY_DIR}/InjectSPRTBaseline-$<CONFIG>.cmake"
 
 cmake_host_system_information (RESULT num_cores QUERY NUMBER_OF_PHYSICAL_CORES)
 
-set (openings_file "${BenBot_SOURCE_DIR}/ben-bot/resources/res/book.pgn")
+set (openings_file "${CMAKE_CURRENT_LIST_DIR}/book.pgn")
 
 set (logs_dir "${BenBot_SOURCE_DIR}/logs/sprt")
 

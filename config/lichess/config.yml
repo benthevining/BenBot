@@ -1,0 +1,138 @@
+# ======================================================================================
+#
+# ░▒▓███████▓▒░░▒▓████████▓▒░▒▓███████▓▒░       ░▒▓███████▓▒░ ░▒▓██████▓▒░▒▓████████▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓███████▓▒░░▒▓██████▓▒░ ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓███████▓▒░░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░ ░▒▓██████▓▒░  ░▒▓█▓▒░
+#
+# ======================================================================================
+
+token: "@LICHESS_TOKEN@"
+url: https://lichess.org/
+
+engine:
+  dir: ./deploy/bin/
+  name: ben_bot
+  protocol: uci
+  ponder: false
+  silence_stderr: false
+  go_commands:
+    movetime: 20000 # 20 sec max per move
+
+  draw_or_resign:
+    resign_enabled: false
+    resign_score: -1000
+    resign_for_egtb_minus_two: true
+    resign_moves: 5
+    offer_draw_enabled: true
+    offer_draw_score: 5
+    offer_draw_for_egtb_zero: true
+    offer_draw_moves: 5
+    offer_draw_pieces: 10
+
+  polyglot:
+    enabled: false
+
+  online_moves:
+    max_out_of_book_moves: 5
+    max_retries: 2
+    max_depth: 10
+    chessdb_book:
+      enabled: true
+      max_time: 10
+      move_quality: best
+    lichess_cloud_analysis:
+      enabled: true
+      max_time: 10
+      move_quality: best
+    lichess_opening_explorer:
+      enabled: true
+      max_time: 10
+      move_quality: best
+      source: player
+      player_name: ben-bot
+      sort: winrate
+      min_games: 1
+    online_egtb:
+      enabled: true
+      max_time: 10
+      move_quality: best
+
+  lichess_bot_tbs:
+    syzygy:
+      enabled: false
+    gaviota:
+      enabled: false
+
+abort_time: 30
+fake_think_time: false
+rate_limiting_delay: 0
+move_overhead: 1000
+max_takebacks_accepted: 0
+quit_after_all_games_finish: false
+
+correspondence:
+  move_time: 300 # 5 mins
+  checkin_period: 300
+  disconnect_time: 300
+  ponder: false
+
+challenge:
+  concurrency: 10
+  sort_by: best
+  preference: human
+  accept_bot: true
+  only_bot: false
+  max_increment: 20
+  min_increment: 0
+  bullet_requires_increment: false
+  max_base: 3600
+  min_base: 30
+  max_days: 120
+  min_days: 1
+  variants:
+  - standard
+  - fromPosition
+  time_controls:
+  - bullet
+  - blitz
+  - rapid
+  - classical
+  - correspondence
+  modes:
+  - rated
+  max_simultaneous_games_per_user: 1
+
+greeting:
+  hello: Hi {opponent}, I'm {me}. Good luck! Type !help for a list of commands I can respond to.
+  goodbye: Good game, {opponent}! Thanks for playing!
+  hello_spectators: Hi, I'm {me}. I hope you enjoy my game! Type !help for a list of commands I can respond to.
+  goodbye_spectators: Thanks for watching!
+
+matchmaking:
+  allow_matchmaking: true
+  allow_during_games: true
+  challenge_variant: random
+  challenge_timeout: 5
+  challenge_initial_time:
+  - 60
+  - 180
+  - 300
+  - 600
+  challenge_increment:
+  - 0
+  - 1
+  - 2
+  challenge_days:
+  - 1
+  - 2
+  - 5
+  - 7
+  opponent_rating_difference: 300
+  rating_preference: low
+  challenge_mode: rated
+  challenge_filter: fine
+  include_challenge_block_list: true

@@ -12,38 +12,25 @@
  * ======================================================================================
  */
 
-#include <catch2/benchmark/catch_benchmark_all.hpp>
+// this symbol must be defined as a quoted string,
+// the absolute path to the license header file
+#ifndef BENBOT_LICENSE_HEADER_FILE
+#    error
+#endif
+
+#include <ben-bot/Resources.hpp>
 #include <catch2/catch_test_macros.hpp>
-#include <libchess/board/Bitboard.hpp>
-#include <libchess/board/BitboardIndex.hpp>
-#include <libchess/board/File.hpp>
-#include <libchess/board/Rank.hpp>
-#include <libchess/board/Square.hpp>
+#include <filesystem>
+#include <libchess/util/Files.hpp>
+#include <string_view>
 
-static constexpr auto TAGS { "[board][Bitboard][!benchmark]" };
+static constexpr auto TAGS { "[util][files]" };
 
-using chess::board::File;
-using chess::board::Rank;
-using chess::board::Square;
-
-TEST_CASE("Benchmarking bitboard iteration", TAGS)
+TEST_CASE("load_file_as_string()", TAGS)
 {
-    // NB. we have to make sure this isn't a compile-time constant, or the
-    // functions we're trying to measure will be optimized away
-    chess::board::Bitboard board;
+    const std::string_view CORRECT_FILE_CONTENT = ben_bot::resources::get_ascii_logo();
 
-    board.set(Square { File::A, Rank::Four });
-    board.set(Square { File::B, Rank::Eight });
-    board.set(Square { File::F, Rank::Seven });
-    board.set(Square { File::H, Rank::Six });
+    const std::filesystem::path LICENSE_HEADER_FILE { BENBOT_LICENSE_HEADER_FILE };
 
-    BENCHMARK("Iterate bitboard indices")
-    {
-        chess::board::BitboardIndex total { 0 };
-
-        for (const auto idx : board.indices())
-            total += idx; // cppcheck-suppress useStlAlgorithm
-
-        return total;
-    };
+    REQUIRE(chess::util::load_file_as_string(LICENSE_HEADER_FILE) == CORRECT_FILE_CONTENT);
 }

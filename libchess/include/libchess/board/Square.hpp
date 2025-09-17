@@ -15,6 +15,8 @@
 /** @defgroup board Board representation
     Classes related to the engine's internal board representation.
     libchess uses bitboards with "Least Significant File" encoding.
+
+    @ingroup libchess
  */
 
 /** @file

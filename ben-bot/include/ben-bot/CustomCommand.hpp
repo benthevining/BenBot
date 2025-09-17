@@ -12,54 +12,56 @@
  * ======================================================================================
  */
 
-#include <algorithm>
-#include <libbenbot/data-structures/OpeningBook.hpp>
-#include <libchess/notation/PGN.hpp>
-#include <libchess/util/Strings.hpp>
-#include <ranges>
-#include <span>
-#include <vector>
+/** @file
+    This file defines the custom command struct used by the engine to implement
+    non-standard UCI commands.
+
+    @ingroup benbot
+ */
+
+#pragma once
+
+#include <functional>
+#include <string_view>
+#include <utility>
 
 namespace ben_bot {
 
-using chess::notation::GameRecord;
+using std::string_view;
 
-void OpeningBook::add_from_pgn(
-    const std::string_view pgnText,
-    const bool             includeVariations)
-{
-    for (const auto& game : chess::notation::parse_all_pgns(pgnText))
-        add_pgn_moves(game.moves, game.startingPosition, includeVariations);
+/** A custom UCI command that the engine can respond to.
+    @ingroup benbot
+ */
+struct CustomCommand final {
+    using Callback = std::function<void(string_view)>;
 
-    prune();
-}
+    /** The name of the command.
+        This is the token the user should type in the CLI to execute the command.
+     */
+    string_view name;
 
-void OpeningBook::add_pgn_moves(
-    const std::span<const GameRecord::Move> moves,
-    Position position, const bool includeVariations)
-{
-    for (const auto& moveData : moves) {
-        lines[position.hash].emplace_back(moveData.move);
+    /** Function object that will be called when the command is executed.
+        This callback will receive the rest of the command line as its argument.
+     */
+    Callback action;
 
-        if (includeVariations) {
-            for (const auto& variation : moveData.variations)
-                add_pgn_moves(variation, position, true);
-        }
+    /** Brief description of this command. This will be shown in the engine's help output. */
+    string_view description;
 
-        position.make_move(moveData.move);
+    /** A brief string to provide some documentation for the command's arguments.
+        This will be shown in the engine's help output.
+        For example, if the command expects a single filepath argument, this help string
+        might be ``<path>``.
+     */
+    string_view argsHelp;
+
+    /** Wraps a callback taking no arguments into a ``Callback`` for a command. */
+    [[nodiscard]] static Callback void_cb(std::function<void()>&& func)
+    {
+        return [callback = std::move(func)]([[maybe_unused]] const string_view args) {
+            callback();
+        };
     }
-}
-
-void OpeningBook::prune()
-{
-    for (auto& moves : std::views::values(lines)) {
-        std::ranges::sort(moves);
-
-        const auto [first, last] = std::ranges::unique(moves);
-
-        moves.erase(first, last);
-        moves.shrink_to_fit();
-    }
-}
+};
 
 } // namespace ben_bot

@@ -46,10 +46,7 @@ struct EPDPosition final {
     /** Returns true if the two positions have the same Zobrist hash
         and an identical set of operations.
      */
-    [[nodiscard]] bool operator==(const EPDPosition& other) const noexcept
-    {
-        return position == other.position && operations == other.operations;
-    }
+    [[nodiscard]] bool operator==(const EPDPosition& other) const noexcept = default;
 };
 
 /** Parses an EPD string.

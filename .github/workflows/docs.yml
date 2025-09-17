@@ -12,8 +12,6 @@
 
 name: Docs
 
-run-name: Build docs
-
 on:
   workflow_dispatch:
   push:
@@ -21,6 +19,10 @@ on:
   workflow_call:
     inputs:
       ref:
+        # this is needed because this workflow is used via workflow_call in the tag & release action
+        # after the version has been bumped, at which point the default for actions/checkout would be
+        # the old version (the ref that triggered the action), and we want the deployed docs to display
+        # the most recent version
         description: Git tag to checkout
         type: string
         required: true
@@ -39,13 +41,14 @@ permissions:
 jobs:
 
   build:
+    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
     runs-on: ubuntu-latest
     name: Build docs
     timeout-minutes: 10
     env:
       CMAKE_BUILD_PARALLEL_LEVEL: 8
-      BUILD_DIR: Builds/clang
-      DEPLOY_DIR: deploy
+      BUILD_DIR: ${{ github.workspace }}/Builds/clang
+      DEPLOY_DIR: ${{ github.workspace }}/deploy
 
     steps:
     - name: Install dependencies
@@ -70,7 +73,8 @@ jobs:
         cmake -E cat logs/Doxygen.log >> $GITHUB_STEP_SUMMARY
 
     - name: Run CMake install
-      run: cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.DEPLOY_DIR }} --component ben_bot_docs
+      run: cmake --install . --prefix ${{ env.DEPLOY_DIR }} --component ben_bot_docs
+      working-directory: ${{ env.BUILD_DIR }}
 
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v4

@@ -30,6 +30,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <utility>
 
 namespace chess::notation::fen_helpers {
 
@@ -189,7 +190,7 @@ namespace {
 
             ++index;
             fenFragment = fenFragment.substr(1uz);
-        } while (index < rankEnd);
+        } while (std::cmp_less(index, rankEnd));
 
         if (not fenFragment.empty() and fenFragment.front() == '/')
             return fenFragment.substr(1uz);

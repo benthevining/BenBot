@@ -30,6 +30,7 @@
 #include <libchess/pieces/PieceTypes.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <optional>
+#include <utility>
 
 namespace chess::board {
 
@@ -163,7 +164,8 @@ constexpr Bitboard& Pieces::get_type(const PieceType type) noexcept
         case PieceType::Rook  : return rooks;
         case PieceType::Queen : return queens;
         case PieceType::King  : return king;
-        default               : return pawns;
+        case PieceType::Pawn  : return pawns;
+        default               : std::unreachable();
     }
 }
 
@@ -175,7 +177,8 @@ constexpr Bitboard Pieces::get_type(const PieceType type) const noexcept
         case PieceType::Rook  : return rooks;
         case PieceType::Queen : return queens;
         case PieceType::King  : return king;
-        default               : return pawns;
+        case PieceType::Pawn  : return pawns;
+        default               : std::unreachable();
     }
 }
 

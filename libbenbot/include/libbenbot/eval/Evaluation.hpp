@@ -14,6 +14,8 @@
 
 /** @defgroup eval Evaluation
     Functions for evaluating positions.
+
+    @ingroup libbenbot
  */
 
 /** @file

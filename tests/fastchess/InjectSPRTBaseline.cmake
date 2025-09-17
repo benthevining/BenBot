@@ -10,7 +10,12 @@
 #
 # ======================================================================================
 
-cmake_minimum_required (VERSION 3.30.0 FATAL_ERROR)
+#[[
+This script allows an arbitrary executable path to be injected as the baseline for SPRT tests.
+This file is a template used by CMake to generate scripts for each configuration into the PROJECT_BINARY_DIR.
+]]
+
+cmake_minimum_required (VERSION "@CMAKE_VERSION@" FATAL_ERROR)
 
 if (NOT DEFINED BASELINE_BINARY)
     message (FATAL_ERROR "BASELINE_BINARY must be defined!")

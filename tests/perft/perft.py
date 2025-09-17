@@ -107,8 +107,6 @@ for depthObj in CORRECT_DATA['depths']:
         get_result_lines(engine.stdout)
     )
 
-    correct = depthObj['results']
-
     if check_result(depthObj['results'], result):
         num_passed = num_passed + 1
     else:

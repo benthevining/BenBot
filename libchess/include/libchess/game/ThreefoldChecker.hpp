@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <beman/inplace_vector/inplace_vector.hpp>
 #include <cstdint> // IWYU pragma: keep - for std::uint64_t
+#include <iterator>
 #include <utility>
 
 namespace chess::game {
@@ -80,7 +81,7 @@ constexpr void ThreefoldChecker::push(const HashValue newHash)
     // and move all other elements back 1
     std::ranges::rotate(
         history.begin(),
-        history.end() - 1,
+        std::prev(history.end()),
         history.end());
 
     history.front() = newHash;

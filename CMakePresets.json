@@ -62,11 +62,11 @@
         },
         "CMAKE_OPTIMIZE_DEPENDENCIES": {
           "type": "BOOL",
-          "value": "ON"
+          "value": "OFF"
         },
         "CMAKE_PROJECT_INCLUDE": {
-          "type": "FILEPATH",
-          "value": "${sourceDir}/config/Warnings.cmake"
+          "type": "STRING",
+          "value": "${sourceDir}/config/Warnings.cmake;${sourceDir}/config/StaticAnalysis.cmake"
         },
         "CTEST_NO_TESTS_ACTION": {
           "type": "STRING",
@@ -110,6 +110,36 @@
       "generator": "Ninja Multi-Config",
       "inherits": "base",
       "name": "clang"
+    },
+    {
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": {
+          "type": "STRING",
+          "value": "-fsanitize=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer"
+        },
+        "CMAKE_C_FLAGS": {
+          "type": "STRING",
+          "value": "-fsanitize=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer"
+        }
+      },
+      "displayName": "Build with Ninja & Clang (ASAN)",
+      "inherits": "clang",
+      "name": "clang-asan"
+    },
+    {
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": {
+          "type": "STRING",
+          "value": "-fsanitize=undefined"
+        },
+        "CMAKE_C_FLAGS": {
+          "type": "STRING",
+          "value": "-fsanitize=undefined"
+        }
+      },
+      "displayName": "Build with Ninja & Clang (UBSAN)",
+      "inherits": "clang",
+      "name": "clang-ubsan"
     },
     {
       "cacheVariables": {

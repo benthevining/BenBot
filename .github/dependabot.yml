@@ -12,6 +12,8 @@
 
 version: 2
 
+# all dependencies are coalesced into this single group
+# so that we get at most a single Dependabot PR per week
 multi-ecosystem-groups:
   dependencies:
     schedule:

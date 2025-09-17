@@ -1,0 +1,35 @@
+# ======================================================================================
+#
+# ░▒▓███████▓▒░░▒▓████████▓▒░▒▓███████▓▒░       ░▒▓███████▓▒░ ░▒▓██████▓▒░▒▓████████▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓███████▓▒░░▒▓██████▓▒░ ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓███████▓▒░░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░ ░▒▓██████▓▒░  ░▒▓█▓▒░
+#
+# ======================================================================================
+
+# This script is used to print the Dockerhub URL of a specific tag to a GHA step output variable.
+# Pipe this script's output into $GITHUB_OUTPUT.
+# This script is needed because Dockerhub image tag URLs contain the SHA of the image.
+# We obtain this via docker inspect.
+
+import sys
+import subprocess
+
+TAG_NAME = sys.argv[1]
+
+result = subprocess.run(
+    ['docker', 'inspect', '--format="{{.RepoDigests}}"', f'benvining/benbot-lichess:{TAG_NAME}'],
+    capture_output=True,
+    text=True
+)
+
+# string format is:
+# [benvining/benbot-lichess@sha256:9e94ea05cbc5b84509beca6c5ab54e176907cf6d5c67f81e2f977149cc086ce1]
+output = result.stdout
+
+hash_str = output[output.find('@')+1:output.find(']')]
+
+print(f'url=https://hub.docker.com/repository/docker/benvining/benbot-lichess/tags/{TAG_NAME}/{hash_str}')

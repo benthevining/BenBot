@@ -25,15 +25,16 @@ CMake presets are provided for IDE integration, but are not mandatory.
 
 Our automated CI & releases include the following builds:
 
-|    OS    | Compiler |          Notes           |
-|:--------:|:--------:|:------------------------:|
-|  Ubuntu  |  Clang   |                          |
-|  Ubuntu  |   GCC    | Requires at least GCC 14 |
-| Windows  |  Clang   |                          |
-| Windows  |   MSVC   |                          |
-|  MacOS   |  Clang   | Builds universal binary  |
+|    OS    | Compiler |            Notes             |
+|:--------:|:--------:|:----------------------------:|
+|  Ubuntu  |  Clang   | Also built with ASAN & UBSAN |
+|  Ubuntu  |   GCC    |   Requires at least GCC 14   |
+| Windows  |  Clang   |                              |
+| Windows  |   MSVC   |                              |
+|  MacOS   |  Clang   |   Builds universal binary    |
 
 ### CMake options
 
 * `BENBOT_DOCS`: controls whether docs are built (defaults to off unless this is the top-level project)
 * `BENBOT_TESTS`: controls whether tests are built (defaults to off unless this is the top-level project)
+* `STATIC_ANALYSIS`: enables static analysis integrations (added by the CMake presets)

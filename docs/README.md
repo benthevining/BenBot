@@ -19,8 +19,3 @@ Library API docs are built using Doxygen. Documentation is written inline in the
 
 * [Doxygen](https://www.doxygen.nl/index.html): required to build API docs
 * dot, from [graphviz](https://graphviz.org/): optional; needed for generating charts and graphs
-
-## Documentation notes
-
-Within the Doxygen documentation, `dot` graphs are placed within `@if DOT_GRAPHS` conditional sections; this section
-will only be enabled if the `dot` executable could be found.

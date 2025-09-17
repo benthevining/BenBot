@@ -441,3 +441,169 @@
 
 * release notes parsing script ([#263](https://github.com/benthevining/BenBot/issues/263)) ([fd31a34](https://github.com/benthevining/BenBot/commit/fd31a3465c2e8f1e738517dd5c9b138c511e532c))
 ## [1.4.4](https://github.com/benthevining/BenBot/compare/v1.4.3...v1.4.4) (2025-09-02)
+## [1.4.5](https://github.com/benthevining/BenBot/compare/v1.4.4...v1.4.5) (2025-09-06)
+
+### Features
+
+* initial commit of vps deployment ([15d05f7](https://github.com/benthevining/BenBot/commit/15d05f7828c6570e4152b83c325cc2bd0f2ad3f0))
+* integration with lichess-bot docker image ([48f55d3](https://github.com/benthevining/BenBot/commit/48f55d3c2f5a6fc569773329d9d2bf22095a425b))
+* linking to specific Docker image tag ([#270](https://github.com/benthevining/BenBot/issues/270)) ([e67f952](https://github.com/benthevining/BenBot/commit/e67f952a74186401d6bfbe74214ef488e7b5e075))
+
+### Bug Fixes
+
+* Docker container [skip ci] ([041150b](https://github.com/benthevining/BenBot/commit/041150b641b21db553e4995303f27579a9ea663c))
+* Dockerfile [skip ci] ([1ec5cfc](https://github.com/benthevining/BenBot/commit/1ec5cfcd0919b4b7974715ac2098b4675e6b0f76))
+* executable install rules ([0b47a3c](https://github.com/benthevining/BenBot/commit/0b47a3c30848aec373d8f05e29c65946763dfc5e))
+* fixed issue with fresh CMake configure attempting to copy file produced by file(GENERATE) that doesn't exist yet ([f2b313e](https://github.com/benthevining/BenBot/commit/f2b313ed0d0379a73f5234046df3621cd040d044))
+* lichess deployment script ([edef22b](https://github.com/benthevining/BenBot/commit/edef22ba4beb2b1888734decbc72c0f5e74ce656))
+* lichess deployment script ([3828a36](https://github.com/benthevining/BenBot/commit/3828a36a407624d58b1fdfcd7e65e42bdcc4edb0))
+* lichess deployment script ([de5b0da](https://github.com/benthevining/BenBot/commit/de5b0da3cea1a0fbaac72b275a9c481a6b536135))
+* lichess deployment script ([1320aac](https://github.com/benthevining/BenBot/commit/1320aac6c34801a79bc1cbbbcea62a15e3ec5826))
+* lichess deployment script ([49bcd2e](https://github.com/benthevining/BenBot/commit/49bcd2e64e76e7f371c4d310538185b8d436cb0b))
+* lichess deployment script ([2454354](https://github.com/benthevining/BenBot/commit/2454354aec9392b917e5b85298c0d40b6fb3f005))
+* lichess deployment script ([0e8c7c3](https://github.com/benthevining/BenBot/commit/0e8c7c36ccf2cdd0ff8c51f9333e24f574574cbd))
+* linking to specific Docker image tag ([#270](https://github.com/benthevining/BenBot/issues/270)) ([5e37bd9](https://github.com/benthevining/BenBot/commit/5e37bd95d2b5684dde174ef88479c63050c959a2))
+* SPRT workflow ([a1365a4](https://github.com/benthevining/BenBot/commit/a1365a435b102de80b27221cc93c7b0e67989666))
+* SPRT workflow ([032c164](https://github.com/benthevining/BenBot/commit/032c164e52cf2a52684af5dd71d91a99740b8107))
+* SPRT workflow ([d620c16](https://github.com/benthevining/BenBot/commit/d620c169299fcd08e1419f38334c9c6075cf8c94))
+* SPRT workflow ([2023a21](https://github.com/benthevining/BenBot/commit/2023a2154de746e19de8170a26302a1f217a91b6))
+* SPRT workflow ([df85114](https://github.com/benthevining/BenBot/commit/df8511438cc057676ccb140a5b5b438999dde45f))
+## [1.4.6](https://github.com/benthevining/BenBot/compare/v1.4.5...v1.4.6) (2025-09-06)
+## [1.4.7](https://github.com/benthevining/BenBot/compare/v1.4.6...v1.4.7) (2025-09-06)
+
+### Features
+
+* action to stop lichess bot [skip ci] ([df55109](https://github.com/benthevining/BenBot/commit/df551099df3d7ba44a92dc2dec03e6d4b7e46464))
+## [1.4.8](https://github.com/benthevining/BenBot/compare/v1.4.7...v1.4.8) (2025-09-06)
+
+### Bug Fixes
+
+* action to stop lichess bot [skip ci] ([51475c6](https://github.com/benthevining/BenBot/commit/51475c6649718e97b8904837dfcf1b6c3c59c1fc))
+## [1.4.9](https://github.com/benthevining/BenBot/compare/v1.4.8...v1.4.9) (2025-09-06)
+
+### Bug Fixes
+
+* deploy lichess action secrets [skip ci] ([661f755](https://github.com/benthevining/BenBot/commit/661f755c8dfff6b47b4ca5cdb59344674c71a338))
+* deploy lichess action secrets [skip ci] ([baf0e7b](https://github.com/benthevining/BenBot/commit/baf0e7bf1ea0d1873452ee6d497fc01d6284ffce))
+* deploy lichess action secrets [skip ci] ([2ade955](https://github.com/benthevining/BenBot/commit/2ade9559eba8cc1b27c7dd1a632bc791709c774a))
+## [1.4.10](https://github.com/benthevining/BenBot/compare/v1.4.9...v1.4.10) (2025-09-06)
+
+### Bug Fixes
+
+* Windows install rules [skip ci] ([8d12c24](https://github.com/benthevining/BenBot/commit/8d12c24c8162493fb405ad504bd9a20d8bb9c4d6))
+## [1.4.11](https://github.com/benthevining/BenBot/compare/v1.4.10...v1.4.11) (2025-09-06)
+
+### Bug Fixes
+
+* Windows install rules [skip ci] ([5ed689e](https://github.com/benthevining/BenBot/commit/5ed689e38f36df63901fe94dc5d4e4de67b1099b))
+## [1.4.12](https://github.com/benthevining/BenBot/compare/v1.4.11...v1.4.12) (2025-09-06)
+## [1.4.13](https://github.com/benthevining/BenBot/compare/v1.4.12...v1.4.13) (2025-09-06)
+## [1.4.14](https://github.com/benthevining/BenBot/compare/v1.4.13...v1.4.14) (2025-09-06)
+## [1.4.15](https://github.com/benthevining/BenBot/compare/v1.4.14...v1.4.15) (2025-09-06)
+
+### Bug Fixes
+
+* release action [skip ci] ([7a3ee80](https://github.com/benthevining/BenBot/commit/7a3ee80906c7607d78ceb86d0cfc4b7a2c0fab92))
+## [1.4.16](https://github.com/benthevining/BenBot/compare/v1.4.15...v1.4.16) (2025-09-06)
+
+### Bug Fixes
+
+* release action [skip ci] ([28c2473](https://github.com/benthevining/BenBot/commit/28c24738882c2f25ce082cc8f626a30a9204eced))
+## [1.4.17](https://github.com/benthevining/BenBot/compare/v1.4.16...v1.4.17) (2025-09-06)
+
+### Bug Fixes
+
+* release action [skip ci] ([859f455](https://github.com/benthevining/BenBot/commit/859f455c4ab6a6feea9ffe7f5ef33d08f4b57e8f))
+## [1.4.18](https://github.com/benthevining/BenBot/compare/v1.4.17...v1.4.18) (2025-09-06)
+
+### Bug Fixes
+
+* release action [skip ci] ([01a267d](https://github.com/benthevining/BenBot/commit/01a267d75f9e74393b30b4d9e5bdbfd6e39f714c))
+## [1.4.19](https://github.com/benthevining/BenBot/compare/v1.4.18...v1.4.19) (2025-09-06)
+
+### Bug Fixes
+
+* release action [skip ci] ([d30f803](https://github.com/benthevining/BenBot/commit/d30f803b7505e8a5dc46fa3dfd53d5049cd33bea))
+## [1.4.20](https://github.com/benthevining/BenBot/compare/v1.4.19...v1.4.20) (2025-09-06)
+
+### Bug Fixes
+
+* release action [skip ci] ([2187112](https://github.com/benthevining/BenBot/commit/21871122a950e8bacf3ab960c2b25f8ec0a48f8d))
+## [1.4.21](https://github.com/benthevining/BenBot/compare/v1.4.20...v1.4.21) (2025-09-06)
+
+### Bug Fixes
+
+* release action [skip ci] ([3c5d633](https://github.com/benthevining/BenBot/commit/3c5d633a1a1afd6dc1d1f1b7605e0a4df6b750cc))
+## [1.4.22](https://github.com/benthevining/BenBot/compare/v1.4.21...v1.4.22) (2025-09-06)
+
+### Bug Fixes
+
+* release action [skip ci] ([d65a344](https://github.com/benthevining/BenBot/commit/d65a3445869d3c2b090e7d48e09e59b2413fe344))
+## [1.4.23](https://github.com/benthevining/BenBot/compare/v1.4.22...v1.4.23) (2025-09-06)
+## [1.4.24](https://github.com/benthevining/BenBot/compare/v1.4.23...v1.4.24) (2025-09-06)
+
+### Bug Fixes
+
+* lichess-bot config [skip ci] ([7a9174e](https://github.com/benthevining/BenBot/commit/7a9174ee851db58e61d553e80cf05750e6de401d))
+## [1.4.25](https://github.com/benthevining/BenBot/compare/v1.4.24...v1.4.25) (2025-09-07)
+
+### Features
+
+* id output now includes engine version ([#272](https://github.com/benthevining/BenBot/issues/272)) ([eaaf2c8](https://github.com/benthevining/BenBot/commit/eaaf2c8d40d5f6bc58e9d983bf8b68c3f0b0d79b))
+## [1.4.26](https://github.com/benthevining/BenBot/compare/v1.4.25...v1.4.26) (2025-09-08)
+
+### Features
+
+* parameter to control max number of book moves ([#274](https://github.com/benthevining/BenBot/issues/274)) ([2f32d9a](https://github.com/benthevining/BenBot/commit/2f32d9a5001cf7b229f0901a59975f21fee2bee8))
+
+### Bug Fixes
+
+* CodeQL python notes ([f87774b](https://github.com/benthevining/BenBot/commit/f87774b2a2a220c3520773b065972d4049fc859d))
+* cppcheck warning ([7b769e3](https://github.com/benthevining/BenBot/commit/7b769e3538cf14ca774781a8d5ec2cec06f2e59d))
+* handling isready during search ([#232](https://github.com/benthevining/BenBot/issues/232)) ([c86a376](https://github.com/benthevining/BenBot/commit/c86a376713df8c98bf9a027408c6b0ddba878c7a))
+* removed usage of gmtime() ([d42e2bf](https://github.com/benthevining/BenBot/commit/d42e2bf259f675e38b5cc3048288e80a725b4e7c))
+* security alert ([12f98a7](https://github.com/benthevining/BenBot/commit/12f98a72e37e7555fcf0fdac2e5e9fe83e63c183))
+* SPRT workflow [skip ci] ([57b31c8](https://github.com/benthevining/BenBot/commit/57b31c86057cf94937567e52020596aed91b84c8))
+* using X-FEN style printing of EP squares to fix rampart test errors ([ab07017](https://github.com/benthevining/BenBot/commit/ab0701737ad5ca19214427a71586958d3a1c96a6))
+* Windows build error ([3ab5f9e](https://github.com/benthevining/BenBot/commit/3ab5f9ee70d7b529b5191227f5ea57a65be26fc4))
+* Windows build error ([a19d7e2](https://github.com/benthevining/BenBot/commit/a19d7e27b38c560d0060d36c84daa722d3f90d31))
+## [1.4.27](https://github.com/benthevining/BenBot/compare/v1.4.26...v1.4.27) (2025-09-13)
+
+### Bug Fixes
+
+* github workflows ([a7f16c7](https://github.com/benthevining/BenBot/commit/a7f16c743215f6afa9efdc733ab3d1c5424cc925))
+* removed spurious warning flags ([dde3e09](https://github.com/benthevining/BenBot/commit/dde3e09cc7b9ca721181f2035d4c796e9e9f829f))
+* SPRT workflow [skip ci] ([a7387ab](https://github.com/benthevining/BenBot/commit/a7387abbda64683793a58d4f1fc4d682ce21d178))
+* SPRT workflow [skip ci] ([d0d3513](https://github.com/benthevining/BenBot/commit/d0d3513ebf2e95d6dc7a29e8d7669f5084bf460d))
+* SPRT workflow [skip ci] ([6de4b34](https://github.com/benthevining/BenBot/commit/6de4b349d58131256b998ae5305309bef1a1bbea))
+* warning flags ([162bfe2](https://github.com/benthevining/BenBot/commit/162bfe227ce30c3f50fc494f1873f086aacdeda0))
+* workflows ([f08eb44](https://github.com/benthevining/BenBot/commit/f08eb44652b300e0c40feb04dd46da9fdc513074))
+## [1.4.28](https://github.com/benthevining/BenBot/compare/v1.4.27...v1.4.28) (2025-09-13)
+
+### Bug Fixes
+
+* bump version workflow [skip ci] ([5ae9395](https://github.com/benthevining/BenBot/commit/5ae939570802e3429ef48bc544129bb6ac75e14b))
+## [1.5.0](https://github.com/benthevining/BenBot/compare/v1.4.28...v1.5.0) (2025-09-17)
+
+### Features
+
+* clang-tidy integration ([c480092](https://github.com/benthevining/BenBot/commit/c48009259bad6d774ba1cbca4c60a6697098be8e))
+* cppcheck integration ([4a06186](https://github.com/benthevining/BenBot/commit/4a0618613d49dee89450e6299f8ab685563c47c1))
+* cpplint integration ([4e8e89f](https://github.com/benthevining/BenBot/commit/4e8e89f2a2f4a7c2965a70c27778a1a41bb57e09))
+* IWYU integration ([61b2c92](https://github.com/benthevining/BenBot/commit/61b2c9211246a7e4bacebba2e8beffc4061e63fd))
+
+### Bug Fixes
+
+* actions ([a875512](https://github.com/benthevining/BenBot/commit/a8755123dde9a716e0dc9e70ce894ce4553470f2))
+* disabled clang-tidy integration ([635d49c](https://github.com/benthevining/BenBot/commit/635d49cb038d934d230b971026ffa9280a972dfc))
+* get_name() now returns a string instead of a string_view ([c559bb6](https://github.com/benthevining/BenBot/commit/c559bb642797bdda44d345921f26afc4bc9d0305))
+* get_name() now returns a string instead of a string_view ([6a018d1](https://github.com/benthevining/BenBot/commit/6a018d1459df2e50545ef974877f38d9e5967371))
+* warning ([831b9b8](https://github.com/benthevining/BenBot/commit/831b9b80411b4472a96108b3944fdb1207d7459b))
+* warnings ([091f567](https://github.com/benthevining/BenBot/commit/091f567f14768e4ab2d3054d33bbb47652de4d22))
+* warnings ([d8e15eb](https://github.com/benthevining/BenBot/commit/d8e15ebea009bfab04f9cf679890c8af51b86c10))
+* warnings ([4a86e95](https://github.com/benthevining/BenBot/commit/4a86e95e0ff84a448ec021b0f03c08b2215dcc4d))
+## [1.5.1](https://github.com/benthevining/BenBot/compare/v1.5.0...v1.5.1) (2025-09-17)
+
+### Bug Fixes
+
+* Dockerfile ([1ce5dc8](https://github.com/benthevining/BenBot/commit/1ce5dc8986c569e71188733812fcc37fcdfc2a4a))

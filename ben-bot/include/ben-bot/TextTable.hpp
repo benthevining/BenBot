@@ -12,6 +12,11 @@
  * ======================================================================================
  */
 
+/** @file
+    This file defines the TextTable utility.
+    @ingroup benbot
+ */
+
 #pragma once
 
 #include <cstddef> // IWYU pragma: keep - for size_t
@@ -29,6 +34,8 @@ using std::string_view;
 /** This class allows you to construct a table of text with vertically aligned columns.
     Rows may have different numbers of columns; the table's size is based on the maximum number of columns.
     The first row is the header, and a separator row will be added between it and the second manually added row.
+
+    @ingroup benbot
  */
 struct TextTable final {
     /** Appends a column to the current row. */

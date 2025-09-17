@@ -17,8 +17,14 @@
 #include <string>
 #include <string_view>
 
-/** @defgroup benbot_data ben-bot data
+/** @defgroup benbot_data Resources
     Binary data embedded into the engine executable.
+    @ingroup benbot
+ */
+
+/** @file
+    This file defines functions for accessing data embedded into the BenBot executable.
+    @ingroup benbot_data
  */
 
 /** This namespace contains resource data embedded into the engine executable.

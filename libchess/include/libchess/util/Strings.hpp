@@ -151,7 +151,7 @@ void write_integer(
     const std::integral auto value,
     std::string&             output)
 {
-    std::array<char, MaxLen> buffer {};
+    std::array<char, MaxLen + 1uz> buffer {};
 
     const auto result = std::to_chars(
         buffer.data(),

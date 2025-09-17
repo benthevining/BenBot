@@ -29,53 +29,5 @@ endif ()
 
 include (Catch)
 
-#
-
-add_executable (libchess_tests)
-
-target_link_libraries (
-    libchess_tests PRIVATE ben_bot::libchess Catch2::Catch2WithMain ben_bot::resources
-)
-
-target_compile_definitions (
-    libchess_tests
-    PRIVATE
-        "BENBOT_LICENSE_HEADER_FILE=\"${BenBot_SOURCE_DIR}/ben-bot/resources/res/license_header.txt\""
-)
-
-file (GLOB_RECURSE sources LIST_DIRECTORIES false CONFIGURE_DEPENDS
-                                                  "${CMAKE_CURRENT_LIST_DIR}/*.cpp"
-)
-
-target_sources (libchess_tests PRIVATE ${sources})
-
-source_group (TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${sources})
-
-# cmake-format: off
-catch_discover_tests (
-        libchess_tests
-        EXTRA_ARGS
-            --verbosity high
-            --warn NoAssertions
-            --warn UnmatchedTestSpec
-            --colour-mode none
-            --reporter console::out=-
-        TEST_PREFIX libchess.unit.
-        PROPERTIES
-            SKIP_REGULAR_EXPRESSION "SKIPPED:"
-)
-
-catch_discover_tests (
-        libchess_tests
-        TEST_SPEC "[!benchmark]"
-        EXTRA_ARGS
-            --verbosity high
-            --warn UnmatchedTestSpec
-            --colour-mode none
-            --reporter console::out=-
-            --reporter cdash::out=-
-        TEST_PREFIX libchess.bench.
-        PROPERTIES
-            SKIP_REGULAR_EXPRESSION "SKIPPED:"
-)
-# cmake-format: on
+add_subdirectory (libchess)
+add_subdirectory (libbenbot)

@@ -114,9 +114,13 @@ constexpr void CastlingRights::rook_moved(const bool isKingside) noexcept
 constexpr void CastlingRights::our_move(const Move& move) noexcept
 {
     switch (move.piece) {
-        case PieceType::King: king_moved(); break;
-        case PieceType::Rook: rook_moved(move.from.is_kingside()); break;
-        default             : break;
+        case PieceType::King  : king_moved(); return;
+        case PieceType::Rook  : rook_moved(move.from.is_kingside()); return;
+        case PieceType::Pawn  : return;
+        case PieceType::Bishop: return;
+        case PieceType::Knight: return;
+        case PieceType::Queen : return;
+        default               : return;
     }
 }
 

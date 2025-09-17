@@ -30,6 +30,9 @@ using std::string_view;
 using util::split_at_first_space;
 using util::trim;
 
+// defined out-of-line to address -Wweak-vtables
+Option::~Option() = default;
+
 BoolOption::BoolOption(
     string name, const bool defaultValue, string helpString)
     : optionName { std::move(name) }

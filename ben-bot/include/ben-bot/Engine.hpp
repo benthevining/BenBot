@@ -12,71 +12,45 @@
  * ======================================================================================
  */
 
+/** @file
+    This file defines the top-level engine class used by the BenBot executable.
+    @ingroup benbot
+ */
+
 #pragma once
 
 #include <array>
 #include <atomic>
-#include <filesystem>
+#include <ben-bot/CustomCommand.hpp>
 #include <functional>
 #include <libbenbot/search/Search.hpp>
 #include <libbenbot/search/Thread.hpp>
 #include <libchess/game/Position.hpp>
-#include <libchess/moves/Move.hpp>
 #include <libchess/uci/CommandParsing.hpp> // IWYU pragma: keep - for uci::GoCommandOptions
 #include <libchess/uci/EngineBase.hpp>
 #include <libchess/uci/Options.hpp>
 #include <span>
+#include <string>
 #include <string_view>
-#include <utility>
 
 namespace ben_bot {
 
-using std::filesystem::path;
 using std::string_view;
 
 namespace uci = chess::uci;
 
-/** A custom UCI command that the engine can respond to. */
-struct CustomCommand final {
-    using Callback = std::function<void(string_view)>;
-
-    /** The name of the command.
-        This is the token the user should type in the CLI to execute the command.
-     */
-    string_view name;
-
-    /** Function object that will be called when the command is executed.
-        This callback will receive the rest of the command line as its argument.
-     */
-    Callback action;
-
-    /** Brief description of this command. This will be shown in the engine's help output. */
-    string_view description;
-
-    /** A brief string to provide some documentation for the command's arguments.
-        This will be shown in the engine's help output.
-        For example, if the command expects a single filepath argument, this help string
-        might be ``<path>``.
-     */
-    string_view argsHelp;
-
-    /** Wraps a callback taking no arguments into a ``Callback`` for a command. */
-    [[nodiscard]] static Callback void_cb(std::function<void()>&& func)
-    {
-        return [callback = std::move(func)]([[maybe_unused]] const string_view args) {
-            callback();
-        };
-    }
-};
-
-/** The ``ben-bot`` UCI engine class. */
+/** The ``ben-bot`` UCI engine class.
+    @ingroup benbot
+ */
 class Engine final : public uci::EngineBase {
 public:
+    Engine();
+
     /** Prints the engine's logo and version to ``stdout``. */
     void print_logo_and_version() const;
 
 private:
-    [[nodiscard]] string_view get_name() const override { return "BenBot"; }
+    [[nodiscard]] std::string get_name() const override;
     [[nodiscard]] string_view get_author() const override { return "Ben Vining"; }
 
     void new_game(bool firstCall) override;
@@ -89,13 +63,13 @@ private:
 
     void wait() override { searcher.context.wait(); }
 
+    bool is_searching() const noexcept override { return searcher.context.in_progress(); }
+
     void set_debug(const bool shouldDebug) override { debugMode.store(shouldDebug); }
 
     [[nodiscard]] std::span<uci::Option*> get_options() override { return options; }
 
     void handle_custom_command(string_view command, string_view opts) override;
-
-    void load_book_file(string_view arguments);
 
     void run_perft(string_view arguments) const;
 
@@ -109,19 +83,9 @@ private:
 
     static void print_compiler_info();
 
-    using Result = search::Callbacks::Result;
-
-    template <bool PrintBestMove>
-    void print_uci_info(const Result& res) const;
-
-    void print_book_hit() const;
-
     std::atomic_bool debugMode { false };
 
-    search::Thread searcher { search::Callbacks {
-        .onSearchComplete = [this](const Result& res) { print_uci_info<true>(res); },
-        .onIteration = [this](const Result& res) { print_uci_info<false>(res); },
-        .onOpeningBookHit = [this]([[maybe_unused]] const Move& move) { print_book_hit(); } } };
+    search::Thread searcher;
 
     uci::Action clearTT {
         "Clear Hash",
@@ -129,19 +93,12 @@ private:
         "Press to clear the transposition table"
     };
 
-    std::array<uci::Option*, 2uz> options {
-        &searcher.context.openingBook.enabled,
+    std::array<uci::Option*, 1uz> options {
         &clearTT
     };
 
     // clang-format off
-    std::array<CustomCommand, 8uz> customCommands {
-        CustomCommand {
-            .name   = "loadbook",
-            .action = [this](const string_view args) { load_book_file(args); },
-            .description = "Reads the given PGN file into the engine's openings database",
-            .argsHelp = "<path> [novars]"
-        },
+    std::array<CustomCommand, 7uz> customCommands {
         CustomCommand {
             .name = "showpos",
             .action = [this](const string_view args){ print_current_position(args); },

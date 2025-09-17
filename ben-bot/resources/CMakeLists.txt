@@ -20,7 +20,6 @@ FetchContent_MakeAvailable (cmrc)
 cmrc_add_resource_library (
         ben_bot_resources_internal
         res/license_header.txt
-        res/book.pgn
         res/bench.epd
 )
 # cmake-format: on
@@ -28,6 +27,10 @@ cmrc_add_resource_library (
 add_library (ben_bot_resources STATIC)
 
 target_link_libraries (ben_bot_resources PRIVATE ben_bot_resources_internal)
+
+set_target_properties (
+    ben_bot_resources PROPERTIES CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF DEBUG_POSTFIX -d
+)
 
 # generate the config header that provides info such as compiler name, build config, etc.
 
@@ -46,9 +49,29 @@ file (GENERATE OUTPUT "${generated_header}" CONTENT "${config_header_content}")
 
 target_sources (
     ben_bot_resources PUBLIC FILE_SET HEADERS BASE_DIRS include FILES include/ben-bot/Resources.hpp
-    PRIVATE src/Resources.cpp "${generated_header}"
+    PRIVATE src/Resources.cpp src/BuildTime.cpp "${generated_header}"
 )
 
 target_include_directories (ben_bot_resources PRIVATE "${generated_includes}")
+
+# warning flags
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang|GNU")
+    set (not_gnu "$<NOT:$<CXX_COMPILER_ID:GNU>>")
+    set (c_or_objc "$<COMPILE_LANGUAGE:C,OBJC>")
+
+    target_compile_options (
+        ben_bot_resources_internal
+        PRIVATE
+            # cmake-format: sortable
+            -Wno-newline-eof
+            -Wno-exit-time-destructors
+            "$<$<OR:${c_or_objc},${not_gnu}>:-Wno-missing-variable-declarations;-Wno-missing-prototypes>"
+    )
+
+    target_compile_options (
+        ben_bot_resources PRIVATE # cmake-format: sortable
+                                  -Wno-date-time -Wno-unreachable-code
+    )
+endif ()
 
 add_library (ben_bot::resources ALIAS ben_bot_resources)

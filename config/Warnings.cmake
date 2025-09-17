@@ -10,13 +10,7 @@
 #
 # ======================================================================================
 
-#[=======================================================================[.rst:
-Warnings.cmake
-----------------------
-
-Including this module globally enables some default warnings.
-
-#]=======================================================================]
+# Including this module globally enables some default warnings.
 
 include_guard (GLOBAL)
 
@@ -55,9 +49,6 @@ add_compile_options (
     -Wall
     -Wcast-align
     -Wconversion
-    -Werror=implicit
-    -Werror=incompatible-pointer-types
-    -Werror=int-conversion
     -Werror=format-security
     -Wextra
     -Wformat
@@ -75,6 +66,15 @@ add_compile_options (
     -Wunused-parameter
     -Wnon-virtual-dtor
     -Wzero-as-null-pointer-constant
+    -Wunused
+    -Wno-c++98-compat
+    -Wno-c++98-compat-pedantic
+    -Wno-c++20-compat
+    -Wno-missing-designated-field-initializers
+    -Wno-padded
+    -Wno-poison-system-directories
+    -Wno-covered-switch-default
+    -Wno-unused-macros
 )
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
@@ -92,12 +92,12 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
         -Wshift-sign-overflow
         -Wshorten-64-to-32
         -Wunused-variable
-        -Wno-missing-designated-field-initializers
+        -Weverything
     )
 elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
     add_compile_options (
         # cmake-format: sortable
-        -Wabi
+        -Waggressive-loop-optimizations
         -Wno-strict-overflow
         -Wpointer-arith
         -Wredundant-decls

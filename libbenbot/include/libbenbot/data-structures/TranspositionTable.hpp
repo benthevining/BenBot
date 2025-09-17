@@ -14,7 +14,7 @@
 
 /** @file
     This file defines the transposition table data structure.
-    @ingroup search
+    @ingroup benbot_data_structures
  */
 
 #pragma once
@@ -34,7 +34,7 @@ using std::size_t;
 
 /** The transposition table data structure.
 
-    @ingroup search
+    @ingroup benbot_data_structures
  */
 class TranspositionTable final {
 public:
@@ -65,6 +65,8 @@ public:
             failed low (i.e. ``score <= alpha``).
          */
         std::optional<Move> bestMove;
+
+        constexpr bool operator==(const Record& other) const noexcept = default;
     };
 
     /** Retrieves the stored record for the given position,
@@ -87,7 +89,7 @@ public:
         is recorded.
      */
     [[nodiscard]] std::optional<Move> get_best_response(
-        const Position& pos, Move move) const;
+        const Position& pos, const Move& move) const;
 
     /** Stores a record for a given position. */
     void store(const Position& pos, const Record& record);
@@ -145,10 +147,14 @@ inline auto TranspositionTable::probe_eval(
                 break;
             }
 
-            default: { // Beta
+            case Beta: {
                 if (record->eval >= beta)
                     return std::make_pair(beta, record->evalType);
+
+                break;
             }
+
+            default: std::unreachable();
         }
     }
 
@@ -156,7 +162,7 @@ inline auto TranspositionTable::probe_eval(
 }
 
 inline std::optional<Move> TranspositionTable::get_best_response(
-    const Position& pos, const Move move) const
+    const Position& pos, const Move& move) const
 {
     if (const auto* record = find(after_move(pos, move)))
         return record->bestMove;
@@ -170,7 +176,7 @@ inline void TranspositionTable::store(const Position& pos, const Record& record)
         it != records.end()) {
         // this position was already stored in the table
         // keep the old evaluation if it was an exact one & the new one isn't,
-        // or if the new evaluation is a greater depth than the old one
+        // or if the new evaluation is a lower depth than the old one
 
         auto& stored = it->second;
 

@@ -12,37 +12,38 @@
  * ======================================================================================
  */
 
-// This file provides a Catch reporter that writes benchmark results in
-// a format understood by CDash for historical measurement tracking
+#include <catch2/benchmark/catch_benchmark.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <libchess/board/Bitboard.hpp>
+#include <libchess/board/BitboardIndex.hpp>
+#include <libchess/board/File.hpp>
+#include <libchess/board/Rank.hpp>
+#include <libchess/board/Square.hpp>
 
-#include <catch2/reporters/catch_reporter_registrars.hpp>
-#include <catch2/reporters/catch_reporter_streaming_base.hpp>
-#include <print>
-#include <string>
+static constexpr auto TAGS { "[board][Bitboard][!benchmark]" };
 
-namespace {
-[[nodiscard, gnu::const]] double get_exec_ms(const Catch::BenchmarkStats<>& stats) noexcept
+using chess::board::File;
+using chess::board::Rank;
+using chess::board::Square;
+
+TEST_CASE("Benchmarking bitboard iteration", TAGS)
 {
-    return stats.info.estimatedDuration * 1e-6;
+    // NB. we have to make sure this isn't a compile-time constant, or the
+    // functions we're trying to measure will be optimized away
+    chess::board::Bitboard board;
+
+    board.set(Square { File::A, Rank::Four });
+    board.set(Square { File::B, Rank::Eight });
+    board.set(Square { File::F, Rank::Seven });
+    board.set(Square { File::H, Rank::Six });
+
+    BENCHMARK("Iterate bitboard indices")
+    {
+        chess::board::BitboardIndex total { 0 };
+
+        for (const auto idx : board.indices())
+            total += idx; // cppcheck-suppress useStlAlgorithm
+
+        return total;
+    };
 }
-} // namespace
-
-struct CDashBenchmarkReporter final : Catch::StreamingReporterBase {
-    using StreamingReporterBase::StreamingReporterBase;
-
-    [[nodiscard]] static std::string getDescription()
-    {
-        return "Output benchmark results in CDash dashboard measurement format";
-    }
-
-private:
-    void benchmarkEnded(const Catch::BenchmarkStats<>& stats) override
-    {
-        std::println(
-            R"-(<DartMeasurement name="{} (ms)" type="numeric/double">{}</DartMeasurement>)-",
-            stats.info.name,
-            get_exec_ms(stats));
-    }
-};
-
-CATCH_REGISTER_REPORTER("cdash", CDashBenchmarkReporter)

@@ -23,6 +23,7 @@
 #include <libchess/uci/CommandParsing.hpp> // IWYU pragma: keep - for GoCommandOptions
 #include <libchess/uci/Options.hpp>
 #include <span>
+#include <string>
 #include <string_view>
 
 namespace chess::uci {
@@ -44,15 +45,18 @@ using std::string_view;
 struct EngineBase {
     EngineBase() = default;
 
-    virtual ~EngineBase() = default;
+    virtual ~EngineBase();
 
     EngineBase(const EngineBase&)            = default;
     EngineBase(EngineBase&&)                 = default;
     EngineBase& operator=(const EngineBase&) = default;
     EngineBase& operator=(EngineBase&&)      = default;
 
-    /** This must return the name of the engine. */
-    [[nodiscard]] virtual string_view get_name() const = 0;
+    /** This must return the name of the engine.
+        The returned string may optionally contain the engine's current version,
+        such as ``BenBot 1.2.0``.
+     */
+    [[nodiscard]] virtual std::string get_name() const = 0;
 
     /** This must return the name of the engine's author. */
     [[nodiscard]] virtual string_view get_author() const = 0;
@@ -61,9 +65,15 @@ struct EngineBase {
     [[nodiscard]] virtual std::span<Option*> get_options() { return {}; }
 
     /** This function will be called when the "isready" command is received,
-        and may block while waiting for background tasks to complete.
+        and may block while waiting for background tasks to complete. This
+        function should be thread-safe.
      */
     virtual void wait() { }
+
+    /** This function must return true if a search is currently in progress.
+        This function should be thread-safe.
+     */
+    [[nodiscard]] virtual bool is_searching() const noexcept = 0;
 
     /** This function will be called when the "ucinewgame" command is received.
         This should flush any game-specific data structures such as hash tables,

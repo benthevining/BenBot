@@ -12,8 +12,6 @@
 
 name: SPRT
 
-run-name: Run SPRT test
-
 on:
   workflow_dispatch:
   push:
@@ -41,7 +39,7 @@ jobs:
     timeout-minutes: 60
     env:
       CMAKE_BUILD_PARALLEL_LEVEL: 8
-      BUILD_DIR: Builds/clang
+      BUILD_DIR: ${{ github.workspace }}/Builds/clang
       SPRT_OUTPUT_LOG: ${{ github.workspace }}/logs/sprt/output.log
 
     steps:
@@ -54,20 +52,21 @@ jobs:
       with:
         repository: Disservin/fastchess
         latest: true
-        preRelease: true
-        fileName: '*-ubuntu-*'
+        preRelease: true # so far, fastchess only has prereleases
+        fileName: '*-linux-x86-64*'
         tarBall: false
         zipBall: false
         out-file-path: fastchess
         extract: true
 
+    # parses download_fastchess output to print the fastchess executable path to a step output
     - name: Print fastchess filename
       id: fastchess_filename
       run: |
-        zip_path=${{ fromJson(steps.download_fastchess.outputs.downloaded_files)[0] }}
-        filename=$(basename "$zip_path" ".zip")
-        dirpath=$(dirname "$zip_path")
-        result="$dirpath/$filename"
+        tar_path=${{ fromJson(steps.download_fastchess.outputs.downloaded_files)[0] }}
+        filename=$(basename "$tar_path" ".tar")
+        dirpath=$(dirname "$tar_path")
+        result="$dirpath/$filename/fastchess"
         echo "fastchess=$result" >> "$GITHUB_OUTPUT"
 
     - name: Download latest BenBot release
@@ -75,16 +74,21 @@ jobs:
       uses: robinraju/release-downloader@v1.12
       with:
         latest: true
-        fileName: '*-Linux-Clang'
+        fileName: BenBot-ubuntu-latest-clang.zip
         tarBall: false
         zipBall: false
         out-file-path: baseline
+        extract: true
 
+    # parses download_benbot output to print the ben_bot executable path to a step output
     - name: Print BenBot filename
       id: benbot_filename
       run: |
-        path=${{ fromJson(steps.download_benbot.outputs.downloaded_files)[0] }}
-        echo "benbot=$path" >> "$GITHUB_OUTPUT"
+        zip_path=${{ fromJson(steps.download_benbot.outputs.downloaded_files)[0] }}
+        filename=$(basename "$zip_path" ".zip")
+        dirpath=$(dirname "$zip_path")
+        result="$dirpath/$filename/bin/ben_bot"
+        echo "benbot=$result" >> "$GITHUB_OUTPUT"
 
     - name: Add execution permissions
       run: chmod --preserve-root 777 ${{ steps.fastchess_filename.outputs.fastchess }} ${{ steps.benbot_filename.outputs.benbot }}
@@ -93,27 +97,27 @@ jobs:
       run: cmake --preset clang -D BENBOT_DOCS=OFF -D FASTCHESS_PROGRAM=${{ steps.fastchess_filename.outputs.fastchess }}
 
     - name: Inject baseline binary
-      run: cmake -D BASELINE_BINARY=${{ steps.benbot_filename.outputs.benbot }} -P ${{ env.BUILD_DIR }}/InjectSPRTBaseline-Release.cmake
+      run: cmake -D BASELINE_BINARY=${{ steps.benbot_filename.outputs.benbot }} -P InjectSPRTBaseline-Release.cmake
+      working-directory: ${{ env.BUILD_DIR }}
 
     - name: Build
       run: cmake --build . --target ben_bot --config Release
       working-directory: ${{ env.BUILD_DIR }}
 
     - name: Run SPRT test
+      # NB. tee needs the output directory to exist before it's invoked
       run: |
-        cmake -E make_directory ${{ github.workspace }}/logs/sprt
+        cmake -E make_directory $(dirname ${{ env.SPRT_OUTPUT_LOG }})
         cmake --build . --target sprt --config Release | tee ${{ env.SPRT_OUTPUT_LOG }}
       working-directory: ${{ env.BUILD_DIR }}
 
     - name: Upload logs
-      if: always()
-      uses: actions/upload-artifact@v4.6.2
+      uses: actions/upload-artifact@v4
       with:
         name: sprt-logs
         path: logs/sprt
         if-no-files-found: error
 
     - name: Report results
-      if: always()
       run: python3 ReportSPRTResults.py ${{ env.SPRT_OUTPUT_LOG }} >> $GITHUB_STEP_SUMMARY
       working-directory: .github/scripts
