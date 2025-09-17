@@ -61,6 +61,8 @@ private:
 
     void abort_search() override { searcher.context.abort(); }
 
+    void ponder_hit() override;
+
     void wait() override { searcher.context.wait(); }
 
     bool is_searching() const noexcept override { return searcher.context.in_progress(); }
