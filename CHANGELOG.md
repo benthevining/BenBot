@@ -602,3 +602,8 @@
 * warnings ([091f567](https://github.com/benthevining/BenBot/commit/091f567f14768e4ab2d3054d33bbb47652de4d22))
 * warnings ([d8e15eb](https://github.com/benthevining/BenBot/commit/d8e15ebea009bfab04f9cf679890c8af51b86c10))
 * warnings ([4a86e95](https://github.com/benthevining/BenBot/commit/4a86e95e0ff84a448ec021b0f03c08b2215dcc4d))
+## [1.5.1](https://github.com/benthevining/BenBot/compare/v1.5.0...v1.5.1) (2025-09-17)
+
+### Bug Fixes
+
+* Dockerfile ([1ce5dc8](https://github.com/benthevining/BenBot/commit/1ce5dc8986c569e71188733812fcc37fcdfc2a4a))
