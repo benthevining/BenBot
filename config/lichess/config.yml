@@ -81,7 +81,7 @@ correspondence:
   ponder: false
 
 challenge:
-  concurrency: 3
+  concurrency: 10
   sort_by: best
   preference: human
   accept_bot: true
