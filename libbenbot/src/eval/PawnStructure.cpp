@@ -43,7 +43,7 @@ namespace {
 
         static constexpr auto OtherSide = chess::pieces::other_side<Side>();
 
-        static constexpr auto promotionRank = Side == Color::White ? Rank::Eight : Rank::One;
+        static constexpr auto promotionRank = Side == Color::White ? Rank::Eight : Rank::One; // cppcheck-suppress knownConditionTrueFalse
 
         static constexpr auto ROOK_BEHIND_BONUS           = 25;
         static constexpr auto KING_ESCORT_BONUS           = 2;
