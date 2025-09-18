@@ -20,7 +20,7 @@
 #include <cmath>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <filesystem>
-#include <libbenbot/search/Search.hpp>
+#include <libbenbot/search/Callbacks.hpp>
 #include <libbenbot/search/Thread.hpp>
 #include <libchess/notation/EPD.hpp>
 #include <libchess/util/Files.hpp>
