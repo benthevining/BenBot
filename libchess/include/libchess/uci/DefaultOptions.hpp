@@ -63,6 +63,19 @@ namespace chess::uci::default_options {
     };
 }
 
+/** Creates the UCI "Hash" option.
+    This option controls the maximum size of the engine's transposition table, in megabytes.
+ */
+[[nodiscard]] inline IntOption hash_size()
+{
+    return {
+        "Hash",
+        1, 1000,
+        100,
+        "Sets the maximum transposition table size (in MB)"
+    };
+}
+
 /** Creates the "UCI_ShowCurrLine" option.
     If this option is supported, this means that the engine can show the current
     line it is calculating (i.e. by printing "info currline" output).

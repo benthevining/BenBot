@@ -155,6 +155,8 @@ void EngineBase::handle_setoption(const string_view arguments)
             option->handle_setvalue({});
         else
             option->handle_setvalue(trim(rest.substr(valueTokenIdx)));
+
+        option_changed(*option);
     }
 }
 
