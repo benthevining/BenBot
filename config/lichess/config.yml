@@ -17,7 +17,7 @@ engine:
   dir: ./deploy/bin/
   name: ben_bot
   protocol: uci
-  ponder: false
+  ponder: true
   silence_stderr: false
   go_commands:
     movetime: 20000 # 20 sec max per move

@@ -373,6 +373,14 @@ void Context::search()
 
     assert(bestMove.has_value());
 
+    // when in ponder mode, we don't want to exit the search
+    // until we've received either a stop or ponderhit command
+    if (pondering.load()) {
+        chess::util::progressive_backoff([this] {
+            return exitFlag.load() or not pondering.load();
+        });
+    }
+
     callbacks.search_complete({ .duration = interrupter.get_search_duration(),
         .depth                            = depth,
         .score                            = bestScore,
