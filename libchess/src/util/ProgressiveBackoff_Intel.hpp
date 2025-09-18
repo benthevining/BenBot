@@ -14,18 +14,20 @@
 
 #pragma once
 
-#include <cstddef> // IWYU pragma: keep - for size_t
 #include <emmintrin.h>
 #include <functional>
 #include <thread>
 
 namespace chess::util {
 
-using std::size_t;
-
-template <size_t N0, size_t N1, size_t N2>
-void progressive_backoff_intel(std::function<bool()> pred)
+inline void progressive_backoff_impl(std::function<bool()> pred)
 {
+    // approx. 5x5 ns (= 25 ns), 10x40 ns (= 400 ns), and 3000x350 ns (~ 1 ms),
+    // respectively, when measured on a 2.9 GHz Intel i9
+    static constexpr auto N0 = 5uz;    // NOLINT(readability-identifier-length)
+    static constexpr auto N1 = 10uz;   // NOLINT(readability-identifier-length)
+    static constexpr auto N2 = 3000uz; // NOLINT(readability-identifier-length)
+
     for (auto i = 0uz; i < N0; ++i) {
         if (pred())
             return;

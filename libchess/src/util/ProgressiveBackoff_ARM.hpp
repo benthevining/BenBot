@@ -15,17 +15,18 @@
 #pragma once
 
 #include <arm_acle.h>
-#include <cstddef> // IWYU pragma: keep - for size_t
 #include <functional>
 #include <thread>
 
 namespace chess::util {
 
-using std::size_t;
-
-template <size_t N0, size_t N1>
-void progressive_backoff_arm(std::function<bool()> pred)
+inline void progressive_backoff_impl(std::function<bool()> pred)
 {
+    // approx. 2x10 ns (= 20 ns) and 750x1333 ns (~ 1 ms), respectively,
+    // on an Apple Silicon Mac or an armv8 based phone
+    static constexpr auto N0 = 2uz;   // NOLINT(readability-identifier-length)
+    static constexpr auto N1 = 750uz; // NOLINT(readability-identifier-length)
+
     for (auto i = 0uz; i < N0; ++i) {
         if (pred())
             return;
