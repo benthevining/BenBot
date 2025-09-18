@@ -275,7 +275,7 @@ void Context::search()
     // sets activeFlag to true while inside this function, resets it to false once function exits
     const ActiveFlagSetter activeFlagRAII { activeFlag };
 
-    Interrupter interrupter { exitFlag, options.searchTime };
+    Interrupter interrupter { exitFlag, pondering, options.searchTime };
 
     // if the movesToSearch was empty, then we search all legal moves
     if (options.movesToSearch.empty()) {
@@ -343,7 +343,7 @@ void Context::search()
             .betaCutoffs                         = stats.betaCutoffs,
             .mdpCutoffs                          = stats.mdpCutoffs });
 
-        if (not infinite) {
+        if (not(infinite or pondering.load())) {
             // only 1 legal move, don't do a deeper iteration
             if (options.movesToSearch.size() == 1uz) {
                 [[unlikely]];
@@ -372,6 +372,14 @@ void Context::search()
     --depth;
 
     assert(bestMove.has_value());
+
+    // when in ponder mode, we don't want to exit the search
+    // until we've received either a stop or ponderhit command
+    if (pondering.load()) {
+        chess::util::progressive_backoff([this] {
+            return exitFlag.load() or not pondering.load();
+        });
+    }
 
     callbacks.search_complete({ .duration = interrupter.get_search_duration(),
         .depth                            = depth,
