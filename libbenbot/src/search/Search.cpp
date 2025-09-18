@@ -23,7 +23,7 @@
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Score.hpp>
-#include <libbenbot/search/Search.hpp>
+#include <libbenbot/search/Context.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/util/Threading.hpp>

@@ -20,7 +20,8 @@
 #pragma once
 
 #include <atomic>
-#include <libbenbot/search/Search.hpp>
+#include <libbenbot/search/Callbacks.hpp>
+#include <libbenbot/search/Context.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/uci/CommandParsing.hpp>
 #include <libchess/util/Threading.hpp>
