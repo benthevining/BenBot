@@ -45,7 +45,9 @@ struct Context final {
      */
     Options options;
 
-    /** The transposition table used for this search. */
+    /** The transposition table used for this search.
+        This object's methods can only be safely called when no search is executing.
+     */
     TranspositionTable transTable;
 
     /** Performs a search.
@@ -56,7 +58,7 @@ struct Context final {
         The search can be interrupted by calling the ``abort()`` method while
         ``search()`` is executing.
 
-        This function accesses ``options`` and ``callbacks``; these objects
+        This function accesses ``options`` and ``transTable``; these objects
         must not be mutated while ``search()`` is executing. ``abort()``,
         ``wait()``, ``in_progress()``, and ``reset()`` may be called while
         ``search()`` is executing without introducing data races.
@@ -65,7 +67,9 @@ struct Context final {
 
     /** This function may be called while ``search()`` is executing to interrupt
         the search. If a search is in progress, calling this method will cause the
-        search routine to return at the next available point.
+        search routine to return at the next available point. This method returns
+        immediately; to wait for the search to complete, call ``wait()`` after
+        calling this method.
      */
     void abort() noexcept { exitFlag.store(true); }
 
@@ -87,13 +91,23 @@ struct Context final {
      */
     void wait() const;
 
-    /** This flag should be set to true during a ponder-mode search, and false otherwise. */
-    std::atomic_bool pondering { false };
+    /** Sets whether the next search will be in ponder mode.
+        When in ponder mode, the search will not exit until ``abort()`` or
+        ``ponder_hit()`` are called.
+     */
+    void set_pondering(bool isPonderMode) noexcept { pondering.store(isPonderMode); }
+
+    /** When in a ponder mode search, this exits the search. A ponder mode search
+        will not exit until this method or ``abort()`` are called.
+     */
+    void ponder_hit() noexcept { pondering.store(false); }
 
 private:
     std::atomic_bool exitFlag { false };
 
     std::atomic_bool activeFlag { false };
+
+    std::atomic_bool pondering { false };
 
     Callbacks callbacks;
 };

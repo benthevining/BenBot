@@ -65,7 +65,7 @@ private:
 
     void abort_search() override { searcher.context.abort(); }
 
-    void ponder_hit() override;
+    void ponder_hit() override { searcher.context.ponder_hit(); }
 
     void wait() override { searcher.context.wait(); }
 
