@@ -1,0 +1,17 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: BenBot
+message: >-
+  If you use or write about this software, please cite it
+  using the metadata from this file.
+type: software
+authors:
+  - given-names: Ben
+    family-names: Vining
+    email: ben.the.vining@gmail.com
+identifiers:
+  - type: url
+    value: 'https://github.com/benthevining/BenBot'
+    description: GitHub repository
