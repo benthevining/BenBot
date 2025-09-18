@@ -23,6 +23,7 @@
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Score.hpp>
+#include <libbenbot/search/Bounds.hpp>
 #include <libbenbot/search/Context.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
@@ -38,48 +39,6 @@ namespace {
 
     using eval::Score;
     using EvalType = TranspositionTable::Record::EvalType;
-
-    struct Bounds final {
-        Score alpha { -eval::MAX };
-        Score beta { eval::MAX };
-
-        [[nodiscard]] constexpr Bounds invert() const noexcept
-        {
-            return {
-                .alpha = -beta,
-                .beta  = -alpha
-            };
-        }
-
-        // if an MDP cutoff is available, returns the cutoff value
-        // if this returns nullopt, the search should continue
-        [[nodiscard]] constexpr std::optional<Score> mate_distance_pruning(const size_t plyFromRoot) noexcept
-        {
-            const auto mateScore = Score::mate(plyFromRoot);
-
-            if (alpha.is_winning_mate()) {
-                if (mateScore < beta) {
-                    beta = mateScore;
-
-                    if (alpha >= mateScore)
-                        return mateScore;
-                }
-
-                return std::nullopt;
-            }
-
-            if (alpha.is_losing_mate()) {
-                if (mateScore > alpha) {
-                    alpha = mateScore;
-
-                    if (beta <= mateScore)
-                        return mateScore;
-                }
-            }
-
-            return std::nullopt;
-        }
-    };
 
     struct Stats final {
         size_t nodesSearched { 0uz };
@@ -174,7 +133,7 @@ namespace {
 
         // check if this position has been searched before to at
         // least this depth and within these bounds for non-PV nodes
-        if (const auto value = transTable.probe_eval(currentPosition, depth, bounds.alpha, bounds.beta)) {
+        if (const auto value = transTable.probe_eval(currentPosition, depth, bounds)) {
             ++stats.transTableHits;
             return Score::from_tt(*value, plyFromRoot);
         }

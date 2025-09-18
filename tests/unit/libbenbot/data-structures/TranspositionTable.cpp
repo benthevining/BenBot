@@ -14,6 +14,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
+#include <libbenbot/search/Bounds.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/notation/Algebraic.hpp>
 #include <libchess/notation/FEN.hpp>
@@ -97,10 +98,15 @@ TEST_CASE("Transposition table - probe_eval()", TAGS)
     static constexpr auto BETA  = 2;
     static constexpr auto EVAL  = 1;
 
+    static constexpr ben_bot::search::Bounds BOUNDS {
+        .alpha = { ALPHA },
+        .beta  = { BETA }
+    };
+
     TranspositionTable table;
 
     REQUIRE(not table.probe_eval(
-                         startPos, DEPTH, ALPHA, BETA)
+                         startPos, DEPTH, BOUNDS)
             .has_value());
 
     SECTION("Exact eval stored")
@@ -110,7 +116,7 @@ TEST_CASE("Transposition table - probe_eval()", TAGS)
                 .eval        = EVAL,
                 .evalType    = EvalType::Exact });
 
-        const auto probed = table.probe_eval(startPos, DEPTH, ALPHA, BETA);
+        const auto probed = table.probe_eval(startPos, DEPTH, BOUNDS);
 
         REQUIRE(probed.has_value());
 
@@ -131,7 +137,10 @@ TEST_CASE("Transposition table - probe_eval()", TAGS)
         {
             static constexpr auto SEARCH_ALPHA = EVAL + 1;
 
-            const auto probed = table.probe_eval(startPos, DEPTH, SEARCH_ALPHA, BETA);
+            auto thisBounds  = BOUNDS;
+            thisBounds.alpha = { SEARCH_ALPHA };
+
+            const auto probed = table.probe_eval(startPos, DEPTH, thisBounds);
 
             REQUIRE(probed.has_value());
 
@@ -143,8 +152,11 @@ TEST_CASE("Transposition table - probe_eval()", TAGS)
 
         SECTION("Probing with alpha that causes cutoff")
         {
+            auto thisBounds  = BOUNDS;
+            thisBounds.alpha = { EVAL - 1 };
+
             REQUIRE(not table.probe_eval(
-                                 startPos, DEPTH, EVAL - 1, BETA)
+                                 startPos, DEPTH, thisBounds)
                     .has_value());
         }
     }
@@ -160,7 +172,10 @@ TEST_CASE("Transposition table - probe_eval()", TAGS)
         {
             static constexpr auto SEARCH_BETA = EVAL - 1;
 
-            const auto probed = table.probe_eval(startPos, DEPTH, ALPHA, SEARCH_BETA);
+            auto thisBounds = BOUNDS;
+            thisBounds.beta = { SEARCH_BETA };
+
+            const auto probed = table.probe_eval(startPos, DEPTH, thisBounds);
 
             REQUIRE(probed.has_value());
 
@@ -172,8 +187,11 @@ TEST_CASE("Transposition table - probe_eval()", TAGS)
 
         SECTION("Probing with beta that causes cutoff")
         {
+            auto thisBounds = BOUNDS;
+            thisBounds.beta = { EVAL + 1 };
+
             REQUIRE(not table.probe_eval(
-                                 startPos, DEPTH, ALPHA, EVAL + 1)
+                                 startPos, DEPTH, thisBounds)
                     .has_value());
         }
     }

@@ -14,6 +14,7 @@
 
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libbenbot/data-structures/TranspositionTable.hpp>
+#include <libbenbot/search/Bounds.hpp>
 #include <optional>
 #include <utility>
 
@@ -23,7 +24,7 @@ using std::size_t;
 
 auto TranspositionTable::probe_eval(
     const Position& pos, const size_t depth,
-    const int alpha, const int beta) const
+    const search::Bounds& bounds) const
     -> std::optional<ProbedEval>
 {
     if (const auto* record = find(pos);
@@ -35,15 +36,15 @@ auto TranspositionTable::probe_eval(
                 return std::make_pair(record->eval, record->evalType);
 
             case Alpha: {
-                if (record->eval <= alpha)
-                    return std::make_pair(alpha, record->evalType);
+                if (record->eval <= bounds.alpha)
+                    return std::make_pair(bounds.alpha, record->evalType);
 
                 break;
             }
 
             case Beta: {
-                if (record->eval >= beta)
-                    return std::make_pair(beta, record->evalType);
+                if (record->eval >= bounds.beta)
+                    return std::make_pair(bounds.beta, record->evalType);
 
                 break;
             }
