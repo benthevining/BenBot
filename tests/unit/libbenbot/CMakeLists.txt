@@ -22,17 +22,4 @@ target_sources (libbenbot_tests PRIVATE ${sources})
 
 source_group (TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${sources})
 
-# cmake-format: off
-catch_discover_tests (
-        libbenbot_tests
-        EXTRA_ARGS
-            --verbosity high
-            --warn NoAssertions
-            --warn UnmatchedTestSpec
-            --colour-mode none
-            --reporter console::out=-
-        TEST_PREFIX libbenbot.unit.
-        PROPERTIES
-            SKIP_REGULAR_EXPRESSION "SKIPPED:"
-)
-# cmake-format: on
+add_catch_tests (libbenbot_tests libbenbot)

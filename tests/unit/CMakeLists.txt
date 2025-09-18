@@ -29,5 +29,24 @@ endif ()
 
 include (Catch)
 
+#
+
+function (add_catch_tests target prefix)
+    # cmake-format: off
+    catch_discover_tests (
+            "${target}"
+            EXTRA_ARGS
+            --verbosity high
+            --warn NoAssertions
+            --warn UnmatchedTestSpec
+            --colour-mode none
+            --reporter console::out=-
+            TEST_PREFIX "${prefix}.unit."
+            PROPERTIES
+            SKIP_REGULAR_EXPRESSION "SKIPPED:"
+    )
+    # cmake-format: on
+endfunction ()
+
 add_subdirectory (libchess)
 add_subdirectory (libbenbot)

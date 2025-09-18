@@ -38,6 +38,8 @@ function (check_python_modules_available outputVar)
     set ("${outputVar}" TRUE PARENT_SCOPE)
 endfunction ()
 
+#
+
 configure_file (CTestCustom.cmake "${BenBot_BINARY_DIR}/CTestCustom.cmake" @ONLY)
 
 add_subdirectory (unit)

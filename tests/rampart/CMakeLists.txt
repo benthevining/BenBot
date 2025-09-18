@@ -58,14 +58,27 @@ file (GLOB testcase_files LIST_DIRECTORIES false
       CONFIGURE_DEPENDS "${rampart_SOURCE_DIR}/src/main/resources/testcases/*.json"
 )
 
+set (output_dir "${CMAKE_CURRENT_BINARY_DIR}/results/$<CONFIG>")
+
 foreach (data_file IN LISTS testcase_files)
     cmake_path (GET data_file STEM filename)
 
     set (test_name "ben_bot.rampart.${filename}")
 
     add_test (NAME "${test_name}" COMMAND Python::Interpreter "${generated_script}" "${data_file}"
-                                          "${CMAKE_CURRENT_BINARY_DIR}/results/$<CONFIG>"
+                                          "${output_dir}"
     )
 
     set_tests_properties ("${test_name}" PROPERTIES REQUIRED_FILES "${data_file}")
+
+    file (READ "${data_file}" file_content)
+
+    string (JSON numTestCases LENGTH "${file_content}" "testCases")
+
+    foreach (idx RANGE 1 "${numTestCases}")
+        set_property (
+            TEST "${test_name}" APPEND PROPERTY ATTACHED_FILES
+                                                "${output_dir}/${filename}/${idx}.json"
+        )
+    endforeach ()
 endforeach ()

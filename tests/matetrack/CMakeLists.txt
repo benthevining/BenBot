@@ -14,6 +14,13 @@ if (NOT TARGET Python::Interpreter)
     return ()
 endif ()
 
+check_python_modules_available (deps_available chess tqdm)
+
+if (NOT deps_available)
+    message (VERBOSE "matetrack dependencies not found, not adding these test cases")
+    return ()
+endif ()
+
 FetchContent_Declare (
     matetrack
     SYSTEM
@@ -23,13 +30,6 @@ FetchContent_Declare (
 )
 
 FetchContent_MakeAvailable (matetrack)
-
-check_python_modules_available (deps_available chess tqdm)
-
-if (NOT deps_available)
-    message (VERBOSE "matetrack dependencies not found, not adding these test cases")
-    return ()
-endif ()
 
 # cmake-format: off
 add_test (
