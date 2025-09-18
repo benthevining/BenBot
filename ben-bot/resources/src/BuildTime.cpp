@@ -40,29 +40,38 @@ namespace {
 
     [[nodiscard, gnu::const]] consteval chrono::month build_month() noexcept
     {
-        static constexpr auto monthNum = [] {
-            switch (BUILD_DATE_STR.front()) {
-                case 'J': {
-                    if constexpr (BUILD_DATE_STR[1] == 'a') // January
-                        return 1u;
-                    else // June or July
-                        return BUILD_DATE_STR[2] == 'n' ? 6u : 7u;
+        switch (BUILD_DATE_STR.front()) {
+            case 'F': return std::chrono::February;
+            case 'S': return std::chrono::September;
+            case 'O': return std::chrono::October;
+            case 'N': return std::chrono::November;
+            case 'D': return std::chrono::December;
+
+            case 'J': {
+                switch (BUILD_DATE_STR[1]) {
+                    case 'a': return std::chrono::January;
+                    case 'n': return std::chrono::June;
+                    default : return std::chrono::July;
                 }
-
-                case 'F': return 2u;
-                case 'S': return 9u;
-                case 'O': return 10u;
-                case 'N': return 11u;
-                case 'D': return 12u;
-                case 'M': return BUILD_DATE_STR[2] == 'r' ? 3u : 5u; // March or May
-                case 'A': return BUILD_DATE_STR[1] == 'p' ? 4u : 8u; // April or August
-
-                default:
-                    std::unreachable();
             }
-        }();
 
-        return chrono::month { monthNum };
+            case 'M': {
+                if constexpr (BUILD_DATE_STR[2] == 'r')
+                    return std::chrono::March;
+                else
+                    return std::chrono::May;
+            }
+
+            case 'A': {
+                if constexpr (BUILD_DATE_STR[1] == 'p')
+                    return std::chrono::April;
+                else
+                    return std::chrono::August;
+            }
+
+            default:
+                std::unreachable();
+        }
     }
 
     [[nodiscard, gnu::const]] consteval chrono::day build_day() noexcept
