@@ -12,25 +12,40 @@
  * ======================================================================================
  */
 
-#include <cstddef> // IWYU pragma: keep - for size_t
-#include <libchess/util/Memory.hpp>
+#pragma once
 
-#ifdef _WIN32
-#    include "Memory_Windows.hpp"
-#else
-#    include "Memory_Posix.hpp"
+#include <cstddef> // IWYU pragma: keep - for size_t
+#include <cstdlib>
+
+#if __has_include(<sys/mman.h>)
+#    include <sys/mman.h>
 #endif
 
 namespace chess::util {
 
-void* page_aligned_alloc(const std::size_t size)
+[[nodiscard]] inline void* page_aligned_alloc_impl(const std::size_t size)
 {
-    return page_aligned_alloc_impl(size);
+#ifdef __linux__
+    static constexpr auto alignment = 2uz * 1024uz * 1024uz; // 2MB page size assumed
+#else
+    static constexpr auto alignment = 4096uz; // small page size assumed
+#endif
+
+    // round up to multiple of page alignment
+    const auto actualSize = ((size + alignment - 1uz) / alignment) * alignment;
+
+    auto* mem = std::aligned_alloc(alignment, actualSize);
+
+#ifdef MADV_HUGEPAGE
+    madvise(mem, size, MADV_HUGEPAGE);
+#endif
+
+    return mem;
 }
 
-void page_aligned_free(void* mem)
+inline void page_aligned_free_impl(void* mem)
 {
-    page_aligned_free_impl(mem);
+    std::free(mem);
 }
 
 } // namespace chess::util
