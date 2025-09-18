@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <iterator>
 #include <libchess/moves/Move.hpp>
 #include <libchess/notation/FEN.hpp>
@@ -26,6 +27,7 @@
 
 namespace chess::uci {
 
+using std::chrono::milliseconds;
 using std::string_view;
 
 using util::split_at_first_space;
@@ -170,7 +172,7 @@ GoCommandOptions parse_go_options(
         if (firstWord == "wtime") {
             const auto [wtime, rest2] = parse_int_value(rest);
 
-            ret.whiteTimeLeft = Milliseconds { wtime };
+            ret.whiteTimeLeft = milliseconds { wtime };
             options           = rest2;
 
             continue;
@@ -179,7 +181,7 @@ GoCommandOptions parse_go_options(
         if (firstWord == "btime") {
             const auto [btime, rest2] = parse_int_value(rest);
 
-            ret.blackTimeLeft = Milliseconds { btime };
+            ret.blackTimeLeft = milliseconds { btime };
             options           = rest2;
 
             continue;
@@ -188,7 +190,7 @@ GoCommandOptions parse_go_options(
         if (firstWord == "winc") {
             const auto [winc, rest2] = parse_int_value(rest);
 
-            ret.whiteInc = Milliseconds { winc };
+            ret.whiteInc = milliseconds { winc };
             options      = rest2;
 
             continue;
@@ -197,7 +199,7 @@ GoCommandOptions parse_go_options(
         if (firstWord == "binc") {
             const auto [binc, rest2] = parse_int_value(rest);
 
-            ret.blackInc = Milliseconds { binc };
+            ret.blackInc = milliseconds { binc };
             options      = rest2;
 
             continue;
@@ -242,7 +244,7 @@ GoCommandOptions parse_go_options(
         if (firstWord == "movetime") {
             const auto [time, rest2] = parse_int_value(rest);
 
-            ret.searchTime = Milliseconds { time };
+            ret.searchTime = milliseconds { time };
             options        = rest2;
 
             continue;

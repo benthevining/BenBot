@@ -38,9 +38,9 @@
  */
 namespace chess::uci {
 
-using Milliseconds = std::chrono::milliseconds;
-
 using game::Position;
+using std::chrono::milliseconds;
+using std::optional;
 using std::size_t;
 
 /** Parses the options following a UCI "position" command into a Position object.
@@ -67,31 +67,31 @@ struct GoCommandOptions final {
     bool infinite { false };
 
     /** Number of milliseconds that White has left. */
-    std::optional<Milliseconds> whiteTimeLeft;
+    optional<milliseconds> whiteTimeLeft;
 
     /** Number of milliseconds that Black has left. */
-    std::optional<Milliseconds> blackTimeLeft;
+    optional<milliseconds> blackTimeLeft;
 
     /** Increment for White, in milliseconds. */
-    std::optional<Milliseconds> whiteInc;
+    optional<milliseconds> whiteInc;
 
     /** Increment for Black, in milliseconds. */
-    std::optional<Milliseconds> blackInc;
+    optional<milliseconds> blackInc;
 
     /** Search for exactly this number of milliseconds. */
-    std::optional<Milliseconds> searchTime;
+    optional<milliseconds> searchTime;
 
     /** Number of moves to the next time control. */
-    std::optional<size_t> movesToGo;
+    optional<size_t> movesToGo;
 
     /** Restrict the search to this many plies only. */
-    std::optional<size_t> depth;
+    optional<size_t> depth;
 
     /** Search this many nodes only. */
-    std::optional<size_t> nodes;
+    optional<size_t> nodes;
 
     /** Search for a mate in this many moves. */
-    std::optional<size_t> mateIn;
+    optional<size_t> mateIn;
 };
 
 /** Parses the options following a UCI "go" command.

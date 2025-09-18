@@ -22,15 +22,14 @@
 
 namespace ben_bot::search {
 
-using Milliseconds = std::chrono::milliseconds;
-
+using std::chrono::milliseconds;
 using std::size_t;
 
 // simple RAII timer that measures the amount of time it's been alive
 struct Timer final {
-    [[nodiscard]] Milliseconds get_duration() const
+    [[nodiscard]] milliseconds get_duration() const
     {
-        return std::chrono::duration_cast<Milliseconds>(Clock::now() - startTime);
+        return std::chrono::duration_cast<milliseconds>(Clock::now() - startTime);
     }
 
 private:
@@ -50,7 +49,7 @@ struct Interrupter final {
     Interrupter(
         std::atomic_bool&                 exitFlagToUse,
         const std::atomic_bool&           ponderFlagToUse,
-        const std::optional<Milliseconds> maxSearchTime)
+        const std::optional<milliseconds> maxSearchTime)
         : exitFlag { exitFlagToUse }
         , ponderFlag { ponderFlagToUse }
         , searchTime { maxSearchTime }
@@ -59,12 +58,12 @@ struct Interrupter final {
         exitFlagToUse.store(false);
     }
 
-    [[nodiscard]] Milliseconds get_search_duration() const { return timer.get_duration(); }
+    [[nodiscard]] milliseconds get_search_duration() const { return timer.get_duration(); }
 
     // returns time remaining until abort time, or nullopt if there's no time bound
-    [[nodiscard]] auto get_remaining_time() const -> std::optional<Milliseconds>
+    [[nodiscard]] auto get_remaining_time() const -> std::optional<milliseconds>
     {
-        return searchTime.and_then([this](const Milliseconds timeLimit) {
+        return searchTime.and_then([this](const milliseconds timeLimit) {
             return std::optional { timeLimit - get_search_duration() };
         });
     }
@@ -108,7 +107,7 @@ private:
 
     Timer timer;
 
-    std::optional<Milliseconds> searchTime;
+    std::optional<milliseconds> searchTime;
 
     // because checking the clock's current time is probably a system call,
     // it's desirable to try and cache the aborted state to avoid recalculating

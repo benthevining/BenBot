@@ -32,9 +32,8 @@
 namespace ben_bot::search {
 
 using chess::moves::Move;
+using std::chrono::milliseconds;
 using std::size_t;
-
-using Milliseconds = std::chrono::milliseconds;
 
 /** This struct encapsulates a set of functions that will be called to
     process search progress and results.
@@ -49,7 +48,7 @@ struct Callbacks final {
             For depths greater than 1, this value is the duration of the entire
             search, including lower depths of the iterative deepening loop.
          */
-        Milliseconds duration { 0uz };
+        milliseconds duration { 0uz };
 
         /** The total depth that was searched. */
         size_t depth { 0uz };
