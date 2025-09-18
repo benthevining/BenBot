@@ -10,22 +10,41 @@
 #
 # ======================================================================================
 
-#[[
-On the Windows CI runner, if we just call python3 from the command line, it uses
-a different version than CMake will find. I addressed this issue by also using the
-CMake find module for locating the python executable used to install dependencies.
-]]
+if (NOT TARGET Python::Interpreter)
+    return ()
+endif ()
 
-cmake_minimum_required (VERSION 3.30.0 FATAL_ERROR)
+FetchContent_Declare (
+    matetrack
+    SYSTEM
+    GIT_REPOSITORY "https://github.com/vondele/matetrack.git"
+    GIT_TAG origin/master
+    OVERRIDE_FIND_PACKAGE
+)
 
-find_package (Python 3.10 COMPONENTS Interpreter REQUIRED)
+FetchContent_MakeAvailable (matetrack)
+
+check_python_modules_available (deps_available chess tqdm)
+
+if (NOT deps_available)
+    message (VERBOSE "matetrack dependencies not found, not adding these test cases")
+    return ()
+endif ()
 
 # cmake-format: off
-execute_process (
-    COMMAND "${Python_EXECUTABLE}" -m pip install --break-system-packages --upgrade
-        python-chess tqdm cpplint cppcheck clang-tidy
-    COMMAND_ECHO STDOUT
-    OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_STRIP_TRAILING_WHITESPACE
-    COMMAND_ERROR_IS_FATAL ANY
+add_test (
+    NAME ben_bot.matetrack
+    COMMAND Python::Interpreter matecheck.py
+        --engine "$<TARGET_FILE:ben_bot>"
+        --epdFile mates2000.epd
+        --nodes 10000
+        --depth 10
+        --time 30
+        --showAllIssues --showAllStats --bench
+    WORKING_DIRECTORY "${matetrack_SOURCE_DIR}"
 )
 # cmake-format: on
+
+set_tests_properties (
+    ben_bot.matetrack PROPERTIES FAIL_REGULAR_EXPRESSION "the following issues were detected:"
+)

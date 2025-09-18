@@ -14,13 +14,9 @@ if (NOT TARGET Python::Interpreter)
     return ()
 endif ()
 
-# check if the python-chess module can be imported
-execute_process (
-    COMMAND "${Python_EXECUTABLE}" -c "import chess.engine" RESULT_VARIABLE python_chess_found
-    OUTPUT_QUIET ERROR_QUIET
-)
+check_python_modules_available (deps_available chess.engine)
 
-if (NOT "${python_chess_found}" EQUAL 0)
+if (NOT deps_available)
     message (VERBOSE "python-chess module not found, not adding position solver tests")
     return ()
 endif ()
