@@ -23,10 +23,8 @@
 #include <atomic>
 #include <ben-bot/CustomCommand.hpp>
 #include <functional>
-#include <libbenbot/search/Search.hpp>
 #include <libbenbot/search/Thread.hpp>
 #include <libchess/game/Position.hpp>
-#include <libchess/uci/CommandParsing.hpp> // IWYU pragma: keep - for uci::GoCommandOptions
 #include <libchess/uci/DefaultOptions.hpp>
 #include <libchess/uci/EngineBase.hpp>
 #include <libchess/uci/Options.hpp>
@@ -34,8 +32,13 @@
 #include <string>
 #include <string_view>
 
+namespace chess::uci {
+struct GoCommandOptions;
+} // namespace chess::uci
+
 namespace ben_bot {
 
+using chess::game::Position;
 using std::string_view;
 
 namespace uci = chess::uci;
@@ -62,7 +65,7 @@ private:
 
     void abort_search() override { searcher.context.abort(); }
 
-    void ponder_hit() override;
+    void ponder_hit() override { searcher.context.ponder_hit(); }
 
     void wait() override { searcher.context.wait(); }
 

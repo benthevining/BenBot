@@ -23,7 +23,7 @@
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Score.hpp>
-#include <libbenbot/search/Search.hpp>
+#include <libbenbot/search/Callbacks.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/UCI.hpp>
@@ -139,12 +139,6 @@ namespace {
         }
     }
 
-    void print_book_hit(const bool debugMode)
-    {
-        if (debugMode)
-            println("info string Opening book hit!");
-    }
-
 } // namespace
 
 std::string Engine::get_name() const
@@ -156,8 +150,7 @@ Engine::Engine()
     : searcher {
         search::Callbacks {
             .onSearchComplete = [this](const Result& res) { print_uci_info<true>(res, debugMode.load(), searcher.context); },
-            .onIteration = [this](const Result& res) { print_uci_info<false>(res, debugMode.load(), searcher.context); },
-            .onOpeningBookHit = [this]([[maybe_unused]] const Move& move) { print_book_hit(debugMode.load()); } }
+            .onIteration = [this](const Result& res) { print_uci_info<false>(res, debugMode.load(), searcher.context); } }
     }
 {
 }

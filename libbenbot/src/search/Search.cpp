@@ -23,13 +23,12 @@
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Score.hpp>
-#include <libbenbot/search/Search.hpp>
+#include <libbenbot/search/Bounds.hpp>
+#include <libbenbot/search/Context.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
-#include <libchess/uci/CommandParsing.hpp>
 #include <libchess/util/Threading.hpp>
 #include <optional>
-#include <utility>
 #include <vector>
 
 namespace ben_bot::search {
@@ -40,48 +39,6 @@ namespace {
 
     using eval::Score;
     using EvalType = TranspositionTable::Record::EvalType;
-
-    struct Bounds final {
-        Score alpha { -eval::MAX };
-        Score beta { eval::MAX };
-
-        [[nodiscard]] constexpr Bounds invert() const noexcept
-        {
-            return {
-                .alpha = -beta,
-                .beta  = -alpha
-            };
-        }
-
-        // if an MDP cutoff is available, returns the cutoff value
-        // if this returns nullopt, the search should continue
-        [[nodiscard]] constexpr std::optional<Score> mate_distance_pruning(const size_t plyFromRoot) noexcept
-        {
-            const auto mateScore = Score::mate(plyFromRoot);
-
-            if (alpha.is_winning_mate()) {
-                if (mateScore < beta) {
-                    beta = mateScore;
-
-                    if (alpha >= mateScore)
-                        return mateScore;
-                }
-
-                return std::nullopt;
-            }
-
-            if (alpha.is_losing_mate()) {
-                if (mateScore > alpha) {
-                    alpha = mateScore;
-
-                    if (beta <= mateScore)
-                        return mateScore;
-                }
-            }
-
-            return std::nullopt;
-        }
-    };
 
     struct Stats final {
         size_t nodesSearched { 0uz };
@@ -176,7 +133,7 @@ namespace {
 
         // check if this position has been searched before to at
         // least this depth and within these bounds for non-PV nodes
-        if (const auto value = transTable.probe_eval(currentPosition, depth, bounds.alpha, bounds.beta)) {
+        if (const auto value = transTable.probe_eval(currentPosition, depth, bounds)) {
             ++stats.transTableHits;
             return Score::from_tt(*value, plyFromRoot);
         }
@@ -396,41 +353,6 @@ void Context::wait() const
     chess::util::progressive_backoff([this] {
         return not activeFlag.load();
     });
-}
-
-void Options::update_from(chess::uci::GoCommandOptions&& goOptions)
-{
-    // always clear this, because if movesToSearch isn't specified, we
-    // want the search algorithm to generate all legal moves instead
-    movesToSearch.clear();
-
-    if (not goOptions.moves.empty())
-        movesToSearch = std::move(goOptions.moves);
-
-    if (goOptions.depth.has_value())
-        depth = *goOptions.depth;
-
-    if (goOptions.nodes.has_value())
-        maxNodes = goOptions.nodes;
-
-    // search time
-    if (goOptions.searchTime.has_value()) {
-        searchTime = goOptions.searchTime;
-    } else if (goOptions.infinite) {
-        searchTime = std::nullopt;
-    } else {
-        const bool isWhite = position.is_white_to_move();
-
-        const auto& timeLeft = isWhite ? goOptions.whiteTimeLeft : goOptions.blackTimeLeft;
-
-        // need to know at least our time remaining in order to calculate search time limit
-        if (timeLeft.has_value()) {
-            searchTime = determine_search_time(
-                *timeLeft,
-                isWhite ? goOptions.whiteInc : goOptions.blackInc,
-                goOptions.movesToGo);
-        }
-    }
 }
 
 } // namespace ben_bot::search

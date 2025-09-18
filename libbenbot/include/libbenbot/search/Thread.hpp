@@ -20,7 +20,8 @@
 #pragma once
 
 #include <atomic>
-#include <libbenbot/search/Search.hpp>
+#include <libbenbot/search/Callbacks.hpp>
+#include <libbenbot/search/Context.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/uci/CommandParsing.hpp>
 #include <libchess/util/Threading.hpp>
@@ -84,7 +85,7 @@ struct Thread final {
     /// @{
     void start(chess::uci::GoCommandOptions&& options)
     {
-        context.pondering.store(options.ponderMode);
+        context.set_pondering(options.ponderMode);
 
         context.wait(); // shouldn't have been searching, but better safe than sorry
 

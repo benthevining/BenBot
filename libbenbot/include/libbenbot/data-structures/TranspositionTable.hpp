@@ -28,6 +28,10 @@
 
 namespace ben_bot {
 
+namespace search {
+    struct Bounds;
+} // namespace search
+
 using chess::game::Position;
 using chess::moves::Move;
 using std::size_t;
@@ -81,12 +85,12 @@ public:
 
     /** Similar to ``find()``, this function instead probes for an
         evaluation value of the given position, searched to at least
-        the given depth and honoring the alpha/beta cutoff values.
+        the given depth and honoring the given search bounds.
 
         Returns pair of the evaluation value and the value type.
      */
     [[nodiscard]] std::optional<ProbedEval> probe_eval(
-        const Position& pos, size_t depth, int alpha, int beta) const;
+        const Position& pos, size_t depth, const search::Bounds& bounds) const;
 
     /** Returns the opponent's best response to the given move, if one
         is recorded.

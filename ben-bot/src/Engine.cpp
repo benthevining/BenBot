@@ -19,6 +19,7 @@
 #include <iostream> // for cerr
 #include <libchess/moves/Perft.hpp>
 #include <libchess/notation/UCI.hpp>
+#include <libchess/uci/CommandParsing.hpp>
 #include <libchess/util/Strings.hpp>
 #include <print>
 #include <utility>
@@ -39,11 +40,6 @@ void Engine::new_game([[maybe_unused]] const bool firstCall)
 void Engine::go(uci::GoCommandOptions&& opts)
 {
     searcher.start(std::move(opts));
-}
-
-void Engine::ponder_hit()
-{
-    searcher.context.pondering.store(false);
 }
 
 // this function implements non-standard UCI commands that we support
