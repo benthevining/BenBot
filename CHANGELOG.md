@@ -607,3 +607,14 @@
 ### Bug Fixes
 
 * Dockerfile ([1ce5dc8](https://github.com/benthevining/BenBot/commit/1ce5dc8986c569e71188733812fcc37fcdfc2a4a))
+## [1.5.2](https://github.com/benthevining/BenBot/compare/v1.5.1...v1.5.2) (2025-09-18)
+
+### Features
+
+* engine now has a ponder option ([07e736d](https://github.com/benthevining/BenBot/commit/07e736d169d13056fab55129f0882e7281559bfe))
+
+### Bug Fixes
+
+* build error ([7d2671b](https://github.com/benthevining/BenBot/commit/7d2671b637a24d59d83a0a38295ddebea6a2833c))
+* pondering fixes ([f7ad331](https://github.com/benthevining/BenBot/commit/f7ad3318fc5e39105038325003af7bb2e887357c))
+* when in ponder mode, search isn't exited until stop or ponderhit ([3bfa629](https://github.com/benthevining/BenBot/commit/3bfa62973815d707c545cfc712f2423ecd2f97ca))
