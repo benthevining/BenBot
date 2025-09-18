@@ -27,6 +27,7 @@
 #include <libbenbot/search/Thread.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/uci/CommandParsing.hpp> // IWYU pragma: keep - for uci::GoCommandOptions
+#include <libchess/uci/DefaultOptions.hpp>
 #include <libchess/uci/EngineBase.hpp>
 #include <libchess/uci/Options.hpp>
 #include <span>
@@ -95,9 +96,13 @@ private:
         "Press to clear the transposition table"
     };
 
-    std::array<uci::Option*, 1uz> options {
-        &clearTT
-    };
+    // NB. The engine doesn't start pondering on its own without explicitly being told to
+    // via another go command; this option is needed to inform the GUI that the engine
+    // supports pondering, and also gives the engine the opportunity to adjust its time
+    // management algorithm when pondering is enabled.
+    uci::BoolOption ponder { uci::default_options::ponder() };
+
+    std::array<uci::Option*, 2uz> options { &clearTT, &ponder };
 
     // clang-format off
     std::array<CustomCommand, 7uz> customCommands {
