@@ -316,6 +316,9 @@ struct Position final {
      */
     void make_null_move();
 
+    /** Performs a color flip of this position. */
+    void flip();
+
     /** Recalculates the Zobrist hash for this position. */
     void refresh_zobrist();
 
@@ -347,9 +350,17 @@ private:
 
     @relates Position
     @ingroup game
-    @see after_move()
+    @see after_move(), flipped()
  */
 [[nodiscard, gnu::const]] Position after_null_move(const Position& starting);
+
+/** Returns a copy of the starting position with colors flipped.
+
+    @relates Position
+    @ingroup game
+    @see after_null_move()
+ */
+[[nodiscard, gnu::const]] Position flipped(const Position& starting);
 
 /** Creates a UTF8 representation of the given position.
     The returned string is meant to be interpreted visually by a human, probably for debugging purposes.
@@ -512,6 +523,15 @@ inline Position after_null_move(const Position& starting)
     auto copy { starting };
 
     copy.make_null_move();
+
+    return copy;
+}
+
+inline Position flipped(const Position& starting)
+{
+    auto copy { starting };
+
+    copy.flip();
 
     return copy;
 }
