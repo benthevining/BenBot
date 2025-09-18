@@ -26,10 +26,8 @@
 #include <libbenbot/search/Search.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
-#include <libchess/uci/CommandParsing.hpp>
 #include <libchess/util/Threading.hpp>
 #include <optional>
-#include <utility>
 #include <vector>
 
 namespace ben_bot::search {
@@ -396,41 +394,6 @@ void Context::wait() const
     chess::util::progressive_backoff([this] {
         return not activeFlag.load();
     });
-}
-
-void Options::update_from(chess::uci::GoCommandOptions&& goOptions)
-{
-    // always clear this, because if movesToSearch isn't specified, we
-    // want the search algorithm to generate all legal moves instead
-    movesToSearch.clear();
-
-    if (not goOptions.moves.empty())
-        movesToSearch = std::move(goOptions.moves);
-
-    if (goOptions.depth.has_value())
-        depth = *goOptions.depth;
-
-    if (goOptions.nodes.has_value())
-        maxNodes = goOptions.nodes;
-
-    // search time
-    if (goOptions.searchTime.has_value()) {
-        searchTime = goOptions.searchTime;
-    } else if (goOptions.infinite) {
-        searchTime = std::nullopt;
-    } else {
-        const bool isWhite = position.is_white_to_move();
-
-        const auto& timeLeft = isWhite ? goOptions.whiteTimeLeft : goOptions.blackTimeLeft;
-
-        // need to know at least our time remaining in order to calculate search time limit
-        if (timeLeft.has_value()) {
-            searchTime = determine_search_time(
-                *timeLeft,
-                isWhite ? goOptions.whiteInc : goOptions.blackInc,
-                goOptions.movesToGo);
-        }
-    }
 }
 
 } // namespace ben_bot::search

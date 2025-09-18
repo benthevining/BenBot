@@ -15,7 +15,6 @@
 #pragma once
 
 #include <atomic>
-#include <cassert>
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <optional>
@@ -118,23 +117,5 @@ private:
 
     bool anyIterationCompleted { false };
 };
-
-// decides the amount of time to limit the search to, based on the parameters
-[[nodiscard, gnu::const]] constexpr Milliseconds determine_search_time(
-    const Milliseconds                timeRemaining,
-    const std::optional<Milliseconds> increment,
-    const std::optional<size_t>       movesToNextTimeControl)
-{
-    const auto inc = increment.value_or(Milliseconds { 0 });
-
-    const auto movesToGo = movesToNextTimeControl.value_or(40uz);
-
-    assert(movesToGo > 0uz);
-
-    return Milliseconds {
-        (static_cast<size_t>(timeRemaining.count()) / movesToGo)
-        + (static_cast<size_t>(inc.count()) / (movesToGo / 10uz))
-    };
-}
 
 } // namespace ben_bot::search
