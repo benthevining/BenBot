@@ -75,7 +75,7 @@ add_custom_target (
         -epdout "file=${logs_dir}/final-positions.epd"
         -log "file=${logs_dir}/sprt.log" engine=true
     WORKING_DIRECTORY "$<TARGET_FILE_DIR:ben_bot>"
-    DEPENDS "${logs_dir}/stamp"
+    DEPENDS "${logs_dir}/stamp" "${openings_file}" "${baseline_binary}" ben_bot::ben_bot
     COMMENT "Running SPRT test..."
     VERBATIM USES_TERMINAL
 )
