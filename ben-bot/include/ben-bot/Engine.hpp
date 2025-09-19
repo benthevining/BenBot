@@ -82,6 +82,7 @@ private:
     static void run_bench(string_view arguments);
 
     void make_null_move();
+    void color_flip();
 
     void print_help(string_view args) const;
     void print_options() const;
@@ -108,7 +109,7 @@ private:
     std::array<uci::Option*, 2uz> options { &clearTT, &ponder };
 
     // clang-format off
-    std::array<CustomCommand, 7uz> customCommands {
+    std::array<CustomCommand, 8uz> customCommands {
         CustomCommand {
             .name = "showpos",
             .action = [this](const string_view args){ print_current_position(args); },
@@ -119,6 +120,11 @@ private:
             .name = "makenull",
             .action = CustomCommand::void_cb([this]{ make_null_move(); }),
             .description = "Play a null move on the internal board"
+        },
+        CustomCommand {
+            .name = "flip",
+            .action = CustomCommand::void_cb([this]{ color_flip(); }),
+            .description = "Color-flip the current position"
         },
         CustomCommand {
             .name = "options",

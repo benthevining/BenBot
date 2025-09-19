@@ -12,6 +12,8 @@
  * ======================================================================================
  */
 
+#include "../../../../libchess/src/game/Zobrist.hpp"
+
 #include <algorithm>
 #include <catch2/catch_test_macros.hpp>
 #include <libchess/board/File.hpp>
@@ -304,4 +306,28 @@ TEST_CASE("Position - fifty-move draws", TAGS)
 
     REQUIRE(from_fen("7k/4NK2/5r2/5BN1/8/8/8/8 w - - 103 115").is_fifty_move_draw());
     REQUIRE(from_fen("8/7k/8/1r3KR1/5B2/8/8/8 w - - 105 122").is_fifty_move_draw());
+}
+
+TEST_CASE("Position - flip()", TAGS)
+{
+    SECTION("Giuoco Piano")
+    {
+        const auto initial = from_fen("r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 1 1");
+        const auto correct = from_fen("rnbqk2r/pppp1ppp/5n2/2b1p3/2B1P3/2N5/PPPP1PPP/R1BQK1NR b KQkq - 1 1");
+
+        REQUIRE(flipped(initial) == correct);
+        REQUIRE(flipped(correct) == initial);
+    }
+
+    SECTION("Giuoco Piano Symmetrical")
+    {
+        const auto initial = from_fen("r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/2N2N2/PPPP1PPP/R1BQK2R w KQkq - 1 1");
+        const auto correct = from_fen("r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/2N2N2/PPPP1PPP/R1BQK2R b KQkq - 1 1");
+
+        REQUIRE(flipped(initial) == correct);
+        REQUIRE(flipped(correct) == initial);
+
+        REQUIRE(flipped(initial) == after_null_move(initial));
+        REQUIRE(flipped(correct) == after_null_move(correct));
+    }
 }

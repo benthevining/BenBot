@@ -14,8 +14,8 @@
 
 #include "Zobrist.hpp" // NOLINT(build/include_subdir)
 #include <cstdint>     // IWYU pragma: keep - for std::uint_least8_t
+#include <libchess/board/Bitboard.hpp>
 #include <libchess/board/Distances.hpp>
-#include <libchess/board/File.hpp>
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
@@ -152,6 +152,35 @@ void Position::make_null_move()
 
     // flip side to move
     sideToMove = isWhite ? Color::Black : Color::White;
+}
+
+namespace {
+    using board::Square;
+
+    [[nodiscard, gnu::const]] constexpr Square square_vertical_flip(const Square starting) noexcept
+    {
+        const auto board = board::Bitboard::from_square(starting);
+
+        return Square::from_index(
+            board::flips::vertical(board).first());
+    }
+} // namespace
+
+void Position::flip()
+{
+    whitePieces = std::exchange(blackPieces, whitePieces);
+
+    whitePieces.vertical_flip();
+    blackPieces.vertical_flip();
+
+    sideToMove = is_white_to_move() ? Color::Black : Color::White;
+
+    whiteCastlingRights = std::exchange(blackCastlingRights, whiteCastlingRights);
+
+    if (enPassantTargetSquare.has_value())
+        enPassantTargetSquare = square_vertical_flip(enPassantTargetSquare.value());
+
+    refresh_zobrist();
 }
 
 Position::Position()

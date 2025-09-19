@@ -23,6 +23,7 @@
 #include <cassert>
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/File.hpp>
+#include <libchess/board/Flips.hpp>
 #include <libchess/board/Masks.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/moves/Move.hpp>
@@ -122,6 +123,9 @@ struct Pieces final {
 
     /** Recalculates the ``occupied`` bitboard from each of the piece bitboards. */
     constexpr void refresh_occupied() noexcept;
+
+    /** Performs a vertical flip of all piece bitboards and refreshes the occupied bitboard. */
+    constexpr void vertical_flip() noexcept;
 };
 
 /*
@@ -154,6 +158,20 @@ constexpr Pieces::Pieces(const Color color) noexcept
 constexpr void Pieces::refresh_occupied() noexcept
 {
     occupied = pawns | knights | bishops | rooks | queens | king;
+}
+
+constexpr void Pieces::vertical_flip() noexcept
+{
+    using flips::vertical;
+
+    pawns   = vertical(pawns);
+    knights = vertical(knights);
+    bishops = vertical(bishops);
+    rooks   = vertical(rooks);
+    queens  = vertical(queens);
+    king    = vertical(king);
+
+    refresh_occupied();
 }
 
 constexpr Bitboard& Pieces::get_type(const PieceType type) noexcept

@@ -108,4 +108,11 @@ void Engine::make_null_move()
     searcher.context.options.position.make_null_move();
 }
 
+void Engine::color_flip()
+{
+    wait();
+
+    searcher.context.options.position.flip();
+}
+
 } // namespace ben_bot
