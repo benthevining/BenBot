@@ -12,25 +12,10 @@
  * ======================================================================================
  */
 
+#include "DetectArch.hpp"
 #include <functional>
 #include <libchess/util/Threading.hpp>
 #include <utility>
-
-#ifndef LIBCHESS_ARM
-#    if defined(__arm__) || defined(__arm64__)
-#        define LIBCHESS_ARM 1
-#    endif
-#endif
-
-#ifndef LIBCHESS_INTEL
-#    if defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86) || defined(__x86_64__) || defined(_M_X64)
-#        define LIBCHESS_INTEL 1
-#    endif
-#endif
-
-#if defined(LIBCHESS_ARM) && defined(LIBCHESS_INTEL)
-#    error "Both ARM and Intel detected!"
-#endif
 
 #ifdef LIBCHESS_ARM
 #    include "ProgressiveBackoff_ARM.hpp"

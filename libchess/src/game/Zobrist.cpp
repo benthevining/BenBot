@@ -12,7 +12,7 @@
  * ======================================================================================
  */
 
-#include "Zobrist.hpp" // NOLINT(build/include_subdir)
+#include "Zobrist.hpp"
 #include <array>
 #include <functional>
 #include <libchess/board/File.hpp>

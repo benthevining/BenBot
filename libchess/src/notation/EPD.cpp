@@ -12,7 +12,7 @@
  * ======================================================================================
  */
 
-#include "FENHelpers.hpp" // NOLINT(build/include_subdir)
+#include "FENHelpers.hpp"
 #include <cassert>
 #include <format>
 #include <libchess/notation/EPD.hpp>

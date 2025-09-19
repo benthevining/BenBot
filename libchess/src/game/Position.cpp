@@ -12,8 +12,8 @@
  * ======================================================================================
  */
 
-#include "Zobrist.hpp" // NOLINT(build/include_subdir)
-#include <cstdint>     // IWYU pragma: keep - for std::uint_least8_t
+#include "Zobrist.hpp"
+#include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/Distances.hpp>
 #include <libchess/board/Rank.hpp>

@@ -31,7 +31,6 @@ using std::size_t;
     ``nullptr`` if the memory could not be allocated.
 
     @ingroup util
-    @see PageAlignedMemoryResource, PageAlignedVector
  */
 [[nodiscard]] void* page_aligned_alloc(size_t size);
 
@@ -39,8 +38,15 @@ using std::size_t;
     This is a no-op if ``mem`` is ``nullptr``.
 
     @ingroup util
-    @see PageAlignedMemoryResource, PageAlignedVector
  */
 void page_aligned_free(void* mem);
+
+/** Hints the CPU to prefetch the page that the given memory address
+    is on. This function is nonblocking, and may be a no-op depending
+    on the target platform.
+
+    @ingroup util
+ */
+void prefetch(const void* mem);
 
 } // namespace chess::util

@@ -12,40 +12,20 @@
  * ======================================================================================
  */
 
-#include "DetectArch.hpp" // IWYU pragma: keep
-#include <cstddef>        // IWYU pragma: keep - for size_t
-#include <libchess/util/Memory.hpp>
+#pragma once
 
-#ifdef _WIN32
-#    include "Memory_Windows.hpp"
-#else
-#    include "Memory_Posix.hpp"
+#ifndef LIBCHESS_ARM
+#    if defined(__arm__) || defined(__arm64__)
+#        define LIBCHESS_ARM 1
+#    endif
 #endif
 
-namespace chess::util {
-
-void* page_aligned_alloc(const std::size_t size)
-{
-    if (size == 0uz)
-        return nullptr;
-
-    return page_aligned_alloc_impl(size);
-}
-
-void page_aligned_free(void* mem)
-{
-    page_aligned_free_impl(mem);
-}
-
-void prefetch([[maybe_unused]] const void* mem)
-{
-#ifdef LIBCHESS_INTEL
-    _mm_prefetch(static_cast<const char*>(mem), _MM_HINT_T0);
-#elif defined(__has_builtin) && __has_builtin(__builtin_prefetch)
-    __builtin_prefetch(mem);
-#else
-#    warning "No implementation of prefetch available"
+#ifndef LIBCHESS_INTEL
+#    if defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86) || defined(__x86_64__) || defined(_M_X64)
+#        define LIBCHESS_INTEL 1
+#    endif
 #endif
-}
 
-} // namespace chess::util
+#if defined(LIBCHESS_ARM) && defined(LIBCHESS_INTEL)
+#    error "Both ARM and Intel detected!"
+#endif

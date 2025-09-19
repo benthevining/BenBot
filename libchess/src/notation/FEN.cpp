@@ -12,8 +12,8 @@
  * ======================================================================================
  */
 
-#include "FENHelpers.hpp" // NOLINT(build/include_subdir)
-#include <cstddef>        // IWYU pragma: keep - for size_t
+#include "FENHelpers.hpp"
+#include <cstddef> // IWYU pragma: keep - for size_t
 #include <format>
 #include <iterator>
 #include <libchess/game/Position.hpp>

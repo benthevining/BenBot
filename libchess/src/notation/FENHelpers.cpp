@@ -12,7 +12,7 @@
  * ======================================================================================
  */
 
-#include "FENHelpers.hpp" // NOLINT(build/include_subdir)
+#include "FENHelpers.hpp"
 #include <array>
 #include <format>
 #include <iterator>
