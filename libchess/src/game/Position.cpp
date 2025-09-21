@@ -12,10 +12,13 @@
  * ======================================================================================
  */
 
-#include "Zobrist.hpp" // NOLINT(build/include_subdir)
-#include <cstdint>     // IWYU pragma: keep - for std::uint_least8_t
+#include "Zobrist.hpp"
+#include <array>
+#include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
+#include <format>
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/Distances.hpp>
+#include <libchess/board/Masks.hpp>
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
@@ -23,12 +26,16 @@
 #include <libchess/moves/Move.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/pieces/Colors.hpp>
+#include <libchess/pieces/PieceTypes.hpp>
+#include <magic_enum/magic_enum.hpp>
 #include <optional>
+#include <string>
 #include <utility>
 
 namespace chess::game {
 
 using board::Rank;
+using std::size_t;
 using std::uint_least8_t;
 
 namespace {
@@ -275,6 +282,95 @@ std::optional<Result> Position::get_result() const
     }
 
     return Result::WhiteWon;
+}
+
+std::optional<std::string> Position::is_illegal() const
+{
+    // for reference, see the rules defined at https://github.com/lechmazur/ChessCounter#rules
+
+    // each side must have exactly 1 king
+    {
+        if (const auto whiteKings = whitePieces.king.count();
+            whiteKings != 1uz) {
+            return std::format(
+                "White has {} kings, expected 1", whiteKings);
+        }
+
+        if (const auto blackKings = blackPieces.king.count();
+            blackKings != 1uz) {
+            return std::format(
+                "Black has {} kings, expected 1", blackKings);
+        }
+    }
+
+    // no pawns on 1st or 8th rank
+    {
+        static constexpr auto outerRanksMask = board::masks::ranks::ONE | board::masks::ranks::EIGHT;
+
+        if (const auto pawns = whitePieces.pawns | blackPieces.pawns;
+            (pawns & outerRanksMask).any()) {
+            return "Pawns found on 1st or 8th rank";
+        }
+    }
+
+    // at most 16 pieces per side
+    {
+        static constexpr auto MAX_PIECES = 16uz;
+
+        if (const auto numWhite = whitePieces.occupied.count();
+            numWhite > MAX_PIECES) {
+            return std::format(
+                "White has {} pieces, expected at most {}",
+                numWhite, MAX_PIECES);
+        }
+
+        if (const auto numBlack = blackPieces.occupied.count();
+            numBlack > MAX_PIECES) {
+            return std::format(
+                "Black has {} pieces, expected at most {}",
+                numBlack, MAX_PIECES);
+        }
+    }
+
+    // at most 8 pawns, 9 queens, 10 bishops, 10 rooks, 10 knights per side
+    {
+        using PieceInfo = std::pair<PieceType, size_t>;
+
+        static constexpr std::array PIECES_INFO {
+            PieceInfo { PieceType::Pawn, 8uz },
+            PieceInfo { PieceType::Queen, 9uz },
+            PieceInfo { PieceType::Bishop, 10uz },
+            PieceInfo { PieceType::Rook, 10uz },
+            PieceInfo { PieceType::Knight, 10uz }
+        };
+
+        for (const auto [type, maxNum] : PIECES_INFO) {
+            if (const auto numWhite = whitePieces.get_type(type).count();
+                numWhite > maxNum) {
+                return std::format(
+                    "White has {} {}s, expected at most {}",
+                    numWhite, type, maxNum);
+            }
+
+            if (const auto numBlack = blackPieces.get_type(type).count();
+                numBlack > maxNum) {
+                return std::format(
+                    "Black has {} {}s, expected at most {}",
+                    numBlack, type, maxNum);
+            }
+        }
+    }
+
+    // if the other side's king is in check when it's our move, the position is illegal
+    if (const auto otherColor = is_white_to_move() ? Color::Black : Color::White;
+        is_side_in_check(otherColor)) {
+        return std::format(
+            "{} is in check during {}'s move",
+            magic_enum::enum_name(otherColor),
+            magic_enum::enum_name(sideToMove));
+    }
+
+    return std::nullopt;
 }
 
 } // namespace chess::game

@@ -322,6 +322,14 @@ struct Position final {
     /** Recalculates the Zobrist hash for this position. */
     void refresh_zobrist();
 
+    /** Tests if the position is legal. If it is, returns ``nullopt``; if the position is
+        illegal, returns an explanatory string describing the error condition detecting.
+        This function conducts basic checks about the number of each type of piece, but this
+        is not an exhaustive validation that a position can definitively be reached from
+        the starting position.
+     */
+    [[nodiscard]] std::optional<std::string> is_illegal() const;
+
     /** Returns an empty position with none of the piece bitboards initialized.
         This is useful for tasks like parsing a FEN string, for example.
         After you've set up the position, don't forget to call ``whitePieces.refresh_occupied()``,
