@@ -52,7 +52,7 @@ using std::uint64_t;
     128-bit result as a 64-bit integer.
     @ingroup util
  */
-[[nodiscard, gnu::const]] constexpr uint64_t mul_hi64(
+[[nodiscard, gnu::const]] inline uint64_t mul_hi64(
     const uint64_t first, const uint64_t second) noexcept
 {
 #ifdef __SIZEOF_INT128__
@@ -68,6 +68,8 @@ using std::uint64_t;
     _umul128(a, b, &highProduct);
     return highProduct;
 #else
+#    warning "No optimized version of mul_hi64() is available, using fallback"
+
     auto get_lo_32_bits = [](const uint64_t value) {
         return static_cast<uint64_t>(static_cast<std::uint32_t>(value));
     };
