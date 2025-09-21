@@ -70,7 +70,7 @@ namespace chess::uci::default_options {
 {
     return {
         "Hash",
-        1, 1000,
+        1, 1024,
         100,
         "Sets the maximum transposition table size (in MB)"
     };

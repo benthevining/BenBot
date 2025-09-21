@@ -208,7 +208,8 @@ TEST_CASE("Transposition table - store() overwriting rules", TAGS)
     const Record oldRecord {
         .searchedDepth = 6uz,
         .eval          = 2,
-        .evalType      = EvalType::Exact
+        .evalType      = EvalType::Exact,
+        .hash          = startPos.hash
     };
 
     table.store(startPos, oldRecord);
@@ -220,7 +221,8 @@ TEST_CASE("Transposition table - store() overwriting rules", TAGS)
         const Record newRecord {
             .searchedDepth = oldRecord.searchedDepth - 1uz,
             .eval          = 4,
-            .evalType      = EvalType::Exact
+            .evalType      = EvalType::Exact,
+            .hash          = startPos.hash
         };
 
         table.store(startPos, newRecord);
@@ -235,7 +237,8 @@ TEST_CASE("Transposition table - store() overwriting rules", TAGS)
             const Record newRecord {
                 .searchedDepth = oldRecord.searchedDepth,
                 .eval          = -6,
-                .evalType      = EvalType::Alpha
+                .evalType      = EvalType::Alpha,
+                .hash          = startPos.hash
             };
 
             table.store(startPos, newRecord);
@@ -248,7 +251,8 @@ TEST_CASE("Transposition table - store() overwriting rules", TAGS)
             const Record newRecord {
                 .searchedDepth = oldRecord.searchedDepth,
                 .eval          = 6,
-                .evalType      = EvalType::Beta
+                .evalType      = EvalType::Beta,
+                .hash          = startPos.hash
             };
 
             table.store(startPos, newRecord);

@@ -23,7 +23,6 @@
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
 #include <optional>
-#include <unordered_map>
 #include <utility>
 
 namespace ben_bot {
@@ -42,10 +41,12 @@ using std::size_t;
  */
 class TranspositionTable final {
 public:
+    using Hash = Position::Hash;
+
     /** A record of a previously searched position. */
     struct Record final {
         /** The depth that the position was searched to. */
-        size_t searchedDepth { 0uz };
+        size_t searchedDepth { 0uz }; // empty slots are marked with a depth of 0
 
         /** The evaluation of this position.
             See ``evalType`` to determine the exact meaning of this value.
@@ -70,8 +71,20 @@ public:
          */
         std::optional<Move> bestMove;
 
+        Hash hash { 0 }; // TODO: move into separate internal structure
+
         constexpr bool operator==(const Record& other) const noexcept = default;
     };
+
+    TranspositionTable();
+
+    ~TranspositionTable();
+
+    TranspositionTable(const TranspositionTable&)            = delete;
+    TranspositionTable& operator=(const TranspositionTable&) = delete;
+
+    TranspositionTable(TranspositionTable&&)            = delete;
+    TranspositionTable& operator=(TranspositionTable&&) = delete;
 
     /** Retrieves the stored record for the given position,
         or nullptr if the given position isn't in the table.
@@ -99,13 +112,37 @@ public:
         const Position& pos, const Move& move) const;
 
     /** Stores a record for a given position. */
-    void store(const Position& pos, const Record& record);
+    void store(const Position& pos, Record record);
 
-    /** Clears the contents of the table. */
-    void clear() noexcept { records.clear(); }
+    /** Clears the contents of the table. Note that no memory is freed. */
+    void clear();
+
+    /** Resizes the table to a given size in megabytes.
+
+        @throws std::bad_alloc An exception is thrown if ``sizeMB`` is 0 or
+        if the allocation fails.
+     */
+    void resize(size_t sizeMB);
+
+    /** Returns an estimate of the percentage of entries (permille) that
+        have been written to during this search.
+     */
+    [[nodiscard]] size_t hashfull() const;
+
+    /** This must be called at the beginning of a new search to keep
+        track of entry aging.
+     */
+    void new_search() noexcept;
 
 private:
-    std::unordered_map<Position::Hash, Record> records;
+    // this is the hash function
+    [[nodiscard]] Record* first_entry(Position::Hash key) const noexcept;
+
+    struct Cluster;
+
+    Cluster* table { nullptr };
+
+    size_t clusterCount { 0uz };
 };
 
 /*
@@ -124,16 +161,6 @@ private:
   `----'     `----'             `--`---'     ---`-'                     `--" `--" `--"
 
  */
-
-inline auto TranspositionTable::find(const Position& pos) const -> const Record*
-{
-    if (const auto it = records.find(pos.hash);
-        it != records.end()) {
-        return &it->second;
-    }
-
-    return nullptr;
-}
 
 inline std::optional<Move> TranspositionTable::get_best_response(
     const Position& pos, const Move& move) const
