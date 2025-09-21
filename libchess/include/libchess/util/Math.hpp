@@ -56,7 +56,7 @@ using std::uint64_t;
     const uint64_t first, const uint64_t second) noexcept
 {
 #ifdef __SIZEOF_INT128__
-    using uint128_t = unsigned __int128;
+    __extension__ using uint128_t = unsigned __int128;
 
     return (static_cast<uint128_t>(first) * static_cast<uint128_t>(second)) >> static_cast<uint128_t>(64);
 #elif defined(_M_X64) || defined(_M_ARM64) // MSVC for x86-64 or AArch64

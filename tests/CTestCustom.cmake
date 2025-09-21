@@ -32,13 +32,13 @@ list (
     CTEST_CUSTOM_ERROR_EXCEPTION
     # cmake-format: sortable
     "(information:)+"
-    "[internalAstError]" # cppcheck false positives for C++23 syntax it can't parse
+    "([internalAstError])+" # cppcheck false positives for C++23 syntax it can't parse
     "(style:)+" # style warnings shouldn't be a hard error
-    "performance:"
+    "(performance:)+"
 )
 
 list (APPEND CTEST_CUSTOM_WARNING_MATCH # cmake-format: sortable
-      "(style:)+" "performance:"
+      "(style:)+" "(performance:)+"
 )
 
 list (
