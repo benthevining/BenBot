@@ -28,7 +28,7 @@
 #include <concepts>
 #include <cstdint> // IWYU pragma: keep - for std::uint64_t
 
-#if __has_include(<intrin.h>)
+#if defined(_M_X64) || defined(_M_ARM64) || defined(_M_IA64)
 #    include <intrin.h>
 #endif
 
