@@ -159,11 +159,10 @@ namespace detail {
         auto nonPromotingPushes = (allPushes & NOT_PROMOTION_MASK).squares()
                                 | std::views::transform([](const Square target) {
                                       return Move {
-                                          .from = {
+                                          Square {
                                               .file = target.file,
                                               .rank = prev_pawn_rank<Side>(target.rank) },
-                                          .to    = target,
-                                          .piece = PieceType::Pawn
+                                          target, PieceType::Pawn
                                       };
                                   })
                                 | std::ranges::to<Pushes>();
@@ -174,12 +173,10 @@ namespace detail {
                                    return pushes
                                         | std::views::transform([promotedType](const Square target) {
                                               return Move {
-                                                  .from = {
+                                                  Square {
                                                       .file = target.file,
                                                       .rank = prev_pawn_rank<Side>(target.rank) },
-                                                  .to           = target,
-                                                  .piece        = PieceType::Pawn,
-                                                  .promotedType = promotedType
+                                                  target, PieceType::Pawn, promotedType
                                               };
                                           });
                                })
@@ -209,11 +206,10 @@ namespace detail {
         return pushes.squares()
              | std::views::transform([](const Square target) {
                    return Move {
-                       .from = {
+                       Square {
                            .file = target.file,
                            .rank = pawnStartingRank },
-                       .to    = target,
-                       .piece = PieceType::Pawn
+                       target, PieceType::Pawn
                    };
                })
              | std::views::filter([&position](const Move& move) {
@@ -231,11 +227,13 @@ namespace detail {
              | std::views::transform([promotedType](const auto& tuple) {
                    const auto [starting, target] = tuple;
 
+                   if (promotedType.has_value())
+                       return Move {
+                           starting, target, PieceType::Pawn, promotedType.value()
+                       };
+
                    return Move {
-                       .from         = starting,
-                       .to           = target,
-                       .piece        = PieceType::Pawn,
-                       .promotedType = promotedType
+                       starting, target, PieceType::Pawn
                    };
                });
     }
@@ -319,9 +317,7 @@ namespace detail {
         return (position.pieces_for<Side>().pawns & startSquares).squares()
              | std::views::transform([targetSquare](const Square square) {
                    return Move {
-                       .from  = square,
-                       .to    = targetSquare,
-                       .piece = PieceType::Pawn
+                       square, targetSquare, PieceType::Pawn
                    };
                })
              | std::views::filter([&position](const Move& move) {
@@ -373,9 +369,8 @@ namespace detail {
                    return knightMoves.squares()
                         | std::views::transform([knightPos](const Square targetSquare) {
                               return Move {
-                                  .from  = Square::from_index(knightPos.first()),
-                                  .to    = targetSquare,
-                                  .piece = PieceType::Knight
+                                  Square::from_index(knightPos.first()),
+                                  targetSquare, PieceType::Knight
                               };
                           });
                })
@@ -406,9 +401,7 @@ namespace detail {
                    return bishopMoves.squares()
                         | std::views::transform([bishopPos](const Square targetSquare) {
                               return Move {
-                                  .from  = bishopPos,
-                                  .to    = targetSquare,
-                                  .piece = PieceType::Bishop
+                                  bishopPos, targetSquare, PieceType::Bishop
                               };
                           });
                })
@@ -439,9 +432,7 @@ namespace detail {
                    return rookMoves.squares()
                         | std::views::transform([rookPos](const Square targetSquare) {
                               return Move {
-                                  .from  = rookPos,
-                                  .to    = targetSquare,
-                                  .piece = PieceType::Rook
+                                  rookPos, targetSquare, PieceType::Rook
                               };
                           });
                })
@@ -472,9 +463,7 @@ namespace detail {
                    return queenMoves.squares()
                         | std::views::transform([queenPos](const Square targetSquare) {
                               return Move {
-                                  .from  = queenPos,
-                                  .to    = targetSquare,
-                                  .piece = PieceType::Queen
+                                  queenPos, targetSquare, PieceType::Queen
                               };
                           });
                })
@@ -500,9 +489,7 @@ namespace detail {
              | std::views::transform([kingSquare = ourPieces.get_king_location()](
                                          const Square targetSquare) {
                    return Move {
-                       .from  = kingSquare,
-                       .to    = targetSquare,
-                       .piece = PieceType::King
+                       kingSquare, targetSquare, PieceType::King
                    };
                })
              | std::views::filter([&position](const Move& move) {

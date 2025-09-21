@@ -29,7 +29,7 @@
 #include <cassert>
 #include <compare>
 #include <cstddef> // IWYU pragma: keep - for size_t
-#include <libchess/board/BitboardIndex.hpp>
+#include <cstdint> // IWYU pragma: keep - for std::uint16_t
 #include <libchess/board/Distances.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Rank.hpp>
@@ -43,6 +43,8 @@
     @ingroup moves
  */
 namespace chess::moves {
+
+using std::size_t;
 
 using board::File;
 using board::Rank;
@@ -66,36 +68,90 @@ using PieceType = pieces::Type;
     @ingroup moves
  */
 struct Move final {
-    /** The starting square of the moving piece.
+    /** Integer type used to hold move data in a packed format. */
+    using Integer = std::uint16_t;
+
+    /** Creates a null move. */
+    constexpr Move() = default;
+
+    /** Initializes a move from the raw packed data format. */
+    explicit constexpr Move(const Integer rawData)
+        : data { rawData }
+    {
+    }
+
+    /** Creates a non-promotion move. */
+    constexpr Move(
+        const Square start, const Square end,
+        const PieceType type_)
+        : data { pack_fields(start, end) }
+        , type { type_ }
+    {
+    }
+
+    /** Creates a promotion move. */
+    constexpr Move(
+        const Square start, const Square end,
+        const PieceType type_, const PieceType promotedType)
+        : data { static_cast<Integer>(
+              ((std::to_underlying(promotedType) - std::to_underlying(PieceType::Knight)) << 12uz)
+              + pack_fields(start, end)) }
+        , type { type_ }
+    {
+    }
+
+    /** Returns the starting square of the moving piece.
         In the case of en passant, this is the square that the capturing pawn started on.
         In the case of castling, this is the square that the king started on.
-
-        @invariant ``from != to``
      */
-    Square from;
+    [[nodiscard]] constexpr Square from() const noexcept
+    {
+        return Square::from_index((data >> 6uz) & 0x3F);
+    }
 
-    /** The ending square of the moving piece.
+    /** Returns the ending square of the moving piece.
         In the case of en passant, this is the square that the capturing pawn lands on.
         In the case of castling, this is the square that the king ends on.
-
-        @invariant ``to != from``
      */
-    Square to;
+    [[nodiscard]] constexpr Square to() const noexcept
+    {
+        return Square::from_index(data & 0x3F);
+    }
 
-    /** The type of the moving piece.
-        In the case of castling, this will be PieceType::King.
+    /** Returns the type of the moving piece. For a promotion, this is pawn;
+        for castling, this is king.
      */
-    PieceType piece;
+    [[nodiscard]] constexpr PieceType piece() const noexcept
+    {
+        return type;
+    }
 
-    /** If this move is a promotion, this is the type of the promoted piece.
-        If this move is not a promotion, this will be ``nullopt``.
+    /** Returns the promoted-to type, or ``nullopt`` if this move is not a promotion. */
+    [[nodiscard]] constexpr std::optional<PieceType> promoted_type() const noexcept
+    {
+        const auto value = ((data >> 12uz) & 3uz) + std::to_underlying(PieceType::Knight);
 
-        @invariant This will never be PieceType::King or PieceType::Pawn.
-     */
-    std::optional<PieceType> promotedType;
+        if (std::cmp_equal(value, 0))
+            return std::nullopt;
+
+        return static_cast<PieceType>(value);
+    }
+
+    /** Returns the raw packed data format. */
+    [[nodiscard]] constexpr Integer raw() const noexcept { return data; }
+
+    /** Returns a hash code for this move. */
+    [[nodiscard]] constexpr size_t hash() const noexcept
+    {
+        // based on a congruential pseudo-random number generator
+        return static_cast<std::uint64_t>(data) * 6364136223846793005ULL + 1442695040888963407ULL;
+    }
+
+    /** Returns true if this is a null move. */
+    [[nodiscard]] bool is_null() const noexcept { return std::cmp_not_equal(data, 0); }
 
     /** Returns true if this move is a promotion. */
-    [[nodiscard]] constexpr bool is_promotion() const noexcept { return promotedType.has_value(); }
+    [[nodiscard]] constexpr bool is_promotion() const noexcept { return promoted_type().has_value(); }
 
     /** Returns true if this move is a promotion to a piece other than a queen. */
     [[nodiscard]] constexpr bool is_under_promotion() const noexcept;
@@ -104,6 +160,17 @@ struct Move final {
     [[nodiscard]] constexpr bool is_castling() const noexcept;
 
     constexpr bool operator==(const Move&) const noexcept = default;
+
+private:
+    [[nodiscard, gnu::const]] static constexpr Integer pack_fields(
+        const Square start, const Square end) noexcept
+    {
+        return static_cast<Integer>((start.index() << 6uz) + end.index());
+    }
+
+    Integer data { 0 };
+
+    PieceType type;
 };
 
 /** Provides a strong ordering of moves. This can be useful for sorting lists of moves.
@@ -112,21 +179,7 @@ struct Move final {
  */
 [[nodiscard, gnu::const]] inline std::strong_ordering operator<=>(const Move& first, const Move& second) noexcept
 {
-    auto get_hash = [](const Move& move) {
-        using std::size_t;
-
-        static constexpr auto MAX_SQUARE = static_cast<size_t>(board::NUM_SQUARES);
-
-        auto value = static_cast<size_t>(move.from.index())
-                   + (static_cast<size_t>(move.to.index()) * MAX_SQUARE);
-
-        if (move.promotedType.has_value())
-            value += static_cast<size_t>(std::to_underlying(*move.promotedType)) * MAX_SQUARE * MAX_SQUARE;
-
-        return value;
-    };
-
-    return get_hash(first) <=> get_hash(second);
+    return first.hash() <=> second.hash();
 }
 
 /// @ingroup moves
@@ -175,15 +228,17 @@ struct Move final {
 
 constexpr bool Move::is_under_promotion() const noexcept
 {
-    return is_promotion()
-       and *promotedType != PieceType::Queen;
+    const auto prom = promoted_type();
+
+    return prom.has_value()
+        && prom.value() == PieceType::Queen;
 }
 
 constexpr bool Move::is_castling() const noexcept
 {
-    return piece == PieceType::King
+    return piece() == PieceType::King
        and std::cmp_greater(
-           file_distance(from, to),
+           file_distance(from(), to()),
            1uz);
 }
 
@@ -192,9 +247,9 @@ constexpr Move castle_kingside(const Color color) noexcept
     const auto rank = board::back_rank_for(color);
 
     return {
-        .from  = Square { .file = File::E, .rank = rank },
-        .to    = Square { .file = File::G, .rank = rank },
-        .piece = PieceType::King
+        Square { .file = File::E, .rank = rank },
+        Square { .file = File::G, .rank = rank },
+        PieceType::King
     };
 }
 
@@ -203,9 +258,9 @@ constexpr Move castle_queenside(const Color color) noexcept
     const auto rank = board::back_rank_for(color);
 
     return {
-        .from  = Square { .file = File::E, .rank = rank },
-        .to    = Square { .file = File::C, .rank = rank },
-        .piece = PieceType::King
+        Square { .file = File::E, .rank = rank },
+        Square { .file = File::C, .rank = rank },
+        PieceType::King
     };
 }
 
@@ -218,10 +273,10 @@ constexpr Move promotion(
     const bool isWhite = color == Color::White;
 
     return {
-        .from         = Square { .file = file, .rank = isWhite ? Rank::Seven : Rank::Two },
-        .to           = Square { .file = file, .rank = isWhite ? Rank::Eight : Rank::One },
-        .piece        = PieceType::Pawn,
-        .promotedType = promotedType
+        Square { .file = file, .rank = isWhite ? Rank::Seven : Rank::Two },
+        Square { .file = file, .rank = isWhite ? Rank::Eight : Rank::One },
+        PieceType::Pawn,
+        promotedType
     };
 }
 

@@ -113,9 +113,9 @@ constexpr void CastlingRights::rook_moved(const bool isKingside) noexcept
 
 constexpr void CastlingRights::our_move(const Move& move) noexcept
 {
-    switch (move.piece) {
+    switch (move.piece()) {
         case PieceType::King  : king_moved(); return;
-        case PieceType::Rook  : rook_moved(move.from.is_kingside()); return;
+        case PieceType::Rook  : rook_moved(move.from().is_kingside()); return;
         case PieceType::Pawn  : return;
         case PieceType::Bishop: return;
         case PieceType::Knight: return;
@@ -135,11 +135,13 @@ constexpr void CastlingRights::their_move(const Move& move) noexcept
 
     static constexpr auto backRank = Side == Color::White ? Rank::One : Rank::Eight;
 
-    if (move.to.rank != backRank)
+    const auto dest = move.to();
+
+    if (dest.rank != backRank)
         return;
 
-    kingside  = kingside and (move.to.file != File::H);
-    queenside = queenside and (move.to.file != File::A);
+    kingside  = kingside and (dest.file != File::H);
+    queenside = queenside and (dest.file != File::A);
 }
 
 } // namespace chess::game

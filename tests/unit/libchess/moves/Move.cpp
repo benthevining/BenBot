@@ -42,9 +42,9 @@ TEST_CASE("Move - castle_kingside()", TAGS)
     {
         static constexpr auto move = moves::castle_kingside(Color::White);
 
-        STATIC_REQUIRE(move.from == whiteKingStartSquare);
-        STATIC_REQUIRE(move.to.rank == move.from.rank);
-        STATIC_REQUIRE(move.piece == PieceType::King);
+        STATIC_REQUIRE(move.from() == whiteKingStartSquare);
+        STATIC_REQUIRE(move.to().rank == move.from().rank);
+        STATIC_REQUIRE(move.piece() == PieceType::King);
         STATIC_REQUIRE(not move.is_promotion());
         STATIC_REQUIRE(move.is_castling());
     }
@@ -53,9 +53,9 @@ TEST_CASE("Move - castle_kingside()", TAGS)
     {
         static constexpr auto move = moves::castle_kingside(Color::Black);
 
-        STATIC_REQUIRE(move.from == blackKingStartSquare);
-        STATIC_REQUIRE(move.to.rank == move.from.rank);
-        STATIC_REQUIRE(move.piece == PieceType::King);
+        STATIC_REQUIRE(move.from() == blackKingStartSquare);
+        STATIC_REQUIRE(move.to().rank == move.from().rank);
+        STATIC_REQUIRE(move.piece() == PieceType::King);
         STATIC_REQUIRE(not move.is_promotion());
         STATIC_REQUIRE(move.is_castling());
     }
@@ -67,9 +67,9 @@ TEST_CASE("Move - castle_queenside()", TAGS)
     {
         static constexpr auto move = moves::castle_queenside(Color::White);
 
-        STATIC_REQUIRE(move.from == whiteKingStartSquare);
-        STATIC_REQUIRE(move.to.rank == move.from.rank);
-        STATIC_REQUIRE(move.piece == PieceType::King);
+        STATIC_REQUIRE(move.from() == whiteKingStartSquare);
+        STATIC_REQUIRE(move.to().rank == move.from().rank);
+        STATIC_REQUIRE(move.piece() == PieceType::King);
         STATIC_REQUIRE(not move.is_promotion());
         STATIC_REQUIRE(move.is_castling());
     }
@@ -78,9 +78,9 @@ TEST_CASE("Move - castle_queenside()", TAGS)
     {
         static constexpr auto move = moves::castle_queenside(Color::Black);
 
-        STATIC_REQUIRE(move.from == blackKingStartSquare);
-        STATIC_REQUIRE(move.to.rank == move.from.rank);
-        STATIC_REQUIRE(move.piece == PieceType::King);
+        STATIC_REQUIRE(move.from() == blackKingStartSquare);
+        STATIC_REQUIRE(move.to().rank == move.from().rank);
+        STATIC_REQUIRE(move.piece() == PieceType::King);
         STATIC_REQUIRE(not move.is_promotion());
         STATIC_REQUIRE(move.is_castling());
     }
@@ -95,15 +95,15 @@ TEST_CASE("Move - promotion()", TAGS)
             for (const auto file : enum_values<File>()) {
                 const auto move = moves::promotion(file, Color::White);
 
-                REQUIRE(move.from.file == file);
-                REQUIRE(move.to.file == file);
+                REQUIRE(move.from().file == file);
+                REQUIRE(move.to().file == file);
 
-                REQUIRE(move.from.rank == Rank::Seven);
-                REQUIRE(move.to.rank == Rank::Eight);
+                REQUIRE(move.from().rank == Rank::Seven);
+                REQUIRE(move.to().rank == Rank::Eight);
 
-                REQUIRE(move.piece == PieceType::Pawn);
-                REQUIRE(move.promotedType.has_value());
-                REQUIRE(*move.promotedType == PieceType::Queen);
+                REQUIRE(move.piece() == PieceType::Pawn);
+                REQUIRE(move.is_promotion());
+                REQUIRE(move.promoted_type().value() == PieceType::Queen);
 
                 REQUIRE(move.is_promotion());
                 REQUIRE(not move.is_under_promotion());
@@ -116,15 +116,15 @@ TEST_CASE("Move - promotion()", TAGS)
             for (const auto file : enum_values<File>()) {
                 const auto move = moves::promotion(file, Color::Black);
 
-                REQUIRE(move.from.file == file);
-                REQUIRE(move.to.file == file);
+                REQUIRE(move.from().file == file);
+                REQUIRE(move.to().file == file);
 
-                REQUIRE(move.from.rank == Rank::Two);
-                REQUIRE(move.to.rank == Rank::One);
+                REQUIRE(move.from().rank == Rank::Two);
+                REQUIRE(move.to().rank == Rank::One);
 
-                REQUIRE(move.piece == PieceType::Pawn);
-                REQUIRE(move.promotedType.has_value());
-                REQUIRE(*move.promotedType == PieceType::Queen);
+                REQUIRE(move.piece() == PieceType::Pawn);
+                REQUIRE(move.is_promotion());
+                REQUIRE(move.promoted_type().value() == PieceType::Queen);
 
                 REQUIRE(move.is_promotion());
                 REQUIRE(not move.is_under_promotion());
@@ -140,12 +140,12 @@ TEST_CASE("Move - promotion()", TAGS)
                 for (const auto promotedType : { PieceType::Knight, PieceType::Bishop, PieceType::Rook }) {
                     const auto move = moves::promotion(file, color, promotedType);
 
-                    REQUIRE(move.from.file == file);
-                    REQUIRE(move.to.file == file);
+                    REQUIRE(move.from().file == file);
+                    REQUIRE(move.to().file == file);
 
-                    REQUIRE(move.piece == PieceType::Pawn);
-                    REQUIRE(move.promotedType.has_value());
-                    REQUIRE(*move.promotedType == promotedType);
+                    REQUIRE(move.piece() == PieceType::Pawn);
+                    REQUIRE(move.is_promotion());
+                    REQUIRE(move.promoted_type().value() == promotedType);
 
                     REQUIRE(move.is_promotion());
                     REQUIRE(move.is_under_promotion());
