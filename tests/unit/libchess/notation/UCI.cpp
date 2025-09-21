@@ -225,3 +225,14 @@ TEST_CASE("UCI notation - promotions", TAGS)
         REQUIRE(to_uci(move) == "f7g8q");
     }
 }
+
+TEST_CASE("UCI notation - null moves", TAGS)
+{
+    const chess::game::Position position {};
+
+    const auto move = from_uci(position, "0000");
+
+    REQUIRE(move.is_null());
+
+    REQUIRE(to_uci(chess::moves::Move {}) == "0000");
+}
