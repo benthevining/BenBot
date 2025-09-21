@@ -22,6 +22,11 @@
 #    include "Memory_Posix.hpp"
 #endif
 
+#ifdef LIBCHESS_INTEL
+#    include <mmintrin.h>
+#    include <xmmintrin.h>
+#endif
+
 namespace chess::util {
 
 void* page_aligned_alloc(const std::size_t size)
