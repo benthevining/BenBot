@@ -26,7 +26,9 @@
 #    endif
 #endif
 
-#define _WIN32_WINNT 0x0601 // Force to include needed API prototypes
+#ifndef _WIN32_WINNT
+#    define _WIN32_WINNT 0x0601 // Force to include needed API prototypes
+#endif
 
 #include <Windows.h>
 
