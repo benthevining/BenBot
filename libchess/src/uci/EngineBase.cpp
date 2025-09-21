@@ -13,7 +13,9 @@
  */
 
 #include <algorithm>
+#include <exception>
 #include <iostream>
+#include <libchess/notation/FEN.hpp>
 #include <libchess/uci/CommandParsing.hpp>
 #include <libchess/uci/EngineBase.hpp>
 #include <libchess/util/Strings.hpp>
@@ -78,8 +80,7 @@ void EngineBase::handle_command(std::string_view command)
     firstWord = trim(firstWord);
 
     if (firstWord == "position") {
-        position = parse_position_options(rest);
-        set_position(position);
+        handle_setpos(rest);
         return;
     }
 
@@ -114,6 +115,22 @@ void EngineBase::respond_to_uci()
         println("{}", option->get_declaration_string());
 
     println("uciok");
+}
+
+// According to the UCI spec, engines should ignore invalid commands.
+// If the FEN or movelist sent is invalid, an exception will be thrown,
+// which we could simply not catch here to let the engine terminate;
+// however, it seems to be the most spec-compliant behavior to ignore
+// the invalid command and not terminate the engine. See this Stockfish
+// PR discussion: https://github.com/official-stockfish/Stockfish/pull/4563
+void EngineBase::handle_setpos(const string_view arguments)
+try {
+    position = parse_position_options(arguments);
+
+    set_position(position);
+} catch (const std::exception& exception) {
+    println("info string Error setting position: {}", exception.what());
+    println("info string Rolling back to previous position: {}", notation::to_fen(position));
 }
 
 void EngineBase::handle_setoption(const string_view arguments)
