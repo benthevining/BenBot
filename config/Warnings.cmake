@@ -70,7 +70,6 @@ add_compile_options (
     -Wno-c++98-compat
     -Wno-c++98-compat-pedantic
     -Wno-c++20-compat
-    -Wno-missing-designated-field-initializers
     -Wno-padded
     -Wno-poison-system-directories
     -Wno-covered-switch-default
