@@ -68,22 +68,22 @@ namespace {
 
         auto score { 0 };
 
-        if (const auto capturedType = currentPosition.their_pieces().get_piece_on(move.to)) {
+        if (const auto capturedType = currentPosition.their_pieces().get_piece_on(move.to())) {
             // NB. checking for captures this way prevents en passant from entering this branch
 
             // we want to prioritize searching moves that capture valuable pieces with less valuable pieces
             score += CAPTURE_MULTIPLIER
-                   * (piece_values::get(*capturedType) - piece_values::get(move.piece));
+                   * (piece_values::get(*capturedType) - piece_values::get(move.piece()));
         }
 
-        if (move.is_promotion()) {
+        if (const auto prom = move.promoted_type()) {
             [[unlikely]];
-            score += PROMOTION_MULTIPLIER * piece_values::get(*move.promotedType);
-        } else if (move.piece != PieceType::Pawn) {
+            score += PROMOTION_MULTIPLIER * piece_values::get(prom.value());
+        } else if (move.piece() != PieceType::Pawn) {
             if (move.is_castling()) {
                 [[unlikely]];
                 score += CASTLING_BONUS;
-            } else if (opponentPawnAttacks.test(move.to)) {
+            } else if (opponentPawnAttacks.test(move.to())) {
                 // Penalize moving piece to a square attacked by opponent pawn
                 score -= PAWN_CONTROLS_PENALTY;
             }
@@ -142,7 +142,7 @@ void order_moves_for_q_search(
         if (currentPosition.is_en_passant(move))
             return PieceType::Pawn;
 
-        return theirPieces.get_piece_on(move.to).value();
+        return theirPieces.get_piece_on(move.to()).value();
     };
 
     std::ranges::sort(

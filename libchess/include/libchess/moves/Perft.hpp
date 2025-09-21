@@ -139,7 +139,7 @@ PerftResult perft(
             if (move.is_castling())
                 ++result.castles;
 
-            if (move.promotedType.has_value())
+            if (move.is_promotion())
                 ++result.promotions;
 
             const bool isCheck = newPosition.is_check();
