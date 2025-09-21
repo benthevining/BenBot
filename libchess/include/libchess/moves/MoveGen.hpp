@@ -39,7 +39,6 @@
 #include <optional>
 #include <ranges>
 #include <utility>
-#include <vector>
 
 namespace chess::moves {
 
@@ -48,6 +47,20 @@ using PieceType = pieces::Type;
 
 /// @ingroup moves
 /// @{
+
+/** The maximum number of moves that can be generated for a position.
+    The actual maximum number of legal moves for any known position
+    is 218, for the position
+    ``R6R/3Q4/1Q4Q1/4Q3/2Q4Q/Q4Q2/pp1Q4/kBNN1KB1 w - - 0 1``.
+
+    @see MoveList
+ */
+static constexpr auto MAX_MOVES = 256uz;
+
+/** A stack-allocated array of moves.
+    @see MAX_MOVES
+ */
+using MoveList = beman::inplace_vector<Move, MAX_MOVES>;
 
 /** Generates a list of all legal moves for the side to move in the given position.
     The list of moves is not sorted in any particular manner.
@@ -66,7 +79,7 @@ void generate(
     @see generate_for()
  */
 template <bool CapturesOnly = false>
-[[nodiscard]] std::vector<Move> generate(const Position& position);
+[[nodiscard]] MoveList generate(const Position& position);
 
 /** Generates a list of all legal moves for only the given piece type in the given position.
 
@@ -88,7 +101,7 @@ void generate_for(
     @see generate()
  */
 template <bool CapturesOnly = false>
-[[nodiscard]] std::vector<Move> generate_for(
+[[nodiscard]] MoveList generate_for(
     const Position& position, PieceType piece);
 
 /** Returns true if the side to move has any legal moves in the given position. */
@@ -690,9 +703,7 @@ namespace detail {
     template <Color Side>
     [[nodiscard]] bool any_legal_moves_internal(const Position& position)
     {
-        // optimize this function by avoiding dynamic allocation, since the number
-        // of moves we're generating at a time should be relatively small
-        beman::inplace_vector<Move, 100uz> moves;
+        MoveList moves;
 
         // as an optimization, check for king moves first, because in a double check,
         // a king move would be the only valid response
@@ -723,9 +734,9 @@ void generate(
 }
 
 template <bool CapturesOnly>
-std::vector<Move> generate(const Position& position)
+MoveList generate(const Position& position)
 {
-    std::vector<Move> moves;
+    MoveList moves;
 
     generate<CapturesOnly>(position, std::back_inserter(moves));
 
@@ -744,10 +755,10 @@ void generate_for(
 }
 
 template <bool CapturesOnly>
-std::vector<Move> generate_for(
+MoveList generate_for(
     const Position& position, const PieceType piece)
 {
-    std::vector<Move> moves;
+    MoveList moves;
 
     generate_for<CapturesOnly>(position, piece, std::back_inserter(moves));
 
