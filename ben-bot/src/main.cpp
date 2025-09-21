@@ -16,7 +16,6 @@
 #include <ben-bot/Engine.hpp>
 #include <cstdlib>
 #include <exception>
-#include <iostream>
 #include <libchess/util/Console.hpp>
 #include <print>
 
@@ -33,8 +32,10 @@ try {
         engine.print_logo_and_version();
     }
 
-    if (not args.uciCommand.empty())
+    if (not args.uciCommand.empty()) {
+        [[unlikely]];
         engine.handle_command(args.uciCommand);
+    }
 
     if (not args.noLoop) {
         [[likely]];
@@ -43,9 +44,9 @@ try {
 
     return EXIT_SUCCESS;
 } catch (const std::exception& exception) {
-    std::println(std::cerr, "{}", exception.what());
+    std::println("info string Error: {}", exception.what());
     return EXIT_FAILURE;
 } catch (...) {
-    std::println(std::cerr, "Error: unknown exception thrown!");
+    std::println("info string Error: unknown exception thrown!");
     return EXIT_FAILURE;
 }

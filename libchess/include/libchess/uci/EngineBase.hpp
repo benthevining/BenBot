@@ -136,6 +136,7 @@ struct EngineBase {
 private:
     void respond_to_uci();
 
+    void handle_setpos(string_view arguments);
     void handle_setoption(string_view arguments);
 
     bool shouldExit { false }; // used as flag for exiting the loop() function
