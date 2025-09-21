@@ -58,7 +58,7 @@ using std::uint64_t;
 #ifdef __SIZEOF_INT128__
     using uint128_t = unsigned __int128;
 
-    return (static_cast<uint128_t>(first) * static_cast<uint128_t>(second)) >> 64uz;
+    return (static_cast<uint128_t>(first) * static_cast<uint128_t>(second)) >> static_cast<uint128_t>(64);
 #elif defined(_M_X64) || defined(_M_ARM64) // MSVC for x86-64 or AArch64
     return __umulh(first, second);
 #elifdef _M_IA64
