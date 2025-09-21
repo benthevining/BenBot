@@ -30,8 +30,7 @@ list (
     CTEST_CUSTOM_ERROR_EXCEPTION
     # cmake-format: sortable
     "(information:)+"
-    "[syntaxError]" # cppcheck false-positives for new syntax it can't parse
-    "[internalAstError]"
+    # "[syntaxError]" # cppcheck false-positives for new syntax it can't parse "[internalAstError]"
     "(style:)+" # style warnings shouldn't be a hard error
     "performance:"
 )
