@@ -23,6 +23,7 @@
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
 #include <optional>
+#include <span>
 #include <utility>
 
 namespace ben_bot {
@@ -76,15 +77,28 @@ public:
         constexpr bool operator==(const Record& other) const noexcept = default;
     };
 
-    TranspositionTable();
+    TranspositionTable() { resize(100uz); }
 
-    ~TranspositionTable();
+    ~TranspositionTable() { deallocate(); }
 
     TranspositionTable(const TranspositionTable&)            = delete;
     TranspositionTable& operator=(const TranspositionTable&) = delete;
 
-    TranspositionTable(TranspositionTable&&)            = delete;
-    TranspositionTable& operator=(TranspositionTable&&) = delete;
+    TranspositionTable(TranspositionTable&& other) noexcept
+        : table { std::exchange(other.table, nullptr) }
+        , clusterCount { std::exchange(other.clusterCount, 0uz) }
+    {
+    }
+
+    TranspositionTable& operator=(TranspositionTable&& other) noexcept
+    {
+        deallocate();
+
+        table        = std::exchange(other.table, nullptr);
+        clusterCount = std::exchange(other.clusterCount, 0uz);
+
+        return *this;
+    }
 
     /** Retrieves the stored record for the given position,
         or nullptr if the given position isn't in the table.
@@ -135,8 +149,10 @@ public:
     void new_search() noexcept;
 
 private:
+    void deallocate();
+
     // this is the hash function
-    [[nodiscard]] Record* first_entry(Position::Hash key) const noexcept;
+    [[nodiscard]] std::span<Record> find_cluster(Position::Hash key) const noexcept;
 
     struct Cluster;
 

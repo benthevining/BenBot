@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/search/Bounds.hpp>
@@ -22,6 +23,7 @@
 #include <memory>
 #include <new>
 #include <optional>
+#include <span>
 #include <utility>
 
 namespace ben_bot {
@@ -31,27 +33,12 @@ using std::size_t;
 static constexpr auto ClusterSize = 3uz;
 
 struct TranspositionTable::Cluster final {
-    std::array<Record, ClusterSize> records;
+    std::array<Record, ClusterSize> records {};
 };
-
-TranspositionTable::TranspositionTable()
-{
-    resize(100uz);
-}
-
-using chess::util::page_aligned_free;
-
-TranspositionTable::~TranspositionTable()
-{
-    std::destroy_n(table, clusterCount);
-    page_aligned_free(table);
-}
 
 void TranspositionTable::resize(const size_t sizeMB)
 {
-    // deallocate previous table
-    std::destroy_n(table, clusterCount);
-    page_aligned_free(table);
+    deallocate();
 
     clusterCount = sizeMB * 1024uz * 1024uz / sizeof(Cluster);
 
@@ -69,6 +56,13 @@ void TranspositionTable::clear()
         std::ranges::fill(table[i].records, Record {});
 }
 
+void TranspositionTable::deallocate()
+{
+    std::destroy_n(table, clusterCount);
+
+    chess::util::page_aligned_free(table);
+}
+
 size_t TranspositionTable::hashfull() const
 {
     // TODO
@@ -79,20 +73,24 @@ void TranspositionTable::new_search() noexcept
     // TODO
 }
 
-auto TranspositionTable::first_entry(const Position::Hash key) const noexcept -> Record*
+auto TranspositionTable::find_cluster(const Position::Hash key) const noexcept -> std::span<Record>
 {
     const auto idx = chess::util::mul_hi64(key, clusterCount);
 
-    return table[idx].records.data();
+    assert(idx < clusterCount);
+
+    return table[idx].records;
 }
 
 auto TranspositionTable::find(const Position& pos) const -> const Record*
 {
-    const auto* first = first_entry(pos.hash);
+    const auto cluster = find_cluster(pos.hash);
 
-    for (auto i = 0uz; i < ClusterSize; ++i)
-        if (first[i].hash == pos.hash)
-            return &first[i];
+    if (const auto it = std::ranges::find_if(cluster,
+            [&pos](const Record& rec) { return rec.hash == pos.hash; });
+        it != cluster.end()) {
+        return std::to_address(it);
+    }
 
     return nullptr;
 }
@@ -135,15 +133,13 @@ void TranspositionTable::store(const Position& pos, Record record)
 {
     record.hash = pos.hash;
 
-    auto* first = first_entry(pos.hash);
+    auto cluster = find_cluster(pos.hash);
 
-    for (auto i = 0uz; i < ClusterSize; ++i) {
-        if (first[i].hash == pos.hash) {
+    for (auto& stored : cluster) {
+        if (stored.hash == pos.hash) {
             // this position was already stored in the table
             // keep the old evaluation if it was an exact one & the new one isn't,
             // or if the new evaluation is a lower depth than the old one
-
-            auto& stored = first[i];
 
             const bool shouldReplace
                 = record.searchedDepth > stored.searchedDepth
@@ -156,9 +152,9 @@ void TranspositionTable::store(const Position& pos, Record record)
             return;
         }
 
-        if (first[i].searchedDepth == 0uz) {
+        if (stored.searchedDepth == 0uz) {
             // empty slot
-            first[i] = record;
+            stored = record;
             return;
         }
     }
