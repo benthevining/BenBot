@@ -118,16 +118,27 @@ void EngineBase::respond_to_uci()
 }
 
 // According to the UCI spec, engines should ignore invalid commands.
-// If the FEN or movelist sent is invalid, an exception will be thrown,
-// which we could simply not catch here to let the engine terminate;
-// however, it seems to be the most spec-compliant behavior to ignore
-// the invalid command and not terminate the engine. See this Stockfish
-// PR discussion: https://github.com/official-stockfish/Stockfish/pull/4563
+// If the FEN or movelist sent is invalid, an exception will be thrown
+// when trying to parse it, which we could simply not catch here to let
+// the engine terminate; however, it seems to be the most spec-compliant
+// behavior to ignore the invalid command and not terminate the engine.
+// If a parsing error is thrown, or if the new position is determined
+// to be illegal, we print an error message via `info string` and keep
+// the old position. See this Stockfish PR discussion:
+// https://github.com/official-stockfish/Stockfish/pull/4563
 void EngineBase::handle_setpos(const string_view arguments)
 try {
-    position = parse_position_options(arguments);
+    const auto newPos = parse_position_options(arguments);
 
-    set_position(position);
+    if (const auto errorStr = newPos.is_illegal()) {
+        [[unlikely]];
+        println("info string Attempted to set illegal position: {}", errorStr.value());
+        return;
+    }
+
+    position = newPos;
+
+    set_position(newPos);
 } catch (const std::exception& exception) {
     println("info string Error setting position: {}", exception.what());
     println("info string Rolling back to previous position: {}", notation::to_fen(position));
