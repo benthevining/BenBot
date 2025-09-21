@@ -94,7 +94,7 @@ struct Move final {
         const Square start, const Square end,
         const PieceType type_, const PieceType promotedType)
         : data { static_cast<Integer>(
-              ((std::to_underlying(promotedType) - std::to_underlying(PieceType::Knight)) << 12uz)
+              (std::to_underlying(promotedType) << 12uz)
               + pack_fields(start, end)) }
         , type { type_ }
     {
@@ -129,7 +129,7 @@ struct Move final {
     /** Returns the promoted-to type, or ``nullopt`` if this move is not a promotion. */
     [[nodiscard]] constexpr std::optional<PieceType> promoted_type() const noexcept
     {
-        const auto value = ((data >> 12uz) & 3uz) + std::to_underlying(PieceType::Knight);
+        const auto value = ((data >> 12uz) & 3uz); // + std::to_underlying(PieceType::Knight);
 
         if (std::cmp_equal(value, 0))
             return std::nullopt;
