@@ -104,7 +104,7 @@ struct Move final {
      */
     [[nodiscard]] constexpr Square from() const noexcept
     {
-        return Square::from_index((data >> 6uz) & 0x3F);
+        return Square::from_index((data >> START_SQUARE_OFFSET) & LOWEST_SIX_BITS_MASK);
     }
 
     /** Returns the ending square of the moving piece.
@@ -113,7 +113,7 @@ struct Move final {
      */
     [[nodiscard]] constexpr Square to() const noexcept
     {
-        return Square::from_index(data & 0x3F);
+        return Square::from_index(data & LOWEST_SIX_BITS_MASK);
     }
 
     /** Returns the type of the moving piece. For a promotion, this is pawn;
@@ -121,13 +121,13 @@ struct Move final {
      */
     [[nodiscard]] constexpr PieceType piece() const noexcept
     {
-        return static_cast<PieceType>(data >> 18uz);
+        return static_cast<PieceType>(data >> MOVING_TYPE_OFFSET);
     }
 
     /** Returns the promoted-to type, or ``nullopt`` if this move is not a promotion. */
     [[nodiscard]] constexpr std::optional<PieceType> promoted_type() const noexcept
     {
-        const auto value = static_cast<std::uint8_t>(((data >> 12uz) & 3uz));
+        const auto value = ((data >> PROMOTED_TYPE_OFFSET) & LOWEST_SIX_BITS_MASK);
 
         if (std::cmp_equal(value, std::to_underlying(PieceType::Pawn)))
             return std::nullopt;
@@ -160,14 +160,20 @@ struct Move final {
     constexpr bool operator==(const Move&) const noexcept = default;
 
 private:
+    static constexpr auto LOWEST_SIX_BITS_MASK = 0x3F;
+
+    static constexpr auto START_SQUARE_OFFSET  = 6uz;
+    static constexpr auto PROMOTED_TYPE_OFFSET = 12uz;
+    static constexpr auto MOVING_TYPE_OFFSET   = 18uz;
+
     [[nodiscard, gnu::const]] static constexpr Integer pack_fields(
         const Square start, const Square end,
         const PieceType type, const PieceType promotedType) noexcept
     {
         return static_cast<Integer>(end.index())
-             + (static_cast<Integer>(start.index()) << 6uz)
-             + (static_cast<Integer>(std::to_underlying(promotedType)) << 12uz)
-             + (static_cast<Integer>(std::to_underlying(type)) << 18uz);
+             + (static_cast<Integer>(start.index()) << START_SQUARE_OFFSET)
+             + (static_cast<Integer>(std::to_underlying(promotedType)) << PROMOTED_TYPE_OFFSET)
+             + (static_cast<Integer>(std::to_underlying(type)) << MOVING_TYPE_OFFSET);
     }
 
     // A move needs 32 bits to be stored
