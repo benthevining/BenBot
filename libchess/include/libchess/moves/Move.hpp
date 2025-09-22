@@ -29,7 +29,7 @@
 #include <cassert>
 #include <compare>
 #include <cstddef> // IWYU pragma: keep - for size_t
-#include <cstdint> // IWYU pragma: keep - for std::uint16_t
+#include <cstdint> // IWYU pragma: keep - for std::uint32_t
 #include <libchess/board/Distances.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Rank.hpp>
@@ -69,7 +69,7 @@ using PieceType = pieces::Type;
  */
 struct Move final {
     /** Integer type used to hold move data in a packed format. */
-    using Integer = std::uint16_t;
+    using Integer = std::uint32_t;
 
     /** Creates a null move. */
     constexpr Move() = default;
@@ -84,7 +84,7 @@ struct Move final {
     constexpr Move(
         const Square start, const Square end,
         const PieceType type_)
-        : data { pack_fields(start, end) }
+        : data { pack_fields(start, end, PieceType::Pawn) }
         , type { type_ }
     {
     }
@@ -93,11 +93,11 @@ struct Move final {
     constexpr Move(
         const Square start, const Square end,
         const PieceType type_, const PieceType promotedType)
-        : data { static_cast<Integer>(
-              (std::to_underlying(promotedType) << 12uz)
-              + pack_fields(start, end)) }
+        : data { pack_fields(start, end, promotedType) }
         , type { type_ }
     {
+        assert(promotedType != PieceType::King);
+        assert(promotedType != PieceType::Pawn);
     }
 
     /** Returns the starting square of the moving piece.
@@ -129,9 +129,9 @@ struct Move final {
     /** Returns the promoted-to type, or ``nullopt`` if this move is not a promotion. */
     [[nodiscard]] constexpr std::optional<PieceType> promoted_type() const noexcept
     {
-        const auto value = ((data >> 12uz) & 3uz); // + std::to_underlying(PieceType::Knight);
+        const auto value = ((data >> 12uz) & 3uz);
 
-        if (std::cmp_equal(value, 0))
+        if (std::cmp_equal(value, std::to_underlying(PieceType::Pawn)))
             return std::nullopt;
 
         return static_cast<PieceType>(value);
@@ -148,7 +148,7 @@ struct Move final {
     }
 
     /** Returns true if this is a null move. */
-    [[nodiscard]] bool is_null() const noexcept { return std::cmp_not_equal(data, 0); }
+    [[nodiscard]] bool is_null() const noexcept { return std::cmp_equal(data, 0); }
 
     /** Returns true if this move is a promotion. */
     [[nodiscard]] constexpr bool is_promotion() const noexcept { return promoted_type().has_value(); }
@@ -163,11 +163,22 @@ struct Move final {
 
 private:
     [[nodiscard, gnu::const]] static constexpr Integer pack_fields(
-        const Square start, const Square end) noexcept
+        const Square start, const Square end,
+        const PieceType promotedType) noexcept
     {
-        return static_cast<Integer>((start.index() << 6uz) + end.index());
+        return static_cast<Integer>(
+            end.index()
+            + (start.index() << 6uz)
+            + (std::to_underlying(promotedType) << 12uz));
     }
 
+    // A move needs 32 bits to be stored
+    //
+    // bit  0- 5: destination square index
+    // bit  6-11: origin square index
+    // bit 12-17: promoted piece type
+    //
+    // Special case is a null move, this integer will be 0
     Integer data { 0 };
 
     PieceType type;
@@ -231,7 +242,7 @@ constexpr bool Move::is_under_promotion() const noexcept
     const auto prom = promoted_type();
 
     return prom.has_value()
-        && prom.value() == PieceType::Queen;
+        && prom.value() != PieceType::Queen;
 }
 
 constexpr bool Move::is_castling() const noexcept
