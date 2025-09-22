@@ -94,7 +94,7 @@ namespace {
         // look up stored record of resulting position after making move
         if (const auto* record = transTable.find(posAfterMove)) {
             switch (record->evalType) {
-                using enum TranspositionTable::Record::EvalType;
+                using enum EvalType;
 
                 case Exact: score += PV_NODE_BONUS; break;
                 case Beta : score -= CUT_NODE_PENALTY; break;

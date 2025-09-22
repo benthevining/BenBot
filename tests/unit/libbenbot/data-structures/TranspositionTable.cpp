@@ -23,7 +23,7 @@ static constexpr auto TAGS { "[data-structures][TranspositionTable]" };
 
 using ben_bot::TranspositionTable;
 using chess::game::Position;
-using EvalType = TranspositionTable::Record::EvalType;
+using EvalType = ben_bot::EvalType;
 
 namespace notation = chess::notation;
 

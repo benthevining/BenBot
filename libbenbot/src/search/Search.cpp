@@ -38,7 +38,6 @@ using std::size_t;
 namespace {
 
     using eval::Score;
-    using EvalType = TranspositionTable::Record::EvalType;
 
     struct Stats final {
         size_t nodesSearched { 0uz };

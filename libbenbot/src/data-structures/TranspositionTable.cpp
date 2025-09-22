@@ -103,7 +103,7 @@ auto TranspositionTable::probe_eval(
     if (const auto* record = find(pos);
         record != nullptr and record->searchedDepth >= depth) {
         switch (record->evalType) {
-            using enum Record::EvalType;
+            using enum EvalType;
 
             case Exact:
                 return std::make_pair(record->eval, record->evalType);
@@ -143,8 +143,8 @@ void TranspositionTable::store(const Position& pos, Record record)
 
             const bool shouldReplace
                 = record.searchedDepth > stored.searchedDepth
-               or (stored.evalType != Record::EvalType::Exact
-                   and record.evalType == Record::EvalType::Exact);
+               or (stored.evalType != EvalType::Exact
+                   and record.evalType == EvalType::Exact);
 
             if (shouldReplace)
                 stored = record;

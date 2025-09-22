@@ -20,6 +20,7 @@
 #pragma once
 
 #include <cstddef> // IWYU pragma: keep - for size_t
+#include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
 #include <optional>
@@ -35,6 +36,17 @@ namespace search {
 using chess::game::Position;
 using chess::moves::Move;
 using std::size_t;
+
+/** This enumeration defines types of evaluation values that
+    different nodes in the search tree may be assigned.
+
+    @ingroup benbot_data_structures
+ */
+enum class EvalType : std::uint_least8_t {
+    Exact, ///< Indicates that the evaluation value is an exact evaluation. This also indicates that this is a PV node.
+    Alpha, ///< Indicates that the evaluation value is a maximum evaluation; for example, if ``eval`` is 16, this means that the evaluation of this node was at most 16.
+    Beta   ///< Indicates that the evaluation is a minimum evaluation; for example, if ``eval`` is 16, this means that the evaluation of this node was at least 16.
+};
 
 /** The transposition table data structure.
 
@@ -53,15 +65,6 @@ public:
             See ``evalType`` to determine the exact meaning of this value.
          */
         int eval { 0 };
-
-        /** This enumeration defines types of evaluation values that
-            different nodes in the search tree may be assigned.
-         */
-        enum class EvalType : std::uint_least8_t {
-            Exact, ///< Indicates that the ``eval`` value is an exact evaluation. This also indicates that this is a PV node.
-            Alpha, ///< Indicate that the ``eval`` value is a maximum evaluation; for example, if ``eval`` is 16, this means that the evaluation of this node was at most 16.
-            Beta   ///< Indicates that the ``eval`` is a minimum evaluation; for example, if ``eval`` is 16, this means that the evaluation of this node was at least 16.
-        };
 
         /** Gives the exact meaning of the ``eval`` value. */
         EvalType evalType { EvalType::Alpha };
@@ -108,7 +111,7 @@ public:
     /** Represents a probed evaluation from the table.
         This is a pair of the evaluation value and the value type.
      */
-    using ProbedEval = std::pair<int, Record::EvalType>;
+    using ProbedEval = std::pair<int, EvalType>;
 
     /** Similar to ``find()``, this function instead probes for an
         evaluation value of the given position, searched to at least

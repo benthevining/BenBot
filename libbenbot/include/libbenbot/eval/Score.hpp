@@ -153,7 +153,7 @@ constexpr Score Score::from_tt(
 {
     const auto [score, type] = eval;
 
-    if (type == TT::Record::EvalType::Exact) {
+    if (type == EvalType::Exact) {
         if (score <= -MATE)
             return mate(plyFromRoot);
 
