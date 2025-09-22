@@ -294,16 +294,6 @@ void Context::search()
 
         interrupter.iteration_completed();
 
-        callbacks.iteration_complete({ .duration = interrupter.get_search_duration(),
-            .depth                               = depth,
-            .score                               = bestScore,
-            .bestMove                            = bestMove.value(),
-            .nodesSearched                       = stats.nodesSearched,
-            .transpositionTableHits              = stats.transTableHits,
-            .betaCutoffs                         = stats.betaCutoffs,
-            .mdpCutoffs                          = stats.mdpCutoffs,
-            .hashfull                            = transTable.hashfull() });
-
         if (not(infinite or pondering.load())) {
             // only 1 legal move, don't do a deeper iteration
             if (options.movesToSearch.size() == 1uz) {
@@ -324,6 +314,20 @@ void Context::search()
                 if (timer.get_duration() >= *remaining)
                     break;
             }
+        }
+
+        // prevent the iteration callback from being called right before search_complete()
+        // will be called, otherwise the final info string would be printed twice
+        if (depth < options.depth) {
+            callbacks.iteration_complete({ .duration = interrupter.get_search_duration(),
+                .depth                               = depth,
+                .score                               = bestScore,
+                .bestMove                            = bestMove.value(),
+                .nodesSearched                       = stats.nodesSearched,
+                .transpositionTableHits              = stats.transTableHits,
+                .betaCutoffs                         = stats.betaCutoffs,
+                .mdpCutoffs                          = stats.mdpCutoffs,
+                .hashfull                            = transTable.hashfull() });
         }
 
         ++depth;
