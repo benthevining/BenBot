@@ -15,7 +15,8 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
-#include <cstddef> // IWYU pragma: keep - for size_t
+#include <cstddef>
+#include <cstdint> // IWYU pragma: keep
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/search/Bounds.hpp>
 #include <libchess/util/Math.hpp>
@@ -30,10 +31,57 @@ namespace ben_bot {
 
 using std::size_t;
 
-static constexpr auto ClusterSize = 3uz;
+struct TranspositionTable::Entry final {
+    std::uint16_t key { 0 }; // the lowest 16 bits of the position's Zobrist key
+
+    std::uint_least8_t depth { 0 };
+
+    std::int16_t eval { 0 };
+
+    EvalType evalType { EvalType::Alpha };
+
+    Move move;
+
+    [[nodiscard]] bool occupied() const noexcept
+    {
+        return std::cmp_greater(depth, 0);
+    }
+
+    [[nodiscard]] TTData read() const noexcept
+    {
+        std::optional<Move> bestMove;
+
+        if (not move.is_null())
+            bestMove.emplace(move);
+
+        return {
+            .searchedDepth = depth,
+            .eval          = static_cast<int>(eval),
+            .evalType      = evalType,
+            .bestMove      = bestMove
+        };
+    }
+
+    void save(const std::uint16_t keyToUse, const TTData& data) noexcept
+    {
+        key      = keyToUse;
+        depth    = static_cast<std::uint_least8_t>(data.searchedDepth);
+        eval     = static_cast<std::int16_t>(data.eval);
+        evalType = data.evalType;
+
+        if (data.bestMove.has_value())
+            move = data.bestMove.value();
+        else
+            move = Move {};
+    }
+};
+
+static constexpr auto ClusterSize = 5uz;
 
 struct TranspositionTable::Cluster final {
-    std::array<TTData, ClusterSize> records {};
+    std::array<Entry, ClusterSize> records {};
+
+    std::array<std::byte, 4uz> padding {}; // pad to 64 bytes
 };
 
 void TranspositionTable::resize(const size_t sizeMB)
@@ -53,7 +101,7 @@ void TranspositionTable::resize(const size_t sizeMB)
 void TranspositionTable::clear()
 {
     for (auto i = 0uz; i < clusterCount; ++i)
-        std::ranges::fill(table[i].records, TTData {});
+        std::ranges::fill(table[i].records, Entry {});
 }
 
 void TranspositionTable::deallocate()
@@ -73,7 +121,7 @@ void TranspositionTable::new_search() noexcept
     // TODO
 }
 
-std::span<TTData> TranspositionTable::find_cluster(const Position::Hash key) const noexcept
+auto TranspositionTable::find_cluster(const Position::Hash key) const noexcept -> std::span<Entry>
 {
     const auto idx = chess::util::mul_hi64(key, clusterCount);
 
@@ -82,17 +130,21 @@ std::span<TTData> TranspositionTable::find_cluster(const Position::Hash key) con
     return table[idx].records;
 }
 
-const TTData* TranspositionTable::find(const Position& pos) const
+std::optional<TTData> TranspositionTable::find(const Position& pos) const
 {
+    // the lowest 16 bits are the key within the cluster
+    const auto key = static_cast<std::uint16_t>(pos.hash);
+
     const auto cluster = find_cluster(pos.hash);
 
-    if (const auto it = std::ranges::find_if(cluster,
-            [&pos](const TTData& rec) { return rec.hash == pos.hash; });
-        it != cluster.end()) {
-        return std::to_address(it);
+    if (const auto it = std::ranges::find_if(
+            cluster,
+            [key](const Entry& entry) { return entry.key == key; });
+        it != cluster.end() and it->occupied()) {
+        return it->read();
     }
 
-    return nullptr;
+    return std::nullopt;
 }
 
 auto TranspositionTable::probe_eval(
@@ -100,8 +152,8 @@ auto TranspositionTable::probe_eval(
     const search::Bounds& bounds) const
     -> std::optional<ProbedEval>
 {
-    if (const auto* record = find(pos);
-        record != nullptr and record->searchedDepth >= depth) {
+    if (const auto record = find(pos);
+        record.has_value() and record->searchedDepth >= depth) {
         switch (record->evalType) {
             using enum EvalType;
 
@@ -129,32 +181,32 @@ auto TranspositionTable::probe_eval(
     return std::nullopt;
 }
 
-void TranspositionTable::store(const Position& pos, TTData record)
+void TranspositionTable::store(const Position& pos, const TTData& record)
 {
-    record.hash = pos.hash;
+    const auto key = static_cast<std::uint16_t>(pos.hash);
 
     auto cluster = find_cluster(pos.hash);
 
     for (auto& stored : cluster) {
-        if (stored.hash == pos.hash) {
+        if (stored.key == key) {
             // this position was already stored in the table
             // keep the old evaluation if it was an exact one & the new one isn't,
             // or if the new evaluation is a lower depth than the old one
 
             const bool shouldReplace
-                = record.searchedDepth > stored.searchedDepth
+                = record.searchedDepth > stored.depth
                or (stored.evalType != EvalType::Exact
                    and record.evalType == EvalType::Exact);
 
             if (shouldReplace)
-                stored = record;
+                stored.save(key, record);
 
             return;
         }
 
-        if (stored.searchedDepth == 0uz) {
+        if (not stored.occupied()) {
             // empty slot
-            stored = record;
+            stored.save(key, record);
             return;
         }
     }

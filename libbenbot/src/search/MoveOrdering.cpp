@@ -92,7 +92,7 @@ namespace {
         const auto posAfterMove = after_move(currentPosition, move);
 
         // look up stored record of resulting position after making move
-        if (const auto* record = transTable.find(posAfterMove)) {
+        if (const auto record = transTable.find(posAfterMove)) {
             switch (record->evalType) {
                 using enum EvalType;
 
@@ -119,7 +119,7 @@ void order_moves_for_search(
     std::optional<Move> bestMove;
 
     // do this lookup only once
-    if (const auto* currPosRecord = transTable.find(currentPosition))
+    if (const auto currPosRecord = transTable.find(currentPosition))
         bestMove = currPosRecord->bestMove;
 
     std::ranges::sort(

@@ -65,6 +65,9 @@ using PieceType = pieces::Type;
 
     This struct also does not directly identify if the move is a capture.
 
+    Null moves are supported; a null move essentially indicates swapping the side
+    to move and incrementing the halfmove counter without changing any piece positions.
+
     @ingroup moves
  */
 struct Move final {

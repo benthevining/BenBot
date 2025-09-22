@@ -71,8 +71,6 @@ struct TTData final {
      */
     std::optional<Move> bestMove;
 
-    Position::Hash hash { 0 }; // TODO: move into separate internal structure
-
     constexpr bool operator==(const TTData& other) const noexcept = default;
 };
 
@@ -82,7 +80,7 @@ struct TTData final {
  */
 class TranspositionTable final {
 public:
-    TranspositionTable() { resize(100uz); }
+    TranspositionTable() { resize(5uz); }
 
     ~TranspositionTable() { deallocate(); }
 
@@ -108,7 +106,7 @@ public:
     /** Retrieves the stored record for the given position,
         or nullptr if the given position isn't in the table.
      */
-    [[nodiscard]] const TTData* find(const Position& pos) const;
+    [[nodiscard]] std::optional<TTData> find(const Position& pos) const;
 
     /** Represents a probed evaluation from the table.
         This is a pair of the evaluation value and the value type.
@@ -131,7 +129,7 @@ public:
         const Position& pos, const Move& move) const;
 
     /** Stores a record for a given position. */
-    void store(const Position& pos, TTData record);
+    void store(const Position& pos, const TTData& record);
 
     /** Clears the contents of the table. Note that no memory is freed. */
     void clear();
@@ -154,10 +152,12 @@ public:
     void new_search() noexcept;
 
 private:
+    struct Entry;
+
     void deallocate();
 
     // this is the hash function
-    [[nodiscard]] std::span<TTData> find_cluster(Position::Hash key) const noexcept;
+    [[nodiscard]] std::span<Entry> find_cluster(Position::Hash key) const noexcept;
 
     struct Cluster;
 
@@ -186,7 +186,7 @@ private:
 inline std::optional<Move> TranspositionTable::get_best_response(
     const Position& pos, const Move& move) const
 {
-    if (const auto* record = find(after_move(pos, move)))
+    if (const auto record = find(after_move(pos, move)))
         return record->bestMove;
 
     return std::nullopt;

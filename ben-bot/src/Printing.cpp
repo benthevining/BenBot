@@ -251,7 +251,7 @@ void Engine::print_current_position(const string_view arguments) const
     println("");
 
     // print eval
-    if (const auto* record = searcher.context.transTable.find(pos)) {
+    if (const auto record = searcher.context.transTable.find(pos)) {
         const auto score = Score::from_tt({ record->eval, record->evalType }, 0uz);
 
         println("TT hit: {}", get_score_string(score));
