@@ -104,6 +104,7 @@ struct TranspositionTable::Cluster final {
 TranspositionTable::TranspositionTable(TranspositionTable&& other) noexcept
     : table { std::exchange(other.table, nullptr) }
     , clusterCount { std::exchange(other.clusterCount, 0uz) }
+    , generation { std::exchange(other.generation, 0) }
 {
 }
 
@@ -113,6 +114,7 @@ TranspositionTable& TranspositionTable::operator=(TranspositionTable&& other) no
 
     table        = std::exchange(other.table, nullptr);
     clusterCount = std::exchange(other.clusterCount, 0uz);
+    generation   = std::exchange(other.generation, 0);
 
     return *this;
 }
