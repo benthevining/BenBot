@@ -24,6 +24,7 @@
 #include <memory>
 #include <new>
 #include <optional>
+#include <ranges>
 #include <span>
 #include <utility>
 
@@ -31,10 +32,15 @@ namespace ben_bot {
 
 using std::size_t;
 
+static constexpr auto GENERATION_DELTA = 8uz;
+static constexpr auto GENERATION_CYCLE = 255uz + GENERATION_DELTA;
+
 struct TranspositionTable::Entry final {
     std::uint16_t key { 0 }; // the lowest 16 bits of the position's Zobrist key
 
-    std::uint_least8_t depth { 0 };
+    std::uint8_t depth { 0 };
+
+    std::uint8_t generation { 0 };
 
     std::int16_t eval { 0 };
 
@@ -45,6 +51,13 @@ struct TranspositionTable::Entry final {
     [[nodiscard]] bool occupied() const noexcept
     {
         return std::cmp_greater(depth, 0);
+    }
+
+    [[nodiscard]] std::uint8_t relative_age(const std::uint8_t gen) const noexcept
+    {
+        static constexpr auto GENERATION_MASK = 248uz; // highest 5 bits
+
+        return (GENERATION_CYCLE + gen - generation) & GENERATION_MASK;
     }
 
     [[nodiscard]] TTData read() const noexcept
@@ -62,12 +75,16 @@ struct TranspositionTable::Entry final {
         };
     }
 
-    void save(const std::uint16_t keyToUse, const TTData& data) noexcept
+    void save(
+        const std::uint16_t keyToUse,
+        const TTData&       data,
+        const std::uint8_t  gen) noexcept
     {
-        key      = keyToUse;
-        depth    = static_cast<std::uint_least8_t>(data.searchedDepth);
-        eval     = static_cast<std::int16_t>(data.eval);
-        evalType = data.evalType;
+        key        = keyToUse;
+        depth      = static_cast<std::uint_least8_t>(data.searchedDepth);
+        generation = gen;
+        eval       = static_cast<std::int16_t>(data.eval);
+        evalType   = data.evalType;
 
         if (data.bestMove.has_value())
             move = data.bestMove.value();
@@ -129,12 +146,24 @@ void TranspositionTable::deallocate()
 
 size_t TranspositionTable::hashfull() const
 {
-    // TODO
+    size_t count { 0uz };
+
+    for (auto i = 0uz; i < std::min(1000uz, clusterCount); ++i) {
+        count += static_cast<size_t>(
+            std::ranges::count_if(
+                table[i].records,
+                [gen = generation](const Entry& entry) {
+                    return entry.occupied()
+                       and entry.relative_age(gen) == 0uz;
+                }));
+    }
+
+    return count / ClusterSize;
 }
 
 void TranspositionTable::new_search() noexcept
 {
-    // TODO
+    generation += GENERATION_DELTA;
 }
 
 auto TranspositionTable::find_cluster(const Position::Hash key) const noexcept -> std::span<Entry>
@@ -224,19 +253,30 @@ void TranspositionTable::store(const Position& pos, const TTData& record)
                    and record.evalType == EvalType::Exact);
 
             if (shouldReplace)
-                stored.save(key, record);
+                stored.save(key, record, generation);
 
             return;
         }
 
         if (not stored.occupied()) {
             // empty slot
-            stored.save(key, record);
+            stored.save(key, record, generation);
             return;
         }
     }
 
-    // TODO: implement replacement strategy
+    auto replacement_score = [gen = generation](const Entry& entry) {
+        return entry.depth - entry.relative_age(gen);
+    };
+
+    auto* replace = cluster.data();
+
+    for (auto& entry : cluster | std::views::drop(1uz)) {
+        if (replacement_score(*replace) > replacement_score(entry))
+            replace = &entry;
+    }
+
+    replace->save(key, record, generation);
 }
 
 } // namespace ben_bot

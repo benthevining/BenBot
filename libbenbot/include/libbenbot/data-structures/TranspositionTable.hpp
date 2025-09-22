@@ -150,6 +150,8 @@ private:
     Cluster* table { nullptr };
 
     size_t clusterCount { 0uz };
+
+    std::uint8_t generation { 0 };
 };
 
 } // namespace ben_bot
