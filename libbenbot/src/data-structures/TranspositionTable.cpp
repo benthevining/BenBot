@@ -84,6 +84,22 @@ struct TranspositionTable::Cluster final {
     std::array<std::byte, 4uz> padding {}; // pad to 64 bytes
 };
 
+TranspositionTable::TranspositionTable(TranspositionTable&& other) noexcept
+    : table { std::exchange(other.table, nullptr) }
+    , clusterCount { std::exchange(other.clusterCount, 0uz) }
+{
+}
+
+TranspositionTable& TranspositionTable::operator=(TranspositionTable&& other) noexcept
+{
+    deallocate();
+
+    table        = std::exchange(other.table, nullptr);
+    clusterCount = std::exchange(other.clusterCount, 0uz);
+
+    return *this;
+}
+
 void TranspositionTable::resize(const size_t sizeMB)
 {
     deallocate();
@@ -177,6 +193,15 @@ auto TranspositionTable::probe_eval(
             default: std::unreachable();
         }
     }
+
+    return std::nullopt;
+}
+
+std::optional<Move> TranspositionTable::get_best_response(
+    const Position& pos, const Move& move) const
+{
+    if (const auto record = find(after_move(pos, move)))
+        return record->bestMove;
 
     return std::nullopt;
 }

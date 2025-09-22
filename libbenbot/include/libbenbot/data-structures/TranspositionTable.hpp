@@ -81,27 +81,13 @@ struct TTData final {
 class TranspositionTable final {
 public:
     TranspositionTable() { resize(5uz); }
-
     ~TranspositionTable() { deallocate(); }
 
     TranspositionTable(const TranspositionTable&)            = delete;
     TranspositionTable& operator=(const TranspositionTable&) = delete;
 
-    TranspositionTable(TranspositionTable&& other) noexcept
-        : table { std::exchange(other.table, nullptr) }
-        , clusterCount { std::exchange(other.clusterCount, 0uz) }
-    {
-    }
-
-    TranspositionTable& operator=(TranspositionTable&& other) noexcept
-    {
-        deallocate();
-
-        table        = std::exchange(other.table, nullptr);
-        clusterCount = std::exchange(other.clusterCount, 0uz);
-
-        return *this;
-    }
+    TranspositionTable(TranspositionTable&& other) noexcept;
+    TranspositionTable& operator=(TranspositionTable&& other) noexcept;
 
     /** Retrieves the stored record for the given position,
         or nullptr if the given position isn't in the table.
@@ -165,31 +151,5 @@ private:
 
     size_t clusterCount { 0uz };
 };
-
-/*
-                         ___                           ,--,
-      ,---,            ,--.'|_                ,--,   ,--.'|
-    ,---.'|            |  | :,'             ,--.'|   |  | :
-    |   | :            :  : ' :             |  |,    :  : '    .--.--.
-    |   | |   ,---.  .;__,'  /    ,--.--.   `--'_    |  ' |   /  /    '
-  ,--.__| |  /     \ |  |   |    /       \  ,' ,'|   '  | |  |  :  /`./
- /   ,'   | /    /  |:__,'| :   .--.  .-. | '  | |   |  | :  |  :  ;_
-.   '  /  |.    ' / |  '  : |__  \__\/: . . |  | :   '  : |__ \  \    `.
-'   ; |:  |'   ;   /|  |  | '.'| ," .--.; | '  : |__ |  | '.'| `----.   \
-|   | '/  ''   |  / |  ;  :    ;/  /  ,.  | |  | '.'|;  :    ;/  /`--'  /__  ___  ___
-|   :    :||   :    |  |  ,   /;  :   .'   \;  :    ;|  ,   /'--'.     /  .\/  .\/  .\
- \   \  /   \   \  /    ---`-' |  ,     .-./|  ,   /  ---`-'   `--'---'\  ; \  ; \  ; |
-  `----'     `----'             `--`---'     ---`-'                     `--" `--" `--"
-
- */
-
-inline std::optional<Move> TranspositionTable::get_best_response(
-    const Position& pos, const Move& move) const
-{
-    if (const auto record = find(after_move(pos, move)))
-        return record->bestMove;
-
-    return std::nullopt;
-}
 
 } // namespace ben_bot
