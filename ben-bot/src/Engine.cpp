@@ -58,6 +58,14 @@ void Engine::handle_custom_command(
     println("Type 'help' for a list of supported commands");
 }
 
+void Engine::option_changed(const uci::Option& option)
+{
+    if (&option == &ttSize) {
+        wait();
+        searcher.context.transTable.resize(static_cast<size_t>(ttSize.get_value()));
+    }
+}
+
 namespace {
     using chess::moves::PerftResult;
 

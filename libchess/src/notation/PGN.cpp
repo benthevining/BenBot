@@ -438,7 +438,7 @@ namespace {
         // write extra metadata tags not part of seven tag roster
         for (const auto& [key, value] : metadata
                                             | std::views::filter([](const auto& it) {
-                                                  return ! std::ranges::contains(sevenTagRoster, it.first);
+                                                  return not std::ranges::contains(sevenTagRoster, it.first);
                                               })) {
             write_metadata_item(key, value, output);
         }

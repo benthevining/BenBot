@@ -22,8 +22,9 @@
 static constexpr auto TAGS { "[data-structures][TranspositionTable]" };
 
 using ben_bot::TranspositionTable;
+using ben_bot::TTData;
 using chess::game::Position;
-using EvalType = TranspositionTable::Record::EvalType;
+using EvalType = ben_bot::EvalType;
 
 namespace notation = chess::notation;
 
@@ -35,24 +36,23 @@ TEST_CASE("Transposition table - find()", TAGS)
 
     TranspositionTable table;
 
-    REQUIRE(table.find(startPos) == nullptr);
-    REQUIRE(table.find(pos2) == nullptr);
+    REQUIRE(not table.find(startPos).has_value());
+    REQUIRE(not table.find(pos2).has_value());
 
-    table.store(startPos, {});
+    table.store(startPos, { .searchedDepth = 1uz });
 
-    REQUIRE(table.find(startPos) != nullptr);
-    REQUIRE(table.find(pos2) == nullptr);
+    REQUIRE(table.find(startPos).has_value());
+    REQUIRE(not table.find(pos2).has_value());
 
-    table.store(pos2, {});
+    table.store(pos2, { .searchedDepth = 1uz });
 
-    REQUIRE(table.find(startPos) != nullptr);
-    REQUIRE(table.find(pos2) != nullptr);
-    REQUIRE(table.find(startPos) != table.find(pos2));
+    REQUIRE(table.find(startPos).has_value());
+    REQUIRE(table.find(pos2).has_value());
 
     table.clear();
 
-    REQUIRE(table.find(startPos) == nullptr);
-    REQUIRE(table.find(pos2) == nullptr);
+    REQUIRE(not table.find(startPos).has_value());
+    REQUIRE(not table.find(pos2).has_value());
 }
 
 TEST_CASE("Transposition table - get_best_response()", TAGS)
@@ -199,13 +199,11 @@ TEST_CASE("Transposition table - probe_eval()", TAGS)
 
 TEST_CASE("Transposition table - store() overwriting rules", TAGS)
 {
-    using Record = TranspositionTable::Record;
-
     static const Position startPos {};
 
     TranspositionTable table;
 
-    const Record oldRecord {
+    static constexpr TTData oldRecord {
         .searchedDepth = 6uz,
         .eval          = 2,
         .evalType      = EvalType::Exact
@@ -217,7 +215,7 @@ TEST_CASE("Transposition table - store() overwriting rules", TAGS)
 
     SECTION("Old eval kept if it's a greater depth than the new one")
     {
-        const Record newRecord {
+        static constexpr TTData newRecord {
             .searchedDepth = oldRecord.searchedDepth - 1uz,
             .eval          = 4,
             .evalType      = EvalType::Exact
@@ -232,7 +230,7 @@ TEST_CASE("Transposition table - store() overwriting rules", TAGS)
     {
         SECTION("Writing an alpha cutoff")
         {
-            const Record newRecord {
+            static constexpr TTData newRecord {
                 .searchedDepth = oldRecord.searchedDepth,
                 .eval          = -6,
                 .evalType      = EvalType::Alpha
@@ -245,7 +243,7 @@ TEST_CASE("Transposition table - store() overwriting rules", TAGS)
 
         SECTION("Writing a beta cutoff")
         {
-            const Record newRecord {
+            static constexpr TTData newRecord {
                 .searchedDepth = oldRecord.searchedDepth,
                 .eval          = 6,
                 .evalType      = EvalType::Beta

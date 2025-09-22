@@ -57,7 +57,7 @@ namespace {
         // erase moves not to the given target square
         moves.erase(
             std::ranges::remove_if(moves,
-                [targetSquare](const Move& candidate) { return candidate.to != targetSquare; })
+                [targetSquare](const Move& candidate) { return candidate.to() != targetSquare; })
                 .begin(),
             moves.end());
 
@@ -79,7 +79,7 @@ namespace {
 
     [[nodiscard]] string get_disambig_string(const Position& position, const Move& move)
     {
-        const auto pieceMoves = get_possible_move_origins(position, move.to, move.piece);
+        const auto pieceMoves = get_possible_move_origins(position, move.to(), move.piece());
 
         if (pieceMoves.size() < 2uz)
             return {};
@@ -89,11 +89,11 @@ namespace {
         // 2. rank of departure if the files are the same but the ranks differ
         // 3. the complete origin square coordinate otherwise
 
-        const auto originSquare = move.from;
+        const auto originSquare = move.from();
 
         if (std::cmp_equal(
                 std::ranges::count_if(pieceMoves,
-                    [file = originSquare.file](const Move& candidate) { return candidate.from.file == file; }),
+                    [file = originSquare.file](const Move& candidate) { return candidate.from().file == file; }),
                 1)) {
             // file of departure is unique, use it to disambiguate
             return std::format("{}", originSquare.file);
@@ -101,7 +101,7 @@ namespace {
 
         if (std::cmp_equal(
                 std::ranges::count_if(pieceMoves,
-                    [rank = originSquare.rank](const Move& candidate) { return candidate.from.rank == rank; }),
+                    [rank = originSquare.rank](const Move& candidate) { return candidate.from().rank == rank; }),
                 1)) {
             // rank of departure is unique, use it to disambiguate
             return std::format("{}", originSquare.rank);
@@ -117,6 +117,8 @@ namespace {
 
 string to_alg(const Position& position, const Move& move)
 {
+    assert(not move.is_null());
+
     const auto checkStr = get_check_string(position, move);
 
     if (move.is_castling()) {
@@ -127,33 +129,33 @@ string to_alg(const Position& position, const Move& move)
 
         return std::format(
             "{}{}",
-            move.to.is_kingside() ? KINGSIDE_CASTLE : QUEENSIDE_CASTLE,
+            move.to().is_kingside() ? KINGSIDE_CASTLE : QUEENSIDE_CASTLE,
             checkStr);
     }
 
     const bool isCapture = position.is_capture(move);
 
-    if (move.is_promotion()) {
+    if (const auto prom = move.promoted_type()) {
         [[unlikely]];
 
         if (isCapture)
-            return std::format("{}x{}={}{}", move.from.file, move.to, *move.promotedType, checkStr);
+            return std::format("{}x{}={}{}", move.from().file, move.to(), prom.value(), checkStr);
 
-        return std::format("{}={}{}", move.to, *move.promotedType, checkStr);
+        return std::format("{}={}{}", move.to(), prom.value(), checkStr);
     }
 
-    if (move.piece == PieceType::Pawn) {
+    if (move.piece() == PieceType::Pawn) {
         if (isCapture)
-            return std::format("{}x{}{}", move.from.file, move.to, checkStr);
+            return std::format("{}x{}{}", move.from().file, move.to(), checkStr);
 
-        return std::format("{}{}", move.to, checkStr);
+        return std::format("{}{}", move.to(), checkStr);
     }
 
     const auto* captureStr = isCapture ? "x" : "";
 
     // with every field: Ngxf4+
     return std::format("{}{}{}{}{}",
-        move.piece, get_disambig_string(position, move), captureStr, move.to, checkStr);
+        move.piece(), get_disambig_string(position, move), captureStr, move.to(), checkStr);
 }
 
 namespace {
@@ -166,7 +168,7 @@ namespace {
     [[nodiscard]] Square get_starting_square_from_file(
         const MoveSpan possibleOrigins, const File file)
     {
-        auto moveStartsOnFile = [file](const Move& move) { return move.from.file == file; };
+        auto moveStartsOnFile = [file](const Move& move) { return move.from().file == file; };
 
         if (std::cmp_greater(
                 std::ranges::count_if(possibleOrigins, moveStartsOnFile),
@@ -188,13 +190,13 @@ namespace {
             };
         }
 
-        return move->from;
+        return move->from();
     }
 
     [[nodiscard]] Square get_starting_square_from_rank(
         const MoveSpan possibleOrigins, const Rank rank)
     {
-        auto moveStartsOnRank = [rank](const Move& move) { return move.from.rank == rank; };
+        auto moveStartsOnRank = [rank](const Move& move) { return move.from().rank == rank; };
 
         if (std::cmp_greater(
                 std::ranges::count_if(possibleOrigins, moveStartsOnRank),
@@ -216,7 +218,7 @@ namespace {
             };
         }
 
-        return move->from;
+        return move->from();
     }
 
     [[nodiscard]] Square get_starting_square(
@@ -232,7 +234,7 @@ namespace {
         }
 
         if (possibleOrigins.size() == 1uz)
-            return possibleOrigins.front().from;
+            return possibleOrigins.front().from();
 
         if (text.empty()) {
             throw std::invalid_argument {
@@ -301,11 +303,10 @@ namespace {
                                 : prev_pawn_rank<Color::Black>(targetSquare.rank);
 
         return {
-            .from = Square {
+            Square {
                 .file = startingFile,
                 .rank = fromRank },
-            .to    = targetSquare,
-            .piece = PieceType::Pawn
+            targetSquare, PieceType::Pawn
         };
     }
 
@@ -369,12 +370,11 @@ namespace {
             xPos != string_view::npos) {
             // string is of form dxe8=Q
             return Move {
-                .from = {
+                Square {
                     .file = board::file_from_char(text.at(xPos - 1uz)),
                     .rank = color == Color::White ? Rank::Seven : Rank::Two },
-                .to           = Square::from_string(text.substr(eqSgnPos - 2uz, 2uz)),
-                .piece        = PieceType::Pawn,
-                .promotedType = promotedType
+                Square::from_string(text.substr(eqSgnPos - 2uz, 2uz)),
+                PieceType::Pawn, promotedType
             };
         }
 
@@ -441,9 +441,8 @@ Move from_alg(const Position& position, string_view text)
         text = text.substr(1uz);
 
     return {
-        .from  = get_starting_square(position, targetSquare, pieceType, text),
-        .to    = targetSquare,
-        .piece = pieceType
+        get_starting_square(position, targetSquare, pieceType, text),
+        targetSquare, pieceType
     };
 }
 

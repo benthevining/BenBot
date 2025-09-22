@@ -75,6 +75,8 @@ private:
 
     [[nodiscard]] std::span<uci::Option*> get_options() override { return options; }
 
+    void option_changed(const uci::Option& option) override;
+
     void handle_custom_command(string_view command, string_view opts) override;
 
     void run_perft(string_view arguments) const;
@@ -94,6 +96,8 @@ private:
 
     search::Thread searcher;
 
+    uci::IntOption ttSize { uci::default_options::hash_size() };
+
     uci::Action clearTT {
         "Clear Hash",
         [this] { searcher.context.clear_transposition_table(); },
@@ -106,7 +110,7 @@ private:
     // management algorithm when pondering is enabled.
     uci::BoolOption ponder { uci::default_options::ponder() };
 
-    std::array<uci::Option*, 2uz> options { &clearTT, &ponder };
+    std::array<uci::Option*, 3uz> options { &ttSize, &clearTT, &ponder };
 
     // clang-format off
     std::array<CustomCommand, 8uz> customCommands {

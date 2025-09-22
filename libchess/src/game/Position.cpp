@@ -48,7 +48,7 @@ namespace {
         auto& ourPieces      = position.our_pieces();
         auto& opponentPieces = position.their_pieces();
 
-        opponentPieces.capture_at(move.to);
+        opponentPieces.capture_at(move.to());
 
         ourPieces.our_move(move, position.sideToMove);
 
@@ -68,14 +68,14 @@ namespace {
         const Move& move, const bool isWhite) noexcept
         -> std::optional<Square>
     {
-        if (move.piece != PieceType::Pawn
-            or std::cmp_not_equal(rank_distance(move.from, move.to), 2uz)) {
+        if (move.piece() != PieceType::Pawn
+            or std::cmp_not_equal(rank_distance(move.from(), move.to()), 2uz)) {
             [[likely]];
             return std::nullopt;
         }
 
         return Square {
-            .file = move.to.file,
+            .file = move.to().file,
             .rank = isWhite ? Rank::Three : Rank::Six
         };
     }
@@ -123,7 +123,7 @@ void Position::make_move(const Move& move)
 
     update_bitboards(*this, move);
 
-    if (move.piece == PieceType::Pawn || isCapture) {
+    if (move.piece() == PieceType::Pawn || isCapture) {
         // reset half-move counter (for 50-move draws & threefold repetition)
         halfmoveClock = UINT8_C(0);
         threefoldChecker.reset(hash);

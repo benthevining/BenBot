@@ -41,9 +41,9 @@ TEST_CASE("UCI notation - normal moves", TAGS)
     {
         const auto move = from_uci(startingPosition, "e2e4");
 
-        REQUIRE(move.from == Square { File::E, Rank::Two });
-        REQUIRE(move.to == Square { File::E, Rank::Four });
-        REQUIRE(move.piece == PieceType::Pawn);
+        REQUIRE(move.from() == Square { File::E, Rank::Two });
+        REQUIRE(move.to() == Square { File::E, Rank::Four });
+        REQUIRE(move.piece() == PieceType::Pawn);
 
         REQUIRE(to_uci(move) == "e2e4");
     }
@@ -52,9 +52,9 @@ TEST_CASE("UCI notation - normal moves", TAGS)
     {
         const auto move = from_uci(startingPosition, "g1f3");
 
-        REQUIRE(move.from == Square { File::G, Rank::One });
-        REQUIRE(move.to == Square { File::F, Rank::Three });
-        REQUIRE(move.piece == PieceType::Knight);
+        REQUIRE(move.from() == Square { File::G, Rank::One });
+        REQUIRE(move.to() == Square { File::F, Rank::Three });
+        REQUIRE(move.piece() == PieceType::Knight);
 
         REQUIRE(to_uci(move) == "g1f3");
     }
@@ -68,9 +68,9 @@ TEST_CASE("UCI notation - captures", TAGS)
 
         const auto move = from_uci(position, "e4d5");
 
-        REQUIRE(move.from == Square { File::E, Rank::Four });
-        REQUIRE(move.to == Square { File::D, Rank::Five });
-        REQUIRE(move.piece == PieceType::Pawn);
+        REQUIRE(move.from() == Square { File::E, Rank::Four });
+        REQUIRE(move.to() == Square { File::D, Rank::Five });
+        REQUIRE(move.piece() == PieceType::Pawn);
 
         REQUIRE(to_uci(move) == "e4d5");
     }
@@ -81,9 +81,9 @@ TEST_CASE("UCI notation - captures", TAGS)
 
         const auto move = from_uci(position, "g4f3");
 
-        REQUIRE(move.from == Square { File::G, Rank::Four });
-        REQUIRE(move.to == Square { File::F, Rank::Three });
-        REQUIRE(move.piece == PieceType::Bishop);
+        REQUIRE(move.from() == Square { File::G, Rank::Four });
+        REQUIRE(move.to() == Square { File::F, Rank::Three });
+        REQUIRE(move.piece() == PieceType::Bishop);
 
         REQUIRE(to_uci(move) == "g4f3");
     }
@@ -95,9 +95,9 @@ TEST_CASE("UCI notation - check", TAGS)
 
     const auto move = from_uci(position, "f3f7");
 
-    REQUIRE(move.from == Square { File::F, Rank::Three });
-    REQUIRE(move.to == Square { File::F, Rank::Seven });
-    REQUIRE(move.piece == PieceType::Queen);
+    REQUIRE(move.from() == Square { File::F, Rank::Three });
+    REQUIRE(move.to() == Square { File::F, Rank::Seven });
+    REQUIRE(move.piece() == PieceType::Queen);
 
     REQUIRE(to_uci(move) == "f3f7");
 
@@ -113,9 +113,9 @@ TEST_CASE("UCI notation - checkmate", TAGS)
 
     const auto move = from_uci(position, "f3f7");
 
-    REQUIRE(move.from == Square { File::F, Rank::Three });
-    REQUIRE(move.to == Square { File::F, Rank::Seven });
-    REQUIRE(move.piece == PieceType::Queen);
+    REQUIRE(move.from() == Square { File::F, Rank::Three });
+    REQUIRE(move.to() == Square { File::F, Rank::Seven });
+    REQUIRE(move.piece() == PieceType::Queen);
 
     REQUIRE(to_uci(move) == "f3f7");
 
@@ -133,9 +133,9 @@ TEST_CASE("UCI notation - castle kingside", TAGS)
 
         const auto move = from_uci(position, "e1g1");
 
-        REQUIRE(move.from == Square { File::E, Rank::One });
-        REQUIRE(move.to == Square { File::G, Rank::One });
-        REQUIRE(move.piece == PieceType::King);
+        REQUIRE(move.from() == Square { File::E, Rank::One });
+        REQUIRE(move.to() == Square { File::G, Rank::One });
+        REQUIRE(move.piece() == PieceType::King);
 
         REQUIRE(to_uci(move) == "e1g1");
 
@@ -148,9 +148,9 @@ TEST_CASE("UCI notation - castle kingside", TAGS)
 
         const auto move = from_uci(position, "e8g8");
 
-        REQUIRE(move.from == Square { File::E, Rank::Eight });
-        REQUIRE(move.to == Square { File::G, Rank::Eight });
-        REQUIRE(move.piece == PieceType::King);
+        REQUIRE(move.from() == Square { File::E, Rank::Eight });
+        REQUIRE(move.to() == Square { File::G, Rank::Eight });
+        REQUIRE(move.piece() == PieceType::King);
 
         REQUIRE(to_uci(move) == "e8g8");
 
@@ -166,9 +166,9 @@ TEST_CASE("UCI notation - castle queenside", TAGS)
 
         const auto move = from_uci(position, "e1c1");
 
-        REQUIRE(move.from == Square { File::E, Rank::One });
-        REQUIRE(move.to == Square { File::C, Rank::One });
-        REQUIRE(move.piece == PieceType::King);
+        REQUIRE(move.from() == Square { File::E, Rank::One });
+        REQUIRE(move.to() == Square { File::C, Rank::One });
+        REQUIRE(move.piece() == PieceType::King);
 
         REQUIRE(to_uci(move) == "e1c1");
 
@@ -181,9 +181,9 @@ TEST_CASE("UCI notation - castle queenside", TAGS)
 
         const auto move = from_uci(position, "e8c8");
 
-        REQUIRE(move.from == Square { File::E, Rank::Eight });
-        REQUIRE(move.to == Square { File::C, Rank::Eight });
-        REQUIRE(move.piece == PieceType::King);
+        REQUIRE(move.from() == Square { File::E, Rank::Eight });
+        REQUIRE(move.to() == Square { File::C, Rank::Eight });
+        REQUIRE(move.piece() == PieceType::King);
 
         REQUIRE(to_uci(move) == "e8c8");
 
@@ -199,12 +199,12 @@ TEST_CASE("UCI notation - promotions", TAGS)
 
         const auto move = from_uci(position, "c2c1b");
 
-        REQUIRE(move.from == Square { File::C, Rank::Two });
-        REQUIRE(move.to == Square { File::C, Rank::One });
-        REQUIRE(move.piece == PieceType::Pawn);
+        REQUIRE(move.from() == Square { File::C, Rank::Two });
+        REQUIRE(move.to() == Square { File::C, Rank::One });
+        REQUIRE(move.piece() == PieceType::Pawn);
 
         REQUIRE(move.is_promotion());
-        REQUIRE(*move.promotedType == PieceType::Bishop);
+        REQUIRE(move.promoted_type().value() == PieceType::Bishop);
 
         REQUIRE(to_uci(move) == "c2c1b");
     }
@@ -215,13 +215,24 @@ TEST_CASE("UCI notation - promotions", TAGS)
 
         const auto move = from_uci(position, "f7g8q");
 
-        REQUIRE(move.from == Square { File::F, Rank::Seven });
-        REQUIRE(move.to == Square { File::G, Rank::Eight });
-        REQUIRE(move.piece == PieceType::Pawn);
+        REQUIRE(move.from() == Square { File::F, Rank::Seven });
+        REQUIRE(move.to() == Square { File::G, Rank::Eight });
+        REQUIRE(move.piece() == PieceType::Pawn);
 
         REQUIRE(move.is_promotion());
-        REQUIRE(*move.promotedType == PieceType::Queen);
+        REQUIRE(move.promoted_type().value() == PieceType::Queen);
 
         REQUIRE(to_uci(move) == "f7g8q");
     }
+}
+
+TEST_CASE("UCI notation - null moves", TAGS)
+{
+    const chess::game::Position position {};
+
+    const auto move = from_uci(position, "0000");
+
+    REQUIRE(move.is_null());
+
+    REQUIRE(to_uci(chess::moves::Move {}) == "0000");
 }

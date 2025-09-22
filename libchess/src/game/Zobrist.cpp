@@ -12,7 +12,7 @@
  * ======================================================================================
  */
 
-#include "Zobrist.hpp" // NOLINT(build/include_subdir)
+#include "Zobrist.hpp"
 #include <array>
 #include <functional>
 #include <libchess/board/File.hpp>
@@ -317,12 +317,12 @@ Hash update(
     });
 
     // remove moved-from square
-    value ^= piece_key(move.piece, pos.sideToMove, move.from);
+    value ^= piece_key(move.piece(), pos.sideToMove, move.from());
 
     // add moved-to square
     value ^= piece_key(
-        move.is_promotion() ? *move.promotedType : move.piece,
-        pos.sideToMove, move.to);
+        move.is_promotion() ? move.promoted_type().value() : move.piece(),
+        pos.sideToMove, move.to());
 
     // remove captured piece
     if (pos.is_capture(move)) {
@@ -337,14 +337,14 @@ Hash update(
                     pos.enPassantTargetSquare.value(),
                     pos.is_white_to_move()));
         } else {
-            const auto capturedType = pos.their_pieces().get_piece_on(move.to);
+            const auto capturedType = pos.their_pieces().get_piece_on(move.to());
 
             value ^= piece_key(
-                capturedType.value(), otherColor, move.to);
+                capturedType.value(), otherColor, move.to());
         }
     } else if (move.is_castling()) {
         [[unlikely]];
-        if (move.to.is_kingside())
+        if (move.to().is_kingside())
             value ^= board::masks::kingside_castle_rook_pos_mask(pos.sideToMove).to_int();
         else
             value ^= board::masks::queenside_castle_rook_pos_mask(pos.sideToMove).to_int();

@@ -448,14 +448,14 @@ inline bool Position::is_legal(const Move& move) const
 
 inline bool Position::is_en_passant(const Move& move) const noexcept
 {
-    return move.piece == PieceType::Pawn
+    return move.piece() == PieceType::Pawn
        and enPassantTargetSquare.has_value()
-       and move.to == *enPassantTargetSquare;
+       and move.to() == *enPassantTargetSquare;
 }
 
 inline bool Position::is_capture(const Move& move) const noexcept
 {
-    return is_en_passant(move) or their_pieces().occupied.test(move.to);
+    return is_en_passant(move) or their_pieces().occupied.test(move.to());
 }
 
 inline bool Position::is_file_open(const File file) const noexcept

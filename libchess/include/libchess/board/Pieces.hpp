@@ -261,17 +261,17 @@ constexpr void Pieces::capture_at(const Square square) noexcept
 
 constexpr void Pieces::our_move(const moves::Move& move, const Color ourColor) noexcept
 {
-    const auto movementMask = Bitboard::from_square(move.from) | Bitboard::from_square(move.to);
+    const auto movementMask = Bitboard::from_square(move.from()) | Bitboard::from_square(move.to());
 
     occupied ^= movementMask;
 
-    auto& pieceBB = get_type(move.piece);
+    auto& pieceBB = get_type(move.piece());
 
-    if (move.is_promotion()) {
+    if (const auto prom = move.promoted_type()) {
         [[unlikely]];
 
-        pieceBB.unset(move.from);
-        get_type(*move.promotedType).set(move.to);
+        pieceBB.unset(move.from());
+        get_type(prom.value()).set(move.to());
 
         return;
     }
@@ -281,7 +281,7 @@ constexpr void Pieces::our_move(const moves::Move& move, const Color ourColor) n
     if (move.is_castling()) {
         [[unlikely]];
 
-        const auto castleMask = move.to.is_queenside()
+        const auto castleMask = move.to().is_queenside()
                                   ? masks::queenside_castle_rook_pos_mask(ourColor)
                                   : masks::kingside_castle_rook_pos_mask(ourColor);
 

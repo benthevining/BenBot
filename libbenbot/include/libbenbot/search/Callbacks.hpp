@@ -47,7 +47,9 @@ struct Callbacks final {
          */
         milliseconds duration { 0uz };
 
-        /** The total depth that was searched. */
+        /** The total depth that was searched.
+            This value is the highest depth that was completed.
+         */
         size_t depth { 0uz };
 
         /** The evaluation of the position resulting from playing the best move. */
@@ -72,6 +74,11 @@ struct Callbacks final {
 
         /** Number of cutoffs due to mate distance pruning. */
         size_t mdpCutoffs { 0uz };
+
+        /** The approximate fraction of transposition table entries (permille) that
+            were written to during this root search.
+         */
+        size_t hashfull { 0uz };
     };
 
     /** Function type that accepts a single Result argument. */

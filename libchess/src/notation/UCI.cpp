@@ -28,13 +28,19 @@ namespace chess::notation {
 
 std::string to_uci(const Move& move)
 {
-    if (move.is_promotion()) {
+    if (move.is_null()) {
         [[unlikely]];
-        return std::format("{}{}{}",
-            move.from, move.to, pieces::to_char(*move.promotedType, false));
+        return "0000";
     }
 
-    return std::format("{}{}", move.from, move.to);
+    if (const auto prom = move.promoted_type()) {
+        [[unlikely]];
+        return std::format("{}{}{}",
+            move.from(), move.to(),
+            pieces::to_char(prom.value(), false));
+    }
+
+    return std::format("{}{}", move.from(), move.to());
 }
 
 Move from_uci(const Position& position, std::string_view text)
@@ -49,35 +55,40 @@ Move from_uci(const Position& position, std::string_view text)
         };
     }
 
-    Move result;
+    if (text == "0000") {
+        [[unlikely]];
+        return {};
+    }
 
-    result.from = Square::from_string(text.substr(0uz, 2uz));
-    text        = text.substr(2uz);
+    const auto from = Square::from_string(text.substr(0uz, 2uz));
+    text            = text.substr(2uz);
 
-    result.to = Square::from_string(text.substr(0uz, 2uz));
-    text      = text.substr(2uz);
+    const auto dest = Square::from_string(text.substr(0uz, 2uz));
+    text            = text.substr(2uz);
 
     const auto& pieces = position.our_pieces();
 
-    const auto movedType = pieces.get_piece_on(result.from);
+    const auto movedType = pieces.get_piece_on(from);
 
     if (not movedType.has_value()) {
         throw std::invalid_argument {
             std::format(
                 "No piece for color {} can move from square {}",
-                magic_enum::enum_name(position.sideToMove), result.from)
+                magic_enum::enum_name(position.sideToMove), from)
         };
     }
-
-    result.piece = *movedType;
 
     // promotion
     if (not text.empty()) {
         [[unlikely]];
-        result.promotedType = pieces::from_string(text);
+        return {
+            from, dest, movedType.value(), pieces::from_string(text)
+        };
     }
 
-    return result;
+    return {
+        from, dest, movedType.value()
+    };
 }
 
 } // namespace chess::notation
