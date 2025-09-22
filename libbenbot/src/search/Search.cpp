@@ -297,7 +297,8 @@ void Context::search()
             .nodesSearched                       = stats.nodesSearched,
             .transpositionTableHits              = stats.transTableHits,
             .betaCutoffs                         = stats.betaCutoffs,
-            .mdpCutoffs                          = stats.mdpCutoffs });
+            .mdpCutoffs                          = stats.mdpCutoffs,
+            .hashfull                            = transTable.hashfull() });
 
         if (not(infinite or pondering.load())) {
             // only 1 legal move, don't do a deeper iteration
@@ -344,7 +345,8 @@ void Context::search()
         .nodesSearched                    = stats.nodesSearched,
         .transpositionTableHits           = stats.transTableHits,
         .betaCutoffs                      = stats.betaCutoffs,
-        .mdpCutoffs                       = stats.mdpCutoffs });
+        .mdpCutoffs                       = stats.mdpCutoffs,
+        .hashfull                         = transTable.hashfull() });
 }
 
 void Context::wait() const

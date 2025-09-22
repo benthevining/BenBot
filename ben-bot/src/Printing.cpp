@@ -116,9 +116,9 @@ namespace {
         const search::Context& context)
     {
         println(
-            "info depth {} score {} time {} nodes {} nps {}{}",
+            "info depth {} score {} time {} nodes {} nps {} hashfull {}{}",
             res.depth, get_score_string(res.score), res.duration.count(),
-            res.nodesSearched, get_nodes_per_second(res),
+            res.nodesSearched, get_nodes_per_second(res), res.hashfull,
             get_extra_stats_string(res, debugMode));
 
         if constexpr (PrintBestMove) {
