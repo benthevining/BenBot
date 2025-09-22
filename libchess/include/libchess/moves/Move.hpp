@@ -127,7 +127,7 @@ struct Move final {
     /** Returns the promoted-to type, or ``nullopt`` if this move is not a promotion. */
     [[nodiscard]] constexpr std::optional<PieceType> promoted_type() const noexcept
     {
-        const auto value = ((data >> 12uz) & 3uz);
+        const auto value = static_cast<std::uint8_t>(((data >> 12uz) & 3uz));
 
         if (std::cmp_equal(value, std::to_underlying(PieceType::Pawn)))
             return std::nullopt;
@@ -164,11 +164,10 @@ private:
         const Square start, const Square end,
         const PieceType type, const PieceType promotedType) noexcept
     {
-        return static_cast<Integer>(
-            end.index()
-            + (start.index() << 6uz)
-            + (std::to_underlying(promotedType) << 12uz)
-            + (std::to_underlying(type) << 18uz));
+        return static_cast<Integer>(end.index())
+             + (static_cast<Integer>(start.index()) << 6uz)
+             + (static_cast<Integer>(std::to_underlying(promotedType)) << 12uz)
+             + (static_cast<Integer>(std::to_underlying(type)) << 18uz);
     }
 
     // A move needs 32 bits to be stored
