@@ -21,6 +21,8 @@ engine:
   silence_stderr: false
   go_commands:
     movetime: 20000 # 20 sec max per move
+  uci_options:
+    Hash: 512
 
   draw_or_resign:
     resign_enabled: false

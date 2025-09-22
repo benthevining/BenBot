@@ -12,6 +12,11 @@
  * ======================================================================================
  */
 
+// the transposition table is a bucket-like hash map
+// each "cluster" is an array of entries; the root table is an array of clusters
+// a coarse lookup using the Zobrist key gets you to the right cluster,
+// then the lowest 16 bits of the Zobrist key are used to identify entries within a cluster
+
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -267,16 +272,18 @@ void TranspositionTable::store(const Position& pos, const TTData& record)
         }
     }
 
+    // choose one of the entries in this cluster to overwrite
+    // an entry is considered more valuable if its replacement score is higher
+    // (ie, we want to replace the entry with the lowest score)
     auto replacement_score = [gen = generation](const Entry& entry) {
         return entry.depth - entry.relative_age(gen);
     };
 
     auto* replace = cluster.data();
 
-    for (auto& entry : cluster | std::views::drop(1uz)) {
+    for (auto& entry : cluster | std::views::drop(1uz))
         if (replacement_score(*replace) > replacement_score(entry))
             replace = &entry;
-    }
 
     replace->save(key, record, generation);
 }

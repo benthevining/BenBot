@@ -235,6 +235,8 @@ void Context::search()
 
     Interrupter interrupter { exitFlag, pondering, options.searchTime };
 
+    transTable.new_search();
+
     // if the movesToSearch was empty, then we search all legal moves
     if (options.movesToSearch.empty()) {
         chess::moves::generate(options.position, std::back_inserter(options.movesToSearch));
