@@ -43,7 +43,7 @@ namespace {
     // and must return the text to go inside that square, or
     // a space if it's empty
     template <typename Func>
-    [[nodiscard]] std::string generate_board_string(
+    [[nodiscard, gnu::cold]] std::string generate_board_string(
         Func       getSquareText,
         const bool includeLabels)
     {

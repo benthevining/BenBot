@@ -37,7 +37,7 @@ void* page_aligned_alloc(const std::size_t size)
     return page_aligned_alloc_impl(size);
 }
 
-void page_aligned_free(void* mem)
+void page_aligned_free([[clang::noescape]] void* mem)
 {
     page_aligned_free_impl(mem);
 }

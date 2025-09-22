@@ -41,6 +41,7 @@ using std::size_t;
 static constexpr auto GENERATION_DELTA = 8uz;
 static constexpr auto GENERATION_CYCLE = 255uz + GENERATION_DELTA;
 
+// size 12 bytes
 struct TranspositionTable::Entry final {
     std::uint16_t key { 0 }; // the lowest 16 bits of the position's Zobrist key
 
@@ -143,8 +144,10 @@ void TranspositionTable::resize(const size_t sizeMB)
 
     table = static_cast<Cluster*>(chess::util::page_aligned_alloc(clusterCount * sizeof(Cluster)));
 
-    if (table == nullptr)
+    if (table == nullptr) {
+        clusterCount = 0uz;
         throw std::bad_alloc {};
+    }
 
     std::uninitialized_default_construct_n(table, clusterCount);
 }
@@ -160,6 +163,9 @@ void TranspositionTable::deallocate()
     std::destroy_n(table, clusterCount);
 
     chess::util::page_aligned_free(table);
+
+    table        = nullptr;
+    clusterCount = 0uz;
 }
 
 size_t TranspositionTable::hashfull() const

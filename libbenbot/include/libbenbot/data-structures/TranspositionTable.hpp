@@ -125,7 +125,7 @@ public:
         @throws std::bad_alloc An exception is thrown if ``sizeMB`` is 0 or
         if the allocation fails.
      */
-    void resize(size_t sizeMB);
+    [[clang::reinitializes]] void resize(size_t sizeMB);
 
     /** Returns an estimate of the percentage of entries (permille) that
         have been written to during this search.

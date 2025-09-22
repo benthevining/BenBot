@@ -49,7 +49,7 @@ namespace {
     constexpr string_view LINE_START { "| " };
     constexpr string_view LINE_ENDING { " |" };
 
-    [[nodiscard]] string make_header_sep_row(
+    [[nodiscard, gnu::cold]] string make_header_sep_row(
         const std::span<const size_t> widths)
     {
         string result { LINE_START };

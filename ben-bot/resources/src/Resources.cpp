@@ -37,11 +37,6 @@ namespace {
     }
 } // namespace
 
-string_view get_opening_book_pgn_text()
-{
-    return get_named_resource("book.pgn");
-}
-
 string_view get_bench_epd_text()
 {
     return get_named_resource("bench.epd");

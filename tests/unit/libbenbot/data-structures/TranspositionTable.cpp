@@ -30,6 +30,13 @@ namespace notation = chess::notation;
 
 TEST_CASE("Transposition table - find()", TAGS)
 {
+    static constexpr TTData record {
+        .searchedDepth = 1uz,
+        .eval          = 0,
+        .evalType      = EvalType::Exact,
+        .bestMove      = {}
+    };
+
     static const Position startPos {};
 
     const auto pos2 = notation::from_fen("8/8/4n3/2B1k1p1/3Pn3/2K5/5R2/8 b - - 0 1");
@@ -39,12 +46,12 @@ TEST_CASE("Transposition table - find()", TAGS)
     REQUIRE(not table.find(startPos).has_value());
     REQUIRE(not table.find(pos2).has_value());
 
-    table.store(startPos, { .searchedDepth = 1uz });
+    table.store(startPos, record);
 
     REQUIRE(table.find(startPos).has_value());
     REQUIRE(not table.find(pos2).has_value());
 
-    table.store(pos2, { .searchedDepth = 1uz });
+    table.store(pos2, record);
 
     REQUIRE(table.find(startPos).has_value());
     REQUIRE(table.find(pos2).has_value());
@@ -114,7 +121,8 @@ TEST_CASE("Transposition table - probe_eval()", TAGS)
         table.store(startPos,
             { .searchedDepth = DEPTH,
                 .eval        = EVAL,
-                .evalType    = EvalType::Exact });
+                .evalType    = EvalType::Exact,
+                .bestMove    = {} });
 
         const auto probed = table.probe_eval(startPos, DEPTH, BOUNDS);
 
@@ -131,7 +139,8 @@ TEST_CASE("Transposition table - probe_eval()", TAGS)
         table.store(startPos,
             { .searchedDepth = DEPTH,
                 .eval        = EVAL,
-                .evalType    = EvalType::Alpha });
+                .evalType    = EvalType::Alpha,
+                .bestMove    = {} });
 
         SECTION("Probing with alpha that doesn't cutoff")
         {
@@ -166,7 +175,8 @@ TEST_CASE("Transposition table - probe_eval()", TAGS)
         table.store(startPos,
             { .searchedDepth = DEPTH,
                 .eval        = EVAL,
-                .evalType    = EvalType::Beta });
+                .evalType    = EvalType::Beta,
+                .bestMove    = {} });
 
         SECTION("Probing with beta that doesn't cutoff")
         {
@@ -206,7 +216,8 @@ TEST_CASE("Transposition table - store() overwriting rules", TAGS)
     static constexpr TTData oldRecord {
         .searchedDepth = 6uz,
         .eval          = 2,
-        .evalType      = EvalType::Exact
+        .evalType      = EvalType::Exact,
+        .bestMove      = {}
     };
 
     table.store(startPos, oldRecord);
@@ -218,7 +229,8 @@ TEST_CASE("Transposition table - store() overwriting rules", TAGS)
         static constexpr TTData newRecord {
             .searchedDepth = oldRecord.searchedDepth - 1uz,
             .eval          = 4,
-            .evalType      = EvalType::Exact
+            .evalType      = EvalType::Exact,
+            .bestMove      = {}
         };
 
         table.store(startPos, newRecord);
@@ -233,7 +245,8 @@ TEST_CASE("Transposition table - store() overwriting rules", TAGS)
             static constexpr TTData newRecord {
                 .searchedDepth = oldRecord.searchedDepth,
                 .eval          = -6,
-                .evalType      = EvalType::Alpha
+                .evalType      = EvalType::Alpha,
+                .bestMove      = {}
             };
 
             table.store(startPos, newRecord);
@@ -246,7 +259,8 @@ TEST_CASE("Transposition table - store() overwriting rules", TAGS)
             static constexpr TTData newRecord {
                 .searchedDepth = oldRecord.searchedDepth,
                 .eval          = 6,
-                .evalType      = EvalType::Beta
+                .evalType      = EvalType::Beta,
+                .bestMove      = {}
             };
 
             table.store(startPos, newRecord);

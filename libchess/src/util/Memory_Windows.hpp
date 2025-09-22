@@ -46,7 +46,8 @@ namespace impl {
             reinterpret_cast<VoidFuncPtr>(GetProcAddress(handle, name)));
     }
 
-    [[nodiscard]] inline void* page_aligned_alloc_internal([[maybe_unused]] const size_t size)
+    [[nodiscard, gnu::alloc_size(1), gnu::malloc, clang::ownership_returns(malloc)]]
+    inline void* page_aligned_alloc_internal([[maybe_unused]] const size_t size)
     {
 #ifndef _WIN64
         return nullptr;
@@ -127,7 +128,8 @@ namespace impl {
     }
 } // namespace impl
 
-[[nodiscard]] inline void* page_aligned_alloc_impl(const size_t size)
+[[nodiscard, gnu::alloc_size(1), gnu::malloc, clang::ownership_returns(malloc)]]
+inline void* page_aligned_alloc_impl(const size_t size)
 {
     if (auto* mem = impl::page_aligned_alloc_internal(size)) // cppcheck-suppress knownConditionTrueFalse
         return mem;
@@ -135,7 +137,7 @@ namespace impl {
     return VirtualAlloc(nullptr, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 }
 
-inline void page_aligned_free_impl(void* mem)
+[[clang::ownership_takes(malloc, 1)]] inline void page_aligned_free_impl([[clang::noescape]] void* mem)
 {
     if (mem != nullptr)
         VirtualFree(mem, 0, MEM_RELEASE);

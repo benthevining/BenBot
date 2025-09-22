@@ -37,9 +37,6 @@ using std::string_view;
 /// @ingroup benbot_data
 /// @{
 
-/** Returns the engine's opening book as a PGN text. */
-[[nodiscard]] string_view get_opening_book_pgn_text();
-
 /** Returns the default set of bench positions as an EPD text. */
 [[nodiscard]] string_view get_bench_epd_text();
 

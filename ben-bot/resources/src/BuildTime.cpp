@@ -94,7 +94,7 @@ namespace {
         };
     }
 
-    [[nodiscard]] std::tm to_utc_time(const std::time_t time)
+    [[nodiscard, gnu::cold]] std::tm to_utc_time(const std::time_t time)
     {
         std::tm ret {};
 

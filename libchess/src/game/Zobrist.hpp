@@ -48,7 +48,7 @@ struct CastlingRightsChanges final {
     std::optional<Square>        newEPTarget,
     const CastlingRightsChanges& rightsChanges);
 
-[[nodiscard, gnu::const]] Position::Hash after_null_move(
+[[nodiscard, gnu::const, gnu::cold]] Position::Hash after_null_move(
     const Position& pos);
 
 } // namespace chess::game::zobrist

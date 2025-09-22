@@ -164,7 +164,7 @@ void Position::make_null_move()
 namespace {
     using board::Square;
 
-    [[nodiscard, gnu::const]] constexpr Square square_vertical_flip(const Square starting) noexcept
+    [[nodiscard, gnu::const, gnu::cold]] constexpr Square square_vertical_flip(const Square starting) noexcept
     {
         const auto board = board::Bitboard::from_square(starting);
 
