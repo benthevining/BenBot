@@ -22,6 +22,7 @@
 static constexpr auto TAGS { "[data-structures][TranspositionTable]" };
 
 using ben_bot::TranspositionTable;
+using ben_bot::TTData;
 using chess::game::Position;
 using EvalType = ben_bot::EvalType;
 
@@ -199,13 +200,11 @@ TEST_CASE("Transposition table - probe_eval()", TAGS)
 
 TEST_CASE("Transposition table - store() overwriting rules", TAGS)
 {
-    using Record = TranspositionTable::Record;
-
     static const Position startPos {};
 
     TranspositionTable table;
 
-    const Record oldRecord {
+    const TTData oldRecord {
         .searchedDepth = 6uz,
         .eval          = 2,
         .evalType      = EvalType::Exact,
@@ -218,7 +217,7 @@ TEST_CASE("Transposition table - store() overwriting rules", TAGS)
 
     SECTION("Old eval kept if it's a greater depth than the new one")
     {
-        const Record newRecord {
+        const TTData newRecord {
             .searchedDepth = oldRecord.searchedDepth - 1uz,
             .eval          = 4,
             .evalType      = EvalType::Exact,
@@ -234,7 +233,7 @@ TEST_CASE("Transposition table - store() overwriting rules", TAGS)
     {
         SECTION("Writing an alpha cutoff")
         {
-            const Record newRecord {
+            const TTData newRecord {
                 .searchedDepth = oldRecord.searchedDepth,
                 .eval          = -6,
                 .evalType      = EvalType::Alpha,
@@ -248,7 +247,7 @@ TEST_CASE("Transposition table - store() overwriting rules", TAGS)
 
         SECTION("Writing a beta cutoff")
         {
-            const Record newRecord {
+            const TTData newRecord {
                 .searchedDepth = oldRecord.searchedDepth,
                 .eval          = 6,
                 .evalType      = EvalType::Beta,

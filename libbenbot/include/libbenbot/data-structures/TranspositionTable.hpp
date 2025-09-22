@@ -48,38 +48,40 @@ enum class EvalType : std::uint_least8_t {
     Beta   ///< Indicates that the evaluation is a minimum evaluation; for example, if ``eval`` is 16, this means that the evaluation of this node was at least 16.
 };
 
+/** This POD struct contains the data stored in the transposition table
+    for a position. The data is returned from the table by copy.
+
+    @ingroup benbot_data_structures
+ */
+struct TTData final {
+    /** The depth that the position was searched to. */
+    size_t searchedDepth { 0uz }; // empty slots are marked with a depth of 0
+
+    /** The evaluation of this position.
+        See ``evalType`` to determine the exact meaning of this value.
+     */
+    int eval { 0 };
+
+    /** Gives the exact meaning of the ``eval`` value. */
+    EvalType evalType { EvalType::Alpha };
+
+    /** If a conclusive best move was found in this position, it
+        is stored here. Sometimes this may be ``nullopt`` if everything
+        failed low (i.e. ``score <= alpha``).
+     */
+    std::optional<Move> bestMove;
+
+    Position::Hash hash { 0 }; // TODO: move into separate internal structure
+
+    constexpr bool operator==(const TTData& other) const noexcept = default;
+};
+
 /** The transposition table data structure.
 
     @ingroup benbot_data_structures
  */
 class TranspositionTable final {
 public:
-    using Hash = Position::Hash;
-
-    /** A record of a previously searched position. */
-    struct Record final {
-        /** The depth that the position was searched to. */
-        size_t searchedDepth { 0uz }; // empty slots are marked with a depth of 0
-
-        /** The evaluation of this position.
-            See ``evalType`` to determine the exact meaning of this value.
-         */
-        int eval { 0 };
-
-        /** Gives the exact meaning of the ``eval`` value. */
-        EvalType evalType { EvalType::Alpha };
-
-        /** If a conclusive best move was found in this position, it
-            is stored here. Sometimes this may be ``nullopt`` if everything
-            failed low (i.e. ``score <= alpha``).
-         */
-        std::optional<Move> bestMove;
-
-        Hash hash { 0 }; // TODO: move into separate internal structure
-
-        constexpr bool operator==(const Record& other) const noexcept = default;
-    };
-
     TranspositionTable() { resize(100uz); }
 
     ~TranspositionTable() { deallocate(); }
@@ -106,7 +108,7 @@ public:
     /** Retrieves the stored record for the given position,
         or nullptr if the given position isn't in the table.
      */
-    [[nodiscard]] const Record* find(const Position& pos) const;
+    [[nodiscard]] const TTData* find(const Position& pos) const;
 
     /** Represents a probed evaluation from the table.
         This is a pair of the evaluation value and the value type.
@@ -129,7 +131,7 @@ public:
         const Position& pos, const Move& move) const;
 
     /** Stores a record for a given position. */
-    void store(const Position& pos, Record record);
+    void store(const Position& pos, TTData record);
 
     /** Clears the contents of the table. Note that no memory is freed. */
     void clear();
@@ -155,7 +157,7 @@ private:
     void deallocate();
 
     // this is the hash function
-    [[nodiscard]] std::span<Record> find_cluster(Position::Hash key) const noexcept;
+    [[nodiscard]] std::span<TTData> find_cluster(Position::Hash key) const noexcept;
 
     struct Cluster;
 

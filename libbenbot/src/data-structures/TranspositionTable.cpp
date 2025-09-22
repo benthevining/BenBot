@@ -33,7 +33,7 @@ using std::size_t;
 static constexpr auto ClusterSize = 3uz;
 
 struct TranspositionTable::Cluster final {
-    std::array<Record, ClusterSize> records {};
+    std::array<TTData, ClusterSize> records {};
 };
 
 void TranspositionTable::resize(const size_t sizeMB)
@@ -53,7 +53,7 @@ void TranspositionTable::resize(const size_t sizeMB)
 void TranspositionTable::clear()
 {
     for (auto i = 0uz; i < clusterCount; ++i)
-        std::ranges::fill(table[i].records, Record {});
+        std::ranges::fill(table[i].records, TTData {});
 }
 
 void TranspositionTable::deallocate()
@@ -73,7 +73,7 @@ void TranspositionTable::new_search() noexcept
     // TODO
 }
 
-auto TranspositionTable::find_cluster(const Position::Hash key) const noexcept -> std::span<Record>
+std::span<TTData> TranspositionTable::find_cluster(const Position::Hash key) const noexcept
 {
     const auto idx = chess::util::mul_hi64(key, clusterCount);
 
@@ -82,12 +82,12 @@ auto TranspositionTable::find_cluster(const Position::Hash key) const noexcept -
     return table[idx].records;
 }
 
-auto TranspositionTable::find(const Position& pos) const -> const Record*
+const TTData* TranspositionTable::find(const Position& pos) const
 {
     const auto cluster = find_cluster(pos.hash);
 
     if (const auto it = std::ranges::find_if(cluster,
-            [&pos](const Record& rec) { return rec.hash == pos.hash; });
+            [&pos](const TTData& rec) { return rec.hash == pos.hash; });
         it != cluster.end()) {
         return std::to_address(it);
     }
@@ -129,7 +129,7 @@ auto TranspositionTable::probe_eval(
     return std::nullopt;
 }
 
-void TranspositionTable::store(const Position& pos, Record record)
+void TranspositionTable::store(const Position& pos, TTData record)
 {
     record.hash = pos.hash;
 
