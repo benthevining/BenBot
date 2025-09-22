@@ -344,7 +344,7 @@ std::optional<std::string> Position::is_illegal() const
             PieceInfo { PieceType::Knight, 10uz }
         };
 
-        for (const auto [type, maxNum] : PIECES_INFO) {
+        for (const auto& [type, maxNum] : PIECES_INFO) {
             if (const auto numWhite = whitePieces.get_type(type).count();
                 numWhite > maxNum) {
                 return std::format(

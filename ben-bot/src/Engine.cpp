@@ -71,7 +71,7 @@ namespace {
 
     void perft_print_root_nodes(const PerftResult& result)
     {
-        for (const auto [move, numChildren] : result.rootNodes) {
+        for (const auto& [move, numChildren] : result.rootNodes) {
             println("{} {}",
                 notation::to_uci(move), numChildren);
         }

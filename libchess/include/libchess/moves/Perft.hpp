@@ -120,7 +120,17 @@ PerftResult perft(
     const game::Position& startingPosition)
 {
     if (depth == 0uz)
-        return { .nodes = 1uz };
+        return {
+            .nodes             = 1uz,
+            .captures          = 0uz,
+            .enPassantCaptures = 0uz,
+            .castles           = 0uz,
+            .promotions        = 0uz,
+            .checks            = 0uz,
+            .checkmates        = 0uz,
+            .stalemates        = 0uz,
+            .rootNodes         = {}
+        };
 
     PerftResult result;
 
