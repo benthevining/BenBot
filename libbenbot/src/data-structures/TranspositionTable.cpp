@@ -281,4 +281,10 @@ void TranspositionTable::store(const Position& pos, const TTData& record)
     replace->save(key, record, generation);
 }
 
+void TranspositionTable::prefetch(const Position& pos) const noexcept
+{
+    chess::util::prefetch(
+        find_cluster(pos.hash).data());
+}
+
 } // namespace ben_bot

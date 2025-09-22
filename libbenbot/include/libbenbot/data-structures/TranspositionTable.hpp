@@ -137,6 +137,11 @@ public:
      */
     void new_search() noexcept;
 
+    /** Hints to the CPU to prefetch the memory bucket containing data
+        for the given position. This function returns immediately.
+     */
+    void prefetch(const Position& pos) const noexcept;
+
 private:
     struct Entry;
 
