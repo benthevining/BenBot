@@ -79,7 +79,8 @@ EPDPosition from_epd(string_view epdString)
     }
 
     EPDPosition pos {
-        .position = Position::empty()
+        .position   = Position::empty(),
+        .operations = {}
     };
 
     const auto [piecePositions, rest1] = split_at_first_space(epdString);

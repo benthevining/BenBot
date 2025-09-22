@@ -85,33 +85,33 @@ constexpr bool squares_attacked(
     // generator functions are necessary to consider blocking pieces, but we can use them in a
     // set-wise manner, e.g., to determine if any Queen attacks any of the target squares.
 
-    const auto pawnAttacks = patterns::pawn_attacks<Side>(pieces.pawns);
-
-    if ((pawnAttacks & targetSquares).any())
+    if (const auto pawnAttacks = patterns::pawn_attacks<Side>(pieces.pawns);
+        (pawnAttacks & targetSquares).any()) {
         return true;
+    }
 
-    const auto knightAttacks = patterns::knight(pieces.knights);
-
-    if ((knightAttacks & targetSquares).any())
+    if (const auto knightAttacks = patterns::knight(pieces.knights);
+        (knightAttacks & targetSquares).any()) {
         return true;
+    }
 
     const auto friendlyPieces = pieces.occupied;
     const auto emptySquares   = (friendlyPieces | enemyPieces).inverse();
 
-    const auto queenAttacks = pseudo_legal::queen(pieces.queens, emptySquares, friendlyPieces);
-
-    if ((queenAttacks & targetSquares).any())
+    if (const auto queenAttacks = pseudo_legal::queen(pieces.queens, emptySquares, friendlyPieces);
+        (queenAttacks & targetSquares).any()) {
         return true;
+    }
 
-    const auto rookAttacks = pseudo_legal::rook(pieces.rooks, emptySquares, friendlyPieces);
-
-    if ((rookAttacks & targetSquares).any())
+    if (const auto rookAttacks = pseudo_legal::rook(pieces.rooks, emptySquares, friendlyPieces);
+        (rookAttacks & targetSquares).any()) {
         return true;
+    }
 
-    const auto bishopAttacks = pseudo_legal::bishop(pieces.bishops, emptySquares, friendlyPieces);
-
-    if ((bishopAttacks & targetSquares).any())
+    if (const auto bishopAttacks = pseudo_legal::bishop(pieces.bishops, emptySquares, friendlyPieces);
+        (bishopAttacks & targetSquares).any()) {
         return true;
+    }
 
     // test king last
     // this function is used for things like detecting if a position is check,

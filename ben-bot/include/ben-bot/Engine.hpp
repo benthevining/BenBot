@@ -123,17 +123,20 @@ private:
         CustomCommand {
             .name = "makenull",
             .action = CustomCommand::void_cb([this]{ make_null_move(); }),
-            .description = "Play a null move on the internal board"
+            .description = "Play a null move on the internal board",
+            .argsHelp = {}
         },
         CustomCommand {
             .name = "flip",
             .action = CustomCommand::void_cb([this]{ color_flip(); }),
-            .description = "Color-flip the current position"
+            .description = "Color-flip the current position",
+            .argsHelp = {}
         },
         CustomCommand {
             .name = "options",
             .action = CustomCommand::void_cb([this] { print_options(); }),
-            .description = "Dump current UCI option values"
+            .description = "Dump current UCI option values",
+            .argsHelp = {}
         },
         CustomCommand {
             .name = "perft",
@@ -150,7 +153,8 @@ private:
         CustomCommand {
             .name = "compiler",
             .action = CustomCommand::void_cb([]{ print_compiler_info(); }),
-            .description = "Print compiler info"
+            .description = "Print compiler info",
+            .argsHelp = {}
         },
         CustomCommand {
             .name = "help",

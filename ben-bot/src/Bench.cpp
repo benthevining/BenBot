@@ -85,7 +85,8 @@ namespace {
             search::Callbacks {
                 .onSearchComplete = [this](SearchResult res) {
                     result = std::move(res);
-                } }
+                },
+                .onIteration = {} }
         };
     };
 

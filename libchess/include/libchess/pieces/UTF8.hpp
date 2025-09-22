@@ -27,7 +27,7 @@
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
 #include <string_view>
-#include <utility>
+#include <utility> // IWYU pragma: keep - for std::unreachable()
 
 /** This namespace contains some UTF8 encodings of chess piece symbols.
     @ingroup utf8_pieces

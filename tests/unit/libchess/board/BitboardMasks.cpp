@@ -83,8 +83,7 @@ TEST_CASE("Bitboard - dark/light square masks", TAGS)
     }
 }
 
-TEST_CASE("Bitboard - file masks", TAGS)
-{
+TEST_CASE("Bitboard - file masks", TAGS) {
 #define TEST_FILE_MASK(str, correctFile, mask)                      \
     SECTION(str)                                                    \
     {                                                               \
@@ -115,20 +114,21 @@ TEST_CASE("Bitboard - file masks", TAGS)
         }                                                           \
     }
 
-    TEST_FILE_MASK("A file", File::A, bitboard_masks::files::A);
-    TEST_FILE_MASK("B file", File::B, bitboard_masks::files::B);
-    TEST_FILE_MASK("C file", File::C, bitboard_masks::files::C);
-    TEST_FILE_MASK("D file", File::D, bitboard_masks::files::D);
-    TEST_FILE_MASK("E file", File::E, bitboard_masks::files::E);
-    TEST_FILE_MASK("F file", File::F, bitboard_masks::files::F);
-    TEST_FILE_MASK("G file", File::G, bitboard_masks::files::G);
-    TEST_FILE_MASK("H file", File::H, bitboard_masks::files::H);
+    // clang-format off
+    TEST_FILE_MASK("A file", File::A, bitboard_masks::files::A)
+    TEST_FILE_MASK("B file", File::B, bitboard_masks::files::B)
+    TEST_FILE_MASK("C file", File::C, bitboard_masks::files::C)
+    TEST_FILE_MASK("D file", File::D, bitboard_masks::files::D)
+    TEST_FILE_MASK("E file", File::E, bitboard_masks::files::E)
+    TEST_FILE_MASK("F file", File::F, bitboard_masks::files::F)
+    TEST_FILE_MASK("G file", File::G, bitboard_masks::files::G)
+    TEST_FILE_MASK("H file", File::H, bitboard_masks::files::H)
+// clang-format on
 
 #undef TEST_FILE_MASK
 }
 
-TEST_CASE("Bitboard - rank masks", TAGS)
-{
+TEST_CASE("Bitboard - rank masks", TAGS) {
 #define TEST_RANK_MASK(str, correctRank, mask)                      \
     SECTION(str)                                                    \
     {                                                               \
@@ -159,14 +159,16 @@ TEST_CASE("Bitboard - rank masks", TAGS)
         }                                                           \
     }
 
-    TEST_RANK_MASK("Rank 1", Rank::One, bitboard_masks::ranks::ONE);
-    TEST_RANK_MASK("Rank 2", Rank::Two, bitboard_masks::ranks::TWO);
-    TEST_RANK_MASK("Rank 3", Rank::Three, bitboard_masks::ranks::THREE);
-    TEST_RANK_MASK("Rank 4", Rank::Four, bitboard_masks::ranks::FOUR);
-    TEST_RANK_MASK("Rank 5", Rank::Five, bitboard_masks::ranks::FIVE);
-    TEST_RANK_MASK("Rank 6", Rank::Six, bitboard_masks::ranks::SIX);
-    TEST_RANK_MASK("Rank 7", Rank::Seven, bitboard_masks::ranks::SEVEN);
-    TEST_RANK_MASK("Rank 8", Rank::Eight, bitboard_masks::ranks::EIGHT);
+    // clang-format off
+    TEST_RANK_MASK("Rank 1", Rank::One, bitboard_masks::ranks::ONE)
+    TEST_RANK_MASK("Rank 2", Rank::Two, bitboard_masks::ranks::TWO)
+    TEST_RANK_MASK("Rank 3", Rank::Three, bitboard_masks::ranks::THREE)
+    TEST_RANK_MASK("Rank 4", Rank::Four, bitboard_masks::ranks::FOUR)
+    TEST_RANK_MASK("Rank 5", Rank::Five, bitboard_masks::ranks::FIVE)
+    TEST_RANK_MASK("Rank 6", Rank::Six, bitboard_masks::ranks::SIX)
+    TEST_RANK_MASK("Rank 7", Rank::Seven, bitboard_masks::ranks::SEVEN)
+    TEST_RANK_MASK("Rank 8", Rank::Eight, bitboard_masks::ranks::EIGHT)
+// clang-format on
 
 #undef TEST_RANK_MASK
 }

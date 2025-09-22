@@ -144,13 +144,14 @@ public:
 
 private:
     struct Entry;
+    struct Cluster;
 
     void deallocate();
 
+    [[nodiscard]] Cluster& index_table(size_t clusterIdx) const noexcept;
+
     // this is the hash function
     [[nodiscard]] std::span<Entry> find_cluster(Position::Hash key) const noexcept;
-
-    struct Cluster;
 
     Cluster* table { nullptr };
 

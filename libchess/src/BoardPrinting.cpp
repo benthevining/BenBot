@@ -23,7 +23,7 @@
 #include <string_view>
 #include <type_traits>
 
-/* Example output of empty board:
+/* Example output of empty board with labels:
 
     | | | | | | | | | 8
     | | | | | | | | | 7

@@ -31,7 +31,6 @@
 #include <print>
 #include <span>
 #include <string_view>
-#include <vector>
 
 int main(const int argc, const char** argv)
 try {
@@ -66,9 +65,8 @@ try {
 
     auto movesJSON = nlohmann::json::array();
 
-    const auto position = chess::notation::from_fen(fenString);
-
-    for (const auto& move : chess::moves::generate(position)) {
+    for (const auto position = chess::notation::from_fen(fenString);
+        const auto& move : chess::moves::generate(position)) {
         nlohmann::json moveJSON;
 
         moveJSON["move"] = chess::notation::to_alg(position, move);

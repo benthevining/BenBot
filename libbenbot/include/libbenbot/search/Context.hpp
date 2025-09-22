@@ -95,7 +95,7 @@ struct Context final {
         When in ponder mode, the search will not exit until ``abort()`` or
         ``ponder_hit()`` are called.
      */
-    void set_pondering(bool isPonderMode) noexcept { pondering.store(isPonderMode); }
+    void set_pondering(const bool isPonderMode) noexcept { pondering.store(isPonderMode); }
 
     /** When in a ponder mode search, this exits the search. A ponder mode search
         will not exit until this method or ``abort()`` are called.

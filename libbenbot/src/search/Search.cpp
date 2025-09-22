@@ -12,6 +12,10 @@
  * ======================================================================================
  */
 
+// Search features:
+// Alpha-beta pruning with iterative deepening and quiescence search
+// Mate distance pruning
+
 #include "MoveOrdering.hpp"
 #include "TimeManagement.hpp"
 #include <algorithm>
@@ -143,7 +147,8 @@ namespace {
             transTable.store(
                 currentPosition, { .searchedDepth = depth,
                                      .eval        = eval::DRAW,
-                                     .evalType    = EvalType::Exact });
+                                     .evalType    = EvalType::Exact,
+                                     .bestMove    = {} });
 
             return {};
         }
@@ -154,7 +159,8 @@ namespace {
             transTable.store(
                 currentPosition, { .searchedDepth = depth,
                                      .eval        = -eval::MATE,
-                                     .evalType    = EvalType::Exact });
+                                     .evalType    = EvalType::Exact,
+                                     .bestMove    = {} });
 
             return Score::mate(plyFromRoot);
         }

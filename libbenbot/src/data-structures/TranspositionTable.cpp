@@ -22,6 +22,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint> // IWYU pragma: keep
+#include <iterator>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/search/Bounds.hpp>
 #include <libchess/util/Math.hpp>
@@ -124,6 +125,16 @@ TranspositionTable& TranspositionTable::operator=(TranspositionTable&& other) no
     return *this;
 }
 
+// this function serves to add a bounds check and avoid warnings about raw pointer arithmetic
+auto TranspositionTable::index_table(const size_t clusterIdx) const noexcept -> Cluster&
+{
+    assert(clusterIdx < clusterCount);
+
+    return *std::next(
+        table,
+        static_cast<std::ptrdiff_t>(clusterIdx));
+}
+
 void TranspositionTable::resize(const size_t sizeMB)
 {
     deallocate();
@@ -141,7 +152,7 @@ void TranspositionTable::resize(const size_t sizeMB)
 void TranspositionTable::clear()
 {
     for (auto i = 0uz; i < clusterCount; ++i)
-        std::ranges::fill(table[i].records, Entry {});
+        std::ranges::fill(index_table(i).records, Entry {});
 }
 
 void TranspositionTable::deallocate()
@@ -158,7 +169,7 @@ size_t TranspositionTable::hashfull() const
     for (auto i = 0uz; i < std::min(1000uz, clusterCount); ++i) {
         count += static_cast<size_t>(
             std::ranges::count_if(
-                table[i].records,
+                index_table(i).records,
                 [gen = generation](const Entry& entry) {
                     return entry.occupied()
                        and entry.relative_age(gen) == 0uz;
@@ -175,11 +186,9 @@ void TranspositionTable::new_search() noexcept
 
 auto TranspositionTable::find_cluster(const Position::Hash key) const noexcept -> std::span<Entry>
 {
-    const auto idx = chess::util::mul_hi64(key, clusterCount);
-
-    assert(idx < clusterCount);
-
-    return table[idx].records;
+    return index_table(
+        chess::util::mul_hi64(key, clusterCount))
+        .records;
 }
 
 std::optional<TTData> TranspositionTable::find(const Position& pos) const

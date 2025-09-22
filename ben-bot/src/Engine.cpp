@@ -19,7 +19,7 @@
 #include <iostream> // for cerr
 #include <libchess/moves/Perft.hpp>
 #include <libchess/notation/UCI.hpp>
-#include <libchess/uci/CommandParsing.hpp>
+#include <libchess/uci/CommandParsing.hpp> // IWYU pragma: keep - for GoCommandOptions
 #include <libchess/util/Strings.hpp>
 #include <print>
 #include <utility>

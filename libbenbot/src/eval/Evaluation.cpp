@@ -103,10 +103,10 @@ namespace {
             // for connected rooks on open files
 
             for (const auto file : position.get_open_files()) {
-                const auto mask = masks::files::get(file);
-
-                if ((mask & pieces.rooks).count() > 1uz)
+                if (const auto mask = masks::files::get(file);
+                    (mask & pieces.rooks).count() > 1uz) {
                     score += OPEN_FILE_BONUS;
+                }
             }
 
             return score;

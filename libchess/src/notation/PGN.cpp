@@ -168,10 +168,10 @@ namespace {
         Position& position, string_view moveText, Moves& output)
     {
         // move numbers may start with 3. or 3...
-        const auto lastDotIdx = moveText.rfind('.');
-
-        if (lastDotIdx != string_view::npos)
+        if (const auto lastDotIdx = moveText.rfind('.');
+            lastDotIdx != string_view::npos) {
             moveText = moveText.substr(lastDotIdx + 1uz);
+        }
 
         const auto move = from_alg(position, moveText);
 
@@ -301,15 +301,15 @@ namespace {
         if (sepIdx == string_view::npos)
             return game.get_final_position().get_result();
 
-        const auto whiteScore = util::trim(text.substr(0uz, sepIdx));
-
-        if (whiteScore == "1")
+        if (const auto whiteScore = util::trim(text.substr(0uz, sepIdx));
+            whiteScore == "1") {
             return game::Result::WhiteWon;
+        }
 
-        const auto blackScore = util::trim(text.substr(sepIdx + 1uz));
-
-        if (blackScore == "1")
+        if (const auto blackScore = util::trim(text.substr(sepIdx + 1uz));
+            blackScore == "1") {
             return game::Result::BlackWon;
+        }
 
         return game::Result::Draw;
     }
@@ -384,20 +384,17 @@ std::vector<GameRecord> parse_all_pgns(string_view fileContent)
         // the next PGN after this one is the first line after moveTextStart that starts with a '['
         const auto moveTextToNextPGN = find_next_line<true>(fileContent.substr(moveTextStart + 1uz));
 
-        auto thisPGN = fileContent;
-
         if (moveTextToNextPGN == string_view::npos) {
-            fileContent = {}; // so that we exit the loop
-        } else {
-            const auto nextPGNStart = moveTextStart + moveTextToNextPGN;
-
-            thisPGN = fileContent.substr(0uz, nextPGNStart);
-
-            fileContent.remove_prefix(nextPGNStart);
+            games.emplace_back(from_pgn(fileContent));
+            return games;
         }
 
-        games.emplace_back(from_pgn(thisPGN));
+        const auto nextPGNStart = moveTextStart + moveTextToNextPGN;
 
+        games.emplace_back(from_pgn(
+            fileContent.substr(0uz, nextPGNStart)));
+
+        fileContent.remove_prefix(nextPGNStart);
         fileContent = util::trim(fileContent);
     }
 
@@ -438,7 +435,7 @@ namespace {
         // write extra metadata tags not part of seven tag roster
         for (const auto& [key, value] : metadata
                                             | std::views::filter([](const auto& it) {
-                                                  return not std::ranges::contains(sevenTagRoster, it.first);
+                                                  return not std::ranges::contains(sevenTagRoster, it.first); // cppcheck-suppress internalAstError
                                               })) {
             write_metadata_item(key, value, output);
         }

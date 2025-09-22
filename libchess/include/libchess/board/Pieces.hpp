@@ -31,7 +31,7 @@
 #include <libchess/pieces/PieceTypes.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <optional>
-#include <utility>
+#include <utility> // IWYU pragma: keep - for std::unreachable()
 
 namespace chess::board {
 

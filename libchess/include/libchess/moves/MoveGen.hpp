@@ -542,14 +542,14 @@ namespace detail {
         if (position.is_check())
             return moves;
 
-        const auto& rights = Side == Color::White ? position.whiteCastlingRights : position.blackCastlingRights; // cppcheck-suppress knownConditionTrueFalse
+        const auto [kingside, queenside] = Side == Color::White ? position.whiteCastlingRights : position.blackCastlingRights; // cppcheck-suppress knownConditionTrueFalse
 
         static constexpr auto OppositeColor = pieces::other_side<Side>();
 
         const auto& ourPieces   = position.pieces_for<Side>();
         const auto& theirPieces = position.pieces_for<OppositeColor>();
 
-        if (rights.kingside) {
+        if (kingside) {
             assert(ourPieces.rooks.test(Square { File::H, board::back_rank_for(position.sideToMove) }));
 
             static constexpr auto requiredSquares = kingside_castle_mask<Side>();
@@ -558,14 +558,14 @@ namespace detail {
                                       or squares_attacked<OppositeColor>(theirPieces, requiredSquares, ourPieces.occupied);
 
             if (not castlingBlocked) {
-                const auto move = castle_kingside(Side);
-
-                if (position.is_legal(move))
+                if (const auto move = castle_kingside(Side);
+                    position.is_legal(move)) {
                     moves.emplace_back(move);
+                }
             }
         }
 
-        if (rights.queenside) {
+        if (queenside) {
             assert(ourPieces.rooks.test(Square { File::A, board::back_rank_for(position.sideToMove) }));
 
             static constexpr auto occupiedMask = queenside_castle_mask<Side, true>();
@@ -575,10 +575,10 @@ namespace detail {
                                       or squares_attacked<OppositeColor>(theirPieces, attackedMask, ourPieces.occupied);
 
             if (not castlingBlocked) {
-                const auto move = castle_queenside(Side);
-
-                if (position.is_legal(move))
+                if (const auto move = castle_queenside(Side);
+                    position.is_legal(move)) {
                     moves.emplace_back(move);
+                }
             }
         }
 
