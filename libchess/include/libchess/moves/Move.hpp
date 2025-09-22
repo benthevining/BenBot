@@ -83,18 +83,16 @@ struct Move final {
     /** Creates a non-promotion move. */
     constexpr Move(
         const Square start, const Square end,
-        const PieceType type_)
-        : data { pack_fields(start, end, PieceType::Pawn) }
-        , type { type_ }
+        const PieceType type)
+        : data { pack_fields(start, end, type, PieceType::Pawn) }
     {
     }
 
     /** Creates a promotion move. */
     constexpr Move(
         const Square start, const Square end,
-        const PieceType type_, const PieceType promotedType)
-        : data { pack_fields(start, end, promotedType) }
-        , type { type_ }
+        const PieceType type, const PieceType promotedType)
+        : data { pack_fields(start, end, type, promotedType) }
     {
         assert(promotedType != PieceType::King);
         assert(promotedType != PieceType::Pawn);
@@ -123,7 +121,7 @@ struct Move final {
      */
     [[nodiscard]] constexpr PieceType piece() const noexcept
     {
-        return type;
+        return static_cast<PieceType>(data >> 18uz);
     }
 
     /** Returns the promoted-to type, or ``nullopt`` if this move is not a promotion. */
@@ -164,12 +162,13 @@ struct Move final {
 private:
     [[nodiscard, gnu::const]] static constexpr Integer pack_fields(
         const Square start, const Square end,
-        const PieceType promotedType) noexcept
+        const PieceType type, const PieceType promotedType) noexcept
     {
         return static_cast<Integer>(
             end.index()
             + (start.index() << 6uz)
-            + (std::to_underlying(promotedType) << 12uz));
+            + (std::to_underlying(promotedType) << 12uz)
+            + (std::to_underlying(type) << 18uz));
     }
 
     // A move needs 32 bits to be stored
@@ -177,11 +176,10 @@ private:
     // bit  0- 5: destination square index
     // bit  6-11: origin square index
     // bit 12-17: promoted piece type
+    // bit 18-23: moving piece type
     //
     // Special case is a null move, this integer will be 0
     Integer data { 0 };
-
-    PieceType type;
 };
 
 /** Provides a strong ordering of moves. This can be useful for sorting lists of moves.
