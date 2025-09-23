@@ -231,7 +231,7 @@ namespace {
 
 } // namespace
 
-void Context::search()
+void Context::search() // NOLINT(readability-function-cognitive-complexity)
 {
     assert(options.depth > 0uz);
     assert(not activeFlag.load());
