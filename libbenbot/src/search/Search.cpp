@@ -118,7 +118,8 @@ namespace {
         const size_t        plyFromRoot, // increases each iteration
         TranspositionTable& transTable,
         Interrupter&        interrupter,
-        Stats&              stats)
+        Stats&              stats,
+        MoveList&           pv)
     {
         if (interrupter.should_abort())
             return {};
@@ -153,6 +154,18 @@ namespace {
             return {};
         }
 
+        auto write_pv_move = [&pv, plyFromRoot](const Move& move) {
+            if (plyFromRoot >= MoveList::capacity()) {
+                [[unlikely]];
+                return;
+            }
+
+            while (pv.size() <= plyFromRoot)
+                pv.emplace_back(Move {});
+
+            pv.at(plyFromRoot) = move;
+        };
+
         auto moves = chess::moves::generate(currentPosition);
 
         if (moves.empty() && currentPosition.is_check()) {
@@ -175,7 +188,7 @@ namespace {
             const auto newPosition = after_move(currentPosition, move);
 
             const auto eval = depth > 0uz
-                                ? -alpha_beta(bounds.invert(), newPosition, depth - 1uz, plyFromRoot + 1uz, transTable, interrupter, stats)
+                                ? -alpha_beta(bounds.invert(), newPosition, depth - 1uz, plyFromRoot + 1uz, transTable, interrupter, stats, pv)
                                 : -quiescence(bounds.invert(), newPosition, plyFromRoot + 1uz, interrupter, stats);
 
             if (interrupter.should_abort())
@@ -199,6 +212,7 @@ namespace {
                 bestMove     = move;
                 evalType     = EvalType::Exact;
                 bounds.alpha = eval;
+                write_pv_move(move);
             }
         }
 
@@ -207,6 +221,9 @@ namespace {
                                  .eval        = bounds.alpha.to_tt(),
                                  .evalType    = evalType,
                                  .bestMove    = bestMove });
+
+        if (bestMove.has_value())
+            write_pv_move(bestMove.value());
 
         return bounds.alpha;
     }
@@ -254,9 +271,9 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
 
     Stats stats;
 
-    std::optional<Move> bestMove;
-
     Score bestScore;
+
+    MoveList pv;
 
     // iterative deepening
     auto depth = 1uz;
@@ -279,7 +296,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
             const auto score = -alpha_beta(
                 bounds.invert(),
                 after_move(options.position, move),
-                depth, 1uz, transTable, interrupter, stats);
+                depth, 1uz, transTable, interrupter, stats, pv);
 
             if (interrupter.was_aborted())
                 break;
@@ -287,6 +304,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
             if (score > bounds.alpha) {
                 bestMoveThisDepth = move;
                 bounds.alpha      = score;
+                pv.front()        = move;
             }
         }
 
@@ -295,8 +313,9 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
 
         assert(bestMoveThisDepth.has_value());
 
-        bestMove  = bestMoveThisDepth;
         bestScore = bounds.alpha;
+
+        pv.front() = bestMoveThisDepth.value();
 
         interrupter.iteration_completed();
 
@@ -325,7 +344,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         // prevent the iteration callback from being called right before search_complete()
         // will be called, otherwise the final info string would be printed twice
         if (depth < options.depth) {
-            callbacks.iteration_complete({ .pv = transTable.get_best_line(options.position, bestMove.value()),
+            callbacks.iteration_complete({ .pv = pv,
                 .duration                      = interrupter.get_search_duration(),
                 .depth                         = depth,
                 .score                         = bestScore,
@@ -352,7 +371,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         });
     }
 
-    callbacks.search_complete({ .pv = transTable.get_best_line(options.position, bestMove.value()),
+    callbacks.search_complete({ .pv = pv,
         .duration                   = interrupter.get_search_duration(),
         .depth                      = depth,
         .score                      = bestScore,

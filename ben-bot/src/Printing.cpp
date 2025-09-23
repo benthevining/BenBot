@@ -87,9 +87,11 @@ namespace {
     {
         std::string line;
 
-        for (const auto& move : res.pv) {
-            line.append(to_uci(move));
-            line.append(1uz, ' ');
+        for (auto i = 0uz; i < res.pv.size(); ++i) {
+            line.append(to_uci(res.pv.at(i)));
+
+            if (i < res.pv.size() - 1uz)
+                line.append(1uz, ' ');
         }
 
         return line;
@@ -124,8 +126,7 @@ namespace {
 
     template <bool PrintBestMove>
     void print_uci_info(
-        const Result& res, const bool debugMode,
-        const search::Context& context)
+        const Result& res, const bool debugMode)
     {
         println(
             "info depth {} score {} time {} nodes {} nps {} hashfull {} pv {}{}",
@@ -135,9 +136,6 @@ namespace {
             get_extra_stats_string(res, debugMode));
 
         if constexpr (PrintBestMove) {
-            const auto& currPos    = context.options.position;
-            const auto& transTable = context.transTable;
-
             println("bestmove {}{}",
                 to_uci(res.best_move()),
                 get_ponder_move_string(res.ponder_move()));
@@ -161,8 +159,8 @@ std::string Engine::get_name() const
 Engine::Engine()
     : searcher {
         search::Callbacks {
-            .onSearchComplete = [this](const Result& res) { print_uci_info<true>(res, debugMode.load(), searcher.context); },
-            .onIteration = [this](const Result& res) { print_uci_info<false>(res, debugMode.load(), searcher.context); } }
+            .onSearchComplete = [this](const Result& res) { print_uci_info<true>(res, debugMode.load()); },
+            .onIteration = [this](const Result& res) { print_uci_info<false>(res, debugMode.load()); } }
     }
 {
 }
