@@ -28,10 +28,10 @@
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libchess/game/Position.hpp>
-#include <libchess/moves/Move.hpp>
+#include <libchess/moves/MoveGen.hpp>
 #include <optional>
+#include <string>
 #include <string_view>
-#include <vector>
 
 /** This namespace contains utilities for working with UCI.
     @ingroup uci
@@ -42,23 +42,52 @@ using game::Position;
 using std::chrono::milliseconds;
 using std::optional;
 using std::size_t;
+using std::string_view;
 
 /** Parses the options following a UCI "position" command into a Position object.
     The ``options`` should not include the "position" token itself.
 
     @ingroup uci
  */
-[[nodiscard]] Position parse_position_options(std::string_view options);
+[[nodiscard]] Position parse_position_options(string_view options);
+
+/** This struct encapsulates the options to a UCI "register" command.
+
+    @ingroup uci
+    @see parse_register_options()
+ */
+struct RegisterNowOptions final {
+    /** The customer's name. */
+    std::string name;
+
+    /** The customer's registration code. */
+    std::string code;
+};
+
+/** A simple convenience typedef.
+    @ingroup uci
+ */
+using RegisterOptions = optional<RegisterNowOptions>;
+
+/** Parses the options following a UCI "register" command.
+    The ``options`` should not include the "register" token itself.
+    If this returns ``nullopt``, then the user sent a ``register later`` command.
+
+    @ingroup uci
+    @relates RegisterOptions
+ */
+[[nodiscard]] RegisterOptions parse_register_options(string_view options);
 
 /** This struct encapsulates the options given to a UCI "go" command.
 
     @ingroup uci
+    @see parse_go_options()
  */
 struct GoCommandOptions final {
     /** The search should be restricted to only these moves.
         Empty if the "moves" suboption was not specified.
      */
-    std::vector<moves::Move> moves;
+    moves::MoveList moves;
 
     /** True if this "go" command is in ponder mode. */
     bool ponderMode { false };
@@ -101,6 +130,6 @@ struct GoCommandOptions final {
     @relates GoCommandOptions
  */
 [[nodiscard]] GoCommandOptions parse_go_options(
-    std::string_view options, const Position& currentPosition);
+    string_view options, const Position& currentPosition);
 
 } // namespace chess::uci

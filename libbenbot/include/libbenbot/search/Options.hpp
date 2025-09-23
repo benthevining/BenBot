@@ -28,10 +28,9 @@
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libchess/game/Position.hpp>
-#include <libchess/moves/Move.hpp>
+#include <libchess/moves/MoveGen.hpp>
 #include <limits>
 #include <optional>
-#include <vector>
 
 namespace chess::uci {
 struct GoCommandOptions;
@@ -69,10 +68,10 @@ struct Options final {
     /** Restrict the search to only these moves.
         If this is empty, all legal moves in the position will be searched.
      */
-    std::vector<chess::moves::Move> movesToSearch;
+    chess::moves::MoveList movesToSearch;
 
     /** Updates the values in this options struct with the UCI "go" command options. */
-    void update_from(chess::uci::GoCommandOptions&& goOptions);
+    void update_from(const chess::uci::GoCommandOptions& goOptions);
 
     /** Returns true if this search has any bounds other than depth. */
     [[nodiscard]] bool is_bounded() const noexcept

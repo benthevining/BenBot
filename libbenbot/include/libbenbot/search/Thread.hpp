@@ -23,10 +23,7 @@
 #include <libbenbot/search/Callbacks.hpp>
 #include <libbenbot/search/Context.hpp>
 #include <libchess/game/Position.hpp>
-#include <libchess/uci/CommandParsing.hpp>
-#include <libchess/util/Threading.hpp>
 #include <thread>
-#include <utility>
 
 namespace chess::uci {
 struct GoCommandOptions;
@@ -42,17 +39,9 @@ struct Thread final {
     /** Creates a searcher thread with a specified set of result callbacks.
         Note that the result callbacks will be invoked on the background thread.
      */
-    explicit Thread(Callbacks&& callbacksToUse)
-        : context { std::move(callbacksToUse) }
-    {
-    }
+    explicit Thread(Callbacks&& callbacksToUse);
 
-    ~Thread()
-    {
-        threadShouldExit.store(true);
-        context.abort();
-        searcherThread.join();
-    }
+    ~Thread();
 
     Thread(const Thread&)            = delete;
     Thread& operator=(const Thread&) = delete;
@@ -68,59 +57,20 @@ struct Thread final {
     /** Sets the position to be searched by the next search invocation.
         This method blocks waiting for any previously executing search to complete.
      */
-    void set_position(const Position& pos)
-    {
-        context.wait();
-
-        context.options.position = pos;
-
-        // clear this so that all legal moves will be searched by default
-        context.options.movesToSearch.clear();
-    }
+    void set_position(const Position& pos);
 
     /** Begins searching asynchronously.
         This method returns immediately, and the actual search will be performed by
         a background thread.
      */
     /// @{
-    void start(chess::uci::GoCommandOptions&& options)
-    {
-        context.set_pondering(options.ponderMode);
+    void start(const chess::uci::GoCommandOptions& options);
 
-        context.wait(); // shouldn't have been searching, but better safe than sorry
-
-        context.options.update_from(std::move(options));
-
-        startSearch.store(true);
-    }
-
-    void start()
-    {
-        context.wait(); // shouldn't have been searching, but better safe than sorry
-
-        startSearch.store(true);
-    }
+    void start();
     /// @}
 
 private:
-    void thread_func()
-    {
-        while (true) {
-            // we want to use progressive backoff to wait on the startSearch flag,
-            // but we also need to exit the PB loop if the threadShouldExit flag
-            // gets set
-            chess::util::progressive_backoff([this] {
-                return threadShouldExit.load() or startSearch.exchange(false);
-            });
-
-            if (threadShouldExit.load()) {
-                [[unlikely]];
-                return;
-            }
-
-            context.search();
-        }
-    }
+    void thread_func();
 
     std::thread searcherThread { [this] { thread_func(); } };
 

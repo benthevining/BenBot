@@ -20,7 +20,7 @@
 #pragma once
 
 #include <libchess/game/Position.hpp>
-#include <libchess/uci/CommandParsing.hpp> // IWYU pragma: keep - for GoCommandOptions
+#include <libchess/uci/CommandParsing.hpp> // IWYU pragma: keep
 #include <libchess/uci/Options.hpp>
 #include <span>
 #include <string>
@@ -104,10 +104,18 @@ struct EngineBase {
         this function has been called, the engine should print to stdout a line of the form
         "bestmove <from><to>".
      */
-    virtual void go([[maybe_unused]] GoCommandOptions&& opts) { }
+    virtual void go([[maybe_unused]] const GoCommandOptions& opts) = 0;
 
     /** Called when the "debug" command is received. */
     virtual void set_debug([[maybe_unused]] bool shouldDebug) { }
+
+    /** Handles a UCI command.
+        Typically you will not call this directly, you'll just invoke ``loop()``, but this
+        method can be used to manually invoke UCI commands if needed.
+
+        @see loop()
+     */
+    void handle_command(string_view command);
 
     /** Any command input string not recognized as a standard UCI command will invoke this function.
         Engines can implement custom commands by overriding this function. The "command" argument
@@ -125,13 +133,10 @@ struct EngineBase {
      */
     void loop();
 
-    /** Handles a UCI command.
-        Typically you will not call this directly, you'll just invoke ``loop()``, but this
-        method can be used to manually invoke UCI commands if needed.
-
-        @see loop()
+    /** Called when the user send a "register" command.
+        The engine may simply do nothing if it does not require registration.
      */
-    void handle_command(string_view command);
+    virtual void handle_registration([[maybe_unused]] const RegisterOptions& opts) { }
 
 private:
     void respond_to_uci();

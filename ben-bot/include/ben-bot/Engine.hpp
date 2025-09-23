@@ -25,16 +25,13 @@
 #include <functional>
 #include <libbenbot/search/Thread.hpp>
 #include <libchess/game/Position.hpp>
+#include <libchess/uci/CommandParsing.hpp>
 #include <libchess/uci/DefaultOptions.hpp>
 #include <libchess/uci/EngineBase.hpp>
 #include <libchess/uci/Options.hpp>
 #include <span>
 #include <string>
 #include <string_view>
-
-namespace chess::uci {
-struct GoCommandOptions;
-} // namespace chess::uci
 
 namespace ben_bot {
 
@@ -61,7 +58,7 @@ private:
 
     void set_position(const Position& pos) override { searcher.set_position(pos); }
 
-    void go(uci::GoCommandOptions&& opts) override;
+    void go(const uci::GoCommandOptions& opts) override { searcher.start(opts); }
 
     void abort_search() override { searcher.context.abort(); }
 
