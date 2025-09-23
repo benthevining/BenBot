@@ -56,11 +56,10 @@ namespace {
 
             pos.operations[std::string { key }] = value;
 
-            if (key == "fmvn") {
+            if (key == "fmvn")
                 pos.position.fullMoveCounter = int_from_string(value, pos.position.fullMoveCounter);
-            } else if (key == "hmvc") {
+            else if (key == "hmvc")
                 pos.position.halfmoveClock = int_from_string(value, pos.position.halfmoveClock);
-            }
         }
     }
 

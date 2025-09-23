@@ -26,7 +26,7 @@ namespace ben_bot::resources {
 using std::string_view;
 
 namespace {
-    [[nodiscard]] string_view get_named_resource(const string_view name)
+    [[nodiscard]] auto get_named_resource(const string_view name) -> string_view
     {
         const auto relPath = std::format("res/{}", name);
 

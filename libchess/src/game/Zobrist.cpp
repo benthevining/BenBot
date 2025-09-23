@@ -43,7 +43,7 @@ namespace {
     constexpr Hash BLACK_KINGSIDE_CASTLE { 0xdbb675f686df04a9ULL };
     constexpr Hash BLACK_QUEENSIDE_CASTLE { 0x71588a053b2bd9e5ULL };
 
-    [[nodiscard, gnu::const]] constexpr Hash en_passant_key(const File file)
+    [[nodiscard, gnu::const]] constexpr auto en_passant_key(const File file) -> Hash
     {
         constexpr std::array values {
             0xa72780f845e9076dULL,
@@ -217,8 +217,9 @@ namespace {
         0xe1f20c6145f85fe4ULL, 0x450a87aba3167ee7ULL, 0x677524f27efe26feULL
     };
 
-    [[nodiscard, gnu::const]] constexpr Hash piece_key(
+    [[nodiscard, gnu::const]] constexpr auto piece_key(
         const PieceType type, const Color side, const Square& square)
+        -> Hash
     {
         const auto typeOffset = 64uz * std::to_underlying(type) * 2uz;
         const auto sideOffset = 64uz * std::to_underlying(side);
@@ -229,8 +230,9 @@ namespace {
     }
 
     template <Color Side>
-    [[nodiscard, gnu::const]] constexpr Hash add_piece_positions(
+    [[nodiscard, gnu::const]] constexpr auto add_piece_positions(
         const Hash prevValue, const PieceType type, const Position& position)
+        -> Hash
     {
         const auto squares = position.pieces_for<Side>().get_type(type).squares();
 

@@ -12,6 +12,10 @@
  * ======================================================================================
  */
 
+// Things I've tried that seemed to make the engine weaker:
+// - bonus for bishops on open diagonals
+// - bonus for the bishop pair that increases with fewer pawns on the board, and also a bonus for knights when there are more pawns on the board
+
 #include "PawnStructure.hpp"
 #include "PieceSquareTables.hpp"
 #include "Positional.hpp"
@@ -38,7 +42,8 @@ namespace ben_bot::eval {
 namespace {
 
     // returns a [0..1] value that is 0 at the start of the game and 1 in the late endgame
-    [[nodiscard, gnu::const]] constexpr float endgame_phase_weight(const Position& position) noexcept
+    [[nodiscard, gnu::const]] constexpr auto endgame_phase_weight(const Position& position) noexcept
+        -> float
     {
         // game phase is roughly determined based on the total amount of non-pawn material left on the board
         // we say that the endgame has begun once the queens & two pairs of minor pieces have been traded
@@ -57,18 +62,14 @@ namespace {
         return 1.f - std::min(1.f, pcntLeft);
     }
 
-    // Things I've tried that seemed to make the engine weaker:
-    // - bonus for bishops on open diagonals
-    // - bonus for the bishop pair that increases with fewer pawns on the board, and also a bonus for knights when there are more pawns on the board
-
     using chess::board::Pieces;
     using chess::pieces::Color;
 
     namespace masks = chess::board::masks;
 
     // awards a bonus for rooks on open or half-open files
-    [[nodiscard, gnu::const]] int score_rook_files(
-        const Position& position) noexcept
+    [[nodiscard, gnu::const]] auto score_rook_files(const Position& position) noexcept
+        -> int
     {
         static constexpr auto HALF_OPEN_FILE_BONUS = 30;
         static constexpr auto OPEN_FILE_BONUS      = 70;
@@ -90,8 +91,8 @@ namespace {
     }
 
     // bonus for connected rooks
-    [[nodiscard, gnu::const]] int score_connected_rooks(
-        const Position& position) noexcept
+    [[nodiscard, gnu::const]] auto score_connected_rooks(const Position& position) noexcept
+        -> int
     {
         static constexpr auto OPEN_FILE_BONUS = 10; // extra bonus for connected rooks on open file
 
@@ -116,8 +117,8 @@ namespace {
     }
 
     // awards various penalties for king danger
-    [[nodiscard, gnu::const]] int score_king_safety(
-        const Position& position, const float endgameWeight) noexcept
+    [[nodiscard, gnu::const]] auto score_king_safety(const Position& position, const float endgameWeight) noexcept
+        -> int
     {
         static constexpr auto OPEN_KING_PENALTY        = -50;
         static constexpr auto STRANDED_KING_PENALTY    = -75;
@@ -192,8 +193,8 @@ namespace {
         return ourScore - theirScore;
     }
 
-    [[nodiscard, gnu::const]] int score_squares_controlled_around_kings(
-        const Position& position) noexcept
+    [[nodiscard, gnu::const]] auto score_squares_controlled_around_kings(const Position& position) noexcept
+        -> int
     {
         namespace moves = chess::moves;
 
@@ -227,8 +228,9 @@ namespace {
 
     // this "mop up" function gives a bonus for cornering the enemy king in the endgame
     // this can help to prevent draws when you're up material
-    [[nodiscard, gnu::const]] int score_endgame_mopup(
+    [[nodiscard, gnu::const]] auto score_endgame_mopup(
         const Position& position, const float endgameWeight, const int materialScore)
+        -> int
     {
         // only give a mop up score if we're the one up material (and on the attack)
         if (std::cmp_greater(materialScore, piece_values::PAWN * 2uz)) {
@@ -250,8 +252,8 @@ namespace {
     // gives a bonus if we have at least 1 non-pawn piece left and our opponent doesn't
     // in cases such as having a queen & piece vs a rook, this prompts the engine to
     // consider sac'ing the queen for the rook, to eliminate the opponent's last piece
-    [[nodiscard, gnu::const]] int no_pieces_left_bonus(
-        const Position& position) noexcept
+    [[nodiscard, gnu::const]] auto no_pieces_left_bonus(const Position& position) noexcept
+        -> int
     {
         static constexpr auto LAST_PIECE_BONUS = 500;
 

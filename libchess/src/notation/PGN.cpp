@@ -60,9 +60,9 @@ namespace {
 
     // writes tag key/value pairs into metadata and returns
     // the rest of the PGN text that's left
-    [[nodiscard]] string_view parse_metadata_tags(
-        string_view pgnText,
-        Metadata&   metadata)
+    [[nodiscard]] auto parse_metadata_tags(
+        string_view pgnText, Metadata& metadata)
+        -> string_view
     {
         auto openingBracketIdx = pgnText.find('[');
 
@@ -105,8 +105,9 @@ namespace {
 
     // writes the content of the block comment to the last move in output
     // and returns the rest of the pgnText after the } that closes this comment
-    [[nodiscard]] string_view parse_block_comment(
+    [[nodiscard]] auto parse_block_comment(
         const string_view pgnText, Moves& output)
+        -> string_view
     {
         assert(pgnText.front() == '{');
 
@@ -124,8 +125,9 @@ namespace {
 
     // writes the content of the line comment to the last move in output
     // and returns the rest of the pgnText after the newline that ends this comment
-    [[nodiscard]] string_view parse_line_comment(
+    [[nodiscard]] auto parse_line_comment(
         const string_view pgnText, Moves& output)
+        -> string_view
     {
         assert(pgnText.front() == ';');
 
@@ -147,8 +149,9 @@ namespace {
 
     // writes the NAG glyph value to the last move in output
     // and returns the rest of the pgnText after the NAG glyph
-    [[nodiscard]] string_view parse_nag(
+    [[nodiscard]] auto parse_nag(
         const string_view pgnText, Moves& output)
+        -> string_view
     {
         assert(pgnText.front() == '$');
 
@@ -187,10 +190,11 @@ namespace {
     // if IsVariation is true, always returns an empty string_view
     // if IsVariation is false (i.e. parsing root PGN), returns text of the game result
     template <bool IsVariation>
-    string_view parse_moves_internal(
+    auto parse_moves_internal(
         string_view pgnText,
         Position    position, // intentionally by copy!
         Moves&      output)
+        -> string_view
     {
         // With a PGN like: 1. e4 (e3), the move e3 was made from the starting position,
         // not the position after e4. So because Position doesn't have an unmake_move()
@@ -260,10 +264,11 @@ namespace {
 
     // writes the variation to the last move in output
     // and returns the rest of the pgnText after the variation
-    [[nodiscard]] string_view parse_variation(
+    [[nodiscard]] auto parse_variation(
         const string_view pgnText,
         const Position&   position,
         Moves&            output)
+        -> string_view
     {
         assert(pgnText.front() == '(');
 
@@ -284,17 +289,19 @@ namespace {
 
     // writes the parsed moves into output and returns the
     // game result string (the rest of the PGN after the last move)
-    [[nodiscard]] string_view parse_move_list(
+    [[nodiscard]] auto parse_move_list(
         const string_view pgnText,
         const Position&   position,
         Moves&            output)
+        -> string_view
     {
         return parse_moves_internal<false>(
             pgnText, position, output);
     }
 
-    [[nodiscard]] GameResult parse_game_result(
+    [[nodiscard]] auto parse_game_result(
         const string_view text, const GameRecord& game)
+        -> GameResult
     {
         const auto sepIdx = text.find('-');
 
@@ -341,8 +348,7 @@ namespace {
     // starts with or doesn't start with a '[' character
     // returns npos if no such line is found
     template <bool SearchForBracket>
-    [[nodiscard]] size_t find_next_line(
-        const string_view text)
+    [[nodiscard, gnu::const]] constexpr auto find_next_line(const string_view text) -> size_t
     {
         size_t lineStart { 0uz };
 

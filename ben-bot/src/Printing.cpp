@@ -45,7 +45,7 @@ using std::println;
 
 namespace {
 
-    [[nodiscard]] std::string get_score_string(const Score score)
+    [[nodiscard]] auto get_score_string(const Score score) -> std::string
     {
         if (not score.is_mate()) {
             [[likely]];
@@ -72,7 +72,7 @@ namespace {
         return std::format("mate {}", mateVal);
     }
 
-    [[nodiscard, gnu::const]] size_t get_nodes_per_second(const Result& res)
+    [[nodiscard, gnu::const]] auto get_nodes_per_second(const Result& res) -> size_t
     {
         const auto seconds = static_cast<double>(res.duration.count()) * 0.001;
 
@@ -83,8 +83,9 @@ namespace {
         return static_cast<size_t>(std::round(nps));
     }
 
-    [[nodiscard]] std::string get_extra_stats_string(
+    [[nodiscard]] auto get_extra_stats_string(
         const Result& res, const bool isDebugMode)
+        -> std::string
     {
         if ((not isDebugMode) or (res.nodesSearched == 0uz))
             return {};
@@ -100,7 +101,9 @@ namespace {
             res.mdpCutoffs, get_pcnt(res.mdpCutoffs));
     }
 
-    [[nodiscard]] std::string get_ponder_move_string(const std::optional<Move> ponderMove)
+    [[nodiscard]] auto get_ponder_move_string(
+        const std::optional<Move> ponderMove)
+        -> std::string
     {
         if (not ponderMove.has_value())
             return {};
