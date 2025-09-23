@@ -59,11 +59,11 @@ namespace {
 
         size_t plyFromRoot { 0uz }; // increases each iteration
 
-        TranspositionTable& transTable;
+        TranspositionTable& transTable; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
-        Interrupter& interrupter;
+        Interrupter& interrupter; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
-        Stats& stats;
+        Stats& stats; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
         [[nodiscard]] AlphaBetaContext recurse(const Position& newPosition) const
         {
