@@ -113,7 +113,7 @@ namespace {
 
     [[nodiscard, gnu::const]] string_view skip_first_word(const string_view input)
     {
-        const auto [firstWord, rest] = split_at_first_space(input);
+        [[maybe_unused]] const auto [firstWord, rest] = split_at_first_space(input);
 
         return trim(rest);
     }
