@@ -51,164 +51,178 @@ namespace {
         size_t mdpCutoffs { 0uz }; // cutoffs due to mate distance pruning
     };
 
+    struct AlphaBetaContext final {
+        Bounds bounds;
+
+        Position currentPosition;
+
+        size_t depth { 0uz }; // this is the depth left to be searched - decreases each iteration, and when this reaches 0, we call the quiescence search
+
+        size_t plyFromRoot { 0uz }; // increases each iteration
+
+        TranspositionTable& transTable;
+
+        Interrupter& interrupter;
+
+        Stats& stats;
+
+        [[nodiscard]] AlphaBetaContext recurse(const Position& newPosition) const
+        {
+            return {
+                .bounds          = bounds.invert(),
+                .currentPosition = newPosition,
+                .depth           = depth - 1uz,
+                .plyFromRoot     = plyFromRoot + 1uz,
+                .transTable      = transTable,
+                .interrupter     = interrupter,
+                .stats           = stats
+            };
+        }
+    };
+
     // searches only captures, with no depth limit, to try to
     // improve the stability of the static evaluation function
-    [[nodiscard]] Score quiescence(
-        Bounds          bounds,
-        const Position& currentPosition,
-        const size_t    plyFromRoot, // increases each iteration (recursion)
-        Interrupter&    interrupter,
-        Stats&          stats)
+    [[nodiscard]] Score quiescence(AlphaBetaContext context)
     {
-        if (interrupter.should_abort() or currentPosition.is_draw())
+        if (context.interrupter.should_abort() or context.currentPosition.is_draw())
             return {};
 
-        if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot)) {
-            ++stats.mdpCutoffs;
+        if (const auto cutoff = context.bounds.mate_distance_pruning(context.plyFromRoot)) {
+            ++context.stats.mdpCutoffs;
             return cutoff.value();
         }
 
-        if (currentPosition.is_checkmate())
-            return Score::mate(plyFromRoot);
+        if (context.currentPosition.is_checkmate())
+            return Score::mate(context.plyFromRoot);
 
-        auto evaluation = eval::evaluate(currentPosition);
+        auto evaluation = eval::evaluate(context.currentPosition);
 
         // see if we can get a cutoff (we may not need to generate moves for this position)
-        if (evaluation >= bounds.beta) {
-            ++stats.betaCutoffs;
-            return bounds.beta;
+        if (evaluation >= context.bounds.beta) {
+            ++context.stats.betaCutoffs;
+            return context.bounds.beta;
         }
 
-        bounds.alpha = std::max(bounds.alpha, evaluation);
+        context.bounds.alpha = std::max(context.bounds.alpha, evaluation);
 
-        auto moves = chess::moves::generate<true>(currentPosition); // captures only
+        auto moves = chess::moves::generate<true>(context.currentPosition); // captures only
 
-        detail::order_moves_for_q_search(currentPosition, moves);
+        detail::order_moves_for_q_search(context.currentPosition, moves);
 
         for (const auto& move : moves) {
-            assert(currentPosition.is_capture(move));
+            assert(context.currentPosition.is_capture(move));
 
-            evaluation = -quiescence(
-                bounds.invert(),
-                after_move(currentPosition, move),
-                plyFromRoot + 1uz, interrupter, stats);
+            evaluation = -quiescence(context.recurse(after_move(context.currentPosition, move)));
 
-            if (interrupter.was_aborted())
+            if (context.interrupter.was_aborted())
                 return {};
 
-            ++stats.nodesSearched;
+            ++context.stats.nodesSearched;
 
-            if (evaluation >= bounds.beta) {
-                ++stats.betaCutoffs;
-                return bounds.beta;
+            if (evaluation >= context.bounds.beta) {
+                ++context.stats.betaCutoffs;
+                return context.bounds.beta;
             }
 
-            bounds.alpha = std::max(bounds.alpha, evaluation);
+            context.bounds.alpha = std::max(context.bounds.alpha, evaluation);
         }
 
-        return bounds.alpha;
+        return context.bounds.alpha;
     }
 
     // standard alpha/beta search algorithm
     // this is called in the body of the higher-level iterative deepening loop
-    [[nodiscard]] Score alpha_beta(
-        Bounds              bounds,
-        const Position&     currentPosition,
-        const size_t        depth,       // this is the depth left to be searched - decreases each iteration, and when this reaches 0, we call the quiescence search
-        const size_t        plyFromRoot, // increases each iteration
-        TranspositionTable& transTable,
-        Interrupter&        interrupter,
-        Stats&              stats)
+    [[nodiscard]] Score alpha_beta(AlphaBetaContext context)
     {
-        if (interrupter.should_abort())
+        if (context.interrupter.should_abort())
             return {};
 
-        transTable.prefetch(currentPosition);
+        context.transTable.prefetch(context.currentPosition);
 
         // it's important that we do this check before probing the transposition table,
         // because the table only contains static evaluations and doesn't consider game
         // history, so its stored evaluations can't detect threefold repetition draws
-        if (currentPosition.is_threefold_repetition())
+        if (context.currentPosition.is_threefold_repetition())
             return {};
 
-        if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot)) {
-            ++stats.mdpCutoffs;
+        if (const auto cutoff = context.bounds.mate_distance_pruning(context.plyFromRoot)) {
+            ++context.stats.mdpCutoffs;
             return cutoff.value();
         }
 
         // check if this position has been searched before to at
         // least this depth and within these bounds for non-PV nodes
-        if (const auto value = transTable.probe_eval(currentPosition, depth, bounds)) {
-            ++stats.transTableHits;
-            return Score::from_tt(*value, plyFromRoot);
+        if (const auto value = context.transTable.probe_eval(context.currentPosition, context.depth, context.bounds)) {
+            ++context.stats.transTableHits;
+            return Score::from_tt(*value, context.plyFromRoot);
         }
 
-        if (currentPosition.is_draw()) {
-            transTable.store(
-                currentPosition, { .searchedDepth = depth,
-                                     .eval        = eval::DRAW,
-                                     .evalType    = EvalType::Exact,
-                                     .bestMove    = {} });
+        if (context.currentPosition.is_draw()) {
+            context.transTable.store(
+                context.currentPosition, { .searchedDepth = context.depth,
+                                             .eval        = eval::DRAW,
+                                             .evalType    = EvalType::Exact,
+                                             .bestMove    = {} });
 
             return {};
         }
 
-        auto moves = chess::moves::generate(currentPosition);
+        auto moves = chess::moves::generate(context.currentPosition);
 
-        if (moves.empty() && currentPosition.is_check()) {
-            transTable.store(
-                currentPosition, { .searchedDepth = depth,
-                                     .eval        = -eval::MATE,
-                                     .evalType    = EvalType::Exact,
-                                     .bestMove    = {} });
+        if (moves.empty() && context.currentPosition.is_check()) {
+            context.transTable.store(
+                context.currentPosition, { .searchedDepth = context.depth,
+                                             .eval        = -eval::MATE,
+                                             .evalType    = EvalType::Exact,
+                                             .bestMove    = {} });
 
-            return Score::mate(plyFromRoot);
+            return Score::mate(context.plyFromRoot);
         }
 
-        detail::order_moves_for_search(currentPosition, moves, transTable);
+        detail::order_moves_for_search(context.currentPosition, moves, context.transTable);
 
         auto evalType { EvalType::Alpha };
 
         std::optional<Move> bestMove;
 
         for (const auto& move : moves) {
-            const auto newPosition = after_move(currentPosition, move);
+            const auto newPosition = after_move(context.currentPosition, move);
 
-            const auto eval = depth > 0uz
-                                ? -alpha_beta(bounds.invert(), newPosition, depth - 1uz, plyFromRoot + 1uz, transTable, interrupter, stats)
-                                : -quiescence(bounds.invert(), newPosition, plyFromRoot + 1uz, interrupter, stats);
+            const auto eval = context.depth > 0uz
+                                ? -alpha_beta(context.recurse(newPosition))
+                                : -quiescence(context.recurse(newPosition));
 
-            if (interrupter.should_abort())
+            if (context.interrupter.should_abort())
                 return {};
 
-            ++stats.nodesSearched;
+            ++context.stats.nodesSearched;
 
-            if (eval >= bounds.beta) {
-                transTable.store(
-                    currentPosition, { .searchedDepth = depth,
-                                         .eval        = bounds.beta.to_tt(),
-                                         .evalType    = EvalType::Beta,
-                                         .bestMove    = bestMove });
+            if (eval >= context.bounds.beta) {
+                context.transTable.store(
+                    context.currentPosition, { .searchedDepth = context.depth,
+                                                 .eval        = context.bounds.beta.to_tt(),
+                                                 .evalType    = EvalType::Beta,
+                                                 .bestMove    = bestMove });
 
-                ++stats.betaCutoffs;
+                ++context.stats.betaCutoffs;
 
-                return bounds.beta;
+                return context.bounds.beta;
             }
 
-            if (eval > bounds.alpha) {
-                bestMove     = move;
-                evalType     = EvalType::Exact;
-                bounds.alpha = eval;
+            if (eval > context.bounds.alpha) {
+                bestMove             = move;
+                evalType             = EvalType::Exact;
+                context.bounds.alpha = eval;
             }
         }
 
-        transTable.store(
-            currentPosition, { .searchedDepth = depth,
-                                 .eval        = bounds.alpha.to_tt(),
-                                 .evalType    = evalType,
-                                 .bestMove    = bestMove });
+        context.transTable.store(
+            context.currentPosition, { .searchedDepth = context.depth,
+                                         .eval        = context.bounds.alpha.to_tt(),
+                                         .evalType    = evalType,
+                                         .bestMove    = bestMove });
 
-        return bounds.alpha;
+        return context.bounds.alpha;
     }
 
     struct ActiveFlagSetter final {
@@ -276,10 +290,13 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         std::optional<Move> bestMoveThisDepth;
 
         for (const auto& move : options.movesToSearch) {
-            const auto score = -alpha_beta(
-                bounds.invert(),
-                after_move(options.position, move),
-                depth, 1uz, transTable, interrupter, stats);
+            const auto score = -alpha_beta({ .bounds = bounds.invert(),
+                .currentPosition                     = after_move(options.position, move),
+                .depth                               = depth,
+                .plyFromRoot                         = 1uz,
+                .transTable                          = transTable,
+                .interrupter                         = interrupter,
+                .stats                               = stats });
 
             if (interrupter.was_aborted())
                 break;
