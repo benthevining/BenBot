@@ -83,13 +83,13 @@ struct Thread final {
         a background thread.
      */
     /// @{
-    void start(chess::uci::GoCommandOptions&& options)
+    void start(const chess::uci::GoCommandOptions& options)
     {
         context.set_pondering(options.ponderMode);
 
         context.wait(); // shouldn't have been searching, but better safe than sorry
 
-        context.options.update_from(std::move(options));
+        context.options.update_from(options);
 
         startSearch.store(true);
     }

@@ -28,10 +28,9 @@
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libchess/game/Position.hpp>
-#include <libchess/moves/Move.hpp>
+#include <libchess/moves/MoveGen.hpp>
 #include <optional>
 #include <string_view>
-#include <vector>
 
 /** This namespace contains utilities for working with UCI.
     @ingroup uci
@@ -58,7 +57,7 @@ struct GoCommandOptions final {
     /** The search should be restricted to only these moves.
         Empty if the "moves" suboption was not specified.
      */
-    std::vector<moves::Move> moves;
+    moves::MoveList moves;
 
     /** True if this "go" command is in ponder mode. */
     bool ponderMode { false };

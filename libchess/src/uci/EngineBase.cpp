@@ -185,6 +185,8 @@ void EngineBase::handle_setoption(const string_view arguments)
             option->handle_setvalue(trim(rest.substr(valueTokenIdx)));
 
         option_changed(*option);
+    } else {
+        println("info string Attempted to set unknown option {}", name);
     }
 }
 

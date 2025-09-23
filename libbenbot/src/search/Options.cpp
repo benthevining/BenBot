@@ -18,7 +18,6 @@
 #include <libbenbot/search/Options.hpp>
 #include <libchess/uci/CommandParsing.hpp>
 #include <optional>
-#include <utility>
 
 namespace ben_bot::search {
 
@@ -44,14 +43,9 @@ namespace {
     }
 } // namespace
 
-void Options::update_from(chess::uci::GoCommandOptions&& goOptions)
+void Options::update_from(const chess::uci::GoCommandOptions& goOptions)
 {
-    // always clear this, because if movesToSearch isn't specified, we
-    // want the search algorithm to generate all legal moves instead
-    movesToSearch.clear();
-
-    if (not goOptions.moves.empty())
-        movesToSearch = std::move(goOptions.moves);
+    movesToSearch = goOptions.moves;
 
     if (goOptions.depth.has_value())
         depth = *goOptions.depth;

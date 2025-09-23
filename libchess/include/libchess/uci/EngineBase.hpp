@@ -104,7 +104,7 @@ struct EngineBase {
         this function has been called, the engine should print to stdout a line of the form
         "bestmove <from><to>".
      */
-    virtual void go([[maybe_unused]] GoCommandOptions&& opts) { }
+    virtual void go([[maybe_unused]] const GoCommandOptions& opts) = 0;
 
     /** Called when the "debug" command is received. */
     virtual void set_debug([[maybe_unused]] bool shouldDebug) { }
