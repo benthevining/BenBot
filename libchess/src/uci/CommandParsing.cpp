@@ -95,6 +95,30 @@ Position parse_position_options(string_view options)
     return position;
 }
 
+namespace {
+    // splits the input string into sections before and after the given whitespace-delimited token
+    // for input string "foo bar baz" and token "bar", this would return ["foo", "bar baz"]
+    [[nodiscard, gnu::const]] constexpr std::pair<string_view, string_view> split_at_token(
+        const string_view input, const string_view token)
+    {
+        const auto tokenStart = input.find(token);
+
+        if (tokenStart == string_view::npos)
+            return std::make_pair(input, "");
+
+        return std::make_pair(
+            input.substr(0uz, tokenStart),
+            input.substr(tokenStart));
+    }
+
+    [[nodiscard, gnu::const]] string_view skip_first_word(const string_view input)
+    {
+        const auto [firstWord, rest] = split_at_first_space(input);
+
+        return trim(rest);
+    }
+} // namespace
+
 RegisterOptions parse_register_options(string_view options)
 {
     // options doesn't include the "register" token itself
@@ -108,18 +132,31 @@ RegisterOptions parse_register_options(string_view options)
 
         firstWord = trim(firstWord);
 
-        options = rest;
-
         if (firstWord == "later")
             return std::nullopt;
 
         if (firstWord == "name") {
-            opts.name = std::string { trim(rest) };
+            const auto [name, rest2] = split_at_token(rest, "code");
+
+            opts.name = std::string { trim(name) };
+
+            options = trim(rest2);
+
             continue;
         }
 
-        if (firstWord == "code")
-            opts.code = std::string { trim(rest) };
+        if (firstWord == "code") {
+            const auto [code, rest2] = split_at_token(rest, "name");
+
+            opts.code = std::string { trim(code) };
+
+            options = trim(rest2);
+
+            continue;
+        }
+
+        // unrecognized token, don't want to loop forever
+        options = skip_first_word(options);
     }
 
     return opts;
@@ -141,9 +178,9 @@ namespace {
 
     // consumes all the moves following the "searchmoves" token,
     // and returns the rest of the ``options`` that are left
-    [[nodiscard]] auto parse_searchmoves(
+    [[nodiscard]] string_view parse_searchmoves(
         string_view options, const Position& currentPosition,
-        std::output_iterator<moves::Move> auto outputIt) -> string_view
+        std::output_iterator<moves::Move> auto outputIt)
     {
         using namespace std::literals::string_view_literals; // NOLINT
 
@@ -284,7 +321,12 @@ GoCommandOptions parse_go_options(
         if (firstWord == "searchmoves") {
             options = parse_searchmoves(
                 rest, currentPosition, std::back_inserter(ret.moves));
+
+            continue;
         }
+
+        // unrecognized token, don't want to loop forever
+        options = skip_first_word(options);
     }
 
     return ret;

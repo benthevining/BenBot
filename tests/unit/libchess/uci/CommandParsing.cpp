@@ -14,10 +14,13 @@
 
 #include <algorithm>
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
+#include <format>
 #include <libchess/game/Position.hpp>
 #include <libchess/notation/Algebraic.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/uci/CommandParsing.hpp>
+#include <string_view>
 
 static constexpr auto TAGS { "[uci][command-parsing]" };
 
@@ -107,5 +110,36 @@ TEST_CASE("UCI parsing - go", TAGS)
 
         REQUIRE(opts.depth.has_value());
         REQUIRE(*opts.depth == 8uz);
+    }
+}
+
+TEST_CASE("UCI parsing - register", TAGS)
+{
+    using chess::uci::parse_register_options;
+
+    SECTION("Later")
+    {
+        REQUIRE(not parse_register_options("later").has_value());
+    }
+
+    SECTION("Now")
+    {
+        namespace match = Catch::Matchers;
+
+        static constexpr std::string_view name { "Ben Vining" };
+        static constexpr std::string_view code { "123456FAQ_pio" };
+
+        const auto result = parse_register_options(
+            std::format("name {} code {}", name, code));
+
+        REQUIRE(result.has_value());
+
+        REQUIRE_THAT(
+            result->name,
+            match::Matches(name.data(), Catch::CaseSensitive::Yes));
+
+        REQUIRE_THAT(
+            result->code,
+            match::Matches(code.data(), Catch::CaseSensitive::Yes));
     }
 }
