@@ -325,15 +325,15 @@ void Context::search()
         // prevent the iteration callback from being called right before search_complete()
         // will be called, otherwise the final info string would be printed twice
         if (depth < options.depth) {
-            callbacks.iteration_complete({ .duration = interrupter.get_search_duration(),
-                .depth                               = depth,
-                .score                               = bestScore,
-                .bestMove                            = bestMove.value(),
-                .nodesSearched                       = stats.nodesSearched,
-                .transpositionTableHits              = stats.transTableHits,
-                .betaCutoffs                         = stats.betaCutoffs,
-                .mdpCutoffs                          = stats.mdpCutoffs,
-                .hashfull                            = transTable.hashfull() });
+            callbacks.iteration_complete({ .pv = transTable.get_best_line(options.position, bestMove.value()),
+                .duration                      = interrupter.get_search_duration(),
+                .depth                         = depth,
+                .score                         = bestScore,
+                .nodesSearched                 = stats.nodesSearched,
+                .transpositionTableHits        = stats.transTableHits,
+                .betaCutoffs                   = stats.betaCutoffs,
+                .mdpCutoffs                    = stats.mdpCutoffs,
+                .hashfull                      = transTable.hashfull() });
         }
 
         ++depth;
@@ -352,15 +352,15 @@ void Context::search()
         });
     }
 
-    callbacks.search_complete({ .duration = interrupter.get_search_duration(),
-        .depth                            = depth,
-        .score                            = bestScore,
-        .bestMove                         = bestMove.value(),
-        .nodesSearched                    = stats.nodesSearched,
-        .transpositionTableHits           = stats.transTableHits,
-        .betaCutoffs                      = stats.betaCutoffs,
-        .mdpCutoffs                       = stats.mdpCutoffs,
-        .hashfull                         = transTable.hashfull() });
+    callbacks.search_complete({ .pv = transTable.get_best_line(options.position, bestMove.value()),
+        .duration                   = interrupter.get_search_duration(),
+        .depth                      = depth,
+        .score                      = bestScore,
+        .nodesSearched              = stats.nodesSearched,
+        .transpositionTableHits     = stats.transTableHits,
+        .betaCutoffs                = stats.betaCutoffs,
+        .mdpCutoffs                 = stats.mdpCutoffs,
+        .hashfull                   = transTable.hashfull() });
 }
 
 void Context::wait() const

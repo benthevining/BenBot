@@ -24,10 +24,13 @@
 #include <functional>
 #include <libbenbot/eval/Score.hpp>
 #include <libchess/moves/Move.hpp>
+#include <libchess/moves/MoveGen.hpp>
+#include <optional>
 
 namespace ben_bot::search {
 
 using chess::moves::Move;
+using chess::moves::MoveList;
 using std::chrono::milliseconds;
 using std::size_t;
 
@@ -41,6 +44,21 @@ using std::size_t;
 struct Callbacks final {
     /** The results from a completed search. */
     struct Result final {
+        /** Returns the best move found during the search. */
+        [[nodiscard]] Move best_move() const { return pv.front(); }
+
+        /** Returns the ponder move, if one was identified. */
+        [[nodiscard]] std::optional<Move> ponder_move() const
+        {
+            if (pv.size() > 1uz)
+                return pv.at(1uz);
+
+            return std::nullopt;
+        }
+
+        /** The principal variation. */
+        MoveList pv;
+
         /** The total amount of time spent searching to produce this result.
             For depths greater than 1, this value is the duration of the entire
             search, including lower depths of the iterative deepening loop.
@@ -54,9 +72,6 @@ struct Callbacks final {
 
         /** The evaluation of the position resulting from playing the best move. */
         eval::Score score;
-
-        /** The best move found in the position. */
-        Move bestMove;
 
         /** The total number of nodes visited during this search. For depths greater
             than 1, this value includes nodes visited in shallower depths of the

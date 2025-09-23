@@ -23,6 +23,7 @@
 #include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
+#include <libchess/moves/MoveGen.hpp>
 #include <optional>
 #include <span>
 #include <utility>
@@ -35,6 +36,7 @@ namespace search {
 
 using chess::game::Position;
 using chess::moves::Move;
+using chess::moves::MoveList;
 using std::size_t;
 
 /** This enumeration defines types of evaluation values that
@@ -113,6 +115,13 @@ public:
      */
     [[nodiscard]] std::optional<Move> get_best_response(
         const Position& pos, const Move& move) const;
+
+    /** Returns the best line stored from the given starting position and initial move.
+        This is mainly intended for retrieving the principal variation, but may be used
+        for querying other lines as well.
+     */
+    [[nodiscard]] MoveList get_best_line(
+        Position startPos, Move firstMove) const;
 
     /** Stores a record for a given position. */
     void store(const Position& pos, const TTData& record);

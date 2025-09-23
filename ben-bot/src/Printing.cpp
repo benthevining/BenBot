@@ -83,6 +83,18 @@ namespace {
         return static_cast<size_t>(std::round(nps));
     }
 
+    [[nodiscard]] std::string get_pv_string(const Result& res)
+    {
+        std::string line;
+
+        for (const auto& move : res.pv) {
+            line.append(to_uci(move));
+            line.append(1uz, ' ');
+        }
+
+        return line;
+    }
+
     [[nodiscard]] std::string get_extra_stats_string(
         const Result& res, const bool isDebugMode)
     {
@@ -116,9 +128,10 @@ namespace {
         const search::Context& context)
     {
         println(
-            "info depth {} score {} time {} nodes {} nps {} hashfull {}{}",
+            "info depth {} score {} time {} nodes {} nps {} hashfull {} pv {}{}",
             res.depth, get_score_string(res.score), res.duration.count(),
             res.nodesSearched, get_nodes_per_second(res), res.hashfull,
+            get_pv_string(res),
             get_extra_stats_string(res, debugMode));
 
         if constexpr (PrintBestMove) {
@@ -126,9 +139,8 @@ namespace {
             const auto& transTable = context.transTable;
 
             println("bestmove {}{}",
-                to_uci(res.bestMove),
-                get_ponder_move_string(
-                    transTable.get_best_response(currPos, res.bestMove)));
+                to_uci(res.best_move()),
+                get_ponder_move_string(res.ponder_move()));
 
             // Because these callbacks are executed on the searcher background thread,
             // without this flush here, the output may not actually be written when we

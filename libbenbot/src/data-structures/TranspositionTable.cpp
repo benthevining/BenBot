@@ -309,4 +309,26 @@ void TranspositionTable::prefetch(const Position& pos) const noexcept
         find_cluster(pos.hash).data());
 }
 
+MoveList TranspositionTable::get_best_line(
+    Position startPos, Move firstMove) const
+{
+    MoveList line;
+
+    line.emplace_back(firstMove);
+
+    do {
+        const auto move = get_best_response(startPos, firstMove);
+
+        if (not move.has_value())
+            break;
+
+        firstMove = move.value();
+
+        line.emplace_back(firstMove);
+        startPos.make_move(firstMove);
+    } while (line.size() < MoveList::capacity());
+
+    return line;
+}
+
 } // namespace ben_bot
