@@ -22,6 +22,7 @@
 #include <libchess/uci/CommandParsing.hpp>
 #include <libchess/util/Strings.hpp>
 #include <optional>
+#include <string>
 #include <string_view>
 #include <utility>
 
@@ -92,6 +93,36 @@ Position parse_position_options(string_view options)
     }
 
     return position;
+}
+
+RegisterOptions parse_register_options(string_view options)
+{
+    // options doesn't include the "register" token itself
+
+    options = trim(options);
+
+    RegisterNowOptions opts;
+
+    while (not options.empty()) {
+        auto [firstWord, rest] = split_at_first_space(options);
+
+        firstWord = trim(firstWord);
+
+        options = rest;
+
+        if (firstWord == "later")
+            return std::nullopt;
+
+        if (firstWord == "name") {
+            opts.name = std::string { trim(rest) };
+            continue;
+        }
+
+        if (firstWord == "code")
+            opts.code = std::string { trim(rest) };
+    }
+
+    return opts;
 }
 
 namespace {

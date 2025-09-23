@@ -78,6 +78,7 @@ void EngineBase::handle_command(std::string_view command)
     auto [firstWord, rest] = split_at_first_space(command);
 
     firstWord = trim(firstWord);
+    rest      = trim(rest);
 
     if (firstWord == "position") {
         handle_setpos(rest);
@@ -89,8 +90,6 @@ void EngineBase::handle_command(std::string_view command)
         return;
     }
 
-    rest = trim(rest);
-
     if (firstWord == "setoption") {
         handle_setoption(rest);
         return;
@@ -98,6 +97,11 @@ void EngineBase::handle_command(std::string_view command)
 
     if (firstWord == "debug") {
         set_debug(rest == "on");
+        return;
+    }
+
+    if (firstWord == "register") {
+        handle_registration(parse_register_options(rest));
         return;
     }
 
