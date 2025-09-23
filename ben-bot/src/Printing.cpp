@@ -87,12 +87,14 @@ namespace {
     {
         std::string line;
 
-        for (auto i = 0uz; i < res.pv.size(); ++i) {
-            line.append(to_uci(res.pv.at(i)));
-
-            if (i < res.pv.size() - 1uz)
-                line.append(1uz, ' ');
+        for (const auto& move : res.pv) {
+            line.append(to_uci(move));
+            line.append(1uz, ' ');
         }
+
+        // remove last whitespace
+        if (! line.empty())
+            line.pop_back();
 
         return line;
     }
