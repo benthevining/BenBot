@@ -139,8 +139,9 @@ void write_en_passant_target_square(
 namespace {
 
     // returns the rest of the piece positions fragment that was left after parsing this rank
-    [[nodiscard]] string_view parse_rank(
+    [[nodiscard]] auto parse_rank(
         const board::Rank rank, string_view fenFragment, Position& position)
+        -> string_view
     {
         const auto rankStart = Square { .file = board::File::A, .rank = rank }.index();
         const auto rankEnd   = rankStart + 8uz;

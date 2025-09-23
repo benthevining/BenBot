@@ -35,7 +35,8 @@ namespace {
     using chess::pieces::Color;
     using PieceType = chess::pieces::Type;
 
-    [[nodiscard, gnu::const]] Bitboard get_opponent_pawn_attacks(const Position& position) noexcept
+    [[nodiscard, gnu::const]] auto get_opponent_pawn_attacks(const Position& position) noexcept
+        -> Bitboard
     {
         using chess::moves::patterns::pawn_attacks;
 
@@ -46,11 +47,12 @@ namespace {
     }
 
     // higher scored moves will be searched first
-    [[nodiscard, gnu::const]] int move_ordering_score(
+    [[nodiscard, gnu::const]] auto move_ordering_score(
         const Position& currentPosition, const Move& move,
         const TranspositionTable& transTable,
         const Bitboard            opponentPawnAttacks,
         const std::optional<Move> bestMove)
+        -> int
     {
         namespace piece_values = eval::piece_values;
 

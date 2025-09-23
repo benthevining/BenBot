@@ -25,10 +25,11 @@ namespace {
     using std::chrono::milliseconds;
     using std::size_t;
 
-    [[nodiscard, gnu::const]] constexpr milliseconds determine_search_time(
+    [[nodiscard, gnu::const]] constexpr auto determine_search_time(
         const milliseconds                timeRemaining,
         const std::optional<milliseconds> increment,
         const std::optional<size_t>       movesToNextTimeControl)
+        -> milliseconds
     {
         const auto inc = increment.value_or(milliseconds { 0 });
 

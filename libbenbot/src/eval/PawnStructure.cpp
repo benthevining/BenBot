@@ -37,7 +37,7 @@ namespace {
     namespace board = chess::board;
 
     template <Color Side>
-    [[nodiscard, gnu::const]] int score_side_passed_pawns(const Position& position)
+    [[nodiscard, gnu::const]] auto score_side_passed_pawns(const Position& position) -> int
     {
         using board::Rank;
 
@@ -117,7 +117,7 @@ namespace {
     }
 
     template <Color Side>
-    [[nodiscard, gnu::const]] int score_side_isolated_pawns(const Position& position) noexcept
+    [[nodiscard, gnu::const]] auto score_side_isolated_pawns(const Position& position) noexcept -> int
     {
         auto score { 0 };
 
@@ -135,7 +135,7 @@ namespace {
     }
 
     template <Color Side>
-    [[nodiscard, gnu::const]] int score_side_doubled_pawns(const Position& position) noexcept
+    [[nodiscard, gnu::const]] auto score_side_doubled_pawns(const Position& position) noexcept -> int
     {
         auto score { 0 };
 
@@ -152,13 +152,13 @@ namespace {
     }
 
     template <Color Side>
-    [[nodiscard, gnu::const]] int score_side_backward_pawns(const Position& position) noexcept
+    [[nodiscard, gnu::const]] auto score_side_backward_pawns(const Position& position) noexcept -> int
     {
         return static_cast<int>(position.get_backward_pawns<Side>().count()) * -20;
     }
 
     template <Color Side>
-    [[nodiscard, gnu::const]] int score_side_pawn_chains(const Position& position) noexcept
+    [[nodiscard, gnu::const]] auto score_side_pawn_chains(const Position& position) noexcept -> int
     {
         // for each pawn, we award a bonus for each square it attacks that has a friendly pawn on it
         // this has the effect of awarding a larger bonus for larger pawn chains
@@ -179,7 +179,7 @@ namespace {
     }
 
     template <Color Side>
-    [[nodiscard, gnu::const]] int score_side_pawns(const Position& position)
+    [[nodiscard, gnu::const]] auto score_side_pawns(const Position& position) -> int
     {
         return score_side_passed_pawns<Side>(position)
              + score_side_isolated_pawns<Side>(position)

@@ -13,7 +13,6 @@
  */
 
 #include <algorithm>
-#include <beman/inplace_vector/inplace_vector.hpp>
 #include <cassert>
 #include <format>
 #include <iterator>
@@ -47,12 +46,9 @@ namespace {
     // given piece type that have the given target square
     [[nodiscard]] auto get_possible_move_origins(
         const Position& position, const Square& targetSquare, const PieceType piece)
+        -> moves::MoveList
     {
-        // we're only generating moves for one piece type, so we can
-        // avoid dynamic memory allocation by using inplace_vector
-        beman::inplace_vector<Move, 200uz> moves;
-
-        moves::generate_for(position, piece, std::back_inserter(moves));
+        auto moves = moves::generate_for(position, piece);
 
         // erase moves not to the given target square
         moves.erase(
@@ -64,7 +60,8 @@ namespace {
         return moves;
     }
 
-    [[nodiscard]] string_view get_check_string(const Position& position, const Move& move)
+    [[nodiscard]] auto get_check_string(const Position& position, const Move& move)
+        -> string_view
     {
         const auto newPos = after_move(position, move);
 
@@ -77,7 +74,8 @@ namespace {
         return "+"; // check
     }
 
-    [[nodiscard]] string get_disambig_string(const Position& position, const Move& move)
+    [[nodiscard]] auto get_disambig_string(const Position& position, const Move& move)
+        -> string
     {
         const auto pieceMoves = get_possible_move_origins(position, move.to(), move.piece());
 
@@ -165,8 +163,9 @@ namespace {
     using pieces::Color;
     using MoveSpan = std::span<const Move>;
 
-    [[nodiscard]] Square get_starting_square_from_file(
+    [[nodiscard]] auto get_starting_square_from_file(
         const MoveSpan possibleOrigins, const File file)
+        -> Square
     {
         auto moveStartsOnFile = [file](const Move& move) { return move.from().file == file; };
 
@@ -193,8 +192,9 @@ namespace {
         return move->from();
     }
 
-    [[nodiscard]] Square get_starting_square_from_rank(
+    [[nodiscard]] auto get_starting_square_from_rank(
         const MoveSpan possibleOrigins, const Rank rank)
+        -> Square
     {
         auto moveStartsOnRank = [rank](const Move& move) { return move.from().rank == rank; };
 
@@ -221,9 +221,10 @@ namespace {
         return move->from();
     }
 
-    [[nodiscard]] Square get_starting_square(
+    [[nodiscard]] auto get_starting_square(
         const Position& position, const Square& targetSquare, const PieceType piece,
         const string_view text)
+        -> Square
     {
         const auto possibleOrigins = get_possible_move_origins(position, targetSquare, piece);
 
@@ -295,8 +296,9 @@ namespace {
         }
     }
 
-    [[nodiscard]] constexpr Move create_pawn_capture(
+    [[nodiscard]] constexpr auto create_pawn_capture(
         const Square& targetSquare, const File startingFile, const Color color)
+        -> Move
     {
         const auto fromRank = color == Color::White
                                 ? prev_pawn_rank<Color::White>(targetSquare.rank)

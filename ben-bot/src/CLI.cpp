@@ -25,8 +25,9 @@ namespace ben_bot {
 using std::string_view;
 
 namespace {
-    [[nodiscard, gnu::cold]] std::string concat_strings(
+    [[nodiscard, gnu::cold]] auto concat_strings(
         const std::span<const string_view> strings)
+        -> std::string
     {
         std::string result;
 

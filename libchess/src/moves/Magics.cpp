@@ -118,7 +118,7 @@ namespace {
 
     using MaskArray = std::array<Bitboard, 64uz>;
 
-    [[nodiscard]] consteval MaskArray calculate_bishop_masks()
+    [[nodiscard]] consteval auto calculate_bishop_masks() -> MaskArray
     {
         MaskArray result {};
 
@@ -128,7 +128,7 @@ namespace {
         return result;
     }
 
-    [[nodiscard]] consteval MaskArray calculate_rook_masks()
+    [[nodiscard]] consteval auto calculate_rook_masks() -> MaskArray
     {
         using board::File;
         using board::Rank;
@@ -175,8 +175,8 @@ namespace {
     // the next two functions calculate indices within the MagicMoves
     // array for the given piece type, square, and occupied squares
 
-    [[nodiscard, gnu::const]] constexpr size_t calc_bishop_index(
-        const size_t squareIdx, const Bitboard occupied)
+    [[nodiscard, gnu::const]] constexpr auto calc_bishop_index(
+        const size_t squareIdx, const Bitboard occupied) -> size_t
     {
         const auto [mul, offset] = BISHOP_MAGICS.at(squareIdx);
 
@@ -186,8 +186,8 @@ namespace {
              + (((occupied & mask).to_int() * mul) >> 55uz);
     }
 
-    [[nodiscard, gnu::const]] constexpr size_t calc_rook_index(
-        const size_t squareIdx, const Bitboard occupied)
+    [[nodiscard, gnu::const]] constexpr auto calc_rook_index(
+        const size_t squareIdx, const Bitboard occupied) -> size_t
     {
         const auto [mul, offset] = ROOK_MAGICS.at(squareIdx);
 
@@ -199,8 +199,8 @@ namespace {
 
     // returns the next permutation of the given set
     // used to generate all permutations of possible blockers
-    [[nodiscard, gnu::const]] constexpr Bitboard permute(
-        const Bitboard set, const Bitboard subset) noexcept
+    [[nodiscard, gnu::const]] constexpr auto permute(
+        const Bitboard set, const Bitboard subset) noexcept -> Bitboard
     {
         return Bitboard { subset.to_int() - set.to_int() } & set;
     }
@@ -208,7 +208,7 @@ namespace {
     // NB. this isn't std::array because we encountered stack overflows when building with MSVC
     using MagicMoves = std::vector<Bitboard>;
 
-    [[nodiscard]] constexpr MagicMoves generate_magic_moves()
+    [[nodiscard]] constexpr auto generate_magic_moves() -> MagicMoves
     {
         MagicMoves result;
 

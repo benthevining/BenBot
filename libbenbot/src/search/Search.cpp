@@ -33,7 +33,6 @@
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/util/Threading.hpp>
 #include <optional>
-#include <vector>
 
 namespace ben_bot::search {
 
@@ -82,7 +81,7 @@ namespace {
 
     // searches only captures, with no depth limit, to try to
     // improve the stability of the static evaluation function
-    [[nodiscard]] Score quiescence(AlphaBetaContext context)
+    [[nodiscard]] auto quiescence(AlphaBetaContext context) -> Score
     {
         if (context.interrupter.should_abort() or context.currentPosition.is_draw())
             return {};
@@ -132,7 +131,7 @@ namespace {
 
     // standard alpha/beta search algorithm
     // this is called in the body of the higher-level iterative deepening loop
-    [[nodiscard]] Score alpha_beta(AlphaBetaContext context)
+    [[nodiscard]] auto alpha_beta(AlphaBetaContext context) -> Score
     {
         if (context.interrupter.should_abort())
             return {};

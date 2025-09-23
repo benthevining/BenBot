@@ -98,8 +98,9 @@ Position parse_position_options(string_view options)
 namespace {
     // splits the input string into sections before and after the given whitespace-delimited token
     // for input string "foo bar baz" and token "bar", this would return ["foo", "bar baz"]
-    [[nodiscard, gnu::const]] constexpr std::pair<string_view, string_view> split_at_token(
+    [[nodiscard, gnu::const]] constexpr auto split_at_token(
         const string_view input, const string_view token)
+        -> std::pair<string_view, string_view>
     {
         const auto tokenStart = input.find(token);
 
@@ -111,7 +112,8 @@ namespace {
             input.substr(tokenStart));
     }
 
-    [[nodiscard, gnu::const]] string_view skip_first_word(const string_view input)
+    [[nodiscard, gnu::const]] auto skip_first_word(const string_view input)
+        -> string_view
     {
         [[maybe_unused]] const auto [firstWord, rest] = split_at_first_space(input);
 
@@ -178,9 +180,10 @@ namespace {
 
     // consumes all the moves following the "searchmoves" token,
     // and returns the rest of the ``options`` that are left
-    [[nodiscard]] string_view parse_searchmoves(
+    [[nodiscard]] auto parse_searchmoves(
         string_view options, const Position& currentPosition,
         std::output_iterator<moves::Move> auto outputIt)
+        -> string_view
     {
         using namespace std::literals::string_view_literals; // NOLINT
 

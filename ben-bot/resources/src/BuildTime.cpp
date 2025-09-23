@@ -28,7 +28,7 @@ namespace {
 
     namespace chrono = std::chrono;
 
-    [[nodiscard, gnu::const]] consteval chrono::year build_year() noexcept
+    [[nodiscard, gnu::const]] consteval auto build_year() noexcept -> chrono::year
     {
         return chrono::year {
             ((BUILD_DATE_STR[7] - '0') * 1000)
@@ -38,7 +38,7 @@ namespace {
         };
     }
 
-    [[nodiscard, gnu::const]] consteval chrono::month build_month() noexcept
+    [[nodiscard, gnu::const]] consteval auto build_month() noexcept -> chrono::month
     {
         switch (BUILD_DATE_STR.front()) {
             case 'F': return std::chrono::February;
@@ -74,7 +74,7 @@ namespace {
         }
     }
 
-    [[nodiscard, gnu::const]] consteval chrono::day build_day() noexcept
+    [[nodiscard, gnu::const]] consteval auto build_day() noexcept -> chrono::day
     {
         static constexpr auto dayNum = [] {
             if constexpr (BUILD_DATE_STR[4] == ' ')
@@ -86,7 +86,7 @@ namespace {
         return chrono::day { dayNum };
     }
 
-    [[nodiscard, gnu::const]] consteval std::chrono::sys_days build_date() noexcept
+    [[nodiscard, gnu::const]] consteval auto build_date() noexcept -> std::chrono::sys_days
     {
         return chrono::sys_days {
             chrono::year_month_day {
@@ -94,7 +94,7 @@ namespace {
         };
     }
 
-    [[nodiscard, gnu::cold]] std::tm to_utc_time(const std::time_t time)
+    [[nodiscard, gnu::cold]] auto to_utc_time(const std::time_t time) -> std::tm
     {
         std::tm ret {};
 

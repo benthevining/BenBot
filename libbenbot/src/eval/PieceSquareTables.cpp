@@ -150,8 +150,9 @@ namespace {
     using chess::board::Pieces;
 
     template <bool IsBlack>
-    [[nodiscard, gnu::const]] constexpr int sum_squares(
+    [[nodiscard, gnu::const]] constexpr auto sum_squares(
         chess::board::Bitboard board, const std::span<const int> table) noexcept
+        -> int
     {
         if constexpr (IsBlack) {
             board = chess::board::flips::vertical(board);
@@ -167,38 +168,39 @@ namespace {
     }
 
     template <bool IsBlack>
-    [[nodiscard, gnu::const]] constexpr int score_pawns(const Pieces& pieces)
+    [[nodiscard, gnu::const]] constexpr auto score_pawns(const Pieces& pieces) -> int
     {
         return sum_squares<IsBlack>(pieces.pawns, pawnTable);
     }
 
     template <bool IsBlack>
-    [[nodiscard, gnu::const]] constexpr int score_knights(const Pieces& pieces)
+    [[nodiscard, gnu::const]] constexpr auto score_knights(const Pieces& pieces) -> int
     {
         return sum_squares<IsBlack>(pieces.knights, knightTable);
     }
 
     template <bool IsBlack>
-    [[nodiscard, gnu::const]] constexpr int score_bishops(const Pieces& pieces)
+    [[nodiscard, gnu::const]] constexpr auto score_bishops(const Pieces& pieces) -> int
     {
         return sum_squares<IsBlack>(pieces.bishops, bishopTable);
     }
 
     template <bool IsBlack>
-    [[nodiscard, gnu::const]] constexpr int score_rooks(const Pieces& pieces)
+    [[nodiscard, gnu::const]] constexpr auto score_rooks(const Pieces& pieces) -> int
     {
         return sum_squares<IsBlack>(pieces.rooks, rookTable);
     }
 
     template <bool IsBlack>
-    [[nodiscard, gnu::const]] constexpr int score_queens(const Pieces& pieces)
+    [[nodiscard, gnu::const]] constexpr auto score_queens(const Pieces& pieces) -> int
     {
         return sum_squares<IsBlack>(pieces.queens, queenTable);
     }
 
     template <bool IsBlack>
-    [[nodiscard, gnu::const]] int score_king(
+    [[nodiscard, gnu::const]] auto score_king(
         const Pieces& pieces, const float endgameWeight)
+        -> int
     {
         auto king = pieces.king;
 
@@ -218,8 +220,9 @@ namespace {
     }
 
     template <bool IsBlack>
-    [[nodiscard, gnu::const]] int score_side_pieces(
+    [[nodiscard, gnu::const]] auto score_side_pieces(
         const Pieces& pieces, const float endgameWeight)
+        -> int
     {
         return score_pawns<IsBlack>(pieces)
              + score_knights<IsBlack>(pieces)
