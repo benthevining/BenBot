@@ -12,64 +12,69 @@
  * ======================================================================================
  */
 
-#include <cassert>
-#include <chrono>
-#include <cstddef> // IWYU pragma: keep - for size_t
-#include <libbenbot/search/Options.hpp>
+#include <libbenbot/search/Thread.hpp>
 #include <libchess/uci/CommandParsing.hpp>
-#include <optional>
+#include <libchess/util/Threading.hpp>
+#include <utility>
 
 namespace ben_bot::search {
 
-namespace {
-    using std::chrono::milliseconds;
-    using std::size_t;
-
-    [[nodiscard, gnu::const]] constexpr milliseconds determine_search_time(
-        const milliseconds                timeRemaining,
-        const std::optional<milliseconds> increment,
-        const std::optional<size_t>       movesToNextTimeControl)
-    {
-        const auto inc = increment.value_or(milliseconds { 0 });
-
-        const auto movesToGo = movesToNextTimeControl.value_or(40uz);
-
-        assert(movesToGo > 0uz);
-
-        return milliseconds {
-            (static_cast<size_t>(timeRemaining.count()) / movesToGo)
-            + (static_cast<size_t>(inc.count()) / (movesToGo / 10uz))
-        };
-    }
-} // namespace
-
-void Options::update_from(const chess::uci::GoCommandOptions& goOptions)
+Thread::Thread(Callbacks&& callbacksToUse)
+    : context { std::move(callbacksToUse) }
 {
-    movesToSearch = goOptions.moves;
+}
 
-    if (goOptions.depth.has_value())
-        depth = *goOptions.depth;
+Thread::~Thread()
+{
+    threadShouldExit.store(true);
+    context.abort();
+    searcherThread.join();
+}
 
-    if (goOptions.nodes.has_value())
-        maxNodes = goOptions.nodes;
+void Thread::set_position(const Position& pos)
+{
+    context.wait();
 
-    // search time
-    if (goOptions.searchTime.has_value()) {
-        searchTime = goOptions.searchTime;
-    } else if (goOptions.infinite) {
-        searchTime = std::nullopt;
-    } else {
-        const bool isWhite = position.is_white_to_move();
+    context.options.position = pos;
 
-        const auto& timeLeft = isWhite ? goOptions.whiteTimeLeft : goOptions.blackTimeLeft;
+    // clear this so that all legal moves will be searched by default
+    context.options.movesToSearch.clear();
+}
 
-        // need to know at least our time remaining in order to calculate search time limit
-        if (timeLeft.has_value()) {
-            searchTime = determine_search_time(
-                *timeLeft,
-                isWhite ? goOptions.whiteInc : goOptions.blackInc,
-                goOptions.movesToGo);
+void Thread::start(const chess::uci::GoCommandOptions& options)
+{
+    context.set_pondering(options.ponderMode);
+
+    context.wait(); // shouldn't have been searching, but better safe than sorry
+
+    context.options.update_from(options);
+
+    startSearch.store(true);
+}
+
+void Thread::start()
+{
+    context.wait(); // shouldn't have been searching, but better safe than sorry
+
+    startSearch.store(true);
+}
+
+void Thread::thread_func()
+{
+    while (true) {
+        // we want to use progressive backoff to wait on the startSearch flag,
+        // but we also need to exit the PB loop if the threadShouldExit flag
+        // gets set
+        chess::util::progressive_backoff([this] {
+            return threadShouldExit.load() or startSearch.exchange(false);
+        });
+
+        if (threadShouldExit.load()) {
+            [[unlikely]];
+            return;
         }
+
+        context.search();
     }
 }
 

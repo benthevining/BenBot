@@ -15,14 +15,11 @@
 #include <algorithm>
 #include <ben-bot/Engine.hpp>
 #include <chrono>
-#include <cstddef>  // IWYU pragma: keep - for size_t
-#include <iostream> // for cerr
+#include <cstddef> // IWYU pragma: keep - for size_t
 #include <libchess/moves/Perft.hpp>
 #include <libchess/notation/UCI.hpp>
-#include <libchess/uci/CommandParsing.hpp> // IWYU pragma: keep - for GoCommandOptions
 #include <libchess/util/Strings.hpp>
 #include <print>
-#include <utility>
 
 namespace ben_bot {
 
@@ -37,11 +34,6 @@ void Engine::new_game([[maybe_unused]] const bool firstCall)
     searcher.context.clear_transposition_table();
 }
 
-void Engine::go(uci::GoCommandOptions&& opts)
-{
-    searcher.start(std::move(opts));
-}
-
 // this function implements non-standard UCI commands that we support
 void Engine::handle_custom_command(
     const string_view command, const string_view opts)
@@ -54,8 +46,8 @@ void Engine::handle_custom_command(
         return;
     }
 
-    println(std::cerr, "Unknown UCI command: {}", command);
-    println("Type 'help' for a list of supported commands");
+    println("info string Unknown UCI command: {}", command);
+    println("info string Type 'help' for a list of supported commands");
 }
 
 void Engine::option_changed(const uci::Option& option)
