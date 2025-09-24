@@ -82,33 +82,25 @@ namespace {
         if (pieceMoves.size() < 2uz)
             return {};
 
-        // order of preference for disambiguation:
+        // Order of preference for disambiguation:
         // 1. file of departure if different
-        // 2. rank of departure if the files are the same but the ranks differ
-        // 3. the complete origin square coordinate otherwise
+        // 2. rank of departure
 
-        const auto originSquare = move.from();
-
-        if (std::cmp_equal(
-                std::ranges::count_if(pieceMoves,
-                    [file = originSquare.file](const Move& candidate) { return candidate.from().file == file; }),
-                1)) {
-            // file of departure is unique, use it to disambiguate
-            return std::format("{}", originSquare.file);
-        }
+        const auto [file, rank] = move.from();
 
         if (std::cmp_equal(
                 std::ranges::count_if(pieceMoves,
-                    [rank = originSquare.rank](const Move& candidate) { return candidate.from().rank == rank; }),
+                    [file](const Move& candidate) { return candidate.from().file == file; }),
                 1)) {
-            // rank of departure is unique, use it to disambiguate
-            return std::format("{}", originSquare.rank);
+            return std::format("{}", file);
         }
 
-        [[unlikely]];
+        assert(std::cmp_equal(
+            std::ranges::count_if(pieceMoves,
+                [rank](const Move& candidate) { return candidate.from().rank == rank; }),
+            1));
 
-        // use both rank & file (is this ever actually reached??)
-        return std::format("{}", originSquare);
+        return std::format("{}", rank);
     }
 
 } // namespace
