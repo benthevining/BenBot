@@ -19,6 +19,7 @@
 #include "MoveOrdering.hpp"
 #include "TimeManagement.hpp"
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <cassert>
 #include <cmath>   // IWYU pragma: keep - for std::abs()
@@ -33,6 +34,7 @@
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/util/Threading.hpp>
 #include <optional>
+#include <ranges>
 
 namespace ben_bot::search {
 
@@ -76,6 +78,31 @@ namespace {
                 .interrupter     = interrupter,
                 .stats           = stats
             };
+        }
+    };
+
+    // used for collecting the PV during search
+    struct Line final {
+        // this is array instead of inplace_vector because we write into higher
+        // indices first, so it's simplest if the objects exist from the get-go
+        std::array<Move, MoveList::capacity()> moves {};
+
+        // number of non-null moves in the line
+        size_t length { 0uz };
+
+        // the PVs collected by alpha-beta will begin 1 ply after the root,
+        // so we need to prepend the first move here
+        [[nodiscard]] MoveList to_movelist(Move firstMove) const
+        {
+            MoveList line;
+
+            line.emplace_back(firstMove);
+
+            std::ranges::copy(
+                std::views::take(moves, length),
+                std::back_inserter(line));
+
+            return line;
         }
     };
 
@@ -131,7 +158,7 @@ namespace {
 
     // standard alpha/beta search algorithm
     // this is called in the body of the higher-level iterative deepening loop
-    [[nodiscard]] auto alpha_beta(AlphaBetaContext context) -> Score
+    [[nodiscard]] auto alpha_beta(AlphaBetaContext context, Line& parentLine) -> Score
     {
         if (context.interrupter.should_abort())
             return {};
@@ -184,11 +211,13 @@ namespace {
 
         std::optional<Move> bestMove;
 
+        Line bestLine;
+
         for (const auto& move : moves) {
             const auto newPosition = after_move(context.currentPosition, move);
 
             const auto eval = context.depth > 0uz
-                                ? -alpha_beta(context.recurse(newPosition))
+                                ? -alpha_beta(context.recurse(newPosition), bestLine)
                                 : -quiescence(context.recurse(newPosition));
 
             if (context.interrupter.should_abort())
@@ -212,6 +241,18 @@ namespace {
                 bestMove             = move;
                 evalType             = EvalType::Exact;
                 context.bounds.alpha = eval;
+
+                if (context.depth > 0uz) {
+                    parentLine.moves.front() = move;
+
+                    std::ranges::copy(
+                        std::views::take(bestLine.moves, bestLine.length),
+                        std::next(parentLine.moves.data(), 1));
+
+                    parentLine.length = bestLine.length + 1uz;
+                } else {
+                    parentLine.length = 0uz;
+                }
             }
         }
 
@@ -269,7 +310,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
 
     Score bestScore;
 
-    Move bestMove;
+    MoveList pv;
 
     // iterative deepening
     auto depth = 1uz;
@@ -286,34 +327,32 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
 
         Bounds bounds {};
 
-        std::optional<Move> bestMoveThisDepth;
-
         for (const auto& move : options.movesToSearch) {
-            const auto score = -alpha_beta({ .bounds = bounds.invert(),
-                .currentPosition                     = after_move(options.position, move),
-                .depth                               = depth,
-                .plyFromRoot                         = 1uz,
-                .transTable                          = transTable,
-                .interrupter                         = interrupter,
-                .stats                               = stats });
+            Line thisPV;
+
+            const auto score = -alpha_beta({ .bounds            = bounds.invert(),
+                                               .currentPosition = after_move(options.position, move),
+                                               .depth           = depth,
+                                               .plyFromRoot     = 1uz,
+                                               .transTable      = transTable,
+                                               .interrupter     = interrupter,
+                                               .stats           = stats },
+                thisPV);
 
             if (interrupter.was_aborted())
                 break;
 
             if (score > bounds.alpha) {
-                bestMoveThisDepth = move;
-                bounds.alpha      = score;
+                bounds.alpha = score;
+
+                pv = thisPV.to_movelist(move);
             }
         }
 
         if (interrupter.was_aborted())
             break;
 
-        assert(bestMoveThisDepth.has_value());
-
         bestScore = bounds.alpha;
-
-        bestMove = bestMoveThisDepth.value();
 
         interrupter.iteration_completed();
 
@@ -342,7 +381,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         // prevent the iteration callback from being called right before search_complete()
         // will be called, otherwise the final info string would be printed twice
         if (depth < options.depth) {
-            callbacks.iteration_complete({ .pv = transTable.get_best_line(options.position, bestMoveThisDepth.value()),
+            callbacks.iteration_complete({ .pv = pv,
                 .duration                      = interrupter.get_search_duration(),
                 .depth                         = depth,
                 .score                         = bestScore,
@@ -369,7 +408,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
 
     assert(! bestMove.is_null());
 
-    callbacks.search_complete({ .pv = transTable.get_best_line(options.position, bestMove),
+    callbacks.search_complete({ .pv = pv,
         .duration                   = interrupter.get_search_duration(),
         .depth                      = depth,
         .score                      = bestScore,
