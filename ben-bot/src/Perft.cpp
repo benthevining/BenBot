@@ -12,45 +12,63 @@
  * ======================================================================================
  */
 
-/** @file
-    This file defines a POD struct that encapsulates the ``ben_bot``
-    executable's CLI arguments.
-
-    @ingroup benbot
- */
-
-#pragma once
-
-#include <string>
+#include <ben-bot/Engine.hpp>
+#include <format>
+#include <libchess/moves/Perft.hpp>
+#include <libchess/notation/UCI.hpp>
+#include <libchess/uci/Printing.hpp>
+#include <libchess/util/Strings.hpp>
+#include <print>
 
 namespace ben_bot {
 
-/** This POD struct encapsulates the ``ben_bot`` executable's command-line
-    arguments, and provides a function for parsing them.
+namespace util     = chess::util;
+namespace notation = chess::notation;
 
-    We process any arguments to the executable as a one-shot UCI command line.
-    ``--no-loop`` can be given to make the engine exit immediately after processing
-    the given UCI command. ``--no-logo`` will suppress the logo & version normally
-    printed at startup.
+using uci::printing::info_string;
 
-    @ingroup benbot
- */
-struct Arguments final {
-    /** If true, the executable should process the given UCI command and exit
-        immediately, not entering the UCI loop waiting for input.
-     */
-    bool noLoop { false };
+namespace {
+    using chess::moves::PerftResult;
 
-    /** If true, the executable should not print the initial logo & version output. */
-    bool noLogo { false };
+    void print_root_nodes(const PerftResult& result)
+    {
+        for (const auto& [move, numChildren] : result.rootNodes) {
+            info_string(std::format(
+                "Move {}: {} child nodes",
+                notation::to_uci(move), numChildren));
+        }
+    }
 
-    /** If not empty, this is a one-shot UCI command that should be evaluated
-        after startup.
-     */
-    std::string uciCommand;
+    void print_results(const PerftResult& result)
+    {
+        info_string(std::format("Nodes: {}", result.nodes));
+        info_string(std::format("Captures: {}", result.captures));
+        info_string(std::format("En passant captures: {}", result.enPassantCaptures));
+        info_string(std::format("Castles: {}", result.castles));
+        info_string(std::format("Promotions: {}", result.promotions));
+        info_string(std::format("Checks: {}", result.checks));
+        info_string(std::format("Checkmates: {}", result.checkmates));
 
-    /** Parses the given command-line arguments into a populated Arguments struct. */
-    [[nodiscard]] static Arguments parse(int argc, const char** argv);
-};
+        // NB. the python wrapper script relies on this being printed last
+        info_string(std::format("Stalemates: {}", result.stalemates));
+    }
+} // namespace
+
+void Engine::run_perft(const string_view arguments) const
+{
+    const auto depth = util::int_from_string(
+        util::trim(arguments),
+        4uz);
+
+    info_string(std::format("Running perft depth {}...", depth));
+
+    const auto result = chess::moves::perft(
+        depth, searcher.context.options.position);
+
+    std::println("");
+    print_root_nodes(result);
+    std::println("");
+    print_results(result);
+}
 
 } // namespace ben_bot

@@ -58,10 +58,8 @@ def get_result_lines(stdout):
 
             # a bit hacky, but we need to check for the end of the perft output
             # or we'll spin forever waiting for EOF from the engine's stdout
-            if line.split(' ', 1)[0] == 'Stalemates:':
+            if line.split(':', 1)[0] == f'info string Stalemates':
                 break
-        elif lines:
-            break
 
     return lines
 
@@ -69,7 +67,7 @@ def get_value_for_key(lines, key):
     for line in lines:
         thisKey, value = line.split(':', 1)
 
-        if thisKey == key:
+        if thisKey == f'info string {key}':
             return int(value.strip())
 
     raise Exception(f'Result does not contain key {key}')

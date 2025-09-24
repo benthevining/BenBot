@@ -14,21 +14,12 @@
 
 #include <algorithm>
 #include <ben-bot/Engine.hpp>
-#include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <format>
-#include <libchess/moves/Perft.hpp>
-#include <libchess/notation/UCI.hpp>
 #include <libchess/uci/Printing.hpp>
-#include <libchess/util/Strings.hpp>
-#include <print>
 
 namespace ben_bot {
 
-namespace util     = chess::util;
-namespace notation = chess::notation;
-
-using std::println;
 using std::size_t;
 using uci::printing::info_string;
 
@@ -59,49 +50,6 @@ void Engine::option_changed(const uci::Option& option)
         wait();
         searcher.context.transTable.resize(static_cast<size_t>(ttSize.get_value()));
     }
-}
-
-namespace {
-    using chess::moves::PerftResult;
-
-    void perft_print_root_nodes(const PerftResult& result)
-    {
-        for (const auto& [move, numChildren] : result.rootNodes) {
-            println("{} {}",
-                notation::to_uci(move), numChildren);
-        }
-    }
-
-    void perft_print_results(const PerftResult& result)
-    {
-        println("Nodes: {}", result.nodes);
-        println("Captures: {}", result.captures);
-        println("En passant captures: {}", result.enPassantCaptures);
-        println("Castles: {}", result.castles);
-        println("Promotions: {}", result.promotions);
-        println("Checks: {}", result.checks);
-        println("Checkmates: {}", result.checkmates);
-
-        // NB. the python wrapper script relies on this being printed last
-        println("Stalemates: {}", result.stalemates);
-    }
-} // namespace
-
-void Engine::run_perft(const string_view arguments) const
-{
-    const auto depth = util::int_from_string(
-        util::trim(arguments),
-        4uz);
-
-    println("Running perft depth {}...", depth);
-
-    const auto result = chess::moves::perft(
-        depth, searcher.context.options.position);
-
-    println("");
-    perft_print_root_nodes(result);
-    println("");
-    perft_print_results(result);
 }
 
 void Engine::make_null_move()

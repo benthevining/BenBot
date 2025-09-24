@@ -20,9 +20,11 @@
 #include <cmath>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <filesystem>
+#include <format>
 #include <libbenbot/search/Callbacks.hpp>
 #include <libbenbot/search/Thread.hpp>
 #include <libchess/notation/EPD.hpp>
+#include <libchess/uci/Printing.hpp>
 #include <libchess/util/Files.hpp>
 #include <libchess/util/Strings.hpp>
 #include <libchess/util/Threading.hpp>
@@ -31,14 +33,13 @@
 #include <print>
 #include <ranges>
 #include <string_view>
-#include <utility>
 #include <vector>
 
 namespace ben_bot {
 
-using std::println;
 using std::size_t;
 using std::string_view;
+using uci::printing::info_string;
 
 namespace util     = chess::util;
 namespace notation = chess::notation;
@@ -83,8 +84,8 @@ namespace {
 
         search::Thread thread {
             search::Callbacks {
-                .onSearchComplete = [this](SearchResult res) {
-                    result = std::move(res);
+                .onSearchComplete = [this](const SearchResult res) {
+                    result = res;
                 },
                 .onIteration = {} }
         };
@@ -100,7 +101,7 @@ namespace {
                                      })
                                    | std::ranges::to<std::vector>();
 
-        println("Started {} searcher threads...", searcherThreads.size());
+        info_string(std::format("Started {} searcher threads", searcherThreads.size()));
 
         using ThreadPtr = std::unique_ptr<BenchSearcherThread>;
 
@@ -140,10 +141,10 @@ namespace {
         const auto nps = static_cast<size_t>(std::round(
             static_cast<double>(totalNodes) / seconds));
 
-        println("Total nodes: {}", totalNodes);
-        println("NPS: {}", nps);
+        info_string(std::format("Total nodes: {}", totalNodes));
+        info_string(std::format("NPS: {}", nps));
 
-        println(
+        std::println(
             R"-(<DartMeasurement name="Nodes per second" type="numeric/integer">{}</DartMeasurement>)-",
             nps);
     }
@@ -157,8 +158,10 @@ void Engine::run_bench(const string_view arguments)
     const auto defaultDepth = util::int_from_string(depth, 3uz);
 
     if (filePath.empty()) {
+        info_string("Running bench for default position set...");
         do_bench(resources::get_bench_epd_text(), defaultDepth);
     } else {
+        info_string(std::format("Running bench for {}", filePath));
         do_bench(
             util::load_file_as_string(std::filesystem::path { filePath }),
             defaultDepth);
