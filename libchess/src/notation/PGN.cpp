@@ -546,7 +546,7 @@ string to_pgn(const GameRecord& game, const bool useBlockComments)
 
     write_metadata(game.metadata, game.startingPosition, result);
 
-    result.append("\n");
+    result.append(1uz, '\n');
 
     write_move_list(game.startingPosition, game.moves, useBlockComments, result);
 

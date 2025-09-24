@@ -244,7 +244,7 @@ constexpr auto Move::pack_fields(
 
 constexpr std::optional<PieceType> Move::promoted_type() const noexcept
 {
-    if (! is_promotion())
+    if (not is_promotion())
         return std::nullopt;
 
     return static_cast<PieceType>(
@@ -264,7 +264,7 @@ constexpr bool Move::is_under_promotion() const noexcept
     const auto prom = promoted_type();
 
     return prom.has_value()
-        && prom.value() != PieceType::Queen;
+       and prom.value() != PieceType::Queen;
 }
 
 constexpr bool Move::is_castling() const noexcept

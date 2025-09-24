@@ -92,11 +92,7 @@ struct TranspositionTable::Entry final {
         generation = gen;
         eval       = static_cast<std::int16_t>(data.eval);
         evalType   = data.evalType;
-
-        if (data.bestMove.has_value())
-            move = data.bestMove.value();
-        else
-            move = Move {};
+        move       = data.bestMove.value_or(Move {});
     }
 };
 
