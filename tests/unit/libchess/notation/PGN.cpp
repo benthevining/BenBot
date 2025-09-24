@@ -221,6 +221,29 @@ TEST_CASE("PGN - NAG inside a comment", TAGS)
     REQUIRE(to_pgn(game) == pgn);
 }
 
+TEST_CASE("PGN - null NAGs", TAGS)
+{
+    static constexpr std::string_view pgn {
+        R"([Event "F/S Return Match"]
+[Site "Belgrade, Serbia JUG"]
+[Date "1992.11.04"]
+[Round "29"]
+[White "Fischer, Robert J."]
+[Black "Spassky, Boris V."]
+[Result "*"]
+
+1.e4 e5)"
+    };
+
+    auto game = from_pgn(pgn);
+
+    game.moves.front().nags.emplace_back(chess::notation::NAG::Null);
+
+    const auto roundTripped = from_pgn(to_pgn(game));
+
+    REQUIRE(roundTripped.moves.front().nags.empty());
+}
+
 TEST_CASE("PGN - custom starting position", TAGS)
 {
     static constexpr std::string_view pgn {
