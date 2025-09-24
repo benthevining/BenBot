@@ -12,44 +12,30 @@
  * ======================================================================================
  */
 
-#include <ben-bot/CLI.hpp>
-#include <ben-bot/Engine.hpp>
-#include <cstdlib>
-#include <exception>
-#include <format>
-#include <libchess/uci/Printing.hpp>
-#include <libchess/util/Console.hpp>
+/** @file
+    This file provides some utility functions for printing UCI-style output.
+    @ingroup uci
+ */
 
-using chess::uci::printing::info_string;
+#pragma once
 
-int main(const int argc, const char** argv)
-try {
-    chess::util::enable_utf8_console_output();
+#include <print>
+#include <string_view>
 
-    const auto args = ben_bot::Arguments::parse(argc, argv);
+/** This namespace contains utility functions for printing UCI-style output.
+    @ingroup uci
+ */
+namespace chess::uci::printing {
 
-    ben_bot::Engine engine;
+/** Prints a UCI-formatted information string to standard output.
+    This function should be used for any informational or debug output that
+    an engine wants to print.
 
-    if (not args.noLogo) {
-        [[likely]];
-        engine.print_logo_and_version();
-    }
-
-    if (not args.uciCommand.empty()) {
-        [[unlikely]];
-        engine.handle_command(args.uciCommand);
-    }
-
-    if (not args.noLoop) {
-        [[likely]];
-        engine.loop();
-    }
-
-    return EXIT_SUCCESS;
-} catch (const std::exception& exception) {
-    info_string(std::format("Internal error: {}", exception.what()));
-    return EXIT_FAILURE;
-} catch (...) {
-    info_string("Error: unknown exception thrown!");
-    return EXIT_FAILURE;
+    @ingroup uci
+ */
+inline void info_string(const std::string_view info)
+{
+    std::println("info string {}", info);
 }
+
+} // namespace chess::uci::printing

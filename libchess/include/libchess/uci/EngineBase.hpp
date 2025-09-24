@@ -32,11 +32,13 @@ using game::Position;
 using std::string_view;
 
 /** A base class for UCI chess engines.
-    This class provides handling of UCI command printing and
-    parsing, so that the engine implementation can focus purely
-    on implementing evaluation and search.
 
-    To use one of these, implement a derived class, then in your
+    This class provides handling of UCI command parsing, so that
+    the engine implementation can focus purely on implementing
+    evaluation and search. UCI printing is provided by the functions
+    in the ``uci::printing`` namespace.
+
+    To use this class, implement a derived class, then in your
     program's ``main()`` function, create an instance of your
     derived engine class and call its ``loop()`` method.
 

@@ -14,16 +14,19 @@
 
 #include <algorithm>
 #include <exception>
+#include <format>
 #include <iostream>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/uci/CommandParsing.hpp>
 #include <libchess/uci/EngineBase.hpp>
+#include <libchess/uci/Printing.hpp>
 #include <libchess/util/Strings.hpp>
 #include <print>
 #include <string>
 
 namespace chess::uci {
 
+using printing::info_string;
 using std::println;
 using util::split_at_first_space;
 using util::trim;
@@ -136,7 +139,8 @@ try {
 
     if (const auto errorStr = newPos.is_illegal()) {
         [[unlikely]];
-        println("info string Attempted to set illegal position: {}", errorStr.value());
+        info_string(std::format("Attempted to set illegal position: {}", errorStr.value()));
+        info_string(std::format("Retained previous position: {}", notation::to_fen(position)));
         return;
     }
 
@@ -144,8 +148,8 @@ try {
 
     set_position(newPos);
 } catch (const std::exception& exception) {
-    println("info string Error setting position: {}", exception.what());
-    println("info string Rolling back to previous position: {}", notation::to_fen(position));
+    info_string(std::format("Error setting position: {}", exception.what()));
+    info_string(std::format("Retained previous position: {}", notation::to_fen(position)));
 }
 
 void EngineBase::handle_setoption(const string_view arguments)
@@ -190,7 +194,7 @@ void EngineBase::handle_setoption(const string_view arguments)
 
         option_changed(*option);
     } else {
-        println("info string Attempted to set unknown option {}", name);
+        info_string(std::format("Attempted to set unknown option '{}'", name));
     }
 }
 

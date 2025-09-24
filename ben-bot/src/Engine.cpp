@@ -16,8 +16,10 @@
 #include <ben-bot/Engine.hpp>
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
+#include <format>
 #include <libchess/moves/Perft.hpp>
 #include <libchess/notation/UCI.hpp>
+#include <libchess/uci/Printing.hpp>
 #include <libchess/util/Strings.hpp>
 #include <print>
 
@@ -28,6 +30,7 @@ namespace notation = chess::notation;
 
 using std::println;
 using std::size_t;
+using uci::printing::info_string;
 
 void Engine::new_game([[maybe_unused]] const bool firstCall)
 {
@@ -46,8 +49,8 @@ void Engine::handle_custom_command(
         return;
     }
 
-    println("info string Unknown UCI command: {}", command);
-    println("info string Type 'help' for a list of supported commands");
+    info_string(std::format("Unknown UCI command: '{}'", command));
+    info_string("Type help for a list of supported commands");
 }
 
 void Engine::option_changed(const uci::Option& option)
