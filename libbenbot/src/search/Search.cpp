@@ -92,7 +92,7 @@ namespace {
 
         // the PVs collected by alpha-beta will begin 1 ply after the root,
         // so we need to prepend the first move here
-        [[nodiscard]] MoveList to_movelist(Move firstMove) const
+        [[nodiscard]] MoveList to_movelist(const Move firstMove) const
         {
             MoveList line;
 
@@ -138,7 +138,8 @@ namespace {
         for (const auto& move : moves) {
             assert(context.currentPosition.is_capture(move));
 
-            evaluation = -quiescence(context.recurse(after_move(context.currentPosition, move)));
+            evaluation = -quiescence(
+                context.recurse(after_move(context.currentPosition, move)));
 
             if (context.interrupter.was_aborted())
                 return {};
@@ -225,6 +226,9 @@ namespace {
 
             ++context.stats.nodesSearched;
 
+            // if (context.depth == 0uz)
+            //     bestLine.length = 0uz;
+
             if (eval >= context.bounds.beta) {
                 context.transTable.store(
                     context.currentPosition, { .searchedDepth = context.depth,
@@ -242,17 +246,13 @@ namespace {
                 evalType             = EvalType::Exact;
                 context.bounds.alpha = eval;
 
-                if (context.depth > 0uz) {
-                    parentLine.moves.front() = move;
+                parentLine.moves.front() = move;
 
-                    std::ranges::copy(
-                        std::views::take(bestLine.moves, bestLine.length),
-                        std::next(parentLine.moves.data(), 1));
+                std::ranges::copy(
+                    std::views::take(bestLine.moves, bestLine.length),
+                    std::next(parentLine.moves.data()));
 
-                    parentLine.length = bestLine.length + 1uz;
-                } else {
-                    parentLine.length = 0uz;
-                }
+                parentLine.length = bestLine.length + 1uz;
             }
         }
 
@@ -405,8 +405,6 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
             return exitFlag.load() or not pondering.load();
         });
     }
-
-    assert(! bestMove.is_null());
 
     callbacks.search_complete({ .pv = pv,
         .duration                   = interrupter.get_search_duration(),
