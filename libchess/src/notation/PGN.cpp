@@ -153,6 +153,10 @@ namespace {
         const string_view pgnText, Moves& output)
         -> string_view
     {
+        // NB. we're not doing explicit checks for null NAGs here
+        // they shouldn't appear in PGN files we parse, but I don't
+        // think it's necessary to refuse to parse them
+
         assert(pgnText.front() == '$');
 
         const auto [nag, rest] = split_at_first_space_or_newline(pgnText.substr(1uz));
@@ -160,7 +164,7 @@ namespace {
         if (not output.empty()) {
             const auto value = int_from_string<std::uint_least8_t>(util::trim(nag));
 
-            output.back().nags.emplace_back(value);
+            output.back().nags.emplace_back(static_cast<NAG>(value));
         }
 
         return rest;
@@ -481,8 +485,11 @@ namespace {
                 }
             }
 
-            for (const auto nag : move.nags)
-                output.append(std::format("${} ", nag));
+            for (const auto nag : move.nags) {
+                // a null NAG has no typographic representation and shouldn't appear in PGN files
+                if (nag != NAG::Null)
+                    output.append(std::format("${} ", std::to_underlying(nag)));
+            }
 
             // set to false after the first move
             writeMoveNumber = false;

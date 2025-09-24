@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
+#include <cstdint>
 #include <libchess/game/Position.hpp>
 #include <libchess/game/Result.hpp>
 #include <libchess/moves/Move.hpp>
@@ -34,6 +34,35 @@ namespace chess::notation {
 using game::Position;
 using std::string;
 
+/** PGN NAG glyphs are represented by their numeric codes.
+    This enumeration lists many of the standard NAGs (but not all of them).
+
+    @ingroup notation
+ */
+enum NAG : std::uint_least8_t {
+    Null                   = 0,  ///< A null annotation. Provided for usage as a placeholder value; should not appear in PGN files and has no typographic representation.
+    Good                   = 1,  ///< A good move, typically displayed as ``!``.
+    Brilliant              = 3,  ///< A brilliant move, typically displayed as ``!!``.
+    Inaccuracy             = 2,  ///< A mistake, typically displayed as ``?``.
+    Blunder                = 4,  ///< A blunder, typically displayed as ``??``.
+    Interesting            = 5,  ///< A speculative or interesting move, typically displayed as ``!?``.
+    Dubious                = 6,  ///< A questionable or dubious move, typically displayed as ``?!``.
+    Forced                 = 7,  ///< A forced or only move, typically displayed as a white square.
+    Drawish                = 10, ///< Indicates that the position is drawish or double-sided, typically displayed as ``=``.
+    Unclear                = 13, ///< Indicates that the position is unclear, typically displayed as an infinity symbol.
+    WhiteSlightAdvantage   = 14, ///< Indicates that white has a slight advantage in this position.
+    WhiteModerateAdvantage = 16, ///< Indicates that white has a moderate advantage in this position.
+    WhiteDecisiveAdvantage = 18, ///< Indicates that white has a decisive advantage in this position.
+    WhiteCrushingAdvantage = 20, ///< Indicates that white has a crushing advantage in this position (black should resign).
+    BlackSlightAdvantage   = 15, ///< Indicates that black has a slight advantage in this position.
+    BlackModerateAdvantage = 17, ///< Indicates that black has a moderate advantage in this position.
+    BlackDecisiveAdvantage = 19, ///< Indicates that black has a decisive advantage in this position.
+    BlackCrushingAdvantage = 21, ///< Indicates that black has a crushing advantage in this position (white should resign).
+    WhiteZugzwang          = 22, ///< Indicates that white is in Zugzwang in this position.
+    WhiteInitiative        = 36, ///< Indicates that white has the initiative in this position.
+    BlackInitiative        = 37  ///< Indicates that black has the initiative in this position.
+};
+
 /** A record of a complete game, including some metadata.
     This structure is returned by the ``from_pgn()`` method.
 
@@ -47,7 +76,7 @@ struct GameRecord final {
     std::unordered_map<string, string> metadata;
 
     /** The starting position of this game. */
-    Position startingPosition {};
+    Position startingPosition;
 
     /** If the game ended in a conclusive result, this holds the
         appropriate Result enumeration. If the game is ongoing,
@@ -75,9 +104,12 @@ struct GameRecord final {
 
             For example, for a move annotated ``!``, this would be 1,
             for a ``?`` this would be 2, etc.
-         */
-        std::vector<std::uint_least8_t> nags;
 
+            See the ``nags`` namespace for some useful NAG constants.
+         */
+        std::vector<NAG> nags;
+
+        /** A variation is simply a nested list of moves. */
         using Variation = std::vector<Move>;
 
         /** If this move has alternate possible continuations, they are
