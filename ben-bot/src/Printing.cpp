@@ -25,14 +25,16 @@
 #include <libbenbot/eval/Score.hpp>
 #include <libbenbot/search/Callbacks.hpp>
 #include <libchess/game/Position.hpp>
+#include <libchess/moves/Move.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/UCI.hpp>
+#include <libchess/uci/Printing.hpp>
 #include <libchess/util/Strings.hpp>
+#include <magic_enum/magic_enum.hpp>
 #include <optional>
 #include <print>
 #include <string>
 #include <string_view>
-#include <variant>
 
 namespace ben_bot {
 
@@ -42,6 +44,7 @@ using std::size_t;
 
 using chess::notation::to_uci;
 using std::println;
+using uci::printing::info_string;
 
 namespace {
 
@@ -249,33 +252,38 @@ void Engine::print_current_position(const string_view arguments) const
         utf8 ? print_utf8(pos) : print_ascii(pos));
 
     println("");
-    println("FEN: {}", chess::notation::to_fen(pos));
-    println("Zobrist key: {}", pos.hash);
-    println("");
+    info_string(std::format("FEN: {}", chess::notation::to_fen(pos)));
+    info_string(std::format("Zobrist key: {}", pos.hash));
 
-    // print eval
     if (const auto record = searcher.context.transTable.find(pos)) {
         const auto score = Score::from_tt({ record->eval, record->evalType }, 0uz);
 
-        println("TT hit: {}", get_score_string(score));
+        info_string(std::format(
+            "TT hit: depth {} eval {} type {} probed {} bestmove {}",
+            record->searchedDepth, record->eval,
+            magic_enum::enum_name(record->evalType),
+            score,
+            to_uci(record->bestMove.value_or(chess::moves::Move {}))));
     }
 
-    println("Static eval: {}", eval::evaluate(pos));
+    info_string(std::format("Static eval: {}", eval::evaluate(pos)));
 }
 
 void Engine::print_compiler_info()
 {
-    println(
+    info_string(std::format(
         "Compiled by {} version {} for {}",
         resources::get_compiler_name(),
         resources::get_compiler_version(),
-        resources::get_system_name());
+        resources::get_system_name()));
 
-    println(
-        "Build configuration: {}", resources::get_build_config());
+    info_string(std::format(
+        "Build configuration: {}",
+        resources::get_build_config()));
 
-    println(
-        "Build date: {}", resources::get_build_time());
+    info_string(std::format(
+        "Build date: {}",
+        resources::get_build_time()));
 }
 
 } // namespace ben_bot
