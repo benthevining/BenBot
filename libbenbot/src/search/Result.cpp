@@ -12,67 +12,45 @@
  * ======================================================================================
  */
 
-/** @file
-    This file defines the search callbacks struct.
-    @ingroup search
- */
-
-#pragma once
-
-#include <functional>
+#include <format>
 #include <libbenbot/search/Result.hpp>
+#include <string>
 
 namespace ben_bot::search {
 
-struct Context;
+namespace {
 
-/** This struct encapsulates a set of functions that will be called to
-    process search progress and results. Search results are always
-    retrieved through these callbacks.
-
-    @ingroup search
-    @see Context
- */
-struct Callbacks final {
-    /** Function type that accepts a single Result argument. */
-    using Callback = std::function<void(const Result&)>;
-
-    /** Function object that will be invoked with results from a completed search. */
-    Callback onSearchComplete;
-
-    /** Function object that will be invoked with results from each iteration of
-        the iterative deepening loop.
-     */
-    Callback onIteration;
-
-    /** Can be safely called without checking if ``onSearchComplete`` is null. */
-    void search_complete(const Result& result) const
+    [[nodiscard]] auto get_extra_stats_string(
+        const Result& res, const bool includeDebugInfo) -> std::string
     {
-        if (onSearchComplete != nullptr) {
-            [[likely]];
-            onSearchComplete(result);
-        }
+        if (res.nodesSearched == 0uz or not includeDebugInfo)
+            return {};
+
+        auto get_pcnt = [totalNodes = static_cast<double>(res.nodesSearched)](const size_t value) {
+            return (static_cast<double>(value) / totalNodes) * 100.;
+        };
+
+        return std::format(
+            "TT hits {} ({:.1f}%) Beta cutoffs {} ({:.1f}%) MDP cutoffs {} ({:.1f}%)",
+            res.transpositionTableHits, get_pcnt(res.transpositionTableHits),
+            res.betaCutoffs, get_pcnt(res.betaCutoffs),
+            res.mdpCutoffs, get_pcnt(res.mdpCutoffs));
     }
 
-    /** Can be safely called without checking if ``onIteration`` is null. */
-    void iteration_complete(const Result& result) const
-    {
-        if (onIteration != nullptr) {
-            [[likely]];
-            onIteration(result);
-        }
-    }
+} // namespace
 
-    /** Creates a set of callbacks that print UCI-formatted information and bestmove
-        output to standard output.
-
-        @param context The search context being used to generate the output.
-        @param isDebugMode Function object that should return true if debug information
-        should be included in the information output.
-     */
-    [[nodiscard]] static Callbacks make_uci_printer(
-        const Context&        context,
-        std::function<bool()> isDebugMode);
-};
+auto Result::to_libchess(const bool includeDebugInfo) const -> LibchessResult
+{
+    return {
+        .score            = score.to_libchess(),
+        .depth            = depth,
+        .time             = duration,
+        .nodes            = nodesSearched,
+        .pv               = {},
+        .hashfull         = hashfull,
+        .tbHits           = 0uz,
+        .extraInformation = get_extra_stats_string(*this, includeDebugInfo)
+    };
+}
 
 } // namespace ben_bot::search

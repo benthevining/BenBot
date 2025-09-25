@@ -12,67 +12,53 @@
  * ======================================================================================
  */
 
-/** @file
-    This file defines the search callbacks struct.
-    @ingroup search
- */
-
-#pragma once
-
 #include <functional>
-#include <libbenbot/search/Result.hpp>
+#include <iostream>
+#include <libbenbot/search/Callbacks.hpp>
+#include <libbenbot/search/Context.hpp>
+#include <libchess/uci/Printing.hpp>
 
 namespace ben_bot::search {
 
-struct Context;
+namespace {
 
-/** This struct encapsulates a set of functions that will be called to
-    process search progress and results. Search results are always
-    retrieved through these callbacks.
+    namespace uci_printing = chess::uci::printing;
 
-    @ingroup search
-    @see Context
- */
-struct Callbacks final {
-    /** Function type that accepts a single Result argument. */
-    using Callback = std::function<void(const Result&)>;
-
-    /** Function object that will be invoked with results from a completed search. */
-    Callback onSearchComplete;
-
-    /** Function object that will be invoked with results from each iteration of
-        the iterative deepening loop.
-     */
-    Callback onIteration;
-
-    /** Can be safely called without checking if ``onSearchComplete`` is null. */
-    void search_complete(const Result& result) const
+    template <bool PrintBestMove>
+    void print_uci_info(
+        const Result&  res,
+        const bool     debugMode,
+        const Context& context)
     {
-        if (onSearchComplete != nullptr) {
-            [[likely]];
-            onSearchComplete(result);
+        uci_printing::search_info(res.to_libchess(debugMode));
+
+        if constexpr (PrintBestMove) {
+            const auto& currPos    = context.options.position;
+            const auto& transTable = context.transTable;
+
+            uci_printing::best_move(
+                res.bestMove,
+                transTable.get_best_response(currPos, res.bestMove));
+
+            // Because these callbacks are executed on the searcher background thread,
+            // without this flush here, the output may not actually be written when we
+            // expect, leading to timeouts or GUIs thinking we've hung/disconnected.
+            // Because the best move is always printed last after all info output, we
+            // can do the flush only in this branch.
+            std::cout.flush();
         }
     }
 
-    /** Can be safely called without checking if ``onIteration`` is null. */
-    void iteration_complete(const Result& result) const
-    {
-        if (onIteration != nullptr) {
-            [[likely]];
-            onIteration(result);
-        }
-    }
+} // namespace
 
-    /** Creates a set of callbacks that print UCI-formatted information and bestmove
-        output to standard output.
-
-        @param context The search context being used to generate the output.
-        @param isDebugMode Function object that should return true if debug information
-        should be included in the information output.
-     */
-    [[nodiscard]] static Callbacks make_uci_printer(
-        const Context&        context,
-        std::function<bool()> isDebugMode);
-};
+Callbacks Callbacks::make_uci_printer(
+    const Context&        context,
+    std::function<bool()> isDebugMode)
+{
+    return {
+        .onSearchComplete = [&context, isDebugMode](const Result& res) { print_uci_info<true>(res, isDebugMode(), context); },
+        .onIteration = [&context, isDebugMode](const Result& res) { print_uci_info<false>(res, isDebugMode(), context); }
+    };
+}
 
 } // namespace ben_bot::search

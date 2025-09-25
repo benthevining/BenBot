@@ -14,24 +14,29 @@
 
 #include <algorithm>
 #include <ben-bot/Engine.hpp>
-#include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
-#include <libchess/moves/Perft.hpp>
-#include <libchess/notation/UCI.hpp>
-#include <libchess/util/Strings.hpp>
-#include <print>
+#include <format>
+#include <libbenbot/search/Callbacks.hpp>
+#include <libchess/uci/Printing.hpp>
 
 namespace ben_bot {
 
-namespace util     = chess::util;
-namespace notation = chess::notation;
-
-using std::println;
 using std::size_t;
+using uci::printing::info_string;
 
-void Engine::new_game([[maybe_unused]] const bool firstCall)
+void Engine::new_game(const bool firstCall)
 {
-    searcher.context.clear_transposition_table();
+    if (not firstCall) {
+        searcher.context.clear_transposition_table();
+        return;
+    }
+
+    // we use delayed initialization for these callbacks instead of
+    // initializing them in the constructor to avoid referencing the
+    // `this` pointer in the constructor
+    searcher.context.callbacks = search::Callbacks::make_uci_printer(
+        searcher.context,
+        [this] { return debugMode.load(); });
 }
 
 // this function implements non-standard UCI commands that we support
@@ -46,8 +51,8 @@ void Engine::handle_custom_command(
         return;
     }
 
-    println("info string Unknown UCI command: {}", command);
-    println("info string Type 'help' for a list of supported commands");
+    info_string(std::format("Unknown UCI command: '{}'", command));
+    info_string("Type help for a list of supported commands");
 }
 
 void Engine::option_changed(const uci::Option& option)
@@ -56,49 +61,6 @@ void Engine::option_changed(const uci::Option& option)
         wait();
         searcher.context.transTable.resize(static_cast<size_t>(ttSize.get_value()));
     }
-}
-
-namespace {
-    using chess::moves::PerftResult;
-
-    void perft_print_root_nodes(const PerftResult& result)
-    {
-        for (const auto& [move, numChildren] : result.rootNodes) {
-            println("{} {}",
-                notation::to_uci(move), numChildren);
-        }
-    }
-
-    void perft_print_results(const PerftResult& result)
-    {
-        println("Nodes: {}", result.nodes);
-        println("Captures: {}", result.captures);
-        println("En passant captures: {}", result.enPassantCaptures);
-        println("Castles: {}", result.castles);
-        println("Promotions: {}", result.promotions);
-        println("Checks: {}", result.checks);
-        println("Checkmates: {}", result.checkmates);
-
-        // NB. the python wrapper script relies on this being printed last
-        println("Stalemates: {}", result.stalemates);
-    }
-} // namespace
-
-void Engine::run_perft(const string_view arguments) const
-{
-    const auto depth = util::int_from_string(
-        util::trim(arguments),
-        4uz);
-
-    println("Running perft depth {}...", depth);
-
-    const auto result = chess::moves::perft(
-        depth, searcher.context.options.position);
-
-    println("");
-    perft_print_root_nodes(result);
-    println("");
-    perft_print_results(result);
 }
 
 void Engine::make_null_move()
