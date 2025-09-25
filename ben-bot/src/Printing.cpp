@@ -104,18 +104,6 @@ namespace {
             res.mdpCutoffs, get_pcnt(res.mdpCutoffs));
     }
 
-    [[nodiscard]] auto get_ponder_move_string(
-        const std::optional<Move> ponderMove)
-        -> std::string
-    {
-        if (not ponderMove.has_value())
-            return {};
-
-        return std::format(
-            " ponder {}",
-            to_uci(*ponderMove));
-    }
-
     template <bool PrintBestMove>
     void print_uci_info(
         const Result& res, const bool debugMode,
@@ -131,10 +119,9 @@ namespace {
             const auto& currPos    = context.options.position;
             const auto& transTable = context.transTable;
 
-            println("bestmove {}{}",
-                to_uci(res.bestMove),
-                get_ponder_move_string(
-                    transTable.get_best_response(currPos, res.bestMove)));
+            uci::printing::best_move(
+                res.bestMove,
+                transTable.get_best_response(currPos, res.bestMove));
 
             // Because these callbacks are executed on the searcher background thread,
             // without this flush here, the output may not actually be written when we
@@ -147,11 +134,6 @@ namespace {
 
 } // namespace
 
-std::string Engine::get_name() const
-{
-    return std::format("BenBot {}", resources::get_version_string());
-}
-
 Engine::Engine()
     : searcher {
         search::Callbacks {
@@ -159,6 +141,11 @@ Engine::Engine()
             .onIteration = [this](const Result& res) { print_uci_info<false>(res, debugMode.load(), searcher.context); } }
     }
 {
+}
+
+std::string Engine::get_name() const
+{
+    return std::format("BenBot {}", resources::get_version_string());
 }
 
 void Engine::print_logo_and_version() const
