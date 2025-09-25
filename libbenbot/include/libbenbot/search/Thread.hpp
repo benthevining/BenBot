@@ -36,6 +36,9 @@ namespace ben_bot::search {
     @ingroup search
  */
 struct Thread final {
+    /** Creates a searcher thread with an empty set of result callbacks. */
+    Thread() = default;
+
     /** Creates a searcher thread with a specified set of result callbacks.
         Note that the result callbacks will be invoked on the background thread.
      */

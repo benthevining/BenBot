@@ -16,6 +16,7 @@
 #include <ben-bot/Engine.hpp>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <format>
+#include <libbenbot/search/Callbacks.hpp>
 #include <libchess/uci/Printing.hpp>
 
 namespace ben_bot {
@@ -23,9 +24,19 @@ namespace ben_bot {
 using std::size_t;
 using uci::printing::info_string;
 
-void Engine::new_game([[maybe_unused]] const bool firstCall)
+void Engine::new_game(const bool firstCall)
 {
-    searcher.context.clear_transposition_table();
+    if (not firstCall) {
+        searcher.context.clear_transposition_table();
+        return;
+    }
+
+    // we use delayed initialization for these callbacks instead of
+    // initializing them in the constructor to avoid referencing the
+    // `this` pointer in the constructor
+    searcher.context.callbacks = search::Callbacks::make_uci_printer(
+        searcher.context,
+        [this] { return debugMode.load(); });
 }
 
 // this function implements non-standard UCI commands that we support

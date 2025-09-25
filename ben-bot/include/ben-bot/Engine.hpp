@@ -45,8 +45,6 @@ namespace uci = chess::uci;
  */
 class Engine final : public uci::EngineBase {
 public:
-    Engine();
-
     /** Prints the engine's logo and version to ``stdout``. */
     void print_logo_and_version() const;
 

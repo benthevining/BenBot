@@ -18,7 +18,6 @@
 #include <format>
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Score.hpp>
-#include <libbenbot/search/Callbacks.hpp>
 #include <libbenbot/search/Result.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/UCI.hpp>
@@ -36,15 +35,6 @@ using Result = search::Result;
 
 using std::println;
 using uci::printing::info_string;
-
-Engine::Engine()
-    : searcher {
-        search::Callbacks::make_uci_printer(
-            searcher.context,
-            [this] { return debugMode.load(); })
-    }
-{
-}
 
 std::string Engine::get_name() const
 {
