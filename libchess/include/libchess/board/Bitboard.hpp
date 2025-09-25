@@ -23,7 +23,6 @@
 #include <cassert>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdint> // IWYU pragma: keep - for std::uint64_t
-#include <format>
 #include <iterator>
 #include <libchess/board/BitboardIndex.hpp>
 #include <libchess/board/Square.hpp>
@@ -234,32 +233,6 @@ private:
 
 } // namespace chess::board
 
-namespace std {
-
-/** A formatter specialization for Bitboard objects.
-
-    The formatter accepts the following format specifier arguments:
-    @li ``i|I``: Tells the formatter to print the bitboard as its integer representation. The integer is displayed in hexadecimal.
-    @li ``g|G``: Tells the formatter to print a graphical representation of the bitboard.
-
-    If no arguments are specified, the formatter prints the bitboard's integer representation by default.
-
-    @see chess::board::Bitboard
-    @ingroup board
- */
-template <>
-struct formatter<chess::board::Bitboard> final {
-    template <typename ParseContext>
-    constexpr typename ParseContext::iterator parse(ParseContext& ctx);
-
-    template <typename FormatContext>
-    typename FormatContext::iterator format(
-        const chess::board::Bitboard& board, FormatContext& ctx) const;
-
-private:
-    bool asInt { true };
-};
-
 /*
                          ___                           ,--,
       ,---,            ,--.'|_                ,--,   ,--.'|
@@ -276,52 +249,6 @@ private:
   `----'     `----'             `--`---'     ---`-'                     `--" `--" `--"
 
  */
-
-template <typename ParseContext>
-constexpr typename ParseContext::iterator
-formatter<chess::board::Bitboard>::parse(ParseContext& ctx)
-{
-    auto it = ctx.begin();
-
-    if (it == ctx.end() or *it == '}')
-        return it;
-
-    do {
-        switch (*it) {
-            case 'i': [[fallthrough]];
-            case 'I':
-                asInt = true;
-                break;
-
-            case 'g': [[fallthrough]];
-            case 'G':
-                asInt = false;
-                break;
-
-            default:
-                throw std::format_error { "Unrecognized format argument" };
-        }
-
-        ++it;
-    } while (not(it == ctx.end() or *it == '}'));
-
-    ctx.advance_to(it);
-
-    return it;
-}
-
-template <typename FormatContext>
-typename FormatContext::iterator
-formatter<chess::board::Bitboard>::format(
-    const chess::board::Bitboard& board, FormatContext& ctx) const
-{
-    if (asInt)
-        return std::format_to(ctx.out(), "{:#X}", board.to_int());
-
-    return std::format_to(ctx.out(), "{}", print_ascii(board));
-}
-
-} // namespace std
 
 namespace chess::board {
 

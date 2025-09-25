@@ -23,8 +23,14 @@ namespace {
     [[nodiscard]] auto get_extra_stats_string(
         const Result& res, const bool includeDebugInfo) -> std::string
     {
-        if (res.nodesSearched == 0uz or not includeDebugInfo)
+        if (not includeDebugInfo)
             return {};
+
+        if (res.nodesSearched == 0uz) {
+            return std::format(
+                "TT hits {} Beta cutoffs {} MDP cutoffs {}",
+                res.transpositionTableHits, res.betaCutoffs, res.mdpCutoffs);
+        }
 
         auto get_pcnt = [totalNodes = static_cast<double>(res.nodesSearched)](const size_t value) {
             return (static_cast<double>(value) / totalNodes) * 100.;
