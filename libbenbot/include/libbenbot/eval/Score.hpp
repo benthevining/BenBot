@@ -24,6 +24,7 @@
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <format>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
+#include <libchess/uci/Printing.hpp>
 
 namespace ben_bot::eval {
 
@@ -99,6 +100,12 @@ struct Score final {
      */
     [[nodiscard]] constexpr int to_tt() const noexcept;
 
+    /** The libchess type used for printing UCI-formatted search information. */
+    using LibchessScore = chess::uci::printing::SearchInfo::Score;
+
+    /** Converts this score object to the libchess type used for printing UCI info. */
+    [[nodiscard]] LibchessScore to_libchess() const noexcept;
+
     /** Returns a checkmate score.
         During search, mate scores are based on the distance from the root of the tree,
         so that the engine actually goes for mate.
@@ -109,14 +116,14 @@ struct Score final {
         return { (MAX - static_cast<int>(plyFromRoot)) * -1 };
     }
 
-    using TT = TranspositionTable;
+    using ProbedEval = TranspositionTable::ProbedEval;
 
     /** Converts a value from the transposition table to a score.
         This maps the MATE constant to a ply-from-root mate score.
      */
     [[nodiscard, gnu::const]] static constexpr Score from_tt(
-        const TT::ProbedEval& eval,
-        size_t                plyFromRoot) noexcept;
+        const ProbedEval& eval,
+        size_t            plyFromRoot) noexcept;
 };
 
 /*
@@ -148,8 +155,8 @@ constexpr int Score::to_tt() const noexcept
 }
 
 constexpr Score Score::from_tt(
-    const TT::ProbedEval& eval,
-    const size_t          plyFromRoot) noexcept
+    const ProbedEval& eval,
+    const size_t      plyFromRoot) noexcept
 {
     const auto [score, type] = eval;
 
@@ -162,6 +169,24 @@ constexpr Score Score::from_tt(
     }
 
     return { score };
+}
+
+inline auto Score::to_libchess() const noexcept -> LibchessScore
+{
+    LibchessScore res;
+
+    if (is_mate()) {
+        auto ply = static_cast<int>(ply_to_mate());
+
+        if (is_losing_mate())
+            ply *= -1;
+
+        res.mate = ply;
+    } else {
+        res.cp = value;
+    }
+
+    return res;
 }
 
 } // namespace ben_bot::eval

@@ -19,8 +19,12 @@
 
 #pragma once
 
+#include <chrono>
+#include <cstddef> // IWYU pragma: keep - for size_t
 #include <libchess/moves/Move.hpp>
+#include <libchess/moves/MoveGen.hpp>
 #include <optional>
+#include <string>
 #include <string_view>
 
 /** This namespace contains utility functions for printing UCI-style output.
@@ -29,6 +33,7 @@
 namespace chess::uci::printing {
 
 using moves::Move;
+using std::size_t;
 
 /** Prints a UCI-formatted information string to standard output.
     This function should be used for any informational or debug output that
@@ -38,12 +43,76 @@ using moves::Move;
  */
 void info_string(std::string_view info);
 
-/** Prints a UCI-formatted best move string, and optionally a ponder move.
+/** Prints a UCI-formatted best move string to standard output.
+    Specifying a ponder move is optional.
 
     @ingroup uci
  */
 void best_move(
     Move                bestMove,
     std::optional<Move> ponderMove);
+
+/** This POD struct encapsulates the various information that can be printed
+    about a search.
+
+    @ingroup uci
+    @see search_info()
+
+    @todo ``seldepth``, ``multipv``, ``currmove``, ``currmovenumber``, ``cpuload``, ``refutation``, ``currline``
+ */
+struct SearchInfo final {
+    /** Represents the engine's evaluation of the line it is currently searching. */
+    struct Score {
+        /** Evaluation value in centipawns, from the engine's point of view.
+            If this is ``nullopt``, ``mate`` must have a value.
+         */
+        std::optional<int> cp;
+
+        /** Mate in X plies.
+            The value should be negative if the engine is getting mated.
+            If this is ``nullopt``, ``cp`` must have a value.
+         */
+        std::optional<int> mate;
+
+        /** True if the score is just a lower bound (ie, a beta cutoff). */
+        bool lowerBound { false };
+
+        /** True if the score is just an upper bound (ie, an alpha cutoff). */
+        bool upperBound { false };
+    };
+
+    /** The engine's evaluation of the root position. */
+    Score score;
+
+    /** The search depth, in plies, associated with this information. */
+    size_t depth { 0uz };
+
+    /** The elapsed search time. */
+    std::chrono::milliseconds time;
+
+    /** The total number of nodes searched. */
+    size_t nodes { 0uz };
+
+    /** The principal variation found. */
+    moves::MoveList pv;
+
+    /** The transposition table was filled X permille by this search so far. */
+    size_t hashfull { 0uz };
+
+    /** The number of positions found in the endgame tablebases. */
+    size_t tbHits { 0uz };
+
+    /** An optional additional information string that will be printed along
+        with the rest of the search information.
+     */
+    std::string extraInformation;
+};
+
+/** Prints a UCI-formatted search info string to standard output.
+
+    @ingroup uci
+    @relates SearchInfo
+ */
+void search_info(const SearchInfo& info);
 
 } // namespace chess::uci::printing

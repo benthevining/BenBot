@@ -15,105 +15,37 @@
 #include <ben-bot/Engine.hpp>
 #include <ben-bot/Resources.hpp>
 #include <ben-bot/TextTable.hpp>
-#include <cassert>
-#include <cmath>
-#include <cstddef> // IWYU pragma: keep - for size_t
 #include <format>
 #include <iostream>
-#include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Score.hpp>
 #include <libbenbot/search/Callbacks.hpp>
-#include <libchess/game/Position.hpp>
-#include <libchess/moves/Move.hpp>
+#include <libbenbot/search/Result.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/UCI.hpp>
 #include <libchess/uci/Printing.hpp>
 #include <libchess/util/Strings.hpp>
 #include <magic_enum/magic_enum.hpp>
-#include <optional>
 #include <print>
 #include <string>
 #include <string_view>
+#include <variant>
 
 namespace ben_bot {
 
-using Result = search::Callbacks::Result;
-using eval::Score;
-using std::size_t;
+using Result = search::Result;
 
-using chess::notation::to_uci;
 using std::println;
 using uci::printing::info_string;
 
 namespace {
-
-    [[nodiscard]] auto get_score_string(const Score score) -> std::string
-    {
-        if (not score.is_mate()) {
-            [[likely]];
-
-            // NB. we pass score.value directly here instead of going through
-            // Score's formatter because that extra indirection appears to cost
-            // enough time to observably cost some Elo
-            return std::format("cp {}", score.value);
-        }
-
-        auto plyToMate = score.ply_to_mate();
-
-        if (plyToMate > 0uz)
-            ++plyToMate;
-
-        // plies -> moves
-        const auto mateIn = plyToMate / 2uz;
-
-        auto mateVal = static_cast<int>(mateIn);
-
-        if (score < 0)
-            mateVal *= -1;
-
-        return std::format("mate {}", mateVal);
-    }
-
-    [[nodiscard, gnu::const]] auto get_nodes_per_second(const Result& res) -> size_t
-    {
-        const auto seconds = static_cast<double>(res.duration.count()) * 0.001;
-
-        assert(seconds > 0.);
-
-        const auto nps = static_cast<double>(res.nodesSearched) / seconds;
-
-        return static_cast<size_t>(std::round(nps));
-    }
-
-    [[nodiscard]] auto get_extra_stats_string(
-        const Result& res, const bool isDebugMode)
-        -> std::string
-    {
-        if ((not isDebugMode) or (res.nodesSearched == 0uz))
-            return {};
-
-        auto get_pcnt = [totalNodes = static_cast<double>(res.nodesSearched)](const size_t value) {
-            return (static_cast<double>(value) / totalNodes) * 100.;
-        };
-
-        return std::format(
-            " string TT hits {} ({}%) Beta cutoffs {} ({}%) MDP cutoffs {} ({}%)",
-            res.transpositionTableHits, get_pcnt(res.transpositionTableHits),
-            res.betaCutoffs, get_pcnt(res.betaCutoffs),
-            res.mdpCutoffs, get_pcnt(res.mdpCutoffs));
-    }
 
     template <bool PrintBestMove>
     void print_uci_info(
         const Result& res, const bool debugMode,
         const search::Context& context)
     {
-        println(
-            "info depth {} score {} time {} nodes {} nps {} hashfull {}{}",
-            res.depth, get_score_string(res.score), res.duration.count(),
-            res.nodesSearched, get_nodes_per_second(res), res.hashfull,
-            get_extra_stats_string(res, debugMode));
+        uci::printing::search_info(res.to_libchess(debugMode));
 
         if constexpr (PrintBestMove) {
             const auto& currPos    = context.options.position;
@@ -243,14 +175,14 @@ void Engine::print_current_position(const string_view arguments) const
     info_string(std::format("Zobrist key: {}", pos.hash));
 
     if (const auto record = searcher.context.transTable.find(pos)) {
-        const auto score = Score::from_tt({ record->eval, record->evalType }, 0uz);
+        const auto score = eval::Score::from_tt({ record->eval, record->evalType }, 0uz);
 
         info_string(std::format(
             "TT hit: depth {} eval {} type {} probed {} bestmove {}",
             record->searchedDepth, record->eval,
             magic_enum::enum_name(record->evalType),
             score,
-            to_uci(record->bestMove.value_or(chess::moves::Move {}))));
+            chess::notation::to_uci(record->bestMove.value_or(Move {}))));
     }
 
     info_string(std::format("Static eval: {}", eval::evaluate(pos)));

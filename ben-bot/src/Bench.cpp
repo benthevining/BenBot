@@ -22,6 +22,7 @@
 #include <filesystem>
 #include <format>
 #include <libbenbot/search/Callbacks.hpp>
+#include <libbenbot/search/Result.hpp>
 #include <libbenbot/search/Thread.hpp>
 #include <libchess/notation/EPD.hpp>
 #include <libchess/uci/Printing.hpp>
@@ -52,7 +53,7 @@ namespace {
     // block in this method - this function creates a search context, executes it,
     // and blocks waiting for the result.
 
-    using SearchResult = search::Callbacks::Result;
+    using SearchResult = search::Result;
 
     struct BenchSearcherThread final {
         BenchSearcherThread(
