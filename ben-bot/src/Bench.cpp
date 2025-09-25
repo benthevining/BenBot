@@ -31,7 +31,6 @@
 #include <libchess/util/Threading.hpp>
 #include <memory>
 #include <numeric>
-#include <print>
 #include <ranges>
 #include <string_view>
 #include <vector>
@@ -93,18 +92,23 @@ namespace {
         // clang-format off
         search::Thread thread {
             search::Callbacks {
-                .onSearchComplete = [this](const SearchResult res) { result = res; },
-                .onIteration      = [this](const SearchResult res) {
-                    if (not outputProgress)
-                        return;
-
-                    auto info = res.to_libchess(false);
-
-                    info.extraInformation = std::format("thread {}", threadNumber);
-
-                    uci::printing::search_info(info); } }
+                .onSearchComplete = [this](const SearchResult& res) { print_info(res); result = res; },
+                .onIteration      = [this](const SearchResult& res) { print_info(res); }
+            }
         };
         // clang-format on
+
+        void print_info(const SearchResult& res) const
+        {
+            if (not outputProgress)
+                return;
+
+            auto info = res.to_libchess(false);
+
+            info.extraInformation = std::format("thread {}", threadNumber);
+
+            uci::printing::search_info(info);
+        }
     };
 
     void do_bench(
@@ -124,7 +128,8 @@ namespace {
             for (auto i = 0uz; i < epds.size(); ++i) {
                 searcherThreads.emplace_back(
                     std::make_unique<BenchSearcherThread>(
-                        i, epds.at(i), defaultDepth, printProgressOutput));
+                        i + 1uz, // display 1-based thread numbers
+                        epds.at(i), defaultDepth, printProgressOutput));
             }
         }
 
@@ -167,9 +172,11 @@ namespace {
         info_string(std::format("Total nodes: {}", totalNodes));
         info_string(std::format("NPS: {}", nps));
 
-        std::println(
+        // CTest can parse test output to extract custom test measurements, which CDash can track over time
+        // see https://cmake.org/cmake/help/latest/command/ctest_test.html#additional-test-measurements
+        info_string(std::format(
             R"-(<DartMeasurement name="Nodes per second" type="numeric/integer">{}</DartMeasurement>)-",
-            nps);
+            nps));
     }
 
 } // namespace
@@ -191,6 +198,12 @@ void Engine::run_bench(const string_view arguments) const
     }
 
     info_string(std::format("Running bench for {}...", filePath));
+
+    // output the filename for CTest to detect & upload with the test info
+    // see https://cmake.org/cmake/help/latest/command/ctest_test.html#attached-files
+    info_string(std::format(
+        R"-(<CTestMeasurementFile type="file" name="BenchData">{}</CTestMeasurementFile>)-",
+        filePath));
 
     do_bench(
         util::load_file_as_string(std::filesystem::path { filePath }),
