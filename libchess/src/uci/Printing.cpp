@@ -12,38 +12,41 @@
  * ======================================================================================
  */
 
-/** @file
-    This file provides some utility functions for printing UCI-style output.
-    @ingroup uci
- */
-
-#pragma once
-
-#include <libchess/moves/Move.hpp>
+#include <format>
+#include <libchess/notation/UCI.hpp>
+#include <libchess/uci/Printing.hpp>
 #include <optional>
+#include <print>
+#include <string>
 #include <string_view>
 
-/** This namespace contains utility functions for printing UCI-style output.
-    @ingroup uci
- */
 namespace chess::uci::printing {
 
-using moves::Move;
+void info_string(const std::string_view info)
+{
+    std::println("info string {}", info);
+}
 
-/** Prints a UCI-formatted information string to standard output.
-    This function should be used for any informational or debug output that
-    an engine wants to print.
+using notation::to_uci;
 
-    @ingroup uci
- */
-void info_string(std::string_view info);
+namespace {
+    [[nodiscard]] auto ponder_move_string(const std::optional<Move> ponderMove) -> std::string
+    {
+        if (ponderMove.has_value()) {
+            [[likely]];
+            return std::format(" ponder {}", to_uci(*ponderMove));
+        }
 
-/** Prints a UCI-formatted best move string, and optionally a ponder move.
+        return {};
+    }
+} // namespace
 
-    @ingroup uci
- */
 void best_move(
-    Move                bestMove,
-    std::optional<Move> ponderMove);
+    const Move bestMove, const std::optional<Move> ponderMove)
+{
+    std::println(
+        "bestmove {}{}",
+        to_uci(bestMove), ponder_move_string(ponderMove));
+}
 
 } // namespace chess::uci::printing
