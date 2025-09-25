@@ -77,15 +77,6 @@ struct Options final {
 
     /** Updates the values in this options struct with the UCI "go" command options. */
     void update_from(const chess::uci::GoCommandOptions& goOptions);
-
-    /** Returns true if this search has any bounds other than depth. */
-    [[nodiscard]] bool is_bounded() const noexcept
-    {
-        if (infinite)
-            return false;
-
-        return searchTime.has_value() or maxNodes.has_value();
-    }
 };
 
 } // namespace ben_bot::search
