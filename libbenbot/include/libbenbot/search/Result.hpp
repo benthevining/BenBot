@@ -21,11 +21,9 @@
 
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t;
-#include <format>
 #include <libbenbot/eval/Score.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/uci/Printing.hpp>
-#include <string>
 
 namespace ben_bot::search {
 
@@ -83,54 +81,5 @@ struct Result final {
     /** Converts this object to the libchess type used for printing UCI-formatted output. */
     [[nodiscard]] LibchessResult to_libchess(bool includeDebugInfo) const;
 };
-
-/*
-                         ___                           ,--,
-      ,---,            ,--.'|_                ,--,   ,--.'|
-    ,---.'|            |  | :,'             ,--.'|   |  | :
-    |   | :            :  : ' :             |  |,    :  : '    .--.--.
-    |   | |   ,---.  .;__,'  /    ,--.--.   `--'_    |  ' |   /  /    '
-  ,--.__| |  /     \ |  |   |    /       \  ,' ,'|   '  | |  |  :  /`./
- /   ,'   | /    /  |:__,'| :   .--.  .-. | '  | |   |  | :  |  :  ;_
-.   '  /  |.    ' / |  '  : |__  \__\/: . . |  | :   '  : |__ \  \    `.
-'   ; |:  |'   ;   /|  |  | '.'| ," .--.; | '  : |__ |  | '.'| `----.   \
-|   | '/  ''   |  / |  ;  :    ;/  /  ,.  | |  | '.'|;  :    ;/  /`--'  /__  ___  ___
-|   :    :||   :    |  |  ,   /;  :   .'   \;  :    ;|  ,   /'--'.     /  .\/  .\/  .\
- \   \  /   \   \  /    ---`-' |  ,     .-./|  ,   /  ---`-'   `--'---'\  ; \  ; \  ; |
-  `----'     `----'             `--`---'     ---`-'                     `--" `--" `--"
-
- */
-namespace detail {
-    [[nodiscard]] inline auto get_extra_stats_string(
-        const Result& res, const bool includeDebugInfo) -> std::string
-    {
-        if (res.nodesSearched == 0uz or not includeDebugInfo)
-            return {};
-
-        auto get_pcnt = [totalNodes = static_cast<double>(res.nodesSearched)](const size_t value) {
-            return (static_cast<double>(value) / totalNodes) * 100.;
-        };
-
-        return std::format(
-            "TT hits {} ({:.1f}%) Beta cutoffs {} ({:.1f}%) MDP cutoffs {} ({:.1f}%)",
-            res.transpositionTableHits, get_pcnt(res.transpositionTableHits),
-            res.betaCutoffs, get_pcnt(res.betaCutoffs),
-            res.mdpCutoffs, get_pcnt(res.mdpCutoffs));
-    }
-} // namespace detail
-
-inline auto Result::to_libchess(const bool includeDebugInfo) const -> LibchessResult
-{
-    return {
-        .score            = score.to_libchess(),
-        .depth            = depth,
-        .time             = duration,
-        .nodes            = nodesSearched,
-        .pv               = {},
-        .hashfull         = hashfull,
-        .tbHits           = 0uz,
-        .extraInformation = detail::get_extra_stats_string(*this, includeDebugInfo)
-    };
-}
 
 } // namespace ben_bot::search
