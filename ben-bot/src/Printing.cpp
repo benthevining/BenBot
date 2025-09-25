@@ -16,7 +16,6 @@
 #include <ben-bot/Resources.hpp>
 #include <ben-bot/TextTable.hpp>
 #include <format>
-#include <iostream>
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Score.hpp>
 #include <libbenbot/search/Callbacks.hpp>
@@ -38,39 +37,11 @@ using Result = search::Result;
 using std::println;
 using uci::printing::info_string;
 
-namespace {
-
-    template <bool PrintBestMove>
-    void print_uci_info(
-        const Result& res, const bool debugMode,
-        const search::Context& context)
-    {
-        uci::printing::search_info(res.to_libchess(debugMode));
-
-        if constexpr (PrintBestMove) {
-            const auto& currPos    = context.options.position;
-            const auto& transTable = context.transTable;
-
-            uci::printing::best_move(
-                res.bestMove,
-                transTable.get_best_response(currPos, res.bestMove));
-
-            // Because these callbacks are executed on the searcher background thread,
-            // without this flush here, the output may not actually be written when we
-            // expect, leading to timeouts or GUIs thinking we've hung/disconnected.
-            // Because the best move is always printed last after all info output, we
-            // can do the flush only in this branch.
-            std::cout.flush();
-        }
-    }
-
-} // namespace
-
 Engine::Engine()
     : searcher {
-        search::Callbacks {
-            .onSearchComplete = [this](const Result& res) { print_uci_info<true>(res, debugMode.load(), searcher.context); },
-            .onIteration = [this](const Result& res) { print_uci_info<false>(res, debugMode.load(), searcher.context); } }
+        search::Callbacks::make_uci_printer(
+            searcher.context,
+            [this] { return debugMode.load(); })
     }
 {
 }
