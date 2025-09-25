@@ -12,45 +12,45 @@
  * ======================================================================================
  */
 
-/** @file
-    This file defines a POD struct that encapsulates the ``ben_bot``
-    executable's CLI arguments.
+#include <functional>
+#include <iostream>
+#include <libbenbot/search/Callbacks.hpp>
+#include <libchess/uci/Printing.hpp>
 
-    @ingroup benbot
- */
+namespace ben_bot::search {
 
-#pragma once
+namespace {
 
-#include <string>
+    namespace uci_printing = chess::uci::printing;
 
-namespace ben_bot {
+    template <bool PrintBestMove>
+    void print_uci_info(
+        const Result& res, const bool debugMode)
+    {
+        uci_printing::search_info(res.to_libchess(debugMode));
 
-/** This POD struct encapsulates the ``ben_bot`` executable's command-line
-    arguments, and provides a function for parsing them.
+        if constexpr (PrintBestMove) {
+            uci_printing::best_move(
+                res.best_move(), res.ponder_move());
 
-    We process any arguments to the executable as a one-shot UCI command line.
-    ``--no-loop`` can be given to make the engine exit immediately after processing
-    the given UCI command. ``--no-logo`` will suppress the logo & version normally
-    printed at startup.
+            // Because these callbacks are executed on the searcher background thread,
+            // without this flush here, the output may not actually be written when we
+            // expect, leading to timeouts or GUIs thinking we've hung/disconnected.
+            // Because the best move is always printed last after all info output, we
+            // can do the flush only in this branch.
+            std::cout.flush();
+        }
+    }
 
-    @ingroup benbot
- */
-struct Arguments final {
-    /** If true, the executable should process the given UCI command and exit
-        immediately, not entering the UCI loop waiting for input.
-     */
-    bool noLoop { false };
+} // namespace
 
-    /** If true, the executable should not print the initial logo & version output. */
-    bool noLogo { false };
+Callbacks Callbacks::make_uci_printer(
+    std::function<bool()> isDebugMode)
+{
+    return {
+        .onSearchComplete = [isDebugMode](const Result& res) { print_uci_info<true>(res, isDebugMode()); },
+        .onIteration = [isDebugMode](const Result& res) { print_uci_info<false>(res, isDebugMode()); }
+    };
+}
 
-    /** If not empty, this is a one-shot UCI command that should be evaluated
-        after startup.
-     */
-    std::string uciCommand;
-
-    /** Parses the given command-line arguments into a populated Arguments struct. */
-    [[nodiscard]] static Arguments parse(int argc, const char** argv);
-};
-
-} // namespace ben_bot
+} // namespace ben_bot::search

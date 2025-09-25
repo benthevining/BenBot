@@ -16,8 +16,11 @@
 #include <ben-bot/Engine.hpp>
 #include <cstdlib>
 #include <exception>
+#include <format>
+#include <libchess/uci/Printing.hpp>
 #include <libchess/util/Console.hpp>
-#include <print>
+
+using chess::uci::printing::info_string;
 
 int main(const int argc, const char** argv)
 try {
@@ -44,9 +47,9 @@ try {
 
     return EXIT_SUCCESS;
 } catch (const std::exception& exception) {
-    std::println("info string Error: {}", exception.what());
+    info_string(std::format("Internal error: {}", exception.what()));
     return EXIT_FAILURE;
 } catch (...) {
-    std::println("info string Error: unknown exception thrown!");
+    info_string("Error: unknown exception thrown!");
     return EXIT_FAILURE;
 }

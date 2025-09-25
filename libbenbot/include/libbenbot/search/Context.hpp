@@ -34,6 +34,9 @@ namespace ben_bot::search {
     @ingroup search
  */
 struct Context final {
+    /** Creates a search context with empty callbacks. */
+    Context() = default;
+
     /** Creates a search context with a specified set of result callbacks. */
     explicit Context(Callbacks&& callbacksToUse)
         : callbacks { std::move(callbacksToUse) }
@@ -49,6 +52,9 @@ struct Context final {
         This object's methods can only be safely called when no search is executing.
      */
     TranspositionTable transTable;
+
+    /** The callbacks used to provide results about the search. */
+    Callbacks callbacks;
 
     /** Performs a search.
         Results will be propagated via the ``callbacks`` that have been
@@ -108,8 +114,6 @@ private:
     std::atomic_bool activeFlag { false };
 
     std::atomic_bool pondering { false };
-
-    Callbacks callbacks;
 };
 
 } // namespace ben_bot::search

@@ -12,45 +12,45 @@
  * ======================================================================================
  */
 
-/** @file
-    This file defines a POD struct that encapsulates the ``ben_bot``
-    executable's CLI arguments.
-
-    @ingroup benbot
- */
-
-#pragma once
-
+#include <format>
+#include <libbenbot/search/Result.hpp>
 #include <string>
 
-namespace ben_bot {
+namespace ben_bot::search {
 
-/** This POD struct encapsulates the ``ben_bot`` executable's command-line
-    arguments, and provides a function for parsing them.
+namespace {
 
-    We process any arguments to the executable as a one-shot UCI command line.
-    ``--no-loop`` can be given to make the engine exit immediately after processing
-    the given UCI command. ``--no-logo`` will suppress the logo & version normally
-    printed at startup.
+    [[nodiscard]] auto get_extra_stats_string(
+        const Result& res, const bool includeDebugInfo) -> std::string
+    {
+        if (res.nodesSearched == 0uz or not includeDebugInfo)
+            return {};
 
-    @ingroup benbot
- */
-struct Arguments final {
-    /** If true, the executable should process the given UCI command and exit
-        immediately, not entering the UCI loop waiting for input.
-     */
-    bool noLoop { false };
+        auto get_pcnt = [totalNodes = static_cast<double>(res.nodesSearched)](const size_t value) {
+            return (static_cast<double>(value) / totalNodes) * 100.;
+        };
 
-    /** If true, the executable should not print the initial logo & version output. */
-    bool noLogo { false };
+        return std::format(
+            "TT hits {} ({:.1f}%) Beta cutoffs {} ({:.1f}%) MDP cutoffs {} ({:.1f}%)",
+            res.transpositionTableHits, get_pcnt(res.transpositionTableHits),
+            res.betaCutoffs, get_pcnt(res.betaCutoffs),
+            res.mdpCutoffs, get_pcnt(res.mdpCutoffs));
+    }
 
-    /** If not empty, this is a one-shot UCI command that should be evaluated
-        after startup.
-     */
-    std::string uciCommand;
+} // namespace
 
-    /** Parses the given command-line arguments into a populated Arguments struct. */
-    [[nodiscard]] static Arguments parse(int argc, const char** argv);
-};
+auto Result::to_libchess(const bool includeDebugInfo) const -> LibchessResult
+{
+    return {
+        .score            = score.to_libchess(),
+        .depth            = depth,
+        .time             = duration,
+        .nodes            = nodesSearched,
+        .pv               = pv,
+        .hashfull         = hashfull,
+        .tbHits           = 0uz,
+        .extraInformation = get_extra_stats_string(*this, includeDebugInfo)
+    };
+}
 
-} // namespace ben_bot
+} // namespace ben_bot::search
