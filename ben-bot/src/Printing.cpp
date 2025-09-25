@@ -46,8 +46,8 @@ void Engine::print_logo_and_version() const
     println("{}", resources::get_ascii_logo());
 
     println(
-        "{}, version {}, by {}",
-        get_name(), resources::get_version_string(), get_author());
+        "{}, by {}",
+        get_name(), get_author());
 }
 
 void Engine::print_help(const string_view args) const
@@ -84,8 +84,15 @@ void Engine::print_help(const string_view args) const
     println("{}", table.to_string());
 }
 
-void Engine::print_options() const
+void Engine::print_options(const string_view args) const
 {
+    const bool noCurrent = [args] {
+        if (args.empty())
+            return false;
+
+        return chess::util::trim(args) == "--no-current";
+    }();
+
     println("");
     println("The following UCI options are supported:");
     println("");
@@ -95,8 +102,10 @@ void Engine::print_options() const
     table.append_column("Option")
         .append_column("Type")
         .append_column("Notes")
-        .append_column("Default")
-        .append_column("Current");
+        .append_column("Default");
+
+    if (not noCurrent)
+        table.append_column("Current");
 
     for (const auto* option : options) {
         table.new_row()
@@ -111,15 +120,20 @@ void Engine::print_options() const
                 },
                 option->get_default_value_variant());
 
-            std::visit(
-                [&table](auto value) {
-                    table.append_column(std::format("{}", value));
-                },
-                option->get_value_variant());
+            if (not noCurrent) {
+                std::visit(
+                    [&table](auto value) {
+                        table.append_column(std::format("{}", value));
+                    },
+                    option->get_value_variant());
+            }
         }
     }
 
     println("{}", table.to_string());
+
+    if (not noCurrent)
+        println("Debug mode: {}", debugMode.load());
 }
 
 void Engine::print_current_position(const string_view arguments) const

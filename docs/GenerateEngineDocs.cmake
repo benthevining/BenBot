@@ -30,7 +30,7 @@ execute_process (
 )
 
 execute_process (
-    COMMAND "${ENGINE_PATH}" --no-loop --no-logo options
+    COMMAND "${ENGINE_PATH}" --no-loop --no-logo options --no-current
     OUTPUT_VARIABLE ENGINE_OPTIONS_HELP_TEXT COMMAND_ECHO STDOUT COMMAND_ERROR_IS_FATAL ANY
 )
 
