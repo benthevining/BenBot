@@ -76,7 +76,7 @@ private:
 
     void run_perft(string_view arguments) const;
 
-    static void run_bench(string_view arguments);
+    void run_bench(string_view arguments) const;
 
     void make_null_move();
     void color_flip();
@@ -141,7 +141,7 @@ private:
         },
         CustomCommand {
             .name = "bench",
-            .action = [](const string_view args){ run_bench(args); },
+            .action = [this](const string_view args){ run_bench(args); },
             .description = "Runs a search and reports total nodes and NPS",
             .argsHelp = "[<depth>] [<epdPath>]"
         },

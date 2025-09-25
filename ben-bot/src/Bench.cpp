@@ -49,15 +49,18 @@ namespace {
 
     // We create a separate context to do bench searches, so that we don't need to
     // mess with changing the main searcher's callbacks, or setting an "isBench"
-    // flag to be checked in the callbacks. The simplest approach is to just
-    // block in this method - this function creates a search context, executes it,
-    // and blocks waiting for the result.
+    // flag to be checked in the callbacks.
 
     using SearchResult = search::Result;
 
     struct BenchSearcherThread final {
         BenchSearcherThread(
-            const notation::EPDPosition& position, const size_t defaultDepth)
+            const size_t                 threadNum,
+            const notation::EPDPosition& position,
+            const size_t                 defaultDepth,
+            const bool                   printProgressOutput)
+            : threadNumber { threadNum }
+            , outputProgress { printProgressOutput }
         {
             thread.set_position(position.position);
 
@@ -81,30 +84,49 @@ namespace {
         }
 
     private:
+        size_t threadNumber { 0uz };
+
+        bool outputProgress { false };
+
         SearchResult result {};
 
+        // clang-format off
         search::Thread thread {
             search::Callbacks {
-                .onSearchComplete = [this](const SearchResult res) {
-                    result = res;
-                },
-                .onIteration = {} }
+                .onSearchComplete = [this](const SearchResult res) { result = res; },
+                .onIteration      = [this](const SearchResult res) {
+                    if (not outputProgress)
+                        return;
+
+                    auto info = res.to_libchess(false);
+
+                    info.extraInformation = std::format("thread {}", threadNumber);
+
+                    uci::printing::search_info(info); } }
         };
+        // clang-format on
     };
 
     void do_bench(
         const string_view epdText,
-        const size_t      defaultDepth)
+        const size_t      defaultDepth,
+        const bool        printProgressOutput)
     {
-        const auto searcherThreads = notation::parse_all_epds(epdText)
-                                   | std::views::transform([defaultDepth](const notation::EPDPosition& pos) {
-                                         return std::make_unique<BenchSearcherThread>(pos, defaultDepth);
-                                     })
-                                   | std::ranges::to<std::vector>();
-
-        info_string(std::format("Started {} searcher threads", searcherThreads.size()));
-
         using ThreadPtr = std::unique_ptr<BenchSearcherThread>;
+
+        std::vector<ThreadPtr> searcherThreads;
+
+        {
+            const auto epds = notation::parse_all_epds(epdText);
+
+            info_string(std::format("Starting {} searcher threads", epds.size()));
+
+            for (auto i = 0uz; i < epds.size(); ++i) {
+                searcherThreads.emplace_back(
+                    std::make_unique<BenchSearcherThread>(
+                        i, epds.at(i), defaultDepth, printProgressOutput));
+            }
+        }
 
         // wait for all threads to finish searching
         util::progressive_backoff(
@@ -152,7 +174,7 @@ namespace {
 
 } // namespace
 
-void Engine::run_bench(const string_view arguments)
+void Engine::run_bench(const string_view arguments) const
 {
     const auto [depth, filePath] = util::split_at_first_space(arguments);
 
@@ -160,13 +182,19 @@ void Engine::run_bench(const string_view arguments)
 
     if (filePath.empty()) {
         info_string("Running bench for default position set...");
-        do_bench(resources::get_bench_epd_text(), defaultDepth);
-    } else {
-        info_string(std::format("Running bench for {}", filePath));
+
         do_bench(
-            util::load_file_as_string(std::filesystem::path { filePath }),
-            defaultDepth);
+            resources::get_bench_epd_text(),
+            defaultDepth, debugMode.load());
+
+        return;
     }
+
+    info_string(std::format("Running bench for {}...", filePath));
+
+    do_bench(
+        util::load_file_as_string(std::filesystem::path { filePath }),
+        defaultDepth, debugMode.load());
 }
 
 } // namespace ben_bot
