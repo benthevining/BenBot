@@ -82,7 +82,7 @@ private:
     void color_flip();
 
     void print_help(string_view args) const;
-    void print_options() const;
+    void print_options(string_view args) const;
     void print_current_position(string_view arguments) const;
 
     static void print_compiler_info();
@@ -129,9 +129,9 @@ private:
         },
         CustomCommand {
             .name = "options",
-            .action = CustomCommand::void_cb([this] { print_options(); }),
+            .action = [this](const string_view args){ print_options(args); },
             .description = "Dump current UCI option values",
-            .argsHelp = {}
+            .argsHelp = "[--no-current]"
         },
         CustomCommand {
             .name = "perft",
