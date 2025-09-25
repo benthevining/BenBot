@@ -197,16 +197,20 @@ void Engine::run_bench(const string_view arguments) const
         return;
     }
 
-    info_string(std::format("Running bench for {}...", filePath));
+    const auto epdPath = absolute(std::filesystem::path { filePath });
+
+    const auto absPathStr = epdPath.string(); // NOLINT(build/include_what_you_use)
+
+    info_string(std::format("Running bench for {}...", absPathStr));
 
     // output the filename for CTest to detect & upload with the test info
     // see https://cmake.org/cmake/help/latest/command/ctest_test.html#attached-files
     info_string(std::format(
         R"-(<CTestMeasurementFile type="file" name="BenchData">{}</CTestMeasurementFile>)-",
-        filePath));
+        absPathStr));
 
     do_bench(
-        util::load_file_as_string(std::filesystem::path { filePath }),
+        util::load_file_as_string(epdPath),
         defaultDepth, debugMode.load());
 }
 
