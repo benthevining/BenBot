@@ -83,12 +83,12 @@ namespace {
 
     // used for collecting the PV during search
     struct Line final {
-        // this is array instead of inplace_vector because we write into higher
-        // indices first, so it's simplest if the objects exist from the get-go
-        std::array<Move, MoveList::capacity()> moves {};
+        Line() = default;
 
-        // number of non-null moves in the line
-        size_t length { 0uz };
+        explicit Line(Line* parentLine)
+            : parent { parentLine }
+        {
+        }
 
         // the PVs collected by alpha-beta will begin 1 ply after the root,
         // so we need to prepend the first move here
@@ -104,6 +104,28 @@ namespace {
 
             return line;
         }
+
+        void add_move(const Move move)
+        {
+            assert(parent != nullptr);
+
+            parent->moves.front() = move;
+
+            std::ranges::copy(
+                std::views::take(moves, length),
+                std::next(parent->moves.data()));
+
+            parent->length = length + 1uz;
+        }
+
+    private:
+        // this is array instead of inplace_vector because we write into higher
+        // indices first, so it's simplest if the objects exist from the get-go
+        std::array<Move, MoveList::capacity()> moves {};
+
+        size_t length { 0uz };
+
+        Line* parent { nullptr };
     };
 
     // searches only captures, with no depth limit, to try to
@@ -212,7 +234,7 @@ namespace {
 
         std::optional<Move> bestMove;
 
-        Line bestLine;
+        Line bestLine { &parentLine };
 
         for (const auto& move : moves) {
             const auto newPosition = after_move(context.currentPosition, move);
@@ -225,9 +247,6 @@ namespace {
                 return {};
 
             ++context.stats.nodesSearched;
-
-            // if (context.depth == 0uz)
-            //     bestLine.length = 0uz;
 
             if (eval >= context.bounds.beta) {
                 context.transTable.store(
@@ -246,13 +265,7 @@ namespace {
                 evalType             = EvalType::Exact;
                 context.bounds.alpha = eval;
 
-                parentLine.moves.front() = move;
-
-                std::ranges::copy(
-                    std::views::take(bestLine.moves, bestLine.length),
-                    std::next(parentLine.moves.data()));
-
-                parentLine.length = bestLine.length + 1uz;
+                bestLine.add_move(move);
             }
         }
 
