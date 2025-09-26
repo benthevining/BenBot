@@ -22,6 +22,7 @@
 #include <libchess/uci/CommandParsing.hpp>
 #include <libchess/util/Strings.hpp>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -61,7 +62,12 @@ Position parse_position_options(string_view options)
 
         const auto fenString = isNPos ? rest : rest.substr(0uz, movesTokenIdx);
 
-        position = notation::from_fen(fenString);
+        const auto fenPos = notation::from_fen(fenString);
+
+        if (not fenPos.has_value())
+            throw std::invalid_argument { fenPos.error() };
+
+        position = fenPos.value();
 
         if (isNPos) {
             // the "moves" token wasn't found, so assume that the FEN string

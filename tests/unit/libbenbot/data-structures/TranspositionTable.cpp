@@ -39,7 +39,8 @@ TEST_CASE("Transposition table - find()", TAGS)
 
     static const Position startPos {};
 
-    const auto pos2 = notation::from_fen("8/8/4n3/2B1k1p1/3Pn3/2K5/5R2/8 b - - 0 1");
+    const auto pos2 = notation::from_fen("8/8/4n3/2B1k1p1/3Pn3/2K5/5R2/8 b - - 0 1")
+                          .value();
 
     TranspositionTable table;
 

@@ -14,6 +14,7 @@
 
 #include "FENHelpers.hpp"
 #include <cstddef> // IWYU pragma: keep - for size_t
+#include <expected>
 #include <format>
 #include <iterator>
 #include <libchess/game/Position.hpp>
@@ -22,7 +23,6 @@
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/util/Strings.hpp>
 #include <ranges>
-#include <stdexcept>
 #include <string>
 
 namespace chess::notation {
@@ -71,18 +71,15 @@ std::string to_fen(const Position& position, const bool alwaysWriteEPSqare)
     return fen;
 }
 
-Position from_fen(std::string_view fenString)
+std::expected<Position, std::string> from_fen(std::string_view fenString)
 {
     using util::int_from_string;
     using util::split_at_first_space;
 
     fenString = util::trim(fenString);
 
-    if (fenString.empty()) {
-        throw std::invalid_argument {
-            "Cannot parse Position from empty FEN string"
-        };
-    }
+    if (fenString.empty())
+        return std::unexpected("Cannot parse Position from empty FEN string");
 
     auto position = Position::empty();
 
@@ -91,14 +88,14 @@ Position from_fen(std::string_view fenString)
     const auto piecePosErr = fen_helpers::parse_piece_positions(piecePositions, position);
 
     if (not piecePosErr.has_value())
-        throw std::invalid_argument { piecePosErr.error() };
+        return std::unexpected(piecePosErr.error());
 
     const auto [sideToMove, rest2] = split_at_first_space(rest1);
 
     const auto stmErr = fen_helpers::parse_side_to_move(sideToMove, position);
 
     if (not stmErr.has_value())
-        throw std::invalid_argument { stmErr.error() };
+        return std::unexpected(stmErr.error());
 
     const auto [castlingRights, rest3] = split_at_first_space(rest2);
 

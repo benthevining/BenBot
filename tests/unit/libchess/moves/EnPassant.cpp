@@ -20,9 +20,11 @@ static constexpr auto TAGS { "[moves][EnPassant]" };
 
 TEST_CASE("En passant - illegal if capture reveals check", TAGS)
 {
-    const auto position = chess::notation::from_fen("4k3/8/8/p1K1Pp1r/Pp5p/6pP/6P1/8 w - f6 0 1");
+    const auto position = chess::notation::from_fen("4k3/8/8/p1K1Pp1r/Pp5p/6pP/6P1/8 w - f6 0 1")
+                              .value();
 
-    const auto move = chess::notation::from_alg(position, "exf6").value();
+    const auto move = chess::notation::from_alg(position, "exf6")
+                          .value();
 
     REQUIRE(not position.is_legal(move));
 }

@@ -333,9 +333,10 @@ GameRecord from_pgn(string_view pgnText)
 
     pgnText = parse_metadata_tags(pgnText, game.metadata);
 
-    if (const auto pos = game.metadata.find("FEN");
-        pos != game.metadata.end()) {
-        game.startingPosition = from_fen(pos->second);
+    if (const auto posStr = game.metadata.find("FEN");
+        posStr != game.metadata.end()) {
+        if (const auto pos = from_fen(posStr->second))
+            game.startingPosition = pos.value();
     }
 
     const auto resultText = parse_move_list(

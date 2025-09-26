@@ -64,7 +64,8 @@ TEST_CASE("UCI notation - captures", TAGS)
 {
     SECTION("Pawn capture")
     {
-        const auto position = from_fen("rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2");
+        const auto position = from_fen("rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2")
+                                  .value();
 
         const auto move = from_uci(position, "e4d5");
 
@@ -77,7 +78,8 @@ TEST_CASE("UCI notation - captures", TAGS)
 
     SECTION("Piece capture")
     {
-        const auto position = from_fen("rn2kbnr/ppp1pppp/3q4/3p4/4P1b1/2N2N2/PPPPQPPP/R1B1KB1R b KQkq - 5 4");
+        const auto position = from_fen("rn2kbnr/ppp1pppp/3q4/3p4/4P1b1/2N2N2/PPPPQPPP/R1B1KB1R b KQkq - 5 4")
+                                  .value();
 
         const auto move = from_uci(position, "g4f3");
 
@@ -91,7 +93,8 @@ TEST_CASE("UCI notation - captures", TAGS)
 
 TEST_CASE("UCI notation - check", TAGS)
 {
-    auto position = from_fen("3rkbnr/ppp1ppp1/2nq4/3p2Np/4P1b1/2N2Q2/PPPP1PPP/R1B1KB1R w KQk - 0 7");
+    auto position = from_fen("3rkbnr/ppp1ppp1/2nq4/3p2Np/4P1b1/2N2Q2/PPPP1PPP/R1B1KB1R w KQk - 0 7")
+                        .value();
 
     const auto move = from_uci(position, "f3f7");
 
@@ -109,7 +112,8 @@ TEST_CASE("UCI notation - check", TAGS)
 
 TEST_CASE("UCI notation - checkmate", TAGS)
 {
-    auto position = from_fen("3rkbnr/pppqppp1/2n5/1N1p2Np/4P1b1/5Q2/PPPP1PPP/R1B1KB1R w KQk - 2 8");
+    auto position = from_fen("3rkbnr/pppqppp1/2n5/1N1p2Np/4P1b1/5Q2/PPPP1PPP/R1B1KB1R w KQk - 2 8")
+                        .value();
 
     const auto move = from_uci(position, "f3f7");
 
@@ -129,7 +133,8 @@ TEST_CASE("UCI notation - castle kingside", TAGS)
 {
     SECTION("White")
     {
-        const auto position = from_fen("r1bqkbnr/pppp1ppp/2n5/4p3/8/2BP1N2/PPP1PPPP/RNBQK2R w KQkq - 0 1");
+        const auto position = from_fen("r1bqkbnr/pppp1ppp/2n5/4p3/8/2BP1N2/PPP1PPPP/RNBQK2R w KQkq - 0 1")
+                                  .value();
 
         const auto move = from_uci(position, "e1g1");
 
@@ -144,7 +149,8 @@ TEST_CASE("UCI notation - castle kingside", TAGS)
 
     SECTION("Black")
     {
-        const auto position = from_fen("rnbqk2r/ppp2ppp/2bp1n2/4p3/2BP4/4PN2/PPP2PPP/RNBQ1RK1 b Qkq - 0 1");
+        const auto position = from_fen("rnbqk2r/ppp2ppp/2bp1n2/4p3/2BP4/4PN2/PPP2PPP/RNBQ1RK1 b Qkq - 0 1")
+                                  .value();
 
         const auto move = from_uci(position, "e8g8");
 
@@ -162,7 +168,8 @@ TEST_CASE("UCI notation - castle queenside", TAGS)
 {
     SECTION("White")
     {
-        const auto position = from_fen("rnb1kb1r/pp1pp1pp/1qp1np2/8/3P1B2/2N5/PPPQPPPP/R3KBNR w KQkq - 0 1");
+        const auto position = from_fen("rnb1kb1r/pp1pp1pp/1qp1np2/8/3P1B2/2N5/PPPQPPPP/R3KBNR w KQkq - 0 1")
+                                  .value();
 
         const auto move = from_uci(position, "e1c1");
 
@@ -177,7 +184,8 @@ TEST_CASE("UCI notation - castle queenside", TAGS)
 
     SECTION("Black")
     {
-        const auto position = from_fen("r3kbnr/pppqpppp/2np4/8/3P1Bb1/2N1P3/PPP2PPP/R2QKBNR b KQkq - 0 1");
+        const auto position = from_fen("r3kbnr/pppqpppp/2np4/8/3P1Bb1/2N1P3/PPP2PPP/R2QKBNR b KQkq - 0 1")
+                                  .value();
 
         const auto move = from_uci(position, "e8c8");
 
@@ -195,7 +203,8 @@ TEST_CASE("UCI notation - promotions", TAGS)
 {
     SECTION("Push")
     {
-        const auto position = from_fen("8/8/2rk4/8/6Q1/1K2N3/2p5/8 b - - 0 1");
+        const auto position = from_fen("8/8/2rk4/8/6Q1/1K2N3/2p5/8 b - - 0 1")
+                                  .value();
 
         const auto move = from_uci(position, "c2c1b");
 
@@ -211,7 +220,8 @@ TEST_CASE("UCI notation - promotions", TAGS)
 
     SECTION("Capture")
     {
-        const auto position = from_fen("4r3/1k1K1P2/8/2qN4/8/8/8/8 w - - 0 1");
+        const auto position = from_fen("4r3/1k1K1P2/8/2qN4/8/8/8/8 w - - 0 1")
+                                  .value();
 
         const auto move = from_uci(position, "f7g8q");
 

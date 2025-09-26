@@ -75,7 +75,8 @@ TEST_CASE("Threefold repetition from differing moves", TAGS)
 TEST_CASE("Position - threefold reps - not threefold if EP possible in starting position", TAGS)
 {
     auto pos = chess::notation::from_fen(
-        "rnbqkbnr/ppp1pppp/8/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 1");
+        "rnbqkbnr/ppp1pppp/8/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 1")
+                   .value();
 
     pos.make_move(from_alg(pos, "Be2").value());
     pos.make_move(from_alg(pos, "Bd7").value());
