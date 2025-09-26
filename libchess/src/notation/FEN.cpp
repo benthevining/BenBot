@@ -88,11 +88,11 @@ PositionOrError from_fen(std::string_view fenString)
     const auto [piecePositions, rest1] = split_at_first_space(fenString);
 
     return fen_helpers::parse_piece_positions(piecePositions, position)
-        .and_then([rest1, &position]() mutable -> PositionOrError {
+        .and_then([rest1, &position]() -> PositionOrError {
             const auto [sideToMove, rest2] = split_at_first_space(rest1);
 
             return fen_helpers::parse_side_to_move(sideToMove, position)
-                .and_then([rest2, &position]() mutable -> PositionOrError {
+                .and_then([rest2, &position]() -> PositionOrError {
                     const auto [castlingRights, rest3] = split_at_first_space(rest2);
 
                     fen_helpers::parse_castling_rights(castlingRights, position);

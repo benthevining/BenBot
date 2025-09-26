@@ -84,11 +84,11 @@ PositionOrError from_epd(string_view epdString)
     const auto [piecePositions, rest1] = split_at_first_space(epdString);
 
     return fen_helpers::parse_piece_positions(piecePositions, pos.position)
-        .and_then([rest1, &pos]() mutable -> PositionOrError {
+        .and_then([rest1, &pos]() -> PositionOrError {
             const auto [sideToMove, rest2] = split_at_first_space(rest1);
 
             return fen_helpers::parse_side_to_move(sideToMove, pos.position)
-                .and_then([rest2, &pos]() mutable -> PositionOrError {
+                .and_then([rest2, &pos]() -> PositionOrError {
                     const auto [castlingRights, rest3] = split_at_first_space(rest2);
 
                     fen_helpers::parse_castling_rights(castlingRights, pos.position);

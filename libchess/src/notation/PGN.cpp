@@ -308,7 +308,7 @@ namespace {
         const string_view pgnText,
         const Position&   position,
         Moves&            output)
-        -> std::expected<string_view, string_view>
+        -> ResultStrOrErrorStr
     {
         return parse_moves_internal<false>(pgnText, position, output);
     }
@@ -337,31 +337,27 @@ namespace {
 
 } // namespace
 
-GameRecord from_pgn(string_view pgnText)
+using GameOrError = std::expected<GameRecord, string_view>;
+
+GameOrError from_pgn(const string_view pgnText)
 {
     GameRecord game;
 
-    const auto afterMeta = parse_metadata_tags(pgnText, game.metadata);
+    return parse_metadata_tags(pgnText, game.metadata)
+        .and_then([&game](const string_view afterMeta) -> GameOrError {
+            if (const auto posStr = game.metadata.find("FEN");
+                posStr != game.metadata.end()) {
+                game.startingPosition = from_fen(posStr->second).value_or(Position {});
+            }
 
-    if (not afterMeta.has_value())
-        throw std::invalid_argument { std::string { afterMeta.error() } };
+            return parse_move_list(
+                afterMeta, game.startingPosition, game.moves)
+                .and_then([&game](const string_view resultText) -> GameOrError {
+                    game.result = parse_game_result(resultText, game);
 
-    pgnText = afterMeta.value();
-
-    if (const auto posStr = game.metadata.find("FEN");
-        posStr != game.metadata.end()) {
-        game.startingPosition = from_fen(posStr->second).value_or(Position {});
-    }
-
-    const auto resultText = parse_move_list(
-        pgnText, game.startingPosition, game.moves);
-
-    if (not resultText.has_value())
-        throw std::invalid_argument { std::string { resultText.error() } };
-
-    game.result = parse_game_result(resultText.value(), game);
-
-    return game;
+                    return game;
+                });
+        });
 }
 
 namespace {
@@ -413,14 +409,18 @@ std::vector<GameRecord> parse_all_pgns(string_view fileContent)
         const auto moveTextToNextPGN = find_next_line<true>(fileContent.substr(moveTextStart + 1uz));
 
         if (moveTextToNextPGN == string_view::npos) {
-            games.emplace_back(from_pgn(fileContent));
+            if (const auto game = from_pgn(fileContent))
+                games.emplace_back(game.value());
+
             return games;
         }
 
         const auto nextPGNStart = moveTextStart + moveTextToNextPGN;
 
-        games.emplace_back(from_pgn(
-            fileContent.substr(0uz, nextPGNStart)));
+        if (const auto game = from_pgn(
+                fileContent.substr(0uz, nextPGNStart))) {
+            games.emplace_back(game.value());
+        }
 
         fileContent.remove_prefix(nextPGNStart);
         fileContent = util::trim(fileContent);
