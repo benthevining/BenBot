@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <expected>
 #include <libchess/game/Position.hpp>
 #include <string>
 #include <string_view>
@@ -51,14 +52,13 @@ struct EPDPosition final {
 
 /** Parses an EPD string.
 
-    @throws std::invalid_argument An exception will be thrown if the
-    EPD string cannot be parsed successfully.
+    If the input string cannot be parsed correctly, returns an explanatory error string.
 
     @ingroup notation
     @relates EPDPosition
     @see parse_all_epds()
  */
-[[nodiscard]] EPDPosition from_epd(std::string_view epdString);
+[[nodiscard]] std::expected<EPDPosition, string> from_epd(std::string_view epdString);
 
 /** Parses all EPDs in a string containing one EPD per line.
 

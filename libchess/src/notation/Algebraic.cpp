@@ -154,7 +154,7 @@ namespace {
     using board::Rank;
     using pieces::Color;
     using MoveSpan      = std::span<const Move>;
-    using SquareOrError = std::expected<Square, std::string>;
+    using SquareOrError = std::expected<Square, string>;
 
     [[nodiscard]] auto get_starting_square_from_file(
         const MoveSpan possibleOrigins, const File file)
@@ -380,7 +380,7 @@ namespace {
 
 } // namespace
 
-std::expected<Move, std::string> from_alg(const Position& position, string_view text)
+std::expected<Move, string> from_alg(const Position& position, string_view text)
 {
     text = util::trim(text);
 

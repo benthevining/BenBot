@@ -88,11 +88,17 @@ Position from_fen(std::string_view fenString)
 
     const auto [piecePositions, rest1] = split_at_first_space(fenString);
 
-    fen_helpers::parse_piece_positions(piecePositions, position);
+    const auto piecePosErr = fen_helpers::parse_piece_positions(piecePositions, position);
+
+    if (not piecePosErr.has_value())
+        throw std::invalid_argument { piecePosErr.error() };
 
     const auto [sideToMove, rest2] = split_at_first_space(rest1);
 
-    fen_helpers::parse_side_to_move(sideToMove, position);
+    const auto stmErr = fen_helpers::parse_side_to_move(sideToMove, position);
+
+    if (not stmErr.has_value())
+        throw std::invalid_argument { stmErr.error() };
 
     const auto [castlingRights, rest3] = split_at_first_space(rest2);
 
@@ -102,6 +108,7 @@ Position from_fen(std::string_view fenString)
 
     fen_helpers::parse_en_passant_target_square(epTarget, position);
 
+    // TODO: allow these being omitted
     const auto [halfMoveClock, fullMoveCounter] = split_at_first_space(rest4);
 
     position.halfmoveClock   = int_from_string(halfMoveClock, position.halfmoveClock);

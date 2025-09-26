@@ -14,11 +14,11 @@
 
 #include "FENHelpers.hpp"
 #include <cassert>
+#include <expected>
 #include <format>
 #include <libchess/notation/EPD.hpp>
 #include <libchess/util/Strings.hpp>
 #include <ranges>
-#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -65,17 +65,14 @@ namespace {
 
 } // namespace
 
-EPDPosition from_epd(string_view epdString)
+std::expected<EPDPosition, string> from_epd(string_view epdString)
 {
     using util::split_at_first_space;
 
     epdString = util::trim(epdString);
 
-    if (epdString.empty()) {
-        throw std::invalid_argument {
-            "Cannot parse Position from empty EPD string"
-        };
-    }
+    if (epdString.empty())
+        return std::unexpected("Cannot parse Position from empty EPD string");
 
     EPDPosition pos {
         .position   = Position::empty(),
@@ -84,11 +81,17 @@ EPDPosition from_epd(string_view epdString)
 
     const auto [piecePositions, rest1] = split_at_first_space(epdString);
 
-    fen_helpers::parse_piece_positions(piecePositions, pos.position);
+    const auto piecePosErr = fen_helpers::parse_piece_positions(piecePositions, pos.position);
+
+    if (not piecePosErr.has_value())
+        return std::unexpected(piecePosErr.error());
 
     const auto [sideToMove, rest2] = split_at_first_space(rest1);
 
-    fen_helpers::parse_side_to_move(sideToMove, pos.position);
+    const auto stmErr = fen_helpers::parse_side_to_move(sideToMove, pos.position);
+
+    if (not stmErr.has_value())
+        return std::unexpected(stmErr.error());
 
     const auto [castlingRights, rest3] = split_at_first_space(rest2);
 
@@ -107,10 +110,15 @@ EPDPosition from_epd(string_view epdString)
 
 std::vector<EPDPosition> parse_all_epds(const string_view fileContent)
 {
-    return util::lines_view(fileContent)
-         | std::views::filter([](const string_view line) { return not line.empty(); })
-         | std::views::transform([](const string_view line) { return from_epd(line); })
-         | std::ranges::to<std::vector>();
+    std::vector<EPDPosition> positions;
+
+    for (const auto str : util::lines_view(fileContent)
+                              | std::views::filter([](const string_view line) { return not line.empty(); })) {
+        if (auto pos = from_epd(str))
+            positions.emplace_back(pos.value());
+    }
+
+    return positions;
 }
 
 namespace {

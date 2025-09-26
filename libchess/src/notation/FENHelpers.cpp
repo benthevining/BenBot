@@ -14,6 +14,7 @@
 
 #include "FENHelpers.hpp"
 #include <array>
+#include <expected>
 #include <format>
 #include <iterator>
 #include <libchess/board/Bitboard.hpp>
@@ -27,7 +28,6 @@
 #include <magic_enum/magic_enum.hpp>
 #include <optional>
 #include <ranges>
-#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -141,7 +141,7 @@ namespace {
     // returns the rest of the piece positions fragment that was left after parsing this rank
     [[nodiscard]] auto parse_rank(
         const board::Rank rank, string_view fenFragment, Position& position)
-        -> string_view
+        -> std::expected<string_view, string>
     {
         const auto rankStart = Square { .file = board::File::A, .rank = rank }.index();
         const auto rankEnd   = rankStart + 8uz;
@@ -150,9 +150,7 @@ namespace {
 
         do {
             if (fenFragment.empty())
-                throw std::invalid_argument {
-                    "Unexpected end of piece positions FEN fragment"
-                };
+                return std::unexpected("Unexpected end of piece positions FEN fragment");
 
             switch (fenFragment.front()) {
                 case 'p': position.blackPieces.pawns.set(index); break;
@@ -184,9 +182,10 @@ namespace {
                     return fenFragment.substr(1uz);
 
                 default:
-                    throw std::invalid_argument {
-                        std::format("Unexpected char in piece positions FEN fragment: {}", fenFragment.front())
-                    };
+                    return std::unexpected(
+                        std::format(
+                            "Unexpected char in piece positions FEN fragment: {}",
+                            fenFragment.front()));
             }
 
             ++index;
@@ -201,27 +200,39 @@ namespace {
 
 } // namespace
 
-void parse_piece_positions(
+std::expected<void, string> parse_piece_positions(
     string_view fenFragment, Position& position)
 {
-    for (const auto rank : std::views::reverse(enum_values<board::Rank>()))
-        fenFragment = parse_rank(rank, fenFragment, position);
+    for (const auto rank : std::views::reverse(enum_values<board::Rank>())) {
+        const auto left = parse_rank(rank, fenFragment, position);
+
+        if (not left.has_value())
+            return std::unexpected(left.error());
+
+        fenFragment = left.value();
+    }
 
     position.whitePieces.refresh_occupied();
     position.blackPieces.refresh_occupied();
+
+    return {};
 }
 
-void parse_side_to_move(
+std::expected<void, string> parse_side_to_move(
     const string_view fenFragment, Position& position)
 {
-    if (fenFragment.length() != 1uz)
-        throw std::invalid_argument {
-            std::format("Expected single character for side to move, got: {}", fenFragment)
-        };
+    if (fenFragment.length() != 1uz) {
+        return std::unexpected(
+            std::format(
+                "Expected single character for side to move, got: {}",
+                fenFragment));
+    }
 
     const bool isBlack = fenFragment.front() == 'b';
 
     position.sideToMove = isBlack ? Color::Black : Color::White;
+
+    return {};
 }
 
 void parse_castling_rights(
