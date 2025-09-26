@@ -180,7 +180,7 @@ namespace {
             moveText = moveText.substr(lastDotIdx + 1uz);
         }
 
-        const auto move = from_alg(position, moveText);
+        const auto move = from_alg(position, moveText).value();
 
         position.make_move(move);
 

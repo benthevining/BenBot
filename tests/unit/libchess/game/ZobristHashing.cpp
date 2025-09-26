@@ -40,9 +40,9 @@ TEST_CASE("Zobrist - reaching identical positions", TAGS)
 
     chess::game::Position pos {};
 
-    pos.make_move(from_alg(pos, "e4"));
-    pos.make_move(from_alg(pos, "d5"));
-    pos.make_move(from_alg(pos, "exd5"));
+    pos.make_move(from_alg(pos, "e4").value());
+    pos.make_move(from_alg(pos, "d5").value());
+    pos.make_move(from_alg(pos, "exd5").value());
 
     REQUIRE(pos.hash == position.hash);
 }
@@ -102,10 +102,10 @@ TEST_CASE("Zobrist - repeated positions", TAGS)
 
     const auto origHash = pos.hash;
 
-    pos.make_move(from_alg(pos, "Nf3"));
-    pos.make_move(from_alg(pos, "Nf6"));
-    pos.make_move(from_alg(pos, "Ng1"));
-    pos.make_move(from_alg(pos, "Ng8"));
+    pos.make_move(from_alg(pos, "Nf3").value());
+    pos.make_move(from_alg(pos, "Nf6").value());
+    pos.make_move(from_alg(pos, "Ng1").value());
+    pos.make_move(from_alg(pos, "Ng8").value());
 
     REQUIRE(pos.hash == origHash);
 }
@@ -116,10 +116,10 @@ TEST_CASE("Zobrist - repeated positions, but original had EP possibility", TAGS)
 
     const auto origHash = pos.hash;
 
-    pos.make_move(from_alg(pos, "Bd7"));
-    pos.make_move(from_alg(pos, "Be2"));
-    pos.make_move(from_alg(pos, "Bc8"));
-    pos.make_move(from_alg(pos, "Bf1"));
+    pos.make_move(from_alg(pos, "Bd7").value());
+    pos.make_move(from_alg(pos, "Be2").value());
+    pos.make_move(from_alg(pos, "Bc8").value());
+    pos.make_move(from_alg(pos, "Bf1").value());
 
     REQUIRE(pos.hash != origHash);
 }

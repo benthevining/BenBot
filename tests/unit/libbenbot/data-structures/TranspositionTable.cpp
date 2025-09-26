@@ -66,10 +66,11 @@ TEST_CASE("Transposition table - get_best_response()", TAGS)
 {
     static const Position startPos {};
 
-    const auto ourMove = notation::from_alg(startPos, "Nf3");
+    const auto ourMove = notation::from_alg(startPos, "Nf3").value();
 
     const auto theirMove = notation::from_alg(
-        chess::game::after_move(startPos, ourMove), "Nf6");
+        chess::game::after_move(startPos, ourMove), "Nf6")
+                               .value();
 
     TranspositionTable table;
 

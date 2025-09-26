@@ -75,9 +75,7 @@ TEST_CASE("Castling rights - lost when rook captured", TAGS)
 
         REQUIRE(position.whiteCastlingRights.kingside);
 
-        const auto move = from_alg(position, "Nxh1");
-
-        position.make_move(move);
+        position.make_move(from_alg(position, "Nxh1").value());
 
         REQUIRE(not position.whiteCastlingRights.kingside);
     }
@@ -88,9 +86,7 @@ TEST_CASE("Castling rights - lost when rook captured", TAGS)
 
         REQUIRE(position.whiteCastlingRights.queenside);
 
-        const auto move = from_alg(position, "Bxa1");
-
-        position.make_move(move);
+        position.make_move(from_alg(position, "Bxa1").value());
 
         REQUIRE(not position.whiteCastlingRights.queenside);
     }
@@ -101,9 +97,7 @@ TEST_CASE("Castling rights - lost when rook captured", TAGS)
 
         REQUIRE(position.blackCastlingRights.kingside);
 
-        const auto move = from_alg(position, "Bxh8");
-
-        position.make_move(move);
+        position.make_move(from_alg(position, "Bxh8").value());
 
         REQUIRE(not position.blackCastlingRights.kingside);
     }
@@ -114,9 +108,7 @@ TEST_CASE("Castling rights - lost when rook captured", TAGS)
 
         REQUIRE(position.blackCastlingRights.queenside);
 
-        const auto move = from_alg(position, "Qxa8");
-
-        position.make_move(move);
+        position.make_move(from_alg(position, "Qxa8").value());
 
         REQUIRE(not position.blackCastlingRights.queenside);
     }
