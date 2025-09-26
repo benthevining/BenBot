@@ -21,7 +21,6 @@
 #include <algorithm>
 #include <atomic>
 #include <cassert>
-#include <cmath>   // IWYU pragma: keep - for std::abs()
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <iterator>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
@@ -95,7 +94,6 @@ namespace {
             assert(parent != nullptr);
 
             parent->moves.clear();
-
             parent->moves.emplace_back(move);
 
             std::ranges::copy(
@@ -111,7 +109,7 @@ namespace {
 
     // searches only captures, with no depth limit, to try to
     // improve the stability of the static evaluation function
-    [[nodiscard]] auto quiescence(AlphaBetaContext context) -> Score
+    [[nodiscard]] auto quiescence(AlphaBetaContext context, Line& parentLine) -> Score
     {
         if (context.interrupter.should_abort() or context.currentPosition.is_draw())
             return {};
@@ -138,11 +136,14 @@ namespace {
 
         detail::order_moves_for_q_search(context.currentPosition, moves);
 
+        Line bestLine { &parentLine };
+
         for (const auto& move : moves) {
             assert(context.currentPosition.is_capture(move));
 
             evaluation = -quiescence(
-                context.recurse(after_move(context.currentPosition, move)));
+                context.recurse(after_move(context.currentPosition, move)),
+                bestLine);
 
             if (context.interrupter.was_aborted())
                 return {};
@@ -154,7 +155,10 @@ namespace {
                 return context.bounds.beta;
             }
 
-            context.bounds.alpha = std::max(context.bounds.alpha, evaluation);
+            if (evaluation > context.bounds.alpha) {
+                context.bounds.alpha = evaluation;
+                bestLine.add_move(move);
+            }
         }
 
         return context.bounds.alpha;
@@ -222,7 +226,7 @@ namespace {
 
             const auto eval = context.depth > 0uz
                                 ? -alpha_beta(context.recurse(newPosition), bestLine)
-                                : -quiescence(context.recurse(newPosition));
+                                : -quiescence(context.recurse(newPosition), bestLine);
 
             if (context.interrupter.should_abort())
                 return {};
