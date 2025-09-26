@@ -19,7 +19,6 @@
 #include "MoveOrdering.hpp"
 #include "TimeManagement.hpp"
 #include <algorithm>
-#include <array>
 #include <atomic>
 #include <cassert>
 #include <cmath>   // IWYU pragma: keep - for std::abs()
@@ -34,7 +33,6 @@
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/util/Threading.hpp>
 #include <optional>
-#include <ranges>
 
 namespace ben_bot::search {
 
@@ -90,30 +88,23 @@ namespace {
         {
         }
 
-        [[nodiscard]] MoveList to_movelist() const
-        {
-            return std::views::take(moves, length)
-                 | std::ranges::to<MoveList>();
-        }
+        [[nodiscard]] MoveList to_movelist() const { return moves; }
 
         void add_move(const Move move)
         {
             assert(parent != nullptr);
 
-            parent->moves.front() = move;
-            parent->length        = length + 1uz;
+            parent->moves.clear();
+
+            parent->moves.emplace_back(move);
 
             std::ranges::copy(
-                std::views::take(moves, length),
-                std::next(parent->moves.data()));
+                moves,
+                std::back_inserter(parent->moves));
         }
 
     private:
-        // this is array instead of inplace_vector because we write into higher
-        // indices first, so it's simplest if the objects exist from the get-go
-        std::array<Move, MoveList::capacity()> moves {};
-
-        size_t length { 0uz };
+        MoveList moves;
 
         Line* parent { nullptr };
     };
@@ -309,8 +300,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
 
     Stats stats;
     Score bestScore;
-    Line  parentPV;
-    Line  pv { &parentPV }; // NOLINT(readability-identifier-length)
+    Line  pv; // NOLINT(readability-identifier-length)
 
     // iterative deepening
     auto depth = 1uz;
@@ -326,6 +316,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         detail::order_moves_for_search(options.position, options.movesToSearch, transTable);
 
         Bounds bounds {};
+        Line   thisPV { &pv };
 
         for (const auto& move : options.movesToSearch) {
             const auto score = -alpha_beta({ .bounds            = bounds.invert(),
@@ -335,7 +326,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
                                                .transTable      = transTable,
                                                .interrupter     = interrupter,
                                                .stats           = stats },
-                pv);
+                thisPV);
 
             if (interrupter.was_aborted())
                 break;
@@ -343,7 +334,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
             if (score > bounds.alpha) {
                 bounds.alpha = score;
 
-                pv.add_move(move);
+                thisPV.add_move(move);
             }
         }
 
@@ -382,7 +373,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         // final output before we're going to spin, then the stop command will print the
         // final info again and the bestmove
         if (depth < options.depth or options.infinite) {
-            callbacks.iteration_complete({ .pv = parentPV.to_movelist(),
+            callbacks.iteration_complete({ .pv = pv.to_movelist(),
                 .duration                      = interrupter.get_search_duration(),
                 .depth                         = depth,
                 .score                         = bestScore,
@@ -411,7 +402,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         });
     }
 
-    callbacks.search_complete({ .pv = parentPV.to_movelist(),
+    callbacks.search_complete({ .pv = pv.to_movelist(),
         .duration                   = interrupter.get_search_duration(),
         .depth                      = depth,
         .score                      = bestScore,
