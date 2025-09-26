@@ -28,7 +28,6 @@
 #include <numeric>
 #include <optional>
 #include <ranges>
-#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <unordered_map>

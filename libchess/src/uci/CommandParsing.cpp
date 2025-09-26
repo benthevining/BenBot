@@ -92,8 +92,12 @@ Position parse_position_options(string_view options)
     while (not moves.empty()) {
         const auto [firstMove, rest2] = split_at_first_space(moves);
 
-        position.make_move(
-            notation::from_uci(position, firstMove));
+        const auto move = notation::from_uci(position, firstMove);
+
+        if (not move.has_value())
+            throw std::invalid_argument { move.error() };
+
+        position.make_move(move.value());
 
         moves = trim(rest2);
     }
@@ -211,7 +215,8 @@ namespace {
 
             options = trim(rest);
 
-            *outputIt = notation::from_uci(currentPosition, firstMove);
+            if (const auto move = notation::from_uci(currentPosition, firstMove))
+                *outputIt = move.value();
         }
 
         return options; // NOLINT
