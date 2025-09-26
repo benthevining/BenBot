@@ -101,11 +101,13 @@ PositionOrError from_fen(std::string_view fenString)
 
                     fen_helpers::parse_en_passant_target_square(epTarget, position);
 
-                    // TODO: allow these being omitted
-                    const auto [halfMoveClock, fullMoveCounter] = split_at_first_space(rest4);
+                    // tolerate the final 2 fields being omitted
+                    if (not util::trim(rest4).empty()) {
+                        const auto [halfMoveClock, fullMoveCounter] = split_at_first_space(rest4);
 
-                    position.halfmoveClock   = int_from_string(halfMoveClock, position.halfmoveClock);
-                    position.fullMoveCounter = int_from_string(fullMoveCounter, position.fullMoveCounter);
+                        position.halfmoveClock   = int_from_string(halfMoveClock, position.halfmoveClock);
+                        position.fullMoveCounter = int_from_string(fullMoveCounter, position.fullMoveCounter);
+                    }
 
                     position.refresh_zobrist();
 

@@ -108,15 +108,12 @@ PositionOrError from_epd(string_view epdString)
 
 std::vector<EPDPosition> parse_all_epds(const string_view fileContent)
 {
-    std::vector<EPDPosition> positions;
-
-    for (const auto str : util::lines_view(fileContent)
-                              | std::views::filter([](const string_view line) { return not line.empty(); })) {
-        if (auto pos = from_epd(str))
-            positions.emplace_back(pos.value());
-    }
-
-    return positions;
+    return util::lines_view(fileContent)
+         | std::views::filter([](const string_view line) { return not line.empty(); })
+         | std::views::transform([](const string_view line) { return from_epd(line); })
+         | std::views::filter([](const PositionOrError& pos) { return pos.has_value(); })
+         | std::views::transform([](const PositionOrError& pos) { return pos.value(); })
+         | std::ranges::to<std::vector>();
 }
 
 namespace {
