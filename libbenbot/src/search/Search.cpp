@@ -320,9 +320,10 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         detail::order_moves_for_search(options.position, options.movesToSearch, transTable);
 
         Bounds bounds {};
-        Line   thisPV { &pv };
 
         for (const auto& move : options.movesToSearch) {
+            Line thisPV { &pv };
+
             const auto score = -alpha_beta({ .bounds            = bounds.invert(),
                                                .currentPosition = after_move(options.position, move),
                                                .depth           = depth,
