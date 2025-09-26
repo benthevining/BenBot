@@ -71,7 +71,9 @@ std::string to_fen(const Position& position, const bool alwaysWriteEPSqare)
     return fen;
 }
 
-std::expected<Position, std::string> from_fen(std::string_view fenString)
+using PositionOrError = std::expected<Position, std::string>;
+
+PositionOrError from_fen(std::string_view fenString)
 {
     using util::int_from_string;
     using util::split_at_first_space;
@@ -85,35 +87,31 @@ std::expected<Position, std::string> from_fen(std::string_view fenString)
 
     const auto [piecePositions, rest1] = split_at_first_space(fenString);
 
-    const auto piecePosErr = fen_helpers::parse_piece_positions(piecePositions, position);
+    return fen_helpers::parse_piece_positions(piecePositions, position)
+        .and_then([rest1, &position]() mutable -> PositionOrError {
+            const auto [sideToMove, rest2] = split_at_first_space(rest1);
 
-    if (not piecePosErr.has_value())
-        return std::unexpected(piecePosErr.error());
+            return fen_helpers::parse_side_to_move(sideToMove, position)
+                .and_then([rest2, &position]() mutable -> PositionOrError {
+                    const auto [castlingRights, rest3] = split_at_first_space(rest2);
 
-    const auto [sideToMove, rest2] = split_at_first_space(rest1);
+                    fen_helpers::parse_castling_rights(castlingRights, position);
 
-    const auto stmErr = fen_helpers::parse_side_to_move(sideToMove, position);
+                    const auto [epTarget, rest4] = split_at_first_space(rest3);
 
-    if (not stmErr.has_value())
-        return std::unexpected(stmErr.error());
+                    fen_helpers::parse_en_passant_target_square(epTarget, position);
 
-    const auto [castlingRights, rest3] = split_at_first_space(rest2);
+                    // TODO: allow these being omitted
+                    const auto [halfMoveClock, fullMoveCounter] = split_at_first_space(rest4);
 
-    fen_helpers::parse_castling_rights(castlingRights, position);
+                    position.halfmoveClock   = int_from_string(halfMoveClock, position.halfmoveClock);
+                    position.fullMoveCounter = int_from_string(fullMoveCounter, position.fullMoveCounter);
 
-    const auto [epTarget, rest4] = split_at_first_space(rest3);
+                    position.refresh_zobrist();
 
-    fen_helpers::parse_en_passant_target_square(epTarget, position);
-
-    // TODO: allow these being omitted
-    const auto [halfMoveClock, fullMoveCounter] = split_at_first_space(rest4);
-
-    position.halfmoveClock   = int_from_string(halfMoveClock, position.halfmoveClock);
-    position.fullMoveCounter = int_from_string(fullMoveCounter, position.fullMoveCounter);
-
-    position.refresh_zobrist();
-
-    return position;
+                    return position;
+                });
+        });
 }
 
 } // namespace chess::notation

@@ -65,7 +65,9 @@ namespace {
 
 } // namespace
 
-std::expected<EPDPosition, string> from_epd(string_view epdString)
+using PositionOrError = std::expected<EPDPosition, string>;
+
+PositionOrError from_epd(string_view epdString)
 {
     using util::split_at_first_space;
 
@@ -81,31 +83,27 @@ std::expected<EPDPosition, string> from_epd(string_view epdString)
 
     const auto [piecePositions, rest1] = split_at_first_space(epdString);
 
-    const auto piecePosErr = fen_helpers::parse_piece_positions(piecePositions, pos.position);
+    return fen_helpers::parse_piece_positions(piecePositions, pos.position)
+        .and_then([rest1, &pos]() mutable -> PositionOrError {
+            const auto [sideToMove, rest2] = split_at_first_space(rest1);
 
-    if (not piecePosErr.has_value())
-        return std::unexpected(piecePosErr.error());
+            return fen_helpers::parse_side_to_move(sideToMove, pos.position)
+                .and_then([rest2, &pos]() mutable -> PositionOrError {
+                    const auto [castlingRights, rest3] = split_at_first_space(rest2);
 
-    const auto [sideToMove, rest2] = split_at_first_space(rest1);
+                    fen_helpers::parse_castling_rights(castlingRights, pos.position);
 
-    const auto stmErr = fen_helpers::parse_side_to_move(sideToMove, pos.position);
+                    const auto [epTarget, rest4] = split_at_first_space(rest3);
 
-    if (not stmErr.has_value())
-        return std::unexpected(stmErr.error());
+                    fen_helpers::parse_en_passant_target_square(epTarget, pos.position);
 
-    const auto [castlingRights, rest3] = split_at_first_space(rest2);
+                    parse_operations(pos, rest4);
 
-    fen_helpers::parse_castling_rights(castlingRights, pos.position);
+                    pos.position.refresh_zobrist();
 
-    const auto [epTarget, rest4] = split_at_first_space(rest3);
-
-    fen_helpers::parse_en_passant_target_square(epTarget, pos.position);
-
-    parse_operations(pos, rest4);
-
-    pos.position.refresh_zobrist();
-
-    return pos;
+                    return pos;
+                });
+        });
 }
 
 std::vector<EPDPosition> parse_all_epds(const string_view fileContent)
