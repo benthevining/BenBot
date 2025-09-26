@@ -18,6 +18,7 @@
 #include <charconv>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
+#include <expected>
 #include <format>
 #include <libchess/game/Result.hpp>
 #include <libchess/notation/Algebraic.hpp>
@@ -51,9 +52,10 @@ namespace {
     using std::size_t;
     using std::string;
     using std::string_view;
-    using Metadata   = std::unordered_map<std::string, std::string>;
-    using Moves      = std::vector<GameRecord::Move>;
-    using GameResult = std::optional<game::Result>;
+    using Metadata            = std::unordered_map<std::string, std::string>;
+    using Moves               = std::vector<GameRecord::Move>;
+    using GameResult          = std::optional<game::Result>;
+    using ResultStrOrErrorStr = std::expected<string_view, string_view>;
 
     using util::int_from_string;
     using util::split_at_first_space_or_newline;
@@ -62,16 +64,15 @@ namespace {
     // the rest of the PGN text that's left
     [[nodiscard]] auto parse_metadata_tags(
         string_view pgnText, Metadata& metadata)
-        -> string_view
+        -> ResultStrOrErrorStr
     {
         auto openingBracketIdx = pgnText.find('[');
 
         while (openingBracketIdx != string_view::npos) {
             const auto closingBracketIdx = pgnText.find(']', openingBracketIdx + 1uz);
 
-            if (closingBracketIdx == string_view::npos) {
-                throw std::invalid_argument { "Invalid PGN: expected ']' following '['" };
-            }
+            if (closingBracketIdx == string_view::npos)
+                return std::unexpected("Invalid PGN: expected ']' following '['");
 
             assert(closingBracketIdx > openingBracketIdx);
 
@@ -107,15 +108,14 @@ namespace {
     // and returns the rest of the pgnText after the } that closes this comment
     [[nodiscard]] auto parse_block_comment(
         const string_view pgnText, Moves& output)
-        -> string_view
+        -> ResultStrOrErrorStr
     {
         assert(pgnText.front() == '{');
 
         const auto closeBracketIdx = pgnText.find('}');
 
-        if (closeBracketIdx == string_view::npos) {
-            throw std::invalid_argument { "Expected '}' following '{'" };
-        }
+        if (closeBracketIdx == string_view::npos)
+            return std::unexpected("Expected '}' following '{'");
 
         if (not output.empty())
             output.back().comment = pgnText.substr(1uz, closeBracketIdx - 1uz);
@@ -187,8 +187,9 @@ namespace {
         output.emplace_back(move);
     }
 
-    string_view parse_variation(
-        string_view pgnText, const Position& position, Moves& output);
+    auto parse_variation(
+        string_view pgnText, const Position& position, Moves& output)
+        -> ResultStrOrErrorStr;
 
     // parses a move list, including nested comments, NAGs, and variations
     // if IsVariation is true, always returns an empty string_view
@@ -198,7 +199,7 @@ namespace {
         string_view pgnText,
         Position    position, // intentionally by copy!
         Moves&      output)
-        -> string_view
+        -> ResultStrOrErrorStr
     {
         // With a PGN like: 1. e4 (e3), the move e3 was made from the starting position,
         // not the position after e4. So because Position doesn't have an unmake_move()
@@ -214,7 +215,12 @@ namespace {
             switch (pgnText.front()) {
                 case '{': {
                     // comment: { continues to }
-                    pgnText = parse_block_comment(pgnText, output);
+                    const auto rest = parse_block_comment(pgnText, output);
+
+                    if (not rest.has_value())
+                        return std::unexpected(rest.error());
+
+                    pgnText = rest.value();
                     continue;
                 }
 
@@ -232,7 +238,12 @@ namespace {
 
                 case '(': {
                     // variation
-                    pgnText = parse_variation(pgnText, lastPos, output);
+                    const auto rest = parse_variation(pgnText, lastPos, output);
+
+                    if (not rest.has_value())
+                        return std::unexpected(rest.error());
+
+                    pgnText = rest.value();
                     continue;
                 }
 
@@ -272,23 +283,23 @@ namespace {
         const string_view pgnText,
         const Position&   position,
         Moves&            output)
-        -> string_view
+        -> ResultStrOrErrorStr
     {
         assert(pgnText.front() == '(');
 
-        if (output.empty()) {
-            throw std::invalid_argument { "Cannot parse a variation with an empty move list!" };
-        }
+        if (output.empty())
+            return std::unexpected("Cannot parse a variation with an empty move list!");
 
         const auto closeParenIdx = util::find_matching_close_paren(pgnText);
 
         auto& variation = output.back().variations.emplace_back();
 
-        parse_moves_internal<true>(
+        return parse_moves_internal<true>(
             pgnText.substr(1uz, closeParenIdx - 1uz),
-            position, variation);
-
-        return pgnText.substr(closeParenIdx + 1uz);
+            position, variation)
+            .and_then([pgnText, closeParenIdx]([[maybe_unused]] const string_view alwaysEmpty) -> ResultStrOrErrorStr {
+                return pgnText.substr(closeParenIdx + 1uz);
+            });
     }
 
     // writes the parsed moves into output and returns the
@@ -297,10 +308,9 @@ namespace {
         const string_view pgnText,
         const Position&   position,
         Moves&            output)
-        -> string_view
+        -> std::expected<string_view, string_view>
     {
-        return parse_moves_internal<false>(
-            pgnText, position, output);
+        return parse_moves_internal<false>(pgnText, position, output);
     }
 
     [[nodiscard]] auto parse_game_result(
@@ -331,18 +341,25 @@ GameRecord from_pgn(string_view pgnText)
 {
     GameRecord game;
 
-    pgnText = parse_metadata_tags(pgnText, game.metadata);
+    const auto afterMeta = parse_metadata_tags(pgnText, game.metadata);
+
+    if (not afterMeta.has_value())
+        throw std::invalid_argument { std::string { afterMeta.error() } };
+
+    pgnText = afterMeta.value();
 
     if (const auto posStr = game.metadata.find("FEN");
         posStr != game.metadata.end()) {
-        if (const auto pos = from_fen(posStr->second))
-            game.startingPosition = pos.value();
+        game.startingPosition = from_fen(posStr->second).value_or(Position {});
     }
 
     const auto resultText = parse_move_list(
         pgnText, game.startingPosition, game.moves);
 
-    game.result = parse_game_result(resultText, game);
+    if (not resultText.has_value())
+        throw std::invalid_argument { std::string { resultText.error() } };
+
+    game.result = parse_game_result(resultText.value(), game);
 
     return game;
 }
