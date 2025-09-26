@@ -90,8 +90,6 @@ namespace {
         {
         }
 
-        // the PVs collected by alpha-beta will begin 1 ply after the root,
-        // so we need to prepend the first move here
         [[nodiscard]] MoveList to_movelist() const
         {
             return std::views::take(moves, length)
@@ -103,12 +101,11 @@ namespace {
             assert(parent != nullptr);
 
             parent->moves.front() = move;
+            parent->length        = length + 1uz;
 
             std::ranges::copy(
                 std::views::take(moves, length),
                 std::next(parent->moves.data()));
-
-            parent->length = length + 1uz;
         }
 
     private:
@@ -312,7 +309,8 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
 
     Stats stats;
     Score bestScore;
-    Line  pv; // NOLINT(readability-identifier-length)
+    Line  parentPV;
+    Line  pv { &parentPV }; // NOLINT(readability-identifier-length)
 
     // iterative deepening
     auto depth = 1uz;
@@ -330,8 +328,6 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         Bounds bounds {};
 
         for (const auto& move : options.movesToSearch) {
-            Line thisPV { &pv };
-
             const auto score = -alpha_beta({ .bounds            = bounds.invert(),
                                                .currentPosition = after_move(options.position, move),
                                                .depth           = depth,
@@ -339,7 +335,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
                                                .transTable      = transTable,
                                                .interrupter     = interrupter,
                                                .stats           = stats },
-                thisPV);
+                pv);
 
             if (interrupter.was_aborted())
                 break;
@@ -347,7 +343,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
             if (score > bounds.alpha) {
                 bounds.alpha = score;
 
-                thisPV.add_move(move);
+                pv.add_move(move);
             }
         }
 
@@ -386,7 +382,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         // final output before we're going to spin, then the stop command will print the
         // final info again and the bestmove
         if (depth < options.depth or options.infinite) {
-            callbacks.iteration_complete({ .pv = pv.to_movelist(),
+            callbacks.iteration_complete({ .pv = parentPV.to_movelist(),
                 .duration                      = interrupter.get_search_duration(),
                 .depth                         = depth,
                 .score                         = bestScore,
@@ -415,7 +411,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         });
     }
 
-    callbacks.search_complete({ .pv = pv.to_movelist(),
+    callbacks.search_complete({ .pv = parentPV.to_movelist(),
         .duration                   = interrupter.get_search_duration(),
         .depth                      = depth,
         .score                      = bestScore,
