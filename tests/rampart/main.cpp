@@ -32,11 +32,11 @@
 #include <span>
 #include <string_view>
 
-auto main(const int argc, const char** argv) -> int
+int main(const int argc, const char** argv)
 try {
     static constexpr auto MAX_ARGS = 3uz;
 
-    const beman::inplace_vector<std::string_view, MAX_ARGS> argStorage {
+    const beman::inplace_vector::inplace_vector<std::string_view, MAX_ARGS> argStorage {
         argv,
         std::next(argv, static_cast<std::ptrdiff_t>(argc))
     };

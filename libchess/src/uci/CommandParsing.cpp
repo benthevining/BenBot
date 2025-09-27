@@ -204,9 +204,6 @@ namespace {
     {
         using namespace std::literals::string_view_literals; // NOLINT
 
-        // we could instead find the first token that doesn't successfully parse as
-        // a UCI move, but from_uci() throws on failure, so instead we detect the
-        // other delimiter tokens
         static constexpr std::array argumentTokens {
             "ponder"sv, "wtime"sv, "btime"sv, "winc"sv, "binc"sv, "infinite"sv,
             "movestogo"sv, "depth"sv, "nodes"sv, "mate"sv, "movetime"sv

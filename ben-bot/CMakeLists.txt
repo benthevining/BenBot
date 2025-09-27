@@ -43,9 +43,16 @@ add_executable (ben_bot::ben_bot ALIAS ben_bot)
 
 # cmake-format: off
 install (TARGETS ben_bot COMPONENT ben_bot
+         # this list can be a bit fussy - the goal is to simply
+         # ignore anything that cmake can't auto-resolve for us
          RUNTIME_DEPENDENCIES
-            PRE_EXCLUDE_REGEXES "api-ms-" "ext-ms-" "Azure"
-            FRAMEWORK DESTINATION Library/Frameworks
+            PRE_EXCLUDE_REGEXES api-ms- ext-ms- wpaxholder wtdccm
+            POST_EXCLUDE_REGEXES .dll # a last resort, I couldn't find
+                                      # any other way to stop CMake from
+                                      # complaining about AzureAttestManager.dll
+                                      # and AzureAttestNormal.dll (pre-exclude
+                                      # regexes didn't work for some reason)
+         FRAMEWORK DESTINATION Library/Frameworks
 )
 # cmake-format: on
 

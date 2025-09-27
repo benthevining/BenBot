@@ -23,7 +23,7 @@
 
 using chess::uci::printing::info_string;
 
-auto main(const int argc, const char** argv) -> int
+int main(const int argc, const char** argv)
 try {
     chess::util::enable_utf8_console_output();
 

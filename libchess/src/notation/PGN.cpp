@@ -188,7 +188,7 @@ namespace {
 
     auto parse_variation(
         string_view pgnText, const Position& position, Moves& output)
-        -> ResultStrOrErrorStr;
+        -> std::expected<string_view, string>;
 
     // parses a move list, including nested comments, NAGs, and variations
     // if IsVariation is true, always returns an empty string_view
@@ -282,22 +282,24 @@ namespace {
         const string_view pgnText,
         const Position&   position,
         Moves&            output)
-        -> ResultStrOrErrorStr
+        -> std::expected<string_view, string>
     {
         assert(pgnText.front() == '(');
 
         if (output.empty())
             return std::unexpected("Cannot parse a variation with an empty move list!");
 
-        const auto closeParenIdx = util::find_matching_close_paren(pgnText);
+        return util::find_matching_close_paren(pgnText)
+            .and_then([pgnText, &position, &output](const size_t closeParenIdx) {
+                auto& variation = output.back().variations.emplace_back();
 
-        auto& variation = output.back().variations.emplace_back();
-
-        return parse_moves_internal<true>(
-            pgnText.substr(1uz, closeParenIdx - 1uz),
-            position, variation)
-            .and_then([pgnText, closeParenIdx]([[maybe_unused]] const string_view alwaysEmpty) -> ResultStrOrErrorStr {
-                return pgnText.substr(closeParenIdx + 1uz);
+                return parse_moves_internal<true>(
+                    pgnText.substr(1uz, closeParenIdx - 1uz),
+                    position, variation)
+                    .and_then([pgnText, closeParenIdx]([[maybe_unused]] const string_view alwaysEmpty) -> ResultStrOrErrorStr {
+                        return pgnText.substr(closeParenIdx + 1uz);
+                    })
+                    .transform_error([](const string_view error) { return string { error }; });
             });
     }
 

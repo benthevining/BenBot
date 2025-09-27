@@ -185,12 +185,12 @@ struct ComboOption final : Option {
 
     using Value = string_view;
 
-    [[nodiscard]] auto get_value() const noexcept -> string_view { return value; }
+    [[nodiscard]] auto get_value() const noexcept -> string_view { return value; } // cppcheck-suppress returnByReference
 
     [[nodiscard]] auto get_value_variant() const -> Variant override { return get_value(); }
 
     /** Returns this option's default value. */
-    [[nodiscard]] auto get_default_value() const noexcept -> string_view { return optionDefault; }
+    [[nodiscard]] auto get_default_value() const noexcept -> string_view { return optionDefault; } // cppcheck-suppress returnByReference
 
     [[nodiscard]] auto get_default_value_variant() const -> Variant override { return get_default_value(); }
 
@@ -226,7 +226,7 @@ struct StringOption final : Option {
 
     using Value = string_view;
 
-    [[nodiscard]] auto get_value() const noexcept -> string_view { return value; }
+    [[nodiscard]] auto get_value() const noexcept -> string_view { return value; } // cppcheck-suppress returnByReference
 
     [[nodiscard]] auto get_value_variant() const -> Variant override { return get_value(); }
 

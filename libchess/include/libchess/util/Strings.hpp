@@ -23,6 +23,7 @@
 #include <charconv>
 #include <concepts>
 #include <cstddef> // IWYU pragma: keep - for size_t
+#include <expected>
 #include <iterator>
 #include <ranges>
 #include <string>
@@ -67,10 +68,11 @@ using StringViewPair = std::pair<string_view, string_view>;
     character, taking nested ``()`` pairs into account. This function asserts
     if the ``input`` does not begin with ``(``.
 
-    @throws std::invalid_argument An exception will be thrown if no matching
-    ``)`` character is found.
+    If a matching close parentheses character isn't found, returns an explanatory
+    error string.
  */
-[[nodiscard]] auto find_matching_close_paren(string_view input) -> size_t;
+[[nodiscard]] auto find_matching_close_paren(string_view input)
+    -> std::expected<size_t, std::string>;
 
 /** Reads an integer from the input string using ``std::from_chars``.
 

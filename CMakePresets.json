@@ -66,7 +66,7 @@
         },
         "CMAKE_PROJECT_INCLUDE": {
           "type": "STRING",
-          "value": "${sourceDir}/config/Warnings.cmake;${sourceDir}/config/StaticAnalysis.cmake"
+          "value": "${sourceDir}/config/Warnings.cmake"
         },
         "CTEST_NO_TESTS_ACTION": {
           "type": "STRING",
@@ -101,6 +101,10 @@
           "type": "STRING",
           "value": "clang++"
         },
+        "CMAKE_CXX_FLAGS": {
+          "type": "STRING",
+          "value": "-stdlib=libc++"
+        },
         "CMAKE_C_COMPILER": {
           "type": "STRING",
           "value": "clang"
@@ -113,11 +117,11 @@
     },
     {
       "cacheVariables": {
-        "CMAKE_CXX_FLAGS": {
+        "CMAKE_CXX_FLAGS_DEBUG": {
           "type": "STRING",
           "value": "-fsanitize=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer"
         },
-        "CMAKE_C_FLAGS": {
+        "CMAKE_C_FLAGS_DEBUG": {
           "type": "STRING",
           "value": "-fsanitize=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer"
         }
@@ -128,11 +132,11 @@
     },
     {
       "cacheVariables": {
-        "CMAKE_CXX_FLAGS": {
+        "CMAKE_CXX_FLAGS_DEBUG": {
           "type": "STRING",
           "value": "-fsanitize=undefined"
         },
-        "CMAKE_C_FLAGS": {
+        "CMAKE_C_FLAGS_DEBUG": {
           "type": "STRING",
           "value": "-fsanitize=undefined"
         }
