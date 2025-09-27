@@ -366,9 +366,14 @@ namespace {
         if (const auto xPos = text.find('x');
             xPos != string_view::npos) {
             // string is of form dxe8=Q
+            const auto file = board::file_from_char(text.at(xPos - 1uz));
+
+            if (not file.has_value())
+                return std::nullopt;
+
             return Move {
                 Square {
-                    .file = board::file_from_char(text.at(xPos - 1uz)),
+                    .file = file.value(),
                     .rank = color == Color::White ? Rank::Seven : Rank::Two },
                 Square::from_string(text.substr(eqSgnPos - 2uz, 2uz)),
                 PieceType::Pawn, promotedType.value()
@@ -376,9 +381,13 @@ namespace {
         }
 
         // string is of form e8=Q
+        const auto file = board::file_from_char(text.front());
+
+        if (not file.has_value())
+            return std::nullopt;
+
         return moves::promotion(
-            board::file_from_char(text.front()),
-            color, promotedType.value());
+            file.value(), color, promotedType.value());
     }
 
 } // namespace

@@ -20,10 +20,11 @@
 #pragma once
 
 #include <cctype> // IWYU pragma: keep - for std::tolower()
+#include <expected>
 #include <format>
 #include <libchess/board/BitboardIndex.hpp>
 #include <magic_enum/magic_enum.hpp>
-#include <stdexcept>
+#include <string>
 
 namespace chess::board {
 
@@ -46,13 +47,12 @@ enum class File : BitboardIndex {
 /** Interprets the given character as a file.
     This function recognizes upper- or lowercase file letters.
 
-    @throws std::invalid_argument An exception will be thrown if a file
-    cannot be parsed correctly from the input character.
+    If the input string cannot be parsed correctly, returns an explanatory error string.
 
     @ingroup board
     @see File
  */
-[[nodiscard, gnu::const]] constexpr File file_from_char(char character);
+[[nodiscard]] std::expected<File, std::string> file_from_char(char character);
 
 /** Converts the file enumeration to its single-character representation.
 
@@ -104,7 +104,7 @@ struct std::formatter<chess::board::File> final {
 
 namespace chess::board {
 
-constexpr File file_from_char(char character)
+inline std::expected<File, std::string> file_from_char(char character)
 {
     switch (character) {
         case 'a': [[fallthrough]];
@@ -132,9 +132,10 @@ constexpr File file_from_char(char character)
         case 'H': return File::H;
 
         default:
-            throw std::invalid_argument {
-                std::format("Cannot parse File from character: {}", character)
-            };
+            return std::unexpected(
+                std::format(
+                    "Cannot parse File from character: {}",
+                    character));
     }
 }
 

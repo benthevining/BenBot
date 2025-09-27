@@ -244,8 +244,13 @@ inline Square Square::from_string(const std::string_view text)
     if (not rank.has_value())
         throw std::invalid_argument { rank.error() };
 
+    const auto file = file_from_char(text.front());
+
+    if (not file.has_value())
+        throw std::invalid_argument { file.error() };
+
     return {
-        .file = file_from_char(text.front()),
+        .file = file.value(),
         .rank = rank.value()
     };
 }

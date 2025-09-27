@@ -24,7 +24,6 @@
 #include <format>
 #include <libchess/board/BitboardIndex.hpp>
 #include <libchess/pieces/Colors.hpp>
-#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -70,8 +69,7 @@ template <Color Side>
 
 /** Interprets the given character as a rank.
 
-    @throws std::invalid_argument An exception will be thrown if a rank
-    cannot be parsed correctly from the input character.
+    If the input string cannot be parsed correctly, returns an explanatory error string.
 
     @ingroup board
     @see Rank
