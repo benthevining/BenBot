@@ -49,18 +49,23 @@ void best_move(
 }
 
 namespace {
+    [[nodiscard, gnu::const]] auto plies_to_moves(int plies) noexcept -> int
+    {
+        if (plies > 0)
+            ++plies;
+
+        return plies / 2;
+    }
+
     [[nodiscard]] auto base_score_string(const SearchInfo::Score& score) -> std::string
     {
-        return score.cp.transform([](const int cp) { return std::format("cp {}", cp); })
+        return score.cp
+            .transform([](const int cp) {
+                return std::format("cp {}", cp);
+            })
             .or_else([&score] {
-                return score.mate.transform([](int pliesToMate) {
-                    // convert plies to moves
-                    if (pliesToMate > 0)
-                        ++pliesToMate;
-
-                    const auto mateIn = pliesToMate / 2;
-
-                    return std::format("mate {}", mateIn);
+                return score.mate.transform([](const int pliesToMate) {
+                    return std::format("mate {}", plies_to_moves(pliesToMate));
                 });
             })
             .value_or(std::string {});
