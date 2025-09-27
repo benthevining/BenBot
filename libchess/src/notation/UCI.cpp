@@ -21,6 +21,7 @@
 #include <libchess/pieces/PieceTypes.hpp>
 #include <libchess/util/Strings.hpp>
 #include <magic_enum/magic_enum.hpp>
+#include <optional>
 #include <string>
 #include <string_view>
 
@@ -33,14 +34,16 @@ auto to_uci(const Move& move) -> std::string
         return "0000";
     }
 
-    if (const auto prom = move.promoted_type()) {
-        [[unlikely]];
-        return std::format("{}{}{}",
-            move.from(), move.to(),
-            pieces::to_char(prom.value(), false));
-    }
-
-    return std::format("{}{}", move.from(), move.to());
+    return move.promoted_type()
+        .transform([move](const pieces::Type promotedType) {
+            return std::format("{}{}{}",
+                move.from(), move.to(),
+                pieces::to_char(promotedType, false));
+        })
+        .or_else([move]() -> std::optional<std::string> {
+            return std::format("{}{}", move.from(), move.to());
+        })
+        .value();
 }
 
 using MoveOrError = std::expected<Move, std::string>;
