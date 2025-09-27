@@ -12,6 +12,9 @@
  * ======================================================================================
  */
 
+// for the complete PGN specification, see: https://www.saremba.de/chessgml/standards/pgn/pgn-complete.htm
+// (the original is here: https://ia902908.us.archive.org/26/items/pgn-standard-1994-03-12/PGN_standard_1994-03-12.txt)
+
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -336,6 +339,24 @@ namespace {
         return game::Result::Draw;
     }
 
+    // according to the PGN standard, any line beginning with % should be ignored
+    // in parsing, but % does not trigger this escape unless at the start of a line
+    // so for ease of parsing, we preprocess the PGN text by removing any lines
+    // starting with %
+    [[nodiscard]] auto remove_escaped_lines(const string_view pgnText) -> string
+    {
+        string result;
+
+        for (const auto line : util::lines_view(pgnText)) {
+            if (not line.empty() or line.front() == '%') {
+                result.append(line);
+                result.append(1uz, '\n');
+            }
+        }
+
+        return result;
+    }
+
 } // namespace
 
 using GameOrError = std::expected<GameRecord, string_view>;
@@ -344,7 +365,9 @@ auto from_pgn(const string_view pgnText) -> GameOrError
 {
     GameRecord game;
 
-    return parse_metadata_tags(pgnText, game.metadata)
+    return parse_metadata_tags(
+        remove_escaped_lines(pgnText),
+        game.metadata)
         .and_then([&game](const string_view afterMeta) -> GameOrError {
             if (const auto posStr = game.metadata.find("FEN");
                 posStr != game.metadata.end()) {
