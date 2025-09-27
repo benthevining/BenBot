@@ -26,6 +26,8 @@ contrib = contrib-title-conventional-commits
 
 verbosity = 2
 
+regex-style-search = true
+
 [title-max-length]
 line-length = 200
 

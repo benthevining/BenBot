@@ -60,7 +60,7 @@ static constexpr auto MAX_MOVES = 256uz;
 /** A stack-allocated array of moves.
     @see MAX_MOVES
  */
-using MoveList = beman::inplace_vector<Move, MAX_MOVES>;
+using MoveList = beman::inplace_vector::inplace_vector<Move, MAX_MOVES>;
 
 /** Generates a list of all legal moves for the side to move in the given position.
     The list of moves is not sorted in any particular manner.
@@ -150,7 +150,7 @@ namespace detail {
     [[nodiscard, gnu::const]] constexpr auto get_pawn_pushes(
         const Position& position, const Bitboard emptySquares)
     {
-        using Pushes = beman::inplace_vector<Move, 32uz>;
+        using Pushes = beman::inplace_vector::inplace_vector<Move, 32uz>;
 
         const auto allPushes = pseudo_legal::pawn_pushes<Side>(
             position.pieces_for<Side>().pawns,
@@ -263,7 +263,7 @@ namespace detail {
         const auto canRegCaptureWest = shifts::pawn_inv_capture_west<Side>(westRegCaptures);
 
         // max number of possible pawn captures is 16 * 4 possible promoted types
-        using PawnCaptures = beman::inplace_vector<Move, 64uz>;
+        using PawnCaptures = beman::inplace_vector::inplace_vector<Move, 64uz>;
 
         auto get_non_promoting_captures = [](const Bitboard startingBoard, const Bitboard targetBoard) {
             return get_pawn_captures_internal(startingBoard, targetBoard)
@@ -297,7 +297,7 @@ namespace detail {
         const Position& position)
     {
         // at most 2 captures are possible at a time
-        using EPMoves = beman::inplace_vector<Move, 2uz>;
+        using EPMoves = beman::inplace_vector::inplace_vector<Move, 2uz>;
 
         return position.enPassantTargetSquare
             .transform([&position](const Square targetSquare) {
@@ -530,7 +530,7 @@ namespace detail {
     [[nodiscard, gnu::const]] constexpr auto get_castling(
         const Position& position, const Bitboard allOccupied)
     {
-        beman::inplace_vector<Move, 2uz> moves;
+        beman::inplace_vector::inplace_vector<Move, 2uz> moves;
 
         // castling out of check is not allowed
         if (position.is_check())

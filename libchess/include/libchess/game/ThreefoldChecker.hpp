@@ -45,7 +45,7 @@ struct ThreefoldChecker final {
 private:
     // stores a history of hash values
     // the most recent value is at front() and the oldest is at back()
-    beman::inplace_vector<HashValue, 50uz> history;
+    beman::inplace_vector::inplace_vector<HashValue, 50uz> history;
 };
 
 /*

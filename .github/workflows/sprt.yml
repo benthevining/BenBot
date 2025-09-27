@@ -43,6 +43,11 @@ jobs:
       SPRT_OUTPUT_LOG: ${{ github.workspace }}/logs/sprt/output.log
 
     steps:
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libc++-dev libc++abi-dev
+
     - name: Checkout code
       uses: actions/checkout@v5
 

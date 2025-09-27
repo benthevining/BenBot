@@ -46,7 +46,7 @@ auto Arguments::parse(
 {
     static constexpr auto MAX_ARGS = 128uz;
 
-    const beman::inplace_vector<string_view, MAX_ARGS> argStorage {
+    const beman::inplace_vector::inplace_vector<string_view, MAX_ARGS> argStorage {
         argv,
         std::next(argv, static_cast<std::ptrdiff_t>(argc))
     };
