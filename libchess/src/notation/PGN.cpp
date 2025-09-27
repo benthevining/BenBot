@@ -366,8 +366,7 @@ auto from_pgn(const string_view pgnText) -> GameOrError
     GameRecord game;
 
     return parse_metadata_tags(
-        remove_escaped_lines(pgnText),
-        game.metadata)
+        remove_escaped_lines(pgnText), game.metadata)
         .and_then([&game](const string_view afterMeta) -> GameOrError {
             if (const auto posStr = game.metadata.find("FEN");
                 posStr != game.metadata.end()) {
