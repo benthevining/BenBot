@@ -43,9 +43,9 @@ add_executable (ben_bot::ben_bot ALIAS ben_bot)
 
 # cmake-format: off
 install (TARGETS ben_bot COMPONENT ben_bot
+         FRAMEWORK DESTINATION Library/Frameworks
          RUNTIME_DEPENDENCIES
-            PRE_EXCLUDE_REGEXES "api-ms-" "ext-ms-" "Azure"
-            FRAMEWORK DESTINATION Library/Frameworks
+            PRE_EXCLUDE_REGEXES "api-ms-" "ext-ms-" "AzureAttest" "wpaxholder" "wtdccm"
 )
 # cmake-format: on
 

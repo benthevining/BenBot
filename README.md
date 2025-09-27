@@ -29,13 +29,13 @@ Notes on building:
 
 Our automated CI & releases include the following builds:
 
-|    OS    | Compiler |            Notes             |
-|:--------:|:--------:|:----------------------------:|
-|  Ubuntu  |  Clang   | Also built with ASAN & UBSAN |
-|  Ubuntu  |   GCC    |                              |
-| Windows  |  Clang   |                              |
-| Windows  |   MSVC   |                              |
-|  MacOS   |  Clang   |   Builds universal binary    |
+|    OS    | Compiler |               Notes                |
+|:--------:|:--------:|:----------------------------------:|
+|  Ubuntu  |  Clang   |    Also built with ASAN & UBSAN    |
+|  Ubuntu  |   GCC    | Collects test coverage information |
+| Windows  |  Clang   |                                    |
+| Windows  |   MSVC   |                                    |
+|  MacOS   |  Clang   |      Builds universal binary       |
 
 ### CMake options
 
