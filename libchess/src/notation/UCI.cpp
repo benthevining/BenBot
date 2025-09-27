@@ -43,7 +43,9 @@ std::string to_uci(const Move& move)
     return std::format("{}{}", move.from(), move.to());
 }
 
-std::expected<Move, std::string> from_uci(
+using MoveOrError = std::expected<Move, std::string>;
+
+MoveOrError from_uci(
     const Position& position, std::string_view text)
 {
     using board::Square;
@@ -67,43 +69,37 @@ std::expected<Move, std::string> from_uci(
 
     text = text.substr(2uz);
 
-    const auto dest = Square::from_string(text.substr(0uz, 2uz));
+    return Square::from_string(text.substr(0uz, 2uz))
+        .and_then([&text, &position, start = from.value()](const Square dest) -> MoveOrError {
+            text                 = text.substr(2uz);
+            const auto movedType = position.our_pieces().get_piece_on(start);
 
-    if (not dest.has_value())
-        return std::unexpected(dest.error());
+            if (not movedType.has_value()) {
+                [[unlikely]];
+                return std::unexpected(
+                    std::format(
+                        "No piece for color {} can move from square {}",
+                        magic_enum::enum_name(position.sideToMove), start));
+            }
 
-    text = text.substr(2uz);
+            // promotion
+            if (not text.empty()) {
+                [[unlikely]];
 
-    const auto& pieces = position.our_pieces();
+                return pieces::from_string(text)
+                    .transform([start, dest, type = movedType.value()](const pieces::Type promotedType) {
+                        return Move { start, dest, type, promotedType };
+                    })
+                    .or_else([](const std::string_view parseError) -> MoveOrError {
+                        return std::unexpected(
+                            std::format(
+                                "Error parsing promoted type: {}",
+                                parseError));
+                    });
+            }
 
-    const auto movedType = pieces.get_piece_on(from.value());
-
-    if (not movedType.has_value()) {
-        [[unlikely]];
-        return std::unexpected(
-            std::format(
-                "No piece for color {} can move from square {}",
-                magic_enum::enum_name(position.sideToMove), from.value()));
-    }
-
-    // promotion
-    if (not text.empty()) {
-        [[unlikely]];
-
-        const auto promotionType = pieces::from_string(text);
-
-        if (not promotionType.has_value()) {
-            return std::unexpected(
-                std::format("Error parsing promoted type: {}",
-                    promotionType.error()));
-        }
-
-        return Move {
-            from.value(), dest.value(), movedType.value(), promotionType.value()
-        };
-    }
-
-    return Move { from.value(), dest.value(), movedType.value() };
+            return Move { start, dest, movedType.value() };
+        });
 }
 
 } // namespace chess::notation
