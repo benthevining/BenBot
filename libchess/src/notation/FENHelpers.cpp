@@ -124,16 +124,20 @@ void write_en_passant_target_square(
     const std::optional<Square> targetSquare,
     string&                     output)
 {
-    if (not targetSquare.has_value()) {
-        [[likely]];
-        output.push_back('-');
-        return;
-    }
+    using Placeholder = std::optional<int>;
 
-    const auto [file, rank] = *targetSquare;
+    targetSquare
+        .and_then([&output](const Square epSquare) {
+            output.push_back(file_to_char(epSquare.file));
+            output.push_back(rank_to_char(epSquare.rank));
 
-    output.push_back(file_to_char(file));
-    output.push_back(rank_to_char(rank));
+            return Placeholder { 1 }; // return placeholder with value
+        })
+        .or_else([&output] {
+            output.push_back('-');
+
+            return Placeholder {};
+        });
 }
 
 namespace {

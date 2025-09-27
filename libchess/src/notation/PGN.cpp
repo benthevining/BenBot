@@ -542,24 +542,25 @@ namespace {
     void write_game_result(
         const GameResult result, string& output)
     {
-        if (not result.has_value())
-            return;
+        result.and_then([&output](const game::Result outcome) {
+            switch (outcome) {
+                case game::Result::Draw:
+                    output.append("1/2-1/2");
+                    break;
 
-        switch (*result) {
-            case game::Result::Draw:
-                output.append("1/2-1/2");
-                return;
+                case game::Result::WhiteWon:
+                    output.append("1-0");
+                    break;
 
-            case game::Result::WhiteWon:
-                output.append("1-0");
-                return;
+                case game::Result::BlackWon:
+                    output.append("0-1");
+                    break;
 
-            case game::Result::BlackWon:
-                output.append("0-1");
-                return;
+                default: std::unreachable();
+            }
 
-            default: std::unreachable();
-        }
+            return std::optional<int> {};
+        });
     }
 
 } // namespace
