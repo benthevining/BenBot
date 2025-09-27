@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <expected>
 #include <libchess/board/Square.hpp>
 #include <optional>
 #include <string>
@@ -46,10 +47,10 @@ void write_en_passant_target_square(
     std::optional<Square> targetSquare,
     string&               output);
 
-void parse_piece_positions(
+[[nodiscard]] std::expected<void, string> parse_piece_positions(
     string_view fenFragment, Position& position);
 
-void parse_side_to_move(
+[[nodiscard]] std::expected<void, string> parse_side_to_move(
     string_view fenFragment, Position& position);
 
 void parse_castling_rights(

@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <expected>
 #include <libchess/moves/Move.hpp>
 #include <string>
 #include <string_view>
@@ -49,12 +50,11 @@ using moves::Move;
 
     This function expects Standard Algebraic Notation (SAN) strings.
 
-    @throws std::invalid_argument An exception will be thrown if a move cannot
-    be parsed correctly from the input string.
+    If the input string cannot be parsed correctly, returns an explanatory error string.
 
     @ingroup notation
     @see to_alg()
  */
-[[nodiscard]] Move from_alg(const Position& position, std::string_view text);
+[[nodiscard]] std::expected<Move, std::string> from_alg(const Position& position, std::string_view text);
 
 } // namespace chess::notation

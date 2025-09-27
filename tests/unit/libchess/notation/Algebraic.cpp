@@ -42,7 +42,7 @@ TEST_CASE("Algebraic notation - piece moves", TAGS)
         Position position {};
 
         {
-            const auto move = from_alg(position, "Nc3");
+            const auto move = from_alg(position, "Nc3").value();
 
             REQUIRE(move.piece() == PieceType::Knight);
             REQUIRE(move.to() == Square { File::C, Rank::Three });
@@ -53,7 +53,7 @@ TEST_CASE("Algebraic notation - piece moves", TAGS)
             position.make_move(move);
         }
 
-        const auto move = from_alg(position, "Nf6");
+        const auto move = from_alg(position, "Nf6").value();
 
         REQUIRE(move.piece() == PieceType::Knight);
         REQUIRE(move.to() == Square { File::F, Rank::Six });
@@ -64,10 +64,11 @@ TEST_CASE("Algebraic notation - piece moves", TAGS)
 
     SECTION("Bishops")
     {
-        auto position = from_fen("8/4b2P/r3k3/4qn2/1Q2P3/3pRK2/3B4/8 w - - 0 1");
+        auto position = from_fen("8/4b2P/r3k3/4qn2/1Q2P3/3pRK2/3B4/8 w - - 0 1")
+                            .value();
 
         {
-            const auto move = from_alg(position, "Bc3");
+            const auto move = from_alg(position, "Bc3").value();
 
             REQUIRE(move.piece() == PieceType::Bishop);
             REQUIRE(move.to() == Square { File::C, Rank::Three });
@@ -79,7 +80,7 @@ TEST_CASE("Algebraic notation - piece moves", TAGS)
         }
 
         {
-            const auto move = from_alg(position, "Bxb4");
+            const auto move = from_alg(position, "Bxb4").value();
 
             REQUIRE(move.piece() == PieceType::Bishop);
             REQUIRE(move.to() == Square { File::B, Rank::Four });
@@ -93,7 +94,7 @@ TEST_CASE("Algebraic notation - piece moves", TAGS)
         }
 
         {
-            const auto move = from_alg(position, "Bxe5");
+            const auto move = from_alg(position, "Bxe5").value();
 
             REQUIRE(move.piece() == PieceType::Bishop);
             REQUIRE(move.to() == Square { File::E, Rank::Five });
@@ -112,10 +113,11 @@ TEST_CASE("Algebraic notation - piece moves", TAGS)
 
     SECTION("Rooks")
     {
-        auto position = from_fen("r7/8/3n1r2/4k3/2bRppqP/1Pr5/3KNB2/R7 w - - 0 1");
+        auto position = from_fen("r7/8/3n1r2/4k3/2bRppqP/1Pr5/3KNB2/R7 w - - 0 1")
+                            .value();
 
         {
-            const auto move = from_alg(position, "Rg1");
+            const auto move = from_alg(position, "Rg1").value();
 
             REQUIRE(move.piece() == PieceType::Rook);
             REQUIRE(move.to() == Square { File::G, Rank::One });
@@ -127,7 +129,7 @@ TEST_CASE("Algebraic notation - piece moves", TAGS)
         }
 
         {
-            const auto move = from_alg(position, "Ra2+");
+            const auto move = from_alg(position, "Ra2+").value();
 
             REQUIRE(move.piece() == PieceType::Rook);
             REQUIRE(move.to() == Square { File::A, Rank::Two });
@@ -145,10 +147,11 @@ TEST_CASE("Algebraic notation - piece moves", TAGS)
     {
         SECTION("Check")
         {
-            auto position = from_fen("r2qkbnr/p1p1pppp/2np4/1p6/2B1P1b1/5Q2/PPPP1PPP/RNB1K1NR w KQkq - 0 1");
+            auto position = from_fen("r2qkbnr/p1p1pppp/2np4/1p6/2B1P1b1/5Q2/PPPP1PPP/RNB1K1NR w KQkq - 0 1")
+                                .value();
 
             {
-                const auto move = from_alg(position, "Qxf7+");
+                const auto move = from_alg(position, "Qxf7+").value();
 
                 REQUIRE(move.piece() == PieceType::Queen);
                 REQUIRE(move.to() == Square { File::F, Rank::Seven });
@@ -173,9 +176,10 @@ TEST_CASE("Algebraic notation - piece moves", TAGS)
 
         SECTION("Checkmate")
         {
-            auto position = from_fen("r1bqk1nr/pppnpp1p/3p2pb/8/8/1B3Q2/PPPPPPPP/RNB1K1NR w KQkq - 0 1");
+            auto position = from_fen("r1bqk1nr/pppnpp1p/3p2pb/8/8/1B3Q2/PPPPPPPP/RNB1K1NR w KQkq - 0 1")
+                                .value();
 
-            const auto move = from_alg(position, "Qxf7#");
+            const auto move = from_alg(position, "Qxf7#").value();
 
             REQUIRE(move.piece() == PieceType::Queen);
             REQUIRE(move.to() == Square { File::F, Rank::Seven });
@@ -193,12 +197,13 @@ TEST_CASE("Algebraic notation - piece moves", TAGS)
 
     SECTION("King")
     {
-        auto position = from_fen("8/3k1p2/2P2rp1/4K3/R7/6n1/8/8 b - - 0 1");
+        auto position = from_fen("8/3k1p2/2P2rp1/4K3/R7/6n1/8/8 b - - 0 1")
+                            .value();
 
         REQUIRE(position.is_check());
 
         {
-            const auto move = from_alg(position, "Kxc6");
+            const auto move = from_alg(position, "Kxc6").value();
 
             REQUIRE(move.piece() == PieceType::King);
             REQUIRE(move.to() == Square { File::C, Rank::Six });
@@ -212,7 +217,7 @@ TEST_CASE("Algebraic notation - piece moves", TAGS)
         REQUIRE(! position.is_check());
 
         {
-            const auto move = from_alg(position, "Kxf6");
+            const auto move = from_alg(position, "Kxf6").value();
 
             REQUIRE(move.piece() == PieceType::King);
             REQUIRE(move.to() == Square { File::F, Rank::Six });
@@ -229,10 +234,11 @@ TEST_CASE("Algebraic notation - piece moves with disambiguation", TAGS)
     {
         SECTION("Disambig required (by file)")
         {
-            const auto position = from_fen("1kr2b1r/ppp1pppp/3q1n2/2np1b2/2B1P3/1NB2N2/PPPPQPPP/R4RK1 w Qk - 0 1");
+            const auto position = from_fen("1kr2b1r/ppp1pppp/3q1n2/2np1b2/2B1P3/1NB2N2/PPPPQPPP/R4RK1 w Qk - 0 1")
+                                      .value();
 
             { // F knight
-                const auto move = from_alg(position, "Nfd4");
+                const auto move = from_alg(position, "Nfd4").value();
 
                 REQUIRE(move.piece() == PieceType::Knight);
                 REQUIRE(move.to() == Square { File::D, Rank::Four });
@@ -241,7 +247,7 @@ TEST_CASE("Algebraic notation - piece moves with disambiguation", TAGS)
                 REQUIRE(to_alg(position, move) == "Nfd4");
             }
             { // B knight
-                const auto move = from_alg(position, "Nbd4");
+                const auto move = from_alg(position, "Nbd4").value();
 
                 REQUIRE(move.piece() == PieceType::Knight);
                 REQUIRE(move.to() == Square { File::D, Rank::Four });
@@ -253,10 +259,11 @@ TEST_CASE("Algebraic notation - piece moves with disambiguation", TAGS)
 
         SECTION("Disambig required (by rank)")
         {
-            const auto position = from_fen("6r1/2k5/1p1pq1p1/p7/R2QP3/1N3P1P/8/KN6 w - - 0 1");
+            const auto position = from_fen("6r1/2k5/1p1pq1p1/p7/R2QP3/1N3P1P/8/KN6 w - - 0 1")
+                                      .value();
 
             { // 3 knight
-                const auto move = from_alg(position, "N3d2");
+                const auto move = from_alg(position, "N3d2").value();
 
                 REQUIRE(move.piece() == PieceType::Knight);
                 REQUIRE(move.to() == Square { File::D, Rank::Two });
@@ -265,7 +272,7 @@ TEST_CASE("Algebraic notation - piece moves with disambiguation", TAGS)
                 REQUIRE(to_alg(position, move) == "N3d2");
             }
             { // 1 knight
-                const auto move = from_alg(position, "N1d2");
+                const auto move = from_alg(position, "N1d2").value();
 
                 REQUIRE(move.piece() == PieceType::Knight);
                 REQUIRE(move.to() == Square { File::D, Rank::Two });
@@ -277,9 +284,10 @@ TEST_CASE("Algebraic notation - piece moves with disambiguation", TAGS)
 
         SECTION("Disambig not required")
         {
-            const auto position = from_fen("rn1qkbnr/ppp1pppp/3p4/8/4P1b1/1NQ2N2/PPPP1PPP/R1BK1B1R w KQkq - 0 1");
+            const auto position = from_fen("rn1qkbnr/ppp1pppp/3p4/8/4P1b1/1NQ2N2/PPPP1PPP/R1BK1B1R w KQkq - 0 1")
+                                      .value();
 
-            const auto move = from_alg(position, "Nd4");
+            const auto move = from_alg(position, "Nd4").value();
 
             REQUIRE(move.piece() == PieceType::Knight);
             REQUIRE(move.to() == Square { File::D, Rank::Four });
@@ -293,10 +301,11 @@ TEST_CASE("Algebraic notation - piece moves with disambiguation", TAGS)
     {
         SECTION("Disambig required (by file)")
         {
-            const auto position = from_fen("r7/8/8/5k2/2R1R3/6n1/1K6/8 w - - 0 1");
+            const auto position = from_fen("r7/8/8/5k2/2R1R3/6n1/1K6/8 w - - 0 1")
+                                      .value();
 
             { // E rook
-                const auto move = from_alg(position, "Red4");
+                const auto move = from_alg(position, "Red4").value();
 
                 REQUIRE(move.piece() == PieceType::Rook);
                 REQUIRE(move.to() == Square { File::D, Rank::Four });
@@ -305,7 +314,7 @@ TEST_CASE("Algebraic notation - piece moves with disambiguation", TAGS)
                 REQUIRE(to_alg(position, move) == "Red4");
             }
             { // C rook
-                const auto move = from_alg(position, "Rcd4");
+                const auto move = from_alg(position, "Rcd4").value();
 
                 REQUIRE(move.piece() == PieceType::Rook);
                 REQUIRE(move.to() == Square { File::D, Rank::Four });
@@ -314,7 +323,7 @@ TEST_CASE("Algebraic notation - piece moves with disambiguation", TAGS)
                 REQUIRE(to_alg(position, move) == "Rcd4");
             }
             {
-                const auto move = from_alg(position, "Ra4");
+                const auto move = from_alg(position, "Ra4").value();
 
                 REQUIRE(move.piece() == PieceType::Rook);
                 REQUIRE(move.to() == Square { File::A, Rank::Four });
@@ -323,7 +332,7 @@ TEST_CASE("Algebraic notation - piece moves with disambiguation", TAGS)
                 REQUIRE(to_alg(position, move) == "Ra4");
             }
             {
-                const auto move = from_alg(position, "Ra4");
+                const auto move = from_alg(position, "Ra4").value();
 
                 REQUIRE(move.piece() == PieceType::Rook);
                 REQUIRE(move.to() == Square { File::A, Rank::Four });
@@ -332,7 +341,7 @@ TEST_CASE("Algebraic notation - piece moves with disambiguation", TAGS)
                 REQUIRE(to_alg(position, move) == "Ra4");
             }
             {
-                const auto move = from_alg(position, "Rf4+");
+                const auto move = from_alg(position, "Rf4+").value();
 
                 REQUIRE(move.piece() == PieceType::Rook);
                 REQUIRE(move.to() == Square { File::F, Rank::Four });
@@ -344,10 +353,11 @@ TEST_CASE("Algebraic notation - piece moves with disambiguation", TAGS)
 
         SECTION("Disambig required (by rank)")
         {
-            const auto position = from_fen("kr6/p7/1r2q3/8/3B4/2Q3N1/3K1P1P/8 b - - 0 1");
+            const auto position = from_fen("kr6/p7/1r2q3/8/3B4/2Q3N1/3K1P1P/8 b - - 0 1")
+                                      .value();
 
             { // 8 rook
-                const auto move = from_alg(position, "R8b7");
+                const auto move = from_alg(position, "R8b7").value();
 
                 REQUIRE(move.piece() == PieceType::Rook);
                 REQUIRE(move.to() == Square { File::B, Rank::Seven });
@@ -356,7 +366,7 @@ TEST_CASE("Algebraic notation - piece moves with disambiguation", TAGS)
                 REQUIRE(to_alg(position, move) == "R8b7");
             }
             { // 6 rook
-                const auto move = from_alg(position, "R6b7");
+                const auto move = from_alg(position, "R6b7").value();
 
                 REQUIRE(move.piece() == PieceType::Rook);
                 REQUIRE(move.to() == Square { File::B, Rank::Seven });
@@ -365,7 +375,7 @@ TEST_CASE("Algebraic notation - piece moves with disambiguation", TAGS)
                 REQUIRE(to_alg(position, move) == "R6b7");
             }
             {
-                const auto move = from_alg(position, "Rb3");
+                const auto move = from_alg(position, "Rb3").value();
 
                 REQUIRE(move.piece() == PieceType::Rook);
                 REQUIRE(move.to() == Square { File::B, Rank::Three });
@@ -377,9 +387,10 @@ TEST_CASE("Algebraic notation - piece moves with disambiguation", TAGS)
 
         SECTION("Disambig not required")
         {
-            const auto position = from_fen("5k2/8/8/q7/6b1/8/1R2R3/3K4 w - - 0 1");
+            const auto position = from_fen("5k2/8/8/q7/6b1/8/1R2R3/3K4 w - - 0 1")
+                                      .value();
 
-            const auto move = from_alg(position, "Rc2");
+            const auto move = from_alg(position, "Rc2").value();
 
             REQUIRE(move.piece() == PieceType::Rook);
             REQUIRE(move.to() == Square { File::C, Rank::Two });
@@ -396,7 +407,7 @@ TEST_CASE("Algebraic notation - pawn pushes", TAGS)
     {
         const Position startingPosition {};
 
-        const auto move = from_alg(startingPosition, "e3");
+        const auto move = from_alg(startingPosition, "e3").value();
 
         REQUIRE(move.piece() == PieceType::Pawn);
         REQUIRE(move.to() == Square { File::E, Rank::Three });
@@ -407,9 +418,10 @@ TEST_CASE("Algebraic notation - pawn pushes", TAGS)
 
     SECTION("With check")
     {
-        auto position = from_fen("rnbqkb1r/p1p1pppp/3P4/1pp4n/2Q2B2/5N2/PPP1PPPP/RN2KB1R w KQkq - 0 1");
+        auto position = from_fen("rnbqkb1r/p1p1pppp/3P4/1pp4n/2Q2B2/5N2/PPP1PPPP/RN2KB1R w KQkq - 0 1")
+                            .value();
 
-        const auto move = from_alg(position, "d7+");
+        const auto move = from_alg(position, "d7+").value();
 
         REQUIRE(move.piece() == PieceType::Pawn);
         REQUIRE(move.to() == Square { File::D, Rank::Seven });
@@ -424,9 +436,10 @@ TEST_CASE("Algebraic notation - pawn pushes", TAGS)
 
     SECTION("With checkmate")
     {
-        auto position = from_fen("8/2N5/1B6/8/k7/P7/KP6/8 w - - 0 1");
+        auto position = from_fen("8/2N5/1B6/8/k7/P7/KP6/8 w - - 0 1")
+                            .value();
 
-        const auto move = from_alg(position, "b3#");
+        const auto move = from_alg(position, "b3#").value();
 
         REQUIRE(move.piece() == PieceType::Pawn);
         REQUIRE(move.to() == Square { File::B, Rank::Three });
@@ -446,7 +459,7 @@ TEST_CASE("Algebraic notation - pawn double pushes", TAGS)
     {
         Position startingPosition {};
 
-        const auto move = from_alg(startingPosition, "e4");
+        const auto move = from_alg(startingPosition, "e4").value();
 
         REQUIRE(move.piece() == PieceType::Pawn);
         REQUIRE(move.to() == Square { File::E, Rank::Four });
@@ -463,9 +476,10 @@ TEST_CASE("Algebraic notation - pawn double pushes", TAGS)
 
     SECTION("With check")
     {
-        auto position = from_fen("8/8/8/4k3/8/8/2KP4/8 w - - 0 1");
+        auto position = from_fen("8/8/8/4k3/8/8/2KP4/8 w - - 0 1")
+                            .value();
 
-        const auto move = from_alg(position, "d4+");
+        const auto move = from_alg(position, "d4+").value();
 
         REQUIRE(move.piece() == PieceType::Pawn);
         REQUIRE(move.to() == Square { File::D, Rank::Four });
@@ -484,9 +498,10 @@ TEST_CASE("Algebraic notation - pawn double pushes", TAGS)
 
     SECTION("With checkmate")
     {
-        auto position = from_fen("4q3/6p1/8/2r5/5k1K/7P/8/6r1 b - - 0 1");
+        auto position = from_fen("4q3/6p1/8/2r5/5k1K/7P/8/6r1 b - - 0 1")
+                            .value();
 
-        const auto move = from_alg(position, "g5#");
+        const auto move = from_alg(position, "g5#").value();
 
         REQUIRE(move.piece() == PieceType::Pawn);
         REQUIRE(move.to() == Square { File::G, Rank::Five });
@@ -508,9 +523,10 @@ TEST_CASE("Algebraic notation - pawn captures", TAGS)
 {
     SECTION("Normal")
     {
-        const auto position = from_fen("rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1");
+        const auto position = from_fen("rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1")
+                                  .value();
 
-        const auto move = from_alg(position, "exd5");
+        const auto move = from_alg(position, "exd5").value();
 
         REQUIRE(move.piece() == PieceType::Pawn);
         REQUIRE(move.to() == Square { File::D, Rank::Five });
@@ -521,9 +537,10 @@ TEST_CASE("Algebraic notation - pawn captures", TAGS)
 
     SECTION("With check")
     {
-        auto position = from_fen("r2qkbnr/p2ppppp/npp1P3/1b6/6N1/2Q5/PPPP1PPP/RNB1KB1R w KQkq - 0 1");
+        auto position = from_fen("r2qkbnr/p2ppppp/npp1P3/1b6/6N1/2Q5/PPPP1PPP/RNB1KB1R w KQkq - 0 1")
+                            .value();
 
-        const auto move = from_alg(position, "exd7+");
+        const auto move = from_alg(position, "exd7+").value();
 
         REQUIRE(move.piece() == PieceType::Pawn);
         REQUIRE(move.to() == Square { File::D, Rank::Seven });
@@ -538,9 +555,10 @@ TEST_CASE("Algebraic notation - pawn captures", TAGS)
 
     SECTION("With checkmate")
     {
-        auto position = from_fen("r1b1kb1r/ppp1p1pp/5p2/6Q1/5q1N/1Pn3p1/P1PPPPPP/R1BnKB1R b KQkq - 0 1");
+        auto position = from_fen("r1b1kb1r/ppp1p1pp/5p2/6Q1/5q1N/1Pn3p1/P1PPPPPP/R1BnKB1R b KQkq - 0 1")
+                            .value();
 
-        const auto move = from_alg(position, "gxf2#");
+        const auto move = from_alg(position, "gxf2#").value();
 
         REQUIRE(move.piece() == PieceType::Pawn);
         REQUIRE(move.to() == Square { File::F, Rank::Two });
@@ -558,9 +576,10 @@ TEST_CASE("Algebraic notation - promotion (push)", TAGS)
 {
     SECTION("Normal")
     {
-        auto position = from_fen("8/1k1P4/8/2r5/8/8/4K3/8 w - - 0 1");
+        auto position = from_fen("8/1k1P4/8/2r5/8/8/4K3/8 w - - 0 1")
+                            .value();
 
-        const auto move = from_alg(position, "d8=Q");
+        const auto move = from_alg(position, "d8=Q").value();
 
         REQUIRE(move.piece() == PieceType::Pawn);
         REQUIRE(move.to() == Square { File::D, Rank::Eight });
@@ -581,9 +600,10 @@ TEST_CASE("Algebraic notation - promotion (push)", TAGS)
 
     SECTION("With check")
     {
-        auto position = from_fen("8/1k1P4/8/2r5/8/8/4K3/8 w - - 0 1");
+        auto position = from_fen("8/1k1P4/8/2r5/8/8/4K3/8 w - - 0 1")
+                            .value();
 
-        const auto move = from_alg(position, "d8=N+");
+        const auto move = from_alg(position, "d8=N+").value();
 
         REQUIRE(move.piece() == PieceType::Pawn);
         REQUIRE(move.to() == Square { File::D, Rank::Eight });
@@ -606,9 +626,10 @@ TEST_CASE("Algebraic notation - promotion (push)", TAGS)
 
     SECTION("With checkmate")
     {
-        auto position = from_fen("k7/ppP5/8/5K2/8/8/8/8 w - - 0 1");
+        auto position = from_fen("k7/ppP5/8/5K2/8/8/8/8 w - - 0 1")
+                            .value();
 
-        const auto move = from_alg(position, "c8=R#");
+        const auto move = from_alg(position, "c8=R#").value();
 
         REQUIRE(move.piece() == PieceType::Pawn);
         REQUIRE(move.to() == Square { File::C, Rank::Eight });
@@ -629,9 +650,10 @@ TEST_CASE("Algebraic notation - promotion (capture)", TAGS)
 {
     SECTION("Normal")
     {
-        auto position = from_fen("3r4/2K1Pk2/8/8/8/8/8/8 w - - 0 1");
+        auto position = from_fen("3r4/2K1Pk2/8/8/8/8/8/8 w - - 0 1")
+                            .value();
 
-        const auto move = from_alg(position, "exd8=B");
+        const auto move = from_alg(position, "exd8=B").value();
 
         REQUIRE(move.piece() == PieceType::Pawn);
         REQUIRE(move.to() == Square { File::D, Rank::Eight });
@@ -653,9 +675,10 @@ TEST_CASE("Algebraic notation - promotion (capture)", TAGS)
 
     SECTION("With check")
     {
-        auto position = from_fen("8/8/8/8/8/2k5/4p3/2KQ4 b - - 0 1");
+        auto position = from_fen("8/8/8/8/8/2k5/4p3/2KQ4 b - - 0 1")
+                            .value();
 
-        const auto move = from_alg(position, "exd1=Q+");
+        const auto move = from_alg(position, "exd1=Q+").value();
 
         REQUIRE(move.piece() == PieceType::Pawn);
         REQUIRE(move.to() == Square { File::D, Rank::One });
@@ -673,9 +696,10 @@ TEST_CASE("Algebraic notation - promotion (capture)", TAGS)
 
     SECTION("With checkmate")
     {
-        auto position = from_fen("b2r4/1k1NP3/8/K7/1r6/8/2R5/6B1 w - - 0 1");
+        auto position = from_fen("b2r4/1k1NP3/8/K7/1r6/8/2R5/6B1 w - - 0 1")
+                            .value();
 
-        const auto move = from_alg(position, "exd8=N#");
+        const auto move = from_alg(position, "exd8=N#").value();
 
         REQUIRE(move.piece() == PieceType::Pawn);
         REQUIRE(move.to() == Square { File::D, Rank::Eight });
@@ -698,9 +722,10 @@ TEST_CASE("Algebraic notation - kingside castling", TAGS)
     {
         SECTION("White")
         {
-            auto position = from_fen("rnbqkb1r/ppp1pppp/3p1n2/8/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 1");
+            auto position = from_fen("rnbqkb1r/ppp1pppp/3p1n2/8/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 1")
+                                .value();
 
-            const auto move = from_alg(position, "O-O");
+            const auto move = from_alg(position, "O-O").value();
 
             REQUIRE(move.is_castling());
             REQUIRE(move.piece() == PieceType::King);
@@ -716,9 +741,10 @@ TEST_CASE("Algebraic notation - kingside castling", TAGS)
 
         SECTION("Black")
         {
-            auto position = from_fen("rnbqk2r/pp1ppppp/2p5/1b3n2/8/1B1P1Q2/PPP1PPPP/RN2KBNR b KQkq - 0 1");
+            auto position = from_fen("rnbqk2r/pp1ppppp/2p5/1b3n2/8/1B1P1Q2/PPP1PPPP/RN2KBNR b KQkq - 0 1")
+                                .value();
 
-            const auto move = from_alg(position, "O-O");
+            const auto move = from_alg(position, "O-O").value();
 
             REQUIRE(move.is_castling());
             REQUIRE(move.piece() == PieceType::King);
@@ -737,9 +763,10 @@ TEST_CASE("Algebraic notation - kingside castling", TAGS)
     {
         SECTION("White")
         {
-            auto position = from_fen("rnbq1knr/ppppp1pp/2b5/8/8/1QNBP3/PPPP2PP/RNB1K2R w KQkq - 0 1");
+            auto position = from_fen("rnbq1knr/ppppp1pp/2b5/8/8/1QNBP3/PPPP2PP/RNB1K2R w KQkq - 0 1")
+                                .value();
 
-            const auto move = from_alg(position, "O-O+");
+            const auto move = from_alg(position, "O-O+").value();
 
             REQUIRE(move.is_castling());
             REQUIRE(move.piece() == PieceType::King);
@@ -757,9 +784,10 @@ TEST_CASE("Algebraic notation - kingside castling", TAGS)
 
         SECTION("Black")
         {
-            auto position = from_fen("rnbqk2r/ppp1p1pp/7b/3p4/2B1N3/4nK2/PPPPP1PP/RNBQ1R2 b kq - 0 1");
+            auto position = from_fen("rnbqk2r/ppp1p1pp/7b/3p4/2B1N3/4nK2/PPPPP1PP/RNBQ1R2 b kq - 0 1")
+                                .value();
 
-            const auto move = from_alg(position, "O-O+");
+            const auto move = from_alg(position, "O-O+").value();
 
             REQUIRE(move.is_castling());
             REQUIRE(move.piece() == PieceType::King);
@@ -780,9 +808,10 @@ TEST_CASE("Algebraic notation - kingside castling", TAGS)
     {
         SECTION("White")
         {
-            auto position = from_fen("8/8/8/7N/2BQ4/5k2/8/4K2R w K - 0 1");
+            auto position = from_fen("8/8/8/7N/2BQ4/5k2/8/4K2R w K - 0 1")
+                                .value();
 
-            const auto move = from_alg(position, "O-O#");
+            const auto move = from_alg(position, "O-O#").value();
 
             REQUIRE(move.is_castling());
             REQUIRE(move.piece() == PieceType::King);
@@ -800,9 +829,10 @@ TEST_CASE("Algebraic notation - kingside castling", TAGS)
 
         SECTION("Black")
         {
-            auto position = from_fen("4k2r/8/8/8/8/3n2r1/7r/5K2 b k - 0 1");
+            auto position = from_fen("4k2r/8/8/8/8/3n2r1/7r/5K2 b k - 0 1")
+                                .value();
 
-            const auto move = from_alg(position, "O-O#");
+            const auto move = from_alg(position, "O-O#").value();
 
             REQUIRE(move.is_castling());
             REQUIRE(move.piece() == PieceType::King);
@@ -826,9 +856,10 @@ TEST_CASE("Algebraic notation - queenside castling", TAGS)
     {
         SECTION("White")
         {
-            auto position = from_fen("rn1qkbnr/pppp1ppp/3b4/4p3/8/2NP1Q2/PPPBPPPP/R3KBNR w KQkq - 0 1");
+            auto position = from_fen("rn1qkbnr/pppp1ppp/3b4/4p3/8/2NP1Q2/PPPBPPPP/R3KBNR w KQkq - 0 1")
+                                .value();
 
-            const auto move = from_alg(position, "O-O-O");
+            const auto move = from_alg(position, "O-O-O").value();
 
             REQUIRE(move.is_castling());
             REQUIRE(move.piece() == PieceType::King);
@@ -844,9 +875,10 @@ TEST_CASE("Algebraic notation - queenside castling", TAGS)
 
         SECTION("Black")
         {
-            auto position = from_fen("r3kbnr/ppp1pppp/n7/2qp1b2/8/3PB3/PPPQPPPP/RN2KBNR b KQkq - 0 1");
+            auto position = from_fen("r3kbnr/ppp1pppp/n7/2qp1b2/8/3PB3/PPPQPPPP/RN2KBNR b KQkq - 0 1")
+                                .value();
 
-            const auto move = from_alg(position, "O-O-O");
+            const auto move = from_alg(position, "O-O-O").value();
 
             REQUIRE(move.is_castling());
             REQUIRE(move.piece() == PieceType::King);
@@ -863,9 +895,10 @@ TEST_CASE("Algebraic notation - queenside castling", TAGS)
 
     SECTION("With check")
     {
-        auto position = from_fen("rn1k1bnr/ppp1pppp/4b3/5q2/4N3/2B2Q2/PPP1PPPP/R3KBNR w KQkq - 0 1");
+        auto position = from_fen("rn1k1bnr/ppp1pppp/4b3/5q2/4N3/2B2Q2/PPP1PPPP/R3KBNR w KQkq - 0 1")
+                            .value();
 
-        const auto move = from_alg(position, "O-O-O+");
+        const auto move = from_alg(position, "O-O-O+").value();
 
         REQUIRE(move.is_castling());
         REQUIRE(move.piece() == PieceType::King);
@@ -883,9 +916,10 @@ TEST_CASE("Algebraic notation - queenside castling", TAGS)
 
     SECTION("With checkmate")
     {
-        auto position = from_fen("r3kb2/ppp1pppp/8/8/6b1/8/1PP1PPnP/r1NKnBNR b Kq - 0 1");
+        auto position = from_fen("r3kb2/ppp1pppp/8/8/6b1/8/1PP1PPnP/r1NKnBNR b Kq - 0 1")
+                            .value();
 
-        const auto move = from_alg(position, "O-O-O#");
+        const auto move = from_alg(position, "O-O-O#").value();
 
         REQUIRE(move.is_castling());
         REQUIRE(move.piece() == PieceType::King);

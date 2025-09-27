@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <expected>
 #include <format>
 #include <iterator>
 #include <libchess/board/File.hpp>
@@ -28,7 +29,6 @@
 #include <libchess/util/Strings.hpp>
 #include <optional>
 #include <span>
-#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -153,32 +153,31 @@ namespace {
     using board::File;
     using board::Rank;
     using pieces::Color;
-    using MoveSpan = std::span<const Move>;
+    using MoveSpan      = std::span<const Move>;
+    using SquareOrError = std::expected<Square, string>;
 
     [[nodiscard]] auto get_starting_square_from_file(
         const MoveSpan possibleOrigins, const File file)
-        -> Square
+        -> SquareOrError
     {
         auto moveStartsOnFile = [file](const Move& move) { return move.from().file == file; };
 
         if (std::cmp_greater(
                 std::ranges::count_if(possibleOrigins, moveStartsOnFile),
                 1)) {
-            throw std::invalid_argument {
+            return std::unexpected(
                 std::format(
                     "Disambiguation given file {}, but multiple pieces of this type can move to the target square from this file!",
-                    file)
-            };
+                    file));
         }
 
         const auto move = std::ranges::find_if(possibleOrigins, moveStartsOnFile);
 
         if (move == possibleOrigins.end()) {
-            throw std::invalid_argument {
+            return std::unexpected(
                 std::format(
                     "Disambiguation given file {}, but no piece of this type can move to the target square from this file!",
-                    file)
-            };
+                    file));
         }
 
         return move->from();
@@ -186,28 +185,26 @@ namespace {
 
     [[nodiscard]] auto get_starting_square_from_rank(
         const MoveSpan possibleOrigins, const Rank rank)
-        -> Square
+        -> SquareOrError
     {
         auto moveStartsOnRank = [rank](const Move& move) { return move.from().rank == rank; };
 
         if (std::cmp_greater(
                 std::ranges::count_if(possibleOrigins, moveStartsOnRank),
                 1)) {
-            throw std::invalid_argument {
+            return std::unexpected(
                 std::format(
                     "Disambiguation given rank {}, but multiple pieces of this type can move to the target square from this rank!",
-                    rank)
-            };
+                    rank));
         }
 
         const auto move = std::ranges::find_if(possibleOrigins, moveStartsOnRank);
 
         if (move == possibleOrigins.end()) {
-            throw std::invalid_argument {
+            return std::unexpected(
                 std::format(
                     "Disambiguation given rank {}, but no piece of this type can move to the target square from this rank!",
-                    rank)
-            };
+                    rank));
         }
 
         return move->from();
@@ -216,24 +213,25 @@ namespace {
     [[nodiscard]] auto get_starting_square(
         const Position& position, const Square& targetSquare, const PieceType piece,
         const string_view text)
-        -> Square
+        -> SquareOrError
     {
         const auto possibleOrigins = get_possible_move_origins(position, targetSquare, piece);
 
         if (possibleOrigins.empty()) {
-            throw std::invalid_argument {
-                std::format("No piece of type {} can legally reach square {}", piece, targetSquare)
-            };
+            return std::unexpected(
+                std::format(
+                    "No piece of type {} can legally reach square {}",
+                    piece, targetSquare));
         }
 
         if (possibleOrigins.size() == 1uz)
             return possibleOrigins.front().from();
 
         if (text.empty()) {
-            throw std::invalid_argument {
-                std::format("Multiple pieces of type {} can legally reach square {}, but no disambiguation string was provided",
-                    piece, targetSquare)
-            };
+            return std::unexpected(
+                std::format(
+                    "Multiple pieces of type {} can legally reach square {}, but no disambiguation string was provided",
+                    piece, targetSquare));
         }
 
         if (text.length() > 1uz)
@@ -281,10 +279,12 @@ namespace {
             case '7': return get_starting_square_from_rank(possibleOrigins, Rank::Seven);
             case '8': return get_starting_square_from_rank(possibleOrigins, Rank::Eight);
 
-            default:
-                throw std::invalid_argument {
-                    std::format("Unrecognized character in disambiguation string: {}", text.front())
-                };
+            default: {
+                return std::unexpected(
+                    std::format(
+                        "Unrecognized character in disambiguation string: {}",
+                        text.front()));
+            }
         }
     }
 
@@ -360,35 +360,51 @@ namespace {
 
         const auto promotedType = pieces::from_string(text.substr(eqSgnPos + 1uz, 1uz));
 
+        if (not promotedType.has_value())
+            return std::nullopt;
+
         if (const auto xPos = text.find('x');
             xPos != string_view::npos) {
             // string is of form dxe8=Q
+            const auto file = board::file_from_char(text.at(xPos - 1uz));
+
+            if (not file.has_value())
+                return std::nullopt;
+
+            const auto destSquare = Square::from_string(text.substr(eqSgnPos - 2uz, 2uz));
+
+            if (not destSquare.has_value())
+                return std::nullopt;
+
             return Move {
                 Square {
-                    .file = board::file_from_char(text.at(xPos - 1uz)),
+                    .file = file.value(),
                     .rank = color == Color::White ? Rank::Seven : Rank::Two },
-                Square::from_string(text.substr(eqSgnPos - 2uz, 2uz)),
-                PieceType::Pawn, promotedType
+                destSquare.value(),
+                PieceType::Pawn, promotedType.value()
             };
         }
 
         // string is of form e8=Q
+        const auto file = board::file_from_char(text.front());
+
+        if (not file.has_value())
+            return std::nullopt;
+
         return moves::promotion(
-            board::file_from_char(text.front()),
-            color, promotedType);
+            file.value(), color, promotedType.value());
     }
 
 } // namespace
 
-Move from_alg(const Position& position, string_view text)
+using MoveOrError = std::expected<Move, string>;
+
+MoveOrError from_alg(const Position& position, string_view text)
 {
     text = util::trim(text);
 
-    if (text.empty()) {
-        throw std::invalid_argument {
-            "Cannot parse Move from empty string"
-        };
-    }
+    if (text.empty())
+        return std::unexpected("Cannot parse Move from empty string");
 
     if (text.back() == '+' or text.back() == '#')
         text.remove_suffix(1uz);
@@ -403,41 +419,45 @@ Move from_alg(const Position& position, string_view text)
     if (const auto move = parse_promotion(text, position.sideToMove))
         return *move;
 
-    const auto targetSquare = Square::from_string(text.substr(text.length() - 2uz));
+    return Square::from_string(text.substr(text.length() - 2uz))
+        .and_then([&text, &position](const Square targetSquare) -> MoveOrError {
+            // trim target square
+            text.remove_suffix(2uz);
 
-    // trim target square
-    text.remove_suffix(2uz);
+            const bool isCapture = [text] {
+                if (text.empty())
+                    return false;
 
-    const bool isCapture = [text] {
-        if (text.empty())
-            return false;
+                return text.back() == 'x';
+            }();
 
-        return text.back() == 'x';
-    }();
+            if (isCapture)
+                text.remove_suffix(1uz);
 
-    if (isCapture)
-        text.remove_suffix(1uz);
+            // at this point, if text is empty, this an abbreviated pawn move such as "e4", etc.
+            // if text is not empty, the first char is either piece type, or in the case of a
+            // pawn capture, it's the file letter of the starting square
 
-    // at this point, if text is empty, this an abbreviated pawn move such as "e4", etc.
-    // if text is not empty, the first char is either piece type, or in the case of a
-    // pawn capture, it's the file letter of the starting square
+            if (isCapture and not text.empty())
+                if (const auto move = parse_pawn_capture(targetSquare, text, position.sideToMove))
+                    return *move;
 
-    if (isCapture and not text.empty())
-        if (const auto move = parse_pawn_capture(targetSquare, text, position.sideToMove))
-            return *move;
+            const auto pieceType = text.empty()
+                                     ? std::expected<PieceType, string> { PieceType::Pawn }
+                                     : pieces::from_string(text.substr(0uz, 1uz));
 
-    const auto pieceType = text.empty()
-                             ? PieceType::Pawn
-                             : pieces::from_string(text.substr(0uz, 1uz));
+            return pieceType
+                .and_then([&text, &position, targetSquare](const PieceType type) {
+                    // trim piece type
+                    if (not text.empty())
+                        text = text.substr(1uz);
 
-    // trim piece type
-    if (not text.empty())
-        text = text.substr(1uz);
-
-    return {
-        get_starting_square(position, targetSquare, pieceType, text),
-        targetSquare, pieceType
-    };
+                    return get_starting_square(position, targetSquare, type, text)
+                        .transform([targetSquare, type](const Square startSquare) {
+                            return Move { startSquare, targetSquare, type };
+                        });
+                });
+        });
 }
 
 } // namespace chess::notation

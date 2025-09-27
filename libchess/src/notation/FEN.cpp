@@ -14,6 +14,7 @@
 
 #include "FENHelpers.hpp"
 #include <cstddef> // IWYU pragma: keep - for size_t
+#include <expected>
 #include <format>
 #include <iterator>
 #include <libchess/game/Position.hpp>
@@ -22,7 +23,6 @@
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/util/Strings.hpp>
 #include <ranges>
-#include <stdexcept>
 #include <string>
 
 namespace chess::notation {
@@ -71,45 +71,49 @@ std::string to_fen(const Position& position, const bool alwaysWriteEPSqare)
     return fen;
 }
 
-Position from_fen(std::string_view fenString)
+using PositionOrError = std::expected<Position, std::string>;
+
+PositionOrError from_fen(std::string_view fenString)
 {
     using util::int_from_string;
     using util::split_at_first_space;
 
     fenString = util::trim(fenString);
 
-    if (fenString.empty()) {
-        throw std::invalid_argument {
-            "Cannot parse Position from empty FEN string"
-        };
-    }
+    if (fenString.empty())
+        return std::unexpected("Cannot parse Position from empty FEN string");
 
     auto position = Position::empty();
 
     const auto [piecePositions, rest1] = split_at_first_space(fenString);
 
-    fen_helpers::parse_piece_positions(piecePositions, position);
+    return fen_helpers::parse_piece_positions(piecePositions, position)
+        .and_then([rest1, &position]() -> PositionOrError {
+            const auto [sideToMove, rest2] = split_at_first_space(rest1);
 
-    const auto [sideToMove, rest2] = split_at_first_space(rest1);
+            return fen_helpers::parse_side_to_move(sideToMove, position)
+                .and_then([rest2, &position]() -> PositionOrError {
+                    const auto [castlingRights, rest3] = split_at_first_space(rest2);
 
-    fen_helpers::parse_side_to_move(sideToMove, position);
+                    fen_helpers::parse_castling_rights(castlingRights, position);
 
-    const auto [castlingRights, rest3] = split_at_first_space(rest2);
+                    const auto [epTarget, rest4] = split_at_first_space(rest3);
 
-    fen_helpers::parse_castling_rights(castlingRights, position);
+                    fen_helpers::parse_en_passant_target_square(epTarget, position);
 
-    const auto [epTarget, rest4] = split_at_first_space(rest3);
+                    // tolerate the final 2 fields being omitted
+                    if (not util::trim(rest4).empty()) {
+                        const auto [halfMoveClock, fullMoveCounter] = split_at_first_space(rest4);
 
-    fen_helpers::parse_en_passant_target_square(epTarget, position);
+                        position.halfmoveClock   = int_from_string(halfMoveClock, position.halfmoveClock);
+                        position.fullMoveCounter = int_from_string(fullMoveCounter, position.fullMoveCounter);
+                    }
 
-    const auto [halfMoveClock, fullMoveCounter] = split_at_first_space(rest4);
+                    position.refresh_zobrist();
 
-    position.halfmoveClock   = int_from_string(halfMoveClock, position.halfmoveClock);
-    position.fullMoveCounter = int_from_string(fullMoveCounter, position.fullMoveCounter);
-
-    position.refresh_zobrist();
-
-    return position;
+                    return position;
+                });
+        });
 }
 
 } // namespace chess::notation

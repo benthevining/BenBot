@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <expected>
 #include <iterator>
 #include <libchess/moves/Move.hpp>
 #include <libchess/notation/FEN.hpp>
@@ -22,6 +23,7 @@
 #include <libchess/uci/CommandParsing.hpp>
 #include <libchess/util/Strings.hpp>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -39,7 +41,7 @@ using util::trim;
 // split_at_first_space() will return a pair whose first element is empty
 // if its input string began with a space!
 
-Position parse_position_options(string_view options)
+std::expected<Position, std::string> parse_position_options(string_view options)
 {
     // position [fen <fenstring> | startpos ]  moves <move1> .... <movei>
     // options doesn't include the "position" token itself
@@ -61,7 +63,12 @@ Position parse_position_options(string_view options)
 
         const auto fenString = isNPos ? rest : rest.substr(0uz, movesTokenIdx);
 
-        position = notation::from_fen(fenString);
+        const auto fenPos = notation::from_fen(fenString);
+
+        if (not fenPos.has_value())
+            return std::unexpected(fenPos.error());
+
+        position = fenPos.value();
 
         if (isNPos) {
             // the "moves" token wasn't found, so assume that the FEN string
@@ -86,8 +93,17 @@ Position parse_position_options(string_view options)
     while (not moves.empty()) {
         const auto [firstMove, rest2] = split_at_first_space(moves);
 
-        position.make_move(
-            notation::from_uci(position, firstMove));
+        const auto parsed = notation::from_uci(position, firstMove);
+
+        if (not parsed.has_value())
+            return std::unexpected(parsed.error());
+
+        const auto move = parsed.value();
+
+        if (move.is_null())
+            return std::unexpected("Found null move in move list");
+
+        position.make_move(move);
 
         moves = trim(rest2);
     }
@@ -205,7 +221,8 @@ namespace {
 
             options = trim(rest);
 
-            *outputIt = notation::from_uci(currentPosition, firstMove);
+            if (const auto move = notation::from_uci(currentPosition, firstMove))
+                *outputIt = move.value();
         }
 
         return options; // NOLINT

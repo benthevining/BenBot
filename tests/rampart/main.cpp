@@ -65,14 +65,20 @@ try {
 
     auto movesJSON = nlohmann::json::array();
 
-    for (const auto position = chess::notation::from_fen(fenString);
-        const auto& move : chess::moves::generate(position)) {
+    const auto position = chess::notation::from_fen(fenString);
+
+    if (not position.has_value()) {
+        std::println(std::cerr, "{}", position.error());
+        return EXIT_FAILURE;
+    }
+
+    for (const auto& move : chess::moves::generate(position.value())) {
         nlohmann::json moveJSON;
 
-        moveJSON["move"] = chess::notation::to_alg(position, move);
+        moveJSON["move"] = chess::notation::to_alg(position.value(), move);
 
         moveJSON["fen"] = chess::notation::to_fen(
-            after_move(position, move),
+            after_move(position.value(), move),
             false);
 
         movesJSON.push_back(moveJSON);

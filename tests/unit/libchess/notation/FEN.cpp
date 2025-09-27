@@ -53,7 +53,7 @@ TEST_CASE("FEN - starting position", TAGS)
 
     SECTION("From FEN")
     {
-        const auto pos = from_fen(startingFEN);
+        const auto pos = from_fen(startingFEN).value();
 
         REQUIRE(pos == startingPos);
 
@@ -70,7 +70,7 @@ TEST_CASE("FEN - after E4", TAGS)
         "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"
     };
 
-    const auto pos = from_fen(correctFEN);
+    const auto pos = from_fen(correctFEN).value();
 
     const auto roundTripped = to_fen(pos);
 
@@ -89,7 +89,7 @@ TEST_CASE("FEN - after E4 C5", TAGS)
         "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2"
     };
 
-    const auto roundTripped = to_fen(from_fen(correctFEN));
+    const auto roundTripped = to_fen(from_fen(correctFEN).value());
 
     REQUIRE_THAT(roundTripped,
         match::Matches(correctFEN.data(), Catch::CaseSensitive::Yes));
@@ -101,7 +101,7 @@ TEST_CASE("FEN - after E4 C5 Nf3", TAGS)
         "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2"
     };
 
-    const auto roundTripped = to_fen(from_fen(correctFEN));
+    const auto roundTripped = to_fen(from_fen(correctFEN).value());
 
     REQUIRE_THAT(roundTripped,
         match::Matches(correctFEN.data(), Catch::CaseSensitive::Yes));

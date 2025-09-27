@@ -13,7 +13,7 @@
  */
 
 #include <algorithm>
-#include <exception>
+#include <expected>
 #include <format>
 #include <iostream>
 #include <libchess/notation/FEN.hpp>
@@ -23,6 +23,7 @@
 #include <libchess/util/Strings.hpp>
 #include <print>
 #include <string>
+#include <string_view>
 
 namespace chess::uci {
 
@@ -124,32 +125,38 @@ void EngineBase::respond_to_uci()
     println("uciok");
 }
 
-// According to the UCI spec, engines should ignore invalid commands.
-// If the FEN or movelist sent is invalid, an exception will be thrown
-// when trying to parse it, which we could simply not catch here to let
-// the engine terminate; however, it seems to be the most spec-compliant
-// behavior to ignore the invalid command and not terminate the engine.
-// If a parsing error is thrown, or if the new position is determined
-// to be illegal, we print an error message via `info string` and keep
-// the old position. See this Stockfish PR discussion:
-// https://github.com/official-stockfish/Stockfish/pull/4563
 void EngineBase::handle_setpos(const string_view arguments)
-try {
-    const auto newPos = parse_position_options(arguments);
+{
+    // According to the UCI spec, engines should ignore invalid commands.
+    // If the FEN or movelist sent is invalid, we could terminate the engine
+    // with an error exit code; however, it seems to be the most spec-compliant
+    // behavior to ignore the invalid command and not terminate the engine.
+    // If parsing returns an error, or if the new position seems to be illegal,
+    // we print an error message via `info string` and keep the old position.
+    // See this Stockfish PR discussion: https://github.com/official-stockfish/Stockfish/pull/4563
 
-    if (const auto errorStr = newPos.is_illegal()) {
-        [[unlikely]];
-        info_string(std::format("Attempted to set illegal position: {}", errorStr.value()));
-        info_string(std::format("Retained previous position: {}", notation::to_fen(position)));
-        return;
-    }
+    using MaybeError = std::expected<void, std::string>;
 
-    position = newPos;
+    parse_position_options(arguments)
+        .and_then([this](const Position& pos) -> MaybeError {
+            if (const auto errorStr = pos.is_illegal()) {
+                [[unlikely]];
+                return std::unexpected(
+                    std::format("Position is illegal: {}", errorStr.value()));
+            }
 
-    set_position(newPos);
-} catch (const std::exception& exception) {
-    info_string(std::format("Error setting position: {}", exception.what()));
-    info_string(std::format("Retained previous position: {}", notation::to_fen(position)));
+            position = pos;
+
+            set_position(pos);
+
+            return {};
+        })
+        .or_else([this](const std::string_view error) -> MaybeError {
+            info_string(std::format("Error setting position: {}", error));
+            info_string(std::format("Retained previous position: {}", notation::to_fen(position)));
+
+            return {};
+        });
 }
 
 void EngineBase::handle_setoption(const string_view arguments)
