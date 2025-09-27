@@ -30,12 +30,13 @@
 #include <cassert>
 #include <compare>
 #include <cstddef> // IWYU pragma: keep - for size_t
+#include <expected>
 #include <format>
 #include <libchess/board/BitboardIndex.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Rank.hpp>
 #include <libchess/util/Math.hpp>
-#include <stdexcept>
+#include <string>
 #include <string_view>
 #include <utility>
 
@@ -82,13 +83,11 @@ struct Square final {
 
     /** Creates a square from a string in algebraic notation, such as "A1", "H4", etc.
 
-        This method recognizes either upper- or lower-case file letters. This method
-        always throws if the input string is not 2 characters long.
+        This method recognizes either upper- or lower-case file letters.
 
-        @throws std::invalid_argument An exception will be thrown if a square cannot be
-        parsed correctly from the input string.
+        If the input string cannot be parsed correctly, returns an explanatory error string.
      */
-    [[nodiscard, gnu::const]] static constexpr Square from_string(std::string_view text);
+    [[nodiscard]] static std::expected<Square, std::string> from_string(std::string_view text);
 
     /** Returns the bitboard bit index for this square.
         The returned index will be in the range ``[0,63]``.
@@ -232,17 +231,25 @@ constexpr bool Square::is_light() const noexcept
         std::to_underlying(rank) + std::to_underlying(file));
 }
 
-constexpr Square Square::from_string(const std::string_view text)
+inline std::expected<Square, std::string> Square::from_string(const std::string_view text)
 {
-    if (text.length() != 2uz)
-        throw std::invalid_argument {
-            std::format("Cannot parse Square from invalid input string: {}", text)
-        };
+    if (text.length() != 2uz) {
+        return std::unexpected(
+            std::format(
+                "Cannot parse Square from invalid input string: {}",
+                text));
+    }
 
-    return {
-        .file = file_from_char(text.front()),
-        .rank = rank_from_char(text.back())
-    };
+    return rank_from_char(text.back())
+        .and_then([fileChar = text.front()](const Rank rankToUse) {
+            return file_from_char(fileChar)
+                .transform([rankToUse](const File fileToUse) {
+                    return Square {
+                        .file = fileToUse,
+                        .rank = rankToUse
+                    };
+                });
+        });
 }
 
 constexpr Square get_en_passant_captured_square(

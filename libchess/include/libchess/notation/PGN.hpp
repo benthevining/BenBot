@@ -20,6 +20,7 @@
 #pragma once
 
 #include <cstdint>
+#include <expected>
 #include <libchess/game/Position.hpp>
 #include <libchess/game/Result.hpp>
 #include <libchess/moves/Move.hpp>
@@ -128,14 +129,13 @@ struct GameRecord final {
 
 /** Parses the text of a PGN file into a GameRecord object.
 
-    @throws std::invalid_argument An exception will be thrown
-    if the PGN can not be parsed correctly.
+    If the input string cannot be parsed correctly, returns an explanatory error string.
 
     @ingroup notation
     @relates GameRecord
     @see parse_all_pgns()
  */
-[[nodiscard]] GameRecord from_pgn(std::string_view pgnText);
+[[nodiscard]] std::expected<GameRecord, std::string_view> from_pgn(std::string_view pgnText);
 
 /** Parses a text file that may contain 0 or more PGNs into a list of
     GameRecord objects. PGNs in the ``fileContent`` should be separated

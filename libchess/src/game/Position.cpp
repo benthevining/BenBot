@@ -184,8 +184,9 @@ void Position::flip()
 
     whiteCastlingRights = std::exchange(blackCastlingRights, whiteCastlingRights);
 
-    if (enPassantTargetSquare.has_value())
-        enPassantTargetSquare = square_vertical_flip(enPassantTargetSquare.value());
+    enPassantTargetSquare = enPassantTargetSquare.and_then([](const Square oldEPSquare) {
+        return std::optional { square_vertical_flip(oldEPSquare) };
+    });
 
     refresh_zobrist();
 }

@@ -11,6 +11,8 @@ contributors to the `BenBot` project.
 * Prefer modern facilities: use `auto`, `using`, etc.
 * West const. `const auto* foo` or `auto* const foo`.
 * For boolean operators `&&`, `||` and `!`, we prefer the alternate tokens `and`, `or`, and `not`. This makes the code more readable. `!` is much easier to miss than `not`.
+* Always prefer standard library algorithms or range-based for loops over raw `for` loops whenever possible.
+* When working with monadic objects such as `std::optional` or `std::expected`, prefer to use the monadic operations over checking `has_value()` whenever possible.
 * Prefer to use standard library mechanisms over reinventing the wheel.
 * Always prefer brackets for initialization.
 For example, a constructor init list:

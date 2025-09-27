@@ -124,7 +124,8 @@ TEST_CASE("Position - is_check()", TAGS)
 
     SECTION("Blocked ray attack")
     {
-        const auto pos = from_fen("r1bqkb1r/pppppppp/2n4n/8/2B1P3/5Q2/PPPP1PPP/RNB1K1NR b KQkq - 4 3");
+        const auto pos = from_fen("r1bqkb1r/pppppppp/2n4n/8/2B1P3/5Q2/PPPP1PPP/RNB1K1NR b KQkq - 4 3")
+                             .value();
 
         REQUIRE(not pos.is_check());
         REQUIRE(not pos.is_checkmate());
@@ -133,7 +134,8 @@ TEST_CASE("Position - is_check()", TAGS)
 
     SECTION("Check")
     {
-        const auto pos = from_fen("r1bqkb1r/pppppB1p/2n4n/6p1/4P3/5Q2/PPPP1PPP/RNB1K1NR b KQkq - 0 4");
+        const auto pos = from_fen("r1bqkb1r/pppppB1p/2n4n/6p1/4P3/5Q2/PPPP1PPP/RNB1K1NR b KQkq - 0 4")
+                             .value();
 
         REQUIRE(pos.is_check());
         REQUIRE(not pos.is_checkmate());
@@ -142,7 +144,8 @@ TEST_CASE("Position - is_check()", TAGS)
 
     SECTION("Checkmate")
     {
-        const auto pos = from_fen("1rbqkbnr/p1pppQpp/1pn5/8/2B1P3/8/PPPP1PPP/RNB1K1NR b KQk - 0 4");
+        const auto pos = from_fen("1rbqkbnr/p1pppQpp/1pn5/8/2B1P3/8/PPPP1PPP/RNB1K1NR b KQk - 0 4")
+                             .value();
 
         REQUIRE(pos.is_check());
         REQUIRE(pos.is_checkmate());
@@ -151,7 +154,8 @@ TEST_CASE("Position - is_check()", TAGS)
 
     SECTION("Stalemate")
     {
-        const auto pos = from_fen("7K/5k2/6q1/8/8/8/8/8 w - - 0 1");
+        const auto pos = from_fen("7K/5k2/6q1/8/8/8/8/8 w - - 0 1")
+                             .value();
 
         REQUIRE(not pos.is_check());
         REQUIRE(not pos.is_checkmate());
@@ -163,14 +167,16 @@ TEST_CASE("Position - stalemate", TAGS)
 {
     SECTION("White is stalemated")
     {
-        const auto position = from_fen("7K/5k2/6q1/8/8/8/8/8 w - - 0 1");
+        const auto position = from_fen("7K/5k2/6q1/8/8/8/8/8 w - - 0 1")
+                                  .value();
 
         REQUIRE(position.is_stalemate());
     }
 
     SECTION("Black is stalemated")
     {
-        const auto position = from_fen("2k5/P7/2K5/6B1/8/8/8/8 b - - 0 1");
+        const auto position = from_fen("2k5/P7/2K5/6B1/8/8/8/8 b - - 0 1")
+                                  .value();
 
         REQUIRE(position.is_stalemate());
     }
@@ -180,14 +186,16 @@ TEST_CASE("Position - checkmate", TAGS)
 {
     SECTION("White is checkmated")
     {
-        const auto position = from_fen("rnb1kb1r/pppppppp/4q3/8/2P5/1B1n4/PP1PPPPP/RN1QKBNR w KQkq - 0 1");
+        const auto position = from_fen("rnb1kb1r/pppppppp/4q3/8/2P5/1B1n4/PP1PPPPP/RN1QKBNR w KQkq - 0 1")
+                                  .value();
 
         REQUIRE(position.is_checkmate());
     }
 
     SECTION("Black is checkmated")
     {
-        const auto position = from_fen("r2qkbnr/ppp1pBpp/2n5/1b1pN3/8/4PQ2/PPPP1PPP/R1B1K1NR b KQkq - 0 1");
+        const auto position = from_fen("r2qkbnr/ppp1pBpp/2n5/1b1pN3/8/4PQ2/PPPP1PPP/R1B1K1NR b KQkq - 0 1")
+                                  .value();
 
         REQUIRE(position.is_checkmate());
     }
@@ -197,35 +205,40 @@ TEST_CASE("Position - draw by insufficient material", TAGS)
 {
     SECTION("Lone kings")
     {
-        const auto position = from_fen("8/8/1K6/8/5k2/8/8/8 w - - 0 1");
+        const auto position = from_fen("8/8/1K6/8/5k2/8/8/8 w - - 0 1")
+                                  .value();
 
         REQUIRE(position.is_draw_by_insufficient_material());
     }
 
     SECTION("White has a single knight")
     {
-        const auto position = from_fen("8/8/1K6/8/5k2/3N4/8/8 b - - 0 1");
+        const auto position = from_fen("8/8/1K6/8/5k2/3N4/8/8 b - - 0 1")
+                                  .value();
 
         REQUIRE(position.is_draw_by_insufficient_material());
     }
 
     SECTION("White has a single bishop")
     {
-        const auto position = from_fen("8/8/1K6/8/5k2/8/8/5B2 b - - 0 1");
+        const auto position = from_fen("8/8/1K6/8/5k2/8/8/5B2 b - - 0 1")
+                                  .value();
 
         REQUIRE(position.is_draw_by_insufficient_material());
     }
 
     SECTION("Black has a single knight")
     {
-        const auto position = from_fen("8/8/1K1n4/8/5k2/8/8/8 w - - 0 1");
+        const auto position = from_fen("8/8/1K1n4/8/5k2/8/8/8 w - - 0 1")
+                                  .value();
 
         REQUIRE(position.is_draw_by_insufficient_material());
     }
 
     SECTION("Black has a single bishop")
     {
-        const auto position = from_fen("8/8/1K6/8/3b1k2/8/8/8 w - - 0 1");
+        const auto position = from_fen("8/8/1K6/8/3b1k2/8/8/8 w - - 0 1")
+                                  .value();
 
         REQUIRE(position.is_draw_by_insufficient_material());
     }
@@ -243,7 +256,8 @@ TEST_CASE("Position - passed pawns", TAGS)
 
     SECTION("White and Black each have a passer")
     {
-        const auto position = from_fen("8/8/2Pk4/8/8/5p2/5K2/8 w - - 0 1");
+        const auto position = from_fen("8/8/2Pk4/8/8/5p2/5K2/8 w - - 0 1")
+                                  .value();
 
         REQUIRE(position.get_passed_pawns<Color::White>().count() == 1uz);
         REQUIRE(position.get_passed_pawns<Color::Black>().count() == 1uz);
@@ -251,7 +265,8 @@ TEST_CASE("Position - passed pawns", TAGS)
 
     SECTION("White has a passer")
     {
-        const auto position = from_fen("8/3Pp3/2p1P3/2P5/1k1K4/5p2/5P2/8 w - - 0 1");
+        const auto position = from_fen("8/3Pp3/2p1P3/2P5/1k1K4/5p2/5P2/8 w - - 0 1")
+                                  .value();
 
         REQUIRE(position.get_passed_pawns<Color::White>().count() == 1uz);
         REQUIRE(position.get_passed_pawns<Color::Black>().count() == 0uz);
@@ -270,7 +285,8 @@ TEST_CASE("Position - backward pawns", TAGS)
 
     SECTION("Telestop weakness")
     {
-        const auto position = from_fen("8/5p2/6p1/p1p3P1/P1P5/7P/1P6/8 w - - 0 1");
+        const auto position = from_fen("8/5p2/6p1/p1p3P1/P1P5/7P/1P6/8 w - - 0 1")
+                                  .value();
 
         const auto wBackwards = position.get_backward_pawns<Color::White>();
 
@@ -302,16 +318,16 @@ TEST_CASE("Position - fifty-move draws", TAGS)
 {
     REQUIRE(! Position {}.is_fifty_move_draw());
 
-    REQUIRE(from_fen("7k/4NK2/5r2/5BN1/8/8/8/8 w - - 103 115").is_fifty_move_draw());
-    REQUIRE(from_fen("8/7k/8/1r3KR1/5B2/8/8/8 w - - 105 122").is_fifty_move_draw());
+    REQUIRE(from_fen("7k/4NK2/5r2/5BN1/8/8/8/8 w - - 103 115").value().is_fifty_move_draw());
+    REQUIRE(from_fen("8/7k/8/1r3KR1/5B2/8/8/8 w - - 105 122").value().is_fifty_move_draw());
 }
 
 TEST_CASE("Position - flip()", TAGS)
 {
     SECTION("Giuoco Piano")
     {
-        const auto initial = from_fen("r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 1 1");
-        const auto correct = from_fen("rnbqk2r/pppp1ppp/5n2/2b1p3/2B1P3/2N5/PPPP1PPP/R1BQK1NR b KQkq - 1 1");
+        const auto initial = from_fen("r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 1 1").value();
+        const auto correct = from_fen("rnbqk2r/pppp1ppp/5n2/2b1p3/2B1P3/2N5/PPPP1PPP/R1BQK1NR b KQkq - 1 1").value();
 
         REQUIRE(flipped(initial) == correct);
         REQUIRE(flipped(correct) == initial);
@@ -319,8 +335,8 @@ TEST_CASE("Position - flip()", TAGS)
 
     SECTION("Giuoco Piano Symmetrical")
     {
-        const auto initial = from_fen("r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/2N2N2/PPPP1PPP/R1BQK2R w KQkq - 1 1");
-        const auto correct = from_fen("r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/2N2N2/PPPP1PPP/R1BQK2R b KQkq - 1 1");
+        const auto initial = from_fen("r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/2N2N2/PPPP1PPP/R1BQK2R w KQkq - 1 1").value();
+        const auto correct = from_fen("r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/2N2N2/PPPP1PPP/R1BQK2R b KQkq - 1 1").value();
 
         REQUIRE(flipped(initial) == correct);
         REQUIRE(flipped(correct) == initial);

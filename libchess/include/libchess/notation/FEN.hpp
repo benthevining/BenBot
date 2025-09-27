@@ -27,6 +27,7 @@
 
 #pragma once
 
+#include <expected>
 #include <libchess/game/Position.hpp>
 #include <string>
 #include <string_view>
@@ -57,12 +58,11 @@ using game::Position;
 
 /** Returns a Position object encoding the given FEN string.
 
-    @throws std::invalid_argument An exception will be thrown if the
-    FEN string cannot be parsed correctly.
+    If the input string cannot be parsed correctly, returns an explanatory error string.
 
     @ingroup notation
     @see to_fen()
  */
-[[nodiscard]] Position from_fen(std::string_view fenString);
+[[nodiscard]] std::expected<Position, std::string> from_fen(std::string_view fenString);
 
 } // namespace chess::notation
