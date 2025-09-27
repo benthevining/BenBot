@@ -365,23 +365,20 @@ namespace {
         if (not promotedType.has_value())
             return std::nullopt;
 
-        if (const auto xPos = text.find('x');
-            xPos != string_view::npos) {
+        if (const auto xPos = text.find('x'); xPos != string_view::npos) {
             // string is of form dxe8=Q
-
-            const auto file = board::file_from_char(text.at(xPos - 1uz));
-
-            if (not file.has_value())
-                return std::nullopt;
-
-            return Square::from_string(text.substr(eqSgnPos - 2uz, 2uz))
-                .transform([f = file.value(), color, prom = promotedType.value()](const Square destSquare) -> MaybeMove {
-                    return Move {
-                        Square {
-                            .file = f,
-                            .rank = color == Color::White ? Rank::Seven : Rank::Two },
-                        destSquare, PieceType::Pawn, prom
-                    };
+            return board::file_from_char(text.at(xPos - 1uz))
+                .transform([color, text, eqSgnPos, prom = promotedType.value()](const File file) -> MaybeMove {
+                    return Square::from_string(text.substr(eqSgnPos - 2uz, 2uz))
+                        .transform([file, color, prom](const Square destSquare) -> MaybeMove {
+                            return Move {
+                                Square {
+                                    .file = file,
+                                    .rank = color == Color::White ? Rank::Seven : Rank::Two },
+                                destSquare, PieceType::Pawn, prom
+                            };
+                        })
+                        .value_or(std::nullopt);
                 })
                 .value_or(std::nullopt);
         }
