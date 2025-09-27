@@ -227,14 +227,11 @@ namespace detail {
              | std::views::transform([promotedType](const auto& tuple) {
                    const auto [starting, target] = tuple;
 
-                   if (promotedType.has_value())
-                       return Move {
-                           starting, target, PieceType::Pawn, promotedType.value()
-                       };
-
-                   return Move {
-                       starting, target, PieceType::Pawn
-                   };
+                   return promotedType
+                       .transform([starting, target](const PieceType type) {
+                           return Move { starting, target, PieceType::Pawn, type };
+                       })
+                       .value_or(Move { starting, target, PieceType::Pawn });
                });
     }
 
@@ -302,28 +299,25 @@ namespace detail {
         // at most 2 captures are possible at a time
         using EPMoves = beman::inplace_vector<Move, 2uz>;
 
-        if (not position.enPassantTargetSquare.has_value()) {
-            [[likely]];
-            return EPMoves {};
-        }
+        return position.enPassantTargetSquare
+            .transform([&position](const Square targetSquare) {
+                const auto targetSquareBoard = Bitboard::from_square(targetSquare);
 
-        const auto targetSquare = *position.enPassantTargetSquare;
+                const auto startSquares = shifts::pawn_inv_capture_east<Side>(targetSquareBoard)
+                                        | shifts::pawn_inv_capture_west<Side>(targetSquareBoard);
 
-        const auto targetSquareBoard = Bitboard::from_square(targetSquare);
-
-        const auto startSquares = shifts::pawn_inv_capture_east<Side>(targetSquareBoard)
-                                | shifts::pawn_inv_capture_west<Side>(targetSquareBoard);
-
-        return (position.pieces_for<Side>().pawns & startSquares).squares()
-             | std::views::transform([targetSquare](const Square square) {
-                   return Move {
-                       square, targetSquare, PieceType::Pawn
-                   };
-               })
-             | std::views::filter([&position](const Move& move) {
-                   return position.is_legal(move);
-               })
-             | std::ranges::to<EPMoves>();
+                return (position.pieces_for<Side>().pawns & startSquares).squares()
+                     | std::views::transform([targetSquare](const Square square) {
+                           return Move {
+                               square, targetSquare, PieceType::Pawn
+                           };
+                       })
+                     | std::views::filter([&position](const Move& move) {
+                           return position.is_legal(move);
+                       })
+                     | std::ranges::to<EPMoves>();
+            })
+            .value_or(EPMoves {});
     }
 
     template <Color Side, bool CapturesOnly>

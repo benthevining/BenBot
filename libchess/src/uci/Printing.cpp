@@ -34,12 +34,9 @@ using notation::to_uci;
 namespace {
     [[nodiscard]] auto ponder_move_string(const std::optional<Move> ponderMove) -> std::string
     {
-        if (ponderMove.has_value()) {
-            [[likely]];
-            return std::format(" ponder {}", to_uci(*ponderMove));
-        }
-
-        return {};
+        return ponderMove
+            .transform([](const Move move) { return std::format(" ponder {}", to_uci(move)); })
+            .value_or(std::string {});
     }
 } // namespace
 
@@ -54,21 +51,19 @@ void best_move(
 namespace {
     [[nodiscard]] auto base_score_string(const SearchInfo::Score& score) -> std::string
     {
-        if (score.cp.has_value()) {
-            [[likely]];
+        return score.cp.transform([](const int cp) { return std::format("cp {}", cp); })
+            .or_else([&score] {
+                return score.mate.transform([](int pliesToMate) {
+                    // convert plies to moves
+                    if (pliesToMate > 0)
+                        ++pliesToMate;
 
-            return std::format("cp {}", *score.cp);
-        }
+                    const auto mateIn = pliesToMate / 2;
 
-        auto plyToMate = *score.mate;
-
-        if (plyToMate > 0)
-            ++plyToMate;
-
-        // plies -> moves
-        const auto mateIn = plyToMate / 2;
-
-        return std::format("mate {}", mateIn);
+                    return std::format("mate {}", mateIn);
+                });
+            })
+            .value_or(std::string {});
     }
 
     [[nodiscard]] auto score_string(const SearchInfo::Score& score) -> std::string
