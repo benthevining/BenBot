@@ -83,8 +83,7 @@ struct Square final {
 
     /** Creates a square from a string in algebraic notation, such as "A1", "H4", etc.
 
-        This method recognizes either upper- or lower-case file letters. This method
-        always throws if the input string is not 2 characters long.
+        This method recognizes either upper- or lower-case file letters.
 
         If the input string cannot be parsed correctly, returns an explanatory error string.
      */
@@ -241,20 +240,16 @@ inline std::expected<Square, std::string> Square::from_string(const std::string_
                 text));
     }
 
-    const auto rank = rank_from_char(text.back());
-
-    if (not rank.has_value())
-        return std::unexpected(rank.error());
-
-    const auto file = file_from_char(text.front());
-
-    if (not file.has_value())
-        return std::unexpected(file.error());
-
-    return Square {
-        .file = file.value(),
-        .rank = rank.value()
-    };
+    return rank_from_char(text.back())
+        .and_then([fileChar = text.front()](const Rank rankToUse) {
+            return file_from_char(fileChar)
+                .transform([rankToUse](const File fileToUse) {
+                    return Square {
+                        .file = fileToUse,
+                        .rank = rankToUse
+                    };
+                });
+        });
 }
 
 constexpr Square get_en_passant_captured_square(
