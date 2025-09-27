@@ -397,7 +397,9 @@ namespace {
 
 } // namespace
 
-std::expected<Move, string> from_alg(const Position& position, string_view text)
+using MoveOrError = std::expected<Move, string>;
+
+MoveOrError from_alg(const Position& position, string_view text)
 {
     text = util::trim(text);
 
@@ -417,45 +419,43 @@ std::expected<Move, string> from_alg(const Position& position, string_view text)
     if (const auto move = parse_promotion(text, position.sideToMove))
         return *move;
 
-    const auto targetSquare = Square::from_string(text.substr(text.length() - 2uz));
+    return Square::from_string(text.substr(text.length() - 2uz))
+        .and_then([&text, &position](const Square targetSquare) -> MoveOrError {
+            // trim target square
+            text.remove_suffix(2uz);
 
-    if (not targetSquare.has_value())
-        return std::unexpected(targetSquare.error());
+            const bool isCapture = [text] {
+                if (text.empty())
+                    return false;
 
-    // trim target square
-    text.remove_suffix(2uz);
+                return text.back() == 'x';
+            }();
 
-    const bool isCapture = [text] {
-        if (text.empty())
-            return false;
+            if (isCapture)
+                text.remove_suffix(1uz);
 
-        return text.back() == 'x';
-    }();
+            // at this point, if text is empty, this an abbreviated pawn move such as "e4", etc.
+            // if text is not empty, the first char is either piece type, or in the case of a
+            // pawn capture, it's the file letter of the starting square
 
-    if (isCapture)
-        text.remove_suffix(1uz);
+            if (isCapture and not text.empty())
+                if (const auto move = parse_pawn_capture(targetSquare, text, position.sideToMove))
+                    return *move;
 
-    // at this point, if text is empty, this an abbreviated pawn move such as "e4", etc.
-    // if text is not empty, the first char is either piece type, or in the case of a
-    // pawn capture, it's the file letter of the starting square
+            const auto pieceType = text.empty()
+                                     ? std::expected<PieceType, string> { PieceType::Pawn }
+                                     : pieces::from_string(text.substr(0uz, 1uz));
 
-    if (isCapture and not text.empty())
-        if (const auto move = parse_pawn_capture(targetSquare.value(), text, position.sideToMove))
-            return *move;
+            return pieceType
+                .and_then([&text, &position, targetSquare](const PieceType type) {
+                    // trim piece type
+                    if (not text.empty())
+                        text = text.substr(1uz);
 
-    const auto pieceType = text.empty()
-                             ? std::expected<PieceType, string> { PieceType::Pawn }
-                             : pieces::from_string(text.substr(0uz, 1uz));
-
-    return pieceType
-        .and_then([&text, &position, dest = targetSquare.value()](const PieceType type) {
-            // trim piece type
-            if (not text.empty())
-                text = text.substr(1uz);
-
-            return get_starting_square(position, dest, type, text)
-                .transform([dest, type](const Square startSquare) {
-                    return Move { startSquare, dest, type };
+                    return get_starting_square(position, targetSquare, type, text)
+                        .transform([targetSquare, type](const Square startSquare) {
+                            return Move { startSquare, targetSquare, type };
+                        });
                 });
         });
 }
