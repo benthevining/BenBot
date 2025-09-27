@@ -27,8 +27,10 @@
 
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdint> // IWYU pragma: keep - for std::uint_fast8_t
+#include <expected>
 #include <format>
 #include <stdexcept>
+#include <string>
 #include <string_view>
 #include <utility>
 
@@ -57,12 +59,11 @@ enum class Type : std::uint_fast8_t {
     This function recognizes single-letter abbreviations (such as ``N`` for knight, etc.),
     or full piece names.
 
-    @throws std::invalid_argument An exception will be thrown if the input string cannot
-    be parsed correctly.
+    If the input string cannot be parsed correctly, returns an explanatory error string.
 
     @ingroup pieces
  */
-[[nodiscard, gnu::const]] constexpr Type from_string(std::string_view text);
+[[nodiscard]] std::expected<Type, std::string> from_string(std::string_view text);
 
 /** Converts the given piece type to its single-character representation.
 
@@ -126,7 +127,7 @@ constexpr char to_char(const Type type, const bool uppercase) noexcept
     return lowerChars[std::to_underlying(type)];
 }
 
-constexpr Type from_string(std::string_view text)
+inline std::expected<Type, std::string> from_string(std::string_view text)
 {
     if (text.length() != 1uz)
         text = text.substr(0uz, 1uz);
@@ -151,9 +152,10 @@ constexpr Type from_string(std::string_view text)
         case 'K': return Type::King;
 
         default:
-            throw std::invalid_argument {
-                std::format("Cannot parse piece type from invalid input string: {}", text)
-            };
+            return std::unexpected(
+                std::format(
+                    "Cannot parse piece type from invalid input string: {}",
+                    text));
     }
 }
 

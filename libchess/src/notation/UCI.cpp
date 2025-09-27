@@ -83,8 +83,17 @@ std::expected<Move, std::string> from_uci(
     // promotion
     if (not text.empty()) {
         [[unlikely]];
+
+        const auto promotionType = pieces::from_string(text);
+
+        if (not promotionType.has_value()) {
+            return std::unexpected(
+                std::format("Error parsing promoted type: {}",
+                    promotionType.error()));
+        }
+
         return Move {
-            from, dest, movedType.value(), pieces::from_string(text)
+            from, dest, movedType.value(), promotionType.value()
         };
     }
 

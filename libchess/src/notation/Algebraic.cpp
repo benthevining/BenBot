@@ -360,6 +360,9 @@ namespace {
 
         const auto promotedType = pieces::from_string(text.substr(eqSgnPos + 1uz, 1uz));
 
+        if (not promotedType.has_value())
+            return std::nullopt;
+
         if (const auto xPos = text.find('x');
             xPos != string_view::npos) {
             // string is of form dxe8=Q
@@ -368,14 +371,14 @@ namespace {
                     .file = board::file_from_char(text.at(xPos - 1uz)),
                     .rank = color == Color::White ? Rank::Seven : Rank::Two },
                 Square::from_string(text.substr(eqSgnPos - 2uz, 2uz)),
-                PieceType::Pawn, promotedType
+                PieceType::Pawn, promotedType.value()
             };
         }
 
         // string is of form e8=Q
         return moves::promotion(
             board::file_from_char(text.front()),
-            color, promotedType);
+            color, promotedType.value());
     }
 
 } // namespace
@@ -427,13 +430,16 @@ std::expected<Move, string> from_alg(const Position& position, string_view text)
                              ? PieceType::Pawn
                              : pieces::from_string(text.substr(0uz, 1uz));
 
+    if (not pieceType.has_value())
+        return std::unexpected(pieceType.error());
+
     // trim piece type
     if (not text.empty())
         text = text.substr(1uz);
 
-    return get_starting_square(position, targetSquare, pieceType, text)
+    return get_starting_square(position, targetSquare, pieceType.value(), text)
         .transform([targetSquare, pieceType](const Square startSquare) {
-            return Move { startSquare, targetSquare, pieceType };
+            return Move { startSquare, targetSquare, pieceType.value() };
         });
 }
 
