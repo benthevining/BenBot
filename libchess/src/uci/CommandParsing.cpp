@@ -93,12 +93,17 @@ std::expected<Position, std::string> parse_position_options(string_view options)
     while (not moves.empty()) {
         const auto [firstMove, rest2] = split_at_first_space(moves);
 
-        const auto move = notation::from_uci(position, firstMove);
+        const auto parsed = notation::from_uci(position, firstMove);
 
-        if (not move.has_value())
-            return std::unexpected(move.error());
+        if (not parsed.has_value())
+            return std::unexpected(parsed.error());
 
-        position.make_move(move.value());
+        const auto move = parsed.value();
+
+        if (move.is_null())
+            return std::unexpected("Found null move in move list");
+
+        position.make_move(move);
 
         moves = trim(rest2);
     }
