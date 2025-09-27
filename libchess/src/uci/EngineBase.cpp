@@ -135,13 +135,14 @@ void EngineBase::handle_setpos(const string_view arguments)
     // we print an error message via `info string` and keep the old position.
     // See this Stockfish PR discussion: https://github.com/official-stockfish/Stockfish/pull/4563
 
+    using MaybeError = std::expected<void, std::string>;
+
     parse_position_options(arguments)
-        .and_then([this](const Position& pos) -> std::expected<void, std::string> {
+        .and_then([this](const Position& pos) -> MaybeError {
             if (const auto errorStr = pos.is_illegal()) {
                 [[unlikely]];
-                info_string(std::format("Attempted to set illegal position: {}", errorStr.value()));
-                info_string(std::format("Retained previous position: {}", notation::to_fen(position)));
-                return {};
+                return std::unexpected(
+                    std::format("Position is illegal: {}", errorStr.value()));
             }
 
             position = pos;
@@ -150,7 +151,7 @@ void EngineBase::handle_setpos(const string_view arguments)
 
             return {};
         })
-        .or_else([this](const std::string_view error) -> std::expected<void, std::string> {
+        .or_else([this](const std::string_view error) -> MaybeError {
             info_string(std::format("Error setting position: {}", error));
             info_string(std::format("Retained previous position: {}", notation::to_fen(position)));
 
