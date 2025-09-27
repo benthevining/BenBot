@@ -192,13 +192,13 @@ TEST_CASE("Square - is_light()/is_dark()", TAGS)
 }
 
 TEST_CASE("Square - to/from string", TAGS) {
-#define SQUARE_TO_FROM_STRING(str, strLower, file, rank)         \
-    SECTION(str)                                                 \
-    {                                                            \
-        static constexpr Square square { file, rank };           \
-        STATIC_REQUIRE(square == Square::from_string(str));      \
-        STATIC_REQUIRE(square == Square::from_string(strLower)); \
-        REQUIRE(std::format("{}", square) == strLower);          \
+#define SQUARE_TO_FROM_STRING(str, strLower, file, rank)  \
+    SECTION(str)                                          \
+    {                                                     \
+        static constexpr Square square { file, rank };    \
+        REQUIRE(square == Square::from_string(str));      \
+        REQUIRE(square == Square::from_string(strLower)); \
+        REQUIRE(std::format("{}", square) == strLower);   \
     }
 
     // clang-format off

@@ -88,7 +88,7 @@ struct Square final {
         @throws std::invalid_argument An exception will be thrown if a square cannot be
         parsed correctly from the input string.
      */
-    [[nodiscard, gnu::const]] static constexpr Square from_string(std::string_view text);
+    [[nodiscard, gnu::const]] static Square from_string(std::string_view text);
 
     /** Returns the bitboard bit index for this square.
         The returned index will be in the range ``[0,63]``.
@@ -232,16 +232,21 @@ constexpr bool Square::is_light() const noexcept
         std::to_underlying(rank) + std::to_underlying(file));
 }
 
-constexpr Square Square::from_string(const std::string_view text)
+inline Square Square::from_string(const std::string_view text)
 {
     if (text.length() != 2uz)
         throw std::invalid_argument {
             std::format("Cannot parse Square from invalid input string: {}", text)
         };
 
+    const auto rank = rank_from_char(text.back());
+
+    if (not rank.has_value())
+        throw std::invalid_argument { rank.error() };
+
     return {
         .file = file_from_char(text.front()),
-        .rank = rank_from_char(text.back())
+        .rank = rank.value()
     };
 }
 

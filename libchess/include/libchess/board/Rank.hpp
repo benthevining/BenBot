@@ -20,10 +20,12 @@
 #pragma once
 
 #include <cassert>
+#include <expected>
 #include <format>
 #include <libchess/board/BitboardIndex.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <stdexcept>
+#include <string>
 #include <string_view>
 #include <utility>
 
@@ -74,7 +76,7 @@ template <Color Side>
     @ingroup board
     @see Rank
  */
-[[nodiscard, gnu::const]] constexpr Rank rank_from_char(char character);
+[[nodiscard]] std::expected<Rank, std::string> rank_from_char(char character);
 
 /** Converts the rank to its single-character representation (as an integer).
 
@@ -160,7 +162,7 @@ constexpr Rank prev_pawn_rank(const Rank rank) noexcept
     }
 }
 
-constexpr Rank rank_from_char(const char character)
+inline std::expected<Rank, std::string> rank_from_char(const char character)
 {
     switch (character) {
         case '1': return Rank::One;
@@ -173,9 +175,10 @@ constexpr Rank rank_from_char(const char character)
         case '8': return Rank::Eight;
 
         default:
-            throw std::invalid_argument {
-                std::format("Cannot parse Rank from character: {}", character)
-            };
+            return std::unexpected(
+                std::format(
+                    "Cannot parse Rank from character: {}",
+                    character));
     }
 }
 
