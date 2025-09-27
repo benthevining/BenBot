@@ -125,27 +125,28 @@ auto to_alg(const Position& position, const Move& move) -> string
 
     const bool isCapture = position.is_capture(move);
 
-    if (const auto prom = move.promoted_type()) {
-        [[unlikely]];
+    return move.promoted_type()
+        .transform([move, checkStr, isCapture](const PieceType promotedType) {
+            if (isCapture)
+                return std::format("{}x{}={}{}", move.from().file, move.to(), promotedType, checkStr);
 
-        if (isCapture)
-            return std::format("{}x{}={}{}", move.from().file, move.to(), prom.value(), checkStr);
+            return std::format("{}={}{}", move.to(), promotedType, checkStr);
+        })
+        .or_else([move, checkStr, isCapture, &position]() -> std::optional<string> {
+            if (move.piece() == PieceType::Pawn) {
+                if (isCapture)
+                    return std::format("{}x{}{}", move.from().file, move.to(), checkStr);
 
-        return std::format("{}={}{}", move.to(), prom.value(), checkStr);
-    }
+                return std::format("{}{}", move.to(), checkStr);
+            }
 
-    if (move.piece() == PieceType::Pawn) {
-        if (isCapture)
-            return std::format("{}x{}{}", move.from().file, move.to(), checkStr);
+            const auto* captureStr = isCapture ? "x" : "";
 
-        return std::format("{}{}", move.to(), checkStr);
-    }
-
-    const auto* captureStr = isCapture ? "x" : "";
-
-    // with every field: Ngxf4+
-    return std::format("{}{}{}{}{}",
-        move.piece(), get_disambig_string(position, move), captureStr, move.to(), checkStr);
+            // with every field: Ngxf4+
+            return std::format("{}{}{}{}{}",
+                move.piece(), get_disambig_string(position, move), captureStr, move.to(), checkStr);
+        })
+        .value();
 }
 
 namespace {

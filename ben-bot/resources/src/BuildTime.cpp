@@ -121,7 +121,7 @@ auto get_build_time() -> std::string
 
     stream << std::put_time(&utcTime, "%c %Z");
 
-    return stream.str();
+    return std::move(stream).str();
 }
 
 } // namespace ben_bot::resources
