@@ -36,7 +36,7 @@ using Result = search::Result;
 using std::println;
 using uci::printing::info_string;
 
-std::string Engine::get_name() const
+auto Engine::get_name() const -> std::string
 {
     return std::format("BenBot {}", resources::get_version_string());
 }
