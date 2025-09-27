@@ -294,11 +294,9 @@ namespace {
 
         return util::find_matching_close_paren(pgnText)
             .and_then([pgnText, &position, &output](const size_t closeParenIdx) {
-                auto& variation = output.back().variations.emplace_back();
-
                 return parse_moves_internal<true>(
-                    pgnText.substr(1uz, closeParenIdx - 1uz),
-                    position, variation)
+                    pgnText.substr(1uz, closeParenIdx - 1uz), position,
+                    output.back().variations.emplace_back())
                     .and_then([pgnText, closeParenIdx]([[maybe_unused]] const string_view alwaysEmpty) -> ResultStrOrErrorStr {
                         return pgnText.substr(closeParenIdx + 1uz);
                     })
@@ -354,6 +352,10 @@ namespace {
             }
         }
 
+        // remove final newline
+        if (not result.empty())
+            result.pop_back();
+
         return result;
     }
 
@@ -363,10 +365,11 @@ using GameOrError = std::expected<GameRecord, string_view>;
 
 auto from_pgn(const string_view pgnText) -> GameOrError
 {
+    const auto escaped = remove_escaped_lines(pgnText);
+
     GameRecord game;
 
-    return parse_metadata_tags(
-        remove_escaped_lines(pgnText), game.metadata)
+    return parse_metadata_tags(escaped, game.metadata)
         .and_then([&game](const string_view afterMeta) -> GameOrError {
             if (const auto posStr = game.metadata.find("FEN");
                 posStr != game.metadata.end()) {
@@ -375,7 +378,8 @@ auto from_pgn(const string_view pgnText) -> GameOrError
 
             return parse_move_list(afterMeta, game.startingPosition, game.moves)
                 .and_then([&game](const string_view resultText) -> GameOrError {
-                    game.result = parse_game_result(resultText, game);
+                    if (not resultText.empty())
+                        game.result = parse_game_result(resultText, game);
 
                     return game;
                 });

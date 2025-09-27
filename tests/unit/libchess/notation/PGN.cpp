@@ -30,6 +30,49 @@ using chess::notation::from_pgn;
 using chess::notation::parse_all_pgns;
 using chess::notation::to_pgn;
 
+TEST_CASE("PGN - tolerate spaces between move number and move", TAGS)
+{
+    static constexpr std::string_view pgn {
+        R"([Event "F/S Return Match"]
+[Site "Belgrade, Serbia JUG"]
+[Date "1992.11.04"]
+[Round "29"]
+[White "Fischer, Robert J."]
+[Black "Spassky, Boris V."]
+[Result "1/2-1/2"]
+
+1. e4 e5 2. Nf3 Nc6 3. Bb5 {This opening is called the Ruy Lopez.} 3. ... a6 4. Ba4 Nf6 5. O-O Be7 6. Re1 b5 7. Bb3 d6 8. c3 O-O 9. h3 Nb8 10. d4 Nbd7)"
+    };
+
+    const auto game = from_pgn(pgn).value();
+
+    REQUIRE(game.moves.size() == 20uz);
+
+    REQUIRE(game.moves.at(4uz).comment == "This opening is called the Ruy Lopez.");
+}
+
+TEST_CASE("PGN - multiline movetext", TAGS)
+{
+    static constexpr std::string_view pgn {
+        R"([Event "F/S Return Match"]
+[Site "Belgrade, Serbia JUG"]
+[Date "1992.11.04"]
+[Round "29"]
+[White "Fischer, Robert J."]
+[Black "Spassky, Boris V."]
+[Result "1/2-1/2"]
+
+1. e4 e5 2. Nf3 Nc6 3. Bb5 {This opening is called the Ruy Lopez.}
+3. ... a6 4. Ba4 Nf6
+5. O-O Be7 6.
+Re1 b5 7. Bb3 d6 8. c3 O-O 9. h3 Nb8 10. d4 Nbd7)"
+    };
+
+    const auto game = from_pgn(pgn).value();
+
+    REQUIRE(game.moves.size() == 20uz);
+}
+
 TEST_CASE("PGN - block comments", TAGS)
 {
     static constexpr std::string_view pgn {
@@ -62,27 +105,6 @@ TEST_CASE("PGN - block comments", TAGS)
     REQUIRE(game.moves.at(4uz).comment == "This opening is called the Ruy Lopez.");
 
     REQUIRE(to_pgn(game) == pgn);
-}
-
-TEST_CASE("PGN - tolerate spaces between move number and move", TAGS)
-{
-    static constexpr std::string_view pgn {
-        R"([Event "F/S Return Match"]
-[Site "Belgrade, Serbia JUG"]
-[Date "1992.11.04"]
-[Round "29"]
-[White "Fischer, Robert J."]
-[Black "Spassky, Boris V."]
-[Result "1/2-1/2"]
-
-1. e4 e5 2. Nf3 Nc6 3. Bb5 {This opening is called the Ruy Lopez.} 3. ... a6 4. Ba4 Nf6 5. O-O Be7 6. Re1 b5 7. Bb3 d6 8. c3 O-O 9. h3 Nb8 10. d4 Nbd7)"
-    };
-
-    const auto game = from_pgn(pgn).value();
-
-    REQUIRE(game.moves.size() == 20uz);
-
-    REQUIRE(game.moves.at(4uz).comment == "This opening is called the Ruy Lopez.");
 }
 
 TEST_CASE("PGN - multiline block comments", TAGS)
@@ -392,7 +414,7 @@ TEST_CASE("PGN - % line escape", TAGS)
     SECTION("Within movetext")
     {
         static constexpr std::string_view pgn {
-        R"([Event "Buenos Aires Sicilian"]
+            R"([Event "Buenos Aires Sicilian"]
 [Site "Buenos Aires ARG"]
 [Date "1994.10.??"]
 [Round "8"]
@@ -404,7 +426,8 @@ TEST_CASE("PGN - % line escape", TAGS)
 % This is a comment within the movetext
 7.Be3 Nge7 $5 $146 {An unstandard move for the Sicilian. This prepares the knight to move up the board to f5 later in the game.} 8.Nb3 b5 9.f4 Bb7 10.Qf3 $4 g5 $3 {Polgar sees that Shirov has lined up his queen on the a8-h1 diagonal, with a discovered pin of Shirov's e4 pawn by the bishop once the knight on c6 moves, so she decides to pounce right away. Polgar wants to force the f4 pawn to move so she can play Ne5.}
 % This is another line comment placed within the movetext, which is followed by a blank line
-11.fxg5 (11.f5 Ne5 {If Shirov had advanced his f pawn instead of taking on g5, Polgar could have played Ne5 anyway.}) (11.O-O-O {Shirov probably should have simply ignored the pawn motion on the queenside and castled his king to safety, forcing Polgar to take on f4 if she wants to play Ne5. Shirov can prevent this move by recapturing e5 with his queen.} 11...gxf4 12.Qxf4) 11...Ne5 12.Qg2 $2 {Shirov spends a tempo moving his queen, but still keeps it on the dangerous a8-h1 diagonal, keeping his a4 pawn pinned.} (12.Qe2 b4 13.Na4 Bxe4) 12...b4 {Kicking away the knight that is defending the pinned e4 pawn.} 13.Ne2 h5 $3 {Polgar wants to play Nf5, so she wants to force the g4 pawn to move.} )"};
+11.fxg5 (11.f5 Ne5 {If Shirov had advanced his f pawn instead of taking on g5, Polgar could have played Ne5 anyway.}) (11.O-O-O {Shirov probably should have simply ignored the pawn motion on the queenside and castled his king to safety, forcing Polgar to take on f4 if she wants to play Ne5. Shirov can prevent this move by recapturing e5 with his queen.} 11...gxf4 12.Qxf4) 11...Ne5 12.Qg2 $2 {Shirov spends a tempo moving his queen, but still keeps it on the dangerous a8-h1 diagonal, keeping his a4 pawn pinned.} (12.Qe2 b4 13.Na4 Bxe4) 12...b4 {Kicking away the knight that is defending the pinned e4 pawn.} 13.Ne2 h5 $3 {Polgar wants to play Nf5, so she wants to force the g4 pawn to move.} )"
+        };
 
         const auto game = from_pgn(pgn).value();
 
