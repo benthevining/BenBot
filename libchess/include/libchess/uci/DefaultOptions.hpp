@@ -38,7 +38,7 @@ namespace chess::uci::default_options {
     book for the engine. If this is set to false by the GUI, the engine should
     not access its own book.
  */
-[[nodiscard]] inline BoolOption own_book()
+[[nodiscard]] inline auto own_book() -> BoolOption
 {
     return {
         "OwnBook",
@@ -54,7 +54,7 @@ namespace chess::uci::default_options {
     needed because the engine might change its time management algorithm when
     pondering is allowed.
  */
-[[nodiscard]] inline BoolOption ponder()
+[[nodiscard]] inline auto ponder() -> BoolOption
 {
     return {
         "Ponder",
@@ -66,7 +66,7 @@ namespace chess::uci::default_options {
 /** Creates the UCI "Hash" option.
     This option controls the maximum size of the engine's transposition table, in megabytes.
  */
-[[nodiscard]] inline IntOption hash_size()
+[[nodiscard]] inline auto hash_size() -> IntOption
 {
     return {
         "Hash",
@@ -79,7 +79,7 @@ namespace chess::uci::default_options {
     If this option is supported, this means that the engine can show the current
     line it is calculating (i.e. by printing "info currline" output).
  */
-[[nodiscard]] inline BoolOption show_curr_line()
+[[nodiscard]] inline auto show_curr_line() -> BoolOption
 {
     return {
         "UCI_ShowCurrLine",
@@ -92,7 +92,7 @@ namespace chess::uci::default_options {
     If this option is supported, this means that the engine can show a move and
     its refutation in a line (i.e. by printing "info refutations" output).
  */
-[[nodiscard]] inline BoolOption show_refutations()
+[[nodiscard]] inline auto show_refutations() -> BoolOption
 {
     return {
         "UCI_ShowRefutations",
@@ -106,7 +106,7 @@ namespace chess::uci::default_options {
     when analyzing or playing a game. For example, when playing it can use some kind of
     learning. This is set to false if the engine is playing a game, otherwise it is true.
  */
-[[nodiscard]] inline BoolOption analyze_mode()
+[[nodiscard]] inline auto analyze_mode() -> BoolOption
 {
     return {
         "UCI_AnalyseMode",

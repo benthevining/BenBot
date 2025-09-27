@@ -79,7 +79,7 @@ void generate(
     @see generate_for()
  */
 template <bool CapturesOnly = false>
-[[nodiscard]] MoveList generate(const Position& position);
+[[nodiscard]] auto generate(const Position& position) -> MoveList;
 
 /** Generates a list of all legal moves for only the given piece type in the given position.
 
@@ -101,11 +101,11 @@ void generate_for(
     @see generate()
  */
 template <bool CapturesOnly = false>
-[[nodiscard]] MoveList generate_for(
-    const Position& position, PieceType piece);
+[[nodiscard]] auto generate_for(
+    const Position& position, PieceType piece) -> MoveList;
 
 /** Returns true if the side to move has any legal moves in the given position. */
-[[nodiscard]] bool any_legal_moves(const Position& position);
+[[nodiscard]] auto any_legal_moves(const Position& position) -> bool;
 
 /// @}
 
@@ -495,7 +495,7 @@ namespace detail {
     // must not be attacked/occupied in order for castling to be allowed
 
     template <Color Side>
-    [[nodiscard, gnu::const]] consteval Bitboard kingside_castle_mask() noexcept
+    [[nodiscard, gnu::const]] consteval auto kingside_castle_mask() noexcept -> Bitboard
     {
         static constexpr auto rank = Side == Color::White ? Rank::One : Rank::Eight; // cppcheck-suppress knownConditionTrueFalse
 
@@ -510,7 +510,7 @@ namespace detail {
     // NB. with queenside castling, the set of squares that must be free/not attacked differ,
     // since castling is possible if the B1/B8 squares are attacked, but not if they are occupied
     template <Color Side, bool Occupied>
-    [[nodiscard, gnu::const]] consteval Bitboard queenside_castle_mask() noexcept
+    [[nodiscard, gnu::const]] consteval auto queenside_castle_mask() noexcept -> Bitboard
     {
         static constexpr auto rank = Side == Color::White ? Rank::One : Rank::Eight; // cppcheck-suppress knownConditionTrueFalse
 
@@ -682,7 +682,7 @@ namespace detail {
     }
 
     template <Color Side>
-    [[nodiscard]] bool any_legal_moves_internal(const Position& position)
+    [[nodiscard]] auto any_legal_moves_internal(const Position& position) -> bool
     {
         MoveList moves;
 
@@ -715,7 +715,7 @@ void generate(
 }
 
 template <bool CapturesOnly>
-MoveList generate(const Position& position)
+auto generate(const Position& position) -> MoveList
 {
     MoveList moves;
 
@@ -736,8 +736,9 @@ void generate_for(
 }
 
 template <bool CapturesOnly>
-MoveList generate_for(
+auto generate_for(
     const Position& position, const PieceType piece)
+    -> MoveList
 {
     MoveList moves;
 
@@ -746,7 +747,7 @@ MoveList generate_for(
     return moves;
 }
 
-inline bool any_legal_moves(const Position& position)
+inline auto any_legal_moves(const Position& position) -> bool
 {
     if (position.is_white_to_move())
         return detail::any_legal_moves_internal<Color::White>(position);

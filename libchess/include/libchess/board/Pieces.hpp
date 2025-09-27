@@ -85,33 +85,34 @@ struct Pieces final {
     };
 
     /** Returns true if the two piece sets are identical. */
-    [[nodiscard]] constexpr bool operator==(const Pieces&) const noexcept = default;
+    [[nodiscard]] constexpr auto operator==(const Pieces&) const noexcept -> bool = default;
 
     /** Returns the bitboard corresponding to the given piece type. */
-    [[nodiscard]] constexpr Bitboard& get_type(PieceType type) noexcept;
+    [[nodiscard]] constexpr auto get_type(PieceType type) noexcept -> Bitboard&;
 
     /** Returns the bitboard corresponding to the given piece type. */
-    [[nodiscard]] constexpr Bitboard get_type(PieceType type) const noexcept;
+    [[nodiscard]] constexpr auto get_type(PieceType type) const noexcept -> Bitboard;
 
     /** Returns a bitboard that is the inverse of the bitboard returned by ``occupied()``.
         The returned bitboard has a bit set if no piece of any type is on that square.
      */
-    [[nodiscard]] constexpr Bitboard free() const noexcept { return occupied.inverse(); }
+    [[nodiscard]] constexpr auto free() const noexcept -> Bitboard { return occupied.inverse(); }
 
     /** Returns true if there are no pawns of this color anywhere on the given file. */
-    [[nodiscard]] constexpr bool is_file_half_open(File file) const noexcept;
+    [[nodiscard]] constexpr auto is_file_half_open(File file) const noexcept -> bool;
 
     /** Returns true if this side has at least one bishop on each color complex. */
-    [[nodiscard]] constexpr bool has_bishop_pair() const noexcept;
+    [[nodiscard]] constexpr auto has_bishop_pair() const noexcept -> bool;
 
     /** Returns the location of the king. */
-    [[nodiscard]] constexpr Square get_king_location() const noexcept;
+    [[nodiscard]] constexpr auto get_king_location() const noexcept -> Square;
 
     /** Returns the type of the piece on the given square, or ``nullopt`` if the
         square is empty. Note that libchess's bitboard board representation is
         not optimized for this operation.
      */
-    [[nodiscard]] constexpr std::optional<PieceType> get_piece_on(Square square) const noexcept;
+    [[nodiscard]] constexpr auto get_piece_on(Square square) const noexcept
+        -> std::optional<PieceType>;
 
     /** Removes the piece on the given square, if any.
         This method asserts if the ``square`` is the location of the king.
@@ -174,7 +175,7 @@ constexpr void Pieces::vertical_flip() noexcept
     refresh_occupied();
 }
 
-constexpr Bitboard& Pieces::get_type(const PieceType type) noexcept
+constexpr auto Pieces::get_type(const PieceType type) noexcept -> Bitboard&
 {
     switch (type) {
         case PieceType::Knight: return knights;
@@ -187,7 +188,7 @@ constexpr Bitboard& Pieces::get_type(const PieceType type) noexcept
     }
 }
 
-constexpr Bitboard Pieces::get_type(const PieceType type) const noexcept
+constexpr auto Pieces::get_type(const PieceType type) const noexcept -> Bitboard
 {
     switch (type) {
         case PieceType::Knight: return knights;
@@ -200,12 +201,12 @@ constexpr Bitboard Pieces::get_type(const PieceType type) const noexcept
     }
 }
 
-constexpr bool Pieces::is_file_half_open(const File file) const noexcept
+constexpr auto Pieces::is_file_half_open(const File file) const noexcept -> bool
 {
     return (pawns & masks::files::get(file)).none();
 }
 
-constexpr bool Pieces::has_bishop_pair() const noexcept
+constexpr auto Pieces::has_bishop_pair() const noexcept -> bool
 {
     // NB. can't just check that bishops.count() == 2 because
     // it's possible that we have 2 bishops of the same color
@@ -214,14 +215,15 @@ constexpr bool Pieces::has_bishop_pair() const noexcept
        and (bishops & masks::DARK_SQUARES).any();
 }
 
-constexpr Square Pieces::get_king_location() const noexcept
+constexpr auto Pieces::get_king_location() const noexcept -> Square
 {
     assert(king.count() == 1uz);
 
     return Square::from_index(king.first());
 }
 
-constexpr std::optional<PieceType> Pieces::get_piece_on(const Square square) const noexcept
+constexpr auto Pieces::get_piece_on(const Square square) const noexcept
+    -> std::optional<PieceType>
 {
     if (not occupied.test(square))
         return std::nullopt;

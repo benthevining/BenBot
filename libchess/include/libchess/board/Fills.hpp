@@ -34,60 +34,60 @@ using pieces::Color;
 /// @{
 
 /** Performs a north fill of the starting bitboard. */
-[[nodiscard, gnu::const]] constexpr Bitboard north(Bitboard starting) noexcept;
+[[nodiscard, gnu::const]] constexpr auto north(Bitboard starting) noexcept -> Bitboard;
 
 /** Performs a south fill of the starting bitboard. */
-[[nodiscard, gnu::const]] constexpr Bitboard south(Bitboard starting) noexcept;
+[[nodiscard, gnu::const]] constexpr auto south(Bitboard starting) noexcept -> Bitboard;
 
 /** Performs an east fill of the starting bitboard. */
-[[nodiscard, gnu::const]] constexpr Bitboard east(Bitboard starting) noexcept;
+[[nodiscard, gnu::const]] constexpr auto east(Bitboard starting) noexcept -> Bitboard;
 
 /** Performs a west fill of the starting bitboard. */
-[[nodiscard, gnu::const]] constexpr Bitboard west(Bitboard starting) noexcept;
+[[nodiscard, gnu::const]] constexpr auto west(Bitboard starting) noexcept -> Bitboard;
 
 /** Performs a northeast fill of the starting bitboard. */
-[[nodiscard, gnu::const]] constexpr Bitboard northeast(Bitboard starting) noexcept;
+[[nodiscard, gnu::const]] constexpr auto northeast(Bitboard starting) noexcept -> Bitboard;
 
 /** Performs a southeast fill of the starting bitboard. */
-[[nodiscard, gnu::const]] constexpr Bitboard southeast(Bitboard starting) noexcept;
+[[nodiscard, gnu::const]] constexpr auto southeast(Bitboard starting) noexcept -> Bitboard;
 
 /** Performs a northwest fill of the starting bitboard. */
-[[nodiscard, gnu::const]] constexpr Bitboard northwest(Bitboard starting) noexcept;
+[[nodiscard, gnu::const]] constexpr auto northwest(Bitboard starting) noexcept -> Bitboard;
 
 /** Performs a southwest fill of the starting bitboard. */
-[[nodiscard, gnu::const]] constexpr Bitboard southwest(Bitboard starting) noexcept;
+[[nodiscard, gnu::const]] constexpr auto southwest(Bitboard starting) noexcept -> Bitboard;
 
 /** Performs a file fill of the starting bitboard.
     For any file in the starting bitboard with at least 1 bit set, the returned
     bitboard will have all bits on that file set to 1.
  */
-[[nodiscard, gnu::const]] constexpr Bitboard file(Bitboard starting) noexcept;
+[[nodiscard, gnu::const]] constexpr auto file(Bitboard starting) noexcept -> Bitboard;
 
 /** Performs a rank fill of the starting bitboard.
     For any rank in the starting bitboard with at least 1 bit set, the returned
     bitboard will have all bits on that rank set to 1.
  */
-[[nodiscard, gnu::const]] constexpr Bitboard rank(Bitboard starting) noexcept;
+[[nodiscard, gnu::const]] constexpr auto rank(Bitboard starting) noexcept -> Bitboard;
 
 /** Performs a diagonal fill of the starting bitboard.
     For any diagonal in the starting bitboard with at least 1 bit set, the returned
     bitboard will have all bits on that diagonal set to 1.
  */
-[[nodiscard, gnu::const]] constexpr Bitboard diagonal(Bitboard starting) noexcept;
+[[nodiscard, gnu::const]] constexpr auto diagonal(Bitboard starting) noexcept -> Bitboard;
 
 /** Performs an antidiagonal fill of the starting bitboard.
     For any antidiagonal in the starting bitboard with at least 1 bit set, the returned
     bitboard will have all bits on that antidiagonal set to 1.
  */
-[[nodiscard, gnu::const]] constexpr Bitboard antidiagonal(Bitboard starting) noexcept;
+[[nodiscard, gnu::const]] constexpr auto antidiagonal(Bitboard starting) noexcept -> Bitboard;
 
 /** Performs a pawn front-fill from the given starting position. */
 template <Color Side>
-[[nodiscard, gnu::const]] constexpr Bitboard pawn_front(Bitboard starting) noexcept;
+[[nodiscard, gnu::const]] constexpr auto pawn_front(Bitboard starting) noexcept -> Bitboard;
 
 /** Performs a pawn rear-fill from the given starting position. */
 template <Color Side>
-[[nodiscard, gnu::const]] constexpr Bitboard pawn_rear(Bitboard starting) noexcept;
+[[nodiscard, gnu::const]] constexpr auto pawn_rear(Bitboard starting) noexcept -> Bitboard;
 
 /// @}
 
@@ -108,7 +108,7 @@ template <Color Side>
 
  */
 
-constexpr Bitboard north(Bitboard starting) noexcept
+constexpr auto north(Bitboard starting) noexcept -> Bitboard
 {
     starting |= (starting << 8uz);
     starting |= (starting << 16uz);
@@ -117,7 +117,7 @@ constexpr Bitboard north(Bitboard starting) noexcept
     return starting;
 }
 
-constexpr Bitboard south(Bitboard starting) noexcept
+constexpr auto south(Bitboard starting) noexcept -> Bitboard
 {
     starting |= (starting >> 8uz);
     starting |= (starting >> 16uz);
@@ -126,7 +126,7 @@ constexpr Bitboard south(Bitboard starting) noexcept
     return starting;
 }
 
-constexpr Bitboard east(Bitboard starting) noexcept
+constexpr auto east(Bitboard starting) noexcept -> Bitboard
 {
     constexpr auto notAFile = masks::files::A.inverse();
 
@@ -140,7 +140,7 @@ constexpr Bitboard east(Bitboard starting) noexcept
     return starting;
 }
 
-constexpr Bitboard west(Bitboard starting) noexcept
+constexpr auto west(Bitboard starting) noexcept -> Bitboard
 {
     constexpr auto notHFile = masks::files::H.inverse();
 
@@ -154,7 +154,7 @@ constexpr Bitboard west(Bitboard starting) noexcept
     return starting;
 }
 
-constexpr Bitboard northeast(Bitboard starting) noexcept
+constexpr auto northeast(Bitboard starting) noexcept -> Bitboard
 {
     constexpr auto notAFile = masks::files::A.inverse();
 
@@ -168,7 +168,7 @@ constexpr Bitboard northeast(Bitboard starting) noexcept
     return starting;
 }
 
-constexpr Bitboard southeast(Bitboard starting) noexcept
+constexpr auto southeast(Bitboard starting) noexcept -> Bitboard
 {
     constexpr auto notAFile = masks::files::A.inverse();
 
@@ -182,7 +182,7 @@ constexpr Bitboard southeast(Bitboard starting) noexcept
     return starting;
 }
 
-constexpr Bitboard northwest(Bitboard starting) noexcept
+constexpr auto northwest(Bitboard starting) noexcept -> Bitboard
 {
     constexpr auto notHFile = masks::files::H.inverse();
 
@@ -196,7 +196,7 @@ constexpr Bitboard northwest(Bitboard starting) noexcept
     return starting;
 }
 
-constexpr Bitboard southwest(Bitboard starting) noexcept
+constexpr auto southwest(Bitboard starting) noexcept -> Bitboard
 {
     constexpr auto notHFile = masks::files::H.inverse();
 
@@ -210,28 +210,28 @@ constexpr Bitboard southwest(Bitboard starting) noexcept
     return starting;
 }
 
-constexpr Bitboard file(const Bitboard starting) noexcept
+constexpr auto file(const Bitboard starting) noexcept -> Bitboard
 {
     return north(starting) | south(starting);
 }
 
-constexpr Bitboard rank(const Bitboard starting) noexcept
+constexpr auto rank(const Bitboard starting) noexcept -> Bitboard
 {
     return east(starting) | west(starting);
 }
 
-constexpr Bitboard diagonal(const Bitboard starting) noexcept
+constexpr auto diagonal(const Bitboard starting) noexcept -> Bitboard
 {
     return northeast(starting) | southwest(starting);
 }
 
-constexpr Bitboard antidiagonal(const Bitboard starting) noexcept
+constexpr auto antidiagonal(const Bitboard starting) noexcept -> Bitboard
 {
     return northwest(starting) | southeast(starting);
 }
 
 template <Color Side>
-constexpr Bitboard pawn_front(const Bitboard starting) noexcept
+constexpr auto pawn_front(const Bitboard starting) noexcept -> Bitboard
 {
     if constexpr (Side == Color::White)
         return north(starting);
@@ -240,7 +240,7 @@ constexpr Bitboard pawn_front(const Bitboard starting) noexcept
 }
 
 template <Color Side>
-constexpr Bitboard pawn_rear(const Bitboard starting) noexcept
+constexpr auto pawn_rear(const Bitboard starting) noexcept -> Bitboard
 {
     if constexpr (Side == Color::White)
         return south(starting);

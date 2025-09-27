@@ -52,9 +52,10 @@ using game::Position;
     @ingroup notation
     @see from_fen()
  */
-[[nodiscard]] std::string to_fen(
+[[nodiscard]] auto to_fen(
     const Position& position,
-    bool            alwaysWriteEPSqare = true);
+    bool            alwaysWriteEPSqare = true)
+    -> std::string;
 
 /** Returns a Position object encoding the given FEN string.
 
@@ -63,6 +64,7 @@ using game::Position;
     @ingroup notation
     @see to_fen()
  */
-[[nodiscard]] std::expected<Position, std::string> from_fen(std::string_view fenString);
+[[nodiscard]] auto from_fen(std::string_view fenString)
+    -> std::expected<Position, std::string>;
 
 } // namespace chess::notation

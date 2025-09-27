@@ -137,7 +137,7 @@ struct Position final {
     Hash hash { 0uz };
 
     /** Returns true if the two positions have the same Zobrist hash. */
-    [[nodiscard]] bool operator==(const Position& other) const noexcept
+    [[nodiscard]] auto operator==(const Position& other) const noexcept -> bool
     {
         return hash == other.hash;
     }
@@ -147,7 +147,7 @@ struct Position final {
 
     /** Returns the piece set representing the given color. */
     template <Color Side>
-    [[nodiscard]] Pieces& pieces_for() noexcept
+    [[nodiscard]] auto pieces_for() noexcept -> Pieces&
     {
         if constexpr (Side == Color::White)
             return whitePieces;
@@ -157,7 +157,7 @@ struct Position final {
 
     /** Returns the piece set representing the given color. */
     template <Color Side>
-    [[nodiscard]] const Pieces& pieces_for() const noexcept
+    [[nodiscard]] auto pieces_for() const noexcept -> const Pieces&
     {
         if constexpr (Side == Color::White)
             return whitePieces;
@@ -166,7 +166,7 @@ struct Position final {
     }
 
     /** Returns the pieces belonging to the side to move. */
-    [[nodiscard]] Pieces& our_pieces() noexcept
+    [[nodiscard]] auto our_pieces() noexcept -> Pieces&
     {
         if (is_white_to_move())
             return whitePieces;
@@ -175,7 +175,7 @@ struct Position final {
     }
 
     /** Returns the pieces belonging to the side to move. */
-    [[nodiscard]] const Pieces& our_pieces() const noexcept
+    [[nodiscard]] auto our_pieces() const noexcept -> const Pieces&
     {
         if (is_white_to_move())
             return whitePieces;
@@ -184,7 +184,7 @@ struct Position final {
     }
 
     /** Returns the pieces belonging to the side-to-move's opponent. */
-    [[nodiscard]] Pieces& their_pieces() noexcept
+    [[nodiscard]] auto their_pieces() noexcept -> Pieces&
     {
         if (is_white_to_move())
             return blackPieces;
@@ -193,7 +193,7 @@ struct Position final {
     }
 
     /** Returns the pieces belonging to the side-to-move's opponent. */
-    [[nodiscard]] const Pieces& their_pieces() const noexcept
+    [[nodiscard]] auto their_pieces() const noexcept -> const Pieces&
     {
         if (is_white_to_move())
             return blackPieces;
@@ -204,13 +204,13 @@ struct Position final {
     /// @}
 
     /** Returns true if the side to move is White. */
-    [[nodiscard]] bool is_white_to_move() const noexcept
+    [[nodiscard]] auto is_white_to_move() const noexcept -> bool
     {
         return sideToMove == Color::White;
     }
 
     /** Returns true if the side to move is Black. */
-    [[nodiscard]] bool is_black_to_move() const noexcept
+    [[nodiscard]] auto is_black_to_move() const noexcept -> bool
     {
         return sideToMove == Color::Black;
     }
@@ -218,10 +218,10 @@ struct Position final {
     /** Returns a bitboard that is the union of all White and Black
         piece positions.
      */
-    [[nodiscard]] Bitboard occupied() const noexcept { return whitePieces.occupied | blackPieces.occupied; }
+    [[nodiscard]] auto occupied() const noexcept -> Bitboard { return whitePieces.occupied | blackPieces.occupied; }
 
     /** Returns a bitboard that is the inverse of the ``occupied()`` board. */
-    [[nodiscard]] Bitboard free() const noexcept { return occupied().inverse(); }
+    [[nodiscard]] auto free() const noexcept -> Bitboard { return occupied().inverse(); }
 
     /// @name File queries
     /// @{
@@ -229,7 +229,7 @@ struct Position final {
     /** Returns true if there are no pawns of either color on the given file.
         @see get_open_files()
      */
-    [[nodiscard]] bool is_file_open(File file) const noexcept;
+    [[nodiscard]] auto is_file_open(File file) const noexcept -> bool;
 
     /** Returns an iterable range of File enumeration values corresponding
         to all open files in this position.
@@ -241,7 +241,7 @@ struct Position final {
     /** Returns true if only one side has a pawn on the given file.
         @see get_half_open_files
      */
-    [[nodiscard]] bool is_file_half_open(File file) const noexcept;
+    [[nodiscard]] auto is_file_half_open(File file) const noexcept -> bool;
 
     /** Returns an iterable range of File enumeration values corresponding
         to all half-open files in this position.
@@ -253,43 +253,43 @@ struct Position final {
     /// @}
 
     /** Returns true if the king of the side to move is in check. */
-    [[nodiscard]] bool is_check() const noexcept { return is_side_in_check(sideToMove); }
+    [[nodiscard]] auto is_check() const noexcept -> bool { return is_side_in_check(sideToMove); }
 
     /** Returns a bitboard containing the locations of passed pawns for the given side. */
     template <Color Side>
-    [[nodiscard]] Bitboard get_passed_pawns() const noexcept;
+    [[nodiscard]] auto get_passed_pawns() const noexcept -> Bitboard;
 
     /** Returns a bitboard containing the locations of backward pawns for the given side. */
     template <Color Side>
-    [[nodiscard]] Bitboard get_backward_pawns() const noexcept;
+    [[nodiscard]] auto get_backward_pawns() const noexcept -> Bitboard;
 
     /// @name Game result queries
     /// @{
 
     /** Returns true if the king is attacked and the side to move has no legal moves. */
-    [[nodiscard]] bool is_checkmate() const;
+    [[nodiscard]] auto is_checkmate() const -> bool;
 
     /** Returns true if the side to move has no legal moves, but their king is not attacked. */
-    [[nodiscard]] bool is_stalemate() const;
+    [[nodiscard]] auto is_stalemate() const -> bool;
 
     /** Returns true if this position is a fifty-move draw, based on the ``halfmoveClock``.
         Note that in order for the game to be drawn, the side to move must have at least 1 legal move.
      */
-    [[nodiscard]] bool is_fifty_move_draw() const;
+    [[nodiscard]] auto is_fifty_move_draw() const -> bool;
 
     /** Returns true if this position is a draw by threefold repetition. */
-    [[nodiscard]] bool is_threefold_repetition() const noexcept;
+    [[nodiscard]] auto is_threefold_repetition() const noexcept -> bool;
 
     /** Returns true if this position is either lone kings or lone king vs. king and bishop or knight. */
-    [[nodiscard]] bool is_draw_by_insufficient_material() const noexcept;
+    [[nodiscard]] auto is_draw_by_insufficient_material() const noexcept -> bool;
 
     /** Returns true if the game has concluded in a draw. */
-    [[nodiscard]] bool is_draw() const;
+    [[nodiscard]] auto is_draw() const -> bool;
 
     /** If this position is a conclusive draw or checkmate, returns the appropriate Result enumeration.
         Returns ``nullopt`` if this position is not a conclusive one.
      */
-    [[nodiscard]] std::optional<Result> get_result() const;
+    [[nodiscard]] auto get_result() const -> std::optional<Result>;
 
     /// @}
 
@@ -298,13 +298,13 @@ struct Position final {
         given type exists on the starting square; this function only verifies that making
         the move does not leave the side's king in check.
      */
-    [[nodiscard]] bool is_legal(const Move& move) const;
+    [[nodiscard]] auto is_legal(const Move& move) const -> bool;
 
     /** Returns true if the given move is an en passant capture in the current position. */
-    [[nodiscard]] bool is_en_passant(const Move& move) const noexcept;
+    [[nodiscard]] auto is_en_passant(const Move& move) const noexcept -> bool;
 
     /** Returns true if the given move is a capture, including en passant. */
-    [[nodiscard]] bool is_capture(const Move& move) const noexcept;
+    [[nodiscard]] auto is_capture(const Move& move) const noexcept -> bool;
 
     /** Makes a move to alter the position. */
     void make_move(const Move& move);
@@ -328,7 +328,7 @@ struct Position final {
         is not an exhaustive validation that a position can definitively be reached from
         the starting position.
      */
-    [[nodiscard]] std::optional<std::string> is_illegal() const;
+    [[nodiscard]] auto is_illegal() const -> std::optional<std::string>;
 
     /** Returns an empty position with none of the piece bitboards initialized.
         This is useful for tasks like parsing a FEN string, for example.
@@ -336,10 +336,10 @@ struct Position final {
         ``blackPieces.refresh_occupied()``, and ``refresh_zobrist()`` to update
         all relevant cached state.
      */
-    [[nodiscard]] static Position empty();
+    [[nodiscard]] static auto empty() -> Position;
 
 private:
-    [[nodiscard]] bool is_side_in_check(Color side) const noexcept;
+    [[nodiscard]] auto is_side_in_check(Color side) const noexcept -> bool;
 
     ThreefoldChecker threefoldChecker;
 };
@@ -352,7 +352,9 @@ private:
     @ingroup game
     @see after_null_move()
  */
-[[nodiscard, gnu::const]] Position after_move(const Position& starting, const Move& move);
+[[nodiscard, gnu::const]] auto after_move(
+    const Position& starting, const Move& move)
+    -> Position;
 
 /** Returns a copy of the starting position with the side to move flipped.
 
@@ -360,7 +362,7 @@ private:
     @ingroup game
     @see after_move(), flipped()
  */
-[[nodiscard, gnu::const]] Position after_null_move(const Position& starting);
+[[nodiscard, gnu::const]] auto after_null_move(const Position& starting) -> Position;
 
 /** Returns a copy of the starting position with colors flipped.
 
@@ -368,7 +370,7 @@ private:
     @ingroup game
     @see after_null_move()
  */
-[[nodiscard, gnu::const]] Position flipped(const Position& starting);
+[[nodiscard, gnu::const]] auto flipped(const Position& starting) -> Position;
 
 /** Creates a UTF8 representation of the given position.
     The returned string is meant to be interpreted visually by a human, probably for debugging purposes.
@@ -379,7 +381,7 @@ private:
     @ingroup game
     @see print_ascii()
  */
-[[nodiscard]] std::string print_utf8(const Position& position);
+[[nodiscard]] auto print_utf8(const Position& position) -> std::string;
 
 /** Creates an ASCII representation of the given position.
     The returned string is meant to be interpreted visually by a human, probably for debugging purposes.
@@ -390,7 +392,7 @@ private:
     @ingroup game
     @see print_utf8()
  */
-[[nodiscard]] std::string print_ascii(const Position& position);
+[[nodiscard]] auto print_ascii(const Position& position) -> std::string;
 
 /*
                          ___                           ,--,
@@ -409,7 +411,7 @@ private:
 
  */
 
-inline Position Position::empty()
+inline auto Position::empty() -> Position
 {
     Position pos {};
 
@@ -421,12 +423,12 @@ inline Position Position::empty()
     return pos;
 }
 
-inline bool Position::is_threefold_repetition() const noexcept
+inline auto Position::is_threefold_repetition() const noexcept -> bool
 {
     return threefoldChecker.is_threefold();
 }
 
-inline bool Position::is_side_in_check(const Color side) const noexcept
+inline auto Position::is_side_in_check(const Color side) const noexcept -> bool
 {
     if (side == Color::White) {
         return moves::squares_attacked<Color::Black>(
@@ -437,7 +439,7 @@ inline bool Position::is_side_in_check(const Color side) const noexcept
         whitePieces, blackPieces.king, blackPieces.occupied);
 }
 
-inline bool Position::is_legal(const Move& move) const
+inline auto Position::is_legal(const Move& move) const -> bool
 {
     auto copy { *this };
 
@@ -446,19 +448,19 @@ inline bool Position::is_legal(const Move& move) const
     return not copy.is_side_in_check(sideToMove);
 }
 
-inline bool Position::is_en_passant(const Move& move) const noexcept
+inline auto Position::is_en_passant(const Move& move) const noexcept -> bool
 {
     return move.piece() == PieceType::Pawn
        and enPassantTargetSquare.has_value()
        and move.to() == *enPassantTargetSquare;
 }
 
-inline bool Position::is_capture(const Move& move) const noexcept
+inline auto Position::is_capture(const Move& move) const noexcept -> bool
 {
     return is_en_passant(move) or their_pieces().occupied.test(move.to());
 }
 
-inline bool Position::is_file_open(const File file) const noexcept
+inline auto Position::is_file_open(const File file) const noexcept -> bool
 {
     return whitePieces.is_file_half_open(file) and blackPieces.is_file_half_open(file);
 }
@@ -469,7 +471,7 @@ inline auto Position::get_open_files() const noexcept
          | std::views::filter([this](const File file) { return is_file_open(file); });
 }
 
-inline bool Position::is_file_half_open(const File file) const noexcept
+inline auto Position::is_file_half_open(const File file) const noexcept -> bool
 {
     const bool whiteOpen = whitePieces.is_file_half_open(file);
     const bool blackOpen = blackPieces.is_file_half_open(file);
@@ -485,7 +487,7 @@ inline auto Position::get_half_open_files() const noexcept
 }
 
 template <Color Side>
-Bitboard Position::get_passed_pawns() const noexcept
+auto Position::get_passed_pawns() const noexcept -> Bitboard
 {
     static constexpr auto OtherSide = pieces::other_side<Side>();
 
@@ -499,7 +501,7 @@ Bitboard Position::get_passed_pawns() const noexcept
 }
 
 template <Color Side>
-Bitboard Position::get_backward_pawns() const noexcept
+auto Position::get_backward_pawns() const noexcept -> Bitboard
 {
     static constexpr auto OtherSide = pieces::other_side<Side>();
 
@@ -517,7 +519,9 @@ Bitboard Position::get_backward_pawns() const noexcept
     return backwardArea & friendlyPawns;
 }
 
-inline Position after_move(const Position& starting, const Move& move)
+inline auto after_move(
+    const Position& starting, const Move& move)
+    -> Position
 {
     auto copy { starting };
 
@@ -526,7 +530,7 @@ inline Position after_move(const Position& starting, const Move& move)
     return copy;
 }
 
-inline Position after_null_move(const Position& starting)
+inline auto after_null_move(const Position& starting) -> Position
 {
     auto copy { starting };
 
@@ -535,7 +539,7 @@ inline Position after_null_move(const Position& starting)
     return copy;
 }
 
-inline Position flipped(const Position& starting)
+inline auto flipped(const Position& starting) -> Position
 {
     auto copy { starting };
 

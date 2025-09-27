@@ -68,7 +68,7 @@ static constexpr Bitboard CENTER { 0X1818000000 };
 static constexpr Bitboard PERIMETER { 0XFF818181818181FF };
 
 /** Returns a bitboard with all squares on the same diagonal as the given square set to 1. */
-[[nodiscard, gnu::const]] constexpr Bitboard diagonal(const Square& square) noexcept
+[[nodiscard, gnu::const]] constexpr auto diagonal(const Square& square) noexcept -> Bitboard
 {
     const auto diag = static_cast<int>(square.file) - static_cast<int>(square.rank);
 
@@ -79,7 +79,7 @@ static constexpr Bitboard PERIMETER { 0XFF818181818181FF };
 }
 
 /** Returns a bitboard with all squares on the same antidiagonal as the given square set to 1. */
-[[nodiscard, gnu::const]] constexpr Bitboard antidiagonal(const Square& square) noexcept
+[[nodiscard, gnu::const]] constexpr auto antidiagonal(const Square& square) noexcept -> Bitboard
 {
     const auto diag = 7 - static_cast<int>(square.file) - static_cast<int>(square.rank);
 
@@ -95,8 +95,8 @@ static constexpr Bitboard PERIMETER { 0XFF818181818181FF };
 
     @see kingside_castle_rook_pos_mask()
  */
-[[nodiscard, gnu::const]] constexpr Bitboard queenside_castle_rook_pos_mask(
-    const Color side) noexcept
+[[nodiscard, gnu::const]] constexpr auto queenside_castle_rook_pos_mask(
+    const Color side) noexcept -> Bitboard
 {
     const auto rank = side == Color::White ? Rank::One : Rank::Eight;
 
@@ -114,8 +114,8 @@ static constexpr Bitboard PERIMETER { 0XFF818181818181FF };
 
     @see queenside_castle_rook_pos_mask()
  */
-[[nodiscard, gnu::const]] constexpr Bitboard kingside_castle_rook_pos_mask(
-    const Color side) noexcept
+[[nodiscard, gnu::const]] constexpr auto kingside_castle_rook_pos_mask(
+    const Color side) noexcept -> Bitboard
 {
     const auto rank = side == Color::White ? Rank::One : Rank::Eight;
 
@@ -162,7 +162,7 @@ namespace files {
     static constexpr Bitboard H { 0x8080808080808080 };
 
     /** Returns a bitboard with all squares on the requested file set to 1. */
-    [[nodiscard, gnu::const]] constexpr Bitboard get(const File file) noexcept
+    [[nodiscard, gnu::const]] constexpr auto get(const File file) noexcept -> Bitboard
     {
         return A << static_cast<size_t>(file);
     }
@@ -204,7 +204,7 @@ namespace ranks {
     static constexpr Bitboard EIGHT { 0xFF00000000000000 };
 
     /** Returns a bitboard with all squares on the requested rank set to 1. */
-    [[nodiscard, gnu::const]] constexpr Bitboard get(const Rank rank) noexcept
+    [[nodiscard, gnu::const]] constexpr auto get(const Rank rank) noexcept -> Bitboard
     {
         return ONE << (8uz * std::to_underlying(rank));
     }
@@ -290,7 +290,7 @@ namespace starting {
     /// @{
 
     /** Returns a bitboard mask for the starting position of the pawns for the given side. */
-    [[nodiscard, gnu::const]] constexpr Bitboard pawns(const Color color) noexcept
+    [[nodiscard, gnu::const]] constexpr auto pawns(const Color color) noexcept -> Bitboard
     {
         if (color == Color::White)
             return white::PAWNS;
@@ -299,7 +299,7 @@ namespace starting {
     }
 
     /** Returns a bitboard mask for the starting position of the rooks for the given side. */
-    [[nodiscard, gnu::const]] constexpr Bitboard rooks(const Color color) noexcept
+    [[nodiscard, gnu::const]] constexpr auto rooks(const Color color) noexcept -> Bitboard
     {
         if (color == Color::White)
             return white::ROOKS;
@@ -308,7 +308,7 @@ namespace starting {
     }
 
     /** Returns a bitboard mask for the starting position of the knights for the given side. */
-    [[nodiscard, gnu::const]] constexpr Bitboard knights(const Color color) noexcept
+    [[nodiscard, gnu::const]] constexpr auto knights(const Color color) noexcept -> Bitboard
     {
         if (color == Color::White)
             return white::KNIGHTS;
@@ -317,7 +317,7 @@ namespace starting {
     }
 
     /** Returns a bitboard mask for the starting position of the bishops for the given side. */
-    [[nodiscard, gnu::const]] constexpr Bitboard bishops(const Color color) noexcept
+    [[nodiscard, gnu::const]] constexpr auto bishops(const Color color) noexcept -> Bitboard
     {
         if (color == Color::White)
             return white::BISHOPS;
@@ -326,7 +326,7 @@ namespace starting {
     }
 
     /** Returns a bitboard mask for the starting position of the queen for the given side. */
-    [[nodiscard, gnu::const]] constexpr Bitboard queen(const Color color) noexcept
+    [[nodiscard, gnu::const]] constexpr auto queen(const Color color) noexcept -> Bitboard
     {
         if (color == Color::White)
             return white::QUEEN;
@@ -335,7 +335,7 @@ namespace starting {
     }
 
     /** Returns a bitboard mask for the starting position of the king for the given side. */
-    [[nodiscard, gnu::const]] constexpr Bitboard king(const Color color) noexcept
+    [[nodiscard, gnu::const]] constexpr auto king(const Color color) noexcept -> Bitboard
     {
         if (color == Color::White)
             return white::KING;

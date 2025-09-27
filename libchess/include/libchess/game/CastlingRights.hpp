@@ -45,7 +45,7 @@ struct CastlingRights final {
     bool queenside { true };
 
     /** Returns true if the two sets of castling rights are identical. */
-    [[nodiscard]] constexpr bool operator==(const CastlingRights&) const noexcept = default;
+    [[nodiscard]] constexpr auto operator==(const CastlingRights&) const noexcept -> bool = default;
 
     /** Called when the king moves.
         Moving the king loses castling rights for both directions.
@@ -71,10 +71,10 @@ struct CastlingRights final {
     constexpr void their_move(const Move& move) noexcept;
 
     /** Returns true if castling either direction is possible. */
-    [[nodiscard]] constexpr bool either() const noexcept { return kingside or queenside; }
+    [[nodiscard]] constexpr auto either() const noexcept -> bool { return kingside or queenside; }
 
     /** Returns true if neither castling direction is available. */
-    [[nodiscard]] constexpr bool neither() const noexcept { return not either(); }
+    [[nodiscard]] constexpr auto neither() const noexcept -> bool { return not either(); }
 };
 
 /*

@@ -30,12 +30,12 @@ namespace chess::board::flips {
 /** Returns a copy of the bitboard, mirrored vertically.
     @ingroup board
  */
-[[nodiscard, gnu::const]] constexpr Bitboard vertical(Bitboard board) noexcept;
+[[nodiscard, gnu::const]] constexpr auto vertical(Bitboard board) noexcept -> Bitboard;
 
 /** Returns a copy of the bitboard, mirrored horizontally.
     @ingroup board
  */
-[[nodiscard, gnu::const]] constexpr Bitboard horizontal(Bitboard board) noexcept;
+[[nodiscard, gnu::const]] constexpr auto horizontal(Bitboard board) noexcept -> Bitboard;
 
 /*
                          ___                           ,--,
@@ -54,14 +54,14 @@ namespace chess::board::flips {
 
  */
 
-constexpr Bitboard vertical(const Bitboard board) noexcept
+constexpr auto vertical(const Bitboard board) noexcept -> Bitboard
 {
     return Bitboard {
         std::byteswap(board.to_int())
     };
 }
 
-constexpr Bitboard horizontal(Bitboard board) noexcept
+constexpr auto horizontal(Bitboard board) noexcept -> Bitboard
 {
     static constexpr Bitboard k1 { 0x5555555555555555 };
     static constexpr Bitboard k2 { 0x3333333333333333 };

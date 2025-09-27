@@ -44,36 +44,36 @@ using pieces::Color;
 
 /** Calculates all possible pawn pushes for the given starting position and color. */
 template <Color Side>
-[[nodiscard, gnu::const]] constexpr Bitboard pawn_pushes(Bitboard starting) noexcept;
+[[nodiscard, gnu::const]] constexpr auto pawn_pushes(Bitboard starting) noexcept -> Bitboard;
 
 /** Calculates all possible pawn double pushes for the given starting position and color. */
 template <Color Side>
-[[nodiscard, gnu::const]] constexpr Bitboard pawn_double_pushes(Bitboard starting) noexcept;
+[[nodiscard, gnu::const]] constexpr auto pawn_double_pushes(Bitboard starting) noexcept -> Bitboard;
 
 /** Calculates all squares that are attacked by pawns from the given starting position and color.
     This can be used to calculate possible pawn captures.
  */
 template <Color Side>
-[[nodiscard, gnu::const]] constexpr Bitboard pawn_attacks(Bitboard starting) noexcept;
+[[nodiscard, gnu::const]] constexpr auto pawn_attacks(Bitboard starting) noexcept -> Bitboard;
 
 /** Calculates all possible knight moves from the given starting position. */
-[[nodiscard, gnu::const]] constexpr Bitboard knight(Bitboard starting) noexcept;
+[[nodiscard, gnu::const]] constexpr auto knight(Bitboard starting) noexcept -> Bitboard;
 
 /** Calculates all possible bishop moves from the given starting square. */
-[[nodiscard, gnu::const]] constexpr Bitboard bishop(Bitboard starting) noexcept;
+[[nodiscard, gnu::const]] constexpr auto bishop(Bitboard starting) noexcept -> Bitboard;
 
 /** Calculates all possible rook moves from the given starting square. */
-[[nodiscard, gnu::const]] constexpr Bitboard rook(Bitboard starting) noexcept;
+[[nodiscard, gnu::const]] constexpr auto rook(Bitboard starting) noexcept -> Bitboard;
 
 /** Calculates all possible queen moves from the given starting square. */
-[[nodiscard, gnu::const]] constexpr Bitboard queen(Bitboard starting) noexcept;
+[[nodiscard, gnu::const]] constexpr auto queen(Bitboard starting) noexcept -> Bitboard;
 
 /** Calculates all possible king moves from the given starting position.
     Typically the starting bitboard will have only a single bit set, but this method can
     technically calculate moves for both kings at once, if both of their positions are
     set in the bitboard sent to this function.
  */
-[[nodiscard, gnu::const]] constexpr Bitboard king(Bitboard starting) noexcept;
+[[nodiscard, gnu::const]] constexpr auto king(Bitboard starting) noexcept -> Bitboard;
 
 /// @}
 
@@ -95,13 +95,15 @@ template <Color Side>
  */
 
 template <Color Side>
-constexpr Bitboard pawn_pushes(const Bitboard starting) noexcept
+constexpr auto pawn_pushes(const Bitboard starting) noexcept
+    -> Bitboard
 {
     return board::shifts::pawn_forward<Side>(starting);
 }
 
 template <Color Side>
-constexpr Bitboard pawn_double_pushes(const Bitboard starting) noexcept
+constexpr auto pawn_double_pushes(const Bitboard starting) noexcept
+    -> Bitboard
 {
     namespace rank_masks = board::masks::ranks;
 
@@ -115,14 +117,16 @@ constexpr Bitboard pawn_double_pushes(const Bitboard starting) noexcept
 }
 
 template <Color Side>
-constexpr Bitboard pawn_attacks(const Bitboard starting) noexcept
+constexpr auto pawn_attacks(const Bitboard starting) noexcept
+    -> Bitboard
 {
     namespace shifts = board::shifts;
 
     return shifts::pawn_capture_east<Side>(starting) | shifts::pawn_capture_west<Side>(starting);
 }
 
-constexpr Bitboard knight(const Bitboard starting) noexcept
+constexpr auto knight(const Bitboard starting) noexcept
+    -> Bitboard
 {
     namespace file_masks = board::masks::files;
 
@@ -145,7 +149,8 @@ constexpr Bitboard knight(const Bitboard starting) noexcept
     return moves;
 }
 
-constexpr Bitboard bishop(const Bitboard starting) noexcept
+constexpr auto bishop(const Bitboard starting) noexcept
+    -> Bitboard
 {
     const auto diags     = board::fills::diagonal(starting);
     const auto antiDiags = board::fills::antidiagonal(starting);
@@ -153,7 +158,8 @@ constexpr Bitboard bishop(const Bitboard starting) noexcept
     return (diags | antiDiags) & starting.inverse();
 }
 
-constexpr Bitboard rook(const Bitboard starting) noexcept
+constexpr auto rook(const Bitboard starting) noexcept
+    -> Bitboard
 {
     const auto ranks = board::fills::rank(starting);
     const auto files = board::fills::file(starting);
@@ -161,7 +167,8 @@ constexpr Bitboard rook(const Bitboard starting) noexcept
     return (ranks | files) & starting.inverse();
 }
 
-constexpr Bitboard queen(const Bitboard starting) noexcept
+constexpr auto queen(const Bitboard starting) noexcept
+    -> Bitboard
 {
     const auto ranks     = board::fills::rank(starting);
     const auto files     = board::fills::file(starting);
@@ -173,7 +180,8 @@ constexpr Bitboard queen(const Bitboard starting) noexcept
     return (ranks | files | diags | antiDiags) & notStartingSquare;
 }
 
-constexpr Bitboard king(Bitboard starting) noexcept
+constexpr auto king(Bitboard starting) noexcept
+    -> Bitboard
 {
     namespace shifts = board::shifts;
 

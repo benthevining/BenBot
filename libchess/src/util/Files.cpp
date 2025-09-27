@@ -21,11 +21,11 @@
 
 namespace chess::util {
 
-auto load_file_as_string(std::filesystem::path file) -> std::string
+auto load_file_as_string(
+    const std::filesystem::path& file)
+    -> std::string
 {
-    file = absolute(file);
-
-    std::ifstream input { file };
+    std::ifstream input { absolute(file) };
 
     input.exceptions(
         std::ios_base::badbit | std::ios_base::failbit);
