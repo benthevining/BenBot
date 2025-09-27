@@ -447,16 +447,16 @@ std::expected<Move, string> from_alg(const Position& position, string_view text)
                              ? std::expected<PieceType, string> { PieceType::Pawn }
                              : pieces::from_string(text.substr(0uz, 1uz));
 
-    if (not pieceType.has_value())
-        return std::unexpected(pieceType.error());
+    return pieceType
+        .and_then([&text, &position, dest = targetSquare.value()](const PieceType type) {
+            // trim piece type
+            if (not text.empty())
+                text = text.substr(1uz);
 
-    // trim piece type
-    if (not text.empty())
-        text = text.substr(1uz);
-
-    return get_starting_square(position, targetSquare.value(), pieceType.value(), text)
-        .transform([targetSquare, pieceType](const Square startSquare) {
-            return Move { startSquare, targetSquare.value(), pieceType.value() };
+            return get_starting_square(position, dest, type, text)
+                .transform([dest, type](const Square startSquare) {
+                    return Move { startSquare, dest, type };
+                });
         });
 }
 

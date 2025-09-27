@@ -349,8 +349,7 @@ GameOrError from_pgn(const string_view pgnText)
                 game.startingPosition = from_fen(posStr->second).value_or(Position {});
             }
 
-            return parse_move_list(
-                afterMeta, game.startingPosition, game.moves)
+            return parse_move_list(afterMeta, game.startingPosition, game.moves)
                 .and_then([&game](const string_view resultText) -> GameOrError {
                     game.result = parse_game_result(resultText, game);
 
