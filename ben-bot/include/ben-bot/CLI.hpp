@@ -50,7 +50,7 @@ struct Arguments final {
     std::string uciCommand;
 
     /** Parses the given command-line arguments into a populated Arguments struct. */
-    [[nodiscard]] static Arguments parse(int argc, const char** argv);
+    [[nodiscard]] static auto parse(int argc, const char** argv) -> Arguments;
 };
 
 } // namespace ben_bot

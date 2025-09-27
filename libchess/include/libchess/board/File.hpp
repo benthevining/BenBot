@@ -52,14 +52,15 @@ enum class File : BitboardIndex {
     @ingroup board
     @see File
  */
-[[nodiscard]] std::expected<File, std::string> file_from_char(char character);
+[[nodiscard]] auto file_from_char(char character)
+    -> std::expected<File, std::string>;
 
 /** Converts the file enumeration to its single-character representation.
 
     @ingroup board
     @see File
  */
-[[nodiscard]] char file_to_char(File file);
+[[nodiscard]] auto file_to_char(File file) -> char;
 
 } // namespace chess::board
 
@@ -72,14 +73,14 @@ enum class File : BitboardIndex {
 template <>
 struct std::formatter<chess::board::File> final {
     template <typename ParseContext>
-    constexpr typename ParseContext::iterator parse(ParseContext& ctx)
+    constexpr auto parse(ParseContext& ctx) -> typename ParseContext::iterator
     {
         return ctx.begin();
     }
 
     template <typename FormatContext>
-    typename FormatContext::iterator format(
-        chess::board::File file, FormatContext& ctx) const
+    auto format(
+        chess::board::File file, FormatContext& ctx) const -> typename FormatContext::iterator
     {
         return std::format_to(ctx.out(), "{}", chess::board::file_to_char(file));
     }
@@ -104,7 +105,8 @@ struct std::formatter<chess::board::File> final {
 
 namespace chess::board {
 
-inline std::expected<File, std::string> file_from_char(char character)
+inline auto file_from_char(char character)
+    -> std::expected<File, std::string>
 {
     switch (character) {
         case 'a': [[fallthrough]];
@@ -139,7 +141,7 @@ inline std::expected<File, std::string> file_from_char(char character)
     }
 }
 
-inline char file_to_char(const File file)
+inline auto file_to_char(const File file) -> char
 {
     const auto upperChar = magic_enum::enum_name(file).front();
 

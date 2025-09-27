@@ -44,8 +44,9 @@ namespace {
 
 } // namespace
 
-Callbacks Callbacks::make_uci_printer(
+auto Callbacks::make_uci_printer(
     std::function<bool()> isDebugMode)
+    -> Callbacks
 {
     return {
         .onSearchComplete = [isDebugMode](const Result& res) { print_uci_info<true>(res, isDebugMode()); },

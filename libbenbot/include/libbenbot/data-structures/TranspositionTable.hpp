@@ -73,7 +73,7 @@ struct TTData final {
      */
     std::optional<Move> bestMove;
 
-    constexpr bool operator==(const TTData& other) const noexcept = default;
+    constexpr auto operator==(const TTData& other) const noexcept -> bool = default;
 };
 
 /** The transposition table data structure.
@@ -94,7 +94,7 @@ public:
     /** Retrieves the stored record for the given position,
         or nullptr if the given position isn't in the table.
      */
-    [[nodiscard]] std::optional<TTData> find(const Position& pos) const;
+    [[nodiscard]] auto find(const Position& pos) const -> std::optional<TTData>;
 
     /** Represents a probed evaluation from the table.
         This is a pair of the evaluation value and the value type.
@@ -107,14 +107,16 @@ public:
 
         Returns pair of the evaluation value and the value type.
      */
-    [[nodiscard]] std::optional<ProbedEval> probe_eval(
-        const Position& pos, size_t depth, const search::Bounds& bounds) const;
+    [[nodiscard]] auto probe_eval(
+        const Position& pos, size_t depth, const search::Bounds& bounds) const
+        -> std::optional<ProbedEval>;
 
     /** Returns the opponent's best response to the given move, if one
         is recorded.
      */
-    [[nodiscard]] std::optional<Move> get_best_response(
-        const Position& pos, const Move& move) const;
+    [[nodiscard]] auto get_best_response(
+        const Position& pos, const Move& move) const
+        -> std::optional<Move>;
 
     /** Returns the best line stored from the given starting position and initial move.
         This is mainly intended for retrieving the principal variation, but may be used
@@ -139,7 +141,7 @@ public:
     /** Returns an estimate of the percentage of entries (permille) that
         have been written to during this search.
      */
-    [[nodiscard]] size_t hashfull() const;
+    [[nodiscard]] auto hashfull() const -> size_t;
 
     /** This must be called at the beginning of a new search to keep
         track of entry aging.
@@ -157,10 +159,10 @@ private:
 
     void deallocate();
 
-    [[nodiscard]] Cluster& index_table(size_t clusterIdx) const noexcept;
+    [[nodiscard]] auto index_table(size_t clusterIdx) const noexcept -> Cluster&;
 
     // this is the hash function
-    [[nodiscard]] std::span<Entry> find_cluster(Position::Hash key) const noexcept;
+    [[nodiscard]] auto find_cluster(Position::Hash key) const noexcept -> std::span<Entry>;
 
     Cluster* table { nullptr };
 

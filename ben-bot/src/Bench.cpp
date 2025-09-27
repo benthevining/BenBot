@@ -73,9 +73,9 @@ namespace {
             thread.start();
         }
 
-        [[nodiscard]] bool finished() const noexcept { return not thread.context.in_progress(); }
+        [[nodiscard]] auto finished() const noexcept -> bool { return not thread.context.in_progress(); }
 
-        [[nodiscard]] SearchResult get_result() const noexcept
+        [[nodiscard]] auto get_result() const noexcept -> SearchResult
         {
             assert(finished());
 

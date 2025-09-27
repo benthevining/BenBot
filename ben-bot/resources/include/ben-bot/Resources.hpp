@@ -38,28 +38,28 @@ using std::string_view;
 /// @{
 
 /** Returns the default set of bench positions as an EPD text. */
-[[nodiscard]] string_view get_bench_epd_text();
+[[nodiscard]] auto get_bench_epd_text() -> string_view;
 
 /** Returns the engine's ASCII logo. */
-[[nodiscard]] string_view get_ascii_logo();
+[[nodiscard]] auto get_ascii_logo() -> string_view;
 
 /** Returns the engine's version string. */
-[[nodiscard, gnu::const]] string_view get_version_string();
+[[nodiscard, gnu::const]] auto get_version_string() -> string_view;
 
 /** Returns the name of the compiler used to build the engine. */
-[[nodiscard, gnu::const]] string_view get_compiler_name();
+[[nodiscard, gnu::const]] auto get_compiler_name() -> string_view;
 
 /** Returns the version of the compiler used to build the engine. */
-[[nodiscard, gnu::const]] string_view get_compiler_version();
+[[nodiscard, gnu::const]] auto get_compiler_version() -> string_view;
 
 /** Returns the name of the target system that the engine was built for. */
-[[nodiscard, gnu::const]] string_view get_system_name();
+[[nodiscard, gnu::const]] auto get_system_name() -> string_view;
 
 /** Returns the name of the build configuration that the engine was built for. */
-[[nodiscard, gnu::const]] string_view get_build_config();
+[[nodiscard, gnu::const]] auto get_build_config() -> string_view;
 
 /** Returns the build time (of the resources library) as a string. */
-[[nodiscard]] std::string get_build_time();
+[[nodiscard]] auto get_build_time() -> std::string;
 
 /// @}
 

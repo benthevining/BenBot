@@ -27,7 +27,7 @@ using std::size_t;
 
 // simple RAII timer that measures the amount of time it's been alive
 struct Timer final {
-    [[nodiscard]] milliseconds get_duration() const
+    [[nodiscard]] auto get_duration() const -> milliseconds
     {
         return std::chrono::duration_cast<milliseconds>(Clock::now() - startTime);
     }
@@ -58,7 +58,7 @@ struct Interrupter final {
         exitFlagToUse.store(false);
     }
 
-    [[nodiscard]] milliseconds get_search_duration() const { return timer.get_duration(); }
+    [[nodiscard]] auto get_search_duration() const -> milliseconds { return timer.get_duration(); }
 
     // returns time remaining until abort time, or nullopt if there's no time bound
     [[nodiscard]] auto get_remaining_time() const -> std::optional<milliseconds>
@@ -70,7 +70,7 @@ struct Interrupter final {
 
     // "active" check: queries clock time to check search duration, checks atomic stop flag
     // updates cached internal abort state
-    [[nodiscard]] bool should_abort()
+    [[nodiscard]] auto should_abort() -> bool
     {
         aborted = aborted or should_trigger_abort();
 
@@ -78,12 +78,12 @@ struct Interrupter final {
     }
 
     // "passive" check: only returns cached internal abort state
-    [[nodiscard]] bool was_aborted() const noexcept { return aborted; }
+    [[nodiscard]] auto was_aborted() const noexcept -> bool { return aborted; }
 
     void iteration_completed() noexcept { anyIterationCompleted = true; }
 
 private:
-    [[nodiscard]] bool should_trigger_abort() const
+    [[nodiscard]] auto should_trigger_abort() const -> bool
     {
         // we don't allow aborting until at least the depth 1 search has been completed
         if (not anyIterationCompleted)

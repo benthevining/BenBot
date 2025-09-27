@@ -38,17 +38,18 @@
 
 namespace chess {
 
+using std::string;
+
 namespace {
     // Func is a callable that takes an argument of type Square
     // and must return the text to go inside that square, or
     // a space if it's empty
-    template <typename Func>
+    template <bool IncludeLabels, typename Func>
     [[nodiscard, gnu::cold]] auto generate_board_string(
-        Func       getSquareText,
-        const bool includeLabels)
-        -> std::string
+        Func getSquareText)
+        -> string
     {
-        std::string result;
+        string result;
 
         for (const auto rank : std::views::reverse(magic_enum::enum_values<board::Rank>())) {
             result.append(1uz, '|');
@@ -65,7 +66,7 @@ namespace {
                 result.append(1uz, '|');
             }
 
-            if (includeLabels) {
+            if constexpr (IncludeLabels) {
                 result.append(1uz, ' ');
                 result.append(1uz, rank_to_char(rank));
             }
@@ -73,32 +74,32 @@ namespace {
             result.append(1uz, '\n');
         }
 
-        if (includeLabels)
+        if constexpr (IncludeLabels) {
             result.append(" a b c d e f g h");
+        }
 
         return result;
     }
 } // namespace
 
 namespace board {
-    std::string print_ascii(const Bitboard board)
+    auto print_ascii(const Bitboard board) -> string
     {
-        return generate_board_string(
+        return generate_board_string<false>(
             [board](const Square square) {
                 return board.test(square) ? 'x' : ' ';
-            },
-            false);
+            });
     }
 } // namespace board
 
 namespace game {
     using board::Square;
 
-    std::string print_utf8(const Position& position)
+    auto print_utf8(const Position& position) -> string
     {
         namespace utf8_pieces = pieces::utf8;
 
-        return generate_board_string(
+        return generate_board_string<true>(
             [&position](const Square square) {
                 if (const auto piece = position.whitePieces.get_piece_on(square))
                     return utf8_pieces::white::get(*piece);
@@ -107,13 +108,12 @@ namespace game {
                     return utf8_pieces::black::get(*piece);
 
                 return std::string_view { " " };
-            },
-            true);
+            });
     }
 
-    std::string print_ascii(const Position& position)
+    auto print_ascii(const Position& position) -> string
     {
-        return generate_board_string(
+        return generate_board_string<true>(
             [&position](const Square square) {
                 if (const auto piece = position.whitePieces.get_piece_on(square))
                     return pieces::to_char(*piece, true);
@@ -122,8 +122,7 @@ namespace game {
                     return pieces::to_char(*piece, false);
 
                 return ' ';
-            },
-            true);
+            });
     }
 
 } // namespace game

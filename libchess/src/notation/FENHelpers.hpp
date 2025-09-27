@@ -47,11 +47,13 @@ void write_en_passant_target_square(
     std::optional<Square> targetSquare,
     string&               output);
 
-[[nodiscard]] std::expected<void, string> parse_piece_positions(
-    string_view fenFragment, Position& position);
+[[nodiscard]] auto parse_piece_positions(
+    string_view fenFragment, Position& position)
+    -> std::expected<void, string>;
 
-[[nodiscard]] std::expected<void, string> parse_side_to_move(
-    string_view fenFragment, Position& position);
+[[nodiscard]] auto parse_side_to_move(
+    string_view fenFragment, Position& position)
+    -> std::expected<void, string>;
 
 void parse_castling_rights(
     string_view fenFragment, Position& position);

@@ -36,7 +36,7 @@
 
 namespace chess::notation {
 
-Position GameRecord::get_final_position() const
+auto GameRecord::get_final_position() const -> Position
 {
     return std::accumulate(
         moves.begin(), moves.end(),
@@ -338,7 +338,7 @@ namespace {
 
 using GameOrError = std::expected<GameRecord, string_view>;
 
-GameOrError from_pgn(const string_view pgnText)
+auto from_pgn(const string_view pgnText) -> GameOrError
 {
     GameRecord game;
 
@@ -390,7 +390,7 @@ namespace {
 
 } // namespace
 
-std::vector<GameRecord> parse_all_pgns(string_view fileContent)
+auto parse_all_pgns(string_view fileContent) -> std::vector<GameRecord>
 {
     std::vector<GameRecord> games;
 
@@ -564,7 +564,7 @@ namespace {
 
 } // namespace
 
-string to_pgn(const GameRecord& game, const bool useBlockComments)
+auto to_pgn(const GameRecord& game, const bool useBlockComments) -> string
 {
     string result;
 

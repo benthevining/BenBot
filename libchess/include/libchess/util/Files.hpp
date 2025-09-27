@@ -29,6 +29,6 @@ namespace chess::util {
 
     @ingroup util
  */
-[[nodiscard]] std::string load_file_as_string(std::filesystem::path file);
+[[nodiscard]] auto load_file_as_string(const std::filesystem::path& file) -> std::string;
 
 } // namespace chess::util

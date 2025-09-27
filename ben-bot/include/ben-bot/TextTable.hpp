@@ -39,31 +39,34 @@ using std::string_view;
  */
 struct TextTable final {
     /** Appends a column to the current row. */
-    TextTable& append_column(string_view text);
+    auto append_column(string_view text) -> TextTable&;
 
     /** Ends the current row.
         Subsequent calls to ``append_column()`` will write to the new row.
      */
-    TextTable& new_row();
+    auto new_row() -> TextTable&;
 
     /** Concatenates all the rows in the table into a single string, with separators between rows and columns. */
-    [[nodiscard]] string to_string() const;
+    [[nodiscard]] auto to_string() const -> string;
 
 private:
     struct Row final {
         void add_column(string_view text) { columns.emplace_back(text); }
 
-        [[nodiscard]] std::span<const string> get_columns() const noexcept { return columns; }
+        [[nodiscard]] auto get_columns() const noexcept -> std::span<const string>
+        {
+            return columns;
+        }
 
-        [[nodiscard]] string to_string(std::span<const size_t> widths) const;
+        [[nodiscard]] auto to_string(std::span<const size_t> widths) const -> string;
 
     private:
         std::vector<string> columns;
     };
 
-    [[nodiscard]] size_t num_columns() const;
+    [[nodiscard]] auto num_columns() const -> size_t;
 
-    [[nodiscard]] std::vector<size_t> get_column_widths() const;
+    [[nodiscard]] auto get_column_widths() const -> std::vector<size_t>;
 
     std::vector<Row> rows;
 

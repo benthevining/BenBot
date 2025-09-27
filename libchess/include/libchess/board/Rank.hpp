@@ -53,19 +53,19 @@ enum class Rank : BitboardIndex {
 
     @ingroup board
  */
-[[nodiscard, gnu::const]] constexpr Rank back_rank_for(Color color) noexcept;
+[[nodiscard, gnu::const]] constexpr auto back_rank_for(Color color) noexcept -> Rank;
 
 /** Returns the next pawn rank, from the given side's perspective.
     @ingroup board
  */
 template <Color Side>
-[[nodiscard, gnu::const]] constexpr Rank next_pawn_rank(Rank rank) noexcept;
+[[nodiscard, gnu::const]] constexpr auto next_pawn_rank(Rank rank) noexcept -> Rank;
 
 /** Returns the previous pawn rank, from the given side's perspective.
     @ingroup board
  */
 template <Color Side>
-[[nodiscard, gnu::const]] constexpr Rank prev_pawn_rank(Rank rank) noexcept;
+[[nodiscard, gnu::const]] constexpr auto prev_pawn_rank(Rank rank) noexcept -> Rank;
 
 /** Interprets the given character as a rank.
 
@@ -74,14 +74,15 @@ template <Color Side>
     @ingroup board
     @see Rank
  */
-[[nodiscard]] std::expected<Rank, std::string> rank_from_char(char character);
+[[nodiscard]] auto rank_from_char(char character)
+    -> std::expected<Rank, std::string>;
 
 /** Converts the rank to its single-character representation (as an integer).
 
     @ingroup board
     @see Rank
  */
-[[nodiscard, gnu::const]] constexpr char rank_to_char(Rank rank) noexcept;
+[[nodiscard, gnu::const]] constexpr auto rank_to_char(Rank rank) noexcept -> char;
 
 } // namespace chess::board
 
@@ -95,14 +96,15 @@ template <Color Side>
 template <>
 struct std::formatter<chess::board::Rank> final {
     template <typename ParseContext>
-    constexpr typename ParseContext::iterator parse(ParseContext& ctx)
+    constexpr auto parse(ParseContext& ctx) -> typename ParseContext::iterator
     {
         return ctx.begin();
     }
 
     template <typename FormatContext>
-    typename FormatContext::iterator format(
+    auto format(
         const chess::board::Rank rank, FormatContext& ctx) const
+        -> typename FormatContext::iterator
     {
         return std::format_to(ctx.out(), "{}",
             chess::board::rank_to_char(rank));
@@ -128,7 +130,7 @@ struct std::formatter<chess::board::Rank> final {
 
 namespace chess::board {
 
-constexpr Rank back_rank_for(const Color color) noexcept
+constexpr auto back_rank_for(const Color color) noexcept -> Rank
 {
     if (color == Color::White)
         return Rank::One;
@@ -137,7 +139,7 @@ constexpr Rank back_rank_for(const Color color) noexcept
 }
 
 template <Color Side>
-constexpr Rank next_pawn_rank(const Rank rank) noexcept
+constexpr auto next_pawn_rank(const Rank rank) noexcept -> Rank
 {
     if constexpr (Side == Color::White) {
         assert(rank != Rank::Eight);
@@ -149,7 +151,7 @@ constexpr Rank next_pawn_rank(const Rank rank) noexcept
 }
 
 template <Color Side>
-constexpr Rank prev_pawn_rank(const Rank rank) noexcept
+constexpr auto prev_pawn_rank(const Rank rank) noexcept -> Rank
 {
     if constexpr (Side == Color::White) {
         assert(rank != Rank::One);
@@ -160,7 +162,8 @@ constexpr Rank prev_pawn_rank(const Rank rank) noexcept
     }
 }
 
-inline std::expected<Rank, std::string> rank_from_char(const char character)
+inline auto rank_from_char(const char character)
+    -> std::expected<Rank, std::string>
 {
     switch (character) {
         case '1': return Rank::One;
@@ -180,7 +183,7 @@ inline std::expected<Rank, std::string> rank_from_char(const char character)
     }
 }
 
-constexpr char rank_to_char(const Rank rank) noexcept
+constexpr auto rank_to_char(const Rank rank) noexcept -> char
 {
     constexpr std::string_view ranks { "12345678" };
 

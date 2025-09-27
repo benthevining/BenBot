@@ -22,7 +22,7 @@
 
 namespace ben_bot {
 
-TextTable& TextTable::append_column(const string_view text)
+auto TextTable::append_column(const string_view text) -> TextTable&
 {
     if (startNewRow) {
         rows.emplace_back();
@@ -34,7 +34,7 @@ TextTable& TextTable::append_column(const string_view text)
     return *this;
 }
 
-TextTable& TextTable::new_row()
+auto TextTable::new_row() -> TextTable&
 {
     if (startNewRow)
         rows.emplace_back();
@@ -67,7 +67,7 @@ namespace {
     }
 } // namespace
 
-string TextTable::to_string() const
+auto TextTable::to_string() const -> string
 {
     const auto widths = get_column_widths();
 
@@ -85,7 +85,7 @@ string TextTable::to_string() const
     return result;
 }
 
-size_t TextTable::num_columns() const
+auto TextTable::num_columns() const -> size_t
 {
     return std::transform_reduce(
         rows.begin(), rows.end(),
@@ -94,7 +94,7 @@ size_t TextTable::num_columns() const
         [](const Row& row) { return row.get_columns().size(); });
 }
 
-std::vector<size_t> TextTable::get_column_widths() const
+auto TextTable::get_column_widths() const -> std::vector<size_t>
 {
     std::vector<size_t> widths;
 
@@ -110,8 +110,9 @@ std::vector<size_t> TextTable::get_column_widths() const
     return widths;
 }
 
-string TextTable::Row::to_string(
+auto TextTable::Row::to_string(
     const std::span<const size_t> widths) const
+    -> string
 {
     string result { LINE_START };
 

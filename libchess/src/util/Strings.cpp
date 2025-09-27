@@ -59,12 +59,12 @@ using std::string_view;
 
 namespace chess::util {
 
-string_view trim(const string_view text)
+auto trim(const string_view text) -> string_view
 {
     return trim_start(trim_end(text));
 }
 
-size_t find_matching_close_paren(const string_view input)
+auto find_matching_close_paren(const string_view input) -> size_t
 {
     assert(input.front() == '(');
 
@@ -96,7 +96,7 @@ size_t find_matching_close_paren(const string_view input)
     };
 }
 
-StringViewPair split_at_first_space(const string_view input)
+auto split_at_first_space(const string_view input) -> StringViewPair
 {
     const auto spaceIdx = input.find(' ');
 
@@ -110,7 +110,7 @@ StringViewPair split_at_first_space(const string_view input)
     };
 }
 
-StringViewPair split_at_first_space_or_newline(const string_view input)
+auto split_at_first_space_or_newline(const string_view input) -> StringViewPair
 {
     const auto spaceIdx   = input.find(' ');
     const auto newLineIdx = input.find('\n');

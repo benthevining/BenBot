@@ -64,7 +64,7 @@ namespace {
 
         Stats& stats; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
-        [[nodiscard]] AlphaBetaContext recurse(const Position& newPosition) const
+        [[nodiscard]] auto recurse(const Position& newPosition) const -> AlphaBetaContext
         {
             return {
                 .bounds          = bounds.invert(),
@@ -87,7 +87,7 @@ namespace {
         {
         }
 
-        [[nodiscard]] MoveList to_movelist() const { return moves; }
+        [[nodiscard]] auto to_movelist() const -> MoveList { return moves; }
 
         void add_move(const Move move)
         {

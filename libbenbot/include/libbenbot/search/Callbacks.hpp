@@ -67,8 +67,9 @@ struct Callbacks final {
         @param isDebugMode Function object that should return true if debug information
         should be included in the information output.
      */
-    [[nodiscard]] static Callbacks make_uci_printer(
-        std::function<bool()> isDebugMode);
+    [[nodiscard]] static auto make_uci_printer(
+        std::function<bool()> isDebugMode)
+        -> Callbacks;
 };
 
 } // namespace ben_bot::search

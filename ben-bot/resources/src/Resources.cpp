@@ -37,12 +37,12 @@ namespace {
     }
 } // namespace
 
-string_view get_bench_epd_text()
+auto get_bench_epd_text() -> string_view
 {
     return get_named_resource("bench.epd");
 }
 
-string_view get_ascii_logo()
+auto get_ascii_logo() -> string_view
 {
     return get_named_resource("license_header.txt");
 }
@@ -50,27 +50,27 @@ string_view get_ascii_logo()
 // the below functions are implemented this way because
 // this is the only TU that includes BenBotConfig.hpp
 
-string_view get_version_string()
+auto get_version_string() -> string_view
 {
     return config::VERSION_STRING;
 }
 
-string_view get_compiler_name()
+auto get_compiler_name() -> string_view
 {
     return config::COMPILER_NAME;
 }
 
-string_view get_compiler_version()
+auto get_compiler_version() -> string_view
 {
     return config::COMPILER_VERSION;
 }
 
-string_view get_system_name()
+auto get_system_name() -> string_view
 {
     return config::SYSTEM_NAME;
 }
 
-string_view get_build_config()
+auto get_build_config() -> string_view
 {
     return config::BUILD_CONFIG;
 }

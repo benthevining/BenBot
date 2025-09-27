@@ -190,7 +190,7 @@ namespace {
 
 } // namespace
 
-[[nodiscard, gnu::const]] int score_pawn_structure(const Position& position)
+auto score_pawn_structure(const Position& position) -> int
 {
     const auto whiteScore = score_side_pawns<Color::White>(position);
     const auto blackScore = score_side_pawns<Color::Black>(position);

@@ -43,7 +43,7 @@ using moves::Move;
     @ingroup notation
     @see from_alg()
  */
-[[nodiscard]] std::string to_alg(const Position& position, const Move& move);
+[[nodiscard]] auto to_alg(const Position& position, const Move& move) -> std::string;
 
 /** Creates a move from a string in algebraic notation, such as "Nd4", "e8=Q",
     "O-O-O", etc.
@@ -55,6 +55,7 @@ using moves::Move;
     @ingroup notation
     @see to_alg()
  */
-[[nodiscard]] std::expected<Move, std::string> from_alg(const Position& position, std::string_view text);
+[[nodiscard]] auto from_alg(const Position& position, std::string_view text)
+    -> std::expected<Move, std::string>;
 
 } // namespace chess::notation

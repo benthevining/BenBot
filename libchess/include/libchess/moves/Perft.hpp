@@ -70,7 +70,7 @@ struct PerftResult final {
     std::vector<RootNodeInfo> rootNodes;
 
     /** Adds a child result to this one. */
-    constexpr PerftResult& operator+=(const PerftResult& rhs) noexcept;
+    constexpr auto operator+=(const PerftResult& rhs) noexcept -> PerftResult&;
 };
 
 /** Computes perft of the given position.
@@ -79,9 +79,10 @@ struct PerftResult final {
     @relates PerftResult
  */
 template <bool IsRoot = true>
-[[nodiscard]] PerftResult perft(
+[[nodiscard]] auto perft(
     size_t                depth,
-    const game::Position& startingPosition);
+    const game::Position& startingPosition)
+    -> PerftResult;
 
 /*
                          ___                           ,--,
@@ -100,7 +101,7 @@ template <bool IsRoot = true>
 
  */
 
-constexpr PerftResult& PerftResult::operator+=(const PerftResult& rhs) noexcept
+constexpr auto PerftResult::operator+=(const PerftResult& rhs) noexcept -> PerftResult&
 {
     nodes += rhs.nodes;
     captures += rhs.captures;
@@ -115,9 +116,10 @@ constexpr PerftResult& PerftResult::operator+=(const PerftResult& rhs) noexcept
 }
 
 template <bool IsRoot>
-PerftResult perft(
+auto perft( // NOLINT(readability-function-cognitive-complexity)
     const size_t          depth,
     const game::Position& startingPosition)
+    -> PerftResult
 {
     if (depth == 0uz)
         return {

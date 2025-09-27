@@ -90,7 +90,7 @@ struct Context final {
     }
 
     /** Returns true if a search is currently in progress. */
-    [[nodiscard]] bool in_progress() const noexcept { return activeFlag.load(); }
+    [[nodiscard]] auto in_progress() const noexcept -> bool { return activeFlag.load(); }
 
     /** Blocks the calling thread until the search in progress is complete.
         Returns immediately if no search was in progress when this function was called.

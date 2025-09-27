@@ -47,7 +47,7 @@ struct EPDPosition final {
     /** Returns true if the two positions have the same Zobrist hash
         and an identical set of operations.
      */
-    [[nodiscard]] bool operator==(const EPDPosition& other) const noexcept = default;
+    [[nodiscard]] auto operator==(const EPDPosition& other) const noexcept -> bool = default;
 };
 
 /** Parses an EPD string.
@@ -58,7 +58,8 @@ struct EPDPosition final {
     @relates EPDPosition
     @see parse_all_epds()
  */
-[[nodiscard]] std::expected<EPDPosition, string> from_epd(std::string_view epdString);
+[[nodiscard]] auto from_epd(std::string_view epdString)
+    -> std::expected<EPDPosition, string>;
 
 /** Parses all EPDs in a string containing one EPD per line.
 
@@ -66,13 +67,14 @@ struct EPDPosition final {
     @relates EPDPosition
     @see from_epd()
  */
-[[nodiscard]] std::vector<EPDPosition> parse_all_epds(std::string_view fileContent);
+[[nodiscard]] auto parse_all_epds(std::string_view fileContent)
+    -> std::vector<EPDPosition>;
 
 /** Writes a position to an EPD string.
 
     @ingroup notation
     @relates EPDPosition
  */
-[[nodiscard]] string to_epd(const EPDPosition& pos);
+[[nodiscard]] auto to_epd(const EPDPosition& pos) -> string;
 
 } // namespace chess::notation

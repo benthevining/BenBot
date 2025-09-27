@@ -94,7 +94,7 @@ struct Result final {
     using LibchessResult = chess::uci::printing::SearchInfo;
 
     /** Converts this object to the libchess type used for printing UCI-formatted output. */
-    [[nodiscard]] LibchessResult to_libchess(bool includeDebugInfo) const;
+    [[nodiscard]] auto to_libchess(bool includeDebugInfo) const -> LibchessResult;
 };
 
 } // namespace ben_bot::search

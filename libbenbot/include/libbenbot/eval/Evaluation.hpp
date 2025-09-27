@@ -44,6 +44,6 @@ using chess::game::Position;
 
     @ingroup eval
  */
-[[nodiscard]] Score evaluate(const Position& position);
+[[nodiscard]] auto evaluate(const Position& position) -> Score;
 
 } // namespace ben_bot::eval

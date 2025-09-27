@@ -63,7 +63,7 @@ namespace piece_values {
     /** Returns the value of the given piece type.
         @ingroup eval
      */
-    [[nodiscard, gnu::const]] constexpr int get(PieceType type) noexcept;
+    [[nodiscard, gnu::const]] constexpr auto get(PieceType type) noexcept -> int;
 
 } // namespace piece_values
 
@@ -72,7 +72,7 @@ namespace piece_values {
 
     @ingroup eval
  */
-[[nodiscard, gnu::const]] constexpr int score_material(const Position& position) noexcept;
+[[nodiscard, gnu::const]] constexpr auto score_material(const Position& position) noexcept -> int;
 
 /*
                          ___                           ,--,
@@ -93,7 +93,7 @@ namespace piece_values {
 
 namespace piece_values {
 
-    constexpr int get(const PieceType type) noexcept
+    constexpr auto get(const PieceType type) noexcept -> int
     {
         switch (type) {
             case PieceType::Pawn  : return PAWN;
@@ -110,8 +110,9 @@ namespace piece_values {
 
 namespace detail {
 
-    [[nodiscard, gnu::const]] constexpr int count_material(
+    [[nodiscard, gnu::const]] constexpr auto count_material(
         const chess::board::Pieces& pieces, const bool includePawns = true) noexcept
+        -> int
     {
         auto total = (static_cast<int>(pieces.knights.count()) * piece_values::KNIGHT)
                    + (static_cast<int>(pieces.bishops.count()) * piece_values::BISHOP)
@@ -126,7 +127,7 @@ namespace detail {
 
 } // namespace detail
 
-constexpr int score_material(const Position& position) noexcept
+constexpr auto score_material(const Position& position) noexcept -> int
 {
     return detail::count_material(position.our_pieces()) - detail::count_material(position.their_pieces());
 }

@@ -45,53 +45,61 @@ using pieces::Color;
 
 /** Calculates all pseudo-legal pawn pushes. */
 template <Color Side>
-[[nodiscard, gnu::const]] constexpr Bitboard pawn_pushes(
-    Bitboard startingPawns, Bitboard emptySquares) noexcept;
+[[nodiscard, gnu::const]] constexpr auto pawn_pushes(
+    Bitboard startingPawns, Bitboard emptySquares) noexcept
+    -> Bitboard;
 
 /** Calculates all pseudo-legal pawn double pushes. */
 template <Color Side>
-[[nodiscard, gnu::const]] constexpr Bitboard pawn_double_pushes(
-    Bitboard startingPawns, Bitboard occupiedSquares) noexcept;
+[[nodiscard, gnu::const]] constexpr auto pawn_double_pushes(
+    Bitboard startingPawns, Bitboard occupiedSquares) noexcept
+    -> Bitboard;
 
 /** Calculates all pseudo-legal pawn captures.
     The returned bitboard has 1 bits set where each pawn would land after making a capture.
     Note that this function does not generate possible en passant captures.
  */
 template <Color Side>
-[[nodiscard, gnu::const]] constexpr Bitboard pawn_captures(
-    Bitboard startingPawns, Bitboard enemyPieces) noexcept;
+[[nodiscard, gnu::const]] constexpr auto pawn_captures(
+    Bitboard startingPawns, Bitboard enemyPieces) noexcept
+    -> Bitboard;
 
 /** Calculates all pseudo-legal knight moves. */
-[[nodiscard, gnu::const]] constexpr Bitboard knight(
-    Bitboard startingKnights, Bitboard friendlyPieces) noexcept;
+[[nodiscard, gnu::const]] constexpr auto knight(
+    Bitboard startingKnights, Bitboard friendlyPieces) noexcept
+    -> Bitboard;
 
 /** Calculates all pseudo-legal bishop moves.
 
     The returned move set includes possible captures (i.e., rays ending where an enemy piece
     is located), and also considers blocking friendly pieces.
  */
-[[nodiscard, gnu::const]] constexpr Bitboard bishop(
-    Bitboard startingBishops, Bitboard emptySquares, Bitboard friendlyPieces) noexcept;
+[[nodiscard, gnu::const]] constexpr auto bishop(
+    Bitboard startingBishops, Bitboard emptySquares, Bitboard friendlyPieces) noexcept
+    -> Bitboard;
 
 /** Calculates all pseudo-legal rook moves, taking blocking pieces into consideration.
 
     The returned move set includes possible captures (i.e., rays ending where an enemy piece
     is located), and also considers blocking friendly pieces.
  */
-[[nodiscard, gnu::const]] constexpr Bitboard rook(
-    Bitboard startingRooks, Bitboard emptySquares, Bitboard friendlyPieces) noexcept;
+[[nodiscard, gnu::const]] constexpr auto rook(
+    Bitboard startingRooks, Bitboard emptySquares, Bitboard friendlyPieces) noexcept
+    -> Bitboard;
 
 /** Calculates all pseudo-legal queen moves, taking blocking pieces into consideration.
 
     The returned move set includes possible captures (i.e., rays ending where an enemy piece
     is located), and also considers blocking friendly pieces.
  */
-[[nodiscard, gnu::const]] constexpr Bitboard queen(
-    Bitboard startingQueens, Bitboard emptySquares, Bitboard friendlyPieces) noexcept;
+[[nodiscard, gnu::const]] constexpr auto queen(
+    Bitboard startingQueens, Bitboard emptySquares, Bitboard friendlyPieces) noexcept
+    -> Bitboard;
 
 /** Calculates all pseudo-legal king moves. */
-[[nodiscard, gnu::const]] constexpr Bitboard king(
-    Bitboard startingKing, Bitboard friendlyPieces) noexcept;
+[[nodiscard, gnu::const]] constexpr auto king(
+    Bitboard startingKing, Bitboard friendlyPieces) noexcept
+    -> Bitboard;
 
 /// @}
 
@@ -113,15 +121,17 @@ template <Color Side>
  */
 
 template <Color Side>
-constexpr Bitboard pawn_pushes(
+constexpr auto pawn_pushes(
     const Bitboard startingPawns, const Bitboard emptySquares) noexcept
+    -> Bitboard
 {
     return patterns::pawn_pushes<Side>(startingPawns) & emptySquares;
 }
 
 template <Color Side>
-constexpr Bitboard pawn_double_pushes(
+constexpr auto pawn_double_pushes(
     const Bitboard startingPawns, const Bitboard occupiedSquares) noexcept
+    -> Bitboard
 {
     namespace ranks = board::masks::ranks;
 
@@ -136,20 +146,23 @@ constexpr Bitboard pawn_double_pushes(
 }
 
 template <Color Side>
-constexpr Bitboard pawn_captures(
+constexpr auto pawn_captures(
     const Bitboard startingPawns, const Bitboard enemyPieces) noexcept
+    -> Bitboard
 {
     return patterns::pawn_attacks<Side>(startingPawns) & enemyPieces;
 }
 
-constexpr Bitboard knight(
+constexpr auto knight(
     const Bitboard startingKnights, const Bitboard friendlyPieces) noexcept
+    -> Bitboard
 {
     return patterns::knight(startingKnights) & friendlyPieces.inverse();
 }
 
-constexpr Bitboard king(
+constexpr auto king(
     const Bitboard startingKing, const Bitboard friendlyPieces) noexcept
+    -> Bitboard
 {
     return patterns::king(startingKing) & friendlyPieces.inverse();
 }
@@ -166,8 +179,8 @@ namespace detail {
         static constexpr auto notAFile = files::A.inverse();
         static constexpr auto notHFile = files::H.inverse();
 
-        [[nodiscard, gnu::const]] constexpr Bitboard north(
-            Bitboard rooks, Bitboard empty) noexcept
+        [[nodiscard, gnu::const]] constexpr auto north(
+            Bitboard rooks, Bitboard empty) noexcept -> Bitboard
         {
             rooks |= empty & (rooks << 8uz);
             empty &= (empty << 8uz);
@@ -178,8 +191,8 @@ namespace detail {
             return rooks;
         }
 
-        [[nodiscard, gnu::const]] constexpr Bitboard south(
-            Bitboard rooks, Bitboard empty) noexcept
+        [[nodiscard, gnu::const]] constexpr auto south(
+            Bitboard rooks, Bitboard empty) noexcept -> Bitboard
         {
             rooks |= empty & (rooks >> 8uz);
             empty &= (empty >> 8uz);
@@ -190,8 +203,8 @@ namespace detail {
             return rooks;
         }
 
-        [[nodiscard, gnu::const]] constexpr Bitboard east(
-            Bitboard rooks, Bitboard empty) noexcept
+        [[nodiscard, gnu::const]] constexpr auto east(
+            Bitboard rooks, Bitboard empty) noexcept -> Bitboard
         {
             empty &= notAFile;
 
@@ -204,8 +217,8 @@ namespace detail {
             return rooks;
         }
 
-        [[nodiscard, gnu::const]] constexpr Bitboard west(
-            Bitboard rooks, Bitboard empty) noexcept
+        [[nodiscard, gnu::const]] constexpr auto west(
+            Bitboard rooks, Bitboard empty) noexcept -> Bitboard
         {
             empty &= notHFile;
 
@@ -218,8 +231,8 @@ namespace detail {
             return rooks;
         }
 
-        [[nodiscard, gnu::const]] constexpr Bitboard northeast(
-            Bitboard bishops, Bitboard empty) noexcept
+        [[nodiscard, gnu::const]] constexpr auto northeast(
+            Bitboard bishops, Bitboard empty) noexcept -> Bitboard
         {
             empty &= notAFile;
 
@@ -232,8 +245,8 @@ namespace detail {
             return bishops;
         }
 
-        [[nodiscard, gnu::const]] constexpr Bitboard southeast(
-            Bitboard bishops, Bitboard empty) noexcept
+        [[nodiscard, gnu::const]] constexpr auto southeast(
+            Bitboard bishops, Bitboard empty) noexcept -> Bitboard
         {
             empty &= notAFile;
 
@@ -246,8 +259,8 @@ namespace detail {
             return bishops;
         }
 
-        [[nodiscard, gnu::const]] constexpr Bitboard northwest(
-            Bitboard bishops, Bitboard empty) noexcept
+        [[nodiscard, gnu::const]] constexpr auto northwest(
+            Bitboard bishops, Bitboard empty) noexcept -> Bitboard
         {
             empty &= notHFile;
 
@@ -260,8 +273,8 @@ namespace detail {
             return bishops;
         }
 
-        [[nodiscard, gnu::const]] constexpr Bitboard southwest(
-            Bitboard bishops, Bitboard empty) noexcept
+        [[nodiscard, gnu::const]] constexpr auto southwest(
+            Bitboard bishops, Bitboard empty) noexcept -> Bitboard
         {
             empty &= notHFile;
 
@@ -278,8 +291,9 @@ namespace detail {
 
     namespace shifts = board::shifts;
 
-    [[nodiscard, gnu::const]] constexpr Bitboard rook_attacks(
+    [[nodiscard, gnu::const]] constexpr auto rook_attacks(
         const Bitboard rooks, const Bitboard emptySquares) noexcept
+        -> Bitboard
     {
         const auto northAttacks = shifts::north(occluded_fills::north(rooks, emptySquares));
         const auto southAttacks = shifts::south(occluded_fills::south(rooks, emptySquares));
@@ -289,8 +303,9 @@ namespace detail {
         return northAttacks | southAttacks | eastAttacks | westAttacks;
     }
 
-    [[nodiscard, gnu::const]] constexpr Bitboard bishop_attacks(
+    [[nodiscard, gnu::const]] constexpr auto bishop_attacks(
         const Bitboard bishops, const Bitboard emptySquares) noexcept
+        -> Bitboard
     {
         const auto NEattacks = shifts::northeast(occluded_fills::northeast(bishops, emptySquares));
         const auto SEattacks = shifts::southeast(occluded_fills::southeast(bishops, emptySquares));
@@ -303,20 +318,23 @@ namespace detail {
 } // namespace detail
 #endif // DOXYGEN
 
-constexpr Bitboard rook(
+constexpr auto rook(
     const Bitboard startingRooks, const Bitboard emptySquares, const Bitboard friendlyPieces) noexcept
+    -> Bitboard
 {
     return detail::rook_attacks(startingRooks, emptySquares) & friendlyPieces.inverse();
 }
 
-constexpr Bitboard bishop(
+constexpr auto bishop(
     const Bitboard startingBishops, const Bitboard emptySquares, const Bitboard friendlyPieces) noexcept
+    -> Bitboard
 {
     return detail::bishop_attacks(startingBishops, emptySquares) & friendlyPieces.inverse();
 }
 
-constexpr Bitboard queen(
+constexpr auto queen(
     const Bitboard startingQueens, const Bitboard emptySquares, const Bitboard friendlyPieces) noexcept
+    -> Bitboard
 {
     const auto attacks = detail::rook_attacks(startingQueens, emptySquares)
                        | detail::bishop_attacks(startingQueens, emptySquares);
