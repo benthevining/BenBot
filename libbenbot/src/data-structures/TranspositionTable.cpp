@@ -249,7 +249,7 @@ auto TranspositionTable::get_best_response(
 {
     return find(after_move(pos, move))
         .transform([](const TTData& data) { return data.bestMove; })
-        .value_or(std::optional<Move> {});
+        .value_or(std::nullopt);
 }
 
 void TranspositionTable::store(const Position& pos, const TTData& record)

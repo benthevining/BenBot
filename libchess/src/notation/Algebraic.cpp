@@ -360,34 +360,32 @@ namespace {
         if (eqSgnPos == string_view::npos)
             return std::nullopt;
 
-        const auto promotedType = pieces::from_string(text.substr(eqSgnPos + 1uz, 1uz));
-
-        if (not promotedType.has_value())
-            return std::nullopt;
-
-        if (const auto xPos = text.find('x'); xPos != string_view::npos) {
-            // string is of form dxe8=Q
-            return board::file_from_char(text.at(xPos - 1uz))
-                .transform([color, text, eqSgnPos, prom = promotedType.value()](const File file) -> MaybeMove {
-                    return Square::from_string(text.substr(eqSgnPos - 2uz, 2uz))
-                        .transform([file, color, prom](const Square destSquare) -> MaybeMove {
-                            return Move {
-                                Square {
-                                    .file = file,
-                                    .rank = color == Color::White ? Rank::Seven : Rank::Two },
-                                destSquare, PieceType::Pawn, prom
-                            };
+        return pieces::from_string(text.substr(eqSgnPos + 1uz, 1uz))
+            .transform([text, color, eqSgnPos](const PieceType promotedType) -> MaybeMove {
+                if (const auto xPos = text.find('x'); xPos != string_view::npos) {
+                    // string is of form dxe8=Q
+                    return board::file_from_char(text.at(xPos - 1uz))
+                        .transform([color, text, eqSgnPos, promotedType](const File file) -> MaybeMove {
+                            return Square::from_string(text.substr(eqSgnPos - 2uz, 2uz))
+                                .transform([file, color, promotedType](const Square destSquare) -> MaybeMove {
+                                    return Move {
+                                        Square {
+                                            .file = file,
+                                            .rank = color == Color::White ? Rank::Seven : Rank::Two },
+                                        destSquare, PieceType::Pawn, promotedType
+                                    };
+                                })
+                                .value_or(std::nullopt);
                         })
                         .value_or(std::nullopt);
-                })
-                .value_or(std::nullopt);
-        }
+                }
 
-        // string is of form e8=Q
-
-        return board::file_from_char(text.front())
-            .transform([color, prom = promotedType.value()](const File file) -> MaybeMove {
-                return moves::promotion(file, color, prom);
+                // string is of form e8=Q
+                return board::file_from_char(text.front())
+                    .transform([color, promotedType](const File file) -> MaybeMove {
+                        return moves::promotion(file, color, promotedType);
+                    })
+                    .value_or(std::nullopt);
             })
             .value_or(std::nullopt);
     }
