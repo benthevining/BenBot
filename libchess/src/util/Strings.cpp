@@ -15,9 +15,10 @@
 #include <algorithm>
 #include <cassert>
 #include <cctype> // IWYU pragma: keep - for std::isspace()
+#include <expected>
 #include <format>
 #include <libchess/util/Strings.hpp>
-#include <stdexcept>
+#include <string>
 #include <string_view>
 
 namespace {
@@ -64,7 +65,7 @@ auto trim(const string_view text) -> string_view
     return trim_start(trim_end(text));
 }
 
-auto find_matching_close_paren(const string_view input) -> size_t
+auto find_matching_close_paren(const string_view input) -> std::expected<size_t, std::string>
 {
     assert(input.front() == '(');
 
@@ -91,9 +92,10 @@ auto find_matching_close_paren(const string_view input) -> size_t
         }
     }
 
-    throw std::invalid_argument {
-        std::format("Unmatched ( in input string: '{}'", input)
-    };
+    return std::unexpected(
+        std::format(
+            "Unmatched ( in input string: '{}'",
+            input));
 }
 
 auto split_at_first_space(const string_view input) -> StringViewPair
