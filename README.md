@@ -23,12 +23,16 @@ All dependencies are fetched via `FetchContent`, so everything should "just work
 
 CMake presets are provided for IDE integration, but are not mandatory.
 
+Notes on building:
+* Using `clang` requires `-stdlib=libc++`, without this flag `clang` can't find `std::expected`
+* If using `gcc`, at least version 14 is required
+
 Our automated CI & releases include the following builds:
 
 |    OS    | Compiler |            Notes             |
 |:--------:|:--------:|:----------------------------:|
 |  Ubuntu  |  Clang   | Also built with ASAN & UBSAN |
-|  Ubuntu  |   GCC    |   Requires at least GCC 14   |
+|  Ubuntu  |   GCC    |                              |
 | Windows  |  Clang   |                              |
 | Windows  |   MSVC   |                              |
 |  MacOS   |  Clang   |   Builds universal binary    |
