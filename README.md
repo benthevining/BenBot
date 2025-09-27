@@ -37,4 +37,3 @@ Our automated CI & releases include the following builds:
 
 * `BENBOT_DOCS`: controls whether docs are built (defaults to off unless this is the top-level project)
 * `BENBOT_TESTS`: controls whether tests are built (defaults to off unless this is the top-level project)
-* `STATIC_ANALYSIS`: enables static analysis integrations (added by the CMake presets)
