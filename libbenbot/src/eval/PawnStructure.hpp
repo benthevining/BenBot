@@ -22,6 +22,6 @@ namespace ben_bot::eval::detail {
 
 using chess::game::Position;
 
-[[nodiscard, gnu::const]] int score_pawn_structure(const Position& position);
+[[nodiscard, gnu::const]] auto score_pawn_structure(const Position& position) -> int;
 
 } // namespace ben_bot::eval::detail

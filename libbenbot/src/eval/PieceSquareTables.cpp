@@ -234,7 +234,9 @@ namespace {
 
 } // namespace
 
-int score_piece_placement(const Position& position, const float endgameWeight)
+auto score_piece_placement(
+    const Position& position, const float endgameWeight)
+    -> int
 {
     const auto [ourScore, theirScore] = [&position, endgameWeight] {
         if (position.is_black_to_move()) {

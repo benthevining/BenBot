@@ -22,7 +22,8 @@ namespace ben_bot::eval {
 
 using chess::game::Position;
 
-[[nodiscard, gnu::const]] int score_piece_placement(
-    const Position& position, float endgameWeight);
+[[nodiscard, gnu::const]] auto score_piece_placement(
+    const Position& position, float endgameWeight)
+    -> int;
 
 } // namespace ben_bot::eval
