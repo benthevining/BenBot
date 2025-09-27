@@ -27,6 +27,7 @@
 
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
+#include <expected>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <optional>
@@ -47,9 +48,11 @@ using std::string_view;
 /** Parses the options following a UCI "position" command into a Position object.
     The ``options`` should not include the "position" token itself.
 
+    If the input string cannot be parsed correctly, returns an explanatory error string.
+
     @ingroup uci
  */
-[[nodiscard]] Position parse_position_options(string_view options);
+[[nodiscard]] std::expected<Position, std::string> parse_position_options(string_view options);
 
 /** This struct encapsulates the options to a UCI "register" command.
 

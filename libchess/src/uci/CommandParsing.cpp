@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <expected>
 #include <iterator>
 #include <libchess/moves/Move.hpp>
 #include <libchess/notation/FEN.hpp>
@@ -40,7 +41,7 @@ using util::trim;
 // split_at_first_space() will return a pair whose first element is empty
 // if its input string began with a space!
 
-Position parse_position_options(string_view options)
+std::expected<Position, std::string> parse_position_options(string_view options)
 {
     // position [fen <fenstring> | startpos ]  moves <move1> .... <movei>
     // options doesn't include the "position" token itself
@@ -65,7 +66,7 @@ Position parse_position_options(string_view options)
         const auto fenPos = notation::from_fen(fenString);
 
         if (not fenPos.has_value())
-            throw std::invalid_argument { fenPos.error() };
+            return std::unexpected(fenPos.error());
 
         position = fenPos.value();
 
@@ -95,7 +96,7 @@ Position parse_position_options(string_view options)
         const auto move = notation::from_uci(position, firstMove);
 
         if (not move.has_value())
-            throw std::invalid_argument { move.error() };
+            return std::unexpected(move.error());
 
         position.make_move(move.value());
 
