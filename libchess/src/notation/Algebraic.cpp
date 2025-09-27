@@ -436,7 +436,7 @@ std::expected<Move, string> from_alg(const Position& position, string_view text)
             return *move;
 
     const auto pieceType = text.empty()
-                             ? PieceType::Pawn
+                             ? std::expected<PieceType, string> { PieceType::Pawn }
                              : pieces::from_string(text.substr(0uz, 1uz));
 
     if (not pieceType.has_value())
