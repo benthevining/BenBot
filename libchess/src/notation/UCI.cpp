@@ -74,33 +74,31 @@ auto from_uci(
                 .and_then([&text, &position, from](const Square dest) -> MoveOrError {
                     text = text.substr(2uz);
 
-                    const auto movedType = position.our_pieces().get_piece_on(from);
+                    return position.our_pieces()
+                        .get_piece_on(from)
+                        .transform([text, from, dest](const pieces::Type movedType) -> MoveOrError {
+                            if (text.empty())
+                                return Move { from, dest, movedType };
 
-                    if (not movedType.has_value()) {
-                        [[unlikely]];
-                        return std::unexpected(
-                            std::format(
-                                "No piece for color {} can move from square {}",
-                                magic_enum::enum_name(position.sideToMove), from));
-                    }
+                            // promotion
+                            [[unlikely]];
 
-                    // promotion
-                    if (not text.empty()) {
-                        [[unlikely]];
-
-                        return pieces::from_string(text)
-                            .transform([from, dest, type = movedType.value()](const pieces::Type promotedType) {
-                                return Move { from, dest, type, promotedType };
-                            })
-                            .or_else([](const std::string_view parseError) -> MoveOrError {
-                                return std::unexpected(
-                                    std::format(
-                                        "Error parsing promoted type: {}",
-                                        parseError));
-                            });
-                    }
-
-                    return Move { from, dest, movedType.value() };
+                            return pieces::from_string(text)
+                                .transform([from, dest, movedType](const pieces::Type promotedType) {
+                                    return Move { from, dest, movedType, promotedType };
+                                })
+                                .or_else([](const std::string_view parseError) -> MoveOrError {
+                                    return std::unexpected(
+                                        std::format(
+                                            "Error parsing promoted type: {}",
+                                            parseError));
+                                });
+                        })
+                        .value_or(
+                            std::unexpected(
+                                std::format(
+                                    "No piece for color {} can move from square {}",
+                                    magic_enum::enum_name(position.sideToMove), from)));
                 });
         });
 }

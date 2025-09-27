@@ -494,13 +494,11 @@ namespace {
             if (position.is_white_to_move()) {
                 output.append(std::format("{}.{} ",
                     position.fullMoveCounter, to_alg(position, move.move)));
+            } else if (writeMoveNumber) {
+                output.append(std::format("{}...{} ",
+                    position.fullMoveCounter, to_alg(position, move.move)));
             } else {
-                if (writeMoveNumber) {
-                    output.append(std::format("{}...{} ",
-                        position.fullMoveCounter, to_alg(position, move.move)));
-                } else {
-                    output.append(std::format("{} ", to_alg(position, move.move)));
-                }
+                output.append(std::format("{} ", to_alg(position, move.move)));
             }
 
             for (const auto nag : move.nags) {
