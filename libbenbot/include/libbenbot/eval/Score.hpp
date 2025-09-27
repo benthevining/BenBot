@@ -68,24 +68,24 @@ struct Score final {
     constexpr operator int() const noexcept { return value; } // NOLINT;
 
     /** Inverts the score. */
-    [[nodiscard]] constexpr Score operator-() const noexcept { return { -value }; }
+    [[nodiscard]] constexpr auto operator-() const noexcept -> Score { return { -value }; }
 
     /// @name Mate queries
     /// @{
 
     /** Returns true if this score represents checkmate (either winning or losing). */
-    [[nodiscard]] bool is_mate() const noexcept { return std::abs(value) >= MATE; }
+    [[nodiscard]] auto is_mate() const noexcept -> bool { return std::abs(value) >= MATE; }
 
     /** Returns true if this score is a winning mate score. */
-    [[nodiscard]] constexpr bool is_winning_mate() const noexcept { return value >= MATE; }
+    [[nodiscard]] constexpr auto is_winning_mate() const noexcept -> bool { return value >= MATE; }
 
     /** Returns true if this score is a losing mate score. */
-    [[nodiscard]] constexpr bool is_losing_mate() const noexcept { return value <= -MATE; }
+    [[nodiscard]] constexpr auto is_losing_mate() const noexcept -> bool { return value <= -MATE; }
 
     /** For a checkmate score, returns the number of plies from the root of the search
         tree to the checkmate position. This method asserts if the score is not mate.
      */
-    [[nodiscard]] size_t ply_to_mate() const noexcept
+    [[nodiscard]] auto ply_to_mate() const noexcept -> size_t
     {
         assert(is_mate());
 
@@ -98,19 +98,19 @@ struct Score final {
         During search, mate scores are based on ply from the root position;
         this function maps all mate scores to the MATE constant.
      */
-    [[nodiscard]] constexpr int to_tt() const noexcept;
+    [[nodiscard]] constexpr auto to_tt() const noexcept -> int;
 
     /** The libchess type used for printing UCI-formatted search information. */
     using LibchessScore = chess::uci::printing::SearchInfo::Score;
 
     /** Converts this score object to the libchess type used for printing UCI info. */
-    [[nodiscard]] LibchessScore to_libchess() const noexcept;
+    [[nodiscard]] auto to_libchess() const noexcept -> LibchessScore;
 
     /** Returns a checkmate score.
         During search, mate scores are based on the distance from the root of the tree,
         so that the engine actually goes for mate.
      */
-    [[nodiscard, gnu::const]] static constexpr Score mate(const size_t plyFromRoot) noexcept
+    [[nodiscard, gnu::const]] static constexpr auto mate(const size_t plyFromRoot) noexcept -> Score
     {
         // multiply by -1 here because this score is relative to the player who got mated
         return { (MAX - static_cast<int>(plyFromRoot)) * -1 };
@@ -121,9 +121,10 @@ struct Score final {
     /** Converts a value from the transposition table to a score.
         This maps the MATE constant to a ply-from-root mate score.
      */
-    [[nodiscard, gnu::const]] static constexpr Score from_tt(
+    [[nodiscard, gnu::const]] static constexpr auto from_tt(
         const ProbedEval& eval,
-        size_t            plyFromRoot) noexcept;
+        size_t            plyFromRoot) noexcept
+        -> Score;
 };
 
 /*
@@ -143,7 +144,7 @@ struct Score final {
 
  */
 
-constexpr int Score::to_tt() const noexcept
+constexpr auto Score::to_tt() const noexcept -> int
 {
     if (is_losing_mate())
         return -MATE;
@@ -154,9 +155,10 @@ constexpr int Score::to_tt() const noexcept
     return value;
 }
 
-constexpr Score Score::from_tt(
+constexpr auto Score::from_tt(
     const ProbedEval& eval,
     const size_t      plyFromRoot) noexcept
+    -> Score
 {
     const auto [score, type] = eval;
 
@@ -201,14 +203,15 @@ inline auto Score::to_libchess() const noexcept -> LibchessScore
 template <>
 struct std::formatter<ben_bot::eval::Score> final {
     template <typename ParseContext>
-    constexpr typename ParseContext::iterator parse(ParseContext& ctx)
+    constexpr auto parse(ParseContext& ctx) -> typename ParseContext::iterator
     {
         return ctx.begin();
     }
 
     template <typename FormatContext>
-    typename FormatContext::iterator format(
+    auto format(
         const ben_bot::eval::Score& score, FormatContext& ctx) const
+        -> typename FormatContext::iterator
     {
         return std::format_to(ctx.out(), "{}", score.value);
     }

@@ -65,7 +65,7 @@ namespace white {
     static constexpr string_view KING { "\xE2\x99\x94" };
 
     /** Returns a UTF8-encoded symbol for a White piece of the given type. */
-    [[nodiscard, gnu::const]] constexpr string_view get(const Type type) noexcept
+    [[nodiscard, gnu::const]] constexpr auto get(const Type type) noexcept -> string_view
     {
         switch (type) {
             case Type::Knight: return KNIGHT;
@@ -111,7 +111,7 @@ namespace black {
     static constexpr string_view KING { "\xE2\x99\x9A" };
 
     /** Returns a UTF8-encoded symbol for a Black piece of the given type. */
-    [[nodiscard, gnu::const]] constexpr string_view get(const Type type) noexcept
+    [[nodiscard, gnu::const]] constexpr auto get(const Type type) noexcept -> string_view
     {
         switch (type) {
             case Type::Knight: return KNIGHT;
@@ -132,7 +132,7 @@ namespace black {
 /// @{
 
 /** Returns a UTF8-encoded symbol for a pawn of the desired color. */
-[[nodiscard, gnu::const]] constexpr string_view pawn(const Color color) noexcept
+[[nodiscard, gnu::const]] constexpr auto pawn(const Color color) noexcept -> string_view
 {
     if (color == Color::White)
         return white::PAWN;
@@ -141,7 +141,7 @@ namespace black {
 }
 
 /** Returns a UTF8-encoded symbol for a knight of the desired color. */
-[[nodiscard, gnu::const]] constexpr string_view knight(const Color color) noexcept
+[[nodiscard, gnu::const]] constexpr auto knight(const Color color) noexcept -> string_view
 {
     if (color == Color::White)
         return white::KNIGHT;
@@ -150,7 +150,7 @@ namespace black {
 }
 
 /** Returns a UTF8-encoded symbol for a bishop of the desired color. */
-[[nodiscard, gnu::const]] constexpr string_view bishop(const Color color) noexcept
+[[nodiscard, gnu::const]] constexpr auto bishop(const Color color) noexcept -> string_view
 {
     if (color == Color::White)
         return white::BISHOP;
@@ -159,7 +159,7 @@ namespace black {
 }
 
 /** Returns a UTF8-encoded symbol for a rook of the desired color. */
-[[nodiscard, gnu::const]] constexpr string_view rook(const Color color) noexcept
+[[nodiscard, gnu::const]] constexpr auto rook(const Color color) noexcept -> string_view
 {
     if (color == Color::White)
         return white::ROOK;
@@ -168,7 +168,7 @@ namespace black {
 }
 
 /** Returns a UTF8-encoded symbol for a queen of the desired color. */
-[[nodiscard, gnu::const]] constexpr string_view queen(const Color color) noexcept
+[[nodiscard, gnu::const]] constexpr auto queen(const Color color) noexcept -> string_view
 {
     if (color == Color::White)
         return white::QUEEN;
@@ -177,7 +177,7 @@ namespace black {
 }
 
 /** Returns a UTF8-encoded symbol for a king of the desired color. */
-[[nodiscard, gnu::const]] constexpr string_view king(const Color color) noexcept
+[[nodiscard, gnu::const]] constexpr auto king(const Color color) noexcept -> string_view
 {
     if (color == Color::White)
         return white::KING;

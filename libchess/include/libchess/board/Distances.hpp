@@ -38,8 +38,9 @@ namespace chess::board {
     @see rank_distance()
     @relates Square
  */
-[[nodiscard, gnu::const]] constexpr BitboardIndex file_distance(
-    const Square& first, const Square& second) noexcept;
+[[nodiscard, gnu::const]] constexpr auto file_distance(
+    const Square& first, const Square& second) noexcept
+    -> BitboardIndex;
 
 /** Returns as an integer the distance between the rank of the first square
     and the rank of the second square.
@@ -49,16 +50,18 @@ namespace chess::board {
     @see file_distance()
     @relates Square
  */
-[[nodiscard, gnu::const]] constexpr BitboardIndex rank_distance(
-    const Square& first, const Square& second) noexcept;
+[[nodiscard, gnu::const]] constexpr auto rank_distance(
+    const Square& first, const Square& second) noexcept
+    -> BitboardIndex;
 
 /** Returns true if two squares are on the same diagonal of the chessboard.
     Two squares are on the same diagonal if their file distance equals their rank distance.
 
     @relates Square
  */
-[[nodiscard, gnu::const]] constexpr bool are_on_same_diagonal(
-    const Square& first, const Square& second) noexcept;
+[[nodiscard, gnu::const]] constexpr auto are_on_same_diagonal(
+    const Square& first, const Square& second) noexcept
+    -> bool;
 
 /** Returns the Manhattan distance between the two squares.
 
@@ -72,8 +75,9 @@ namespace chess::board {
     @see chebyshev_distance(), center_manhattan_distance()
     @relates Square
  */
-[[nodiscard, gnu::const]] constexpr BitboardIndex manhattan_distance(
-    const Square& first, const Square& second) noexcept;
+[[nodiscard, gnu::const]] constexpr auto manhattan_distance(
+    const Square& first, const Square& second) noexcept
+    -> BitboardIndex;
 
 /** Returns the smallest Manhattan distance from the given square to any of the four central squares.
     The maximum value is 6, from each of the 4 corners.
@@ -81,8 +85,9 @@ namespace chess::board {
     @see manhattan_distance()
     @relates Square
  */
-[[nodiscard, gnu::const]] constexpr BitboardIndex center_manhattan_distance(
-    const Square& square) noexcept;
+[[nodiscard, gnu::const]] constexpr auto center_manhattan_distance(
+    const Square& square) noexcept
+    -> BitboardIndex;
 
 /** Returns the Chebyshev distance between the two squares.
 
@@ -95,8 +100,9 @@ namespace chess::board {
     @see manhattan_distance()
     @relates Square
  */
-[[nodiscard, gnu::const]] constexpr BitboardIndex chebyshev_distance(
-    const Square& first, const Square& second) noexcept;
+[[nodiscard, gnu::const]] constexpr auto chebyshev_distance(
+    const Square& first, const Square& second) noexcept
+    -> BitboardIndex;
 
 /** Returns the knight distance between the two squares; that is, the number of moves a knight
     requires to maneuver from ``first`` to ``second``.
@@ -105,8 +111,9 @@ namespace chess::board {
 
     @relates Square
  */
-[[nodiscard, gnu::const]] BitboardIndex knight_distance(
-    const Square& first, const Square& second);
+[[nodiscard, gnu::const]] auto knight_distance(
+    const Square& first, const Square& second)
+    -> BitboardIndex;
 
 /// @}
 
@@ -127,8 +134,9 @@ namespace chess::board {
 
  */
 
-constexpr BitboardIndex file_distance(
+constexpr auto file_distance(
     const Square& first, const Square& second) noexcept
+    -> BitboardIndex
 {
     const auto firstFile  = std::to_underlying(first.file);
     const auto secondFile = std::to_underlying(second.file);
@@ -138,8 +146,9 @@ constexpr BitboardIndex file_distance(
     return maxFile - minFile;
 }
 
-constexpr BitboardIndex rank_distance(
+constexpr auto rank_distance(
     const Square& first, const Square& second) noexcept
+    -> BitboardIndex
 {
     const auto firstRank  = std::to_underlying(first.rank);
     const auto secondRank = std::to_underlying(second.rank);
@@ -149,20 +158,23 @@ constexpr BitboardIndex rank_distance(
     return maxRank - minRank;
 }
 
-constexpr bool are_on_same_diagonal(
+constexpr auto are_on_same_diagonal(
     const Square& first, const Square& second) noexcept
+    -> bool
 {
     return std::cmp_equal(file_distance(first, second), rank_distance(first, second));
 }
 
-constexpr BitboardIndex manhattan_distance(
+constexpr auto manhattan_distance(
     const Square& first, const Square& second) noexcept
+    -> BitboardIndex
 {
     return file_distance(first, second) + rank_distance(first, second);
 }
 
-constexpr BitboardIndex center_manhattan_distance(
+constexpr auto center_manhattan_distance(
     const Square& square) noexcept
+    -> BitboardIndex
 {
     auto file = static_cast<int>(square.file);
     auto rank = static_cast<int>(square.rank);
@@ -173,8 +185,9 @@ constexpr BitboardIndex center_manhattan_distance(
     return (file + rank) & 7;
 }
 
-constexpr BitboardIndex chebyshev_distance(
+constexpr auto chebyshev_distance(
     const Square& first, const Square& second) noexcept
+    -> BitboardIndex
 {
     const auto fileDist = file_distance(first, second);
     const auto rankDist = rank_distance(first, second);

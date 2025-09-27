@@ -58,13 +58,13 @@ struct EngineBase {
         The returned string may optionally contain the engine's current version,
         such as ``BenBot 1.2.0``.
      */
-    [[nodiscard]] virtual std::string get_name() const = 0;
+    [[nodiscard]] virtual auto get_name() const -> std::string = 0;
 
     /** This must return the name of the engine's author. */
-    [[nodiscard]] virtual string_view get_author() const = 0;
+    [[nodiscard]] virtual auto get_author() const -> string_view = 0;
 
     /** This must return the list of all options the engine supports. */
-    [[nodiscard]] virtual std::span<Option*> get_options() { return {}; }
+    [[nodiscard]] virtual auto get_options() -> std::span<Option*> { return {}; }
 
     /** The engine can use this method to be informed when one of its options changes. */
     virtual void option_changed([[maybe_unused]] const Option& option) { }
@@ -78,7 +78,7 @@ struct EngineBase {
     /** This function must return true if a search is currently in progress.
         This function should be thread-safe.
      */
-    [[nodiscard]] virtual bool is_searching() const noexcept = 0;
+    [[nodiscard]] virtual auto is_searching() const noexcept -> bool = 0;
 
     /** This function will be called when the "ucinewgame" command is received.
         This should flush any game-specific data structures such as hash tables,

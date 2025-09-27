@@ -40,8 +40,9 @@ namespace {
     }
 } // namespace
 
-Arguments Arguments::parse(
+auto Arguments::parse(
     const int argc, const char** argv)
+    -> Arguments
 {
     static constexpr auto MAX_ARGS = 128uz;
 

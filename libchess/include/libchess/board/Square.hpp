@@ -79,7 +79,7 @@ struct Square final {
     /** Calculates the rank and file corresponding to the given bitboard index.
         This function asserts if the passed ``index`` is greater than 63.
      */
-    [[nodiscard, gnu::const]] static constexpr Square from_index(BitboardIndex index) noexcept;
+    [[nodiscard, gnu::const]] static constexpr auto from_index(BitboardIndex index) noexcept -> Square;
 
     /** Creates a square from a string in algebraic notation, such as "A1", "H4", etc.
 
@@ -87,38 +87,38 @@ struct Square final {
 
         If the input string cannot be parsed correctly, returns an explanatory error string.
      */
-    [[nodiscard]] static std::expected<Square, std::string> from_string(std::string_view text);
+    [[nodiscard]] static auto from_string(std::string_view text) -> std::expected<Square, std::string>;
 
     /** Returns the bitboard bit index for this square.
         The returned index will be in the range ``[0,63]``.
      */
-    [[nodiscard]] constexpr BitboardIndex index() const noexcept;
+    [[nodiscard]] constexpr auto index() const noexcept -> BitboardIndex;
 
     /** Returns true if two squares are equivalent. */
-    [[nodiscard]] constexpr bool operator==(const Square&) const noexcept = default;
+    [[nodiscard]] constexpr auto operator==(const Square&) const noexcept -> bool = default;
 
     /// @name Area queries
     /// @{
 
     /** Returns true if this square is on the queenside (the A-D files). */
-    [[nodiscard]] constexpr bool is_queenside() const noexcept;
+    [[nodiscard]] constexpr auto is_queenside() const noexcept -> bool;
 
     /** Returns true if this square is on the kingside (the E-H files). */
-    [[nodiscard]] constexpr bool is_kingside() const noexcept;
+    [[nodiscard]] constexpr auto is_kingside() const noexcept -> bool;
 
     /** Returns true if this square is within White's territory (the first through fourth ranks). */
-    [[nodiscard]] constexpr bool is_white_territory() const noexcept;
+    [[nodiscard]] constexpr auto is_white_territory() const noexcept -> bool;
 
     /** Returns true if this square is within Black's territory (the fifth through eighth ranks). */
-    [[nodiscard]] constexpr bool is_black_territory() const noexcept;
+    [[nodiscard]] constexpr auto is_black_territory() const noexcept -> bool;
 
     /// @}
 
     /** Returns true if this is a light square. */
-    [[nodiscard]] constexpr bool is_light() const noexcept;
+    [[nodiscard]] constexpr auto is_light() const noexcept -> bool;
 
     /** Returns true if this is a dark square. */
-    [[nodiscard]] constexpr bool is_dark() const noexcept { return not is_light(); }
+    [[nodiscard]] constexpr auto is_dark() const noexcept -> bool { return not is_light(); }
 };
 
 /// @ingroup board
@@ -127,8 +127,9 @@ struct Square final {
 /** Orders the two squares based on their bitboard indices.
     @relates Square
  */
-[[nodiscard, gnu::const]] constexpr std::strong_ordering operator<=>(
+[[nodiscard, gnu::const]] constexpr auto operator<=>(
     const Square& first, const Square& second) noexcept
+    -> std::strong_ordering
 {
     return first.index() <=> second.index();
 }
@@ -136,8 +137,9 @@ struct Square final {
 /** Given the en passant target square, this returns the square that the
     captured pawn was on.
  */
-[[nodiscard, gnu::const]] constexpr Square get_en_passant_captured_square(
-    const Square& targetSquare, bool isWhite) noexcept;
+[[nodiscard, gnu::const]] constexpr auto get_en_passant_captured_square(
+    const Square& targetSquare, bool isWhite) noexcept
+    -> Square;
 
 /// @}
 
@@ -153,14 +155,15 @@ struct Square final {
 template <>
 struct std::formatter<chess::board::Square> final {
     template <typename ParseContext>
-    constexpr typename ParseContext::iterator parse(ParseContext& ctx)
+    constexpr auto parse(ParseContext& ctx) -> typename ParseContext::iterator
     {
         return ctx.begin();
     }
 
     template <typename FormatContext>
-    typename FormatContext::iterator format(
+    auto format(
         const chess::board::Square& square, FormatContext& ctx) const
+        -> typename FormatContext::iterator
     {
         return std::format_to(ctx.out(), "{}{}", square.file, square.rank);
     }
@@ -185,7 +188,7 @@ struct std::formatter<chess::board::Square> final {
 
 namespace chess::board {
 
-constexpr Square Square::from_index(const BitboardIndex index) noexcept
+constexpr auto Square::from_index(const BitboardIndex index) noexcept -> Square
 {
     assert(index <= MAX_BITBOARD_IDX);
 
@@ -195,43 +198,44 @@ constexpr Square Square::from_index(const BitboardIndex index) noexcept
     };
 }
 
-constexpr BitboardIndex Square::index() const noexcept
+constexpr auto Square::index() const noexcept -> BitboardIndex
 {
     return static_cast<BitboardIndex>(
         (static_cast<int>(rank) << 3) + static_cast<int>(file));
 }
 
-constexpr bool Square::is_queenside() const noexcept
+constexpr auto Square::is_queenside() const noexcept -> bool
 {
     return std::cmp_less_equal(
         std::to_underlying(file), std::to_underlying(File::D));
 }
 
-constexpr bool Square::is_kingside() const noexcept
+constexpr auto Square::is_kingside() const noexcept -> bool
 {
     return std::cmp_greater_equal(
         std::to_underlying(file), std::to_underlying(File::E));
 }
 
-constexpr bool Square::is_white_territory() const noexcept
+constexpr auto Square::is_white_territory() const noexcept -> bool
 {
     return std::cmp_less_equal(
         std::to_underlying(rank), std::to_underlying(Rank::Four));
 }
 
-constexpr bool Square::is_black_territory() const noexcept
+constexpr auto Square::is_black_territory() const noexcept -> bool
 {
     return std::cmp_greater_equal(
         std::to_underlying(rank), std::to_underlying(Rank::Five));
 }
 
-constexpr bool Square::is_light() const noexcept
+constexpr auto Square::is_light() const noexcept -> bool
 {
     return not util::is_even(
         std::to_underlying(rank) + std::to_underlying(file));
 }
 
-inline std::expected<Square, std::string> Square::from_string(const std::string_view text)
+inline auto Square::from_string(const std::string_view text)
+    -> std::expected<Square, std::string>
 {
     if (text.length() != 2uz) {
         return std::unexpected(
@@ -252,8 +256,9 @@ inline std::expected<Square, std::string> Square::from_string(const std::string_
         });
 }
 
-constexpr Square get_en_passant_captured_square(
+constexpr auto get_en_passant_captured_square(
     const Square& targetSquare, const bool isWhite) noexcept
+    -> Square
 {
     // the captured pawn is on the file of the target square, but
     // one rank below (White capture) or one rank above (Black capture)

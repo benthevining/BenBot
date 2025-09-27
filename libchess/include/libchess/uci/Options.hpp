@@ -46,23 +46,23 @@ struct Option {
     Option& operator=(Option&&)      = default;
 
     /** Returns this option's name. */
-    [[nodiscard]] virtual string_view get_name() const noexcept = 0;
+    [[nodiscard]] virtual auto get_name() const noexcept -> string_view = 0;
 
     /** Returns the option's declaration string suitable for sending
         to the GUI. The returned string includes the "option" token.
      */
-    [[nodiscard]] virtual string get_declaration_string() const = 0;
+    [[nodiscard]] virtual auto get_declaration_string() const -> string = 0;
 
     /** Returns a textual representation of this option's type. */
-    [[nodiscard]] virtual string_view get_type() const noexcept = 0;
+    [[nodiscard]] virtual auto get_type() const noexcept -> string_view = 0;
 
     /** Returns the help string for this option. */
-    [[nodiscard]] virtual string_view get_help() const noexcept = 0;
+    [[nodiscard]] virtual auto get_help() const noexcept -> string_view = 0;
 
     /** Returns true if this option type has an associated value.
         False only for Action options.
      */
-    [[nodiscard]] virtual bool has_value() const noexcept { return true; }
+    [[nodiscard]] virtual auto has_value() const noexcept -> bool { return true; }
 
     /** Represents a variant that can hold any of the derived class's value types. */
     using Variant = std::variant<bool, int, string_view>;
@@ -70,12 +70,12 @@ struct Option {
     /** Returns this option's current value, as a variant.
         Note that if ``has_value()`` returns false, you must not call this method!
      */
-    [[nodiscard]] virtual Variant get_value_variant() const = 0;
+    [[nodiscard]] virtual auto get_value_variant() const -> Variant = 0;
 
     /** Returns this option's default value, as a variant.
         Note that if ``has_value()`` returns false, you must not call this method!
      */
-    [[nodiscard]] virtual Variant get_default_value_variant() const = 0;
+    [[nodiscard]] virtual auto get_default_value_variant() const -> Variant = 0;
 
     /** Will be called with everything in the "setoption" command after the option name.
         This is typically not called directly by user code.
@@ -95,22 +95,22 @@ struct BoolOption final : Option {
     /** Returns this option's current value, as set by the last
         call to ``parse()``.
      */
-    [[nodiscard]] bool get_value() const noexcept { return value; }
+    [[nodiscard]] auto get_value() const noexcept -> bool { return value; }
 
-    [[nodiscard]] Variant get_value_variant() const override { return value; }
+    [[nodiscard]] auto get_value_variant() const -> Variant override { return value; }
 
     /** Returns this option's default value. */
-    [[nodiscard]] bool get_default_value() const noexcept { return optionDefault; }
+    [[nodiscard]] auto get_default_value() const noexcept -> bool { return optionDefault; }
 
-    [[nodiscard]] Variant get_default_value_variant() const override { return optionDefault; }
+    [[nodiscard]] auto get_default_value_variant() const -> Variant override { return optionDefault; }
 
-    [[nodiscard]] string_view get_name() const noexcept override { return optionName; }
+    [[nodiscard]] auto get_name() const noexcept -> string_view override { return optionName; }
 
-    [[nodiscard]] string get_declaration_string() const override;
+    [[nodiscard]] auto get_declaration_string() const -> string override;
 
-    [[nodiscard]] string_view get_type() const noexcept override { return "Toggle"; }
+    [[nodiscard]] auto get_type() const noexcept -> string_view override { return "Toggle"; }
 
-    [[nodiscard]] string_view get_help() const noexcept override { return help; }
+    [[nodiscard]] auto get_help() const noexcept -> string_view override { return help; }
 
     void handle_setvalue(string_view arguments) override;
 
@@ -140,22 +140,22 @@ struct IntOption final : Option {
     /** Returns this option's current value, as set by the last
         call to ``parse()``.
      */
-    [[nodiscard]] int get_value() const noexcept { return value; }
+    [[nodiscard]] auto get_value() const noexcept -> int { return value; }
 
-    [[nodiscard]] Variant get_value_variant() const override { return value; }
+    [[nodiscard]] auto get_value_variant() const -> Variant override { return value; }
 
     /** Returns this option's default value. */
-    [[nodiscard]] int get_default_value() const noexcept { return optionDefault; }
+    [[nodiscard]] auto get_default_value() const noexcept -> int { return optionDefault; }
 
-    [[nodiscard]] Variant get_default_value_variant() const override { return optionDefault; }
+    [[nodiscard]] auto get_default_value_variant() const -> Variant override { return optionDefault; }
 
-    [[nodiscard]] string_view get_name() const noexcept override { return optionName; }
+    [[nodiscard]] auto get_name() const noexcept -> string_view override { return optionName; }
 
-    [[nodiscard]] string get_declaration_string() const override;
+    [[nodiscard]] auto get_declaration_string() const -> string override;
 
-    [[nodiscard]] string_view get_type() const noexcept override { return "Integer"; }
+    [[nodiscard]] auto get_type() const noexcept -> string_view override { return "Integer"; }
 
-    [[nodiscard]] string_view get_help() const noexcept override { return help; }
+    [[nodiscard]] auto get_help() const noexcept -> string_view override { return help; }
 
     void handle_setvalue(string_view arguments) override;
 
@@ -185,22 +185,22 @@ struct ComboOption final : Option {
 
     using Value = string_view;
 
-    [[nodiscard]] string_view get_value() const noexcept { return value; }
+    [[nodiscard]] auto get_value() const noexcept -> string_view { return value; }
 
-    [[nodiscard]] Variant get_value_variant() const override { return get_value(); }
+    [[nodiscard]] auto get_value_variant() const -> Variant override { return get_value(); }
 
     /** Returns this option's default value. */
-    [[nodiscard]] string_view get_default_value() const noexcept { return optionDefault; }
+    [[nodiscard]] auto get_default_value() const noexcept -> string_view { return optionDefault; }
 
-    [[nodiscard]] Variant get_default_value_variant() const override { return get_default_value(); }
+    [[nodiscard]] auto get_default_value_variant() const -> Variant override { return get_default_value(); }
 
-    [[nodiscard]] string_view get_name() const noexcept override { return optionName; }
+    [[nodiscard]] auto get_name() const noexcept -> string_view override { return optionName; }
 
-    [[nodiscard]] string get_declaration_string() const override;
+    [[nodiscard]] auto get_declaration_string() const -> string override;
 
-    [[nodiscard]] string_view get_type() const noexcept override { return "Multichoice"; }
+    [[nodiscard]] auto get_type() const noexcept -> string_view override { return "Multichoice"; }
 
-    [[nodiscard]] string_view get_help() const noexcept override { return help; }
+    [[nodiscard]] auto get_help() const noexcept -> string_view override { return help; }
 
     void handle_setvalue(string_view arguments) override;
 
@@ -226,19 +226,19 @@ struct StringOption final : Option {
 
     using Value = string_view;
 
-    [[nodiscard]] string_view get_value() const noexcept { return value; }
+    [[nodiscard]] auto get_value() const noexcept -> string_view { return value; }
 
-    [[nodiscard]] Variant get_value_variant() const override { return get_value(); }
+    [[nodiscard]] auto get_value_variant() const -> Variant override { return get_value(); }
 
-    [[nodiscard]] Variant get_default_value_variant() const override { return string_view {}; }
+    [[nodiscard]] auto get_default_value_variant() const -> Variant override { return string_view {}; }
 
-    [[nodiscard]] string_view get_name() const noexcept override { return optionName; }
+    [[nodiscard]] auto get_name() const noexcept -> string_view override { return optionName; }
 
-    [[nodiscard]] string get_declaration_string() const override;
+    [[nodiscard]] auto get_declaration_string() const -> string override;
 
-    [[nodiscard]] string_view get_type() const noexcept override { return "String"; }
+    [[nodiscard]] auto get_type() const noexcept -> string_view override { return "String"; }
 
-    [[nodiscard]] string_view get_help() const noexcept override { return help; }
+    [[nodiscard]] auto get_help() const noexcept -> string_view override { return help; }
 
     void handle_setvalue(string_view arguments) override;
 
@@ -261,18 +261,18 @@ struct Action final : Option {
 
     using Value = void;
 
-    [[nodiscard]] Variant get_value_variant() const override { throw_value_error(); }
-    [[nodiscard]] Variant get_default_value_variant() const override { throw_value_error(); }
+    [[nodiscard]] auto get_value_variant() const -> Variant override { throw_value_error(); }
+    [[nodiscard]] auto get_default_value_variant() const -> Variant override { throw_value_error(); }
 
-    [[nodiscard]] string_view get_name() const noexcept override { return optionName; }
+    [[nodiscard]] auto get_name() const noexcept -> string_view override { return optionName; }
 
-    [[nodiscard]] string get_declaration_string() const override;
+    [[nodiscard]] auto get_declaration_string() const -> string override;
 
-    [[nodiscard]] string_view get_type() const noexcept override { return "Button"; }
+    [[nodiscard]] auto get_type() const noexcept -> string_view override { return "Button"; }
 
-    [[nodiscard]] string_view get_help() const noexcept override { return help; }
+    [[nodiscard]] auto get_help() const noexcept -> string_view override { return help; }
 
-    [[nodiscard]] bool has_value() const noexcept override { return false; }
+    [[nodiscard]] auto has_value() const noexcept -> bool override { return false; }
 
     void handle_setvalue(string_view arguments) override;
 

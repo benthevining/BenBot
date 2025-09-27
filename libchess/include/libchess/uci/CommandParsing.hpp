@@ -52,7 +52,8 @@ using std::string_view;
 
     @ingroup uci
  */
-[[nodiscard]] std::expected<Position, std::string> parse_position_options(string_view options);
+[[nodiscard]] auto parse_position_options(string_view options)
+    -> std::expected<Position, std::string>;
 
 /** This struct encapsulates the options to a UCI "register" command.
 
@@ -79,7 +80,7 @@ using RegisterOptions = optional<RegisterNowOptions>;
     @ingroup uci
     @relates RegisterOptions
  */
-[[nodiscard]] RegisterOptions parse_register_options(string_view options);
+[[nodiscard]] auto parse_register_options(string_view options) -> RegisterOptions;
 
 /** This struct encapsulates the options given to a UCI "go" command.
 
@@ -132,7 +133,8 @@ struct GoCommandOptions final {
     @ingroup uci
     @relates GoCommandOptions
  */
-[[nodiscard]] GoCommandOptions parse_go_options(
-    string_view options, const Position& currentPosition);
+[[nodiscard]] auto parse_go_options(
+    string_view options, const Position& currentPosition)
+    -> GoCommandOptions;
 
 } // namespace chess::uci

@@ -55,19 +55,19 @@ struct TranspositionTable::Entry final {
 
     Move move;
 
-    [[nodiscard]] bool occupied() const noexcept
+    [[nodiscard]] auto occupied() const noexcept -> bool
     {
         return std::cmp_greater(depth, 0);
     }
 
-    [[nodiscard]] std::uint8_t relative_age(const std::uint8_t gen) const noexcept
+    [[nodiscard]] auto relative_age(const std::uint8_t gen) const noexcept -> std::uint8_t
     {
         static constexpr auto GENERATION_MASK = 248uz; // highest 5 bits
 
         return (GENERATION_CYCLE + gen - generation) & GENERATION_MASK;
     }
 
-    [[nodiscard]] TTData read() const noexcept
+    [[nodiscard]] auto read() const noexcept -> TTData
     {
         std::optional<Move> bestMove;
 
@@ -111,7 +111,7 @@ TranspositionTable::TranspositionTable(TranspositionTable&& other) noexcept
 {
 }
 
-TranspositionTable& TranspositionTable::operator=(TranspositionTable&& other) noexcept
+auto TranspositionTable::operator=(TranspositionTable&& other) noexcept -> TranspositionTable&
 {
     deallocate();
 
@@ -164,7 +164,7 @@ void TranspositionTable::deallocate()
     clusterCount = 0uz;
 }
 
-size_t TranspositionTable::hashfull() const
+auto TranspositionTable::hashfull() const -> size_t
 {
     size_t count { 0uz };
 
@@ -193,7 +193,7 @@ auto TranspositionTable::find_cluster(const Position::Hash key) const noexcept -
         .records;
 }
 
-std::optional<TTData> TranspositionTable::find(const Position& pos) const
+auto TranspositionTable::find(const Position& pos) const -> std::optional<TTData>
 {
     // the lowest 16 bits are the key within the cluster
     const auto key = static_cast<std::uint16_t>(pos.hash);
@@ -244,8 +244,8 @@ auto TranspositionTable::probe_eval(
     return std::nullopt;
 }
 
-std::optional<Move> TranspositionTable::get_best_response(
-    const Position& pos, const Move& move) const
+auto TranspositionTable::get_best_response(
+    const Position& pos, const Move& move) const -> std::optional<Move>
 {
     if (const auto record = find(after_move(pos, move)))
         return record->bestMove;

@@ -56,7 +56,7 @@ struct CustomCommand final {
     string_view argsHelp;
 
     /** Wraps a callback taking no arguments into a ``Callback`` for a command. */
-    [[nodiscard]] static Callback void_cb(std::function<void()>&& func)
+    [[nodiscard]] static auto void_cb(std::function<void()>&& func) -> Callback
     {
         return [callback = std::move(func)]([[maybe_unused]] const string_view args) {
             callback();

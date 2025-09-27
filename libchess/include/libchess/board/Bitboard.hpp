@@ -57,39 +57,39 @@ struct Bitboard final {
     explicit constexpr Bitboard(Integer val) noexcept;
 
     /** Returns true if the two bitboards have all the same bits set. */
-    [[nodiscard]] constexpr bool operator==(const Bitboard&) const noexcept = default;
+    [[nodiscard]] constexpr auto operator==(const Bitboard&) const noexcept -> bool = default;
 
     /// @name Observers
     /// @{
 
     /** Returns true if any of the bits are set. */
-    [[nodiscard]] constexpr bool any() const noexcept { return value != UINT64_C(0); }
+    [[nodiscard]] constexpr auto any() const noexcept -> bool { return value != UINT64_C(0); }
 
     /** Returns true if none of the bits are set. */
-    [[nodiscard]] constexpr bool none() const noexcept { return value == UINT64_C(0); }
+    [[nodiscard]] constexpr auto none() const noexcept -> bool { return value == UINT64_C(0); }
 
     /** Returns the number of bits that are set. */
-    [[nodiscard]] constexpr size_t count() const noexcept { return static_cast<size_t>(std::popcount(value)); }
+    [[nodiscard]] constexpr auto count() const noexcept -> size_t { return static_cast<size_t>(std::popcount(value)); }
 
     /** Returns true if there is a piece on the given square. */
-    [[nodiscard]] constexpr bool test(const Square square) const noexcept { return test(square.index()); }
+    [[nodiscard]] constexpr auto test(const Square square) const noexcept -> bool { return test(square.index()); }
 
     /** Returns true if there is a piece on the given square.
         This method asserts if the given index is greater than 63.
      */
-    [[nodiscard]] constexpr bool test(BitboardIndex index) const noexcept;
+    [[nodiscard]] constexpr auto test(BitboardIndex index) const noexcept -> bool;
 
     /** Returns the index of the first set bit.
         This operation may also be known as "bitscan forward".
         Returns 64 if all bits are 0.
      */
-    [[nodiscard]] constexpr BitboardIndex first() const noexcept;
+    [[nodiscard]] constexpr auto first() const noexcept -> BitboardIndex;
 
     /** Returns the index of the last set bit.
         This operation may also be known as "bitscan reverse".
         Returns 64 if all bits are 0.
      */
-    [[nodiscard]] constexpr BitboardIndex last() const noexcept;
+    [[nodiscard]] constexpr auto last() const noexcept -> BitboardIndex;
 
     /// @}
 
@@ -118,7 +118,7 @@ struct Bitboard final {
     /// @}
 
     /** Converts this bitboard to its integer representation. */
-    [[nodiscard]] constexpr Integer to_int() const noexcept { return value; }
+    [[nodiscard]] constexpr auto to_int() const noexcept -> Integer { return value; }
 
     /// @name Iteration
     /// @{
@@ -162,31 +162,31 @@ struct Bitboard final {
     /// @{
 
     /** Returns a copy of this bitboard with all bits flipped (binary NOT). */
-    [[nodiscard]] constexpr Bitboard inverse() const noexcept;
+    [[nodiscard]] constexpr auto inverse() const noexcept -> Bitboard;
 
     /** Performs binary AND with another bitboard. */
-    constexpr Bitboard& operator&=(const Bitboard& other) noexcept;
+    constexpr auto operator&=(const Bitboard& other) noexcept -> Bitboard&;
 
     /** Performs binary OR with another bitboard. */
-    constexpr Bitboard& operator|=(const Bitboard& other) noexcept;
+    constexpr auto operator|=(const Bitboard& other) noexcept -> Bitboard&;
 
     /** Performs binary XOR with another bitboard. */
-    constexpr Bitboard& operator^=(const Bitboard& other) noexcept;
+    constexpr auto operator^=(const Bitboard& other) noexcept -> Bitboard&;
 
     /** Performs binary shift left (towards higher index positions).
         Zeroes are shifted in, and bits that would go to an index out of range are dropped.
      */
-    constexpr Bitboard& operator<<=(size_t num) noexcept;
+    constexpr auto operator<<=(size_t num) noexcept -> Bitboard&;
 
     /** Performs binary shift right (towards lower index positions).
         Zeroes are shifted in, and bits that would go to an index out of range are dropped.
      */
-    constexpr Bitboard& operator>>=(size_t num) noexcept;
+    constexpr auto operator>>=(size_t num) noexcept -> Bitboard&;
 
     /// @}
 
     /** Returns a bitboard with only a single bit set. */
-    [[nodiscard, gnu::const]] static constexpr Bitboard from_square(const Square& square) noexcept;
+    [[nodiscard, gnu::const]] static constexpr auto from_square(const Square& square) noexcept -> Bitboard;
 
 private:
     Integer value { UINT64_C(0) };
@@ -198,27 +198,27 @@ private:
 /** Returns the binary AND of two bitboards.
     @relates Bitboard
  */
-[[nodiscard, gnu::const]] constexpr Bitboard operator&(const Bitboard& lhs, const Bitboard& rhs) noexcept;
+[[nodiscard, gnu::const]] constexpr auto operator&(const Bitboard& lhs, const Bitboard& rhs) noexcept -> Bitboard;
 
 /** Returns the binary OR of two bitboards.
     @relates Bitboard
  */
-[[nodiscard, gnu::const]] constexpr Bitboard operator|(const Bitboard& lhs, const Bitboard& rhs) noexcept;
+[[nodiscard, gnu::const]] constexpr auto operator|(const Bitboard& lhs, const Bitboard& rhs) noexcept -> Bitboard;
 
 /** Returns the binary XOR of two bitboards.
     @relates Bitboard
  */
-[[nodiscard, gnu::const]] constexpr Bitboard operator^(const Bitboard& lhs, const Bitboard& rhs) noexcept;
+[[nodiscard, gnu::const]] constexpr auto operator^(const Bitboard& lhs, const Bitboard& rhs) noexcept -> Bitboard;
 
 /** Returns a copy of the bitboard with a binary shift left applied.
     @relates Bitboard
  */
-[[nodiscard, gnu::const]] constexpr Bitboard operator<<(const Bitboard& board, size_t num) noexcept;
+[[nodiscard, gnu::const]] constexpr auto operator<<(const Bitboard& board, size_t num) noexcept -> Bitboard;
 
 /** Returns a copy of the bitboard with a binary shift right applied.
     @relates Bitboard
  */
-[[nodiscard, gnu::const]] constexpr Bitboard operator>>(const Bitboard& board, size_t num) noexcept;
+[[nodiscard, gnu::const]] constexpr auto operator>>(const Bitboard& board, size_t num) noexcept -> Bitboard;
 
 /** Creates an ASCII representation of the given bitboard.
     The returned string is meant to be interpreted visually by a human, probably for debugging purposes.
@@ -227,7 +227,7 @@ private:
 
     @relates Bitboard
  */
-[[nodiscard]] std::string print_ascii(Bitboard board);
+[[nodiscard]] auto print_ascii(Bitboard board) -> std::string;
 
 /// @}
 
@@ -257,12 +257,12 @@ constexpr Bitboard::Bitboard(const Integer val) noexcept
 {
 }
 
-constexpr Bitboard Bitboard::from_square(const Square& square) noexcept
+constexpr auto Bitboard::from_square(const Square& square) noexcept -> Bitboard
 {
     return Bitboard { UINT64_C(1) << square.index() };
 }
 
-constexpr bool Bitboard::test(const BitboardIndex index) const noexcept
+constexpr auto Bitboard::test(const BitboardIndex index) const noexcept -> bool
 {
     assert(index <= MAX_BITBOARD_IDX);
     return ((value >> index) & UINT64_C(1)) != 0;
@@ -283,13 +283,13 @@ constexpr void Bitboard::unset(const BitboardIndex index) noexcept
     value &= ~mask;
 }
 
-constexpr BitboardIndex Bitboard::first() const noexcept
+constexpr auto Bitboard::first() const noexcept -> BitboardIndex
 {
     // same as number of leading zeroes
     return static_cast<BitboardIndex>(std::countr_zero(value));
 }
 
-constexpr BitboardIndex Bitboard::last() const noexcept
+constexpr auto Bitboard::last() const noexcept -> BitboardIndex
 {
     if (none()) {
         [[unlikely]];
@@ -301,70 +301,70 @@ constexpr BitboardIndex Bitboard::last() const noexcept
     return NUM_SQUARES - trailingZeroes - static_cast<BitboardIndex>(1);
 }
 
-constexpr Bitboard& Bitboard::operator&=(const Bitboard& other) noexcept
+constexpr auto Bitboard::operator&=(const Bitboard& other) noexcept -> Bitboard&
 {
     value &= other.value;
     return *this;
 }
 
-constexpr Bitboard& Bitboard::operator|=(const Bitboard& other) noexcept
+constexpr auto Bitboard::operator|=(const Bitboard& other) noexcept -> Bitboard&
 {
     value |= other.value;
     return *this;
 }
 
-constexpr Bitboard& Bitboard::operator^=(const Bitboard& other) noexcept
+constexpr auto Bitboard::operator^=(const Bitboard& other) noexcept -> Bitboard&
 {
     value ^= other.value;
     return *this;
 }
 
-constexpr Bitboard& Bitboard::operator<<=(const size_t num) noexcept
+constexpr auto Bitboard::operator<<=(const size_t num) noexcept -> Bitboard&
 {
     value <<= num;
     return *this;
 }
 
-constexpr Bitboard& Bitboard::operator>>=(const size_t num) noexcept
+constexpr auto Bitboard::operator>>=(const size_t num) noexcept -> Bitboard&
 {
     value >>= num;
     return *this;
 }
 
-constexpr Bitboard Bitboard::inverse() const noexcept
+constexpr auto Bitboard::inverse() const noexcept -> Bitboard
 {
     return Bitboard { ~value };
 }
 
-constexpr Bitboard operator&(const Bitboard& lhs, const Bitboard& rhs) noexcept
+constexpr auto operator&(const Bitboard& lhs, const Bitboard& rhs) noexcept -> Bitboard
 {
     auto ret = lhs;
     ret &= rhs;
     return ret;
 }
 
-constexpr Bitboard operator|(const Bitboard& lhs, const Bitboard& rhs) noexcept
+constexpr auto operator|(const Bitboard& lhs, const Bitboard& rhs) noexcept -> Bitboard
 {
     auto ret = lhs;
     ret |= rhs;
     return ret;
 }
 
-constexpr Bitboard operator^(const Bitboard& lhs, const Bitboard& rhs) noexcept
+constexpr auto operator^(const Bitboard& lhs, const Bitboard& rhs) noexcept -> Bitboard
 {
     auto ret = lhs;
     ret ^= rhs;
     return ret;
 }
 
-constexpr Bitboard operator<<(const Bitboard& board, const size_t num) noexcept
+constexpr auto operator<<(const Bitboard& board, const size_t num) noexcept -> Bitboard
 {
     auto ret = board;
     ret <<= num;
     return ret;
 }
 
-constexpr Bitboard operator>>(const Bitboard& board, const size_t num) noexcept
+constexpr auto operator>>(const Bitboard& board, const size_t num) noexcept -> Bitboard
 {
     auto ret = board;
     ret >>= num;
@@ -392,16 +392,19 @@ namespace detail {
         {
         }
 
-        constexpr bool operator==(const BitboardIterator& other) const noexcept { return value == other.value; }
+        constexpr auto operator==(const BitboardIterator& other) const noexcept -> bool = default;
 
-        constexpr bool operator==(std::default_sentinel_t) const noexcept { return value == UINT64_C(0); }
+        constexpr auto operator==([[maybe_unused]] std::default_sentinel_t sentinel) const noexcept -> bool
+        {
+            return value == UINT64_C(0);
+        }
 
-        [[nodiscard]] constexpr value_type operator*() const noexcept
+        [[nodiscard]] constexpr auto operator*() const noexcept -> value_type
         {
             return static_cast<value_type>(std::countr_zero(value));
         }
 
-        constexpr BitboardIterator& operator++() noexcept
+        constexpr auto operator++() noexcept -> BitboardIterator&
         {
             assert(value > UINT64_C(0));
 
@@ -410,7 +413,7 @@ namespace detail {
             return *this;
         }
 
-        [[nodiscard]] constexpr BitboardIterator operator++(int) noexcept
+        [[nodiscard]] constexpr auto operator++(int) noexcept -> BitboardIterator
         {
             const auto ret { *this };
             ++*this;

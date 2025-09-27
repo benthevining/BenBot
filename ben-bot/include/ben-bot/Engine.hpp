@@ -49,8 +49,8 @@ public:
     void print_logo_and_version() const;
 
 private:
-    [[nodiscard]] std::string get_name() const override;
-    [[nodiscard]] string_view get_author() const override { return "Ben Vining"; }
+    [[nodiscard]] auto get_name() const -> std::string override;
+    [[nodiscard]] auto get_author() const -> string_view override { return "Ben Vining"; }
 
     void new_game(bool firstCall) override;
 
@@ -64,11 +64,14 @@ private:
 
     void wait() override { searcher.context.wait(); }
 
-    bool is_searching() const noexcept override { return searcher.context.in_progress(); }
+    auto is_searching() const noexcept -> bool override { return searcher.context.in_progress(); }
 
     void set_debug(const bool shouldDebug) override { debugMode.store(shouldDebug); }
 
-    [[nodiscard]] std::span<uci::Option*> get_options() override { return options; }
+    [[nodiscard]] auto get_options() -> std::span<uci::Option*> override
+    {
+        return options;
+    }
 
     void option_changed(const uci::Option& option) override;
 

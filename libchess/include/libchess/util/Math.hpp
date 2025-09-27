@@ -40,8 +40,9 @@ namespace chess::util {
 /** Returns true if the given value is an even number.
     @ingroup util
  */
-[[nodiscard, gnu::const]] constexpr bool is_even(
+[[nodiscard, gnu::const]] constexpr auto is_even(
     const std::integral auto value) noexcept
+    -> bool
 {
     return static_cast<int>(value) % 2 == 0;
 }
@@ -52,8 +53,9 @@ using std::uint64_t;
     128-bit result as a 64-bit integer.
     @ingroup util
  */
-[[nodiscard, gnu::const]] inline uint64_t mul_hi64(
+[[nodiscard, gnu::const]] inline auto mul_hi64(
     const uint64_t first, const uint64_t second) noexcept
+    -> uint64_t
 {
 #ifdef __SIZEOF_INT128__
     __extension__ using uint128_t = unsigned __int128;

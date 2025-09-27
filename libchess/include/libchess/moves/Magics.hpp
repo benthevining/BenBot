@@ -45,24 +45,27 @@ using board::Square;
     The returned move set includes possible captures (i.e., rays ending where an enemy piece
     is located), and also considers blocking friendly pieces.
  */
-[[nodiscard]] Bitboard bishop(
-    const Square& bishopPos, Bitboard occupiedSquares, Bitboard friendlyPieces);
+[[nodiscard]] auto bishop(
+    const Square& bishopPos, Bitboard occupiedSquares, Bitboard friendlyPieces)
+    -> Bitboard;
 
 /** Calculates all pseudo-legal rook moves.
 
     The returned move set includes possible captures (i.e., rays ending where an enemy piece
     is located), and also considers blocking friendly pieces.
  */
-[[nodiscard]] Bitboard rook(
-    const Square& rookPos, Bitboard occupiedSquares, Bitboard friendlyPieces);
+[[nodiscard]] auto rook(
+    const Square& rookPos, Bitboard occupiedSquares, Bitboard friendlyPieces)
+    -> Bitboard;
 
 /** Calculates all pseudo-legal queen moves.
 
     The returned move set includes possible captures (i.e., rays ending where an enemy piece
     is located), and also considers blocking friendly pieces.
  */
-[[nodiscard]] Bitboard queen(
-    const Square& queenPos, Bitboard occupiedSquares, Bitboard friendlyPieces);
+[[nodiscard]] auto queen(
+    const Square& queenPos, Bitboard occupiedSquares, Bitboard friendlyPieces)
+    -> Bitboard;
 
 /// @}
 

@@ -259,8 +259,9 @@ namespace {
 
 } // namespace
 
-Bitboard bishop(
+auto bishop(
     const Square& bishopPos, const Bitboard occupiedSquares, const Bitboard friendlyPieces)
+    -> Bitboard
 {
     const auto moves = MAGIC_MOVES.at(
         calc_bishop_index(bishopPos.index(), occupiedSquares));
@@ -268,8 +269,9 @@ Bitboard bishop(
     return moves & friendlyPieces.inverse();
 }
 
-Bitboard rook(
+auto rook(
     const Square& rookPos, const Bitboard occupiedSquares, const Bitboard friendlyPieces)
+    -> Bitboard
 {
     const auto moves = MAGIC_MOVES.at(
         calc_rook_index(rookPos.index(), occupiedSquares));
@@ -277,8 +279,9 @@ Bitboard rook(
     return moves & friendlyPieces.inverse();
 }
 
-Bitboard queen(
+auto queen(
     const Square& queenPos, const Bitboard occupiedSquares, const Bitboard friendlyPieces)
+    -> Bitboard
 {
     const auto squareIdx = queenPos.index();
 

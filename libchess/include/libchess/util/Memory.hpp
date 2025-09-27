@@ -33,7 +33,7 @@ using std::size_t;
     @ingroup util
  */
 [[nodiscard, gnu::alloc_size(1), gnu::malloc, clang::ownership_returns(malloc)]]
-void* page_aligned_alloc(size_t size);
+auto page_aligned_alloc(size_t size) -> void*;
 
 /** Frees page-aligned memory allocated by ``page_aligned_alloc()``.
     This is a no-op if ``mem`` is ``nullptr``.

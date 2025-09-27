@@ -105,7 +105,7 @@ namespace {
 
 } // namespace
 
-string to_alg(const Position& position, const Move& move)
+auto to_alg(const Position& position, const Move& move) -> string
 {
     assert(not move.is_null());
 
@@ -399,7 +399,7 @@ namespace {
 
 using MoveOrError = std::expected<Move, string>;
 
-MoveOrError from_alg(const Position& position, string_view text)
+auto from_alg(const Position& position, string_view text) -> MoveOrError
 {
     text = util::trim(text);
 

@@ -74,7 +74,7 @@ struct Options final {
     void update_from(const chess::uci::GoCommandOptions& goOptions);
 
     /** Returns true if this search has any bounds other than depth. */
-    [[nodiscard]] bool is_bounded() const noexcept
+    [[nodiscard]] auto is_bounded() const noexcept -> bool
     {
         return searchTime.has_value() or maxNodes.has_value();
     }

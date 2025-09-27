@@ -37,7 +37,7 @@ enum class Color : std::uint_fast8_t {
     @see Color
  */
 template <Color Side>
-[[nodiscard]] constexpr Color other_side() noexcept
+[[nodiscard]] constexpr auto other_side() noexcept -> Color
 {
     if constexpr (Side == Color::White) {
         return Color::Black;

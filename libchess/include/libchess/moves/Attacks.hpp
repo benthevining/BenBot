@@ -42,8 +42,9 @@ using std::size_t;
     @see num_squares_attacked()
  */
 template <Color Side>
-[[nodiscard, gnu::const]] constexpr bool squares_attacked(
-    const Pieces& pieces, Bitboard targetSquares, Bitboard enemyPieces) noexcept;
+[[nodiscard, gnu::const]] constexpr auto squares_attacked(
+    const Pieces& pieces, Bitboard targetSquares, Bitboard enemyPieces) noexcept
+    -> bool;
 
 /** Returns the number of ``targetSquares`` that any of the ``pieces`` attack.
     This function considers only pseudo-legal moves, not strictly legal moves.
@@ -55,8 +56,9 @@ template <Color Side>
     @see squares_attacked()
  */
 template <Color Side>
-[[nodiscard, gnu::const]] constexpr size_t num_squares_attacked(
-    const Pieces& pieces, Bitboard targetSquares, Bitboard enemyPieces, bool includeKing = true) noexcept;
+[[nodiscard, gnu::const]] constexpr auto num_squares_attacked(
+    const Pieces& pieces, Bitboard targetSquares, Bitboard enemyPieces, bool includeKing = true) noexcept
+    -> size_t;
 
 /*
                          ___                           ,--,
@@ -76,8 +78,9 @@ template <Color Side>
  */
 
 template <Color Side>
-constexpr bool squares_attacked(
+constexpr auto squares_attacked(
     const Pieces& pieces, const Bitboard targetSquares, const Bitboard enemyPieces) noexcept
+    -> bool
 {
     // For pawns, knights & kings we use the move pattern generator functions, because the only
     // difference with the pseudo-legal generator functions is excluding squares occupied by
@@ -123,8 +126,9 @@ constexpr bool squares_attacked(
 }
 
 template <Color Side>
-constexpr size_t num_squares_attacked(
+constexpr auto num_squares_attacked(
     const Pieces& pieces, const Bitboard targetSquares, const Bitboard enemyPieces, const bool includeKing) noexcept
+    -> size_t
 {
     const auto friendlyPieces = pieces.occupied;
     const auto emptySquares   = (friendlyPieces | enemyPieces).inverse();

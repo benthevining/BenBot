@@ -44,7 +44,7 @@ using StringViewPair = std::pair<string_view, string_view>;
 /** Trims any whitespace characters from the beginning and ending
     of the string, including space and newline characters.
  */
-[[nodiscard]] string_view trim(string_view text);
+[[nodiscard]] auto trim(string_view text) -> string_view;
 
 /** Splits the input string into segments before and after the first
     whitespace character. If there is no whitespace in the input
@@ -55,13 +55,13 @@ using StringViewPair = std::pair<string_view, string_view>;
 
     @see split_at_first_space_or_newline()
  */
-[[nodiscard]] StringViewPair split_at_first_space(string_view input);
+[[nodiscard]] auto split_at_first_space(string_view input) -> StringViewPair;
 
 /** Similar to ``split_at_first_space()``, but also splits on newlines.
 
     @see split_at_first_space()
  */
-[[nodiscard]] StringViewPair split_at_first_space_or_newline(string_view input);
+[[nodiscard]] auto split_at_first_space_or_newline(string_view input) -> StringViewPair;
 
 /** For a string beginning with ``(``, finds the index of the matching ``)``
     character, taking nested ``()`` pairs into account. This function asserts
@@ -70,15 +70,16 @@ using StringViewPair = std::pair<string_view, string_view>;
     @throws std::invalid_argument An exception will be thrown if no matching
     ``)`` character is found.
  */
-[[nodiscard]] size_t find_matching_close_paren(string_view input);
+[[nodiscard]] auto find_matching_close_paren(string_view input) -> size_t;
 
 /** Reads an integer from the input string using ``std::from_chars``.
 
     @see write_integer()
  */
 template <std::integral Int>
-[[nodiscard]] Int int_from_string(
-    string_view text, Int defaultValue = 0) noexcept;
+[[nodiscard]] auto int_from_string(
+    string_view text, Int defaultValue = 0) noexcept
+    -> Int;
 
 /** Appends an integer to the output string using ``std::to_chars``.
     This function uses stack memory for ``to_chars()`` to write into.

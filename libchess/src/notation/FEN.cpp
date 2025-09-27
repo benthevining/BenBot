@@ -30,7 +30,7 @@ namespace chess::notation {
 using pieces::Color;
 using std::size_t;
 
-std::string to_fen(const Position& position, const bool alwaysWriteEPSqare)
+auto to_fen(const Position& position, const bool alwaysWriteEPSqare) -> std::string
 {
     std::string fen;
 
@@ -73,7 +73,7 @@ std::string to_fen(const Position& position, const bool alwaysWriteEPSqare)
 
 using PositionOrError = std::expected<Position, std::string>;
 
-PositionOrError from_fen(std::string_view fenString)
+auto from_fen(std::string_view fenString) -> PositionOrError
 {
     using util::int_from_string;
     using util::split_at_first_space;

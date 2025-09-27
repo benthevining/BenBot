@@ -40,7 +40,7 @@ struct ThreefoldChecker final {
     constexpr void push(HashValue newHash);
 
     /** Returns true if the last call to ``push()`` created a threefold repetition in the history. */
-    [[nodiscard]] constexpr bool is_threefold() const noexcept;
+    [[nodiscard]] constexpr auto is_threefold() const noexcept -> bool;
 
 private:
     // stores a history of hash values
@@ -87,7 +87,7 @@ constexpr void ThreefoldChecker::push(const HashValue newHash)
     history.front() = newHash;
 }
 
-constexpr bool ThreefoldChecker::is_threefold() const noexcept
+constexpr auto ThreefoldChecker::is_threefold() const noexcept -> bool
 {
     // NB. the threefold repetition doesn't need to be consecutive within the history
     return std::cmp_greater_equal(

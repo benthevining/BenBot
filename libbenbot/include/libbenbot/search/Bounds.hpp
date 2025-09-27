@@ -43,14 +43,14 @@ struct Bounds final {
     /** Returns an inverted copy of these bounds, suitable for swapping the
         player perspectives.
      */
-    [[nodiscard]] constexpr Bounds invert() const noexcept;
+    [[nodiscard]] constexpr auto invert() const noexcept -> Bounds;
 
     /** Performs mate distance pruning.
         If an MDP cutoff is available, returns the cutoff value (and the
         search may return early). If no MDP cutoff is available, this method
         returns ``nullopt`` and the search should continue.
      */
-    [[nodiscard]] constexpr std::optional<Score> mate_distance_pruning(size_t plyFromRoot) noexcept;
+    [[nodiscard]] constexpr auto mate_distance_pruning(size_t plyFromRoot) noexcept -> std::optional<Score>;
 };
 
 /*
@@ -70,7 +70,7 @@ struct Bounds final {
 
  */
 
-constexpr Bounds Bounds::invert() const noexcept
+constexpr auto Bounds::invert() const noexcept -> Bounds
 {
     return {
         .alpha = -beta,
@@ -78,7 +78,7 @@ constexpr Bounds Bounds::invert() const noexcept
     };
 }
 
-constexpr std::optional<Score> Bounds::mate_distance_pruning(const size_t plyFromRoot) noexcept
+constexpr auto Bounds::mate_distance_pruning(const size_t plyFromRoot) noexcept -> std::optional<Score>
 {
     const auto mateScore = Score::mate(plyFromRoot);
 

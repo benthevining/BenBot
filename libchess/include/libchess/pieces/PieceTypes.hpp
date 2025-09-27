@@ -63,13 +63,16 @@ enum class Type : std::uint_fast8_t {
 
     @ingroup pieces
  */
-[[nodiscard]] std::expected<Type, std::string> from_string(std::string_view text);
+[[nodiscard]] auto from_string(std::string_view text)
+    -> std::expected<Type, std::string>;
 
 /** Converts the given piece type to its single-character representation.
 
     @ingroup pieces
  */
-[[nodiscard, gnu::const]] constexpr char to_char(Type type, bool uppercase = true) noexcept;
+[[nodiscard, gnu::const]] constexpr auto to_char(
+    Type type, bool uppercase = true) noexcept
+    -> char;
 
 } // namespace chess::pieces
 
@@ -82,14 +85,15 @@ enum class Type : std::uint_fast8_t {
 template <>
 struct std::formatter<chess::pieces::Type> final {
     template <typename ParseContext>
-    constexpr typename ParseContext::iterator parse(ParseContext& ctx)
+    constexpr auto parse(ParseContext& ctx) -> typename ParseContext::iterator
     {
         return ctx.begin();
     }
 
     template <typename FormatContext>
-    typename FormatContext::iterator format(
+    auto format(
         chess::pieces::Type piece, FormatContext& ctx) const
+        -> typename FormatContext::iterator
     {
         return std::format_to(ctx.out(), "{}", chess::pieces::to_char(piece));
     }
@@ -114,7 +118,7 @@ struct std::formatter<chess::pieces::Type> final {
 
 namespace chess::pieces {
 
-constexpr char to_char(const Type type, const bool uppercase) noexcept
+constexpr auto to_char(const Type type, const bool uppercase) noexcept -> char
 {
     if (uppercase) {
         static constexpr std::string_view upperChars { "PNBRQK" };
@@ -127,7 +131,8 @@ constexpr char to_char(const Type type, const bool uppercase) noexcept
     return lowerChars[std::to_underlying(type)];
 }
 
-inline std::expected<Type, std::string> from_string(std::string_view text)
+inline auto from_string(std::string_view text)
+    -> std::expected<Type, std::string>
 {
     if (text.length() != 1uz)
         text = text.substr(0uz, 1uz);

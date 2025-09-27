@@ -32,7 +32,6 @@
 #include <libchess/game/CastlingRights.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Attacks.hpp>
-#include <libchess/moves/MoveGen.hpp>
 #include <libchess/moves/Patterns.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <utility>
@@ -42,7 +41,8 @@ namespace ben_bot::eval {
 namespace {
 
     // returns a [0..1] value that is 0 at the start of the game and 1 in the late endgame
-    [[nodiscard, gnu::const]] constexpr auto endgame_phase_weight(const Position& position) noexcept
+    [[nodiscard, gnu::const]] constexpr auto endgame_phase_weight(
+        const Position& position) noexcept
         -> float
     {
         // game phase is roughly determined based on the total amount of non-pawn material left on the board
@@ -68,7 +68,8 @@ namespace {
     namespace masks = chess::board::masks;
 
     // awards a bonus for rooks on open or half-open files
-    [[nodiscard, gnu::const]] auto score_rook_files(const Position& position) noexcept
+    [[nodiscard, gnu::const]] auto score_rook_files(
+        const Position& position) noexcept
         -> int
     {
         static constexpr auto HALF_OPEN_FILE_BONUS = 30;
@@ -91,7 +92,8 @@ namespace {
     }
 
     // bonus for connected rooks
-    [[nodiscard, gnu::const]] auto score_connected_rooks(const Position& position) noexcept
+    [[nodiscard, gnu::const]] auto score_connected_rooks(
+        const Position& position) noexcept
         -> int
     {
         static constexpr auto OPEN_FILE_BONUS = 10; // extra bonus for connected rooks on open file
@@ -117,7 +119,8 @@ namespace {
     }
 
     // awards various penalties for king danger
-    [[nodiscard, gnu::const]] auto score_king_safety(const Position& position, const float endgameWeight) noexcept
+    [[nodiscard, gnu::const]] auto score_king_safety(
+        const Position& position, const float endgameWeight) noexcept
         -> int
     {
         static constexpr auto OPEN_KING_PENALTY        = -50;
@@ -193,7 +196,8 @@ namespace {
         return ourScore - theirScore;
     }
 
-    [[nodiscard, gnu::const]] auto score_squares_controlled_around_kings(const Position& position) noexcept
+    [[nodiscard, gnu::const]] auto score_squares_controlled_around_kings(
+        const Position& position) noexcept
         -> int
     {
         namespace moves = chess::moves;
@@ -252,7 +256,8 @@ namespace {
     // gives a bonus if we have at least 1 non-pawn piece left and our opponent doesn't
     // in cases such as having a queen & piece vs a rook, this prompts the engine to
     // consider sac'ing the queen for the rook, to eliminate the opponent's last piece
-    [[nodiscard, gnu::const]] auto no_pieces_left_bonus(const Position& position) noexcept
+    [[nodiscard, gnu::const]] auto no_pieces_left_bonus(
+        const Position& position) noexcept
         -> int
     {
         static constexpr auto LAST_PIECE_BONUS = 500;
@@ -282,7 +287,7 @@ namespace {
 
 } // namespace
 
-Score evaluate(const Position& position)
+auto evaluate(const Position& position) -> Score
 {
     const auto endgameWeight = endgame_phase_weight(position);
 

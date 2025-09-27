@@ -124,7 +124,7 @@ struct GameRecord final {
     std::vector<Move> moves;
 
     /** Returns the final position of this game. */
-    [[nodiscard]] Position get_final_position() const;
+    [[nodiscard]] auto get_final_position() const -> Position;
 };
 
 /** Parses the text of a PGN file into a GameRecord object.
@@ -135,7 +135,8 @@ struct GameRecord final {
     @relates GameRecord
     @see parse_all_pgns()
  */
-[[nodiscard]] std::expected<GameRecord, std::string_view> from_pgn(std::string_view pgnText);
+[[nodiscard]] auto from_pgn(std::string_view pgnText)
+    -> std::expected<GameRecord, std::string_view>;
 
 /** Parses a text file that may contain 0 or more PGNs into a list of
     GameRecord objects. PGNs in the ``fileContent`` should be separated
@@ -147,7 +148,8 @@ struct GameRecord final {
     @relates GameRecord
     @see from_pgn()
  */
-[[nodiscard]] std::vector<GameRecord> parse_all_pgns(std::string_view fileContent);
+[[nodiscard]] auto parse_all_pgns(std::string_view fileContent)
+    -> std::vector<GameRecord>;
 
 /** Creates a PGN string from the given game record.
 
@@ -160,6 +162,6 @@ struct GameRecord final {
     @ingroup notation
     @relates GameRecord
  */
-[[nodiscard]] string to_pgn(const GameRecord& game, bool useBlockComments = true);
+[[nodiscard]] auto to_pgn(const GameRecord& game, bool useBlockComments = true) -> string;
 
 } // namespace chess::notation

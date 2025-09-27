@@ -111,7 +111,7 @@ namespace {
     }
 } // namespace
 
-std::string get_build_time()
+auto get_build_time() -> std::string
 {
     static constexpr auto timePoint = build_date();
 

@@ -41,7 +41,8 @@ using util::trim;
 // split_at_first_space() will return a pair whose first element is empty
 // if its input string began with a space!
 
-std::expected<Position, std::string> parse_position_options(string_view options)
+auto parse_position_options(string_view options)
+    -> std::expected<Position, std::string>
 {
     // position [fen <fenstring> | startpos ]  moves <move1> .... <movei>
     // options doesn't include the "position" token itself
@@ -137,7 +138,7 @@ namespace {
     }
 } // namespace
 
-RegisterOptions parse_register_options(string_view options)
+auto parse_register_options(string_view options) -> RegisterOptions
 {
     // options doesn't include the "register" token itself
 
@@ -230,8 +231,9 @@ namespace {
 
 } // namespace
 
-GoCommandOptions parse_go_options(
+auto parse_go_options(
     string_view options, const Position& currentPosition)
+    -> GoCommandOptions
 {
     // options doesn't include the "go" token itself
 

@@ -40,7 +40,7 @@ using moves::Move;
     @ingroup notation
     @see from_uci()
  */
-[[nodiscard]] std::string to_uci(const Move& move);
+[[nodiscard]] auto to_uci(const Move& move) -> std::string;
 
 /** Parses the UCI-format algebraic notation string into a Move object.
     The current position is used to determine the type of the moved piece.
@@ -50,7 +50,8 @@ using moves::Move;
     @ingroup notation
     @see from_uci()
  */
-[[nodiscard]] std::expected<Move, std::string> from_uci(
-    const Position& position, std::string_view text);
+[[nodiscard]] auto from_uci(
+    const Position& position, std::string_view text)
+    -> std::expected<Move, std::string>;
 
 } // namespace chess::notation

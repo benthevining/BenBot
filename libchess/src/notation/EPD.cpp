@@ -67,7 +67,7 @@ namespace {
 
 using PositionOrError = std::expected<EPDPosition, string>;
 
-PositionOrError from_epd(string_view epdString)
+auto from_epd(string_view epdString) -> PositionOrError
 {
     using util::split_at_first_space;
 
@@ -106,7 +106,7 @@ PositionOrError from_epd(string_view epdString)
         });
 }
 
-std::vector<EPDPosition> parse_all_epds(const string_view fileContent)
+auto parse_all_epds(const string_view fileContent) -> std::vector<EPDPosition>
 {
     return util::lines_view(fileContent)
          | std::views::filter([](const string_view line) { return not line.empty(); })
@@ -133,7 +133,7 @@ namespace {
 
 } // namespace
 
-string to_epd(const EPDPosition& pos)
+auto to_epd(const EPDPosition& pos) -> string
 {
     string epd;
 

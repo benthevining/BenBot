@@ -248,7 +248,7 @@ namespace {
 
 } // namespace
 
-Hash CastlingRightsChanges::update_hash(Hash value) const noexcept
+auto CastlingRightsChanges::update_hash(Hash value) const noexcept -> Hash
 {
     if (whiteKingside)
         value ^= WHITE_KINGSIDE_CASTLE;
@@ -265,7 +265,9 @@ Hash CastlingRightsChanges::update_hash(Hash value) const noexcept
     return value;
 }
 
-Hash calculate(const Position& pos)
+using Placeholder = std::optional<int>;
+
+auto calculate(const Position& pos) -> Hash
 {
     Hash value { 0uz };
 
@@ -291,16 +293,17 @@ Hash calculate(const Position& pos)
 
     pos.enPassantTargetSquare.and_then([&value](const Square& square) {
         value ^= en_passant_key(square.file);
-        return std::optional<int> {};
+        return Placeholder {};
     });
 
     return value;
 }
 
-Hash update(
+auto update(
     const Position& pos, const Move& move,
     const std::optional<Square>  newEPTarget,
     const CastlingRightsChanges& rightsChanges)
+    -> Hash
 {
     auto value = pos.hash;
 
@@ -309,13 +312,13 @@ Hash update(
     // remove old EP target
     pos.enPassantTargetSquare.and_then([&value](const Square& square) {
         value ^= en_passant_key(square.file);
-        return std::optional<int> {};
+        return Placeholder {};
     });
 
     // add new EP target
     newEPTarget.and_then([&value](const Square& square) {
         value ^= en_passant_key(square.file);
-        return std::optional<int> {};
+        return Placeholder {};
     });
 
     // remove moved-from square
@@ -357,7 +360,7 @@ Hash update(
     return value;
 }
 
-Hash after_null_move(const Position& pos)
+auto after_null_move(const Position& pos) -> Hash
 {
     auto value = pos.hash;
 
@@ -366,7 +369,7 @@ Hash after_null_move(const Position& pos)
     // remove old EP target
     pos.enPassantTargetSquare.and_then([&value](const Square& square) {
         value ^= en_passant_key(square.file);
-        return std::optional<int> {};
+        return Placeholder {};
     });
 
     return value;
