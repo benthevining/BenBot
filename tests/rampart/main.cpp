@@ -32,7 +32,7 @@
 #include <span>
 #include <string_view>
 
-auto main(const int argc, const char** argv) -> int
+int main(const int argc, const char** argv)
 try {
     static constexpr auto MAX_ARGS = 3uz;
 
