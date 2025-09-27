@@ -52,7 +52,9 @@ jobs:
 
     steps:
     - name: Install dependencies
-      run: sudo apt install doxygen graphviz
+      run: |
+        sudo apt-get update
+        sudo apt install -y doxygen graphviz libc++-dev libc++abi-dev
 
     - name: Checkout code
       uses: actions/checkout@v5

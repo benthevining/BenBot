@@ -82,7 +82,7 @@ jobs:
       working-directory: .github/scripts
 
     - name: Install Linux dependencies
-      if: runner.os == Linux
+      if: runner.os == 'Linux'
       run: |
         sudo apt-get update
         sudo apt-get install -y libc++-dev libc++abi-dev
