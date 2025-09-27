@@ -262,7 +262,11 @@ void parse_en_passant_target_square(
         return;
     }
 
-    position.enPassantTargetSquare = Square::from_string(fenFragment);
+    Square::from_string(fenFragment)
+        .and_then([&position](const Square epSqare) {
+            position.enPassantTargetSquare = epSqare;
+            return std::expected<void, string> {};
+        });
 }
 
 } // namespace chess::notation::fen_helpers

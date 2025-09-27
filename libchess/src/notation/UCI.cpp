@@ -62,22 +62,28 @@ std::expected<Move, std::string> from_uci(
 
     const auto from = Square::from_string(text.substr(0uz, 2uz));
 
+    if (not from.has_value())
+        return std::unexpected(from.error());
+
     text = text.substr(2uz);
 
     const auto dest = Square::from_string(text.substr(0uz, 2uz));
+
+    if (not dest.has_value())
+        return std::unexpected(dest.error());
 
     text = text.substr(2uz);
 
     const auto& pieces = position.our_pieces();
 
-    const auto movedType = pieces.get_piece_on(from);
+    const auto movedType = pieces.get_piece_on(from.value());
 
     if (not movedType.has_value()) {
         [[unlikely]];
         return std::unexpected(
             std::format(
                 "No piece for color {} can move from square {}",
-                magic_enum::enum_name(position.sideToMove), from));
+                magic_enum::enum_name(position.sideToMove), from.value()));
     }
 
     // promotion
@@ -93,11 +99,11 @@ std::expected<Move, std::string> from_uci(
         }
 
         return Move {
-            from, dest, movedType.value(), promotionType.value()
+            from.value(), dest.value(), movedType.value(), promotionType.value()
         };
     }
 
-    return Move { from, dest, movedType.value() };
+    return Move { from.value(), dest.value(), movedType.value() };
 }
 
 } // namespace chess::notation

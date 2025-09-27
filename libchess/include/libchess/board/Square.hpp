@@ -30,12 +30,13 @@
 #include <cassert>
 #include <compare>
 #include <cstddef> // IWYU pragma: keep - for size_t
+#include <expected>
 #include <format>
 #include <libchess/board/BitboardIndex.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Rank.hpp>
 #include <libchess/util/Math.hpp>
-#include <stdexcept>
+#include <string>
 #include <string_view>
 #include <utility>
 
@@ -85,10 +86,9 @@ struct Square final {
         This method recognizes either upper- or lower-case file letters. This method
         always throws if the input string is not 2 characters long.
 
-        @throws std::invalid_argument An exception will be thrown if a square cannot be
-        parsed correctly from the input string.
+        If the input string cannot be parsed correctly, returns an explanatory error string.
      */
-    [[nodiscard, gnu::const]] static Square from_string(std::string_view text);
+    [[nodiscard]] static std::expected<Square, std::string> from_string(std::string_view text);
 
     /** Returns the bitboard bit index for this square.
         The returned index will be in the range ``[0,63]``.
@@ -232,24 +232,26 @@ constexpr bool Square::is_light() const noexcept
         std::to_underlying(rank) + std::to_underlying(file));
 }
 
-inline Square Square::from_string(const std::string_view text)
+inline std::expected<Square, std::string> Square::from_string(const std::string_view text)
 {
-    if (text.length() != 2uz)
-        throw std::invalid_argument {
-            std::format("Cannot parse Square from invalid input string: {}", text)
-        };
+    if (text.length() != 2uz) {
+        return std::unexpected(
+            std::format(
+                "Cannot parse Square from invalid input string: {}",
+                text));
+    }
 
     const auto rank = rank_from_char(text.back());
 
     if (not rank.has_value())
-        throw std::invalid_argument { rank.error() };
+        return std::unexpected(rank.error());
 
     const auto file = file_from_char(text.front());
 
     if (not file.has_value())
-        throw std::invalid_argument { file.error() };
+        return std::unexpected(file.error());
 
-    return {
+    return Square {
         .file = file.value(),
         .rank = rank.value()
     };

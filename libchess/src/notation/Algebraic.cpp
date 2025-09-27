@@ -371,11 +371,16 @@ namespace {
             if (not file.has_value())
                 return std::nullopt;
 
+            const auto destSquare = Square::from_string(text.substr(eqSgnPos - 2uz, 2uz));
+
+            if (not destSquare.has_value())
+                return std::nullopt;
+
             return Move {
                 Square {
                     .file = file.value(),
                     .rank = color == Color::White ? Rank::Seven : Rank::Two },
-                Square::from_string(text.substr(eqSgnPos - 2uz, 2uz)),
+                destSquare.value(),
                 PieceType::Pawn, promotedType.value()
             };
         }
@@ -414,6 +419,9 @@ std::expected<Move, string> from_alg(const Position& position, string_view text)
 
     const auto targetSquare = Square::from_string(text.substr(text.length() - 2uz));
 
+    if (not targetSquare.has_value())
+        return std::unexpected(targetSquare.error());
+
     // trim target square
     text.remove_suffix(2uz);
 
@@ -432,7 +440,7 @@ std::expected<Move, string> from_alg(const Position& position, string_view text)
     // pawn capture, it's the file letter of the starting square
 
     if (isCapture and not text.empty())
-        if (const auto move = parse_pawn_capture(targetSquare, text, position.sideToMove))
+        if (const auto move = parse_pawn_capture(targetSquare.value(), text, position.sideToMove))
             return *move;
 
     const auto pieceType = text.empty()
@@ -446,9 +454,9 @@ std::expected<Move, string> from_alg(const Position& position, string_view text)
     if (not text.empty())
         text = text.substr(1uz);
 
-    return get_starting_square(position, targetSquare, pieceType.value(), text)
+    return get_starting_square(position, targetSquare.value(), pieceType.value(), text)
         .transform([targetSquare, pieceType](const Square startSquare) {
-            return Move { startSquare, targetSquare, pieceType.value() };
+            return Move { startSquare, targetSquare.value(), pieceType.value() };
         });
 }
 
