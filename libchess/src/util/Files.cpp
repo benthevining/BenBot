@@ -21,7 +21,7 @@
 
 namespace chess::util {
 
-std::string load_file_as_string(std::filesystem::path file)
+auto load_file_as_string(std::filesystem::path file) -> std::string
 {
     file = absolute(file);
 

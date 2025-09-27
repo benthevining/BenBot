@@ -24,7 +24,7 @@
 namespace chess::util {
 
 [[nodiscard, gnu::alloc_size(1), gnu::malloc, clang::ownership_returns(malloc)]]
-inline void* page_aligned_alloc_impl(const std::size_t size)
+inline auto page_aligned_alloc_impl(const std::size_t size) -> void*
 {
 #ifdef __linux__
     static constexpr auto alignment = 2uz * 1024uz * 1024uz; // 2MB page size assumed

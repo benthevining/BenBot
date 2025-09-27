@@ -205,25 +205,25 @@ void Position::refresh_zobrist()
     threefoldChecker.reset(hash);
 }
 
-bool Position::is_checkmate() const
+auto Position::is_checkmate() const -> bool
 {
     return is_check()
        and not moves::any_legal_moves(*this);
 }
 
-bool Position::is_stalemate() const
+auto Position::is_stalemate() const -> bool
 {
     return not is_check()
        and not moves::any_legal_moves(*this);
 }
 
-bool Position::is_fifty_move_draw() const
+auto Position::is_fifty_move_draw() const -> bool
 {
     return std::cmp_greater_equal(halfmoveClock, 100)
        and moves::any_legal_moves(*this); // side to move must have at least 1 legal move
 }
 
-bool Position::is_draw_by_insufficient_material() const noexcept
+auto Position::is_draw_by_insufficient_material() const noexcept -> bool
 {
     // even if either side has a single pawn that can't move, mate can still be possible
     if (whitePieces.pawns.any() or blackPieces.pawns.any()
@@ -258,7 +258,7 @@ bool Position::is_draw_by_insufficient_material() const noexcept
     return numWhiteKnights + numWhiteBishops == 1uz;
 }
 
-bool Position::is_draw() const
+auto Position::is_draw() const -> bool
 {
     if (is_threefold_repetition() or is_draw_by_insufficient_material())
         return true;
@@ -269,7 +269,7 @@ bool Position::is_draw() const
     return not is_check(); // stalemate
 }
 
-std::optional<Result> Position::get_result() const
+auto Position::get_result() const -> std::optional<Result>
 {
     if (is_draw())
         return Result::Draw;
@@ -285,7 +285,7 @@ std::optional<Result> Position::get_result() const
     return Result::WhiteWon;
 }
 
-std::optional<std::string> Position::is_illegal() const
+auto Position::is_illegal() const -> std::optional<std::string>
 {
     // for reference, see the rules defined at https://github.com/lechmazur/ChessCounter#rules
 

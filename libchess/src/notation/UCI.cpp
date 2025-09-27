@@ -26,7 +26,7 @@
 
 namespace chess::notation {
 
-std::string to_uci(const Move& move)
+auto to_uci(const Move& move) -> std::string
 {
     if (move.is_null()) {
         [[unlikely]];
@@ -45,8 +45,9 @@ std::string to_uci(const Move& move)
 
 using MoveOrError = std::expected<Move, std::string>;
 
-MoveOrError from_uci(
+auto from_uci(
     const Position& position, std::string_view text)
+    -> MoveOrError
 {
     using board::Square;
 

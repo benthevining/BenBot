@@ -41,7 +41,7 @@ BoolOption::BoolOption(
 {
 }
 
-string BoolOption::get_declaration_string() const
+auto BoolOption::get_declaration_string() const -> string
 {
     return std::format(
         "option name {} type check default {}",
@@ -85,7 +85,7 @@ IntOption::IntOption(
     assert(optionDefault <= optionMax);
 }
 
-string IntOption::get_declaration_string() const
+auto IntOption::get_declaration_string() const -> string
 {
     return std::format(
         "option name {} type spin default {} min {} max {}",
@@ -121,7 +121,7 @@ ComboOption::ComboOption(
     assert(std::ranges::contains(possibleValues, optionDefault));
 }
 
-string ComboOption::get_declaration_string() const
+auto ComboOption::get_declaration_string() const -> string
 {
     auto result = std::format(
         "option name {} type combo default {}",
@@ -164,7 +164,7 @@ StringOption::StringOption(
 {
 }
 
-string StringOption::get_declaration_string() const
+auto StringOption::get_declaration_string() const -> string
 {
     return std::format(
         "option name {} type string default {}",
@@ -196,7 +196,7 @@ Action::Action(
     assert(callback != nullptr);
 }
 
-string Action::get_declaration_string() const
+auto Action::get_declaration_string() const -> string
 {
     return std::format("option name {} type button", optionName);
 }

@@ -29,7 +29,7 @@
 
 namespace chess::util {
 
-void* page_aligned_alloc(const std::size_t size)
+auto page_aligned_alloc(const std::size_t size) -> void*
 {
     if (size == 0uz)
         return nullptr;

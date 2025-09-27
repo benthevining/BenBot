@@ -38,7 +38,7 @@ using std::size_t;
 
 namespace impl {
     template <typename Func>
-    [[nodiscard]] Func find_function(HMODULE handle, LPCSTR name)
+    [[nodiscard]] auto find_function(HMODULE handle, LPCSTR name) -> Func
     {
         using VoidFuncPtr = void (*)();
 
@@ -47,7 +47,7 @@ namespace impl {
     }
 
     [[nodiscard, gnu::alloc_size(1), gnu::malloc, clang::ownership_returns(malloc)]]
-    inline void* page_aligned_alloc_internal([[maybe_unused]] const size_t size)
+    inline auto page_aligned_alloc_internal([[maybe_unused]] const size_t size) -> void*
     {
 #ifndef _WIN64
         return nullptr;
@@ -129,7 +129,7 @@ namespace impl {
 } // namespace impl
 
 [[nodiscard, gnu::alloc_size(1), gnu::malloc, clang::ownership_returns(malloc)]]
-inline void* page_aligned_alloc_impl(const size_t size)
+inline auto page_aligned_alloc_impl(const size_t size) -> void*
 {
     if (auto* mem = impl::page_aligned_alloc_internal(size)) // cppcheck-suppress knownConditionTrueFalse
         return mem;

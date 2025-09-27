@@ -204,8 +204,9 @@ namespace {
 
 } // namespace
 
-std::expected<void, string> parse_piece_positions(
+auto parse_piece_positions(
     string_view fenFragment, Position& position)
+    -> std::expected<void, string>
 {
     for (const auto rank : std::views::reverse(enum_values<board::Rank>())) {
         const auto left = parse_rank(rank, fenFragment, position);
@@ -222,8 +223,9 @@ std::expected<void, string> parse_piece_positions(
     return {};
 }
 
-std::expected<void, string> parse_side_to_move(
+auto parse_side_to_move(
     const string_view fenFragment, Position& position)
+    -> std::expected<void, string>
 {
     if (fenFragment.length() != 1uz) {
         return std::unexpected(
