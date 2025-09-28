@@ -681,3 +681,8 @@
 * warnings ([483e51b](https://github.com/benthevining/BenBot/commit/483e51bf12973a65d0113a023285f43f1e88cf42))
 * Windows build of large page alloc functions ([f07cefc](https://github.com/benthevining/BenBot/commit/f07cefcd4720693275286b39819dc6442b05f9d6))
 * Windows install ([579a7d9](https://github.com/benthevining/BenBot/commit/579a7d92f28f9414853cb59a3f566cf7ce2afccd))
+## [1.6.1](https://github.com/benthevining/BenBot/compare/v1.6.0...v1.6.1) (2025-09-28)
+
+### Bug Fixes
+
+* **ci:** installing libc++ where needed ([2076110](https://github.com/benthevining/BenBot/commit/2076110676caa3cdf5f83c7979512202bd828ced))
