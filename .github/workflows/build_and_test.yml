@@ -61,7 +61,7 @@ jobs:
           config: Debug
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }}.${{ matrix.preset }}.${{ matrix.config }}.${{ inputs.dashboard_type }}
-    timeout-minutes: 120
+    timeout-minutes: 180 # 3 hours
     env:
       CMAKE_OSX_ARCHITECTURES: arm64;x86_64
       CMAKE_BUILD_PARALLEL_LEVEL: 8

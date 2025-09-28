@@ -27,27 +27,6 @@ list (APPEND CTEST_CUSTOM_COVERAGE_EXCLUDE # cmake-format: sortable
       "@CMAKE_PREFIX_PATH@" "@FETCHCONTENT_BASE_DIR@" "(_cmrc)+" "(_deps)+"
 )
 
-list (
-    APPEND
-    CTEST_CUSTOM_ERROR_EXCEPTION
-    # cmake-format: sortable
-    "(information:)+"
-    "([internalAstError])+" # cppcheck false positives for C++23 syntax it can't parse
-    "(style:)+" # style warnings shouldn't be a hard error
-    "(performance:)+"
-)
-
-list (APPEND CTEST_CUSTOM_WARNING_MATCH # cmake-format: sortable
-      "(style:)+" "(performance:)+"
-)
-
-list (
-    APPEND
-    CTEST_CUSTOM_WARNING_EXCEPTION
-    # cmake-format: sortable
-    "@CMAKE_PREFIX_PATH@"
-    "@FETCHCONTENT_BASE_DIR@"
-    "(note:)+"
-    "(_deps)+"
-    "Warning: cpplint diagnostics:" # this line precedes the actual warning output
+list (APPEND CTEST_CUSTOM_WARNING_EXCEPTION # cmake-format: sortable
+      "@CMAKE_PREFIX_PATH@" "@FETCHCONTENT_BASE_DIR@" "(_cmrc)+" "(_deps)+"
 )

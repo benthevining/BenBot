@@ -247,10 +247,9 @@ auto TranspositionTable::probe_eval(
 auto TranspositionTable::get_best_response(
     const Position& pos, const Move& move) const -> std::optional<Move>
 {
-    if (const auto record = find(after_move(pos, move)))
-        return record->bestMove;
-
-    return std::nullopt;
+    return find(after_move(pos, move))
+        .transform([](const TTData& data) { return data.bestMove; })
+        .value_or(std::nullopt);
 }
 
 void TranspositionTable::store(const Position& pos, const TTData& record)

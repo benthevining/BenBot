@@ -240,7 +240,7 @@ namespace {
         return std::transform_reduce(
             squares.begin(), squares.end(),
             prevValue,
-            std::bit_xor<void> {},
+            std::bit_xor<> {},
             [type](const Square square) {
                 return piece_key(type, Side, square);
             });

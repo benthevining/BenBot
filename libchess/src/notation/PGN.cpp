@@ -453,12 +453,9 @@ namespace {
             "Event"s, "Site"s, "Date"s, "Round"s, "White"s, "Black"s, "Result"s
         };
 
-        for (const auto& tag : sevenTagRoster) {
-            const auto pos = metadata.find(tag);
-
-            if (pos != metadata.end())
+        for (const auto& tag : sevenTagRoster)
+            if (const auto pos = metadata.find(tag); pos != metadata.end())
                 write_metadata_item(tag, pos->second, output);
-        }
 
         // write extra metadata tags not part of seven tag roster
         for (const auto& [key, value] : metadata
@@ -494,13 +491,11 @@ namespace {
             if (position.is_white_to_move()) {
                 output.append(std::format("{}.{} ",
                     position.fullMoveCounter, to_alg(position, move.move)));
+            } else if (writeMoveNumber) {
+                output.append(std::format("{}...{} ",
+                    position.fullMoveCounter, to_alg(position, move.move)));
             } else {
-                if (writeMoveNumber) {
-                    output.append(std::format("{}...{} ",
-                        position.fullMoveCounter, to_alg(position, move.move)));
-                } else {
-                    output.append(std::format("{} ", to_alg(position, move.move)));
-                }
+                output.append(std::format("{} ", to_alg(position, move.move)));
             }
 
             for (const auto nag : move.nags) {

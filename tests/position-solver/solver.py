@@ -10,9 +10,12 @@
 #
 # ======================================================================================
 
+import logging
 from pathlib import Path
 import sys
 import chess.engine
+
+logging.basicConfig(level=logging.DEBUG)
 
 TESTCASE_FILE = Path(sys.argv[1])
 LINE_IDX = int(sys.argv[2].strip())

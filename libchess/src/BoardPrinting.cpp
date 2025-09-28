@@ -101,13 +101,13 @@ namespace game {
 
         return generate_board_string<true>(
             [&position](const Square square) {
-                if (const auto piece = position.whitePieces.get_piece_on(square))
-                    return utf8_pieces::white::get(*piece);
-
-                if (const auto piece = position.blackPieces.get_piece_on(square))
-                    return utf8_pieces::black::get(*piece);
-
-                return std::string_view { " " };
+                return position.whitePieces.get_piece_on(square)
+                    .transform([](const PieceType type) { return utf8_pieces::white::get(type); })
+                    .or_else([&position, square] {
+                        return position.blackPieces.get_piece_on(square)
+                            .transform([](const PieceType type) { return utf8_pieces::black::get(type); });
+                    })
+                    .value_or(std::string_view { " " });
             });
     }
 
@@ -115,13 +115,13 @@ namespace game {
     {
         return generate_board_string<true>(
             [&position](const Square square) {
-                if (const auto piece = position.whitePieces.get_piece_on(square))
-                    return pieces::to_char(*piece, true);
-
-                if (const auto piece = position.blackPieces.get_piece_on(square))
-                    return pieces::to_char(*piece, false);
-
-                return ' ';
+                return position.whitePieces.get_piece_on(square)
+                    .transform([](const PieceType type) { return pieces::to_char(type, true); })
+                    .or_else([&position, square] {
+                        return position.blackPieces.get_piece_on(square)
+                            .transform([](const PieceType type) { return pieces::to_char(type, false); });
+                    })
+                    .value_or(' ');
             });
     }
 

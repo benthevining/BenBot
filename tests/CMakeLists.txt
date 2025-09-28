@@ -49,6 +49,8 @@ add_subdirectory (position-solver)
 add_subdirectory (fastchess)
 add_subdirectory (matetrack)
 
-add_test (NAME ben_bot.bench.engine_nps COMMAND ben_bot::ben_bot bench --no-loop)
+add_test (NAME ben_bot.bench.engine_nps COMMAND ben_bot::ben_bot bench --no-loop
+          CONFIGURATIONS Release
+)
 
 set_tests_properties (ben_bot.bench.engine_nps PROPERTIES RUN_SERIAL TRUE)

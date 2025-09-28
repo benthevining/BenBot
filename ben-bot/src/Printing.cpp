@@ -16,6 +16,7 @@
 #include <ben-bot/Resources.hpp>
 #include <ben-bot/TextTable.hpp>
 #include <format>
+#include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Score.hpp>
 #include <libbenbot/search/Result.hpp>
@@ -59,7 +60,7 @@ void Engine::print_help(const string_view args) const
         return chess::util::trim(args) == "--no-logo";
     }();
 
-    if (! noLogo) {
+    if (not noLogo) {
         print_logo_and_version();
 
         println("");
@@ -149,16 +150,19 @@ void Engine::print_current_position(const string_view arguments) const
     info_string(std::format("FEN: {}", chess::notation::to_fen(pos)));
     info_string(std::format("Zobrist key: {}", pos.hash));
 
-    if (const auto record = searcher.context.transTable.find(pos)) {
-        const auto score = eval::Score::from_tt({ record->eval, record->evalType }, 0uz);
+    searcher.context.transTable.find(pos)
+        .and_then([](const TTData& data) {
+            const auto score = eval::Score::from_tt({ data.eval, data.evalType }, 0uz);
 
-        info_string(std::format(
-            "TT hit: depth {} eval {} type {} probed {} bestmove {}",
-            record->searchedDepth, record->eval,
-            magic_enum::enum_name(record->evalType),
-            score,
-            chess::notation::to_uci(record->bestMove.value_or(Move {}))));
-    }
+            info_string(std::format(
+                "TT hit: depth {} eval {} type {} probed {} bestmove {}",
+                data.searchedDepth, data.eval,
+                magic_enum::enum_name(data.evalType),
+                score,
+                chess::notation::to_uci(data.bestMove.value_or(Move {}))));
+
+            return std::optional<int> {};
+        });
 
     info_string(std::format("Static eval: {}", eval::evaluate(pos)));
 }
