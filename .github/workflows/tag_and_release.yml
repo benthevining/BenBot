@@ -117,6 +117,12 @@ jobs:
       DEPLOY_DIR: deploy
 
     steps:
+    - name: Install Linux dependencies
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libc++-dev libc++abi-dev
+
     - name: Checkout code
       uses: actions/checkout@v5
       with:
