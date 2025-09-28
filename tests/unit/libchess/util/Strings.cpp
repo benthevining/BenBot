@@ -148,3 +148,17 @@ TEST_CASE("Strings - split_at_first_space_or_newline()", TAGS)
         }
     }
 }
+
+TEST_CASE("Strings - find_matching_close_paren()", TAGS)
+{
+    using chess::util::find_matching_close_paren;
+
+    REQUIRE(not find_matching_close_paren("(").has_value());
+    REQUIRE(not find_matching_close_paren("(()").has_value());
+
+    REQUIRE(find_matching_close_paren("()").value() == 1uz);
+    REQUIRE(find_matching_close_paren("(())").value() == 3uz);
+
+    REQUIRE(find_matching_close_paren("(123)34f3g3g").value() == 4uz);
+    REQUIRE(find_matching_close_paren("(3(ervev)1424)wcevev").value() == 13uz);
+}
