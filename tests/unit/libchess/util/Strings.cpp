@@ -14,6 +14,9 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include <libchess/util/Strings.hpp>
+#include <ranges>
+#include <string_view>
+#include <vector>
 
 static constexpr auto TAGS { "[util][strings]" };
 
@@ -161,4 +164,40 @@ TEST_CASE("Strings - find_matching_close_paren()", TAGS)
 
     REQUIRE(find_matching_close_paren("(123)34f3g3g").value() == 4uz);
     REQUIRE(find_matching_close_paren("(3(ervev)1424)wcevev").value() == 13uz);
+}
+
+TEST_CASE("Strings - lines_view()", TAGS)
+{
+    auto lines_vector = [](const std::string_view input) {
+        return chess::util::lines_view(input)
+             | std::ranges::to<std::vector>();
+    };
+
+    REQUIRE(lines_vector({}).empty());
+
+    SECTION("Single line")
+    {
+        const auto lines = lines_vector("123456");
+
+        REQUIRE(lines.size() == 1uz);
+        REQUIRE(lines.front() == "123456");
+    }
+
+    SECTION("Single line ending in newline")
+    {
+        const auto lines = lines_vector("123456\n");
+
+        REQUIRE(lines.size() == 1uz);
+        REQUIRE(lines.front() == "123456");
+    }
+
+    SECTION("2 lines")
+    {
+        const auto lines = lines_vector("123\n456");
+
+        REQUIRE(lines.size() == 2uz);
+
+        REQUIRE(lines.front() == "123");
+        REQUIRE(lines.back() == "456");
+    }
 }
