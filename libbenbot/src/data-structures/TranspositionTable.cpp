@@ -25,6 +25,7 @@
 #include <iterator>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/search/Bounds.hpp>
+#include <libchess/uci/DefaultOptions.hpp>
 #include <libchess/util/Math.hpp>
 #include <libchess/util/Memory.hpp>
 #include <memory>
@@ -103,6 +104,12 @@ struct TranspositionTable::Cluster final {
 
     std::array<std::byte, 4uz> padding {}; // pad to 64 bytes
 };
+
+TranspositionTable::TranspositionTable()
+{
+    resize(static_cast<size_t>(
+        chess::uci::default_options::hash_size().get_default_value()));
+}
 
 TranspositionTable::TranspositionTable(TranspositionTable&& other) noexcept
     : table { std::exchange(other.table, nullptr) }
@@ -224,7 +231,7 @@ auto TranspositionTable::probe_eval(
                 return std::make_pair(record->eval, record->evalType);
 
             case Alpha: {
-                if (record->eval <= bounds.alpha)
+                if (record->eval < bounds.alpha)
                     return std::make_pair(bounds.alpha, record->evalType);
 
                 break;
