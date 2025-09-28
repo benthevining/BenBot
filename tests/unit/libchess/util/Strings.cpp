@@ -70,4 +70,81 @@ TEST_CASE("Strings - split_at_first_space()", TAGS)
         REQUIRE(before == "123");
         REQUIRE(after == "456");
     }
+
+    SECTION("Second word contains spaces")
+    {
+        const auto [before, after] = split_at_first_space("123 456 789");
+
+        REQUIRE(before == "123");
+        REQUIRE(after == "456 789");
+    }
+}
+
+TEST_CASE("Strings - split_at_first_space_or_newline()", TAGS)
+{
+    using chess::util::split_at_first_space_or_newline;
+
+    SECTION("Empty string")
+    {
+        const auto [before, after] = split_at_first_space_or_newline({});
+
+        REQUIRE(before.empty());
+        REQUIRE(after.empty());
+    }
+
+    SECTION("No whitespace")
+    {
+        const auto [before, after] = split_at_first_space_or_newline("abcdef");
+
+        REQUIRE(before == "abcdef");
+        REQUIRE(after.empty());
+    }
+
+    SECTION("Starts with whitespace")
+    {
+        {
+            const auto [before, after] = split_at_first_space_or_newline(" abcdef");
+
+            REQUIRE(before.empty());
+            REQUIRE(after == "abcdef");
+        }
+        {
+            const auto [before, after] = split_at_first_space_or_newline("\nabcdef");
+
+            REQUIRE(before.empty());
+            REQUIRE(after == "abcdef");
+        }
+    }
+
+    SECTION("Two words")
+    {
+        {
+            const auto [before, after] = split_at_first_space_or_newline("123 456");
+
+            REQUIRE(before == "123");
+            REQUIRE(after == "456");
+        }
+        {
+            const auto [before, after] = split_at_first_space_or_newline("123\n456");
+
+            REQUIRE(before == "123");
+            REQUIRE(after == "456");
+        }
+    }
+
+    SECTION("Second word contains spaces")
+    {
+        {
+            const auto [before, after] = split_at_first_space_or_newline("123 456 789");
+
+            REQUIRE(before == "123");
+            REQUIRE(after == "456 789");
+        }
+        {
+            const auto [before, after] = split_at_first_space_or_newline("123\n456\n789");
+
+            REQUIRE(before == "123");
+            REQUIRE(after == "456\n789");
+        }
+    }
 }
