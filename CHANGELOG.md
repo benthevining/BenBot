@@ -686,3 +686,4 @@
 ### Bug Fixes
 
 * **ci:** installing libc++ where needed ([2076110](https://github.com/benthevining/BenBot/commit/2076110676caa3cdf5f83c7979512202bd828ced))
+## [1.6.2](https://github.com/benthevining/BenBot/compare/v1.6.1...v1.6.2) (2025-09-28)
