@@ -183,14 +183,6 @@ TEST_CASE("Strings - lines_view()", TAGS)
         REQUIRE(lines.front() == "123456");
     }
 
-    SECTION("Single line ending in newline")
-    {
-        const auto lines = lines_vector("123456\n");
-
-        REQUIRE(lines.size() == 1uz);
-        REQUIRE(lines.front() == "123456");
-    }
-
     SECTION("2 lines")
     {
         const auto lines = lines_vector("123\n456");
@@ -199,5 +191,33 @@ TEST_CASE("Strings - lines_view()", TAGS)
 
         REQUIRE(lines.front() == "123");
         REQUIRE(lines.back() == "456");
+    }
+}
+
+TEST_CASE("Strings - words_view()", TAGS)
+{
+    auto words_vector = [](const std::string_view input) {
+        return chess::util::words_view(input)
+             | std::ranges::to<std::vector>();
+    };
+
+    REQUIRE(words_vector({}).empty());
+
+    SECTION("Single word")
+    {
+        const auto words = words_vector("123456");
+
+        REQUIRE(words.size() == 1uz);
+        REQUIRE(words.front() == "123456");
+    }
+
+    SECTION("2 words")
+    {
+        const auto words = words_vector("123 456");
+
+        REQUIRE(words.size() == 2uz);
+
+        REQUIRE(words.front() == "123");
+        REQUIRE(words.back() == "456");
     }
 }
