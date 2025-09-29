@@ -98,7 +98,7 @@ namespace {
                     position, { .searchedDepth = depth,
                                   .eval        = eval::DRAW,
                                   .evalType    = EvalType::Exact,
-                                  .bestMove    = {} });
+                                  .bestMove    = std::nullopt });
 
                 return {};
             }
@@ -106,13 +106,15 @@ namespace {
             auto moves = chess::moves::generate(position);
 
             if (moves.empty() && position.is_check()) {
+                const auto score = Score::mate(plyFromRoot);
+
                 transTable.store(
                     position, { .searchedDepth = depth,
-                                  .eval        = -eval::MATE,
+                                  .eval        = score.to_tt(),
                                   .evalType    = EvalType::Exact,
-                                  .bestMove    = {} });
+                                  .bestMove    = std::nullopt });
 
-                return Score::mate(plyFromRoot);
+                return score;
             }
 
             detail::order_moves_for_search(position, moves, transTable);
