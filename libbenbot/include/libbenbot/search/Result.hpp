@@ -67,6 +67,9 @@ struct Result final {
     /** Number of cutoffs due to alpha-beta. */
     size_t betaCutoffs { 0uz };
 
+    /** The total number of static evaluations performed during the search. */
+    size_t staticEvals { 0uz };
+
     /** Number of cutoffs due to mate distance pruning. */
     size_t mdpCutoffs { 0uz };
 

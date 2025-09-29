@@ -28,8 +28,8 @@ namespace {
 
         if (res.nodesSearched == 0uz) {
             return std::format(
-                "TT hits {} Beta cutoffs {} MDP cutoffs {}",
-                res.transpositionTableHits, res.betaCutoffs, res.mdpCutoffs);
+                "TT hits {} Beta cutoffs {} MDP cutoffs {} Static evals {}",
+                res.transpositionTableHits, res.betaCutoffs, res.mdpCutoffs, res.staticEvals);
         }
 
         auto get_pcnt = [totalNodes = static_cast<double>(res.nodesSearched)](const size_t value) {
@@ -37,10 +37,11 @@ namespace {
         };
 
         return std::format(
-            "TT hits {} ({:.1f}%) Beta cutoffs {} ({:.1f}%) MDP cutoffs {} ({:.1f}%)",
+            "TT hits {} ({:.1f}%) Beta cutoffs {} ({:.1f}%) MDP cutoffs {} ({:.1f}%) Static evals {} ({:.1f}%)",
             res.transpositionTableHits, get_pcnt(res.transpositionTableHits),
             res.betaCutoffs, get_pcnt(res.betaCutoffs),
-            res.mdpCutoffs, get_pcnt(res.mdpCutoffs));
+            res.mdpCutoffs, get_pcnt(res.mdpCutoffs),
+            res.staticEvals, get_pcnt(res.staticEvals));
     }
 
 } // namespace

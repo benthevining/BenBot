@@ -45,7 +45,7 @@ namespace {
     struct Stats final {
         size_t nodesSearched { 0uz };
         size_t transTableHits { 0uz };
-
+        size_t staticEvals { 0uz };
         size_t betaCutoffs { 0uz };
         size_t mdpCutoffs { 0uz }; // cutoffs due to mate distance pruning
     };
@@ -180,6 +180,8 @@ namespace {
                 return Score::mate(plyFromRoot); // TODO: write to TT here?
 
             auto evaluation = eval::evaluate(position);
+
+            ++stats.staticEvals;
 
             // see if we can get a cutoff (we may not need to generate moves for this position)
             if (evaluation >= bounds.beta) {
@@ -363,6 +365,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
                 .nodesSearched                       = stats.nodesSearched,
                 .transpositionTableHits              = stats.transTableHits,
                 .betaCutoffs                         = stats.betaCutoffs,
+                .staticEvals                         = stats.staticEvals,
                 .mdpCutoffs                          = stats.mdpCutoffs,
                 .hashfull                            = transTable.hashfull() });
         }
@@ -390,6 +393,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         .nodesSearched                    = stats.nodesSearched,
         .transpositionTableHits           = stats.transTableHits,
         .betaCutoffs                      = stats.betaCutoffs,
+        .staticEvals                      = stats.staticEvals,
         .mdpCutoffs                       = stats.mdpCutoffs,
         .hashfull                         = transTable.hashfull() });
 }
