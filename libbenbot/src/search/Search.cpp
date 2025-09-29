@@ -149,8 +149,6 @@ namespace {
                     bestMove     = move;
                     evalType     = EvalType::Exact;
                     bounds.alpha = eval;
-
-                    // TODO: write to TT here?
                 }
             }
 
@@ -177,7 +175,7 @@ namespace {
             }
 
             if (position.is_checkmate())
-                return Score::mate(plyFromRoot); // TODO: write to TT here?
+                return Score::mate(plyFromRoot);
 
             auto evaluation = eval::evaluate(position);
 
@@ -301,7 +299,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         // because the move ordering will change based on the evaluations done during the last iteration
         detail::order_moves_for_search(options.position, options.movesToSearch, transTable);
 
-        Bounds bounds {};
+        Bounds bounds;
 
         std::optional<Move> bestMoveThisDepth;
 
