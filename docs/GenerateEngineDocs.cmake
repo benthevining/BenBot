@@ -25,12 +25,12 @@ if (NOT DEFINED ENGINE_PATH)
 endif ()
 
 execute_process (
-    COMMAND "${ENGINE_PATH}" --no-loop --no-logo help --no-logo
+    COMMAND "${ENGINE_PATH}" --no-loop help --no-logo
     OUTPUT_VARIABLE ENGINE_COMMANDS_HELP_TEXT COMMAND_ECHO STDOUT COMMAND_ERROR_IS_FATAL ANY
 )
 
 execute_process (
-    COMMAND "${ENGINE_PATH}" --no-loop --no-logo options --no-current
+    COMMAND "${ENGINE_PATH}" --no-loop options --no-current
     OUTPUT_VARIABLE ENGINE_OPTIONS_HELP_TEXT COMMAND_ECHO STDOUT COMMAND_ERROR_IS_FATAL ANY
 )
 

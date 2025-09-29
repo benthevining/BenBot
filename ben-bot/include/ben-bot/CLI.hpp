@@ -41,9 +41,6 @@ struct Arguments final {
      */
     bool noLoop { false };
 
-    /** If true, the executable should not print the initial logo & version output. */
-    bool noLogo { false };
-
     /** If not empty, this is a one-shot UCI command that should be evaluated
         after startup.
      */

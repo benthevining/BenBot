@@ -35,11 +35,6 @@ try {
 
     ben_bot::Engine engine;
 
-    if (not args.noLogo) {
-        [[likely]];
-        engine.print_logo_and_version();
-    }
-
     if (not args.uciCommand.empty()) {
         [[unlikely]];
         engine.handle_command(args.uciCommand);

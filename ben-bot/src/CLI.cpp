@@ -76,7 +76,6 @@ auto Arguments::parse(
 
     return Arguments {
         .noLoop     = check_for_arg("--no-loop"),
-        .noLogo     = check_for_arg("--no-logo"),
         .uciCommand = concat_strings(args)
     };
 }
