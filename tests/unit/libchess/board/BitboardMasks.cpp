@@ -37,48 +37,50 @@ using magic_enum::enum_values;
 
 namespace bitboard_masks = chess::board::masks;
 
-[[nodiscard]] static constexpr auto get_squares(const chess::board::Bitboard& board)
+namespace {
+[[nodiscard]] constexpr auto get_squares(const chess::board::Bitboard board)
 {
     return board.squares() | std::ranges::to<std::vector>();
 }
+} // namespace
 
 TEST_CASE("Bitboard - dark/light square masks", TAGS)
 {
     SECTION("Dark squares")
     {
-        static constexpr auto darkSquares = bitboard_masks::DARK_SQUARES;
+        using bitboard_masks::DARK_SQUARES;
 
-        STATIC_REQUIRE(darkSquares.count() == 32uz);
-        STATIC_REQUIRE(get_squares(darkSquares).size() == darkSquares.count());
+        STATIC_REQUIRE(DARK_SQUARES.count() == 32uz);
+        STATIC_REQUIRE(get_squares(DARK_SQUARES).size() == DARK_SQUARES.count());
 
         for (const auto rank : enum_values<Rank>()) {
             for (const auto file : enum_values<File>()) {
                 const Square square { file, rank };
 
-                REQUIRE(darkSquares.test(square) == square.is_dark());
+                REQUIRE(DARK_SQUARES.test(square) == square.is_dark());
             }
         }
 
-        for (const auto square : darkSquares.squares())
+        for (const auto square : DARK_SQUARES.squares())
             REQUIRE(square.is_dark());
     }
 
     SECTION("Light squares")
     {
-        static constexpr auto lightSquares = bitboard_masks::LIGHT_SQUARES;
+        using bitboard_masks::LIGHT_SQUARES;
 
-        STATIC_REQUIRE(lightSquares.count() == 32uz);
-        STATIC_REQUIRE(get_squares(lightSquares).size() == lightSquares.count());
+        STATIC_REQUIRE(LIGHT_SQUARES.count() == 32uz);
+        STATIC_REQUIRE(get_squares(LIGHT_SQUARES).size() == LIGHT_SQUARES.count());
 
         for (const auto rank : enum_values<Rank>()) {
             for (const auto file : enum_values<File>()) {
                 const Square square { file, rank };
 
-                REQUIRE(lightSquares.test(square) == square.is_light());
+                REQUIRE(LIGHT_SQUARES.test(square) == square.is_light());
             }
         }
 
-        for (const auto square : lightSquares.squares())
+        for (const auto square : LIGHT_SQUARES.squares())
             REQUIRE(square.is_light());
     }
 }
