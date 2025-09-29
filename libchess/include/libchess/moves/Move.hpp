@@ -70,7 +70,7 @@ using MaybePieceType = std::optional<PieceType>;
     to move and incrementing the halfmove counter without changing any piece positions.
 
     @ingroup moves
-    @todo Flags for en passant, maybe isCapture/isCheck
+    @todo Flags for en passant, maybe isCapture/isCheck, isCastling
  */
 struct Move final {
     /** Creates a null move. */
@@ -132,6 +132,7 @@ private:
     // bit 12-15: integer (0-15) that encodes both moving type & promoted type
     //          : 0-5 gives moving piece type & implies the move is not a promotion
     //          : 6-11 gives promoted piece type, implies the moving type is pawn
+    //          : get_flags() declared above returns this integer
     //
     // Special case is a null move, this integer will be 0
     Integer data { 0 };
@@ -197,8 +198,8 @@ namespace detail {
 
     static constexpr auto LOWEST_SIX_BITS_MASK = 63uz;
 
-    static constexpr auto START_SQUARE_OFFSET = 6uz;
-    static constexpr auto FLAGS_OFFSET        = 12uz;
+    static constexpr auto START_SQUARE_OFFSET = static_cast<Integer>(6uz);
+    static constexpr auto FLAGS_OFFSET        = static_cast<Integer>(12uz);
 
     static constexpr auto PROMOTED_TYPE_OFFSET_WITHIN_FLAGS = 6uz;
 
@@ -256,7 +257,7 @@ constexpr auto Move::piece() const noexcept -> PieceType
 {
     const auto flags = get_flags();
 
-    if (flags >= detail::PROMOTED_TYPE_OFFSET_WITHIN_FLAGS)
+    if (std::cmp_greater_equal(flags, detail::PROMOTED_TYPE_OFFSET_WITHIN_FLAGS))
         return PieceType::Pawn;
 
     return static_cast<PieceType>(flags);
@@ -266,7 +267,7 @@ constexpr auto Move::promoted_type() const noexcept -> MaybePieceType
 {
     const auto flags = get_flags();
 
-    if (flags < detail::PROMOTED_TYPE_OFFSET_WITHIN_FLAGS)
+    if (std::cmp_less(flags, detail::PROMOTED_TYPE_OFFSET_WITHIN_FLAGS))
         return std::nullopt;
 
     return static_cast<PieceType>(flags - detail::PROMOTED_TYPE_OFFSET_WITHIN_FLAGS);
@@ -274,7 +275,8 @@ constexpr auto Move::promoted_type() const noexcept -> MaybePieceType
 
 constexpr auto Move::is_promotion() const noexcept -> bool
 {
-    return get_flags() >= detail::PROMOTED_TYPE_OFFSET_WITHIN_FLAGS;
+    return std::cmp_greater_equal(
+        get_flags(), detail::PROMOTED_TYPE_OFFSET_WITHIN_FLAGS);
 }
 
 constexpr auto Move::is_under_promotion() const noexcept -> bool
