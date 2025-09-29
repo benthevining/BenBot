@@ -124,11 +124,9 @@ namespace {
             std::optional<Move> bestMove;
 
             for (const auto& move : moves) {
-                const auto newPosition = after_move(position, move);
+                auto child = recurse(move);
 
-                const auto eval = depth > 0uz
-                                    ? -recurse(newPosition).alpha_beta()
-                                    : -recurse(newPosition).quiescence();
+                const auto eval = depth > 0uz ? -child.alpha_beta() : -child.quiescence();
 
                 if (interrupter.should_abort())
                     return {};
@@ -151,6 +149,8 @@ namespace {
                     bestMove     = move;
                     evalType     = EvalType::Exact;
                     bounds.alpha = eval;
+
+                    // TODO: write to TT here?
                 }
             }
 
@@ -177,7 +177,7 @@ namespace {
             }
 
             if (position.is_checkmate())
-                return Score::mate(plyFromRoot);
+                return Score::mate(plyFromRoot); // TODO: write to TT here?
 
             auto evaluation = eval::evaluate(position);
 
@@ -196,7 +196,7 @@ namespace {
             for (const auto& move : moves) {
                 assert(position.is_capture(move));
 
-                evaluation = -recurse(after_move(position, move)).quiescence();
+                evaluation = -(recurse(move).quiescence());
 
                 if (interrupter.was_aborted())
                     return {};
@@ -214,9 +214,13 @@ namespace {
             return bounds.alpha;
         }
 
-        [[nodiscard]] auto recurse(const Position& newPosition) const -> AlphaBetaContext
+        [[nodiscard]] auto recurse(const Move move) const -> AlphaBetaContext
         {
-            return { bounds.invert(), newPosition, depth - 1uz, plyFromRoot + 1uz,
+            const auto left = depth > 0uz ? depth - 1uz : 0uz;
+
+            return { bounds.invert(),
+                after_move(position, move),
+                left, plyFromRoot + 1uz,
                 transTable, interrupter, stats };
         }
 
@@ -326,6 +330,8 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         interrupter.iteration_completed();
 
         if (not(infinite or pondering.load())) {
+            // TODO: stop search if mate-in-X found
+
             // only 1 legal move, don't do a deeper iteration
             if (options.movesToSearch.size() == 1uz) {
                 [[unlikely]];
