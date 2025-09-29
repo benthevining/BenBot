@@ -160,15 +160,13 @@ constexpr auto Score::from_tt(
     const size_t      plyFromRoot) noexcept
     -> Score
 {
-    const auto [score, type] = eval;
+    [[maybe_unused]] const auto [score, type] = eval;
 
-    if (type == EvalType::Exact) {
-        if (score <= -MATE)
-            return mate(plyFromRoot);
+    if (score <= -MATE)
+        return mate(plyFromRoot);
 
-        if (score >= MATE)
-            return -mate(plyFromRoot);
-    }
+    if (score >= MATE)
+        return -mate(plyFromRoot);
 
     return { score };
 }
