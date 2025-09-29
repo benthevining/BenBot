@@ -49,6 +49,7 @@ void Options::update_from(const chess::uci::GoCommandOptions& goOptions)
     movesToSearch = goOptions.moves;
     maxNodes      = goOptions.nodes;
     infinite      = goOptions.infinite;
+    mateIn        = goOptions.mateIn;
 
     if (goOptions.depth.has_value())
         depth = *goOptions.depth;

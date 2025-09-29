@@ -328,7 +328,12 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         interrupter.iteration_completed();
 
         if (not(options.infinite or pondering.load())) {
-            // TODO: stop search if mate-in-X found
+            // check "mate in X" search bound
+            if (options.mateIn.has_value() and bestScore.is_mate()) {
+                if (const auto targetPliesToMate = *options.mateIn * 2uz;
+                    bestScore.ply_to_mate() <= targetPliesToMate)
+                    break;
+            }
 
             // only 1 legal move, don't do a deeper iteration
             if (options.movesToSearch.size() == 1uz) {
@@ -338,7 +343,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
 
             // if we've hit our node limit, don't do a deeper iteration
             if (options.maxNodes.has_value()
-                && stats.nodesSearched >= *options.maxNodes) {
+                and stats.nodesSearched >= *options.maxNodes) {
                 break;
             }
 

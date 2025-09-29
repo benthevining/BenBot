@@ -75,6 +75,9 @@ struct Options final {
      */
     bool infinite { false };
 
+    /** Search for mate in this many moves. */
+    std::optional<size_t> mateIn;
+
     /** Updates the values in this options struct with the UCI "go" command options. */
     void update_from(const chess::uci::GoCommandOptions& goOptions);
 };
