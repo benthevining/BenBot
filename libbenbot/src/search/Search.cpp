@@ -50,82 +50,20 @@ namespace {
         size_t mdpCutoffs { 0uz }; // cutoffs due to mate distance pruning
     };
 
+    // encapsulates the arguments to the recursive alpha/beta call
     struct AlphaBetaContext final {
-        Bounds bounds;
-
-        Position position;
-
-        size_t depth { 0uz }; // this is the depth left to be searched - decreases each iteration, and when this reaches 0, we call the quiescence search
-
-        size_t plyFromRoot { 0uz }; // increases each iteration
-
-        TranspositionTable& transTable; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
-
-        Interrupter& interrupter; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
-
-        Stats& stats; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
-
-        [[nodiscard]] auto recurse(const Position& newPosition) const -> AlphaBetaContext
+        AlphaBetaContext(
+            const Bounds bnd, const Position& pos,
+            const size_t depthLeft, const size_t ply,
+            TranspositionTable& trans, Interrupter& inter, Stats& statsToUse)
+            : bounds { bnd }
+            , position { pos }
+            , depth { depthLeft }
+            , plyFromRoot { ply }
+            , transTable { trans }
+            , interrupter { inter }
+            , stats { statsToUse }
         {
-            return {
-                .bounds      = bounds.invert(),
-                .position    = newPosition,
-                .depth       = depth - 1uz,
-                .plyFromRoot = plyFromRoot + 1uz,
-                .transTable  = transTable,
-                .interrupter = interrupter,
-                .stats       = stats
-            };
-        }
-
-        // searches only captures, with no depth limit, to try to
-        // improve the stability of the static evaluation function
-        [[nodiscard]] auto quiescence() -> Score
-        {
-            if (interrupter.should_abort() or position.is_draw())
-                return {};
-
-            if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot)) {
-                ++stats.mdpCutoffs;
-                return cutoff.value();
-            }
-
-            if (position.is_checkmate())
-                return Score::mate(plyFromRoot);
-
-            auto evaluation = eval::evaluate(position);
-
-            // see if we can get a cutoff (we may not need to generate moves for this position)
-            if (evaluation >= bounds.beta) {
-                ++stats.betaCutoffs;
-                return bounds.beta;
-            }
-
-            bounds.alpha = std::max(bounds.alpha, evaluation);
-
-            auto moves = chess::moves::generate<true>(position); // captures only
-
-            detail::order_moves_for_q_search(position, moves);
-
-            for (const auto& move : moves) {
-                assert(position.is_capture(move));
-
-                evaluation = -recurse(after_move(position, move)).quiescence();
-
-                if (interrupter.was_aborted())
-                    return {};
-
-                ++stats.nodesSearched;
-
-                if (evaluation >= bounds.beta) {
-                    ++stats.betaCutoffs;
-                    return bounds.beta;
-                }
-
-                bounds.alpha = std::max(bounds.alpha, evaluation);
-            }
-
-            return bounds.alpha;
         }
 
         // standard alpha/beta search algorithm
@@ -222,6 +160,77 @@ namespace {
 
             return bounds.alpha;
         }
+
+    private:
+        // searches only captures, with no depth limit, to try to
+        // improve the stability of the static evaluation function
+        [[nodiscard]] auto quiescence() -> Score
+        {
+            if (interrupter.should_abort() or position.is_draw())
+                return {};
+
+            if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot)) {
+                ++stats.mdpCutoffs;
+                return cutoff.value();
+            }
+
+            if (position.is_checkmate())
+                return Score::mate(plyFromRoot);
+
+            auto evaluation = eval::evaluate(position);
+
+            // see if we can get a cutoff (we may not need to generate moves for this position)
+            if (evaluation >= bounds.beta) {
+                ++stats.betaCutoffs;
+                return bounds.beta;
+            }
+
+            bounds.alpha = std::max(bounds.alpha, evaluation);
+
+            auto moves = chess::moves::generate<true>(position); // captures only
+
+            detail::order_moves_for_q_search(position, moves);
+
+            for (const auto& move : moves) {
+                assert(position.is_capture(move));
+
+                evaluation = -recurse(after_move(position, move)).quiescence();
+
+                if (interrupter.was_aborted())
+                    return {};
+
+                ++stats.nodesSearched;
+
+                if (evaluation >= bounds.beta) {
+                    ++stats.betaCutoffs;
+                    return bounds.beta;
+                }
+
+                bounds.alpha = std::max(bounds.alpha, evaluation);
+            }
+
+            return bounds.alpha;
+        }
+
+        [[nodiscard]] auto recurse(const Position& newPosition) const -> AlphaBetaContext
+        {
+            return { bounds.invert(), newPosition, depth - 1uz, plyFromRoot + 1uz,
+                transTable, interrupter, stats };
+        }
+
+        Bounds bounds;
+
+        Position position;
+
+        size_t depth { 0uz }; // this is the depth left to be searched - decreases each iteration, and when this reaches 0, we call the quiescence search
+
+        size_t plyFromRoot { 0uz }; // increases each iteration
+
+        TranspositionTable& transTable; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
+
+        Interrupter& interrupter; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
+
+        Stats& stats; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
     };
 
     struct ActiveFlagSetter final {
@@ -289,15 +298,11 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         std::optional<Move> bestMoveThisDepth;
 
         for (const auto& move : options.movesToSearch) {
-            const auto score = -(AlphaBetaContext {
-                .bounds      = bounds.invert(),
-                .position    = after_move(options.position, move),
-                .depth       = depth,
-                .plyFromRoot = 1uz,
-                .transTable  = transTable,
-                .interrupter = interrupter,
-                .stats       = stats }
-                    .alpha_beta());
+            AlphaBetaContext context { bounds.invert(),
+                after_move(options.position, move),
+                depth, 1uz, transTable, interrupter, stats };
+
+            const auto score = -context.alpha_beta();
 
             if (interrupter.was_aborted())
                 break;
