@@ -61,6 +61,10 @@ add_custom_command (
     VERBATIM USES_TERMINAL
 )
 
+set (pgn_out "${logs_dir}/games.pgn")
+set (epd_out "${logs_dir}/final-positions.epd")
+set (logfile "${logs_dir}/sprt.log")
+
 # cmake-format: off
 add_custom_target (
     sprt
@@ -71,10 +75,11 @@ add_custom_target (
         -recover -show-latency
         -openings "file=${openings_file}" format=pgn
         -sprt elo0=0 elo1=10 alpha=0.05 beta=0.05
-        -pgnout "file=${logs_dir}/games.pgn" nodes=true nps=true timeleft=true latency=true
-        -epdout "file=${logs_dir}/final-positions.epd"
-        -log "file=${logs_dir}/sprt.log" engine=true
+        -pgnout "file=${pgn_out}" nodes=true nps=true timeleft=true latency=true
+        -epdout "file=${epd_out}"
+        -log "file=${logfile}" engine=true
     WORKING_DIRECTORY "$<TARGET_FILE_DIR:ben_bot>"
+    BYPRODUCTS "${pgn_out}" "${epd_out}" "${logfile}"
     DEPENDS "${logs_dir}/stamp" "${openings_file}" "${baseline_binary}" ben_bot::ben_bot
     COMMENT "Running SPRT test..."
     VERBATIM USES_TERMINAL
