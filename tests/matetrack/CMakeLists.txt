@@ -49,4 +49,5 @@ add_test (
 
 set_tests_properties (
     ben_bot.matetrack PROPERTIES FAIL_REGULAR_EXPRESSION "the following issues were detected:"
+                                 "Exception parsing pv from info:"
 )

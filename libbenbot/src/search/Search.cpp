@@ -278,8 +278,6 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         assert(! options.movesToSearch.empty());
     }
 
-    const bool infinite = not options.is_bounded();
-
     Stats stats;
 
     std::optional<Move> bestMove;
@@ -329,7 +327,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
 
         interrupter.iteration_completed();
 
-        if (not(infinite or pondering.load())) {
+        if (not(options.infinite or pondering.load())) {
             // TODO: stop search if mate-in-X found
 
             // only 1 legal move, don't do a deeper iteration
@@ -353,9 +351,10 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
             }
         }
 
-        // prevent the iteration callback from being called right before search_complete()
-        // will be called, otherwise the final info string would be printed twice
-        if (depth < options.depth) {
+        // in the infinite case, we do allow this repetition because we want to print the
+        // final output before we're going to spin, then the stop command will print the
+        // final info again and the bestmove
+        if (depth < options.depth or options.infinite) {
             callbacks.iteration_complete({ .duration = interrupter.get_search_duration(),
                 .depth                               = depth,
                 .score                               = bestScore,
@@ -381,6 +380,10 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
     if (pondering.load()) {
         chess::util::progressive_backoff([this] {
             return exitFlag.load() or not pondering.load();
+        });
+    } else if (options.infinite) {
+        chess::util::progressive_backoff([this] {
+            return exitFlag.load();
         });
     }
 

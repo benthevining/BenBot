@@ -70,14 +70,13 @@ struct Options final {
      */
     chess::moves::MoveList movesToSearch;
 
+    /** If true, the search should not exit until a ``xtop`` or ``exit``
+        command is received.
+     */
+    bool infinite { false };
+
     /** Updates the values in this options struct with the UCI "go" command options. */
     void update_from(const chess::uci::GoCommandOptions& goOptions);
-
-    /** Returns true if this search has any bounds other than depth. */
-    [[nodiscard]] auto is_bounded() const noexcept -> bool
-    {
-        return searchTime.has_value() or maxNodes.has_value();
-    }
 };
 
 } // namespace ben_bot::search
