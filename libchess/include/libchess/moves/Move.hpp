@@ -51,7 +51,8 @@ using board::Rank;
 using board::Square;
 using pieces::Color;
 
-using PieceType = pieces::Type;
+using PieceType      = pieces::Type;
+using MaybePieceType = std::optional<PieceType>;
 
 /** This struct encodes information about a move.
 
@@ -69,82 +70,40 @@ using PieceType = pieces::Type;
     to move and incrementing the halfmove counter without changing any piece positions.
 
     @ingroup moves
+    @todo Flags for en passant, maybe isCapture/isCheck
  */
 struct Move final {
-    /** Integer type used to hold move data in a packed format. */
-    using Integer = std::uint16_t;
-
     /** Creates a null move. */
     constexpr Move() = default;
 
-    /** Initializes a move from the raw packed data format. */
-    explicit constexpr Move(const Integer rawData)
-        : data { rawData }
-    {
-    }
-
-    /** Creates a non-promotion move. */
+    /** Creates a move. */
     constexpr Move(
-        const Square start, const Square end,
-        const PieceType type)
-        : data { pack_fields(start, end, type, std::nullopt) }
-    {
-    }
-
-    /** Creates a promotion move. */
-    constexpr Move(
-        const Square start, const Square end,
-        const PieceType type, const PieceType promotedType)
-        : data { pack_fields(start, end, type, promotedType) }
-    {
-        assert(type == PieceType::Pawn);
-        assert(promotedType != PieceType::King);
-        assert(promotedType != PieceType::Pawn);
-    }
+        Square start, Square end,
+        PieceType      type,
+        MaybePieceType promotedType = std::nullopt);
 
     /** Returns the starting square of the moving piece.
         In the case of en passant, this is the square that the capturing pawn started on.
         In the case of castling, this is the square that the king started on.
      */
-    [[nodiscard]] constexpr auto from() const noexcept -> Square
-    {
-        return Square::from_index((data >> START_SQUARE_OFFSET) & LOWEST_SIX_BITS_MASK);
-    }
+    [[nodiscard]] constexpr auto from() const noexcept -> Square;
 
     /** Returns the ending square of the moving piece.
         In the case of en passant, this is the square that the capturing pawn lands on.
         In the case of castling, this is the square that the king ends on.
      */
-    [[nodiscard]] constexpr auto to() const noexcept -> Square
-    {
-        return Square::from_index(data & LOWEST_SIX_BITS_MASK);
-    }
+    [[nodiscard]] constexpr auto to() const noexcept -> Square;
 
     /** Returns the type of the moving piece.
         For a promotion, this is pawn; for castling, this is king.
      */
-    [[nodiscard]] constexpr auto piece() const noexcept -> PieceType
-    {
-        const auto flags = get_flags();
-
-        if (flags >= PROMOTED_TYPE_OFFSET_WITHIN_FLAGS)
-            return PieceType::Pawn;
-
-        return static_cast<PieceType>(flags);
-    }
+    [[nodiscard]] constexpr auto piece() const noexcept -> PieceType;
 
     /** Returns the promoted-to type, or ``nullopt`` if this move is not a promotion. */
-    [[nodiscard]] constexpr auto promoted_type() const noexcept -> std::optional<PieceType>;
-
-    /** Returns the raw packed data format. */
-    [[nodiscard]] constexpr auto raw() const noexcept -> Integer { return data; }
+    [[nodiscard]] constexpr auto promoted_type() const noexcept -> MaybePieceType;
 
     /** Returns a hash code for this move. */
-    [[nodiscard]] constexpr auto hash() const noexcept -> size_t
-    {
-        // based on a congruential pseudo-random number generator
-        return (static_cast<std::uint64_t>(data) * 6364136223846793005ULL) + 1442695040888963407ULL;
-    }
+    [[nodiscard]] constexpr auto hash() const noexcept -> size_t;
 
     /** Returns true if this is a null move. */
     [[nodiscard]] auto is_null() const noexcept -> bool { return std::cmp_equal(data, 0); }
@@ -161,29 +120,12 @@ struct Move final {
     constexpr auto operator==(const Move&) const noexcept -> bool = default;
 
 private:
-    static constexpr auto LOWEST_SIX_BITS_MASK = 0x3F;
+    using Integer = std::uint16_t;
 
-    static constexpr auto START_SQUARE_OFFSET = 6uz;
-    static constexpr auto FLAGS_OFFSET        = 12uz;
+    [[nodiscard]] constexpr auto get_flags() const noexcept -> Integer;
 
-    static constexpr auto PROMOTED_TYPE_OFFSET_WITHIN_FLAGS = 6uz;
-
-    [[nodiscard]] constexpr auto get_flags() const noexcept -> Integer
-    {
-        static constexpr auto LOWEST_FOUR_BITS_MASK = 0xF;
-
-        return (data >> FLAGS_OFFSET) & LOWEST_FOUR_BITS_MASK;
-    }
-
-    [[nodiscard, gnu::const]] static constexpr auto pack_fields(
-        Square start, Square end,
-        PieceType                type,
-        std::optional<PieceType> promotedType) noexcept
-        -> Integer;
-
-    // A move needs 18 bits to be stored
+    // A move needs 16 bits to be stored
     // Square indices are 0-63, so we need 6 bits to store them
-    // Piece types are 0-5, so they need 3 bits
     //
     // bit  0- 5: destination square index
     // bit  6-11: origin square index
@@ -249,40 +191,97 @@ private:
 
  */
 
-constexpr auto Move::pack_fields(
-    const Square start, const Square end,
-    const PieceType type, const std::optional<PieceType> promotedType) noexcept -> Integer
-{
-    const auto flags = promotedType.has_value()
-                         ? PROMOTED_TYPE_OFFSET_WITHIN_FLAGS + std::to_underlying(*promotedType)
-                         : std::to_underlying(type);
+#ifndef DOXYGEN
+namespace detail {
+    using Integer = std::uint16_t;
 
-    return static_cast<Integer>(end.index())
-         + (static_cast<Integer>(start.index()) << START_SQUARE_OFFSET)
-         + (static_cast<Integer>(flags) << FLAGS_OFFSET);
+    static constexpr auto LOWEST_SIX_BITS_MASK = 63uz;
+
+    static constexpr auto START_SQUARE_OFFSET = 6uz;
+    static constexpr auto FLAGS_OFFSET        = 12uz;
+
+    static constexpr auto PROMOTED_TYPE_OFFSET_WITHIN_FLAGS = 6uz;
+
+    [[nodiscard, gnu::const]] static constexpr auto pack_fields(
+        const Square start, const Square end, const PieceType type,
+        const MaybePieceType promotedType) noexcept
+        -> Integer
+    {
+        const auto flags = promotedType
+                               .transform([](const PieceType prom) {
+                                   return PROMOTED_TYPE_OFFSET_WITHIN_FLAGS + std::to_underlying(prom);
+                               })
+                               .value_or(std::to_underlying(type));
+
+        return static_cast<Integer>(end.index())
+             + (static_cast<Integer>(start.index()) << START_SQUARE_OFFSET)
+             + (static_cast<Integer>(flags) << FLAGS_OFFSET);
+    }
+} // namespace detail
+#endif
+
+constexpr Move::Move(
+    const Square start, const Square end,
+    const PieceType      type,
+    const MaybePieceType promotedType)
+    : data { detail::pack_fields(start, end, type, promotedType) }
+{
+#ifndef NDEBUG
+    if (promotedType.has_value()) {
+        assert(type == PieceType::Pawn);
+        assert(promotedType != PieceType::King);
+        assert(promotedType != PieceType::Pawn);
+    }
+#endif
 }
 
-constexpr auto Move::promoted_type() const noexcept -> std::optional<PieceType>
+constexpr auto Move::get_flags() const noexcept -> Integer
+{
+    static constexpr auto LOWEST_FOUR_BITS_MASK = 15uz;
+
+    return (data >> detail::FLAGS_OFFSET) & LOWEST_FOUR_BITS_MASK;
+}
+
+constexpr auto Move::from() const noexcept -> Square
+{
+    return Square::from_index((data >> detail::START_SQUARE_OFFSET) & detail::LOWEST_SIX_BITS_MASK);
+}
+
+constexpr auto Move::to() const noexcept -> Square
+{
+    return Square::from_index(data & detail::LOWEST_SIX_BITS_MASK);
+}
+
+constexpr auto Move::piece() const noexcept -> PieceType
 {
     const auto flags = get_flags();
 
-    if (flags < PROMOTED_TYPE_OFFSET_WITHIN_FLAGS)
+    if (flags >= detail::PROMOTED_TYPE_OFFSET_WITHIN_FLAGS)
+        return PieceType::Pawn;
+
+    return static_cast<PieceType>(flags);
+}
+
+constexpr auto Move::promoted_type() const noexcept -> MaybePieceType
+{
+    const auto flags = get_flags();
+
+    if (flags < detail::PROMOTED_TYPE_OFFSET_WITHIN_FLAGS)
         return std::nullopt;
 
-    return static_cast<PieceType>(flags - PROMOTED_TYPE_OFFSET_WITHIN_FLAGS);
+    return static_cast<PieceType>(flags - detail::PROMOTED_TYPE_OFFSET_WITHIN_FLAGS);
 }
 
 constexpr auto Move::is_promotion() const noexcept -> bool
 {
-    return get_flags() >= PROMOTED_TYPE_OFFSET_WITHIN_FLAGS;
+    return get_flags() >= detail::PROMOTED_TYPE_OFFSET_WITHIN_FLAGS;
 }
 
 constexpr auto Move::is_under_promotion() const noexcept -> bool
 {
-    const auto prom = promoted_type();
-
-    return prom.has_value()
-       and prom.value() != PieceType::Queen;
+    return promoted_type()
+        .transform([](const PieceType type) { return type != PieceType::Queen; })
+        .value_or(false);
 }
 
 constexpr auto Move::is_castling() const noexcept -> bool
@@ -291,6 +290,12 @@ constexpr auto Move::is_castling() const noexcept -> bool
        and std::cmp_greater(
            file_distance(from(), to()),
            1uz);
+}
+
+constexpr auto Move::hash() const noexcept -> size_t
+{
+    // based on a congruential pseudo-random number generator
+    return (static_cast<size_t>(data) * 6364136223846793005uz) + 1442695040888963407uz;
 }
 
 constexpr auto castle_kingside(const Color color) noexcept -> Move
