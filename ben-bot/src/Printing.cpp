@@ -152,7 +152,7 @@ void Engine::print_current_position(const string_view arguments) const
 
     searcher.context.transTable.find(pos)
         .and_then([](const TTData& data) {
-            const auto score = eval::Score::from_tt({ data.eval, data.evalType }, 0uz);
+            const auto score = eval::Score::from_tt(data.eval, 0uz);
 
             info_string(std::format(
                 "TT hit: depth {} eval {} type {} probed {} bestmove {}",

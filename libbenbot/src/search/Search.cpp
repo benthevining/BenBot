@@ -90,7 +90,7 @@ namespace {
             // least this depth and within these bounds for non-PV nodes
             if (const auto value = transTable.probe_eval(position, depth, bounds)) {
                 ++stats.transTableHits;
-                return Score::from_tt(*value, plyFromRoot);
+                return Score::from_tt(value->first, plyFromRoot);
             }
 
             if (position.is_draw()) {

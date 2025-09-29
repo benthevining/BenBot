@@ -23,7 +23,6 @@
 #include <cmath>   // IWYU pragma: keep - for std::abs()
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <format>
-#include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libchess/uci/Printing.hpp>
 
 namespace ben_bot::eval {
@@ -116,14 +115,11 @@ struct Score final {
         return { (MAX - static_cast<int>(plyFromRoot)) * -1 };
     }
 
-    using ProbedEval = TranspositionTable::ProbedEval;
-
     /** Converts a value from the transposition table to a score.
         This maps the MATE constant to a ply-from-root mate score.
      */
     [[nodiscard, gnu::const]] static constexpr auto from_tt(
-        const ProbedEval& eval,
-        size_t            plyFromRoot) noexcept
+        int eval, size_t plyFromRoot) noexcept
         -> Score;
 };
 
@@ -156,19 +152,16 @@ constexpr auto Score::to_tt() const noexcept -> int
 }
 
 constexpr auto Score::from_tt(
-    const ProbedEval& eval,
-    const size_t      plyFromRoot) noexcept
+    const int eval, const size_t plyFromRoot) noexcept
     -> Score
 {
-    [[maybe_unused]] const auto [score, type] = eval;
-
-    if (score <= -MATE)
+    if (eval <= -MATE)
         return mate(plyFromRoot);
 
-    if (score >= MATE)
+    if (eval >= MATE)
         return -mate(plyFromRoot);
 
-    return { score };
+    return { eval };
 }
 
 inline auto Score::to_libchess() const noexcept -> LibchessScore
