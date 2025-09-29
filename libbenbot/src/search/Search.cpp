@@ -77,155 +77,152 @@ namespace {
                 .stats       = stats
             };
         }
+
+        // searches only captures, with no depth limit, to try to
+        // improve the stability of the static evaluation function
+        [[nodiscard]] auto quiescence() -> Score
+        {
+            if (interrupter.should_abort() or position.is_draw())
+                return {};
+
+            if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot)) {
+                ++stats.mdpCutoffs;
+                return cutoff.value();
+            }
+
+            if (position.is_checkmate())
+                return Score::mate(plyFromRoot);
+
+            auto evaluation = eval::evaluate(position);
+
+            // see if we can get a cutoff (we may not need to generate moves for this position)
+            if (evaluation >= bounds.beta) {
+                ++stats.betaCutoffs;
+                return bounds.beta;
+            }
+
+            bounds.alpha = std::max(bounds.alpha, evaluation);
+
+            auto moves = chess::moves::generate<true>(position); // captures only
+
+            detail::order_moves_for_q_search(position, moves);
+
+            for (const auto& move : moves) {
+                assert(position.is_capture(move));
+
+                evaluation = -recurse(after_move(position, move)).quiescence();
+
+                if (interrupter.was_aborted())
+                    return {};
+
+                ++stats.nodesSearched;
+
+                if (evaluation >= bounds.beta) {
+                    ++stats.betaCutoffs;
+                    return bounds.beta;
+                }
+
+                bounds.alpha = std::max(bounds.alpha, evaluation);
+            }
+
+            return bounds.alpha;
+        }
+
+        // standard alpha/beta search algorithm
+        // this is called in the body of the higher-level iterative deepening loop
+        [[nodiscard]] auto alpha_beta() -> Score
+        {
+            if (interrupter.should_abort())
+                return {};
+
+            transTable.prefetch(position);
+
+            // it's important that we do this check before probing the transposition table,
+            // because the table only contains static evaluations and doesn't consider game
+            // history, so its stored evaluations can't detect threefold repetition draws
+            if (position.is_threefold_repetition())
+                return {};
+
+            if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot)) {
+                ++stats.mdpCutoffs;
+                return cutoff.value();
+            }
+
+            // check if this position has been searched before to at
+            // least this depth and within these bounds for non-PV nodes
+            if (const auto value = transTable.probe_eval(position, depth, bounds)) {
+                ++stats.transTableHits;
+                return Score::from_tt(*value, plyFromRoot);
+            }
+
+            if (position.is_draw()) {
+                transTable.store(
+                    position, { .searchedDepth = depth,
+                                  .eval        = eval::DRAW,
+                                  .evalType    = EvalType::Exact,
+                                  .bestMove    = {} });
+
+                return {};
+            }
+
+            auto moves = chess::moves::generate(position);
+
+            if (moves.empty() && position.is_check()) {
+                transTable.store(
+                    position, { .searchedDepth = depth,
+                                  .eval        = -eval::MATE,
+                                  .evalType    = EvalType::Exact,
+                                  .bestMove    = {} });
+
+                return Score::mate(plyFromRoot);
+            }
+
+            detail::order_moves_for_search(position, moves, transTable);
+
+            auto evalType { EvalType::Alpha };
+
+            std::optional<Move> bestMove;
+
+            for (const auto& move : moves) {
+                const auto newPosition = after_move(position, move);
+
+                const auto eval = depth > 0uz
+                                    ? -recurse(newPosition).alpha_beta()
+                                    : -recurse(newPosition).quiescence();
+
+                if (interrupter.should_abort())
+                    return {};
+
+                ++stats.nodesSearched;
+
+                if (eval >= bounds.beta) {
+                    transTable.store(
+                        position, { .searchedDepth = depth,
+                                      .eval        = bounds.beta.to_tt(),
+                                      .evalType    = EvalType::Beta,
+                                      .bestMove    = bestMove });
+
+                    ++stats.betaCutoffs;
+
+                    return bounds.beta;
+                }
+
+                if (eval > bounds.alpha) {
+                    bestMove     = move;
+                    evalType     = EvalType::Exact;
+                    bounds.alpha = eval;
+                }
+            }
+
+            transTable.store(
+                position, { .searchedDepth = depth,
+                              .eval        = bounds.alpha.to_tt(),
+                              .evalType    = evalType,
+                              .bestMove    = bestMove });
+
+            return bounds.alpha;
+        }
     };
-
-    // searches only captures, with no depth limit, to try to
-    // improve the stability of the static evaluation function
-    [[nodiscard]] auto quiescence(AlphaBetaContext context)
-        -> Score
-    {
-        if (context.interrupter.should_abort() or context.position.is_draw())
-            return {};
-
-        if (const auto cutoff = context.bounds.mate_distance_pruning(context.plyFromRoot)) {
-            ++context.stats.mdpCutoffs;
-            return cutoff.value();
-        }
-
-        if (context.position.is_checkmate())
-            return Score::mate(context.plyFromRoot);
-
-        auto evaluation = eval::evaluate(context.position);
-
-        // see if we can get a cutoff (we may not need to generate moves for this position)
-        if (evaluation >= context.bounds.beta) {
-            ++context.stats.betaCutoffs;
-            return context.bounds.beta;
-        }
-
-        context.bounds.alpha = std::max(context.bounds.alpha, evaluation);
-
-        auto moves = chess::moves::generate<true>(context.position); // captures only
-
-        detail::order_moves_for_q_search(context.position, moves);
-
-        for (const auto& move : moves) {
-            assert(currentPosition.is_capture(move));
-
-            evaluation = -quiescence(context.recurse(
-                after_move(context.position, move)));
-
-            if (context.interrupter.was_aborted())
-                return {};
-
-            ++context.stats.nodesSearched;
-
-            if (evaluation >= context.bounds.beta) {
-                ++context.stats.betaCutoffs;
-                return context.bounds.beta;
-            }
-
-            context.bounds.alpha = std::max(context.bounds.alpha, evaluation);
-        }
-
-        return context.bounds.alpha;
-    }
-
-    // standard alpha/beta search algorithm
-    // this is called in the body of the higher-level iterative deepening loop
-    [[nodiscard]] auto alpha_beta(AlphaBetaContext context)
-        -> Score
-    {
-        if (context.interrupter.should_abort())
-            return {};
-
-        context.transTable.prefetch(context.position);
-
-        // it's important that we do this check before probing the transposition table,
-        // because the table only contains static evaluations and doesn't consider game
-        // history, so its stored evaluations can't detect threefold repetition draws
-        if (context.position.is_threefold_repetition())
-            return {};
-
-        if (const auto cutoff = context.bounds.mate_distance_pruning(context.plyFromRoot)) {
-            ++context.stats.mdpCutoffs;
-            return cutoff.value();
-        }
-
-        // check if this position has been searched before to at
-        // least this depth and within these bounds for non-PV nodes
-        if (const auto value = context.transTable.probe_eval(context.position, context.depth, context.bounds)) {
-            ++context.stats.transTableHits;
-            return Score::from_tt(*value, context.plyFromRoot);
-        }
-
-        if (context.position.is_draw()) {
-            context.transTable.store(
-                context.position, { .searchedDepth = context.depth,
-                                      .eval        = eval::DRAW,
-                                      .evalType    = EvalType::Exact,
-                                      .bestMove    = {} });
-
-            return {};
-        }
-
-        auto moves = chess::moves::generate(context.position);
-
-        if (moves.empty() && context.position.is_check()) {
-            context.transTable.store(
-                context.position, { .searchedDepth = context.depth,
-                                      .eval        = -eval::MATE,
-                                      .evalType    = EvalType::Exact,
-                                      .bestMove    = {} });
-
-            return Score::mate(context.plyFromRoot);
-        }
-
-        detail::order_moves_for_search(context.position, moves, context.transTable);
-
-        auto evalType { EvalType::Alpha };
-
-        std::optional<Move> bestMove;
-
-        for (const auto& move : moves) {
-            const auto newPosition = after_move(context.position, move);
-
-            const auto eval = context.depth > 0uz
-                                ? -alpha_beta(context.recurse(newPosition))
-                                : -quiescence(context.recurse(newPosition));
-
-            if (context.interrupter.should_abort())
-                return {};
-
-            ++context.stats.nodesSearched;
-
-            if (eval >= context.bounds.beta) {
-                context.transTable.store(
-                    context.position, { .searchedDepth = context.depth,
-                                          .eval        = context.bounds.beta.to_tt(),
-                                          .evalType    = EvalType::Beta,
-                                          .bestMove    = bestMove });
-
-                ++context.stats.betaCutoffs;
-
-                return context.bounds.beta;
-            }
-
-            if (eval > context.bounds.alpha) {
-                bestMove             = move;
-                evalType             = EvalType::Exact;
-                context.bounds.alpha = eval;
-            }
-        }
-
-        context.transTable.store(
-            context.position, { .searchedDepth = context.depth,
-                                  .eval        = context.bounds.alpha.to_tt(),
-                                  .evalType    = evalType,
-                                  .bestMove    = bestMove });
-
-        return context.bounds.alpha;
-    }
 
     struct ActiveFlagSetter final {
         explicit ActiveFlagSetter(std::atomic_bool& flag)
@@ -292,13 +289,15 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         std::optional<Move> bestMoveThisDepth;
 
         for (const auto& move : options.movesToSearch) {
-            const auto score = -alpha_beta({ .bounds = bounds.invert(),
-                .position                            = after_move(options.position, move),
-                .depth                               = depth,
-                .plyFromRoot                         = 1uz,
-                .transTable                          = transTable,
-                .interrupter                         = interrupter,
-                .stats                               = stats });
+            const auto score = -(AlphaBetaContext {
+                .bounds      = bounds.invert(),
+                .position    = after_move(options.position, move),
+                .depth       = depth,
+                .plyFromRoot = 1uz,
+                .transTable  = transTable,
+                .interrupter = interrupter,
+                .stats       = stats }
+                    .alpha_beta());
 
             if (interrupter.was_aborted())
                 break;
