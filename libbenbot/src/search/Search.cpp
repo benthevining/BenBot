@@ -109,7 +109,7 @@ namespace {
 
             auto moves = chess::moves::generate(position);
 
-            if (moves.empty() && position.is_check()) {
+            if (moves.empty() and position.is_check()) {
                 const auto score = Score::mate(plyFromRoot);
 
                 transTable.store(
@@ -127,23 +127,19 @@ namespace {
 
             std::optional<Move> bestMove;
 
-            for (auto i = 0uz; i < moves.size(); ++i) {
-                const auto move = moves[i];
-
-                const auto eval = [this, move, i] {
+            for (const auto move : moves) {
+                const auto eval = [this, move, foundPV = bestMove.has_value()] {
                     if (depth == 0uz)
                         return -(recurse(move).quiescence());
 
-                    if (i == 0uz)
+                    if (not foundPV)
                         return -(recurse(move).alpha_beta());
 
                     // Principal variation search: first try null window
                     const auto nullSearchEval = -(recurse(move, true).alpha_beta());
 
-                    if (nullSearchEval > bounds.alpha and bounds.beta - bounds.alpha > 1) {
-                        // null window failed, re-search with full window
+                    if (nullSearchEval > bounds.alpha /*and bounds.beta - bounds.alpha > 1*/)
                         return -(recurse(move).alpha_beta());
-                    }
 
                     return nullSearchEval;
                 }();
@@ -215,7 +211,7 @@ namespace {
 
             detail::order_moves_for_q_search(position, moves);
 
-            for (const auto& move : moves) {
+            for (const auto move : moves) {
                 assert(position.is_capture(move));
 
                 evaluation = -(recurse(move).quiescence());
@@ -318,15 +314,13 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
 
         const Timer timer;
 
-        // we can generate the legal moves only once, but we should reorder them each iteration
-        // because the move ordering will change based on the evaluations done during the last iteration
         detail::order_moves_for_search(options.position, options.movesToSearch, transTable);
 
         Bounds bounds;
 
         std::optional<Move> bestMoveThisDepth;
 
-        for (const auto& move : options.movesToSearch) {
+        for (const auto move : options.movesToSearch) {
             AlphaBetaContext context { bounds.invert(),
                 after_move(options.position, move),
                 depth, 1uz, transTable, interrupter, stats };
