@@ -270,7 +270,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
     // sets activeFlag to true while inside this function, resets it to false once function exits
     const ActiveFlagSetter activeFlagRAII { activeFlag };
 
-    Interrupter interrupter { exitFlag, pondering, options.searchTime };
+    Interrupter interrupter { exitFlag, pondering, options.searchTime, options.infinite };
 
     transTable.new_search();
 

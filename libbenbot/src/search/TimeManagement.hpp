@@ -49,10 +49,12 @@ struct Interrupter final {
     Interrupter(
         std::atomic_bool&                 exitFlagToUse,
         const std::atomic_bool&           ponderFlagToUse,
-        const std::optional<milliseconds> maxSearchTime)
+        const std::optional<milliseconds> maxSearchTime,
+        const bool                        infinite)
         : exitFlag { exitFlagToUse }
         , ponderFlag { ponderFlagToUse }
         , searchTime { maxSearchTime }
+        , infiniteMode { infinite }
     {
         // make sure exit flag is false when search starts
         exitFlagToUse.store(false);
@@ -63,8 +65,8 @@ struct Interrupter final {
     // returns time remaining until abort time, or nullopt if there's no time bound
     [[nodiscard]] auto get_remaining_time() const -> std::optional<milliseconds>
     {
-        return searchTime.and_then([this](const milliseconds timeLimit) {
-            return std::optional { timeLimit - get_search_duration() };
+        return searchTime.transform([this](const milliseconds timeLimit) {
+            return timeLimit - get_search_duration();
         });
     }
 
@@ -93,13 +95,14 @@ private:
             return true;
 
         // don't exit the search when in ponder mode
-        if (ponderFlag.load())
+        if (infiniteMode or ponderFlag.load())
             return false;
 
-        if (not searchTime.has_value())
-            return false;
-
-        return get_search_duration() >= *searchTime;
+        return searchTime
+            .transform([this](const milliseconds timeLimit) {
+                return get_search_duration() >= timeLimit;
+            })
+            .value_or(false);
     }
 
     const std::atomic_bool& exitFlag;   // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
@@ -115,6 +118,8 @@ private:
     bool aborted { false };
 
     bool anyIterationCompleted { false };
+
+    bool infiniteMode { false };
 };
 
 } // namespace ben_bot::search
