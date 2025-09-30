@@ -71,13 +71,18 @@ add_custom_target (
     COMMAND "${FASTCHESS_PROGRAM}"
         -engine "cmd=$<TARGET_FILE:ben_bot>" name=Refactor
         -engine "cmd=${baseline_binary}" name=Baseline
-        -each tc=8+0.08 -rounds 50 -repeat -concurrency "${num_cores}"
+        -each tc=8+0.08 option.Hash=32
+        -rounds 100000 -repeat
+        -sprt elo0=0 elo1=5 alpha=0.05 beta=0.1
+        -maxmoves 400 -ratinginterval 10
+        -resign movecount=3 score=500 twosided=true
+        -draw movenumber=40 movecount=8 score=10
+        -concurrency "${num_cores}"
         -recover -show-latency
-        -openings "file=${openings_file}" format=pgn
-        -sprt elo0=0 elo1=10 alpha=0.05 beta=0.05
+        -openings "file=${openings_file}" format=pgn order=random
         -pgnout "file=${pgn_out}" nodes=true nps=true timeleft=true latency=true
         -epdout "file=${epd_out}"
-        -log "file=${logfile}" engine=true
+        -log "file=${logfile}" level=warn engine=true
     WORKING_DIRECTORY "$<TARGET_FILE_DIR:ben_bot>"
     BYPRODUCTS "${pgn_out}" "${epd_out}" "${logfile}"
     DEPENDS "${logs_dir}/stamp" "${openings_file}" "${baseline_binary}" ben_bot::ben_bot
