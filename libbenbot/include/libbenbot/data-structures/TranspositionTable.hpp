@@ -55,7 +55,7 @@ enum class EvalType : std::uint_least8_t {
  */
 struct TTData final {
     /** The depth that the position was searched to. */
-    size_t searchedDepth { 0uz }; // empty slots are marked with a depth of 0
+    size_t searchedDepth { 0uz };
 
     /** The evaluation of this position.
         See ``evalType`` to determine the exact meaning of this value.

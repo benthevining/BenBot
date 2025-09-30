@@ -19,6 +19,7 @@
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <cassert>
 #include <cstddef>
 #include <cstdint> // IWYU pragma: keep
@@ -30,6 +31,7 @@
 #include <libchess/util/Memory.hpp>
 #include <memory>
 #include <new>
+#include <numeric>
 #include <optional>
 #include <ranges>
 #include <span>
@@ -42,11 +44,10 @@ using std::size_t;
 static constexpr auto GENERATION_DELTA = 8uz;
 static constexpr auto GENERATION_CYCLE = 255uz + GENERATION_DELTA;
 
-// size 12 bytes
 struct TranspositionTable::Entry final {
     std::uint16_t key { 0 }; // the lowest 16 bits of the position's Zobrist key
 
-    std::uint8_t depth { 0 };
+    std::uint8_t depth { 0 }; // empty slots are marked with a depth of 0
 
     std::uint8_t generation { 0 };
 
@@ -97,12 +98,19 @@ struct TranspositionTable::Entry final {
     }
 };
 
-static constexpr auto ClusterSize = 5uz;
+static constexpr auto CLUSTER_SIZE = 3uz;
 
-struct TranspositionTable::Cluster final {
-    std::array<Entry, ClusterSize> records {};
+struct alignas(32) TranspositionTable::Cluster final {
+    static_assert(sizeof(Entry) == 10uz);
 
-    std::array<std::byte, 4uz> padding {}; // pad to 64 bytes
+    std::array<Entry, CLUSTER_SIZE> records {};
+
+    // padding bytes
+    // round up to nearest power of 2
+    [[maybe_unused]] std::array<
+        std::byte,
+        std::bit_ceil(sizeof(Entry) * CLUSTER_SIZE) - (sizeof(Entry) * CLUSTER_SIZE)>
+        padding {};
 };
 
 TranspositionTable::TranspositionTable()
@@ -141,9 +149,14 @@ auto TranspositionTable::index_table(const size_t clusterIdx) const noexcept -> 
 
 void TranspositionTable::resize(const size_t sizeMB)
 {
+    const auto newClusterCount = (sizeMB * 1024uz * 1024uz) / sizeof(Cluster);
+
+    if (clusterCount == newClusterCount)
+        return;
+
     deallocate();
 
-    clusterCount = sizeMB * 1024uz * 1024uz / sizeof(Cluster);
+    clusterCount = newClusterCount;
 
     table = static_cast<Cluster*>(chess::util::page_aligned_alloc(clusterCount * sizeof(Cluster)));
 
@@ -173,19 +186,19 @@ void TranspositionTable::deallocate()
 
 auto TranspositionTable::hashfull() const -> size_t
 {
-    size_t count { 0uz };
+    const auto indices = std::views::iota(0uz, std::min(1000uz, clusterCount));
 
-    for (auto i = 0uz; i < std::min(1000uz, clusterCount); ++i) {
-        count += static_cast<size_t>(
-            std::ranges::count_if(
-                index_table(i).records,
-                [gen = generation](const Entry& entry) {
-                    return entry.occupied()
-                       and entry.relative_age(gen) == 0uz;
-                }));
-    }
+    const auto count = std::accumulate(
+        indices.begin(), indices.end(),
+        0uz,
+        [this](const size_t sum, const size_t idx) {
+            return sum + static_cast<size_t>(std::ranges::count_if(index_table(idx).records, [gen = generation](const Entry& entry) {
+                return entry.occupied()
+                   and entry.relative_age(gen) == 0uz;
+            }));
+        });
 
-    return count / ClusterSize;
+    return count / CLUSTER_SIZE;
 }
 
 void TranspositionTable::new_search() noexcept
@@ -202,14 +215,14 @@ auto TranspositionTable::find_cluster(const Position::Hash key) const noexcept -
 
 auto TranspositionTable::find(const Position& pos) const -> std::optional<TTData>
 {
-    // the lowest 16 bits are the key within the cluster
-    const auto key = static_cast<std::uint16_t>(pos.hash);
-
     const auto cluster = find_cluster(pos.hash);
 
     if (const auto it = std::ranges::find_if(
             cluster,
-            [key](const Entry& entry) { return entry.key == key; });
+            // the lowest 16 bits are the key within the cluster
+            [key = static_cast<std::uint16_t>(pos.hash)](const Entry& entry) {
+                return entry.key == key;
+            });
         it != cluster.end() and it->occupied()) {
         return it->read();
     }
