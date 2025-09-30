@@ -102,13 +102,18 @@ private:
         "Press to clear the transposition table"
     };
 
-    // NB. The engine doesn't start pondering on its own without explicitly being told to
+    // The engine doesn't start pondering on its own without explicitly being told to
     // via another go command; this option is needed to inform the GUI that the engine
     // supports pondering, and also gives the engine the opportunity to adjust its time
     // management algorithm when pondering is enabled.
     uci::BoolOption ponder { uci::default_options::ponder() };
 
-    std::array<uci::Option*, 3uz> options { &ttSize, &clearTT, &ponder };
+    uci::IntOption threads {
+        "Threads", 1, 1, 1,
+        "Number of searcher threads (currently a dummy)"
+    };
+
+    std::array<uci::Option*, 4uz> options { &ttSize, &clearTT, &ponder, &threads };
 
     // clang-format off
     std::array<CustomCommand, 8uz> customCommands {
