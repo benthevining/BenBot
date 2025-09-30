@@ -47,6 +47,9 @@ struct Result final {
      */
     size_t depth { 0uz };
 
+    /** The deepest depth reached by the quiescence search. */
+    size_t qDepth { 0uz };
+
     /** The evaluation of the position resulting from playing the best move. */
     eval::Score score;
 

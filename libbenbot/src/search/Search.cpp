@@ -48,6 +48,7 @@ namespace {
         size_t staticEvals { 0uz };
         size_t betaCutoffs { 0uz };
         size_t mdpCutoffs { 0uz }; // cutoffs due to mate distance pruning
+        size_t qDepth { 0uz };
     };
 
     // encapsulates the arguments to the recursive alpha/beta call
@@ -168,6 +169,8 @@ namespace {
         {
             if (interrupter.should_abort() or position.is_draw())
                 return {};
+
+            stats.qDepth = std::max(stats.qDepth, plyFromRoot);
 
             if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot)) {
                 ++stats.mdpCutoffs;
@@ -362,6 +365,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         if (depth < options.depth or options.infinite) {
             callbacks.iteration_complete({ .duration = interrupter.get_search_duration(),
                 .depth                               = depth,
+                .qDepth                              = stats.qDepth,
                 .score                               = bestScore,
                 .bestMove                            = bestMove.value(),
                 .nodesSearched                       = stats.nodesSearched,
@@ -394,6 +398,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
 
     callbacks.search_complete({ .duration = interrupter.get_search_duration(),
         .depth                            = depth,
+        .qDepth                           = stats.qDepth,
         .score                            = bestScore,
         .bestMove                         = bestMove.value(),
         .nodesSearched                    = stats.nodesSearched,
