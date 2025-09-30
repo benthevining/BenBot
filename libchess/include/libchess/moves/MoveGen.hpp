@@ -227,11 +227,7 @@ namespace detail {
              | std::views::transform([promotedType](const auto& tuple) {
                    const auto [starting, target] = tuple;
 
-                   return promotedType
-                       .transform([starting, target](const PieceType type) {
-                           return Move { starting, target, PieceType::Pawn, type };
-                       })
-                       .value_or(Move { starting, target, PieceType::Pawn });
+                   return Move { starting, target, PieceType::Pawn, promotedType };
                });
     }
 

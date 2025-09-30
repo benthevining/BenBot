@@ -101,6 +101,8 @@ constexpr auto squares_attacked(
     const auto friendlyPieces = pieces.occupied;
     const auto emptySquares   = (friendlyPieces | enemyPieces).inverse();
 
+    // TODO: could try replacing the pseudo-legal funcs with the magics funcs here
+
     if (const auto queenAttacks = pseudo_legal::queen(pieces.queens, emptySquares, friendlyPieces);
         (queenAttacks & targetSquares).any()) {
         return true;

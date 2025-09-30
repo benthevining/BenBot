@@ -118,11 +118,8 @@ void order_moves_for_search(
     const std::span<Move>     moves,
     const TranspositionTable& transTable)
 {
-    std::optional<Move> bestMove;
-
-    // do this lookup only once
-    if (const auto currPosRecord = transTable.find(currentPosition))
-        bestMove = currPosRecord->bestMove;
+    const auto bestMove = transTable.find(currentPosition)
+                              .and_then([](const TTData& data) { return data.bestMove; });
 
     std::ranges::sort(
         moves,
