@@ -13,7 +13,10 @@
  */
 
 // Search features:
-// Alpha-beta pruning with iterative deepening and quiescence search
+// Alpha-beta pruning
+// Iterative deepening
+// Quiescence search
+// Principal variation search
 // Mate distance pruning
 
 #include "MoveOrdering.hpp"
@@ -124,10 +127,26 @@ namespace {
 
             std::optional<Move> bestMove;
 
-            for (const auto& move : moves) {
-                auto child = recurse(move);
+            for (auto i = 0uz; i < moves.size(); ++i) {
+                const auto move = moves[i];
 
-                const auto eval = depth > 0uz ? -child.alpha_beta() : -child.quiescence();
+                const auto eval = [this, move, i] {
+                    if (depth == 0uz)
+                        return -(recurse(move).quiescence());
+
+                    if (i == 0uz)
+                        return -(recurse(move).alpha_beta());
+
+                    // Principal variation search: first try null window
+                    const auto nullSearchEval = -(recurse(move, true).alpha_beta());
+
+                    if (nullSearchEval > bounds.alpha and bounds.beta - bounds.alpha > 1) {
+                        // null window failed, re-search with full window
+                        return -(recurse(move).alpha_beta());
+                    }
+
+                    return nullSearchEval;
+                }();
 
                 if (interrupter.should_abort())
                     return {};
@@ -217,14 +236,17 @@ namespace {
             return bounds.alpha;
         }
 
-        [[nodiscard]] auto recurse(const Move move) const -> AlphaBetaContext
+        [[nodiscard]] auto recurse(
+            const Move move,
+            const bool useNullWindow = false) const -> AlphaBetaContext
         {
-            const auto left = depth > 0uz ? depth - 1uz : 0uz;
-
-            return { bounds.invert(),
+            return {
+                useNullWindow ? bounds.null_window() : bounds.invert(),
                 after_move(position, move),
-                left, plyFromRoot + 1uz,
-                transTable, interrupter, stats };
+                depth > 0uz ? depth - 1uz : 0uz,
+                plyFromRoot + 1uz,
+                transTable, interrupter, stats
+            };
         }
 
         Bounds bounds;
