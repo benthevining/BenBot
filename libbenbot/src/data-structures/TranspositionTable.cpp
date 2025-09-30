@@ -12,7 +12,7 @@
  * ======================================================================================
  */
 
-// the transposition table is a bucket-like hash map
+// the transposition table is a bucket-style hash map
 // each "cluster" is an array of entries; the root table is an array of clusters
 // a coarse lookup using the Zobrist key gets you to the right cluster,
 // then the lowest 16 bits of the Zobrist key are used to identify entries within a cluster
@@ -115,6 +115,9 @@ struct alignas(32) TranspositionTable::Cluster final {
 
 TranspositionTable::TranspositionTable()
 {
+    // check that padding was the correct size to make Cluster have a power of 2 size
+    static_assert(std::has_single_bit(sizeof(Cluster)));
+
     resize(static_cast<size_t>(
         chess::uci::default_options::hash_size().get_default_value()));
 }
