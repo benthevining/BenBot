@@ -14,6 +14,7 @@
 
 #include <cmath>
 #include <format>
+#include <iostream>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/UCI.hpp>
 #include <libchess/uci/Printing.hpp>
@@ -46,6 +47,8 @@ void best_move(
     std::println(
         "bestmove {}{}",
         to_uci(bestMove), ponder_move_string(ponderMove));
+
+    std::cout.flush(); // make sure the GUI doesn't think we've stalled
 }
 
 namespace {
