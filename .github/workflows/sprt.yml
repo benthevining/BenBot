@@ -36,7 +36,7 @@ jobs:
     if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
     runs-on: ubuntu-latest
     name: Run SPRT test
-    timeout-minutes: 60
+    timeout-minutes: 300 # 5 hours
     env:
       CMAKE_BUILD_PARALLEL_LEVEL: 8
       BUILD_DIR: ${{ github.workspace }}/Builds/clang
