@@ -13,7 +13,6 @@
  */
 
 #include <functional>
-#include <iostream>
 #include <libbenbot/search/Callbacks.hpp>
 #include <libbenbot/search/Context.hpp>
 #include <libchess/uci/Printing.hpp>
@@ -39,13 +38,6 @@ namespace {
             uci_printing::best_move(
                 res.bestMove,
                 transTable.get_best_response(currPos, res.bestMove));
-
-            // Because these callbacks are executed on the searcher background thread,
-            // without this flush here, the output may not actually be written when we
-            // expect, leading to timeouts or GUIs thinking we've hung/disconnected.
-            // Because the best move is always printed last after all info output, we
-            // can do the flush only in this branch.
-            std::cout.flush();
         }
     }
 
