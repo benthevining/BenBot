@@ -73,8 +73,9 @@ add_custom_target (
         -engine "cmd=${baseline_binary}" name=Baseline
         -each tc=8+0.08 option.Hash=32
         -rounds 100000 -repeat
-        -sprt elo0=0 elo1=5 alpha=0.05 beta=0.1
-        -maxmoves 400 -ratinginterval 10
+        -sprt elo0=0 elo1=10 alpha=0.05 beta=0.1
+        -ratinginterval 10
+        -maxmoves 400
         -resign movecount=3 score=500 twosided=true
         -draw movenumber=40 movecount=8 score=10
         -concurrency "${num_cores}"
