@@ -13,6 +13,7 @@
  */
 
 #include <algorithm>
+#include <cstdio>
 #include <expected>
 #include <format>
 #include <iostream>
@@ -53,6 +54,7 @@ void EngineBase::handle_command(std::string_view command)
             wait();
 
         println("readyok");
+        [[maybe_unused]] const auto errCode = std::fflush(stdout);
         return;
     }
 
@@ -123,6 +125,8 @@ void EngineBase::respond_to_uci()
         println("{}", option->get_declaration_string());
 
     println("uciok");
+
+    [[maybe_unused]] const auto errCode = std::fflush(stdout);
 }
 
 void EngineBase::handle_setpos(const string_view arguments)

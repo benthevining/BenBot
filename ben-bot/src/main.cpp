@@ -17,7 +17,6 @@
 #include <cstdlib>
 #include <exception>
 #include <format>
-#include <ios>
 #include <libchess/uci/Printing.hpp>
 #include <libchess/util/Console.hpp>
 
@@ -26,10 +25,6 @@ using chess::uci::printing::info_string;
 int main(const int argc, const char** argv)
 try {
     chess::util::enable_utf8_console_output();
-
-    // we don't care about the ability to intermix C stdio with C++ iostreams
-    // all of our IO is done through C++ iostreams
-    std::ios_base::sync_with_stdio(false);
 
     const auto args = ben_bot::Arguments::parse(argc, argv);
 
