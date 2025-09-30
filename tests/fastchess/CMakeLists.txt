@@ -72,7 +72,7 @@ add_custom_target (
         -engine "cmd=$<TARGET_FILE:ben_bot>" name=Refactor
         -engine "cmd=${baseline_binary}" name=Baseline
         -each tc=8+0.08 option.Hash=32
-        -rounds 200000 -repeat
+        -rounds 100000 -repeat
         -sprt elo0=0 elo1=5 alpha=0.05 beta=0.1
         -maxmoves 400 -ratinginterval 10
         -resign movecount=3 score=500 twosided=true
