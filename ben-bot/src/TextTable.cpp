@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <ben-bot/TextTable.hpp>
+#include <cstddef> // IWYU pragma: keep - for size_t;
 #include <numeric>
 #include <ranges>
 #include <span>
@@ -21,6 +22,8 @@
 #include <vector>
 
 namespace ben_bot {
+
+using std::size_t;
 
 auto TextTable::append_column(const string_view text) -> TextTable&
 {
@@ -90,7 +93,7 @@ auto TextTable::num_columns() const -> size_t
     return std::transform_reduce(
         rows.begin(), rows.end(),
         0uz,
-        [](const auto first, const auto second) { return std::max(first, second); },
+        [](const size_t first, const size_t second) { return std::max(first, second); },
         [](const Row& row) { return row.get_columns().size(); });
 }
 
@@ -116,7 +119,7 @@ auto TextTable::Row::to_string(
 {
     string result { LINE_START };
 
-    size_t index { 0uz };
+    auto index { 0uz };
 
     for (const auto width : widths) {
         if (index > 0uz)
