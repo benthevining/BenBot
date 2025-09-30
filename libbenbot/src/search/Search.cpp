@@ -166,7 +166,12 @@ namespace {
         // improve the stability of the static evaluation function
         [[nodiscard]] auto quiescence() -> Score
         {
-            if (interrupter.should_abort() or position.is_draw())
+            if (interrupter.should_abort())
+                return {};
+
+            transTable.prefetch(position);
+
+            if (position.is_threefold_repetition())
                 return {};
 
             if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot)) {
@@ -174,8 +179,32 @@ namespace {
                 return cutoff.value();
             }
 
-            if (position.is_checkmate())
-                return Score::mate(plyFromRoot);
+            if (const auto value = transTable.probe_eval(position, depth, bounds)) {
+                ++stats.transTableHits;
+                return Score::from_tt(value->first, plyFromRoot);
+            }
+
+            if (position.is_draw()) {
+                transTable.store(
+                    position, { .searchedDepth = depth,
+                                  .eval        = eval::DRAW,
+                                  .evalType    = EvalType::Exact,
+                                  .bestMove    = std::nullopt });
+
+                return {};
+            }
+
+            if (position.is_checkmate()) {
+                const auto score = Score::mate(plyFromRoot);
+
+                transTable.store(
+                    position, { .searchedDepth = depth,
+                                  .eval        = score.to_tt(),
+                                  .evalType    = EvalType::Exact,
+                                  .bestMove    = std::nullopt });
+
+                return score;
+            }
 
             auto evaluation = eval::evaluate(position);
 
