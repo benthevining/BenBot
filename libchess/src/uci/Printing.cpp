@@ -131,12 +131,12 @@ namespace {
 void search_info(const SearchInfo& info)
 {
     std::println(
-        "info depth {} score {} time {} hashfull {} nodes {} nps {} tbhits {}{}{}",
+        "info depth {} score {} time {} hashfull {} nodes {} nps {} seldepth {} tbhits {}{}{}",
         info.depth,
         score_string(info.score),
         info.time.count(), info.hashfull, info.nodes,
         get_nodes_per_second(info),
-        info.tbHits,
+        info.selDepth, info.tbHits,
         pv_string(info.pv),
         get_extra_info_string(info.extraInformation));
 }
