@@ -58,7 +58,7 @@ void best_move(
     @ingroup uci
     @see search_info()
 
-    @todo ``seldepth``, ``multipv``, ``currmove``, ``currmovenumber``, ``cpuload``, ``refutation``, ``currline``
+    @todo ``multipv``, ``currmove``, ``currmovenumber``, ``cpuload``, ``refutation``, ``currline``
  */
 struct SearchInfo final {
     /** Represents the engine's evaluation of the line it is currently searching. */
@@ -86,6 +86,9 @@ struct SearchInfo final {
 
     /** The search depth, in plies, associated with this information. */
     size_t depth { 0uz };
+
+    /** Selective search depth, in plies. */
+    size_t selDepth { 0uz };
 
     /** The elapsed search time. */
     std::chrono::milliseconds time;

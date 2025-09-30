@@ -51,6 +51,7 @@ auto Result::to_libchess(const bool includeDebugInfo) const -> LibchessResult
     return {
         .score            = score.to_libchess(),
         .depth            = depth,
+        .selDepth         = qDepth,
         .time             = duration,
         .nodes            = nodesSearched,
         .pv               = {},
