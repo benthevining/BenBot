@@ -137,26 +137,26 @@ void EngineBase::handle_setpos(const string_view arguments)
 
     using MaybeError = std::expected<void, std::string>;
 
-    parse_position_options(arguments)
-        .and_then([this](const Position& pos) -> MaybeError {
-            if (const auto errorStr = pos.is_illegal()) {
-                [[unlikely]];
-                return std::unexpected(
-                    std::format("Position is illegal: {}", errorStr.value()));
-            }
+    [[maybe_unused]] const auto obj = parse_position_options(arguments)
+                                          .and_then([this](const Position& pos) -> MaybeError {
+                                              if (const auto errorStr = pos.is_illegal()) {
+                                                  [[unlikely]];
+                                                  return std::unexpected(
+                                                      std::format("Position is illegal: {}", errorStr.value()));
+                                              }
 
-            position = pos;
+                                              position = pos;
 
-            set_position(pos);
+                                              set_position(pos);
 
-            return {};
-        })
-        .or_else([this](const std::string_view error) -> MaybeError {
-            info_string(std::format("Error setting position: {}", error));
-            info_string(std::format("Retained previous position: {}", notation::to_fen(position)));
+                                              return {};
+                                          })
+                                          .or_else([this](const std::string_view error) -> MaybeError {
+                                              info_string(std::format("Error setting position: {}", error));
+                                              info_string(std::format("Retained previous position: {}", notation::to_fen(position)));
 
-            return {};
-        });
+                                              return {};
+                                          });
 }
 
 void EngineBase::handle_setoption(const string_view arguments)
