@@ -13,9 +13,10 @@ import argparse
 import json
 import subprocess
 from pathlib import Path
+from typing import Optional
 
 
-def get_move_from_obj(listObj, move):  # listObj is a JSON list of objects
+def get_move_from_obj(listObj: list[dict], move: str) -> Optional[dict]:
     for obj in listObj:
         if obj["move"] == move:
             return obj

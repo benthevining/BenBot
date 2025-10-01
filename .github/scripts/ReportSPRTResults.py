@@ -9,25 +9,25 @@
 # ░▒▓███████▓▒░░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░ ░▒▓██████▓▒░  ░▒▓█▓▒░
 #
 # ======================================================================================
-
 # This script is used to parse the output of fastchess running an SPRT test.
 # Pipe this script's output into $GITHUB_STEP_SUMMARY.
 # This script isn't strictly necessary, it just provides a convenient summary in the GHA summary.
 # The template for the summary is read from sprt-results.md in this directory.
-
-from pathlib import Path
-import sys
 import re
+import sys
 from enum import Enum
+from pathlib import Path
+from typing import Tuple
 
 LOG_FILE = Path(sys.argv[1])
 
-with open(LOG_FILE, 'r') as file:
+with open(LOG_FILE) as file:
     SPRT_OUTPUT = file.readlines()
+
 
 # finds the indices of the last 2 '-----------------' lines in the output
 # the final results report is in the fenced section between these 2 lines
-def find_last_two_fences():
+def find_last_two_fences() -> list[int]:
     indices = []
 
     for i, line in enumerate(reversed(SPRT_OUTPUT)):
@@ -38,44 +38,52 @@ def find_last_two_fences():
 
     return sorted(indices)
 
-def get_final_results_report():
+
+def get_final_results_report() -> list[str]:
     start, end = find_last_two_fences()
 
     return SPRT_OUTPUT[start + 1 : end]
 
+
 RESULTS = get_final_results_report()
 
+
 # returns the first string that matches the given regex
-def find_first_match(regex, strings):
+def find_first_match(regex: str, strings: list[str]) -> str:
     for str in strings:
         if re.search(regex, str):
             return str
 
-    return ''
+    return ""
+
 
 class EmojiType(Enum):
-    NEUTRAL = 1,
-    POSITIVE = 2,
+    NEUTRAL = (1,)
+    POSITIVE = (2,)
     NEGATIVE = 3
 
-def get_emoji(type):
+
+def get_emoji(type: EmojiType) -> str:
     match type:
-        case EmojiType.NEUTRAL: return '🟰'
-        case EmojiType.POSITIVE: return '✅'
-        case EmojiType.NEGATIVE: return '❌'
-    return ''
+        case EmojiType.NEUTRAL:
+            return "🟰"
+        case EmojiType.POSITIVE:
+            return "✅"
+        case EmojiType.NEGATIVE:
+            return "❌"
+    return ""
 
-def get_elo():
-    elo_line = find_first_match('Elo:', RESULTS)
 
-    first_space_idx = elo_line.find(' ')
-    second_space_idx = elo_line.find(' ', first_space_idx + 1)
+def get_elo() -> float:
+    elo_line = find_first_match("Elo:", RESULTS)
 
-    return float(
-        elo_line[first_space_idx:second_space_idx]
-    )
+    first_space_idx = elo_line.find(" ")
+    second_space_idx = elo_line.find(" ", first_space_idx + 1)
 
-def get_elo_emoji(elo):
+    return float(elo_line[first_space_idx:second_space_idx])
+
+
+def get_elo_emoji(elo: float) -> str:
     if abs(elo) <= 1:
         return get_emoji(EmojiType.NEUTRAL)
 
@@ -84,50 +92,45 @@ def get_elo_emoji(elo):
 
     return get_emoji(EmojiType.NEGATIVE)
 
-def get_result_breakdown():
-    games_line = find_first_match('Games:', RESULTS)
 
-    second_space_idx = games_line.find(' ',
-                            games_line.find(' ') + 1)
+def get_result_breakdown() -> Tuple[int, int, int, float]:
+    games_line = find_first_match("Games:", RESULTS)
 
-    after_second_space = games_line[second_space_idx+1:]
+    second_space_idx = games_line.find(" ", games_line.find(" ") + 1)
+
+    after_second_space = games_line[second_space_idx + 1 :]
 
     # string format is:
     # Wins: W, Losses: L, Draws: D, Points: 50.5 (50.50 %)
 
-    wins_comma_idx = after_second_space.find(',')
+    wins_comma_idx = after_second_space.find(",")
 
     num_wins = int(
-        after_second_space[after_second_space.find(' ')+1:wins_comma_idx]
+        after_second_space[after_second_space.find(" ") + 1 : wins_comma_idx]
     )
 
-    after_wins = (after_second_space[after_second_space.find(' ', wins_comma_idx + 1):]).lstrip()
+    after_wins = (
+        after_second_space[after_second_space.find(" ", wins_comma_idx + 1) :]
+    ).lstrip()
 
-    losses_comma_idx = after_wins.find(',')
+    losses_comma_idx = after_wins.find(",")
 
-    num_losses = int(
-        after_wins[after_wins.find(' ')+1:losses_comma_idx]
-    )
+    num_losses = int(after_wins[after_wins.find(" ") + 1 : losses_comma_idx])
 
-    after_losses = (after_wins[after_wins.find(' ', losses_comma_idx + 1):]).lstrip()
+    after_losses = (after_wins[after_wins.find(" ", losses_comma_idx + 1) :]).lstrip()
 
-    draws_comma_idx = after_losses.find(',')
+    draws_comma_idx = after_losses.find(",")
 
-    num_draws = int(
-        after_losses[after_losses.find(' ')+1:draws_comma_idx]
-    )
+    num_draws = int(after_losses[after_losses.find(" ") + 1 : draws_comma_idx])
 
-    after_draws = (after_losses[after_losses.find(' ', draws_comma_idx+1):]).lstrip()
+    after_draws = (after_losses[after_losses.find(" ", draws_comma_idx + 1) :]).lstrip()
 
-    pcnt = float(
-        after_draws[after_draws.find('(')+1:after_draws.find('%')]
-    )
+    pcnt = float(after_draws[after_draws.find("(") + 1 : after_draws.find("%")])
 
-    return (
-        num_wins, num_losses, num_draws, pcnt
-    )
+    return (num_wins, num_losses, num_draws, pcnt)
 
-def get_pcnt_emoji(pcnt):
+
+def get_pcnt_emoji(pcnt: float) -> str:
     if pcnt in range(0, 45):
         return get_emoji(EmojiType.NEGATIVE)
 
@@ -136,9 +139,11 @@ def get_pcnt_emoji(pcnt):
 
     return get_emoji(EmojiType.POSITIVE)
 
+
 #
 
-def replace_pairs(old_values, new_values, string):
+
+def replace_pairs(old_values: list[str], new_values: list[str], string: str) -> str:
     text = string
 
     for old, new in zip(old_values, new_values):
@@ -146,9 +151,10 @@ def replace_pairs(old_values, new_values, string):
 
     return text
 
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 
-with open(f'{SCRIPT_DIR}/sprt-results.md', 'r') as file:
+with open(f"{SCRIPT_DIR}/sprt-results.md") as file:
     MD_TEMPLATE_TEXT = file.read()
 
 elo = get_elo()
@@ -157,12 +163,24 @@ num_wins, num_losses, num_draws, pcnt = get_result_breakdown()
 
 print(
     replace_pairs(
-        ['%ELO%', '%ELO_EMOJI%',
-         '%WINS%', '%LOSSES%', '%DRAWS%',
-         '%PCNT%', '%PCNT_EMOJI%'],
-        [f'{elo}', get_elo_emoji(elo),
-         f'{num_wins}', f'{num_losses}', f'{num_draws}',
-         f'{pcnt}%', get_pcnt_emoji(pcnt)],
-        MD_TEMPLATE_TEXT
+        [
+            "%ELO%",
+            "%ELO_EMOJI%",
+            "%WINS%",
+            "%LOSSES%",
+            "%DRAWS%",
+            "%PCNT%",
+            "%PCNT_EMOJI%",
+        ],
+        [
+            f"{elo}",
+            get_elo_emoji(elo),
+            f"{num_wins}",
+            f"{num_losses}",
+            f"{num_draws}",
+            f"{pcnt}%",
+            get_pcnt_emoji(pcnt),
+        ],
+        MD_TEMPLATE_TEXT,
     )
 )
