@@ -139,6 +139,8 @@ void search_info(const SearchInfo& info)
         info.selDepth, info.tbHits,
         pv_string(info.pv),
         get_extra_info_string(info.extraInformation));
+
+    std::cout.flush();
 }
 
 } // namespace chess::uci::printing
