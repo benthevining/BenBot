@@ -25,10 +25,16 @@
 
 namespace chess::util {
 
+// Credit to Stockfish for this idea:
+// https://github.com/official-stockfish/Stockfish/blob/3073d82ccf25a8ab31e0e0215a2a661d0dcdadd7/src/misc.cpp
+
 using std::streambuf;
 
+// This is a streambuf that wraps another streambuf, passing through the output
+// and duplicating it into a second streambuf. This is used to duplicate cin and
+// cout traffic to a log file for debugging purposes.
 struct Tie final : streambuf {
-    Tie(streambuf& buffer, streambuf& log)
+    Tie(streambuf& buffer, streambuf& log) // NOLINT(bugprone-easily-swappable-parameters)
         : buf { buffer }
         , logBuf { log }
     {
@@ -53,10 +59,14 @@ private:
     streambuf& logBuf; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 };
 
+// NB. virtual member functions defined out-of-line to address -Wweak-vtables
+
 auto Tie::sync() -> int
 {
-    logBuf.pubsync();
-    return buf.pubsync();
+    const bool logSuccess = logBuf.pubsync() == 0;
+    const bool bufSuccess = buf.pubsync() == 0;
+
+    return logSuccess and bufSuccess ? 0 : -1;
 }
 
 auto Tie::overflow(const int_type character) -> int_type
@@ -70,6 +80,8 @@ auto Tie::log(
     const int_type         character,
     const std::string_view prefix) const -> int_type
 {
+    // this is static because there's only one log file shared between
+    // two tie objects (one for stdin and one for stdout)
     static int_type last = '\n';
 
     if (last == '\n') {
@@ -78,35 +90,18 @@ auto Tie::log(
             static_cast<std::streamsize>(prefix.size()));
     }
 
-    return last = logBuf.sputc(static_cast<char_type>(character));
+    last = logBuf.sputc(static_cast<char_type>(character));
+
+    return last;
 }
 
+using std::filesystem::path;
 using MaybeError = std::expected<void, std::string>;
 
+// wraps two tie objects (one for stdin & one for stdout) and a file stream
+// stdin & stdout traffic is duplicated into the log file
 struct Logger final {
-    [[nodiscard]] static auto start(const std::filesystem::path& logFile) -> MaybeError
-    {
-        static Logger logger;
-
-        logger.close_log_file();
-
-        if (logFile.empty())
-            return {};
-
-        logger.file.open(logFile, std::ifstream::out);
-
-        if (not logger.file.is_open()) {
-            return std::unexpected(
-                std::format(
-                    "Unable to open log file at path '{}'",
-                    logFile.string()));
-        }
-
-        std::cin.rdbuf(&logger.in);
-        std::cout.rdbuf(&logger.out);
-
-        return {};
-    }
+    [[nodiscard]] static auto start(const path& logFile) -> MaybeError;
 
     Logger(const Logger&)            = delete;
     Logger(Logger&&)                 = delete;
@@ -118,16 +113,7 @@ private:
 
     ~Logger() { close_log_file(); }
 
-    void close_log_file()
-    {
-        if (not file.is_open())
-            return;
-
-        std::cout.rdbuf(out.buffer());
-        std::cin.rdbuf(in.buffer());
-
-        file.close();
-    }
+    void close_log_file();
 
     std::ofstream file;
 
@@ -135,7 +121,42 @@ private:
     Tie out { *std::cout.rdbuf(), *file.rdbuf() };
 };
 
-auto start_file_logger(const std::filesystem::path& logFile) -> MaybeError
+auto Logger::start(const path& logFile) -> MaybeError
+{
+    static Logger logger;
+
+    logger.close_log_file();
+
+    if (logFile.empty())
+        return {};
+
+    logger.file.open(logFile, std::ifstream::out);
+
+    if (not logger.file.is_open()) {
+        return std::unexpected(
+            std::format(
+                "Unable to open log file at path '{}'",
+                logFile.string()));
+    }
+
+    std::cin.rdbuf(&logger.in);
+    std::cout.rdbuf(&logger.out);
+
+    return {};
+}
+
+void Logger::close_log_file()
+{
+    if (not file.is_open())
+        return;
+
+    std::cout.rdbuf(out.buffer());
+    std::cin.rdbuf(in.buffer());
+
+    file.close();
+}
+
+auto start_file_logger(const path& logFile) -> MaybeError
 {
     const auto path = absolute(logFile);
 

@@ -46,7 +46,7 @@ foreach (epd_file IN LISTS testcase_files)
                           "${epd_idx}" "$<TARGET_FILE:ben_bot>" "${engine_log}"
         )
 
-        set_tests_properties ("${test_name}" PROPERTIES ATTACHED_FILES "${engine_log}")
+        set_tests_properties ("${test_name}" PROPERTIES ATTACHED_FILES_ON_FAIL "${engine_log}")
 
         set_property (DIRECTORY APPEND PROPERTY ADDITIONAL_CLEAN_FILES "${engine_log}")
     endforeach ()

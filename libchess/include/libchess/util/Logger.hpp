@@ -27,8 +27,10 @@ namespace chess::util {
 
 /** Starts a file logger.
     This works by duplicating ``std::cout`` and ``std::cerr`` output
-    to a file at the given path.
-    If the operation fails, returns an explanatory error string.
+    to a file at the given path. If the operation fails, returns an
+    explanatory error string. This may be called multiple times with
+    different file paths; each call will flush output to the previous
+    log file and start writing output to the new log file.
 
     @ingroup util
  */
