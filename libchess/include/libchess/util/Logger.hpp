@@ -13,23 +13,28 @@
  */
 
 /** @file
-    This file provides some basic file handling utilities.
+    This file provides some basic logging utilities.
     @ingroup util
  */
 
 #pragma once
 
+#include <expected>
 #include <filesystem>
 #include <string>
 
 namespace chess::util {
 
-/** Loads the file's content as a string.
-    Throws an exception if the file cannot be loaded.
+/** Starts a file logger.
+    This works by duplicating ``std::cout`` and ``std::cerr`` output
+    to a file at the given path. If the operation fails, returns an
+    explanatory error string. This may be called multiple times with
+    different file paths; each call will flush output to the previous
+    log file and start writing output to the new log file.
 
-    @todo Return std::expected
     @ingroup util
  */
-[[nodiscard]] auto load_file_as_string(const std::filesystem::path& file) -> std::string;
+[[nodiscard]] auto start_file_logger(const std::filesystem::path& logFile)
+    -> std::expected<void, std::string>;
 
 } // namespace chess::util

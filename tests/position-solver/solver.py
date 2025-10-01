@@ -20,6 +20,7 @@ logging.basicConfig(level=logging.DEBUG)
 TESTCASE_FILE = Path(sys.argv[1])
 LINE_IDX = int(sys.argv[2].strip())
 ENGINE_PATH = Path(sys.argv[3])
+ENGINE_LOG_PATH = Path(sys.argv[4])
 
 with open(TESTCASE_FILE, 'r') as file:
     epd_data = file.readlines()[LINE_IDX]
@@ -30,6 +31,10 @@ operations = board.set_epd(epd_data)
 
 engine = chess.engine.SimpleEngine.popen_uci(
     ENGINE_PATH, timeout=None
+)
+
+engine.configure(
+    { "Debug Log File": str(ENGINE_LOG_PATH.resolve()) }
 )
 
 result = engine.play(

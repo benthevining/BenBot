@@ -15,9 +15,13 @@
 #include <algorithm>
 #include <ben-bot/Engine.hpp>
 #include <cstddef> // IWYU pragma: keep - for size_t
+#include <expected>
+#include <filesystem>
 #include <format>
 #include <libbenbot/search/Callbacks.hpp>
 #include <libchess/uci/Printing.hpp>
+#include <libchess/util/Logger.hpp>
+#include <string>
 
 namespace ben_bot {
 
@@ -60,6 +64,22 @@ void Engine::option_changed(const uci::Option& option)
     if (&option == &ttSize) {
         wait();
         searcher.context.transTable.resize(static_cast<size_t>(ttSize.get_value()));
+        return;
+    }
+
+    if (&option == &logFile) {
+        const auto path = logFile.get_value();
+
+        if (path.empty())
+            return;
+
+        [[maybe_unused]] const auto result
+            = chess::util::start_file_logger(
+                std::filesystem::path { path })
+                  .or_else([](const string_view error) {
+                      info_string(error);
+                      return std::expected<void, std::string> {};
+                  });
     }
 }
 
