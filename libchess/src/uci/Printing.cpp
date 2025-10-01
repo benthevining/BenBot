@@ -27,7 +27,7 @@ namespace chess::uci::printing {
 
 void info_string(const std::string_view info)
 {
-    std::println("info string {}", info);
+    std::println(std::cout, "info string {}", info);
 }
 
 using notation::to_uci;
@@ -44,7 +44,7 @@ namespace {
 void best_move(
     const Move bestMove, const std::optional<Move> ponderMove)
 {
-    std::println(
+    std::println(std::cout,
         "bestmove {}{}",
         to_uci(bestMove), ponder_move_string(ponderMove));
 
@@ -130,7 +130,7 @@ namespace {
 
 void search_info(const SearchInfo& info)
 {
-    std::println(
+    std::println(std::cout,
         "info depth {} score {} time {} hashfull {} nodes {} nps {} seldepth {} tbhits {}{}{}",
         info.depth,
         score_string(info.score),

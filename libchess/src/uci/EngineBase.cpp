@@ -52,7 +52,7 @@ void EngineBase::handle_command(std::string_view command)
         if (not is_searching())
             wait();
 
-        println("readyok");
+        println(std::cout, "readyok");
         std::cout.flush();
         return;
     }
@@ -117,13 +117,13 @@ void EngineBase::respond_to_uci()
 {
     // this command is sent once after program boot
 
-    println("id name {}", get_name());
-    println("id author {}", get_author());
+    println(std::cout, "id name {}", get_name());
+    println(std::cout, "id author {}", get_author());
 
     for (const auto* option : get_options())
-        println("{}", option->get_declaration_string());
+        println(std::cout, "{}", option->get_declaration_string());
 
-    println("uciok");
+    println(std::cout, "uciok");
 
     std::cout.flush();
 }
