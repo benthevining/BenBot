@@ -13,8 +13,8 @@
  */
 
 #include <cmath>
-#include <cstdio>
 #include <format>
+#include <iostream>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/UCI.hpp>
 #include <libchess/uci/Printing.hpp>
@@ -48,7 +48,7 @@ void best_move(
         "bestmove {}{}",
         to_uci(bestMove), ponder_move_string(ponderMove));
 
-    [[maybe_unused]] const auto errCode = std::fflush(stdout);
+    std::cout.flush();
 }
 
 namespace {
