@@ -32,7 +32,9 @@
 #include <memory>
 #include <numeric>
 #include <ranges>
+#include <span>
 #include <string_view>
+#include <thread>
 #include <vector>
 
 namespace ben_bot {
@@ -111,26 +113,21 @@ namespace {
         }
     };
 
-    void do_bench(
-        const string_view epdText,
-        const size_t      defaultDepth,
-        const bool        printProgressOutput)
+    [[nodiscard]] auto get_batch_results(
+        const size_t startIdx, const size_t batchSize,
+        const std::span<const notation::EPDPosition> epds,
+        const size_t                                 defaultDepth,
+        const bool                                   printProgressOutput) -> std::vector<SearchResult>
     {
         using ThreadPtr = std::unique_ptr<BenchSearcherThread>;
 
         std::vector<ThreadPtr> searcherThreads;
 
-        {
-            const auto epds = notation::parse_all_epds(epdText);
-
-            info_string(std::format("Starting {} searcher threads", epds.size()));
-
-            for (auto i = 0uz; i < epds.size(); ++i) {
-                searcherThreads.emplace_back(
-                    std::make_unique<BenchSearcherThread>(
-                        i + 1uz, // display 1-based thread numbers
-                        epds.at(i), defaultDepth, printProgressOutput));
-            }
+        for (auto idx = startIdx; idx < startIdx + batchSize; ++idx) {
+            searcherThreads.emplace_back(
+                std::make_unique<BenchSearcherThread>(
+                    idx + 1uz, // display 1-based thread numbers
+                    epds[idx], defaultDepth, printProgressOutput));
         }
 
         // wait for all threads to finish searching
@@ -140,11 +137,47 @@ namespace {
                     [](const ThreadPtr& thread) { return thread->finished(); });
             });
 
-        const auto results = searcherThreads
-                           | std::views::transform([](const ThreadPtr& thread) {
-                                 return thread->get_result();
-                             })
-                           | std::ranges::to<std::vector>();
+        return searcherThreads
+             | std::views::transform([](const ThreadPtr& thread) {
+                   return thread->get_result();
+               })
+             | std::ranges::to<std::vector>();
+    }
+
+    [[nodiscard]] auto get_bench_results(
+        const string_view epdText,
+        const size_t      defaultDepth,
+        const bool        printProgressOutput) -> std::vector<SearchResult>
+    {
+        const auto batchSize = static_cast<size_t>(std::thread::hardware_concurrency());
+
+        const auto epds = notation::parse_all_epds(epdText);
+
+        info_string(std::format(
+            "Searching {} positions in batches of {}",
+            epds.size(), batchSize));
+
+        std::vector<SearchResult> results;
+
+        for (auto start = 0uz; start + batchSize <= epds.size(); start += batchSize)
+            results.append_range(get_batch_results(
+                start, batchSize, epds, defaultDepth, printProgressOutput));
+
+        if (const auto left = epds.size() % batchSize;
+            left != 0uz) {
+            results.append_range(get_batch_results(
+                epds.size() - left, left, epds, defaultDepth, printProgressOutput));
+        }
+
+        return results;
+    }
+
+    void do_bench(
+        const string_view epdText,
+        const size_t      defaultDepth,
+        const bool        printProgressOutput)
+    {
+        const auto results = get_bench_results(epdText, defaultDepth, printProgressOutput);
 
         const auto totalNodes = std::accumulate(
             results.begin(), results.end(),
