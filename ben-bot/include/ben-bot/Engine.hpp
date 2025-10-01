@@ -113,7 +113,12 @@ private:
         "Number of searcher threads (currently a dummy)"
     };
 
-    std::array<uci::Option*, 4uz> options { &ttSize, &clearTT, &ponder, &threads };
+    uci::StringOption logFile {
+        "Debug Log File", "<empty>",
+        "If not empty, engine I/O will be mirrored to this file"
+    };
+
+    std::array<uci::Option*, 5uz> options { &ttSize, &clearTT, &ponder, &threads, &logFile };
 
     // clang-format off
     std::array<CustomCommand, 8uz> customCommands {

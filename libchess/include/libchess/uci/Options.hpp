@@ -217,7 +217,6 @@ private:
 };
 
 /** An option that can have any arbitrary string value.
-    String options are empty by default.
 
     @ingroup uci
  */
@@ -226,7 +225,13 @@ struct StringOption final : Option {
 
     using Value = string_view;
 
-    [[nodiscard]] auto get_value() const noexcept -> string_view { return value; } // cppcheck-suppress returnByReference
+    [[nodiscard]] auto get_value() const noexcept -> string_view
+    {
+        if (value == "<empty>")
+            return {};
+
+        return value;
+    }
 
     [[nodiscard]] auto get_value_variant() const -> Variant override { return get_value(); }
 
