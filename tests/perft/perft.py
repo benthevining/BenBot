@@ -15,7 +15,7 @@ import subprocess
 from pathlib import Path
 
 
-def get_result_lines(stdout):
+def get_result_lines(stdout) -> list[str]:
     lines = []
 
     for line in stdout:
@@ -30,7 +30,7 @@ def get_result_lines(stdout):
     return lines
 
 
-def get_value_for_key(lines, key):
+def get_value_for_key(lines: list[str], key: str) -> int:
     for line in lines:
         thisKey, value = line.split(":", 1)
 
@@ -40,7 +40,7 @@ def get_value_for_key(lines, key):
     raise Exception(f"Result does not contain key {key}")
 
 
-def get_result(lines):
+def get_result(lines: list[str]) -> dict[str, int]:
     return {
         "captures": get_value_for_key(lines, "Captures"),
         "castles": get_value_for_key(lines, "Castles"),
@@ -53,7 +53,7 @@ def get_result(lines):
     }
 
 
-def check_result(expected, actual):
+def check_result(expected: dict[str, int], actual: dict[str, int]) -> bool:
     for key in (
         "totalNodes",
         "captures",
