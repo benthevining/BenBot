@@ -53,6 +53,7 @@ void EngineBase::handle_command(std::string_view command)
             wait();
 
         println("readyok");
+        std::cout.flush();
         return;
     }
 
@@ -123,6 +124,8 @@ void EngineBase::respond_to_uci()
         println("{}", option->get_declaration_string());
 
     println("uciok");
+
+    std::cout.flush();
 }
 
 void EngineBase::handle_setpos(const string_view arguments)

@@ -48,7 +48,7 @@ void best_move(
         "bestmove {}{}",
         to_uci(bestMove), ponder_move_string(ponderMove));
 
-    std::cout.flush(); // make sure the GUI doesn't think we've stalled
+    std::cout.flush();
 }
 
 namespace {
