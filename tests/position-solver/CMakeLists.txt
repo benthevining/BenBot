@@ -37,9 +37,17 @@ foreach (epd_file IN LISTS testcase_files)
     math (EXPR num_epds "${num_epds} - 1") # because RANGE includes the end value
 
     foreach (epd_idx RANGE "${num_epds}")
-        add_test (NAME "ben_bot.position_solver.${filename}.${epd_idx}"
+        set (test_name "ben_bot.position_solver.${filename}.${epd_idx}")
+
+        set (engine_log "${BenBot_SOURCE_DIR}/logs/position-solver/${filename}-${epd_idx}.log")
+
+        add_test (NAME "${test_name}"
                   COMMAND Python::Interpreter "${CMAKE_CURRENT_LIST_DIR}/solver.py" "${epd_file}"
-                          "${epd_idx}" "$<TARGET_FILE:ben_bot>"
+                          "${epd_idx}" "$<TARGET_FILE:ben_bot>" "${engine_log}"
         )
+
+        set_tests_properties ("${test_name}" PROPERTIES ATTACHED_FILES "${engine_log}")
+
+        set_property (DIRECTORY APPEND PROPERTY ADDITIONAL_CLEAN_FILES "${engine_log}")
     endforeach ()
 endforeach ()
