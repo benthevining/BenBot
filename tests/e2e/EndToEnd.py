@@ -12,6 +12,7 @@
 import argparse
 import collections
 import concurrent.futures
+import fnmatch
 import io
 import subprocess
 import sys
@@ -20,6 +21,7 @@ import traceback
 from contextlib import redirect_stdout
 from functools import wraps
 from pathlib import Path
+from typing import Callable
 
 #
 
@@ -84,9 +86,30 @@ class BenBot:
         self.send_command(f"setoption name {name} value {value}")
 
     @timeout_decorator(MAX_TIMEOUT)
-    def output_contains(self, expected_output: str):
+    def equals(self, expected_output: str):
         for line in self.readline():
             if line == expected_output:
+                return
+
+    @timeout_decorator(MAX_TIMEOUT)
+    def starts_with(self, expected_output: str):
+        for line in self.readline():
+            if line.startswith(expected_output):
+                return
+
+    @timeout_decorator(MAX_TIMEOUT)
+    def check_output(self, callback: Callable[[str], bool]):
+        if not callback:
+            raise ValueError("Callback function is required")
+
+        for line in self.readline():
+            if callback(line):
+                return
+
+    @timeout_decorator(MAX_TIMEOUT)
+    def expect(self, expected_output: str):
+        for line in self.readline():
+            if fnmatch.fnmatch(line, expected_output):
                 return
 
     def readline(self):
@@ -140,7 +163,110 @@ class BenBotTests(metaclass=OrderedClassMembers):
 
     def test_uci_command(self):
         self.engine.send_command("uci")
-        self.engine.output_contains("uciok")
+        self.engine.equals("uciok")
+
+    def test_ucinewgame_and_startpos_nodes_1000(self):
+        self.engine.send_command("ucinewgame")
+        self.engine.send_command("position startpos")
+        self.engine.send_command("go nodes 1000")
+        self.engine.starts_with("bestmove")
+
+    def test_ucinewgame_and_startpos_moves(self):
+        self.engine.send_command("ucinewgame")
+        self.engine.send_command("position startpos moves e2e4 e7e6")
+        self.engine.send_command("go nodes 1000")
+        self.engine.starts_with("bestmove")
+
+    def test_fen_position_1(self):
+        self.engine.send_command("ucinewgame")
+        self.engine.send_command("position fen 5rk1/1K4p1/8/8/3B4/8/8/8 b - - 0 1")
+        self.engine.send_command("go nodes 1000")
+        self.engine.starts_with("bestmove")
+
+    def test_fen_position_2_flip(self):
+        self.engine.send_command("ucinewgame")
+        self.engine.send_command("position fen 5rk1/1K4p1/8/8/3B4/8/8/8 b - - 0 1")
+        self.engine.send_command("flip")
+        self.engine.send_command("go nodes 1000")
+        self.engine.starts_with("bestmove")
+
+    def test_clear_hash(self):
+        self.engine.send_command("setoption name Clear Hash")
+
+    def test_fen_position_mate_1(self):
+        self.engine.send_command("ucinewgame")
+        self.engine.send_command("position fen 5K2/8/2qk4/2nPp3/3r4/6B1/B7/3R4 w - e6")
+        self.engine.send_command("go depth 7")
+
+        self.engine.expect("* score mate 1 *")
+        self.engine.equals("bestmove d5e6")
+
+    def test_fen_position_mate_minus_1(self):
+        self.engine.send_command("ucinewgame")
+        self.engine.send_command(
+            "position fen 2brrb2/8/p7/Q7/1p1kpPp1/1P1pN1K1/3P4/8 b - -"
+        )
+        self.engine.send_command("go depth 7")
+        self.engine.expect("* score mate -1 *")
+        self.engine.starts_with("bestmove")
+
+    def test_fen_position_fixed_node(self):
+        self.engine.send_command("ucinewgame")
+        self.engine.send_command(
+            "position fen 5K2/8/2P1P1Pk/6pP/3p2P1/1P6/3P4/8 w - - 0 1"
+        )
+        self.engine.send_command("go nodes 500000")
+        self.engine.starts_with("bestmove")
+
+    def test_fen_position_with_mate_go_depth(self):
+        self.engine.send_command("ucinewgame")
+        self.engine.send_command("position fen 8/5R2/2K1P3/4k3/8/b1PPpp1B/5p2/8 w - -")
+        self.engine.send_command("go depth 18 searchmoves c6d7")
+        self.engine.expect("* score mate 2 *")
+
+        self.engine.starts_with("bestmove")
+
+    def test_fen_position_with_mate_go_mate(self):
+        self.engine.send_command("ucinewgame")
+        self.engine.send_command("position fen 8/5R2/2K1P3/4k3/8/b1PPpp1B/5p2/8 w - -")
+        self.engine.send_command("go mate 2 searchmoves c6d7")
+        self.engine.expect("* score mate 2 *")
+
+        self.engine.starts_with("bestmove")
+
+    def test_fen_position_with_mate_go_nodes(self):
+        self.engine.send_command("ucinewgame")
+        self.engine.send_command("position fen 8/5R2/2K1P3/4k3/8/b1PPpp1B/5p2/8 w - -")
+        self.engine.send_command("go nodes 500000 searchmoves c6d7")
+        self.engine.expect("* score mate 2 *")
+
+        self.engine.starts_with("bestmove")
+
+    def test_fen_position_with_mate_go_depth_and_promotion(self):
+        self.engine.send_command("ucinewgame")
+        self.engine.send_command(
+            "position fen 8/5R2/2K1P3/4k3/8/b1PPpp1B/5p2/8 w - - moves c6d7 f2f1q"
+        )
+        self.engine.send_command("go depth 10")
+        self.engine.expect("* score mate 1 *")
+        self.engine.starts_with("bestmove f7f5")
+
+    def test_fen_position_with_mate_go_depth_and_searchmoves(self):
+        self.engine.send_command("ucinewgame")
+        self.engine.send_command("position fen 8/5R2/2K1P3/4k3/8/b1PPpp1B/5p2/8 w - -")
+        self.engine.send_command("go depth 10 searchmoves c6d7")
+        self.engine.expect("* score mate 2 *")
+
+        self.engine.starts_with("bestmove c6d7")
+
+    def test_fen_position_with_moves_with_mate_go_depth_and_searchmoves(self):
+        self.engine.send_command("ucinewgame")
+        self.engine.send_command(
+            "position fen 8/5R2/2K1P3/4k3/8/b1PPpp1B/5p2/8 w - - moves c6d7"
+        )
+        self.engine.send_command("go depth 10 searchmoves e3e2")
+        self.engine.expect("* score mate -1 *")
+        self.engine.starts_with("bestmove e3e2")
 
 
 class TestFramework:
