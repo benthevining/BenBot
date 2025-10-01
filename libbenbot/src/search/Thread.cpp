@@ -41,12 +41,15 @@ void Thread::set_position(const Position& pos)
     context.options.movesToSearch.clear();
 }
 
-void Thread::start(const chess::uci::GoCommandOptions& options)
+void Thread::start(
+    const chess::uci::GoCommandOptions& options,
+    const milliseconds                  moveOverheadTime)
 {
     context.set_pondering(options.ponderMode);
 
     context.wait(); // shouldn't have been searching, but better safe than sorry
 
+    context.options.moveOverhead = moveOverheadTime;
     context.options.update_from(options);
 
     startSearch.store(true);

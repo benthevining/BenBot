@@ -56,7 +56,7 @@ private:
 
     void set_position(const Position& pos) override { searcher.set_position(pos); }
 
-    void go(const uci::GoCommandOptions& opts) override { searcher.start(opts); }
+    void go(const uci::GoCommandOptions& opts) override;
 
     void abort_search() override { searcher.context.abort(); }
 
@@ -68,10 +68,7 @@ private:
 
     void set_debug(const bool shouldDebug) override { debugMode.store(shouldDebug); }
 
-    [[nodiscard]] auto get_options() -> std::span<uci::Option*> override
-    {
-        return options;
-    }
+    [[nodiscard]] auto get_options() -> std::span<uci::Option*> override { return options; }
 
     void option_changed(const uci::Option& option) override;
 
@@ -113,12 +110,17 @@ private:
         "Number of searcher threads (currently a dummy)"
     };
 
+    uci::IntOption moveOverhead {
+        "Move Overhead", 0, 5000, 10,
+        "Extra overhead time subtracted from search time (in ms). Increase this if engine loses on time."
+    };
+
     uci::StringOption logFile {
         "Debug Log File", "<empty>",
         "If not empty, engine I/O will be mirrored to this file"
     };
 
-    std::array<uci::Option*, 5uz> options { &ttSize, &clearTT, &ponder, &threads, &logFile };
+    std::array<uci::Option*, 6uz> options { &ttSize, &clearTT, &ponder, &threads, &moveOverhead, &logFile };
 
     // clang-format off
     std::array<CustomCommand, 8uz> customCommands {

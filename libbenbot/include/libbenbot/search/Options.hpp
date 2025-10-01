@@ -60,6 +60,9 @@ struct Options final {
     /** The maximum search time. */
     std::optional<std::chrono::milliseconds> searchTime;
 
+    /** Move overhead time subtracted from maximum search time. */
+    std::chrono::milliseconds moveOverhead { 0uz };
+
     /** Search only this many nodes. Setting this value too low can
         really emphasize the effects of our move ordering algorithm.
      */

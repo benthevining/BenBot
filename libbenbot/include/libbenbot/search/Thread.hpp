@@ -20,6 +20,7 @@
 #pragma once
 
 #include <atomic>
+#include <chrono>
 #include <libbenbot/search/Callbacks.hpp>
 #include <libbenbot/search/Context.hpp>
 #include <libchess/game/Position.hpp>
@@ -30,6 +31,8 @@ struct GoCommandOptions;
 } // namespace chess::uci
 
 namespace ben_bot::search {
+
+using std::chrono::milliseconds;
 
 /** A worker thread that can be used to execute a search.
 
@@ -67,7 +70,9 @@ struct Thread final {
         a background thread.
      */
     /// @{
-    void start(const chess::uci::GoCommandOptions& options);
+    void start(
+        const chess::uci::GoCommandOptions& options,
+        milliseconds                        moveOverheadTime = milliseconds { 0uz });
 
     void start();
     /// @}

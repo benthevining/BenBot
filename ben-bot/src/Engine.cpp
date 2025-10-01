@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <ben-bot/Engine.hpp>
+#include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <expected>
 #include <filesystem>
@@ -41,6 +42,13 @@ void Engine::new_game(const bool firstCall)
     searcher.context.callbacks = search::Callbacks::make_uci_printer(
         searcher.context,
         [this] { return debugMode.load(); });
+}
+
+void Engine::go(const uci::GoCommandOptions& opts)
+{
+    searcher.start(
+        opts,
+        std::chrono::milliseconds { moveOverhead.get_value() });
 }
 
 // this function implements non-standard UCI commands that we support
