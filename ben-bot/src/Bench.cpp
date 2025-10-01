@@ -21,6 +21,7 @@
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <filesystem>
 #include <format>
+#include <iterator>
 #include <libbenbot/search/Callbacks.hpp>
 #include <libbenbot/search/Result.hpp>
 #include <libbenbot/search/Thread.hpp>
@@ -159,14 +160,17 @@ namespace {
 
         std::vector<SearchResult> results;
 
-        for (auto start = 0uz; start + batchSize <= epds.size(); start += batchSize)
-            results.append_range(get_batch_results(
-                start, batchSize, epds, defaultDepth, printProgressOutput));
+        for (auto start = 0uz; start + batchSize <= epds.size(); start += batchSize) {
+            std::ranges::copy(
+                get_batch_results(start, batchSize, epds, defaultDepth, printProgressOutput),
+                std::back_inserter(results));
+        }
 
         if (const auto left = epds.size() % batchSize;
             left != 0uz) {
-            results.append_range(get_batch_results(
-                epds.size() - left, left, epds, defaultDepth, printProgressOutput));
+            std::ranges::copy(
+                get_batch_results(epds.size() - left, left, epds, defaultDepth, printProgressOutput),
+                std::back_inserter(results));
         }
 
         return results;
