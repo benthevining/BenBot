@@ -39,21 +39,6 @@ if (NOT TARGET Python::Interpreter)
     return ()
 endif ()
 
-set (generated_script "${CMAKE_CURRENT_BINARY_DIR}/RunRampart$<CONFIG>.py")
-
-# cmake-format: off
-file (
-    GENERATE
-    OUTPUT "${generated_script}"
-    INPUT RunRampart.py
-    TARGET rampart
-    FILE_PERMISSIONS
-        OWNER_READ OWNER_EXECUTE
-        GROUP_READ GROUP_EXECUTE
-        WORLD_READ WORLD_EXECUTE
-)
-# cmake-format: on
-
 file (GLOB testcase_files LIST_DIRECTORIES false
       CONFIGURE_DEPENDS "${rampart_SOURCE_DIR}/src/main/resources/testcases/*.json"
 )
@@ -65,8 +50,9 @@ foreach (data_file IN LISTS testcase_files)
 
     set (test_name "ben_bot.rampart.${filename}")
 
-    add_test (NAME "${test_name}" COMMAND Python::Interpreter "${generated_script}" "${data_file}"
-                                          "${output_dir}"
+    add_test (NAME "${test_name}"
+              COMMAND Python::Interpreter "${CMAKE_CURRENT_LIST_DIR}/RunRampart.py"
+                      "--test=${data_file}" "--tmp=${output_dir}" "--exec=$<TARGET_FILE:rampart>"
     )
 
     set_tests_properties ("${test_name}" PROPERTIES REQUIRED_FILES "${data_file}")

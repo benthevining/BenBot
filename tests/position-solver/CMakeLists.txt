@@ -41,9 +41,10 @@ foreach (epd_file IN LISTS testcase_files)
 
         set (engine_log "${BenBot_SOURCE_DIR}/logs/position-solver/${filename}-${epd_idx}.log")
 
-        add_test (NAME "${test_name}"
-                  COMMAND Python::Interpreter "${CMAKE_CURRENT_LIST_DIR}/solver.py" "${epd_file}"
-                          "${epd_idx}" "$<TARGET_FILE:ben_bot>" "${engine_log}"
+        add_test (
+            NAME "${test_name}"
+            COMMAND Python::Interpreter "${CMAKE_CURRENT_LIST_DIR}/solver.py" "--test=${epd_file}"
+                    "--index=${epd_idx}" "--engine=$<TARGET_FILE:ben_bot>" "--log=${engine_log}"
         )
 
         set_tests_properties ("${test_name}" PROPERTIES ATTACHED_FILES_ON_FAIL "${engine_log}")

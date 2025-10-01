@@ -10,14 +10,10 @@
 #
 # ======================================================================================
 
-# This file was configured by CMake! Any changes will be overwritten!
-# Note for devs: if you're working on the template script in the source tree,
-# you'll need to rerun CMake to see the effects.
-
+import argparse
 import json
 import subprocess
 from pathlib import Path
-import sys
 
 def get_move_from_obj(listObj, move): # listObj is a JSON list of objects
     for obj in listObj:
@@ -26,8 +22,21 @@ def get_move_from_obj(listObj, move): # listObj is a JSON list of objects
 
     return None
 
-TESTCASE_FILE = Path(sys.argv[1])
-TMP_DIR_PATH = Path(sys.argv[2])
+parser = argparse.ArgumentParser(
+    prog='RunRampart',
+    description='Run rampart movegen tests',
+    epilog='This script is intended to be invoked by CTest'
+)
+
+parser.add_argument('-t', '--test')
+parser.add_argument('-d', '--tmp')
+parser.add_argument('-e', '--exec')
+
+args = parser.parse_args()
+
+TESTCASE_FILE = Path(args.test).resolve()
+TMP_DIR_PATH = Path(args.tmp).resolve()
+RAMPART_PROGRAM = Path(args.exec).resolve()
 
 test_cases_passed = 0
 test_cases_failed = 0
@@ -50,7 +59,7 @@ for test_case in testcase_data['testCases']:
     print(f'Output file: {output_file}')
 
     subprocess.run(
-        ['$<TARGET_FILE:rampart>', startFEN, output_file],
+        [RAMPART_PROGRAM, startFEN, output_file],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT
@@ -81,8 +90,7 @@ for test_case in testcase_data['testCases']:
             print(f'Expected {correctFEN}, got {generatedFEN}')
             any_errors = True
 
-        # check for moves in generated_moves not in correct_moves
-
+    # check for moves in generated_moves not in correct_moves
     for generated_move in generated_moves:
         move = generated_move['move']
 

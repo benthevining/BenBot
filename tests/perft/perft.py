@@ -10,44 +10,10 @@
 #
 # ======================================================================================
 
+import argparse
 import json
 from pathlib import Path
-import sys
 import subprocess
-
-TESTCASE_FILE = Path(sys.argv[1])
-ENGINE_PATH = Path(sys.argv[2])
-
-with open(TESTCASE_FILE, 'r') as file:
-    CORRECT_DATA = json.load(file)
-
-startingFEN = CORRECT_DATA['position']
-
-print(f'Running tests for position {startingFEN}')
-
-engine = subprocess.Popen(
-    ENGINE_PATH,
-    stdin=subprocess.PIPE,
-    stdout=subprocess.PIPE,
-    stderr=subprocess.STDOUT,
-    bufsize=1,
-    universal_newlines=True,
-    text=True
-)
-
-engine.stdin.write('uci\n')
-
-# skip greeting & info/options output
-for line in engine.stdout:
-    if line.strip() == 'uciok':
-        break
-
-engine.stdin.write('ucinewgame\n')
-engine.stdin.write('isready\n')
-
-engine.stdout.readline() # "readyok" response
-
-engine.stdin.write(f'position fen {startingFEN}\n')
 
 def get_result_lines(stdout):
     lines = []
@@ -92,6 +58,53 @@ def check_result(expected, actual):
 
     return True
 
+#
+
+parser = argparse.ArgumentParser(
+    prog='RunPerft',
+    description='Run BenBot perft tests',
+    epilog='This script is intended to be invoked by CTest'
+)
+
+parser.add_argument('-t', '--test')
+parser.add_argument('-e', '--engine')
+
+args = parser.parse_args()
+
+TESTCASE_FILE = Path(args.test).resolve()
+ENGINE_PATH = Path(args.engine).resolve()
+
+with open(TESTCASE_FILE, 'r') as file:
+    CORRECT_DATA = json.load(file)
+
+startingFEN = CORRECT_DATA['position']
+
+print(f'Running tests for position {startingFEN}')
+
+engine = subprocess.Popen(
+    ENGINE_PATH,
+    stdin=subprocess.PIPE,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.STDOUT,
+    bufsize=1,
+    universal_newlines=True,
+    text=True
+)
+
+engine.stdin.write('uci\n')
+
+# skip greeting & info/options output
+for line in engine.stdout:
+    if line.strip() == 'uciok':
+        break
+
+engine.stdin.write('ucinewgame\n')
+engine.stdin.write('isready\n')
+
+engine.stdout.readline() # "readyok" response
+
+engine.stdin.write(f'position fen {startingFEN}\n')
+
 num_failed = 0
 num_passed = 0
 
@@ -117,4 +130,4 @@ engine.communicate()
 print(f'{num_passed} depths passed')
 print(f'{num_failed} depths failed')
 
-sys.exit(num_failed)
+exit(num_failed)

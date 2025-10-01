@@ -10,20 +10,32 @@
 #
 # ======================================================================================
 
+import argparse
 import logging
 from pathlib import Path
-import sys
 import chess.engine
 
 logging.basicConfig(level=logging.DEBUG)
 
-TESTCASE_FILE = Path(sys.argv[1])
-LINE_IDX = int(sys.argv[2].strip())
-ENGINE_PATH = Path(sys.argv[3])
-ENGINE_LOG_PATH = Path(sys.argv[4])
+parser = argparse.ArgumentParser(
+    prog='PositionSolver',
+    description='Run BenBot test positions',
+    epilog='This script is intended to be invoked by CTest'
+)
+
+parser.add_argument('-t', '--test')
+parser.add_argument('-i', '--index', type=int)
+parser.add_argument('-e', '--engine')
+parser.add_argument('-l', '--log')
+
+args = parser.parse_args()
+
+TESTCASE_FILE = Path(args.test).resolve()
+ENGINE_PATH = Path(args.engine).resolve()
+ENGINE_LOG_PATH = Path(args.log).resolve()
 
 with open(TESTCASE_FILE, 'r') as file:
-    epd_data = file.readlines()[LINE_IDX]
+    epd_data = file.readlines()[args.index]
 
 board = chess.Board()
 
@@ -53,9 +65,9 @@ expectedMove = operations['bm'][0]
 
 if result.move == expectedMove:
     print('Passed!')
-    sys.exit(0)
+    exit(0)
 
 print('FAILED!')
 print(f'Expected {board.san(expectedMove)}, got {board.san(result.move)}')
 
-sys.exit(1)
+exit(1)
