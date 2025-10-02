@@ -12,10 +12,8 @@
 # This script is used to parse the output of fastchess running an SPRT test.
 # Pipe this script's output into $GITHUB_STEP_SUMMARY.
 # This script isn't strictly necessary, it just provides a convenient summary in the GHA summary.
-# The template for the summary is read from sprt-results.md in this directory.
 import re
 import sys
-from enum import Enum
 from pathlib import Path
 from typing import Tuple
 
@@ -25,162 +23,41 @@ with open(LOG_FILE) as file:
     SPRT_OUTPUT = file.readlines()
 
 
-# finds the indices of the last 2 '-----------------' lines in the output
-# the final results report is in the fenced section between these 2 lines
-def find_last_two_fences() -> list[int]:
-    indices = []
+def find_result_line() -> str:
+    for line in reversed(SPRT_OUTPUT):
+        if re.search(r"SPRT .* completed", line):
+            return line
 
-    for i, line in enumerate(reversed(SPRT_OUTPUT)):
-        if re.search(r"(--)+", line):
-            indices.append(len(SPRT_OUTPUT) - i)
-            if len(indices) == 2:
-                break
-
-    return sorted(indices)
+    raise Exception("Result line not found in fastchess log")
 
 
-def get_final_results_report() -> list[str]:
-    start, end = find_last_two_fences()
-
-    return SPRT_OUTPUT[start + 1 : end]
+RESULT_LINE = find_result_line()
 
 
-RESULTS = get_final_results_report()
+def get_elos() -> Tuple[int, int]:
+    comma_idx = RESULT_LINE.find(",")
 
-
-# returns the first string that matches the given regex
-def find_first_match(regex: str, strings: list[str]) -> str:
-    for str in strings:
-        if re.search(regex, str):
-            return str
-
-    return ""
-
-
-class EmojiType(Enum):
-    NEUTRAL = (1,)
-    POSITIVE = (2,)
-    NEGATIVE = 3
-
-
-def get_emoji(type: EmojiType) -> str:
-    match type:
-        case EmojiType.NEUTRAL:
-            return "🟰"
-        case EmojiType.POSITIVE:
-            return "✅"
-        case EmojiType.NEGATIVE:
-            return "❌"
-    return ""
-
-
-def get_elo() -> float:
-    elo_line = find_first_match("Elo:", RESULTS)
-
-    first_space_idx = elo_line.find(" ")
-    second_space_idx = elo_line.find(" ", first_space_idx + 1)
-
-    return float(elo_line[first_space_idx:second_space_idx])
-
-
-def get_elo_emoji(elo: float) -> str:
-    if abs(elo) <= 1:
-        return get_emoji(EmojiType.NEUTRAL)
-
-    if elo > 0:
-        return get_emoji(EmojiType.POSITIVE)
-
-    return get_emoji(EmojiType.NEGATIVE)
-
-
-def get_result_breakdown() -> Tuple[int, int, int, float]:
-    games_line = find_first_match("Games:", RESULTS)
-
-    second_space_idx = games_line.find(" ", games_line.find(" ") + 1)
-
-    after_second_space = games_line[second_space_idx + 1 :]
-
-    # string format is:
-    # Wins: W, Losses: L, Draws: D, Points: 50.5 (50.50 %)
-
-    wins_comma_idx = after_second_space.find(",")
-
-    num_wins = int(
-        after_second_space[after_second_space.find(" ") + 1 : wins_comma_idx]
+    return (
+        round(float(RESULT_LINE[RESULT_LINE.find("[") + 1 : comma_idx].strip())),
+        round(float(RESULT_LINE[comma_idx + 1 : RESULT_LINE.find("]")].strip())),
     )
 
-    after_wins = (
-        after_second_space[after_second_space.find(" ", wins_comma_idx + 1) :]
-    ).lstrip()
 
-    losses_comma_idx = after_wins.find(",")
+def get_accepted() -> int:
+    idx = RESULT_LINE.find("H") + 1
 
-    num_losses = int(after_wins[after_wins.find(" ") + 1 : losses_comma_idx])
-
-    after_losses = (after_wins[after_wins.find(" ", losses_comma_idx + 1) :]).lstrip()
-
-    draws_comma_idx = after_losses.find(",")
-
-    num_draws = int(after_losses[after_losses.find(" ") + 1 : draws_comma_idx])
-
-    after_draws = (after_losses[after_losses.find(" ", draws_comma_idx + 1) :]).lstrip()
-
-    pcnt = float(after_draws[after_draws.find("(") + 1 : after_draws.find("%")])
-
-    return (num_wins, num_losses, num_draws, pcnt)
+    return int(RESULT_LINE[idx : idx + 1].strip())
 
 
-def get_pcnt_emoji(pcnt: float) -> str:
-    if pcnt in range(0, 45):
-        return get_emoji(EmojiType.NEGATIVE)
+elo0, elo1 = get_elos()
 
-    if pcnt in range(45, 55):
-        return get_emoji(EmojiType.NEUTRAL)
+test_type = "Non-regression" if elo0 < 0 else "Gainer"
 
-    return get_emoji(EmojiType.POSITIVE)
+accepted = get_accepted()
 
+if accepted == 0:
+    print(f"{test_type} SPRT failed!")
+    exit(1)
 
-#
-
-
-def replace_pairs(old_values: list[str], new_values: list[str], string: str) -> str:
-    text = string
-
-    for old, new in zip(old_values, new_values):
-        text = text.replace(old, new)
-
-    return text
-
-
-SCRIPT_DIR = Path(__file__).resolve().parent
-
-with open(f"{SCRIPT_DIR}/sprt-results.md") as file:
-    MD_TEMPLATE_TEXT = file.read()
-
-elo = get_elo()
-
-num_wins, num_losses, num_draws, pcnt = get_result_breakdown()
-
-print(
-    replace_pairs(
-        [
-            "%ELO%",
-            "%ELO_EMOJI%",
-            "%WINS%",
-            "%LOSSES%",
-            "%DRAWS%",
-            "%PCNT%",
-            "%PCNT_EMOJI%",
-        ],
-        [
-            f"{elo}",
-            get_elo_emoji(elo),
-            f"{num_wins}",
-            f"{num_losses}",
-            f"{num_draws}",
-            f"{pcnt}%",
-            get_pcnt_emoji(pcnt),
-        ],
-        MD_TEMPLATE_TEXT,
-    )
-)
+print(f"{test_type} SPRT passed!")
+exit(0)
