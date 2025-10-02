@@ -66,7 +66,7 @@ struct Options final {
     /** Search only this many nodes. Setting this value too low can
         really emphasize the effects of our move ordering algorithm.
      */
-    std::optional<size_t> maxNodes;
+    size_t maxNodes { std::numeric_limits<size_t>::max() };
 
     /** Restrict the search to only these moves.
         If this is empty, all legal moves in the position will be searched.

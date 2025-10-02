@@ -345,10 +345,8 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
             }
 
             // if we've hit our node limit, don't do a deeper iteration
-            if (options.maxNodes.has_value()
-                and stats.nodesSearched >= *options.maxNodes) {
+            if (stats.nodesSearched >= options.maxNodes)
                 break;
-            }
 
             // if the iteration we just completed took as much or more time than we
             // have remaining for the search, then don't start a deeper iteration
