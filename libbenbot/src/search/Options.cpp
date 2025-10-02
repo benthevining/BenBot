@@ -72,6 +72,10 @@ void Options::update_from(const chess::uci::GoCommandOptions& goOptions)
                 goOptions.movesToGo);
         }
     }
+
+    searchTime = searchTime.and_then([overhead = moveOverhead](const milliseconds time) {
+        return std::optional { time - overhead };
+    });
 }
 
 } // namespace ben_bot::search
