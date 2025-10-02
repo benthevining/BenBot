@@ -13,11 +13,18 @@
 name: SPRT
 
 on:
-  workflow_dispatch:
-  push:
-    branches: [main]
-  pull_request:
-    types: [opened, reopened, synchronize]
+  workflow_call:
+    inputs:
+      sprt_target:
+        description: Name of the CMake target to build to execute the SPRT test
+        type: string
+        required: true
+      use_main:
+        description: If true, runs SPRT against the latest main; if false, runs against the latest release
+        type: boolean
+        required: true
+
+run-name: Build & test (${{ inputs.sprt_target }})
 
 concurrency:
   group: ${{ github.workflow }}.${{ github.ref }}
@@ -74,7 +81,13 @@ jobs:
         result="$dirpath/$filename/fastchess"
         echo "fastchess=$result" >> "$GITHUB_OUTPUT"
 
+    - name: Add execution permissions
+      run: chmod --preserve-root 777 ${{ steps.fastchess_filename.outputs.fastchess }}
+
+    # --- if not building against main, download latest release ---
+
     - name: Download latest BenBot release
+      if: ${{ !inputs.use_main }}
       id: download_benbot
       uses: robinraju/release-downloader@v1.12
       with:
@@ -87,6 +100,7 @@ jobs:
 
     # parses download_benbot output to print the ben_bot executable path to a step output
     - name: Print BenBot filename
+      if: ${{ !inputs.use_main }}
       id: benbot_filename
       run: |
         zip_path=${{ fromJson(steps.download_benbot.outputs.downloaded_files)[0] }}
@@ -96,14 +110,45 @@ jobs:
         echo "benbot=$result" >> "$GITHUB_OUTPUT"
 
     - name: Add execution permissions
-      run: chmod --preserve-root 777 ${{ steps.fastchess_filename.outputs.fastchess }} ${{ steps.benbot_filename.outputs.benbot }}
+      if: ${{ !inputs.use_main }}
+      run: chmod --preserve-root 777 ${{ steps.benbot_filename.outputs.benbot }}
+
+      # --- if building against main, clone & build latest main ---
+
+    - name: Checkout main
+      if: ${{ inputs.use_main }}
+      uses: actions/checkout@v5
+      with:
+        ref: main
+        path: tmp-main
+
+    - name: Configure main
+      if: ${{ inputs.use_main }}
+      run: cmake --preset clang -D BENBOT_DOCS=OFF
+      working-directory: tmp-main
+
+    - name: Build main
+      if: ${{ inputs.use_main }}
+      run: cmake --build . --target ben_bot --config Release
+      working-directory: tmp-main/Builds/clang
+
+    - name: Install main
+      if: ${{ inputs.use_main }}
+      run: cmake --install tmp-main/Builds/clang --prefix tmp-main/deploy --component ben_bot --config Release
+
+      # --- configure SPRT build ---
 
     - name: Configure CMake
       run: cmake --preset clang -D BENBOT_DOCS=OFF -D FASTCHESS_PROGRAM=${{ steps.fastchess_filename.outputs.fastchess }}
 
     - name: Inject baseline binary
+      if: ${{ !inputs.use_main }}
       run: cmake -D BASELINE_BINARY=${{ steps.benbot_filename.outputs.benbot }} -P InjectSPRTBaseline-Release.cmake
       working-directory: ${{ env.BUILD_DIR }}
+
+    - name: Inject baseline binary
+      if: ${{ inputs.use_main }}
+      run: cmake -D BASELINE_BINARY=tmp-main/deploy/bin/ben_bot -P ${{ env.BUILD_DIR }}/InjectSPRTBaseline-Release.cmake
 
     - name: Build
       run: cmake --build . --target ben_bot --config Release
@@ -113,7 +158,7 @@ jobs:
       # NB. tee needs the output directory to exist before it's invoked
       run: |
         cmake -E make_directory $(dirname ${{ env.SPRT_OUTPUT_LOG }})
-        cmake --build . --target sprt_non_regression --config Release | tee ${{ env.SPRT_OUTPUT_LOG }}
+        cmake --build . --target ${{ inputs.sprt_target }} --config Release | tee ${{ env.SPRT_OUTPUT_LOG }}
       working-directory: ${{ env.BUILD_DIR }}
 
     - name: Upload logs
