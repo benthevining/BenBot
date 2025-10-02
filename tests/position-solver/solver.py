@@ -49,6 +49,8 @@ board = chess.Board()
 
 operations = board.set_epd(epd_data)
 
+print(f"Testing position {board.fen()}")
+
 engine = chess.engine.SimpleEngine.popen_uci(ENGINE_PATH, timeout=None)
 
 engine.configure({"Debug Log File": str(ENGINE_LOG_PATH.resolve())})
@@ -70,5 +72,7 @@ if result.move == expectedMove:
 
 print("FAILED!")
 print(f"Expected {board.san(expectedMove)}, got {board.san(result.move)}")
+
+print(board.unicode(borders=True, empty_square=" "))
 
 exit(1)
