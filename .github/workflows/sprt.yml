@@ -113,7 +113,7 @@ jobs:
       # NB. tee needs the output directory to exist before it's invoked
       run: |
         cmake -E make_directory $(dirname ${{ env.SPRT_OUTPUT_LOG }})
-        cmake --build . --target sprt --config Release | tee ${{ env.SPRT_OUTPUT_LOG }}
+        cmake --build . --target sprt_non_regression --config Release | tee ${{ env.SPRT_OUTPUT_LOG }}
       working-directory: ${{ env.BUILD_DIR }}
 
     - name: Upload logs

@@ -61,35 +61,40 @@ add_custom_command (
     VERBATIM USES_TERMINAL
 )
 
-set (pgn_out "${logs_dir}/games.pgn")
-set (epd_out "${logs_dir}/final-positions.epd")
-set (logfile "${logs_dir}/sprt.log")
+function (add_sprt_test name elo0 elo1 description)
+    set (pgn_out "${logs_dir}/${name}-games.pgn")
+    set (epd_out "${logs_dir}/${name}-final-positions.epd")
+    set (logfile "${logs_dir}/${name}-sprt.log")
 
-# cmake-format: off
-add_custom_target (
-    sprt
-    COMMAND "${FASTCHESS_PROGRAM}"
-        -engine "cmd=$<TARGET_FILE:ben_bot>" name=Refactor
-        -engine "cmd=${baseline_binary}" name=Baseline
-        -each tc=8+0.08 option.Hash=32
-        -rounds 100000 -repeat
-        -sprt elo0=0 elo1=10 alpha=0.05 beta=0.1
-        -ratinginterval 10
-        -maxmoves 400
-        -resign movecount=3 score=500 twosided=true
-        -draw movenumber=40 movecount=8 score=10
-        -concurrency "${num_cores}"
-        -recover -show-latency
-        -openings "file=${openings_file}" format=pgn order=random
-        -pgnout "file=${pgn_out}" nodes=true nps=true timeleft=true latency=true
-        -epdout "file=${epd_out}"
-        -log "file=${logfile}" level=warn engine=true
-    WORKING_DIRECTORY "$<TARGET_FILE_DIR:ben_bot>"
-    BYPRODUCTS "${pgn_out}" "${epd_out}" "${logfile}"
-    DEPENDS "${logs_dir}/stamp" "${openings_file}" "${baseline_binary}" ben_bot::ben_bot
-    COMMENT "Running SPRT test..."
-    VERBATIM USES_TERMINAL
-)
-# cmake-format: on
+    # cmake-format: off
+    add_custom_target (
+        "${name}"
+        COMMAND "${FASTCHESS_PROGRAM}"
+            -engine "cmd=$<TARGET_FILE:ben_bot>" name=Refactor
+            -engine "cmd=${baseline_binary}" name=Baseline
+            -each tc=8+0.08 option.Hash=32
+            -rounds 100000 -repeat
+            -sprt "elo0=${elo0}" "elo1=${elo1}" alpha=0.05 beta=0.1
+            -ratinginterval 10
+            -maxmoves 400
+            -resign movecount=3 score=500 twosided=true
+            -draw movenumber=40 movecount=8 score=10
+            -concurrency "${num_cores}"
+            -recover -show-latency
+            -openings "file=${openings_file}" format=pgn order=random
+            -pgnout "file=${pgn_out}" nodes=true nps=true timeleft=true latency=true
+            -epdout "file=${epd_out}"
+            -log "file=${logfile}" level=warn engine=true
+        WORKING_DIRECTORY "$<TARGET_FILE_DIR:ben_bot>"
+        BYPRODUCTS "${pgn_out}" "${epd_out}" "${logfile}"
+        DEPENDS "${logs_dir}/stamp" "${openings_file}" "${baseline_binary}" ben_bot::ben_bot
+        COMMENT "Running SPRT ${description} test..."
+        VERBATIM USES_TERMINAL
+    )
+    # cmake-format: on
 
-add_dependencies (sprt ben_bot)
+    add_dependencies ("${name}" ben_bot)
+endfunction ()
+
+add_sprt_test (sprt_gain 0 10 "gainer")
+add_sprt_test (sprt_non_regression -10 0 "non-regression")

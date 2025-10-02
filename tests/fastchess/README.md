@@ -4,18 +4,17 @@ Tests that utilize the `fastchess` tool. This tool can perform UCI compliance te
 
 ## SPRT testing
 
-SPRT testing works by playing a match between the previous ("baseline") build and the new build. This directory creates two custom targets that you can run to automate this process:
-* `sprt_set_baseline`: Builds `ben_bot` and uses this new binary as the baseline for the next SPRT test
-* `sprt`: runs SPRT testing with the newest `ben_bot` build and the last baseline that was saved by building `sprt_set_baseline`
+SPRT testing works by playing a match between the previous ("baseline") build and the new build. This directory creates custom targets that you can run to automate this process.
 
-Neither of these targets are run by CTest; SPRT testing should be invoked manually.
+None of these targets are run by CTest; SPRT testing should be invoked manually.
 
 ## CMake
 
 ### Targets
 
-* `sprt_set_baseline`: sets the current output of the `ben_bot` target as the baseline to use in subsequent `sprt` tests
-* `sprt`: run an SPRT test
+* `sprt_set_baseline`: Builds `ben_bot` and uses this new binary as the baseline for the next SPRT test
+* `sprt_gain`: runs SPRT testing with gainer bounds
+* `sprt_non_regression`: runs SPRT testing with non-regression bounds
 
 ## Dependencies
 
