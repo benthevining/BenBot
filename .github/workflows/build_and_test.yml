@@ -93,23 +93,8 @@ jobs:
       run: cmake --preset ${{ matrix.preset }} -D BENBOT_DOCS=OFF -D STATIC_ANALYSIS=ON -D BUILDNAME=${{ env.BUILD_NAME }}
 
     - name: Build and test
-      run: ctest -D ${{ inputs.dashboard_type }} -C ${{ matrix.config }} --output-junit junit.xml --schedule-random
+      run: ctest -D ${{ inputs.dashboard_type }} -C ${{ matrix.config }} --schedule-random
       working-directory: ${{ env.BUILD_DIR }}
-
-    - name: Upload JUnit report
-      uses: mikepenz/action-junit-report@v5
-      if: always() && github.event_name == 'pull_request' # only works when run from a PR
-      with:
-        report_paths: ${{ env.BUILD_DIR }}/junit.xml
-        exclude_sources: ${{ env.BUILD_DIR }}
-        check_annotations: true
-        detailed_summary: true
-        flaky_summary: true
-        include_time_in_summary: true
-        simplified_summary: true
-        comment: true
-        skip_comment_without_tests: true
-        updateComment: false
 
     - name: Run cmake install
       if: always() && matrix.config == 'Release'
