@@ -23,6 +23,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint> // IWYU pragma: keep
+#include <functional>
 #include <iterator>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/search/Bounds.hpp>
@@ -102,13 +103,15 @@ static constexpr auto CLUSTER_SIZE = 3uz;
 struct alignas(32) TranspositionTable::Cluster final {
     static_assert(sizeof(Entry) == 10uz);
 
+    static constexpr auto RecordsSize = sizeof(Entry) * CLUSTER_SIZE;
+
     std::array<Entry, CLUSTER_SIZE> records {};
 
     // padding bytes
     // round up to nearest power of 2
-    [[maybe_unused]] std::array<
+    [[maybe_unused, no_unique_address]] std::array<
         std::byte,
-        std::bit_ceil(sizeof(Entry) * CLUSTER_SIZE) - (sizeof(Entry) * CLUSTER_SIZE)>
+        std::bit_ceil(RecordsSize) - RecordsSize>
         padding {};
 };
 
@@ -183,14 +186,17 @@ auto TranspositionTable::hashfull() const -> size_t
 {
     const auto indices = std::views::iota(0uz, std::min(1000uz, clusterCount));
 
-    const auto count = std::accumulate(
+    const auto count = std::transform_reduce(
         indices.begin(), indices.end(),
         0uz,
-        [this](const size_t sum, const size_t idx) {
-            return sum + static_cast<size_t>(std::ranges::count_if(index_table(idx).records, [gen = generation](const Entry& entry) {
-                return entry.occupied()
-                   and entry.relative_age(gen) == 0uz;
-            }));
+        std::plus {},
+        [this](const size_t idx) {
+            return static_cast<size_t>(std::ranges::count_if(
+                index_table(idx).records,
+                [gen = generation](const Entry& entry) {
+                    return entry.occupied()
+                       and entry.relative_age(gen) == 0uz;
+                }));
         });
 
     return count / CLUSTER_SIZE;
@@ -230,33 +236,37 @@ auto TranspositionTable::probe_eval(
     const search::Bounds& bounds) const
     -> std::optional<ProbedEval>
 {
-    if (const auto record = find(pos);
-        record.has_value() and record->searchedDepth >= depth) {
-        switch (record->evalType) {
-            using enum EvalType;
+    return find(pos)
+        .and_then([depth](const TTData& data) -> std::optional<TTData> {
+            if (data.searchedDepth < depth)
+                return std::nullopt;
 
-            case Exact:
-                return std::make_pair(record->eval, record->evalType);
+            return data;
+        })
+        .and_then([bounds](const TTData& data) -> std::optional<ProbedEval> {
+            switch (data.evalType) {
+                case EvalType::Exact:
+                    return std::make_pair(data.eval, data.evalType);
 
-            case Alpha: {
-                if (record->eval < bounds.alpha)
-                    return std::make_pair(bounds.alpha, record->evalType);
+                case EvalType::Alpha: {
+                    if (data.eval < bounds.alpha)
+                        return std::make_pair(bounds.alpha, data.evalType);
 
-                break;
+                    break;
+                }
+
+                case EvalType::Beta: {
+                    if (data.eval >= bounds.beta)
+                        return std::make_pair(bounds.beta, data.evalType);
+
+                    break;
+                }
+
+                default: break;
             }
 
-            case Beta: {
-                if (record->eval >= bounds.beta)
-                    return std::make_pair(bounds.beta, record->evalType);
-
-                break;
-            }
-
-            default: std::unreachable();
-        }
-    }
-
-    return std::nullopt;
+            return std::nullopt;
+        });
 }
 
 auto TranspositionTable::get_best_response(
@@ -271,30 +281,33 @@ void TranspositionTable::store(const Position& pos, const TTData& record)
 {
     const auto key = static_cast<std::uint16_t>(pos.hash);
 
-    auto cluster = find_cluster(pos.hash);
+    const auto cluster = find_cluster(pos.hash);
 
-    for (auto& stored : cluster) {
-        if (stored.key == key) {
-            // this position was already stored in the table
-            // keep the old evaluation if it was an exact one & the new one isn't,
-            // or if the new evaluation is a lower depth than the old one
+    // check if this position is already present in this cluster
+    if (const auto it = std::ranges::find_if(cluster,
+            [key](const Entry& entry) { return entry.key == key; });
+        it != cluster.end()) {
+        assert(it->occupied());
 
-            const bool shouldReplace
-                = record.searchedDepth > stored.depth
-               or (stored.evalType != EvalType::Exact
-                   and record.evalType == EvalType::Exact);
+        // keep the old evaluation if it was an exact one & the new one isn't,
+        // or if the new evaluation is a lower depth than the old one
+        const bool shouldReplace
+            = record.searchedDepth > it->depth
+           or (it->evalType != EvalType::Exact
+               and record.evalType == EvalType::Exact);
 
-            if (shouldReplace)
-                stored.save(key, record, generation);
+        if (shouldReplace)
+            it->save(key, record, generation);
 
-            return;
-        }
+        return;
+    }
 
-        if (not stored.occupied()) {
-            // empty slot
-            stored.save(key, record, generation);
-            return;
-        }
+    // check for empty slot
+    if (const auto it = std::ranges::find_if(cluster,
+            [](const Entry& entry) { return not entry.occupied(); });
+        it != cluster.end()) {
+        it->save(key, record, generation);
+        return;
     }
 
     // choose one of the entries in this cluster to overwrite
