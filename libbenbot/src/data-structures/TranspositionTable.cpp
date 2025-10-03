@@ -26,6 +26,7 @@
 #include <functional>
 #include <iterator>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
+#include <libbenbot/eval/Score.hpp>
 #include <libbenbot/search/Bounds.hpp>
 #include <libchess/util/Math.hpp>
 #include <libchess/util/Memory.hpp>
@@ -51,7 +52,7 @@ struct TranspositionTable::Entry final {
 
     std::uint8_t generation { 0 };
 
-    std::int16_t eval { 0 };
+    eval::Value eval { 0 };
 
     EvalType evalType { EvalType::Alpha };
 

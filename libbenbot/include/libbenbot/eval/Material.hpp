@@ -111,26 +111,29 @@ namespace piece_values {
 
 namespace detail {
 
+    template <bool IncludePawns = true>
     [[nodiscard, gnu::const]] constexpr auto count_material(
-        const chess::board::Pieces& pieces, const bool includePawns = true) noexcept
+        const chess::board::Pieces& pieces) noexcept
         -> Value
     {
-        auto total = (static_cast<int>(pieces.knights.count()) * piece_values::KNIGHT)
-                   + (static_cast<int>(pieces.bishops.count()) * piece_values::BISHOP)
-                   + (static_cast<int>(pieces.rooks.count()) * piece_values::ROOK)
-                   + (static_cast<int>(pieces.queens.count()) * piece_values::QUEEN);
+        auto total = (static_cast<Value>(pieces.knights.count()) * piece_values::KNIGHT)
+                   + (static_cast<Value>(pieces.bishops.count()) * piece_values::BISHOP)
+                   + (static_cast<Value>(pieces.rooks.count()) * piece_values::ROOK)
+                   + (static_cast<Value>(pieces.queens.count()) * piece_values::QUEEN);
 
-        if (includePawns)
-            total += (static_cast<int>(pieces.pawns.count()) * piece_values::PAWN);
+        if constexpr (IncludePawns) {
+            total += (static_cast<Value>(pieces.pawns.count()) * piece_values::PAWN);
+        }
 
-        return total;
+        return static_cast<Value>(total);
     }
 
 } // namespace detail
 
 constexpr auto score_material(const Position& position) noexcept -> Value
 {
-    return detail::count_material(position.our_pieces()) - detail::count_material(position.their_pieces());
+    return detail::count_material(position.our_pieces())
+         - detail::count_material(position.their_pieces());
 }
 
 } // namespace ben_bot::eval
