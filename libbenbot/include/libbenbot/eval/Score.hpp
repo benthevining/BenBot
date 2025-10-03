@@ -22,6 +22,7 @@
 #include <cassert>
 #include <cmath>   // IWYU pragma: keep - for std::abs()
 #include <cstddef> // IWYU pragma: keep - for size_t
+#include <cstdint>
 #include <format>
 #include <libchess/uci/Printing.hpp>
 #include <limits>
@@ -30,13 +31,18 @@ namespace ben_bot::eval {
 
 using std::size_t;
 
+/** Signed integer type used to represent evaluation values.
+    @ingroup eval
+ */
+using Value = std::int16_t;
+
 /** Arbitrary value used as the starting beta value for alpha/beta search.
     This should be larger than mate, but smaller than the data type's max
     (to avoid issues with sign flipping).
 
     @ingroup eval
  */
-static constexpr auto MAX { static_cast<int>(std::numeric_limits<std::int16_t>::max()) - 5 };
+static constexpr Value MAX { std::numeric_limits<Value>::max() - 5 };
 
 /** The maximum possible evaluation score, i.e., if the side to move
     has mate-in-1. If the side to move is in checkmate, the evaluation
@@ -44,12 +50,12 @@ static constexpr auto MAX { static_cast<int>(std::numeric_limits<std::int16_t>::
 
     @ingroup eval
  */
-static constexpr auto MATE { MAX / 2 };
+static constexpr Value MATE { MAX / 2 };
 
 /** A neutral, or draw, score.
     @ingroup eval
  */
-static constexpr auto DRAW { 0 };
+static constexpr Value DRAW { 0 };
 
 /** An evaluation score.
     This is essentially a wrapper around an integer value, with a few helper
@@ -59,16 +65,16 @@ static constexpr auto DRAW { 0 };
  */
 struct Score final {
     /** The evaluation value, in centipawns. */
-    int value { 0 };
+    Value value { 0 };
 
     /** Implicitly converts this score object to its integer value.
         This method is intentionally not explicit, which allows score
         objects to be transparently compared as integers.
      */
-    constexpr operator int() const noexcept { return value; } // NOLINT;
+    constexpr operator Value() const noexcept { return value; } // NOLINT;
 
     /** Inverts the score. */
-    [[nodiscard]] constexpr auto operator-() const noexcept -> Score { return { -value }; }
+    [[nodiscard]] constexpr auto operator-() const noexcept -> Score { return { static_cast<Value>(-value) }; }
 
     /// @name Mate queries
     /// @{
@@ -98,7 +104,7 @@ struct Score final {
         During search, mate scores are based on ply from the root position;
         this function maps all mate scores to the MATE constant.
      */
-    [[nodiscard]] constexpr auto to_tt() const noexcept -> int;
+    [[nodiscard]] constexpr auto to_tt() const noexcept -> Value;
 
     /** The libchess type used for printing UCI-formatted search information. */
     using LibchessScore = chess::uci::printing::SearchInfo::Score;
@@ -113,14 +119,15 @@ struct Score final {
     [[nodiscard, gnu::const]] static constexpr auto mate(const size_t plyFromRoot) noexcept -> Score
     {
         // multiply by -1 here because this score is relative to the player who got mated
-        return { (MAX - static_cast<int>(plyFromRoot)) * -1 };
+        return { static_cast<Value>(
+            (MAX - static_cast<Value>(plyFromRoot)) * -1) };
     }
 
     /** Converts a value from the transposition table to a score.
         This maps the MATE constant to a ply-from-root mate score.
      */
     [[nodiscard, gnu::const]] static constexpr auto from_tt(
-        int eval, size_t plyFromRoot) noexcept
+        Value eval, size_t plyFromRoot) noexcept
         -> Score;
 };
 
@@ -141,7 +148,7 @@ struct Score final {
 
  */
 
-constexpr auto Score::to_tt() const noexcept -> int
+constexpr auto Score::to_tt() const noexcept -> Value
 {
     if (is_losing_mate())
         return -MATE;
@@ -153,7 +160,7 @@ constexpr auto Score::to_tt() const noexcept -> int
 }
 
 constexpr auto Score::from_tt(
-    const int eval, const size_t plyFromRoot) noexcept
+    const Value eval, const size_t plyFromRoot) noexcept
     -> Score
 {
     if (eval <= -MATE)
