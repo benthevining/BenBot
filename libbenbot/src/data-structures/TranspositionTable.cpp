@@ -222,7 +222,7 @@ auto TranspositionTable::find(const Position& pos) const -> std::optional<TTData
             cluster,
             // the lowest 16 bits are the key within the cluster
             [key = static_cast<std::uint16_t>(pos.hash)](const Entry& entry) {
-                return entry.key == key;
+                return entry.occupied() and entry.key == key;
             });
         it != cluster.end() and it->occupied()) {
         return it->read();
@@ -285,10 +285,8 @@ void TranspositionTable::store(const Position& pos, const TTData& record)
 
     // check if this position is already present in this cluster
     if (const auto it = std::ranges::find_if(cluster,
-            [key](const Entry& entry) { return entry.key == key; });
+            [key](const Entry& entry) { return entry.occupied() and entry.key == key; });
         it != cluster.end()) {
-        assert(it->occupied());
-
         // keep the old evaluation if it was an exact one & the new one isn't,
         // or if the new evaluation is a lower depth than the old one
         const bool shouldReplace
