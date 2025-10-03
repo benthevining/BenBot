@@ -224,7 +224,7 @@ auto TranspositionTable::find(const Position& pos) const -> std::optional<TTData
             [key = static_cast<std::uint16_t>(pos.hash)](const Entry& entry) {
                 return entry.occupied() and entry.key == key;
             });
-        it != cluster.end() and it->occupied()) {
+        it != cluster.end()) {
         return it->read();
     }
 

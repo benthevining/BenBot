@@ -24,18 +24,11 @@
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <format>
 #include <libchess/uci/Printing.hpp>
+#include <limits>
 
 namespace ben_bot::eval {
 
 using std::size_t;
-
-/** The maximum possible evaluation score, i.e., if the side to move
-    has mate-in-1. If the side to move is in checkmate, the evaluation
-    is ``-MATE``.
-
-    @ingroup eval
- */
-static constexpr auto MATE { 10000000 };
 
 /** Arbitrary value used as the starting beta value for alpha/beta search.
     This should be larger than mate, but smaller than the data type's max
@@ -43,7 +36,15 @@ static constexpr auto MATE { 10000000 };
 
     @ingroup eval
  */
-static constexpr auto MAX { MATE * 2 };
+static constexpr auto MAX { static_cast<int>(std::numeric_limits<std::int16_t>::max()) - 5 };
+
+/** The maximum possible evaluation score, i.e., if the side to move
+    has mate-in-1. If the side to move is in checkmate, the evaluation
+    is ``-MATE``.
+
+    @ingroup eval
+ */
+static constexpr auto MATE { MAX / 2 };
 
 /** A neutral, or draw, score.
     @ingroup eval
