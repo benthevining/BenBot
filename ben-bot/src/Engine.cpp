@@ -82,8 +82,7 @@ void Engine::option_changed(const uci::Option& option)
             return;
 
         [[maybe_unused]] const auto result
-            = chess::util::start_file_logger(
-                std::filesystem::path { path })
+            = chess::util::start_file_logger(std::filesystem::path { path })
                   .or_else([](const string_view error) {
                       info_string(error);
                       return std::expected<void, std::string> {};

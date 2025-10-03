@@ -21,6 +21,7 @@
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <filesystem>
 #include <format>
+#include <functional>
 #include <iterator>
 #include <libbenbot/search/Callbacks.hpp>
 #include <libbenbot/search/Result.hpp>
@@ -181,23 +182,21 @@ namespace {
         const size_t      defaultDepth,
         const bool        printProgressOutput)
     {
-        const auto results = get_bench_results(epdText, defaultDepth, printProgressOutput);
-
-        const auto totalNodes = std::accumulate(
-            results.begin(), results.end(),
-            0uz,
-            [](const size_t num, const SearchResult& result) {
-                return num + result.nodesSearched;
-            });
-
         using std::chrono::milliseconds;
 
-        const auto totalTime = std::accumulate(
+        const auto results = get_bench_results(epdText, defaultDepth, printProgressOutput);
+
+        const auto totalNodes = std::transform_reduce(
+            results.begin(), results.end(),
+            0uz,
+            std::plus {},
+            [](const SearchResult& result) { return result.nodesSearched; });
+
+        const auto totalTime = std::transform_reduce(
             results.begin(), results.end(),
             milliseconds { 0 },
-            [](const milliseconds time, const SearchResult& result) {
-                return time + result.duration;
-            });
+            std::plus {},
+            [](const SearchResult& result) { return result.duration; });
 
         const auto seconds = static_cast<double>(totalTime.count()) * 0.001;
 

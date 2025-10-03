@@ -291,11 +291,10 @@ namespace {
 
         return util::find_matching_close_paren(pgnText)
             .and_then([pgnText, &position, &output](const size_t closeParenIdx) {
-                auto& variation = output.back().variations.emplace_back();
-
                 return parse_moves_internal<true>(
                     pgnText.substr(1uz, closeParenIdx - 1uz),
-                    position, variation)
+                    position,
+                    output.back().variations.emplace_back())
                     .and_then([pgnText, closeParenIdx]([[maybe_unused]] const string_view alwaysEmpty) -> ResultStrOrErrorStr {
                         return pgnText.substr(closeParenIdx + 1uz);
                     })
