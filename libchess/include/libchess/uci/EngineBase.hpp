@@ -66,9 +66,6 @@ struct EngineBase {
     /** This must return the list of all options the engine supports. */
     [[nodiscard]] virtual auto get_options() -> std::span<Option*> { return {}; }
 
-    /** The engine can use this method to be informed when one of its options changes. */
-    virtual void option_changed([[maybe_unused]] const Option& option) { }
-
     /** This function will be called when the "isready" command is received,
         and may block while waiting for background tasks to complete. This
         function should be thread-safe.

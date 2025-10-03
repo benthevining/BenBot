@@ -80,7 +80,11 @@ struct TTData final {
  */
 class TranspositionTable final {
 public:
-    TranspositionTable();
+    explicit TranspositionTable(const size_t initialSize = 16uz)
+    {
+        resize(initialSize);
+    }
+
     ~TranspositionTable() { deallocate(); }
 
     TranspositionTable(const TranspositionTable&)            = delete;

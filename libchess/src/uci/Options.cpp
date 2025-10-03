@@ -34,10 +34,11 @@ using util::trim;
 Option::~Option() = default;
 
 BoolOption::BoolOption(
-    string name, const bool defaultValue, string helpString)
+    string name, const bool defaultValue, string helpString, Callback&& changeCallback)
     : optionName { std::move(name) }
     , optionDefault { defaultValue }
     , help { std::move(helpString) }
+    , onChange { std::move(changeCallback) }
 {
 }
 
@@ -66,6 +67,8 @@ void BoolOption::handle_setvalue(const string_view arguments)
     } else {
         value = valueStr == "true";
     }
+
+    onChange(value);
 }
 
 /*------------------------------------------------------------------------------------------------------------------*/
@@ -73,13 +76,15 @@ void BoolOption::handle_setvalue(const string_view arguments)
 IntOption::IntOption(
     string    name,
     const int minValue, const int maxValue,
-    const int defaultValue,
-    string    helpString)
+    const int  defaultValue,
+    string     helpString,
+    Callback&& changeCallback)
     : optionName { std::move(name) }
     , optionMin { minValue }
     , optionMax { maxValue }
     , optionDefault { defaultValue }
     , help { std::move(helpString) }
+    , onChange { std::move(changeCallback) }
 {
     assert(optionDefault >= optionMin);
     assert(optionDefault <= optionMax);
@@ -104,6 +109,8 @@ void IntOption::handle_setvalue(const string_view arguments)
     const auto newValue = util::int_from_string(trim(valueStr), value);
 
     value = std::clamp(newValue, optionMin, optionMax);
+
+    onChange(value);
 }
 
 /*------------------------------------------------------------------------------------------------------------------*/
@@ -112,11 +119,13 @@ ComboOption::ComboOption(
     string              name,
     std::vector<string> values,
     string              defaultValue,
-    string              helpString)
+    string              helpString,
+    Callback&&          changeCallback)
     : optionName { std::move(name) }
     , possibleValues { std::move(values) }
     , optionDefault { std::move(defaultValue) }
     , help { std::move(helpString) }
+    , onChange { std::move(changeCallback) }
 {
     assert(std::ranges::contains(possibleValues, optionDefault));
 }
@@ -150,17 +159,21 @@ void ComboOption::handle_setvalue(const string_view arguments)
     } else {
         value = optionDefault;
     }
+
+    onChange(value);
 }
 
 /*------------------------------------------------------------------------------------------------------------------*/
 
 StringOption::StringOption(
-    string name,
-    string defaultValue,
-    string helpString)
+    string     name,
+    string     defaultValue,
+    string     helpString,
+    Callback&& changeCallback)
     : optionName { std::move(name) }
     , value { std::move(defaultValue) }
     , help { std::move(helpString) }
+    , onChange { std::move(changeCallback) }
 {
 }
 
@@ -181,6 +194,8 @@ void StringOption::handle_setvalue(const string_view arguments)
         return;
 
     value = trim(valueStr);
+
+    onChange(value);
 }
 
 /*------------------------------------------------------------------------------------------------------------------*/

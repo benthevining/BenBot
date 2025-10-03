@@ -69,27 +69,17 @@ void Engine::handle_custom_command(
     info_string("Type help for a list of supported commands");
 }
 
-void Engine::option_changed(const uci::Option& option)
+void Engine::start_file_logger(const string_view path)
 {
-    if (&option == &ttSize) {
-        wait();
-        searcher.context.transTable.resize(static_cast<size_t>(ttSize.get_value()));
+    if (path.empty())
         return;
-    }
 
-    if (&option == &logFile) {
-        const auto path = logFile.get_value();
-
-        if (path.empty())
-            return;
-
-        [[maybe_unused]] const auto result
-            = chess::util::start_file_logger(std::filesystem::path { path })
-                  .or_else([](const string_view error) {
-                      info_string(error);
-                      return std::expected<void, std::string> {};
-                  });
-    }
+    [[maybe_unused]] const auto result
+        = chess::util::start_file_logger(std::filesystem::path { path })
+              .or_else([](const string_view error) {
+                  info_string(error);
+                  return std::expected<void, std::string> {};
+              });
 }
 
 void Engine::make_null_move()

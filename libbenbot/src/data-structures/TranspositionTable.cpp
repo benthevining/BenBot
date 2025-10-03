@@ -26,7 +26,6 @@
 #include <iterator>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/search/Bounds.hpp>
-#include <libchess/uci/DefaultOptions.hpp>
 #include <libchess/util/Math.hpp>
 #include <libchess/util/Memory.hpp>
 #include <memory>
@@ -113,20 +112,13 @@ struct alignas(32) TranspositionTable::Cluster final {
         padding {};
 };
 
-TranspositionTable::TranspositionTable()
-{
-    // check that padding was the correct size to make Cluster have a power of 2 size
-    static_assert(std::has_single_bit(sizeof(Cluster)));
-
-    resize(static_cast<size_t>(
-        chess::uci::default_options::hash_size().get_default_value()));
-}
-
 TranspositionTable::TranspositionTable(TranspositionTable&& other) noexcept
     : table { std::exchange(other.table, nullptr) }
     , clusterCount { std::exchange(other.clusterCount, 0uz) }
     , generation { std::exchange(other.generation, 0) }
 {
+    // check that padding was the correct size to make Cluster have a power of 2 size
+    static_assert(std::has_single_bit(sizeof(Cluster)));
 }
 
 auto TranspositionTable::operator=(TranspositionTable&& other) noexcept -> TranspositionTable&

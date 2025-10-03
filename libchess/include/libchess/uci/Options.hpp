@@ -88,9 +88,14 @@ struct Option {
     @ingroup uci
  */
 struct BoolOption final : Option {
-    BoolOption(string name, bool defaultValue, string helpString);
+    using Value    = bool;
+    using Callback = std::function<void(bool)>;
 
-    using Value = bool;
+    /** Creates a boolean option. */
+    BoolOption(
+        string name, bool defaultValue,
+        string     helpString,
+        Callback&& changeCallback = [](bool) { });
 
     /** Returns this option's current value, as set by the last
         call to ``parse()``.
@@ -122,6 +127,8 @@ private:
     bool value { optionDefault };
 
     string help;
+
+    Callback onChange { [](bool) { } };
 };
 
 /** An integer option.
@@ -129,13 +136,16 @@ private:
     @ingroup uci
  */
 struct IntOption final : Option {
+    using Value    = int;
+    using Callback = std::function<void(int)>;
+
+    /** Creates an integer option. */
     IntOption(
         string name,
         int minValue, int maxValue,
-        int    defaultValue,
-        string helpString);
-
-    using Value = int;
+        int        defaultValue,
+        string     helpString,
+        Callback&& changeCallback = [](int) { });
 
     /** Returns this option's current value, as set by the last
         call to ``parse()``.
@@ -170,6 +180,8 @@ private:
     int value { optionDefault };
 
     string help;
+
+    Callback onChange { [](int) { } };
 };
 
 /** A multiple-choice option that can have one of several predefined string values.
@@ -177,13 +189,16 @@ private:
     @ingroup uci
  */
 struct ComboOption final : Option {
+    using Value    = string_view;
+    using Callback = std::function<void(string_view)>;
+
+    /** Creates a multiple-choice option. */
     ComboOption(
         string              name,
         std::vector<string> values,
         string              defaultValue,
-        string              helpString);
-
-    using Value = string_view;
+        string              helpString,
+        Callback&&          changeCallback = [](string_view) { });
 
     [[nodiscard]] auto get_value() const noexcept -> string_view { return value; } // cppcheck-suppress returnByReference
 
@@ -214,6 +229,8 @@ private:
     string value { optionDefault };
 
     string help;
+
+    Callback onChange { [](string_view) { } };
 };
 
 /** An option that can have any arbitrary string value.
@@ -221,9 +238,15 @@ private:
     @ingroup uci
  */
 struct StringOption final : Option {
-    StringOption(string name, string defaultValue, string helpString);
+    using Value    = string_view;
+    using Callback = std::function<void(string_view)>;
 
-    using Value = string_view;
+    /** Creates a string option. */
+    StringOption(
+        string     name,
+        string     defaultValue,
+        string     helpString,
+        Callback&& changeCallback = [](string_view) { });
 
     [[nodiscard]] auto get_value() const noexcept -> string_view
     {
@@ -253,6 +276,8 @@ private:
     string value;
 
     string help;
+
+    Callback onChange { [](string_view) { } };
 };
 
 /** A triggerable action.
@@ -260,11 +285,14 @@ private:
     @ingroup uci
  */
 struct Action final : Option {
+    using Value    = void;
     using Callback = std::function<void()>;
 
-    Action(string name, Callback&& action, string helpString);
-
-    using Value = void;
+    /** Creates an action option. */
+    Action(
+        string     name,
+        Callback&& action,
+        string     helpString);
 
     [[nodiscard]] auto get_value_variant() const -> Variant override { throw_value_error(); }
     [[nodiscard]] auto get_default_value_variant() const -> Variant override { throw_value_error(); }

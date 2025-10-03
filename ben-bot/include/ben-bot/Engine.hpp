@@ -26,7 +26,6 @@
 #include <libbenbot/search/Thread.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/uci/CommandParsing.hpp>
-#include <libchess/uci/DefaultOptions.hpp>
 #include <libchess/uci/EngineBase.hpp>
 #include <libchess/uci/Options.hpp>
 #include <span>
@@ -44,11 +43,6 @@ namespace uci = chess::uci;
     @ingroup benbot
  */
 class Engine final : public uci::EngineBase {
-public:
-    /** Prints the engine's logo and version to ``stdout``. */
-    void print_logo_and_version() const;
-
-private:
     [[nodiscard]] auto get_name() const -> std::string override;
     [[nodiscard]] auto get_author() const -> string_view override { return "Ben Vining"; }
 
@@ -70,8 +64,6 @@ private:
 
     [[nodiscard]] auto get_options() -> std::span<uci::Option*> override { return options; }
 
-    void option_changed(const uci::Option& option) override;
-
     void handle_custom_command(string_view command, string_view opts) override;
 
     void run_perft(string_view arguments) const;
@@ -81,17 +73,29 @@ private:
     void make_null_move();
     void color_flip();
 
+    void print_logo_and_version() const;
     void print_help(string_view args) const;
     void print_options(string_view args) const;
     void print_current_position(string_view arguments) const;
 
     static void print_compiler_info();
 
+    static void start_file_logger(string_view path);
+
     std::atomic_bool debugMode { false };
 
     search::Thread searcher;
 
-    uci::IntOption ttSize { uci::default_options::hash_size() };
+    uci::IntOption ttSize {
+        "Hash",
+        1, 2048, 16,
+        "Sets the maximum transposition table size (in MB)",
+        [this](const int sizeMB) {
+            wait();
+            searcher.context.transTable.resize(
+                static_cast<size_t>(sizeMB));
+        }
+    };
 
     uci::Action clearTT {
         "Clear Hash",
@@ -103,7 +107,11 @@ private:
     // via another go command; this option is needed to inform the GUI that the engine
     // supports pondering, and also gives the engine the opportunity to adjust its time
     // management algorithm when pondering is enabled.
-    uci::BoolOption ponder { uci::default_options::ponder() };
+    uci::BoolOption ponder {
+        "Ponder",
+        true,
+        "Controls whether pondering is allowed"
+    };
 
     uci::IntOption threads {
         "Threads", 1, 1, 1,
@@ -117,7 +125,8 @@ private:
 
     uci::StringOption logFile {
         "Debug Log File", "<empty>",
-        "If not empty, engine I/O will be mirrored to this file"
+        "If not empty, engine I/O will be mirrored to this file",
+        [](const string_view path) { start_file_logger(path); }
     };
 
     std::array<uci::Option*, 6uz> options { &ttSize, &clearTT, &ponder, &threads, &moveOverhead, &logFile };
