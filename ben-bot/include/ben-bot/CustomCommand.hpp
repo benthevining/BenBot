@@ -33,6 +33,7 @@ using std::string_view;
     @ingroup benbot
  */
 struct CustomCommand final {
+    /** Function type that is invoked when this command is executed. */
     using Callback = std::function<void(string_view)>;
 
     /** The name of the command.

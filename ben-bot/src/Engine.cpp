@@ -63,6 +63,8 @@ void Engine::handle_custom_command(
         return;
     }
 
+    [[unlikely]];
+
     info_string(std::format("Unknown UCI command: '{}'", command));
     info_string("Type help for a list of supported commands");
 }

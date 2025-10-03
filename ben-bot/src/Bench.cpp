@@ -161,14 +161,14 @@ namespace {
 
         std::vector<SearchResult> results;
 
-        for (auto start = 0uz; start + batchSize <= epds.size(); start += batchSize) {
+        for (auto start = 0uz; start + batchSize < epds.size(); start += batchSize) {
             std::ranges::copy(
                 get_batch_results(start, batchSize, epds, defaultDepth, printProgressOutput),
                 std::back_inserter(results));
         }
 
         if (const auto left = epds.size() % batchSize;
-            left != 0uz) {
+            left > 0uz) {
             std::ranges::copy(
                 get_batch_results(epds.size() - left, left, epds, defaultDepth, printProgressOutput),
                 std::back_inserter(results));
@@ -206,6 +206,7 @@ namespace {
             static_cast<double>(totalNodes) / seconds));
 
         info_string(std::format("Total nodes: {}", totalNodes));
+        info_string(std::format("Total seconds: {}", seconds));
         info_string(std::format("NPS: {}", nps));
 
         // CTest can parse test output to extract custom test measurements, which CDash can track over time
