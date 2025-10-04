@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <libbenbot/eval/Score.hpp>
 #include <libchess/board/Pieces.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
@@ -38,32 +39,32 @@ namespace piece_values {
     /// @{
 
     /** The value of a pawn. */
-    static constexpr auto PAWN { 100 };
+    static constexpr Value PAWN { 100 };
 
     /** The value of a knight */
-    static constexpr auto KNIGHT { 320 };
+    static constexpr Value KNIGHT { 320 };
 
     /** The value of a bishop. */
-    static constexpr auto BISHOP { 330 };
+    static constexpr Value BISHOP { 330 };
 
     /** The value of a rook. */
-    static constexpr auto ROOK { 500 };
+    static constexpr Value ROOK { 500 };
 
     /** The value of a queen. */
-    static constexpr auto QUEEN { 900 };
+    static constexpr Value QUEEN { 900 };
 
     /** The value of the king.
         This value isn't really used in counting material, it's just an
         arbitrarily large placeholder value.
      */
-    static constexpr auto KING { 10000 };
+    static constexpr Value KING { 10000 };
 
     /// @}
 
     /** Returns the value of the given piece type.
         @ingroup eval
      */
-    [[nodiscard, gnu::const]] constexpr auto get(PieceType type) noexcept -> int;
+    [[nodiscard, gnu::const]] constexpr auto get(PieceType type) noexcept -> Value;
 
 } // namespace piece_values
 
@@ -72,7 +73,7 @@ namespace piece_values {
 
     @ingroup eval
  */
-[[nodiscard, gnu::const]] constexpr auto score_material(const Position& position) noexcept -> int;
+[[nodiscard, gnu::const]] constexpr auto score_material(const Position& position) noexcept -> Value;
 
 /*
                          ___                           ,--,
@@ -93,7 +94,7 @@ namespace piece_values {
 
 namespace piece_values {
 
-    constexpr auto get(const PieceType type) noexcept -> int
+    constexpr auto get(const PieceType type) noexcept -> Value
     {
         switch (type) {
             case PieceType::Pawn  : return PAWN;
@@ -110,26 +111,29 @@ namespace piece_values {
 
 namespace detail {
 
+    template <bool IncludePawns = true>
     [[nodiscard, gnu::const]] constexpr auto count_material(
-        const chess::board::Pieces& pieces, const bool includePawns = true) noexcept
-        -> int
+        const chess::board::Pieces& pieces) noexcept
+        -> Value
     {
-        auto total = (static_cast<int>(pieces.knights.count()) * piece_values::KNIGHT)
-                   + (static_cast<int>(pieces.bishops.count()) * piece_values::BISHOP)
-                   + (static_cast<int>(pieces.rooks.count()) * piece_values::ROOK)
-                   + (static_cast<int>(pieces.queens.count()) * piece_values::QUEEN);
+        auto total = (static_cast<Value>(pieces.knights.count()) * piece_values::KNIGHT)
+                   + (static_cast<Value>(pieces.bishops.count()) * piece_values::BISHOP)
+                   + (static_cast<Value>(pieces.rooks.count()) * piece_values::ROOK)
+                   + (static_cast<Value>(pieces.queens.count()) * piece_values::QUEEN);
 
-        if (includePawns)
-            total += (static_cast<int>(pieces.pawns.count()) * piece_values::PAWN);
+        if constexpr (IncludePawns) {
+            total += (static_cast<Value>(pieces.pawns.count()) * piece_values::PAWN);
+        }
 
-        return total;
+        return static_cast<Value>(total);
     }
 
 } // namespace detail
 
-constexpr auto score_material(const Position& position) noexcept -> int
+constexpr auto score_material(const Position& position) noexcept -> Value
 {
-    return detail::count_material(position.our_pieces()) - detail::count_material(position.their_pieces());
+    return detail::count_material(position.our_pieces())
+         - detail::count_material(position.their_pieces());
 }
 
 } // namespace ben_bot::eval

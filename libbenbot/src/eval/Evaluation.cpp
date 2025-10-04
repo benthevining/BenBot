@@ -54,8 +54,8 @@ namespace {
 
         static constexpr auto multiplier = 1.f / EG_MATERIAL_START;
 
-        const auto nonPawnMaterialLeft = detail::count_material(position.whitePieces, false)
-                                       + detail::count_material(position.blackPieces, false);
+        const auto nonPawnMaterialLeft = detail::count_material<false>(position.whitePieces)
+                                       + detail::count_material<false>(position.blackPieces);
 
         const auto pcntLeft = static_cast<float>(nonPawnMaterialLeft) * multiplier;
 
@@ -178,7 +178,7 @@ namespace {
                 = piece_values::QUEEN + (piece_values::ROOK * 2) + (piece_values::BISHOP * 2) + (piece_values::KNIGHT * 2);
 
             // weight score by opponent's remaining material
-            return score * (detail::count_material(enemyPieces, false) / STARTING_NON_PAWN_MATERIAL);
+            return score * (detail::count_material<false>(enemyPieces) / STARTING_NON_PAWN_MATERIAL);
         };
 
         const bool isWhite = position.is_white_to_move();
@@ -293,16 +293,17 @@ auto evaluate(const Position& position) -> Score
 
     const auto materialScore = score_material(position);
 
-    return Score { materialScore
-                   + no_pieces_left_bonus(position)
-                   + score_piece_placement(position, endgameWeight)
-                   + score_rook_files(position)
-                   + score_connected_rooks(position)
-                   + score_king_safety(position, endgameWeight)
-                   + score_squares_controlled_around_kings(position)
-                   + score_endgame_mopup(position, endgameWeight, materialScore)
-                   + detail::score_positional(position)
-                   + detail::score_pawn_structure(position) };
+    return Score { static_cast<Value>(
+        materialScore
+        + no_pieces_left_bonus(position)
+        + score_piece_placement(position, endgameWeight)
+        + score_rook_files(position)
+        + score_connected_rooks(position)
+        + score_king_safety(position, endgameWeight)
+        + score_squares_controlled_around_kings(position)
+        + score_endgame_mopup(position, endgameWeight, materialScore)
+        + detail::score_positional(position)
+        + detail::score_pawn_structure(position)) };
 }
 
 } // namespace ben_bot::eval

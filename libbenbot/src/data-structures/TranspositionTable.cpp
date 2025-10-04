@@ -26,6 +26,7 @@
 #include <functional>
 #include <iterator>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
+#include <libbenbot/eval/Score.hpp>
 #include <libbenbot/search/Bounds.hpp>
 #include <libchess/util/Math.hpp>
 #include <libchess/util/Memory.hpp>
@@ -51,7 +52,7 @@ struct TranspositionTable::Entry final {
 
     std::uint8_t generation { 0 };
 
-    std::int16_t eval { 0 };
+    eval::Value eval { 0 };
 
     EvalType evalType { EvalType::Alpha };
 
@@ -224,7 +225,7 @@ auto TranspositionTable::find(const Position& pos) const -> std::optional<TTData
             [key = static_cast<std::uint16_t>(pos.hash)](const Entry& entry) {
                 return entry.occupied() and entry.key == key;
             });
-        it != cluster.end() and it->occupied()) {
+        it != cluster.end()) {
         return it->read();
     }
 

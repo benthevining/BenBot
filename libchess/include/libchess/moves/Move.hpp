@@ -214,9 +214,10 @@ namespace detail {
                                })
                                .value_or(std::to_underlying(type));
 
-        return static_cast<Integer>(end.index())
-             + (static_cast<Integer>(start.index()) << START_SQUARE_OFFSET)
-             + (static_cast<Integer>(flags) << FLAGS_OFFSET);
+        return static_cast<Integer>(
+            static_cast<Integer>(end.index())
+            + (static_cast<Integer>(start.index()) << START_SQUARE_OFFSET)
+            + (static_cast<Integer>(flags) << FLAGS_OFFSET));
     }
 } // namespace detail
 #endif
