@@ -79,7 +79,7 @@ struct TranspositionTable::Entry final {
 
         return {
             .searchedDepth = depth,
-            .eval          = static_cast<int>(eval),
+            .eval          = eval,
             .evalType      = evalType,
             .bestMove      = bestMove
         };

@@ -21,6 +21,7 @@
 
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
+#include <libbenbot/eval/Score.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
 #include <optional>
@@ -60,7 +61,7 @@ struct TTData final {
     /** The evaluation of this position.
         See ``evalType`` to determine the exact meaning of this value.
      */
-    int eval { 0 };
+    eval::Value eval { 0 };
 
     /** Gives the exact meaning of the ``eval`` value. */
     EvalType evalType { EvalType::Alpha };
@@ -101,7 +102,7 @@ public:
     /** Represents a probed evaluation from the table.
         This is a pair of the evaluation value and the value type.
      */
-    using ProbedEval = std::pair<int, EvalType>;
+    using ProbedEval = std::pair<eval::Value, EvalType>;
 
     /** Similar to ``find()``, this function instead probes for an
         evaluation value of the given position, searched to at least
