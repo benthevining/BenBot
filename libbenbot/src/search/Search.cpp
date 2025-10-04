@@ -95,7 +95,7 @@ namespace {
 
             if (position.is_draw()) {
                 transTable.store(
-                    position, { .searchedDepth = plyFromRoot,
+                    position, { .searchedDepth = depthLeft,
                                   .eval        = eval::DRAW,
                                   .evalType    = EvalType::Exact,
                                   .bestMove    = std::nullopt });
@@ -109,7 +109,7 @@ namespace {
                 const auto score = Score::mate(plyFromRoot);
 
                 transTable.store(
-                    position, { .searchedDepth = plyFromRoot,
+                    position, { .searchedDepth = depthLeft,
                                   .eval        = score.to_tt(),
                                   .evalType    = EvalType::Exact,
                                   .bestMove    = std::nullopt });
@@ -401,8 +401,6 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
 
     // we want to report the last completed depth
     --depth;
-
-    assert(bestMove.has_value());
 
     // when in ponder mode, we don't want to exit the search
     // until we've received either a stop or ponderhit command
