@@ -19,6 +19,7 @@
 #include "MoveOrdering.hpp"
 #include "TimeManagement.hpp"
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <cassert>
 #include <cmath>   // IWYU pragma: keep - for std::abs()
@@ -51,12 +52,36 @@ namespace {
         size_t qDepth { 0uz };
     };
 
+    struct PvList {
+        std::array<Move, 255uz> moves {};
+
+        size_t length { 0uz };
+
+        void update(const Move move, const PvList& child)
+        {
+            moves.front() = move;
+
+            std::copy_n(child.moves.begin(), child.length, moves.begin() + 1);
+
+            length = child.length + 1;
+
+            assert(length == 1uz or moves.front() != moves[1]);
+        }
+
+        void reset()
+        {
+            moves.front() = Move {};
+            length        = 0uz;
+        }
+    };
+
     // encapsulates the arguments to the recursive alpha/beta call
     struct AlphaBetaContext final {
         AlphaBetaContext(
             const Bounds bnd, const Position& pos,
             const size_t depthToSearch, const size_t ply,
-            TranspositionTable& trans, Interrupter& inter, Stats& statsToUse)
+            TranspositionTable& trans, Interrupter& inter, Stats& statsToUse,
+            PvList& parent_pv)
             : bounds { bnd }
             , position { pos }
             , depthLeft { depthToSearch }
@@ -64,6 +89,7 @@ namespace {
             , transTable { trans }
             , interrupter { inter }
             , stats { statsToUse }
+            , parentPV { parent_pv }
         {
         }
 
@@ -149,6 +175,8 @@ namespace {
                     bestMove     = move;
                     evalType     = EvalType::Exact;
                     bounds.alpha = eval;
+
+                    parentPV.update(move, pv);
                 }
             }
 
@@ -216,13 +244,13 @@ namespace {
             return bounds.alpha;
         }
 
-        [[nodiscard]] auto recurse(const Move move) const -> AlphaBetaContext
+        [[nodiscard]] auto recurse(const Move move) -> AlphaBetaContext
         {
             return { bounds.invert(),
                 after_move(position, move),
                 depthLeft > 0uz ? depthLeft - 1uz : 0uz,
                 plyFromRoot + 1uz,
-                transTable, interrupter, stats };
+                transTable, interrupter, stats, pv };
         }
 
         Bounds bounds;
@@ -238,6 +266,10 @@ namespace {
         Interrupter& interrupter; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
         Stats& stats; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
+
+        PvList& parentPV; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
+
+        PvList pv;
     };
 
     struct RootSearchResult final {
@@ -276,17 +308,19 @@ namespace {
 
         Stats  stats;
         Bounds bounds;
-        Move   bestMove;
+        PvList pv;
 
         for (const auto move : options.movesToSearch) {
+            PvList childPV;
+
             AlphaBetaContext context { bounds.invert(),
                 after_move(options.position, move),
-                depth, 1uz, transTable, interrupter, stats };
+                depth, 1uz, transTable, interrupter, stats, childPV };
 
             const auto score = -context.alpha_beta();
 
             if (score > bounds.alpha) {
-                bestMove     = move;
+                pv.update(move, childPV);
                 bounds.alpha = score;
             }
 
@@ -295,7 +329,7 @@ namespace {
         }
 
         return {
-            .bestMove  = bestMove,
+            .bestMove  = pv.moves.front(),
             .bestScore = bounds.alpha,
             .stats     = stats,
             .duration  = timer.get_duration()
