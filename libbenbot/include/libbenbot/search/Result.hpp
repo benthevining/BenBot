@@ -23,11 +23,14 @@
 #include <cstddef> // IWYU pragma: keep - for size_t;
 #include <libbenbot/eval/Score.hpp>
 #include <libchess/moves/Move.hpp>
+#include <libchess/moves/MoveGen.hpp>
 #include <libchess/uci/Printing.hpp>
+#include <optional>
 
 namespace ben_bot::search {
 
 using chess::moves::Move;
+using chess::moves::MoveList;
 using std::chrono::milliseconds;
 using std::size_t;
 
@@ -53,8 +56,8 @@ struct Result final {
     /** The evaluation of the position resulting from playing the best move. */
     eval::Score score;
 
-    /** The best move found in the position. */
-    Move bestMove;
+    /** The principal variation found during the search. */
+    MoveList pv;
 
     /** The total number of nodes visited during this search. For depths greater
         than 1, this value includes nodes visited in shallower depths of the
@@ -80,6 +83,18 @@ struct Result final {
         were written to during this root search.
      */
     size_t hashfull { 0uz };
+
+    /** Returns the best move found by this search. */
+    [[nodiscard]] Move best_move() const { return pv.front(); }
+
+    /** Returns the ponder move found by this search, if one exists. */
+    [[nodiscard]] std::optional<Move> ponder_move() const
+    {
+        if (pv.size() < 2uz)
+            return std::nullopt;
+
+        return pv[1uz];
+    }
 
     /** Typedef for the libchess type used for printing UCI-formatted output. */
     using LibchessResult = chess::uci::printing::SearchInfo;

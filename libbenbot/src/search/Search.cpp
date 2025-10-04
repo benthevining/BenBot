@@ -61,17 +61,20 @@ namespace {
         {
             moves.front() = move;
 
-            std::copy_n(child.moves.begin(), child.length, moves.begin() + 1);
+            std::copy_n(child.moves.begin(), child.length, std::next(moves.begin()));
 
             length = child.length + 1;
 
             assert(length == 1uz or moves.front() != moves[1]);
         }
 
-        void reset()
+        [[nodiscard]] MoveList to_movelist() const
         {
-            moves.front() = Move {};
-            length        = 0uz;
+            MoveList list;
+
+            std::copy_n(moves.begin(), length, std::back_inserter(list));
+
+            return list;
         }
     };
 
@@ -273,7 +276,7 @@ namespace {
     };
 
     struct RootSearchResult final {
-        Move         bestMove;
+        MoveList     pv;
         Score        bestScore;
         Stats        stats;
         milliseconds duration { 0 };
@@ -285,7 +288,7 @@ namespace {
                 .depth                  = depth,
                 .qDepth                 = stats.qDepth,
                 .score                  = bestScore,
-                .bestMove               = bestMove,
+                .pv                     = pv,
                 .nodesSearched          = stats.nodesSearched,
                 .transpositionTableHits = stats.transTableHits,
                 .betaCutoffs            = stats.betaCutoffs,
@@ -329,7 +332,7 @@ namespace {
         }
 
         return {
-            .bestMove  = pv.moves.front(),
+            .pv        = pv.to_movelist(),
             .bestScore = bounds.alpha,
             .stats     = stats,
             .duration  = timer.get_duration()

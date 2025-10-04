@@ -54,7 +54,7 @@ auto Result::to_libchess(const bool includeDebugInfo) const -> LibchessResult
         .selDepth         = qDepth,
         .time             = duration,
         .nodes            = nodesSearched,
-        .pv               = {},
+        .pv               = pv,
         .hashfull         = hashfull,
         .tbHits           = 0uz,
         .extraInformation = get_extra_stats_string(*this, includeDebugInfo)

@@ -24,8 +24,6 @@
 
 namespace ben_bot::search {
 
-struct Context;
-
 /** This struct encapsulates a set of functions that will be called to
     process search progress and results. Search results are always
     retrieved through these callbacks.
@@ -66,12 +64,10 @@ struct Callbacks final {
     /** Creates a set of callbacks that print UCI-formatted information and bestmove
         output to standard output.
 
-        @param context The search context being used to generate the output.
         @param isDebugMode Function object that should return true if debug information
         should be included in the information output.
      */
     [[nodiscard]] static auto make_uci_printer(
-        const Context&        context,
         std::function<bool()> isDebugMode)
         -> Callbacks;
 };
