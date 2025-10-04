@@ -55,11 +55,11 @@ namespace {
     struct AlphaBetaContext final {
         AlphaBetaContext(
             const Bounds bnd, const Position& pos,
-            const size_t depthLeft, const size_t ply,
+            const size_t depthToSearch, const size_t ply,
             TranspositionTable& trans, Interrupter& inter, Stats& statsToUse)
             : bounds { bnd }
             , position { pos }
-            , depth { depthLeft }
+            , depthLeft { depthToSearch }
             , plyFromRoot { ply }
             , transTable { trans }
             , interrupter { inter }
@@ -68,7 +68,6 @@ namespace {
         }
 
         // standard alpha/beta search algorithm
-        // this is called in the body of the higher-level iterative deepening loop
         [[nodiscard]] auto alpha_beta() -> Score
         {
             if (interrupter.should_abort())
@@ -89,14 +88,14 @@ namespace {
 
             // check if this position has been searched before to at
             // least this depth and within these bounds for non-PV nodes
-            if (const auto value = transTable.probe_eval(position, depth, bounds)) {
+            if (const auto value = transTable.probe_eval(position, depthLeft, bounds)) {
                 ++stats.transTableHits;
                 return Score::from_tt(value->first, plyFromRoot);
             }
 
             if (position.is_draw()) {
                 transTable.store(
-                    position, { .searchedDepth = depth,
+                    position, { .searchedDepth = depthLeft,
                                   .eval        = eval::DRAW,
                                   .evalType    = EvalType::Exact,
                                   .bestMove    = std::nullopt });
@@ -110,7 +109,7 @@ namespace {
                 const auto score = Score::mate(plyFromRoot);
 
                 transTable.store(
-                    position, { .searchedDepth = depth,
+                    position, { .searchedDepth = depthLeft,
                                   .eval        = score.to_tt(),
                                   .evalType    = EvalType::Exact,
                                   .bestMove    = std::nullopt });
@@ -124,10 +123,10 @@ namespace {
 
             std::optional<Move> bestMove;
 
-            for (const auto& move : moves) {
+            for (const auto move : moves) {
                 auto child = recurse(move);
 
-                const auto eval = depth > 0uz ? -child.alpha_beta() : -child.quiescence();
+                const auto eval = depthLeft > 0uz ? -child.alpha_beta() : -child.quiescence();
 
                 if (interrupter.should_abort())
                     return {};
@@ -136,7 +135,7 @@ namespace {
 
                 if (eval >= bounds.beta) {
                     transTable.store(
-                        position, { .searchedDepth = depth,
+                        position, { .searchedDepth = depthLeft,
                                       .eval        = bounds.beta.to_tt(),
                                       .evalType    = EvalType::Beta,
                                       .bestMove    = bestMove });
@@ -154,7 +153,7 @@ namespace {
             }
 
             transTable.store(
-                position, { .searchedDepth = depth,
+                position, { .searchedDepth = depthLeft,
                               .eval        = bounds.alpha.to_tt(),
                               .evalType    = evalType,
                               .bestMove    = bestMove });
@@ -196,7 +195,7 @@ namespace {
 
             detail::order_moves_for_q_search(position, moves);
 
-            for (const auto& move : moves) {
+            for (const auto move : moves) {
                 assert(position.is_capture(move));
 
                 evaluation = -(recurse(move).quiescence());
@@ -219,11 +218,10 @@ namespace {
 
         [[nodiscard]] auto recurse(const Move move) const -> AlphaBetaContext
         {
-            const auto left = depth > 0uz ? depth - 1uz : 0uz;
-
             return { bounds.invert(),
                 after_move(position, move),
-                left, plyFromRoot + 1uz,
+                depthLeft > 0uz ? depthLeft - 1uz : 0uz,
+                plyFromRoot + 1uz,
                 transTable, interrupter, stats };
         }
 
@@ -231,7 +229,7 @@ namespace {
 
         Position position;
 
-        size_t depth { 0uz }; // this is the depth left to be searched - decreases each iteration, and when this reaches 0, we call the quiescence search
+        size_t depthLeft { 0uz }; // decreases each iteration, and when this reaches 0, we call the quiescence search
 
         size_t plyFromRoot { 0uz }; // increases each iteration
 
@@ -241,6 +239,45 @@ namespace {
 
         Stats& stats; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
     };
+
+    struct RootSearchResult final {
+        Move         bestMove;
+        Score        bestScore;
+        milliseconds duration { 0 };
+    };
+
+    [[nodiscard]] auto root_search(
+        const size_t        depth,
+        Options&            options,
+        TranspositionTable& transTable, Interrupter& interrupter, Stats& stats)
+        -> RootSearchResult
+    {
+        const Timer timer;
+
+        detail::order_moves_for_search(options.position, options.movesToSearch, transTable);
+
+        Bounds bounds;
+        Move   bestMove;
+
+        for (const auto move : options.movesToSearch) {
+            AlphaBetaContext context { bounds.invert(),
+                after_move(options.position, move),
+                depth, 1uz, transTable, interrupter, stats };
+
+            const auto score = -context.alpha_beta();
+
+            if (score > bounds.alpha) {
+                bestMove     = move;
+                bounds.alpha = score;
+            }
+        }
+
+        return {
+            .bestMove  = bestMove,
+            .bestScore = bounds.alpha,
+            .duration  = timer.get_duration()
+        };
+    }
 
     struct ActiveFlagSetter final {
         explicit ActiveFlagSetter(std::atomic_bool& flag)
@@ -281,11 +318,9 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         assert(! options.movesToSearch.empty());
     }
 
-    Stats stats;
-
-    std::optional<Move> bestMove;
-
+    Move  bestMove;
     Score bestScore;
+    Stats stats;
 
     // iterative deepening
     auto depth = 1uz;
@@ -294,39 +329,14 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         if (interrupter.should_abort())
             break;
 
-        const Timer timer;
-
-        // we can generate the legal moves only once, but we should reorder them each iteration
-        // because the move ordering will change based on the evaluations done during the last iteration
-        detail::order_moves_for_search(options.position, options.movesToSearch, transTable);
-
-        Bounds bounds;
-
-        std::optional<Move> bestMoveThisDepth;
-
-        for (const auto& move : options.movesToSearch) {
-            AlphaBetaContext context { bounds.invert(),
-                after_move(options.position, move),
-                depth, 1uz, transTable, interrupter, stats };
-
-            const auto score = -context.alpha_beta();
-
-            if (interrupter.was_aborted())
-                break;
-
-            if (score > bounds.alpha) {
-                bestMoveThisDepth = move;
-                bounds.alpha      = score;
-            }
-        }
+        const auto [move, score, duration] = root_search(
+            depth, options, transTable, interrupter, stats);
 
         if (interrupter.was_aborted())
             break;
 
-        assert(bestMoveThisDepth.has_value());
-
-        bestMove  = bestMoveThisDepth;
-        bestScore = bounds.alpha;
+        bestMove  = move;
+        bestScore = score;
 
         interrupter.iteration_completed();
 
@@ -352,7 +362,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
             // have remaining for the search, then don't start a deeper iteration
             // because it would probably get interrupted
             if (const auto remaining = interrupter.get_remaining_time()) {
-                if (timer.get_duration() >= *remaining)
+                if (duration >= *remaining)
                     break;
             }
         }
@@ -361,11 +371,11 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         // final output before we're going to spin, then the stop command will print the
         // final info again and the bestmove
         if (depth < options.depth or options.infinite) {
-            callbacks.iteration_complete({ .duration = interrupter.get_search_duration(),
+            callbacks.iteration_complete({ .duration = duration,
                 .depth                               = depth,
                 .qDepth                              = stats.qDepth,
                 .score                               = bestScore,
-                .bestMove                            = bestMove.value(),
+                .bestMove                            = bestMove,
                 .nodesSearched                       = stats.nodesSearched,
                 .transpositionTableHits              = stats.transTableHits,
                 .betaCutoffs                         = stats.betaCutoffs,
@@ -398,7 +408,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         .depth                            = depth,
         .qDepth                           = stats.qDepth,
         .score                            = bestScore,
-        .bestMove                         = bestMove.value(),
+        .bestMove                         = bestMove,
         .nodesSearched                    = stats.nodesSearched,
         .transpositionTableHits           = stats.transTableHits,
         .betaCutoffs                      = stats.betaCutoffs,
