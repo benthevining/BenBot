@@ -120,7 +120,7 @@ struct Pieces final {
     constexpr void capture_at(Square square) noexcept;
 
     /** Call this when a move is made by this side to update the piece bitboards. */
-    constexpr void our_move(const moves::Move& move, Color ourColor) noexcept;
+    constexpr void our_move(moves::Move move, Color ourColor) noexcept;
 
     /** Recalculates the ``occupied`` bitboard from each of the piece bitboards. */
     constexpr void refresh_occupied() noexcept;
@@ -261,35 +261,36 @@ constexpr void Pieces::capture_at(const Square square) noexcept
     occupied.unset(idx);
 }
 
-constexpr void Pieces::our_move(const moves::Move& move, const Color ourColor) noexcept
+constexpr void Pieces::our_move(const moves::Move move, const Color ourColor) noexcept
 {
     const auto movementMask = Bitboard::from_square(move.from()) | Bitboard::from_square(move.to());
 
     occupied ^= movementMask;
 
-    auto& pieceBB = get_type(move.piece());
+    using Placeholder = std::optional<int>;
 
-    if (const auto prom = move.promoted_type()) {
-        [[unlikely]];
+    move.promoted_type()
+        .and_then([move, this](const PieceType type) {
+            get_type(move.piece()).unset(move.from());
+            get_type(type).set(move.to());
+            return Placeholder { 1 };
+        })
+        .or_else([move, movementMask, ourColor, this] {
+            get_type(move.piece()) ^= movementMask;
 
-        pieceBB.unset(move.from());
-        get_type(prom.value()).set(move.to());
+            if (move.is_castling()) {
+                [[unlikely]];
 
-        return;
-    }
+                const auto castleMask = move.to().is_queenside()
+                                          ? masks::queenside_castle_rook_pos_mask(ourColor)
+                                          : masks::kingside_castle_rook_pos_mask(ourColor);
 
-    pieceBB ^= movementMask;
+                rooks ^= castleMask;
+                occupied ^= castleMask;
+            }
 
-    if (move.is_castling()) {
-        [[unlikely]];
-
-        const auto castleMask = move.to().is_queenside()
-                                  ? masks::queenside_castle_rook_pos_mask(ourColor)
-                                  : masks::kingside_castle_rook_pos_mask(ourColor);
-
-        rooks ^= castleMask;
-        occupied ^= castleMask;
-    }
+            return Placeholder {};
+        });
 }
 
 } // namespace chess::board

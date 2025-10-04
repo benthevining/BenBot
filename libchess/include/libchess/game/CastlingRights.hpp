@@ -135,13 +135,13 @@ constexpr void CastlingRights::their_move(const Move& move) noexcept
 
     static constexpr auto backRank = Side == Color::White ? Rank::One : Rank::Eight;
 
-    const auto dest = move.to();
+    const auto [file, rank] = move.to();
 
-    if (dest.rank != backRank)
+    if (rank != backRank)
         return;
 
-    kingside  = kingside and (dest.file != File::H);
-    queenside = queenside and (dest.file != File::A);
+    kingside  = kingside and (file != File::H);
+    queenside = queenside and (file != File::A);
 }
 
 } // namespace chess::game
