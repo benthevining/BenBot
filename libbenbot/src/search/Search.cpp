@@ -95,7 +95,7 @@ namespace {
 
             if (position.is_draw()) {
                 transTable.store(
-                    position, { .searchedDepth = depthLeft,
+                    position, { .searchedDepth = plyFromRoot,
                                   .eval        = eval::DRAW,
                                   .evalType    = EvalType::Exact,
                                   .bestMove    = std::nullopt });
@@ -109,7 +109,7 @@ namespace {
                 const auto score = Score::mate(plyFromRoot);
 
                 transTable.store(
-                    position, { .searchedDepth = depthLeft,
+                    position, { .searchedDepth = plyFromRoot,
                                   .eval        = score.to_tt(),
                                   .evalType    = EvalType::Exact,
                                   .bestMove    = std::nullopt });
@@ -243,19 +243,22 @@ namespace {
     struct RootSearchResult final {
         Move         bestMove;
         Score        bestScore;
+        Stats        stats;
         milliseconds duration { 0 };
     };
 
     [[nodiscard]] auto root_search(
         const size_t        depth,
         Options&            options,
-        TranspositionTable& transTable, Interrupter& interrupter, Stats& stats)
+        TranspositionTable& transTable,
+        Interrupter&        interrupter)
         -> RootSearchResult
     {
         const Timer timer;
 
         detail::order_moves_for_search(options.position, options.movesToSearch, transTable);
 
+        Stats  stats;
         Bounds bounds;
         Move   bestMove;
 
@@ -275,6 +278,7 @@ namespace {
         return {
             .bestMove  = bestMove,
             .bestScore = bounds.alpha,
+            .stats     = stats,
             .duration  = timer.get_duration()
         };
     }
@@ -318,9 +322,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         assert(! options.movesToSearch.empty());
     }
 
-    Move  bestMove;
-    Score bestScore;
-    Stats stats;
+    RootSearchResult result;
 
     // iterative deepening
     auto depth = 1uz;
@@ -329,22 +331,18 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         if (interrupter.should_abort())
             break;
 
-        const auto [move, score, duration] = root_search(
-            depth, options, transTable, interrupter, stats);
+        result = root_search(depth, options, transTable, interrupter);
 
         if (interrupter.was_aborted())
             break;
-
-        bestMove  = move;
-        bestScore = score;
 
         interrupter.iteration_completed();
 
         if (not(options.infinite or pondering.load())) {
             // check "mate in X" search bound
-            if (options.mateIn.has_value() and bestScore.is_mate()) {
+            if (options.mateIn.has_value() and result.bestScore.is_mate()) {
                 if (const auto targetPliesToMate = *options.mateIn * 2uz;
-                    bestScore.ply_to_mate() <= targetPliesToMate)
+                    result.bestScore.ply_to_mate() <= targetPliesToMate)
                     break;
             }
 
@@ -355,14 +353,15 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
             }
 
             // if we've hit our node limit, don't do a deeper iteration
-            if (stats.nodesSearched >= options.maxNodes)
+            // TODO: should check total nodes, not just nodes from last depth
+            if (result.stats.nodesSearched >= options.maxNodes)
                 break;
 
             // if the iteration we just completed took as much or more time than we
             // have remaining for the search, then don't start a deeper iteration
             // because it would probably get interrupted
             if (const auto remaining = interrupter.get_remaining_time()) {
-                if (duration >= *remaining)
+                if (result.duration >= *remaining)
                     break;
             }
         }
@@ -371,16 +370,16 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         // final output before we're going to spin, then the stop command will print the
         // final info again and the bestmove
         if (depth < options.depth or options.infinite) {
-            callbacks.iteration_complete({ .duration = duration,
+            callbacks.iteration_complete({ .duration = result.duration,
                 .depth                               = depth,
-                .qDepth                              = stats.qDepth,
-                .score                               = bestScore,
-                .bestMove                            = bestMove,
-                .nodesSearched                       = stats.nodesSearched,
-                .transpositionTableHits              = stats.transTableHits,
-                .betaCutoffs                         = stats.betaCutoffs,
-                .staticEvals                         = stats.staticEvals,
-                .mdpCutoffs                          = stats.mdpCutoffs,
+                .qDepth                              = result.stats.qDepth,
+                .score                               = result.bestScore,
+                .bestMove                            = result.bestMove,
+                .nodesSearched                       = result.stats.nodesSearched,
+                .transpositionTableHits              = result.stats.transTableHits,
+                .betaCutoffs                         = result.stats.betaCutoffs,
+                .staticEvals                         = result.stats.staticEvals,
+                .mdpCutoffs                          = result.stats.mdpCutoffs,
                 .hashfull                            = transTable.hashfull() });
         }
 
@@ -406,14 +405,14 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
 
     callbacks.search_complete({ .duration = interrupter.get_search_duration(),
         .depth                            = depth,
-        .qDepth                           = stats.qDepth,
-        .score                            = bestScore,
-        .bestMove                         = bestMove,
-        .nodesSearched                    = stats.nodesSearched,
-        .transpositionTableHits           = stats.transTableHits,
-        .betaCutoffs                      = stats.betaCutoffs,
-        .staticEvals                      = stats.staticEvals,
-        .mdpCutoffs                       = stats.mdpCutoffs,
+        .qDepth                           = result.stats.qDepth,
+        .score                            = result.bestScore,
+        .bestMove                         = result.bestMove,
+        .nodesSearched                    = result.stats.nodesSearched,
+        .transpositionTableHits           = result.stats.transTableHits,
+        .betaCutoffs                      = result.stats.betaCutoffs,
+        .staticEvals                      = result.stats.staticEvals,
+        .mdpCutoffs                       = result.stats.mdpCutoffs,
         .hashfull                         = transTable.hashfull() });
 }
 
