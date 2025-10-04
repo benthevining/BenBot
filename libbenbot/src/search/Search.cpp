@@ -52,7 +52,7 @@ namespace {
         size_t qDepth { 0uz };     // max depth reached by any quiescence search
     };
 
-    struct PvList {
+    struct PvList final {
         void update(const Move move, const PvList& child)
         {
             moves.front() = move;
