@@ -22,7 +22,7 @@
 #include <array>
 #include <atomic>
 #include <cassert>
-#include <cmath>   // IWYU pragma: keep - for std::abs()
+#include <cmath>   // IWYU pragma: keep - for std::max()
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <iterator>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
@@ -49,14 +49,10 @@ namespace {
         size_t staticEvals { 0uz };
         size_t betaCutoffs { 0uz };
         size_t mdpCutoffs { 0uz }; // cutoffs due to mate distance pruning
-        size_t qDepth { 0uz };
+        size_t qDepth { 0uz };     // max depth reached by any quiescence search
     };
 
     struct PvList {
-        std::array<Move, 255uz> moves {};
-
-        size_t length { 0uz };
-
         void update(const Move move, const PvList& child)
         {
             moves.front() = move;
@@ -76,6 +72,11 @@ namespace {
 
             return list;
         }
+
+    private:
+        std::array<Move, 255uz> moves {};
+
+        size_t length { 0uz };
     };
 
     // encapsulates the arguments to the recursive alpha/beta call
