@@ -245,6 +245,22 @@ namespace {
         Score        bestScore;
         Stats        stats;
         milliseconds duration { 0 };
+
+        [[nodiscard]] auto to_cb_result(
+            const size_t depth, const size_t hashfull) const noexcept -> Result
+        {
+            return { .duration          = duration,
+                .depth                  = depth,
+                .qDepth                 = stats.qDepth,
+                .score                  = bestScore,
+                .bestMove               = bestMove,
+                .nodesSearched          = stats.nodesSearched,
+                .transpositionTableHits = stats.transTableHits,
+                .betaCutoffs            = stats.betaCutoffs,
+                .staticEvals            = stats.staticEvals,
+                .mdpCutoffs             = stats.mdpCutoffs,
+                .hashfull               = hashfull };
+        }
     };
 
     [[nodiscard]] auto root_search(
@@ -273,6 +289,9 @@ namespace {
                 bestMove     = move;
                 bounds.alpha = score;
             }
+
+            if (interrupter.was_aborted())
+                break;
         }
 
         return {
@@ -324,6 +343,8 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
 
     RootSearchResult result;
 
+    size_t totalNodesSearched { 0uz };
+
     // iterative deepening
     auto depth = 1uz;
 
@@ -335,6 +356,8 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
 
         if (interrupter.was_aborted())
             break;
+
+        totalNodesSearched += result.stats.nodesSearched;
 
         interrupter.iteration_completed();
 
@@ -353,8 +376,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
             }
 
             // if we've hit our node limit, don't do a deeper iteration
-            // TODO: should check total nodes, not just nodes from last depth
-            if (result.stats.nodesSearched >= options.maxNodes)
+            if (totalNodesSearched >= options.maxNodes)
                 break;
 
             // if the iteration we just completed took as much or more time than we
@@ -370,17 +392,8 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         // final output before we're going to spin, then the stop command will print the
         // final info again and the bestmove
         if (depth < options.depth or options.infinite) {
-            callbacks.iteration_complete({ .duration = result.duration,
-                .depth                               = depth,
-                .qDepth                              = result.stats.qDepth,
-                .score                               = result.bestScore,
-                .bestMove                            = result.bestMove,
-                .nodesSearched                       = result.stats.nodesSearched,
-                .transpositionTableHits              = result.stats.transTableHits,
-                .betaCutoffs                         = result.stats.betaCutoffs,
-                .staticEvals                         = result.stats.staticEvals,
-                .mdpCutoffs                          = result.stats.mdpCutoffs,
-                .hashfull                            = transTable.hashfull() });
+            callbacks.iteration_complete(
+                result.to_cb_result(depth, transTable.hashfull()));
         }
 
         ++depth;
@@ -403,17 +416,8 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         });
     }
 
-    callbacks.search_complete({ .duration = interrupter.get_search_duration(),
-        .depth                            = depth,
-        .qDepth                           = result.stats.qDepth,
-        .score                            = result.bestScore,
-        .bestMove                         = result.bestMove,
-        .nodesSearched                    = result.stats.nodesSearched,
-        .transpositionTableHits           = result.stats.transTableHits,
-        .betaCutoffs                      = result.stats.betaCutoffs,
-        .staticEvals                      = result.stats.staticEvals,
-        .mdpCutoffs                       = result.stats.mdpCutoffs,
-        .hashfull                         = transTable.hashfull() });
+    callbacks.search_complete(
+        result.to_cb_result(depth, transTable.hashfull()));
 }
 
 void Context::wait() const
