@@ -39,6 +39,13 @@ source_group (TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${benbot_headers} ${benbot_
 
 add_executable (ben_bot::ben_bot ALIAS ben_bot)
 
+add_custom_target (
+    bench COMMAND ben_bot::ben_bot bench --no-loop COMMENT "Running ben_bot bench..." VERBATIM
+                                                                                      USES_TERMINAL
+)
+
+add_dependencies (bench ben_bot::ben_bot)
+
 #
 
 # cmake-format: off
