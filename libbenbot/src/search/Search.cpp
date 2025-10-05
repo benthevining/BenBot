@@ -85,7 +85,7 @@ namespace {
             const Bounds bnd, const Position& pos,
             const size_t depthToSearch, const size_t ply,
             TranspositionTable& trans, Interrupter& inter, Stats& statsToUse,
-            PvList& parent_pv)
+            PvList& parentPV)
             : bounds { bnd }
             , position { pos }
             , depthLeft { depthToSearch }
@@ -93,7 +93,7 @@ namespace {
             , transTable { trans }
             , interrupter { inter }
             , stats { statsToUse }
-            , parentPV { parent_pv }
+            , pv { parentPV }
         {
         }
 
@@ -154,7 +154,7 @@ namespace {
             std::optional<Move> bestMove;
 
             for (const auto move : moves) {
-                pv.reset();
+                childPV.reset();
 
                 auto child = recurse(move);
 
@@ -182,7 +182,7 @@ namespace {
                     evalType     = EvalType::Exact;
                     bounds.alpha = eval;
 
-                    parentPV.update(move, pv);
+                    pv.update(move, childPV);
                 }
             }
 
@@ -256,7 +256,7 @@ namespace {
                 after_move(position, move),
                 depthLeft > 0uz ? depthLeft - 1uz : 0uz,
                 plyFromRoot + 1uz,
-                transTable, interrupter, stats, pv };
+                transTable, interrupter, stats, childPV };
         }
 
         Bounds bounds;
@@ -273,9 +273,9 @@ namespace {
 
         Stats& stats; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
-        PvList& parentPV; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
+        PvList& pv; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
-        PvList pv;
+        PvList childPV;
     };
 
     struct RootSearchResult final {
@@ -314,7 +314,7 @@ namespace {
 
         Stats    stats;
         Bounds   bounds;
-        MoveList pv;
+        MoveList pv; // NOLINT(readability-identifier-length)
 
         for (const auto move : options.movesToSearch) {
             PvList childPV;
