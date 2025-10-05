@@ -158,24 +158,25 @@ namespace {
             for (const auto move : moves) {
                 childPV.reset();
 
-                Score eval;
+                const auto eval = [this, move, foundPV = bestMove.has_value()] {
+                    if (depthLeft == 0uz)
+                        return -recurse(move).quiescence();
 
-                if (depthLeft == 0uz) {
-                    eval = -recurse(move).quiescence();
-                } else {
-                    // principal variation search: if we've found a PV already,
-                    // then test all other moves with a null window first
-                    if (bestMove.has_value()) {
-                        eval = -recurse(move, true).alpha_beta();
+                    if (not foundPV)
+                        return -recurse(move).alpha_beta();
 
-                        if ((eval > bounds.alpha) and (eval < bounds.beta))
-                            eval = -recurse(move).alpha_beta();
-                    } else {
-                        eval = -recurse(move).alpha_beta();
-                    }
-                }
+                    const auto score = -recurse(move, true).alpha_beta();
+
+                    if (bounds.contains(score))
+                        return -recurse(move).alpha_beta();
+
+                    return score;
+                }();
 
                 ++stats.nodesSearched;
+
+                if (interrupter.was_aborted())
+                    return {};
 
                 if (eval >= bounds.beta) {
                     transTable.store(
@@ -196,9 +197,6 @@ namespace {
 
                     pv.update(move, childPV);
                 }
-
-                if (interrupter.should_abort())
-                    return {};
             }
 
             transTable.store(
@@ -249,10 +247,10 @@ namespace {
 
                 evaluation = -(recurse(move).quiescence());
 
+                ++stats.nodesSearched;
+
                 if (interrupter.was_aborted())
                     return {};
-
-                ++stats.nodesSearched;
 
                 if (evaluation >= bounds.beta) {
                     ++stats.betaCutoffs;
@@ -335,32 +333,27 @@ namespace {
         bool foundPV = false;
 
         for (const auto move : options.movesToSearch) {
-            const auto newPos = after_move(options.position, move);
-
             PvList childPV;
 
-            Score score;
+            const auto score = [bounds, &options, move, depth, foundPV, &transTable, &interrupter, &stats, &childPV] {
+                const auto newPos = after_move(options.position, move);
 
-            // principal variation search: if we've found a PV already,
-            // then test all other moves with a null window first
-            if (foundPV) {
-                AlphaBetaContext nullWindowContext { bounds.null_window(),
-                    newPos, depth, 1uz, transTable, interrupter, stats, childPV };
-
-                score = -nullWindowContext.alpha_beta();
-
-                if ((score > bounds.alpha) and (score < bounds.beta)) {
-                    AlphaBetaContext context { bounds.invert(),
-                        newPos, depth, 1uz, transTable, interrupter, stats, childPV };
-
-                    score = -context.alpha_beta();
-                }
-            } else {
                 AlphaBetaContext context { bounds.invert(),
                     newPos, depth, 1uz, transTable, interrupter, stats, childPV };
 
-                score = -context.alpha_beta();
-            }
+                if (not foundPV)
+                    return -context.alpha_beta();
+
+                AlphaBetaContext nullWindowContext { bounds.null_window(),
+                    newPos, depth, 1uz, transTable, interrupter, stats, childPV };
+
+                const auto nullWinScore = -nullWindowContext.alpha_beta();
+
+                if (bounds.contains(nullWinScore))
+                    return -context.alpha_beta();
+
+                return nullWinScore;
+            }();
 
             if (score > bounds.alpha) {
                 bounds.alpha = score;
