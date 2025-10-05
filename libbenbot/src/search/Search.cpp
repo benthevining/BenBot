@@ -13,7 +13,10 @@
  */
 
 // Search features:
-// Alpha-beta pruning with iterative deepening and quiescence search
+// Alpha-beta pruning
+// Iterative deepening
+// Quiescence search
+// Principal variation search
 // Mate distance pruning
 
 #include "MoveOrdering.hpp"
@@ -316,14 +319,35 @@ namespace {
         Bounds   bounds;
         MoveList pv; // NOLINT(readability-identifier-length)
 
+        bool foundPV = false;
+
         for (const auto move : options.movesToSearch) {
+            const auto newPos = after_move(options.position, move);
+
             PvList childPV;
 
-            AlphaBetaContext context { bounds.invert(),
-                after_move(options.position, move),
-                depth, 1uz, transTable, interrupter, stats, childPV };
+            Score score;
 
-            const auto score = -context.alpha_beta();
+            // principal variation search: if we've found a PV already,
+            // then test all other moves with a null window first
+            if (foundPV) {
+                AlphaBetaContext nullWindowContext { bounds.null_window(),
+                    newPos, depth, 1uz, transTable, interrupter, stats, childPV };
+
+                score = -nullWindowContext.alpha_beta();
+
+                if ((score > bounds.alpha) and (score < bounds.beta)) {
+                    AlphaBetaContext context { bounds.invert(),
+                        newPos, depth, 1uz, transTable, interrupter, stats, childPV };
+
+                    score = -context.alpha_beta();
+                }
+            } else {
+                AlphaBetaContext context { bounds.invert(),
+                    newPos, depth, 1uz, transTable, interrupter, stats, childPV };
+
+                score = -context.alpha_beta();
+            }
 
             if (score > bounds.alpha) {
                 bounds.alpha = score;
@@ -332,6 +356,8 @@ namespace {
                 pv.emplace_back(move);
 
                 childPV.to_movelist(pv);
+
+                foundPV = true;
             }
 
             if (interrupter.was_aborted())

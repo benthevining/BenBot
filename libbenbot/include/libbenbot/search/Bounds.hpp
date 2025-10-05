@@ -45,6 +45,11 @@ struct Bounds final {
      */
     [[nodiscard]] constexpr auto invert() const noexcept -> Bounds;
 
+    /** Returns a null window around alpha. For usage with principal variation
+        search.
+     */
+    [[nodiscard]] constexpr auto null_window() const noexcept -> Bounds;
+
     /** Performs mate distance pruning.
         If an MDP cutoff is available, returns the cutoff value (and the
         search may return early). If no MDP cutoff is available, this method
@@ -74,6 +79,14 @@ constexpr auto Bounds::invert() const noexcept -> Bounds
 {
     return {
         .alpha = -beta,
+        .beta  = -alpha
+    };
+}
+
+constexpr auto Bounds::null_window() const noexcept -> Bounds
+{
+    return {
+        .alpha = Score { static_cast<eval::Value>(-alpha.value - 1) },
         .beta  = -alpha
     };
 }
