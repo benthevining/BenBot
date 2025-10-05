@@ -13,7 +13,10 @@
  */
 
 // Search features:
-// Alpha-beta pruning with iterative deepening and quiescence search
+// Alpha-beta pruning
+// Iterative deepening
+// Quiescence search
+// Principal variation search
 // Mate distance pruning
 
 #include "MoveOrdering.hpp"
@@ -97,8 +100,7 @@ namespace {
         {
         }
 
-        // standard alpha/beta search algorithm
-        [[nodiscard]] auto alpha_beta() -> Score
+        [[nodiscard]] auto alpha_beta() -> Score // NOLINT(readability-function-cognitive-complexity)
         {
             if (interrupter.should_abort())
                 return {};
@@ -135,7 +137,7 @@ namespace {
 
             auto moves = chess::moves::generate(position);
 
-            if (moves.empty() && position.is_check()) {
+            if (moves.empty() and position.is_check()) {
                 const auto score = Score::mate(plyFromRoot);
 
                 transTable.store(
@@ -156,14 +158,13 @@ namespace {
             for (const auto move : moves) {
                 childPV.reset();
 
-                auto child = recurse(move);
-
-                const auto eval = depthLeft > 0uz ? -child.alpha_beta() : -child.quiescence();
-
-                if (interrupter.should_abort())
-                    return {};
+                // NB. adding PVS here seems to lose some Elo
+                const auto eval = depthLeft > 0uz ? -recurse(move).alpha_beta() : -recurse(move).quiescence();
 
                 ++stats.nodesSearched;
+
+                if (interrupter.was_aborted())
+                    return {};
 
                 if (eval >= bounds.beta) {
                     transTable.store(
@@ -234,10 +235,10 @@ namespace {
 
                 evaluation = -(recurse(move).quiescence());
 
+                ++stats.nodesSearched;
+
                 if (interrupter.was_aborted())
                     return {};
-
-                ++stats.nodesSearched;
 
                 if (evaluation >= bounds.beta) {
                     ++stats.betaCutoffs;
@@ -316,14 +317,33 @@ namespace {
         Bounds   bounds;
         MoveList pv; // NOLINT(readability-identifier-length)
 
+        bool foundPV = false;
+
         for (const auto move : options.movesToSearch) {
             PvList childPV;
 
-            AlphaBetaContext context { bounds.invert(),
-                after_move(options.position, move),
-                depth, 1uz, transTable, interrupter, stats, childPV };
+            // principal variation search: first try searching with a null window
+            const auto score = [bounds, &options, move, depth, foundPV, &transTable, &interrupter, &stats, &childPV] {
+                const auto newPos = after_move(options.position, move);
 
-            const auto score = -context.alpha_beta();
+                AlphaBetaContext context { bounds.invert(),
+                    newPos, depth, 1uz, transTable, interrupter, stats, childPV };
+
+                if (not foundPV)
+                    return -context.alpha_beta();
+
+                AlphaBetaContext nullWindowContext { bounds.null_window(),
+                    newPos, depth, 1uz, transTable, interrupter, stats, childPV };
+
+                const auto nullWinScore = -nullWindowContext.alpha_beta();
+
+                if (bounds.contains(nullWinScore))
+                    return -context.alpha_beta();
+
+                return nullWinScore;
+            }();
+
+            ++stats.nodesSearched;
 
             if (score > bounds.alpha) {
                 bounds.alpha = score;
@@ -332,6 +352,8 @@ namespace {
                 pv.emplace_back(move);
 
                 childPV.to_movelist(pv);
+
+                foundPV = true;
             }
 
             if (interrupter.was_aborted())
