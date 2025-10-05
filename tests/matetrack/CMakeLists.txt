@@ -10,8 +10,6 @@
 #
 # ======================================================================================
 
-return ()
-
 if (NOT TARGET Python::Interpreter)
     return ()
 endif ()
@@ -47,7 +45,8 @@ add_test (
 )
 # cmake-format: on
 
-set_tests_properties (
-    ben_bot.matetrack PROPERTIES FAIL_REGULAR_EXPRESSION "the following issues were detected:"
-                                 "Exception parsing pv from info:"
+set_property (
+    TEST ben_bot.matetrack APPEND
+    PROPERTY FAIL_REGULAR_EXPRESSION "the following issues were detected:"
+             "Exception parsing pv from info:"
 )
