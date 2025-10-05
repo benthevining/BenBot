@@ -31,6 +31,8 @@ namespace ben_bot::search::detail {
 
 namespace {
 
+    namespace piece_values = eval::piece_values;
+
     using chess::board::Bitboard;
     using chess::pieces::Color;
     using PieceType = chess::pieces::Type;
@@ -48,14 +50,12 @@ namespace {
 
     // higher scored moves will be searched first
     [[nodiscard, gnu::const]] auto move_ordering_score(
-        const Position& currentPosition, const Move& move,
+        const Position& currentPosition, const Move move,
         const TranspositionTable& transTable,
         const Bitboard            opponentPawnAttacks,
         const std::optional<Move> bestMove)
         -> int
     {
-        namespace piece_values = eval::piece_values;
-
         static constexpr auto PV_NODE_BONUS { 15000 };       // cppcheck-suppress variableScope
         static constexpr auto CUT_NODE_PENALTY { 15000 };    // cppcheck-suppress variableScope
         static constexpr auto CAPTURE_MULTIPLIER { 10 };     // cppcheck-suppress variableScope
@@ -71,8 +71,6 @@ namespace {
         auto score { 0 };
 
         if (const auto capturedType = currentPosition.their_pieces().get_piece_on(move.to())) {
-            // NB. checking for captures this way prevents en passant from entering this branch
-
             // we want to prioritize searching moves that capture valuable pieces with less valuable pieces
             score += CAPTURE_MULTIPLIER
                    * (piece_values::get(*capturedType) - piece_values::get(move.piece()));
@@ -124,31 +122,35 @@ void order_moves_for_search(
     std::ranges::sort(
         moves,
         [&currentPosition, &transTable, bestMove,
-            opponentPawnAttacks = get_opponent_pawn_attacks(currentPosition)](const Move& first, const Move& second) {
+            opponentPawnAttacks = get_opponent_pawn_attacks(currentPosition)](const Move first, const Move second) {
             return move_ordering_score(currentPosition, first, transTable, opponentPawnAttacks, bestMove)
                  > move_ordering_score(currentPosition, second, transTable, opponentPawnAttacks, bestMove);
         });
 }
 
-// in quiescence search, moves are ordered simply by the value of the captured piece
+namespace {
+    // MVV-LVA scoring
+    [[nodiscard, gnu::const]] auto q_search_move_order_score(
+        const Position& currentPosition, const Move move) noexcept -> int
+    {
+        return currentPosition.their_pieces()
+            .get_piece_on(move.to())
+            .transform([move](const PieceType capturedType) {
+                return piece_values::get(capturedType) - std::to_underlying(move.piece());
+            })
+            .value_or(0);
+    }
+} // namespace
+
 void order_moves_for_q_search(
-    const Position& currentPosition,
-    std::span<Move> moves)
+    const Position&       currentPosition,
+    const std::span<Move> moves)
 {
-    const auto& theirPieces = currentPosition.their_pieces();
-
-    auto get_captured_type = [&currentPosition, &theirPieces](const Move& move) {
-        if (currentPosition.is_en_passant(move))
-            return PieceType::Pawn;
-
-        return theirPieces.get_piece_on(move.to()).value();
-    };
-
     std::ranges::sort(
         moves,
-        [captured_type = std::move(get_captured_type)](const Move& first, const Move& second) {
-            return eval::piece_values::get(captured_type(first))
-                 > eval::piece_values::get(captured_type(second));
+        [&currentPosition](const Move first, const Move second) {
+            return q_search_move_order_score(currentPosition, first)
+                 > q_search_move_order_score(currentPosition, second);
         });
 }
 
