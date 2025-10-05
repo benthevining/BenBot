@@ -19,9 +19,10 @@
 #include "MoveOrdering.hpp"
 #include "TimeManagement.hpp"
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <cassert>
-#include <cmath>   // IWYU pragma: keep - for std::abs()
+#include <cmath>   // IWYU pragma: keep - for std::max()
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <iterator>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
@@ -48,7 +49,34 @@ namespace {
         size_t staticEvals { 0uz };
         size_t betaCutoffs { 0uz };
         size_t mdpCutoffs { 0uz }; // cutoffs due to mate distance pruning
-        size_t qDepth { 0uz };
+        size_t qDepth { 0uz };     // max depth reached by any quiescence search
+    };
+
+    struct PvList final {
+        void update(const Move move, const PvList& child)
+        {
+            moves.front() = move;
+
+            std::copy_n(
+                child.moves.begin(), child.length,
+                std::next(moves.begin()));
+
+            length = child.length + 1;
+        }
+
+        void reset() noexcept { length = 0uz; }
+
+        void to_movelist(MoveList& list) const
+        {
+            std::copy_n(
+                moves.begin(), length,
+                std::back_inserter(list));
+        }
+
+    private:
+        std::array<Move, 255uz> moves {};
+
+        size_t length { 0uz };
     };
 
     // encapsulates the arguments to the recursive alpha/beta call
@@ -56,7 +84,8 @@ namespace {
         AlphaBetaContext(
             const Bounds bnd, const Position& pos,
             const size_t depthToSearch, const size_t ply,
-            TranspositionTable& trans, Interrupter& inter, Stats& statsToUse)
+            TranspositionTable& trans, Interrupter& inter, Stats& statsToUse,
+            PvList& parent_pv)
             : bounds { bnd }
             , position { pos }
             , depthLeft { depthToSearch }
@@ -64,6 +93,7 @@ namespace {
             , transTable { trans }
             , interrupter { inter }
             , stats { statsToUse }
+            , parentPV { parent_pv }
         {
         }
 
@@ -124,6 +154,8 @@ namespace {
             std::optional<Move> bestMove;
 
             for (const auto move : moves) {
+                pv.reset();
+
                 auto child = recurse(move);
 
                 const auto eval = depthLeft > 0uz ? -child.alpha_beta() : -child.quiescence();
@@ -149,6 +181,8 @@ namespace {
                     bestMove     = move;
                     evalType     = EvalType::Exact;
                     bounds.alpha = eval;
+
+                    parentPV.update(move, pv);
                 }
             }
 
@@ -216,13 +250,13 @@ namespace {
             return bounds.alpha;
         }
 
-        [[nodiscard]] auto recurse(const Move move) const -> AlphaBetaContext
+        [[nodiscard]] auto recurse(const Move move) -> AlphaBetaContext
         {
             return { bounds.invert(),
                 after_move(position, move),
                 depthLeft > 0uz ? depthLeft - 1uz : 0uz,
                 plyFromRoot + 1uz,
-                transTable, interrupter, stats };
+                transTable, interrupter, stats, pv };
         }
 
         Bounds bounds;
@@ -238,10 +272,14 @@ namespace {
         Interrupter& interrupter; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
         Stats& stats; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
+
+        PvList& parentPV; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
+
+        PvList pv;
     };
 
     struct RootSearchResult final {
-        Move         bestMove;
+        MoveList     pv;
         Score        bestScore;
         Stats        stats;
         milliseconds duration { 0 };
@@ -253,7 +291,7 @@ namespace {
                 .depth                  = depth,
                 .qDepth                 = stats.qDepth,
                 .score                  = bestScore,
-                .bestMove               = bestMove,
+                .pv                     = pv,
                 .nodesSearched          = stats.nodesSearched,
                 .transpositionTableHits = stats.transTableHits,
                 .betaCutoffs            = stats.betaCutoffs,
@@ -274,20 +312,26 @@ namespace {
 
         detail::order_moves_for_search(options.position, options.movesToSearch, transTable);
 
-        Stats  stats;
-        Bounds bounds;
-        Move   bestMove;
+        Stats    stats;
+        Bounds   bounds;
+        MoveList pv;
 
         for (const auto move : options.movesToSearch) {
+            PvList childPV;
+
             AlphaBetaContext context { bounds.invert(),
                 after_move(options.position, move),
-                depth, 1uz, transTable, interrupter, stats };
+                depth, 1uz, transTable, interrupter, stats, childPV };
 
             const auto score = -context.alpha_beta();
 
             if (score > bounds.alpha) {
-                bestMove     = move;
                 bounds.alpha = score;
+
+                pv.clear();
+                pv.emplace_back(move);
+
+                childPV.to_movelist(pv);
             }
 
             if (interrupter.was_aborted())
@@ -295,7 +339,7 @@ namespace {
         }
 
         return {
-            .bestMove  = bestMove,
+            .pv        = pv,
             .bestScore = bounds.alpha,
             .stats     = stats,
             .duration  = timer.get_duration()

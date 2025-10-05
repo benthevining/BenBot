@@ -40,7 +40,6 @@ void Engine::new_game(const bool firstCall)
     // initializing them in the constructor to avoid referencing the
     // `this` pointer in the constructor
     searcher.context.callbacks = search::Callbacks::make_uci_printer(
-        searcher.context,
         [this] { return debugMode.load(); });
 }
 
