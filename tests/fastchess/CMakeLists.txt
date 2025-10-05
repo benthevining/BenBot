@@ -96,5 +96,5 @@ function (add_sprt_test name elo0 elo1 description)
     add_dependencies ("${name}" ben_bot)
 endfunction ()
 
-add_sprt_test (sprt_gain 0 10 "gainer")
-add_sprt_test (sprt_non_regression -10 0 "non-regression")
+add_sprt_test (sprt_gain 0 5 "gainer")
+add_sprt_test (sprt_non_regression -5 0 "non-regression")
