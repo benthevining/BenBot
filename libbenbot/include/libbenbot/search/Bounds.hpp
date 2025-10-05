@@ -94,7 +94,7 @@ constexpr auto Bounds::null_window() const noexcept -> Bounds
     };
 }
 
-constexpr auto Bounds::contains(Score score) const noexcept -> bool
+constexpr auto Bounds::contains(const Score score) const noexcept -> bool
 {
     return score > alpha and score < beta;
 }

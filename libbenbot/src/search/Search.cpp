@@ -355,6 +355,8 @@ namespace {
                 return nullWinScore;
             }();
 
+            ++stats.nodesSearched;
+
             if (score > bounds.alpha) {
                 bounds.alpha = score;
 
