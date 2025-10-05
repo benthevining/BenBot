@@ -57,20 +57,20 @@ namespace {
         {
             moves.front() = move;
 
-            std::copy_n(child.moves.begin(), child.length, std::next(moves.begin()));
+            std::copy_n(
+                child.moves.begin(), child.length,
+                std::next(moves.begin()));
 
             length = child.length + 1;
-
-            assert(length == 1uz or moves.front() != moves[1]);
         }
 
-        [[nodiscard]] MoveList to_movelist() const
+        void reset() noexcept { length = 0uz; }
+
+        void to_movelist(MoveList& list) const
         {
-            MoveList list;
-
-            std::copy_n(moves.begin(), length, std::back_inserter(list));
-
-            return list;
+            std::copy_n(
+                moves.begin(), length,
+                std::back_inserter(list));
         }
 
     private:
@@ -154,6 +154,8 @@ namespace {
             std::optional<Move> bestMove;
 
             for (const auto move : moves) {
+                pv.reset();
+
                 auto child = recurse(move);
 
                 const auto eval = depthLeft > 0uz ? -child.alpha_beta() : -child.quiescence();
@@ -310,9 +312,9 @@ namespace {
 
         detail::order_moves_for_search(options.position, options.movesToSearch, transTable);
 
-        Stats  stats;
-        Bounds bounds;
-        PvList pv;
+        Stats    stats;
+        Bounds   bounds;
+        MoveList pv;
 
         for (const auto move : options.movesToSearch) {
             PvList childPV;
@@ -324,8 +326,12 @@ namespace {
             const auto score = -context.alpha_beta();
 
             if (score > bounds.alpha) {
-                pv.update(move, childPV);
                 bounds.alpha = score;
+
+                pv.clear();
+                pv.emplace_back(move);
+
+                childPV.to_movelist(pv);
             }
 
             if (interrupter.was_aborted())
@@ -333,7 +339,7 @@ namespace {
         }
 
         return {
-            .pv        = pv.to_movelist(),
+            .pv        = pv,
             .bestScore = bounds.alpha,
             .stats     = stats,
             .duration  = timer.get_duration()
