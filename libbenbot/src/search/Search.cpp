@@ -100,8 +100,7 @@ namespace {
         {
         }
 
-        // standard alpha/beta search algorithm
-        [[nodiscard]] auto alpha_beta() -> Score
+        [[nodiscard]] auto alpha_beta() -> Score // NOLINT(readability-function-cognitive-complexity)
         {
             if (interrupter.should_abort())
                 return {};
@@ -138,7 +137,7 @@ namespace {
 
             auto moves = chess::moves::generate(position);
 
-            if (moves.empty() && position.is_check()) {
+            if (moves.empty() and position.is_check()) {
                 const auto score = Score::mate(plyFromRoot);
 
                 transTable.store(
@@ -159,12 +158,22 @@ namespace {
             for (const auto move : moves) {
                 childPV.reset();
 
-                auto child = recurse(move);
+                Score eval;
 
-                const auto eval = depthLeft > 0uz ? -child.alpha_beta() : -child.quiescence();
+                if (depthLeft == 0uz) {
+                    eval = -recurse(move).quiescence();
+                } else {
+                    // principal variation search: if we've found a PV already,
+                    // then test all other moves with a null window first
+                    if (bestMove.has_value()) {
+                        eval = -recurse(move, true).alpha_beta();
 
-                if (interrupter.should_abort())
-                    return {};
+                        if ((eval > bounds.alpha) and (eval < bounds.beta))
+                            eval = -recurse(move).alpha_beta();
+                    } else {
+                        eval = -recurse(move).alpha_beta();
+                    }
+                }
 
                 ++stats.nodesSearched;
 
@@ -187,6 +196,9 @@ namespace {
 
                     pv.update(move, childPV);
                 }
+
+                if (interrupter.should_abort())
+                    return {};
             }
 
             transTable.store(
@@ -253,9 +265,10 @@ namespace {
             return bounds.alpha;
         }
 
-        [[nodiscard]] auto recurse(const Move move) -> AlphaBetaContext
+        [[nodiscard]] auto recurse(
+            const Move move, const bool useNullWindow = false) -> AlphaBetaContext
         {
-            return { bounds.invert(),
+            return { useNullWindow ? bounds.null_window() : bounds.invert(),
                 after_move(position, move),
                 depthLeft > 0uz ? depthLeft - 1uz : 0uz,
                 plyFromRoot + 1uz,
