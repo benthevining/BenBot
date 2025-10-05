@@ -18,7 +18,7 @@
 
 [general]
 
-ignore = title-trailing-punctuation, body-is-missing, body-max-line-length
+ignore = title-trailing-punctuation, body-is-missing, body-max-line-length, body-min-length
 
 fail-without-commits = true
 
@@ -27,6 +27,8 @@ contrib = contrib-title-conventional-commits
 verbosity = 2
 
 regex-style-search = true
+
+staged = true
 
 [title-max-length]
 line-length = 200

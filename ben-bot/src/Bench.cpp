@@ -22,7 +22,6 @@
 #include <filesystem>
 #include <format>
 #include <functional>
-#include <iterator>
 #include <libbenbot/search/Callbacks.hpp>
 #include <libbenbot/search/Result.hpp>
 #include <libbenbot/search/Thread.hpp>
@@ -34,7 +33,6 @@
 #include <memory>
 #include <numeric>
 #include <ranges>
-#include <span>
 #include <string_view>
 #include <thread>
 #include <vector>
@@ -115,17 +113,20 @@ namespace {
         }
     };
 
-    [[nodiscard]] auto get_batch_results(
-        const size_t startIdx, const size_t batchSize,
-        const std::span<const notation::EPDPosition> epds,
-        const size_t                                 defaultDepth,
-        const bool                                   printProgressOutput) -> std::vector<SearchResult>
+    [[nodiscard]] auto get_bench_results(
+        const string_view epdText,
+        const size_t      defaultDepth,
+        const bool        printProgressOutput) -> std::vector<SearchResult>
     {
+        const auto epds = notation::parse_all_epds(epdText);
+
         using ThreadPtr = std::unique_ptr<BenchSearcherThread>;
 
         std::vector<ThreadPtr> searcherThreads;
 
-        for (auto idx = startIdx; idx < startIdx + batchSize; ++idx) {
+        searcherThreads.reserve(epds.size());
+
+        for (auto idx = 0uz; idx < epds.size(); ++idx) {
             searcherThreads.emplace_back(
                 std::make_unique<BenchSearcherThread>(
                     idx + 1uz, // display 1-based thread numbers
@@ -144,37 +145,6 @@ namespace {
                    return thread->get_result();
                })
              | std::ranges::to<std::vector>();
-    }
-
-    [[nodiscard]] auto get_bench_results(
-        const string_view epdText,
-        const size_t      defaultDepth,
-        const bool        printProgressOutput) -> std::vector<SearchResult>
-    {
-        const auto batchSize = static_cast<size_t>(std::thread::hardware_concurrency());
-
-        const auto epds = notation::parse_all_epds(epdText);
-
-        info_string(std::format(
-            "Searching {} positions in batches of {}",
-            epds.size(), batchSize));
-
-        std::vector<SearchResult> results;
-
-        for (auto start = 0uz; start + batchSize < epds.size(); start += batchSize) {
-            std::ranges::copy(
-                get_batch_results(start, batchSize, epds, defaultDepth, printProgressOutput),
-                std::back_inserter(results));
-        }
-
-        if (const auto left = epds.size() % batchSize;
-            left > 0uz) {
-            std::ranges::copy(
-                get_batch_results(epds.size() - left, left, epds, defaultDepth, printProgressOutput),
-                std::back_inserter(results));
-        }
-
-        return results;
     }
 
     void do_bench(
@@ -208,12 +178,6 @@ namespace {
         info_string(std::format("Total nodes: {}", totalNodes));
         info_string(std::format("Total seconds: {}", seconds));
         info_string(std::format("NPS: {}", nps));
-
-        // CTest can parse test output to extract custom test measurements, which CDash can track over time
-        // see https://cmake.org/cmake/help/latest/command/ctest_test.html#additional-test-measurements
-        info_string(std::format(
-            R"-(<DartMeasurement name="Nodes per second" type="numeric/integer">{}</DartMeasurement>)-",
-            nps));
     }
 
 } // namespace
