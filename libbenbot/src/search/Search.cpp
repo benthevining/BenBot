@@ -396,10 +396,12 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         if (interrupter.should_abort())
             break;
 
-        result = root_search(depth, options, transTable, interrupter);
+        const auto res = root_search(depth, options, transTable, interrupter);
 
         if (interrupter.was_aborted())
             break;
+
+        result = res;
 
         totalNodesSearched += result.stats.nodesSearched;
 
