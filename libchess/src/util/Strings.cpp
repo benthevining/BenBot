@@ -35,7 +35,7 @@ using std::string_view;
     return std::isspace(static_cast<unsigned char>(text)) == 0;
 }
 
-[[nodiscard]] auto trim_start(string_view text) noexcept -> string_view
+[[nodiscard]] auto trim_start(string_view text) noexcept -> string_view // NOLINT(bugprone-exception-escape)
 {
     return text.substr(
         static_cast<size_t>(
@@ -112,6 +112,7 @@ auto split_at_first_space(const string_view input) -> StringViewPair
 
 auto split_at_first_space_or_newline(const string_view input) -> StringViewPair
 {
+    // TODO: will \r\n sequences on Windows mess this up?
     const auto firstDelimIdx = std::min(
         input.find(' '),
         input.find('\n'));

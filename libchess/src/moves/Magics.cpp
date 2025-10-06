@@ -116,7 +116,7 @@ namespace {
 
     namespace masks = board::masks;
 
-    using MaskArray = std::array<Bitboard, 64uz>;
+    using MaskArray = std::array<Bitboard, board::NUM_SQUARES>;
 
     [[nodiscard]] consteval auto calculate_bishop_masks() -> MaskArray
     {
@@ -214,7 +214,7 @@ namespace {
 
         result.resize(88772uz);
 
-        for (auto i = 0uz; i < 64uz; ++i) {
+        for (auto i = 0uz; i < board::NUM_SQUARES; ++i) {
             const auto square = Square::from_index(static_cast<BitboardIndex>(i));
 
             // Bishops

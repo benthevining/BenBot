@@ -315,7 +315,7 @@ namespace {
 
         Stats    stats;
         Bounds   bounds;
-        MoveList pv; // NOLINT(readability-identifier-length)
+        MoveList pv;
 
         bool foundPV = false;
 

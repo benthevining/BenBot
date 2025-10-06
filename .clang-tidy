@@ -63,9 +63,9 @@ CheckOptions:
 - key: readability-identifier-length.MinimumLoopCounterNameLength
   value: 1
 - key: readability-identifier-length.IgnoredVariableNames
-  value: it
+  value: it|pv
 - key: readability-identifier-length.IgnoredParameterNames
-  value: it
+  value: it|pv
 - key: readability-inconsistent-declaration-parameter-name.Strict
   value: true
 - key: readability-redundant-access-specifiers.CheckFirstDeclaration

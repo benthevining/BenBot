@@ -49,13 +49,15 @@ auto BoolOption::get_declaration_string() const -> string
         optionName, optionDefault);
 }
 
+static constexpr string_view VALUE_TOKEN { "value" };
+
 void BoolOption::handle_setvalue(const string_view arguments)
 {
     auto [valueToken, valueStr] = split_at_first_space(arguments);
 
     valueToken = trim(valueToken);
 
-    if (valueToken != "value")
+    if (valueToken != VALUE_TOKEN)
         return;
 
     valueStr = trim(valueStr);
@@ -103,7 +105,7 @@ void IntOption::handle_setvalue(const string_view arguments)
 
     valueToken = trim(valueToken);
 
-    if (valueToken != "value")
+    if (valueToken != VALUE_TOKEN)
         return;
 
     const auto newValue = util::int_from_string(trim(valueStr), value);
@@ -149,7 +151,7 @@ void ComboOption::handle_setvalue(const string_view arguments)
 
     valueToken = trim(valueToken);
 
-    if (valueToken != "value")
+    if (valueToken != VALUE_TOKEN)
         return;
 
     valueStr = trim(valueStr);
@@ -157,6 +159,7 @@ void ComboOption::handle_setvalue(const string_view arguments)
     if (std::ranges::contains(possibleValues, valueStr)) {
         value = valueStr;
     } else {
+        [[unlikely]];
         value = optionDefault;
     }
 
@@ -190,7 +193,7 @@ void StringOption::handle_setvalue(const string_view arguments)
 
     valueToken = trim(valueToken);
 
-    if (valueToken != "value")
+    if (valueToken != VALUE_TOKEN)
         return;
 
     value = trim(valueStr);

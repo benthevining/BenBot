@@ -464,7 +464,9 @@ namespace {
             write_metadata_item(key, value, output);
         }
 
-        if (startingPosition != Position {}) {
+        static const Position startPos {};
+
+        if (startingPosition != startPos) {
             if (not metadata.contains("FEN"s)) {
                 const auto startFEN = to_fen(startingPosition);
                 write_metadata_item("FEN", startFEN, output);

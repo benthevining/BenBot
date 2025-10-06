@@ -28,14 +28,20 @@
 namespace chess::uci {
 
 using printing::info_string;
+using std::cout;
 using std::println;
+using std::string_view;
 using util::split_at_first_space;
 using util::trim;
+
+// NB. With our println calls, we explicitly provide std::cout as the first parameter, because
+// when the first parameter is omitted, the default overload writes to the FILE* stdout, but we
+// want to use C++ iostreams for all our I/O so that our logging facility works correctly
 
 // defined out-of-line to address -Wweak-vtables
 EngineBase::~EngineBase() = default;
 
-void EngineBase::handle_command(std::string_view command)
+void EngineBase::handle_command(string_view command)
 {
     command = trim(command);
 
@@ -52,8 +58,8 @@ void EngineBase::handle_command(std::string_view command)
         if (not is_searching())
             wait();
 
-        println(std::cout, "readyok");
-        std::cout.flush();
+        println(cout, "readyok");
+        cout.flush();
         return;
     }
 
@@ -117,15 +123,15 @@ void EngineBase::respond_to_uci()
 {
     // this command is sent once after program boot
 
-    println(std::cout, "id name {}", get_name());
-    println(std::cout, "id author {}", get_author());
+    println(cout, "id name {}", get_name());
+    println(cout, "id author {}", get_author());
 
     for (const auto* option : get_options())
-        println(std::cout, "{}", option->get_declaration_string());
+        println(cout, "{}", option->get_declaration_string());
 
-    println(std::cout, "uciok");
+    println(cout, "uciok");
 
-    std::cout.flush();
+    cout.flush();
 }
 
 void EngineBase::handle_setpos(const string_view arguments)
@@ -160,7 +166,7 @@ void EngineBase::handle_setpos(const string_view arguments)
 
                   return {};
               })
-              .or_else([this](const std::string_view error) -> MaybeError {
+              .or_else([this](const string_view error) -> MaybeError {
                   info_string(std::format("Error setting position: {}", error));
                   info_string(std::format("Retained previous position: {}", notation::to_fen(position)));
 

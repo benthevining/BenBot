@@ -68,16 +68,16 @@ namespace {
             }
 
             if (whitePieces.test(square)) {
-                const auto type = position.whitePieces.get_piece_on(square);
-
-                output.push_back(to_char(type.value(), true));
+                output.push_back(to_char(
+                    position.whitePieces.get_piece_on(square).value(),
+                    true));
 
                 continue;
             }
 
-            const auto type = position.blackPieces.get_piece_on(square);
-
-            output.push_back(to_char(type.value(), false));
+            output.push_back(to_char(
+                position.blackPieces.get_piece_on(square).value(),
+                false));
         }
 
         if (consecutiveEmpty > 0uz)
@@ -172,7 +172,7 @@ namespace {
                     position.whitePieces.king.set(index);
                     break;
 
-                    // NB. these are all 1 less because index is incremented down below
+                    // NB. These are all 1 less because index is incremented down below
                 case '1': break;
                 case '2': ++index; break;
                 case '3': index += 2uz; break;
@@ -264,11 +264,11 @@ void parse_en_passant_target_square(
         return;
     }
 
-    Square::from_string(fenFragment)
-        .and_then([&position](const Square epSqare) {
-            position.enPassantTargetSquare = epSqare;
-            return std::expected<void, string> {};
-        });
+    [[maybe_unused]] const auto result = Square::from_string(fenFragment)
+                                             .and_then([&position](const Square epSqare) {
+                                                 position.enPassantTargetSquare = epSqare;
+                                                 return std::expected<void, string> {};
+                                             });
 }
 
 } // namespace chess::notation::fen_helpers

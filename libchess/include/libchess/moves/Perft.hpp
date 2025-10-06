@@ -136,7 +136,7 @@ auto perft( // NOLINT(readability-function-cognitive-complexity)
 
     PerftResult result;
 
-    for (const auto& move : generate(startingPosition)) {
+    for (const auto move : generate(startingPosition)) {
         const auto newPosition = after_move(startingPosition, move);
 
         // we want stats only for leaf nodes

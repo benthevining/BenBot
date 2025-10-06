@@ -19,6 +19,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstddef> // IWYU pragma: keep - for size_t
+#include <expected>
 #include <filesystem>
 #include <format>
 #include <functional>
@@ -33,8 +34,8 @@
 #include <memory>
 #include <numeric>
 #include <ranges>
+#include <string>
 #include <string_view>
-#include <thread>
 #include <vector>
 
 namespace ben_bot {
@@ -202,17 +203,27 @@ void Engine::run_bench(const string_view arguments) const
 
     const auto absPathStr = epdPath.string(); // NOLINT(build/include_what_you_use)
 
-    info_string(std::format("Running bench for {}...", absPathStr));
+    using Placeholder = std::expected<void, std::string>;
 
-    // output the filename for CTest to detect & upload with the test info
-    // see https://cmake.org/cmake/help/latest/command/ctest_test.html#attached-files
-    info_string(std::format(
-        R"-(<CTestMeasurementFile type="file" name="BenchData">{}</CTestMeasurementFile>)-",
-        absPathStr));
+    [[maybe_unused]] const auto result = util::load_file_as_string(epdPath)
+                                             .and_then([&absPathStr, this, defaultDepth](const string_view fileContent) {
+                                                 info_string(std::format("Running bench for {}...", absPathStr));
 
-    do_bench(
-        util::load_file_as_string(epdPath),
-        defaultDepth, debugMode.load());
+                                                 // output the filename for CTest to detect & upload with the test info
+                                                 // see https://cmake.org/cmake/help/latest/command/ctest_test.html#attached-files
+                                                 info_string(std::format(
+                                                     R"-(<CTestMeasurementFile type="file" name="BenchData">{}</CTestMeasurementFile>)-",
+                                                     absPathStr));
+
+                                                 do_bench(fileContent, defaultDepth, debugMode.load());
+
+                                                 return Placeholder {};
+                                             })
+                                             .or_else([](const string_view error) {
+                                                 info_string(error);
+
+                                                 return Placeholder {};
+                                             });
 }
 
 } // namespace ben_bot

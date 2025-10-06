@@ -12,7 +12,7 @@
  * ======================================================================================
  */
 
-#include "DetectArch.hpp"
+#include "DetectArch.hpp" // IWYU pragma: keep
 #include <functional>
 #include <libchess/util/Threading.hpp>
 #include <utility>

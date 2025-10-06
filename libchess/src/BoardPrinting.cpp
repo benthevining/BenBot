@@ -12,6 +12,7 @@
  * ======================================================================================
  */
 
+#include <concepts>
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
@@ -38,26 +39,33 @@
 
 namespace chess {
 
+using board::Square;
 using std::string;
+using std::string_view;
 
 namespace {
+    template <typename Func>
+    concept SquarePrinter = std::regular_invocable<Func, Square>
+                        and (std::same_as<std::invoke_result_t<Func, Square>, char>
+                             or std::same_as<std::invoke_result_t<Func, Square>, string_view>);
+
     // Func is a callable that takes an argument of type Square
     // and must return the text to go inside that square, or
     // a space if it's empty
-    template <bool IncludeLabels, typename Func>
-    [[nodiscard, gnu::cold]] auto generate_board_string(
-        Func getSquareText)
-        -> string
+    template <bool IncludeLabels, SquarePrinter Func>
+    [[nodiscard, gnu::cold]] auto generate_board_string(Func getSquareText) -> string
     {
+        static constexpr bool FuncReturnsChar = std::is_same_v<char, std::invoke_result_t<Func, Square>>;
+
         string result;
 
         for (const auto rank : std::views::reverse(magic_enum::enum_values<board::Rank>())) {
             result.append(1uz, '|');
 
             for (const auto file : magic_enum::enum_values<board::File>()) {
-                const board::Square square { .file = file, .rank = rank };
+                const Square square { .file = file, .rank = rank };
 
-                if constexpr (std::is_same_v<char, std::invoke_result_t<Func, board::Square>>) {
+                if constexpr (FuncReturnsChar) {
                     result.append(1uz, getSquareText(square));
                 } else {
                     result.append(getSquareText(square));
@@ -93,8 +101,6 @@ namespace board {
 } // namespace board
 
 namespace game {
-    using board::Square;
-
     auto print_utf8(const Position& position) -> string
     {
         namespace utf8_pieces = pieces::utf8;
@@ -107,7 +113,7 @@ namespace game {
                         return position.blackPieces.get_piece_on(square)
                             .transform([](const PieceType type) { return utf8_pieces::black::get(type); });
                     })
-                    .value_or(std::string_view { " " });
+                    .value_or(string_view { " " });
             });
     }
 

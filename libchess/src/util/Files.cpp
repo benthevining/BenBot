@@ -12,7 +12,10 @@
  * ======================================================================================
  */
 
+#include <exception>
+#include <expected>
 #include <filesystem>
+#include <format>
 #include <fstream>
 #include <ios>
 #include <iterator>
@@ -21,18 +24,32 @@
 
 namespace chess::util {
 
+using std::string;
+
 auto load_file_as_string(
     const std::filesystem::path& file)
-    -> std::string
+    -> std::expected<string, string>
 {
     std::ifstream input { absolute(file) };
 
-    input.exceptions(
-        std::ios_base::badbit | std::ios_base::failbit);
+    if (not input.is_open()) {
+        return std::unexpected(std::format(
+            "Could not open file at path '{}'",
+            file.string()));
+    }
 
-    using Iterator = std::istreambuf_iterator<char>;
+    try {
+        input.exceptions(
+            std::ios_base::badbit | std::ios_base::failbit);
 
-    return { Iterator { input }, Iterator {} };
+        using Iterator = std::istreambuf_iterator<char>;
+
+        return string { Iterator { input }, Iterator {} };
+    } catch (const std::exception& exception) {
+        return std::unexpected(std::format(
+            "Error while reading file at path '{}': {}",
+            file.string(), exception.what()));
+    }
 }
 
 } // namespace chess::util

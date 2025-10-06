@@ -58,7 +58,7 @@ void best_move(
     @ingroup uci
     @see search_info()
 
-    @todo ``multipv``, ``currmove``, ``currmovenumber``, ``cpuload``, ``refutation``, ``currline``
+    @todo ``multipv``, ``currmove``, ``currmovenumber``, ``refutation``, ``currline``
  */
 struct SearchInfo final {
     /** Represents the engine's evaluation of the line it is currently searching. */

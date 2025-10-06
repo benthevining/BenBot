@@ -19,17 +19,18 @@
 
 #pragma once
 
+#include <expected>
 #include <filesystem>
 #include <string>
 
 namespace chess::util {
 
 /** Loads the file's content as a string.
-    Throws an exception if the file cannot be loaded.
+    If the file cannot be loaded, returns an explanatory error message.
 
-    @todo Return std::expected
     @ingroup util
  */
-[[nodiscard]] auto load_file_as_string(const std::filesystem::path& file) -> std::string;
+[[nodiscard]] auto load_file_as_string(const std::filesystem::path& file)
+    -> std::expected<std::string, std::string>;
 
 } // namespace chess::util

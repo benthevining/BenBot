@@ -63,10 +63,12 @@ private:
 
 auto Tie::sync() -> int
 {
-    const bool logSuccess = logBuf.pubsync() == 0;
-    const bool bufSuccess = buf.pubsync() == 0;
+    static constexpr auto SUCCESS = 0;
 
-    return logSuccess and bufSuccess ? 0 : -1;
+    const bool logSuccess = logBuf.pubsync() == SUCCESS;
+    const bool bufSuccess = buf.pubsync() == SUCCESS;
+
+    return logSuccess and bufSuccess ? SUCCESS : -1;
 }
 
 auto Tie::overflow(const int_type character) -> int_type
@@ -130,7 +132,7 @@ auto Logger::start(const path& logFile) -> MaybeError
     if (logFile.empty())
         return {};
 
-    logger.file.open(logFile, std::ifstream::out);
+    logger.file.open(logFile, std::ios_base::out);
 
     if (not logger.file.is_open()) {
         return std::unexpected(

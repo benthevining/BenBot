@@ -27,29 +27,38 @@
 
 namespace chess::notation {
 
-auto to_uci(const Move& move) -> std::string
+using std::string;
+using std::string_view;
+
+using PieceType = pieces::Type;
+
+static constexpr string_view UCI_NULL_MOVE { "0000" };
+
+auto to_uci(const Move move) -> string
 {
     if (move.is_null()) {
         [[unlikely]];
-        return "0000";
+        return string { UCI_NULL_MOVE };
     }
 
     return move.promoted_type()
-        .transform([move](const pieces::Type promotedType) {
+        .transform([move](const PieceType promotedType) {
             return std::format("{}{}{}",
                 move.from(), move.to(),
                 pieces::to_char(promotedType, false));
         })
-        .or_else([move]() -> std::optional<std::string> {
-            return std::format("{}{}", move.from(), move.to());
+        .or_else([move] {
+            return std::optional {
+                std::format("{}{}", move.from(), move.to())
+            };
         })
         .value();
 }
 
-using MoveOrError = std::expected<Move, std::string>;
+using MoveOrError = std::expected<Move, string>;
 
 auto from_uci(
-    const Position& position, std::string_view text)
+    const Position& position, string_view text)
     -> MoveOrError
 {
     using board::Square;
@@ -58,10 +67,10 @@ auto from_uci(
 
     if (text.empty()) {
         [[unlikely]];
-        return std::unexpected("Cannot parse Move from empty string");
+        return std::unexpected("Cannot parse UCI move from empty string");
     }
 
-    if (text == "0000") {
+    if (text == UCI_NULL_MOVE) {
         [[unlikely]];
         return Move {};
     }
@@ -76,7 +85,7 @@ auto from_uci(
 
                     return position.our_pieces()
                         .get_piece_on(from)
-                        .transform([text, from, dest](const pieces::Type movedType) -> MoveOrError {
+                        .transform([text, from, dest](const PieceType movedType) -> MoveOrError {
                             if (text.empty())
                                 return Move { from, dest, movedType };
 
@@ -84,10 +93,10 @@ auto from_uci(
                             [[unlikely]];
 
                             return pieces::from_string(text)
-                                .transform([from, dest, movedType](const pieces::Type promotedType) {
+                                .transform([from, dest, movedType](const PieceType promotedType) {
                                     return Move { from, dest, movedType, promotedType };
                                 })
-                                .or_else([](const std::string_view parseError) -> MoveOrError {
+                                .or_else([](const string_view parseError) -> MoveOrError {
                                     return std::unexpected(
                                         std::format(
                                             "Error parsing promoted type: {}",

@@ -25,30 +25,42 @@
 
 namespace chess::uci::printing {
 
-void info_string(const std::string_view info)
-{
-    std::println(std::cout, "info string {}", info);
-}
+// NB. With our println calls, we explicitly provide std::cout as the first parameter, because
+// when the first parameter is omitted, the default overload writes to the FILE* stdout, but we
+// want to use C++ iostreams for all our I/O so that our logging facility works correctly
 
 using notation::to_uci;
+using std::cout;
+using std::println;
+using std::string;
+using std::string_view;
+
+void info_string(const string_view info)
+{
+    println(cout, "info string {}", info);
+}
 
 namespace {
-    [[nodiscard]] auto ponder_move_string(const std::optional<Move> ponderMove) -> std::string
+    [[nodiscard]] auto ponder_move_string(
+        const std::optional<Move> ponderMove)
+        -> string
     {
         return ponderMove
-            .transform([](const Move move) { return std::format(" ponder {}", to_uci(move)); })
-            .value_or(std::string {});
+            .transform([](const Move move) {
+                return std::format(" ponder {}", to_uci(move));
+            })
+            .value_or(string {});
     }
 } // namespace
 
 void best_move(
     const Move bestMove, const std::optional<Move> ponderMove)
 {
-    std::println(std::cout,
+    println(cout,
         "bestmove {}{}",
         to_uci(bestMove), ponder_move_string(ponderMove));
 
-    std::cout.flush();
+    cout.flush();
 }
 
 namespace {
@@ -60,21 +72,21 @@ namespace {
         return plies / 2;
     }
 
-    [[nodiscard]] auto base_score_string(const SearchInfo::Score& score) -> std::string
+    [[nodiscard]] auto base_score_string(const SearchInfo::Score& score) -> string
     {
         return score.cp
-            .transform([](const int cp) {
-                return std::format("cp {}", cp);
+            .transform([](const int centipawns) {
+                return std::format("cp {}", centipawns);
             })
             .or_else([&score] {
                 return score.mate.transform([](const int pliesToMate) {
                     return std::format("mate {}", plies_to_moves(pliesToMate));
                 });
             })
-            .value_or(std::string {});
+            .value_or(string {});
     }
 
-    [[nodiscard]] auto score_string(const SearchInfo::Score& score) -> std::string
+    [[nodiscard]] auto score_string(const SearchInfo::Score& score) -> string
     {
         auto string = base_score_string(score);
 
@@ -86,14 +98,14 @@ namespace {
         return string;
     }
 
-    [[nodiscard]] auto pv_string(const moves::MoveList& pv) -> std::string
+    [[nodiscard]] auto pv_string(const moves::MoveList& pv) -> string
     {
         if (pv.empty()) {
             [[unlikely]];
             return {};
         }
 
-        std::string result { " pv " };
+        string result { " pv " };
 
         for (const auto move : pv) {
             result.append(to_uci(move));
@@ -119,7 +131,7 @@ namespace {
         return static_cast<size_t>(std::round(nps));
     }
 
-    [[nodiscard]] auto get_extra_info_string(const std::string_view info) -> std::string
+    [[nodiscard]] auto get_extra_info_string(const string_view info) -> string
     {
         if (info.empty())
             return {};
@@ -130,7 +142,7 @@ namespace {
 
 void search_info(const SearchInfo& info)
 {
-    std::println(std::cout,
+    println(cout,
         "info depth {} score {} time {} hashfull {} nodes {} nps {} seldepth {} tbhits {}{}{}",
         info.depth,
         score_string(info.score),
@@ -140,7 +152,7 @@ void search_info(const SearchInfo& info)
         pv_string(info.pv),
         get_extra_info_string(info.extraInformation));
 
-    std::cout.flush();
+    cout.flush();
 }
 
 } // namespace chess::uci::printing

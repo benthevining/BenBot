@@ -26,16 +26,16 @@ int main(const int argc, const char** argv)
 try {
     chess::util::enable_utf8_console_output();
 
-    const auto args = ben_bot::Arguments::parse(argc, argv);
+    const auto [noLoop, uciCommand] = ben_bot::Arguments::parse(argc, argv);
 
     ben_bot::Engine engine;
 
-    if (not args.uciCommand.empty()) {
+    if (not uciCommand.empty()) {
         [[unlikely]];
-        engine.handle_command(args.uciCommand);
+        engine.handle_command(uciCommand);
     }
 
-    if (not args.noLoop) {
+    if (not noLoop) {
         [[likely]];
         engine.loop();
     }

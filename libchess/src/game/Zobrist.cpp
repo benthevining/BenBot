@@ -15,6 +15,7 @@
 #include "Zobrist.hpp"
 #include <array>
 #include <functional>
+#include <libchess/board/BitboardIndex.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Masks.hpp>
 #include <libchess/board/Pieces.hpp>
@@ -221,8 +222,10 @@ namespace {
         const PieceType type, const Color side, const Square& square)
         -> Hash
     {
-        const auto typeOffset = 64uz * std::to_underlying(type) * 2uz;
-        const auto sideOffset = 64uz * std::to_underlying(side);
+        static constexpr auto squares = static_cast<size_t>(board::NUM_SQUARES);
+
+        const auto typeOffset = squares * std::to_underlying(type) * 2uz;
+        const auto sideOffset = squares * std::to_underlying(side);
 
         const auto index = typeOffset + sideOffset + square.index();
 
