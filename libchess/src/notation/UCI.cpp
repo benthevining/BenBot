@@ -67,7 +67,7 @@ auto from_uci(
 
     if (text.empty()) {
         [[unlikely]];
-        return std::unexpected("Cannot parse UCI move from empty string");
+        return std::unexpected { "Cannot parse UCI move from empty string" };
     }
 
     if (text == UCI_NULL_MOVE) {
@@ -97,17 +97,18 @@ auto from_uci(
                                     return Move { from, dest, movedType, promotedType };
                                 })
                                 .or_else([](const string_view parseError) -> MoveOrError {
-                                    return std::unexpected(
+                                    return std::unexpected {
                                         std::format(
                                             "Error parsing promoted type: {}",
-                                            parseError));
+                                            parseError)
+                                    };
                                 });
                         })
                         .value_or(
-                            std::unexpected(
+                            std::unexpected {
                                 std::format(
                                     "No piece for color {} can move from square {}",
-                                    magic_enum::enum_name(position.sideToMove), from)));
+                                    magic_enum::enum_name(position.sideToMove), from) });
                 });
         });
 }

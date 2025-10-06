@@ -91,10 +91,11 @@ auto find_matching_close_paren(const string_view input) -> std::expected<size_t,
         }
     }
 
-    return std::unexpected(
+    return std::unexpected {
         std::format(
             "Unmatched ( in input string: '{}'",
-            input));
+            input)
+    };
 }
 
 auto split_at_first_space(const string_view input) -> StringViewPair

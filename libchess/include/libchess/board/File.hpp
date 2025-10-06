@@ -134,10 +134,11 @@ inline auto file_from_char(char character)
         case 'H': return File::H;
 
         default:
-            return std::unexpected(
+            return std::unexpected {
                 std::format(
                     "Cannot parse File from character: {}",
-                    character));
+                    character)
+            };
     }
 }
 

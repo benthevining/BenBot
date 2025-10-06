@@ -71,7 +71,7 @@ namespace {
             const auto closingBracketIdx = pgnText.find(']', openingBracketIdx + 1uz);
 
             if (closingBracketIdx == string_view::npos)
-                return std::unexpected("Invalid PGN: expected ']' following '['");
+                return std::unexpected { "Invalid PGN: expected ']' following '['" };
 
             assert(closingBracketIdx > openingBracketIdx);
 
@@ -114,7 +114,7 @@ namespace {
         const auto closeBracketIdx = pgnText.find('}');
 
         if (closeBracketIdx == string_view::npos)
-            return std::unexpected("Expected '}' following '{'");
+            return std::unexpected { "Expected '}' following '{'" };
 
         if (not output.empty())
             output.back().comment = pgnText.substr(1uz, closeBracketIdx - 1uz);
@@ -217,7 +217,7 @@ namespace {
                     const auto rest = parse_block_comment(pgnText, output);
 
                     if (not rest.has_value())
-                        return std::unexpected(rest.error());
+                        return std::unexpected { rest.error() };
 
                     pgnText = rest.value();
                     continue;
@@ -240,7 +240,7 @@ namespace {
                     const auto rest = parse_variation(pgnText, lastPos, output);
 
                     if (not rest.has_value())
-                        return std::unexpected(rest.error());
+                        return std::unexpected { rest.error() };
 
                     pgnText = rest.value();
                     continue;
@@ -287,7 +287,7 @@ namespace {
         assert(pgnText.front() == '(');
 
         if (output.empty())
-            return std::unexpected("Cannot parse a variation with an empty move list!");
+            return std::unexpected { "Cannot parse a variation with an empty move list!" };
 
         return util::find_matching_close_paren(pgnText)
             .and_then([pgnText, &position, &output](const size_t closeParenIdx) {

@@ -238,10 +238,11 @@ inline auto Square::from_string(const std::string_view text)
     -> std::expected<Square, std::string>
 {
     if (text.length() != 2uz) {
-        return std::unexpected(
+        return std::unexpected {
             std::format(
                 "Cannot parse Square from invalid input string: {}",
-                text));
+                text)
+        };
     }
 
     return rank_from_char(text.back())

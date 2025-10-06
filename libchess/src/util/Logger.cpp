@@ -135,10 +135,11 @@ auto Logger::start(const path& logFile) -> MaybeError
     logger.file.open(logFile, std::ios_base::out);
 
     if (not logger.file.is_open()) {
-        return std::unexpected(
+        return std::unexpected {
             std::format(
                 "Unable to open log file at path '{}'",
-                logFile.string()));
+                logFile.string())
+        };
     }
 
     std::cin.rdbuf(&logger.in);

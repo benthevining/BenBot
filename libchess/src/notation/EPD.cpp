@@ -74,7 +74,7 @@ auto from_epd(string_view epdString) -> PositionOrError
     epdString = util::trim(epdString);
 
     if (epdString.empty())
-        return std::unexpected("Cannot parse Position from empty EPD string");
+        return std::unexpected { "Cannot parse Position from empty EPD string" };
 
     EPDPosition pos {
         .position   = Position::empty(),

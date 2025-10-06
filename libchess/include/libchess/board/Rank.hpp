@@ -176,10 +176,11 @@ inline auto rank_from_char(const char character)
         case '8': return Rank::Eight;
 
         default:
-            return std::unexpected(
+            return std::unexpected {
                 std::format(
                     "Cannot parse Rank from character: {}",
-                    character));
+                    character)
+            };
     }
 }
 

@@ -67,7 +67,7 @@ auto parse_position_options(string_view options)
         const auto fenPos = notation::from_fen(fenString);
 
         if (not fenPos.has_value())
-            return std::unexpected(fenPos.error());
+            return std::unexpected { fenPos.error() };
 
         position = fenPos.value();
 
@@ -97,12 +97,12 @@ auto parse_position_options(string_view options)
         const auto parsed = notation::from_uci(position, firstMove);
 
         if (not parsed.has_value())
-            return std::unexpected(parsed.error());
+            return std::unexpected { parsed.error() };
 
         const auto move = parsed.value();
 
         if (move.is_null())
-            return std::unexpected("Found null move in move list");
+            return std::unexpected { "Found null move in move list" };
 
         position.make_move(move);
 

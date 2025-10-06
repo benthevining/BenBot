@@ -154,7 +154,7 @@ namespace {
 
         do {
             if (fenFragment.empty())
-                return std::unexpected("Unexpected end of piece positions FEN fragment");
+                return std::unexpected { "Unexpected end of piece positions FEN fragment" };
 
             switch (fenFragment.front()) {
                 case 'p': position.blackPieces.pawns.set(index); break;
@@ -186,10 +186,11 @@ namespace {
                     return fenFragment.substr(1uz);
 
                 default:
-                    return std::unexpected(
+                    return std::unexpected {
                         std::format(
                             "Unexpected char in piece positions FEN fragment: {}",
-                            fenFragment.front()));
+                            fenFragment.front())
+                    };
             }
 
             ++index;
@@ -212,7 +213,7 @@ auto parse_piece_positions(
         const auto left = parse_rank(rank, fenFragment, position);
 
         if (not left.has_value())
-            return std::unexpected(left.error());
+            return std::unexpected { left.error() };
 
         fenFragment = left.value();
     }
@@ -228,10 +229,11 @@ auto parse_side_to_move(
     -> std::expected<void, string>
 {
     if (fenFragment.length() != 1uz) {
-        return std::unexpected(
+        return std::unexpected {
             std::format(
                 "Expected single character for side to move, got: {}",
-                fenFragment));
+                fenFragment)
+        };
     }
 
     const bool isBlack = fenFragment.front() == 'b';

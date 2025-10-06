@@ -33,9 +33,9 @@ auto load_file_as_string(
     std::ifstream input { absolute(file) };
 
     if (not input.is_open()) {
-        return std::unexpected(std::format(
+        return std::unexpected { std::format(
             "Could not open file at path '{}'",
-            file.string()));
+            file.string()) };
     }
 
     try {
@@ -46,9 +46,9 @@ auto load_file_as_string(
 
         return string { Iterator { input }, Iterator {} };
     } catch (const std::exception& exception) {
-        return std::unexpected(std::format(
+        return std::unexpected { std::format(
             "Error while reading file at path '{}': {}",
-            file.string(), exception.what()));
+            file.string(), exception.what()) };
     }
 }
 

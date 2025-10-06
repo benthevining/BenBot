@@ -167,19 +167,21 @@ namespace {
         if (std::cmp_greater(
                 std::ranges::count_if(possibleOrigins, moveStartsOnFile),
                 1)) {
-            return std::unexpected(
+            return std::unexpected {
                 std::format(
                     "Disambiguation given file {}, but multiple pieces of this type can move to the target square from this file!",
-                    file));
+                    file)
+            };
         }
 
         const auto move = std::ranges::find_if(possibleOrigins, moveStartsOnFile);
 
         if (move == possibleOrigins.end()) {
-            return std::unexpected(
+            return std::unexpected {
                 std::format(
                     "Disambiguation given file {}, but no piece of this type can move to the target square from this file!",
-                    file));
+                    file)
+            };
         }
 
         return move->from();
@@ -194,19 +196,21 @@ namespace {
         if (std::cmp_greater(
                 std::ranges::count_if(possibleOrigins, moveStartsOnRank),
                 1)) {
-            return std::unexpected(
+            return std::unexpected {
                 std::format(
                     "Disambiguation given rank {}, but multiple pieces of this type can move to the target square from this rank!",
-                    rank));
+                    rank)
+            };
         }
 
         const auto move = std::ranges::find_if(possibleOrigins, moveStartsOnRank);
 
         if (move == possibleOrigins.end()) {
-            return std::unexpected(
+            return std::unexpected {
                 std::format(
                     "Disambiguation given rank {}, but no piece of this type can move to the target square from this rank!",
-                    rank));
+                    rank)
+            };
         }
 
         return move->from();
@@ -220,20 +224,22 @@ namespace {
         const auto possibleOrigins = get_possible_move_origins(position, targetSquare, piece);
 
         if (possibleOrigins.empty()) {
-            return std::unexpected(
+            return std::unexpected {
                 std::format(
                     "No piece of type {} can legally reach square {}",
-                    piece, targetSquare));
+                    piece, targetSquare)
+            };
         }
 
         if (possibleOrigins.size() == 1uz)
             return possibleOrigins.front().from();
 
         if (text.empty()) {
-            return std::unexpected(
+            return std::unexpected {
                 std::format(
                     "Multiple pieces of type {} can legally reach square {}, but no disambiguation string was provided",
-                    piece, targetSquare));
+                    piece, targetSquare)
+            };
         }
 
         if (text.length() > 1uz)
@@ -282,10 +288,11 @@ namespace {
             case '8': return get_starting_square_from_rank(possibleOrigins, Rank::Eight);
 
             default: {
-                return std::unexpected(
+                return std::unexpected {
                     std::format(
                         "Unrecognized character in disambiguation string: {}",
-                        text.front()));
+                        text.front())
+                };
             }
         }
     }
@@ -399,7 +406,7 @@ auto from_alg(const Position& position, string_view text) -> MoveOrError
     text = util::trim(text);
 
     if (text.empty())
-        return std::unexpected("Cannot parse Move from empty string");
+        return std::unexpected { "Cannot parse Move from empty string" };
 
     if (text.back() == '+' or text.back() == '#')
         text.remove_suffix(1uz);

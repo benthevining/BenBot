@@ -157,10 +157,11 @@ inline auto from_string(std::string_view text)
         case 'K': return Type::King;
 
         default:
-            return std::unexpected(
+            return std::unexpected {
                 std::format(
                     "Cannot parse piece type from invalid input string: {}",
-                    text));
+                    text)
+            };
     }
 }
 

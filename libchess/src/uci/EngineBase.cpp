@@ -155,8 +155,9 @@ void EngineBase::handle_setpos(const string_view arguments)
                   if constexpr (SanitizeIncomingPositions) {
                       if (const auto errorStr = pos.is_illegal()) {
                           [[unlikely]];
-                          return std::unexpected(
-                              std::format("Position is illegal: {}", errorStr.value()));
+                          return std::unexpected {
+                              std::format("Position is illegal: {}", errorStr.value())
+                          };
                       }
                   }
 

@@ -81,7 +81,7 @@ auto from_fen(std::string_view fenString) -> PositionOrError
     fenString = util::trim(fenString);
 
     if (fenString.empty())
-        return std::unexpected("Cannot parse Position from empty FEN string");
+        return std::unexpected { "Cannot parse Position from empty FEN string" };
 
     auto position = Position::empty();
 
