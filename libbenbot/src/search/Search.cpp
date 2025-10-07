@@ -169,13 +169,13 @@ namespace {
                 if (eval >= bounds.beta) {
                     transTable.store(
                         position, { .searchedDepth = depthLeft,
-                                      .eval        = bounds.beta.to_tt(),
+                                      .eval        = eval.to_tt(),
                                       .evalType    = EvalType::Beta,
                                       .bestMove    = bestMove });
 
                     ++stats.betaCutoffs;
 
-                    return bounds.beta;
+                    return eval;
                 }
 
                 if (eval > bounds.alpha) {
@@ -242,7 +242,7 @@ namespace {
 
                 if (evaluation >= bounds.beta) {
                     ++stats.betaCutoffs;
-                    return bounds.beta;
+                    return evaluation;
                 }
 
                 bounds.alpha = std::max(bounds.alpha, evaluation);
