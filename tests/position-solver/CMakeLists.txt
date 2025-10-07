@@ -25,7 +25,7 @@ file (GLOB testcase_files LIST_DIRECTORIES false CONFIGURE_DEPENDS
                                                  "${CMAKE_CURRENT_LIST_DIR}/data/*.epd"
 )
 
-list (APPEND CMAKE_CONFIGURE_DEPENDS ${testcase_files})
+set_property (DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${testcase_files})
 
 foreach (epd_file IN LISTS testcase_files)
     cmake_path (GET epd_file STEM filename)
