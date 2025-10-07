@@ -141,13 +141,13 @@ namespace {
 
             // reverse futility pruning
             if constexpr (not PVNode) {
-                if (not inCheck and depthLeft <= 6uz) {
-                    const auto margin = 150 * static_cast<int>(depthLeft);
+                if (not inCheck /*and depthLeft <= 6uz*/) {
+                    const auto margin = 80 * static_cast<int>(depthLeft);
 
                     const auto staticEval = eval::evaluate(position);
 
                     if (staticEval.value >= bounds.beta.value + margin)
-                        return bounds.beta;
+                        return staticEval;
                 }
             }
 
