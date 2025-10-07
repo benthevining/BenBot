@@ -17,6 +17,7 @@
 #include <chrono>
 #include <expected>
 #include <iterator>
+#include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/UCI.hpp>

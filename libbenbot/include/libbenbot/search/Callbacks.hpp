@@ -20,9 +20,10 @@
 #pragma once
 
 #include <functional>
-#include <libbenbot/search/Result.hpp>
 
 namespace ben_bot::search {
+
+struct Result;
 
 /** This struct encapsulates a set of functions that will be called to
     process search progress and results. Search results are always

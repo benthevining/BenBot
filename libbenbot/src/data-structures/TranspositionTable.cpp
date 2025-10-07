@@ -28,6 +28,7 @@
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Score.hpp>
 #include <libbenbot/search/Bounds.hpp>
+#include <libchess/game/Position.hpp>
 #include <libchess/util/Math.hpp>
 #include <libchess/util/Memory.hpp>
 #include <memory>
@@ -271,7 +272,7 @@ auto TranspositionTable::probe_eval(
 }
 
 auto TranspositionTable::get_best_response(
-    const Position& pos, const Move& move) const -> std::optional<Move>
+    const Position& pos, const Move move) const -> std::optional<Move>
 {
     return find(after_move(pos, move))
         .transform([](const TTData& data) { return data.bestMove; })

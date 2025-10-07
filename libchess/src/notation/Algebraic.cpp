@@ -105,7 +105,7 @@ namespace {
 
 } // namespace
 
-auto to_alg(const Position& position, const Move& move) -> string
+auto to_alg(const Position& position, const Move move) -> string
 {
     assert(not move.is_null());
 

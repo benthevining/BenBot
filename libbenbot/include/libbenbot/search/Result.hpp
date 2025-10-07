@@ -24,8 +24,11 @@
 #include <libbenbot/eval/Score.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/moves/MoveGen.hpp>
-#include <libchess/uci/Printing.hpp>
 #include <optional>
+
+namespace chess::uci::printing {
+struct SearchInfo;
+} // namespace chess::uci::printing
 
 namespace ben_bot::search {
 

@@ -22,11 +22,14 @@
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
 #include <libbenbot/eval/Score.hpp>
-#include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
 #include <optional>
 #include <span>
 #include <utility>
+
+namespace chess::game {
+struct Position;
+} // namespace chess::game
 
 namespace ben_bot {
 
@@ -118,7 +121,7 @@ public:
         is recorded.
      */
     [[nodiscard]] auto get_best_response(
-        const Position& pos, const Move& move) const
+        const Position& pos, Move move) const
         -> std::optional<Move>;
 
     /** Stores a record for a given position. */
@@ -158,7 +161,7 @@ private:
     [[nodiscard]] auto index_table(size_t clusterIdx) const noexcept -> Cluster&;
 
     // this is the hash function
-    [[nodiscard]] auto find_cluster(Position::Hash key) const noexcept -> std::span<Entry>;
+    [[nodiscard]] auto find_cluster(std::uint64_t key) const noexcept -> std::span<Entry>;
 
     Cluster* table { nullptr };
 

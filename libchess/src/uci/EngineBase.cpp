@@ -19,6 +19,7 @@
 #include <libchess/notation/FEN.hpp>
 #include <libchess/uci/CommandParsing.hpp>
 #include <libchess/uci/EngineBase.hpp>
+#include <libchess/uci/Options.hpp>
 #include <libchess/uci/Printing.hpp>
 #include <libchess/util/Strings.hpp>
 #include <print>

@@ -22,7 +22,7 @@
 #include <cassert>
 #include <cmath>   // IWYU pragma: keep - for std::abs()
 #include <cstddef> // IWYU pragma: keep - for size_t
-#include <cstdint>
+#include <cstdint> // IWYU pragma: keep - for std::int16_t
 #include <format>
 #include <libchess/uci/Printing.hpp>
 #include <limits>

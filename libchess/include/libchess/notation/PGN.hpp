@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <cstdint>
+#include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
 #include <expected>
 #include <libchess/game/Position.hpp>
 #include <libchess/game/Result.hpp>

@@ -14,6 +14,7 @@
 
 #include <functional>
 #include <libbenbot/search/Callbacks.hpp>
+#include <libbenbot/search/Result.hpp>
 #include <libchess/uci/Printing.hpp>
 
 namespace ben_bot::search {

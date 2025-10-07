@@ -28,11 +28,14 @@
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <expected>
-#include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <optional>
 #include <string>
 #include <string_view>
+
+namespace chess::game {
+struct Position;
+} // namespace chess::game
 
 /** This namespace contains utilities for working with UCI.
     @ingroup uci

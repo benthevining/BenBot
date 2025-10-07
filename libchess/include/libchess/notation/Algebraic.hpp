@@ -43,7 +43,7 @@ using moves::Move;
     @ingroup notation
     @see from_alg()
  */
-[[nodiscard]] auto to_alg(const Position& position, const Move& move) -> std::string;
+[[nodiscard]] auto to_alg(const Position& position, Move move) -> std::string;
 
 /** Creates a move from a string in algebraic notation, such as "Nd4", "e8=Q",
     "O-O-O", etc.

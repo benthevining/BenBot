@@ -14,6 +14,7 @@
 
 #include <format>
 #include <libbenbot/search/Result.hpp>
+#include <libchess/uci/Printing.hpp>
 #include <string>
 
 namespace ben_bot::search {

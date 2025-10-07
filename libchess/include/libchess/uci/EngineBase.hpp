@@ -19,17 +19,21 @@
 
 #pragma once
 
-#include <libchess/game/Position.hpp>
-#include <libchess/uci/CommandParsing.hpp> // IWYU pragma: keep
-#include <libchess/uci/Options.hpp>
 #include <span>
 #include <string>
 #include <string_view>
+
+namespace chess::game {
+struct Position;
+} // namespace chess::game
 
 namespace chess::uci {
 
 using game::Position;
 using std::string_view;
+
+struct Option;
+struct GoCommandOptions;
 
 /** A base class for UCI chess engines.
 

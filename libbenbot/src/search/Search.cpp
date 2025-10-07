@@ -34,6 +34,7 @@
 #include <libbenbot/eval/Score.hpp>
 #include <libbenbot/search/Bounds.hpp>
 #include <libbenbot/search/Context.hpp>
+#include <libbenbot/search/Result.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/util/Threading.hpp>
@@ -41,6 +42,7 @@
 
 namespace ben_bot::search {
 
+using chess::moves::MoveList;
 using std::size_t;
 
 namespace {
