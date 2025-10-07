@@ -15,17 +15,17 @@
 #pragma once
 
 #ifndef LIBCHESS_ARM
-#    if defined(__arm__) || defined(__arm64__)
+#    if defined(__arm__) or defined(__arm64__)
 #        define LIBCHESS_ARM 1
 #    endif
 #endif
 
 #ifndef LIBCHESS_INTEL
-#    if defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86) || defined(__x86_64__) || defined(_M_X64)
+#    if defined(i386) or defined(__i386__) or defined(__i386) or defined(_M_IX86) or defined(__x86_64__) or defined(_M_X64)
 #        define LIBCHESS_INTEL 1
 #    endif
 #endif
 
-#if defined(LIBCHESS_ARM) && defined(LIBCHESS_INTEL)
+#if defined(LIBCHESS_ARM) and defined(LIBCHESS_INTEL)
 #    error "Both ARM and Intel detected!"
 #endif
