@@ -141,7 +141,7 @@ namespace {
 
             // reverse futility pruning
             if constexpr (not PVNode) {
-                if (not inCheck /*and depthLeft <= 6uz*/) {
+                if (not inCheck) {
                     const auto margin = 80 * static_cast<int>(depthLeft);
 
                     const auto staticEval = eval::evaluate(position);
@@ -492,6 +492,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
             }
         }
 
+        // without this check, the final info output would be printed twice
         // in the infinite case, we do allow this repetition because we want to print the
         // final output before we're going to spin, then the stop command will print the
         // final info again and the bestmove
