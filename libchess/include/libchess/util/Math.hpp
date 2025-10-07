@@ -28,7 +28,7 @@
 #include <concepts>
 #include <cstdint> // IWYU pragma: keep - for std::uint64_t
 
-#if defined(_M_X64) || defined(_M_ARM64) || defined(_M_IA64)
+#if defined(_M_X64) or defined(_M_ARM64) or defined(_M_IA64)
 #    include <intrin.h>
 #endif
 
@@ -61,7 +61,7 @@ using std::uint64_t;
     __extension__ using uint128_t = unsigned __int128;
 
     return (static_cast<uint128_t>(first) * static_cast<uint128_t>(second)) >> static_cast<uint128_t>(64);
-#elif defined(_M_X64) || defined(_M_ARM64) // MSVC for x86-64 or AArch64
+#elif defined(_M_X64) or defined(_M_ARM64) // MSVC for x86-64 or AArch64
     return __umulh(first, second);
 #elifdef _M_IA64
     // https://learn.microsoft.com/en-gb/cpp/intrinsics/umul128
