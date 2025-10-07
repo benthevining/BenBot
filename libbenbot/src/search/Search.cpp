@@ -100,6 +100,7 @@ namespace {
         {
         }
 
+        template <bool PVNode>
         [[nodiscard]] auto alpha_beta() -> Score // NOLINT(readability-function-cognitive-complexity)
         {
             if (interrupter.should_abort())
@@ -156,10 +157,28 @@ namespace {
             std::optional<Move> bestMove;
 
             for (const auto move : moves) {
-                childPV.reset();
+                if constexpr (PVNode) {
+                    childPV.reset();
+                }
 
-                // NB. adding PVS here seems to lose some Elo
-                const auto eval = depthLeft > 0uz ? -recurse(move).alpha_beta() : -recurse(move).quiescence();
+                const auto eval = [this, move, foundPV = bestMove.has_value()] {
+                    if (depthLeft == 0uz)
+                        return -recurse(move).quiescence();
+
+                    if (not foundPV)
+                        return -recurse(move).alpha_beta<PVNode>();
+
+                    // principal variation search: first try searching with a null window
+
+                    const auto nullWinScore = -recurse(move, true).alpha_beta<false>();
+
+                    if constexpr (PVNode) {
+                        if (nullWinScore > bounds.alpha)
+                            return -recurse(move).alpha_beta<true>();
+                    }
+
+                    return nullWinScore;
+                }();
 
                 ++stats.nodesSearched;
 
@@ -183,7 +202,9 @@ namespace {
                     evalType     = EvalType::Exact;
                     bounds.alpha = eval;
 
-                    pv.update(move, childPV);
+                    if constexpr (PVNode) {
+                        pv.update(move, childPV);
+                    }
                 }
             }
 
@@ -251,9 +272,9 @@ namespace {
             return bounds.alpha;
         }
 
-        [[nodiscard]] auto recurse(const Move move) -> AlphaBetaContext
+        [[nodiscard]] auto recurse(const Move move, const bool useNullWindow = false) -> AlphaBetaContext
         {
-            return { bounds.invert(),
+            return { useNullWindow ? bounds.null_window() : bounds.invert(),
                 after_move(position, move),
                 depthLeft > 0uz ? depthLeft - 1uz : 0uz,
                 plyFromRoot + 1uz,
@@ -330,15 +351,15 @@ namespace {
                     newPos, depth, 1uz, transTable, interrupter, stats, childPV };
 
                 if (not foundPV)
-                    return -context.alpha_beta();
+                    return -context.alpha_beta<true>();
 
                 AlphaBetaContext nullWindowContext { bounds.null_window(),
                     newPos, depth, 1uz, transTable, interrupter, stats, childPV };
 
-                const auto nullWinScore = -nullWindowContext.alpha_beta();
+                const auto nullWinScore = -nullWindowContext.alpha_beta<false>();
 
                 if (bounds.contains(nullWinScore))
-                    return -context.alpha_beta();
+                    return -context.alpha_beta<true>();
 
                 return nullWinScore;
             }();
