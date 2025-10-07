@@ -155,6 +155,8 @@ namespace {
 
             std::optional<Move> bestMove;
 
+            auto bestScore = Score { -eval::MAX };
+
             for (const auto move : moves) {
                 childPV.reset();
 
@@ -180,6 +182,7 @@ namespace {
 
                 if (eval > bounds.alpha) {
                     bestMove     = move;
+                    bestScore    = eval;
                     evalType     = EvalType::Exact;
                     bounds.alpha = eval;
 
@@ -189,11 +192,11 @@ namespace {
 
             transTable.store(
                 position, { .searchedDepth = depthLeft,
-                              .eval        = bounds.alpha.to_tt(),
+                              .eval        = bestScore.to_tt(),
                               .evalType    = evalType,
                               .bestMove    = bestMove });
 
-            return bounds.alpha;
+            return bestScore;
         }
 
     private:
@@ -230,6 +233,8 @@ namespace {
 
             detail::order_moves_for_q_search(position, moves);
 
+            auto bestScore = Score { -eval::MAX };
+
             for (const auto move : moves) {
                 assert(position.is_capture(move));
 
@@ -245,10 +250,13 @@ namespace {
                     return evaluation;
                 }
 
-                bounds.alpha = std::max(bounds.alpha, evaluation);
+                if (evaluation > bounds.alpha) {
+                    bounds.alpha = evaluation;
+                    bestScore    = evaluation;
+                }
             }
 
-            return bounds.alpha;
+            return bestScore;
         }
 
         [[nodiscard]] auto recurse(const Move move) -> AlphaBetaContext
