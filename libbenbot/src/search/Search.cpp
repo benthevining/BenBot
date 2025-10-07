@@ -17,6 +17,7 @@
 // Iterative deepening
 // Quiescence search
 // Principal variation search
+// Reverse futility pruning
 // Mate distance pruning
 
 #include "MoveOrdering.hpp"
@@ -136,9 +137,23 @@ namespace {
                 return {};
             }
 
+            const bool inCheck = position.is_check();
+
+            // reverse futility pruning
+            if constexpr (not PVNode) {
+                if (not inCheck and depthLeft <= 6uz) {
+                    const auto margin = 150 * static_cast<int>(depthLeft);
+
+                    const auto staticEval = eval::evaluate(position);
+
+                    if (staticEval.value >= bounds.beta.value + margin)
+                        return bounds.beta;
+                }
+            }
+
             auto moves = chess::moves::generate(position);
 
-            if (moves.empty() and position.is_check()) {
+            if (moves.empty() and inCheck) {
                 const auto score = Score::mate(plyFromRoot);
 
                 transTable.store(
