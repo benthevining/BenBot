@@ -161,8 +161,24 @@ namespace {
                     childPV.reset();
                 }
 
-                // NB. adding PVS here seems to lose some Elo
-                const auto eval = depthLeft > 0uz ? -recurse(move).alpha_beta<PVNode>() : -recurse(move).quiescence();
+                const auto eval = [this, move, foundPV = bestMove.has_value()] {
+                    if (depthLeft == 0uz)
+                        return -recurse(move).quiescence();
+
+                    if (not foundPV)
+                        return -recurse(move).alpha_beta<PVNode>();
+
+                    // principal variation search: first try searching with a null window
+
+                    const auto nullWinScore = -recurse(move, true).alpha_beta<false>();
+
+                    if constexpr (PVNode) {
+                        if (nullWinScore > bounds.alpha)
+                            return -recurse(move).alpha_beta<true>();
+                    }
+
+                    return nullWinScore;
+                }();
 
                 ++stats.nodesSearched;
 
@@ -256,9 +272,9 @@ namespace {
             return bounds.alpha;
         }
 
-        [[nodiscard]] auto recurse(const Move move) -> AlphaBetaContext
+        [[nodiscard]] auto recurse(const Move move, const bool useNullWindow = false) -> AlphaBetaContext
         {
-            return { bounds.invert(),
+            return { useNullWindow ? bounds.null_window() : bounds.invert(),
                 after_move(position, move),
                 depthLeft > 0uz ? depthLeft - 1uz : 0uz,
                 plyFromRoot + 1uz,
