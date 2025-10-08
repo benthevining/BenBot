@@ -12,35 +12,54 @@
  * ======================================================================================
  */
 
+/** @file
+    This file defines the killer moves data structure.
+    @ingroup benbot_data_structures
+ */
+
 #pragma once
 
+#include <array>
+#include <cstddef> // IWYU pragma: keep - for size_t
+#include <libbenbot/search/Constants.hpp>
+#include <libchess/moves/Move.hpp>
+#include <libchess/moves/MoveGen.hpp>
 #include <span>
 
-namespace chess::game {
-struct Position;
-} // namespace chess::game
-
-namespace chess::moves {
-struct Move;
-} // namespace chess::moves
-
 namespace ben_bot {
-class TranspositionTable;
-} // namespace ben_bot
 
-namespace ben_bot::search::detail {
-
-using chess::game::Position;
 using chess::moves::Move;
+using chess::moves::MoveList;
+using std::size_t;
 
-void order_moves_for_search(
-    const Position&           currentPosition,
-    std::span<Move>           moves,
-    const TranspositionTable& transTable,
-    std::span<const Move>     killerMoves);
+/** This structure stores killer moves collected during the search.
+    This is essentially a set of lists of moves, indexed by ply from
+    the root of the search.
 
-void order_moves_for_q_search(
-    const Position& currentPosition,
-    std::span<Move> moves);
+    @ingroup benbot_data_structures
+ */
+struct KillerMoves final {
+    /** Clears all the stored moves. */
+    void clear()
+    {
+        for (auto& list : lists)
+            list.clear();
+    }
 
-} // namespace ben_bot::search::detail
+    /** Stores a killer move. */
+    void store(const size_t plyFromRoot, const Move move) noexcept
+    {
+        lists[plyFromRoot].emplace_back(move);
+    }
+
+    /** Returns the killer moves for the given ply. */
+    [[nodiscard]] auto get(const size_t plyFromRoot) const noexcept -> std::span<const Move>
+    {
+        return lists[plyFromRoot];
+    }
+
+private:
+    std::array<MoveList, search::MAX_PLY> lists {};
+};
+
+} // namespace ben_bot

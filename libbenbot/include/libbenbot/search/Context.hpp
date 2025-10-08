@@ -20,6 +20,7 @@
 #pragma once
 
 #include <atomic>
+#include <libbenbot/data-structures/KillerMoves.hpp>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/search/Callbacks.hpp>
 #include <libbenbot/search/Options.hpp>
@@ -114,6 +115,8 @@ private:
     std::atomic_bool activeFlag { false };
 
     std::atomic_bool pondering { false };
+
+    KillerMoves killerMoves;
 };
 
 } // namespace ben_bot::search
