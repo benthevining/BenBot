@@ -19,7 +19,9 @@
 
 #pragma once
 
+#include <algorithm>
 #include <array>
+#include <beman/inplace_vector/inplace_vector.hpp>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libbenbot/search/Constants.hpp>
 #include <libchess/moves/Move.hpp>
@@ -29,7 +31,6 @@
 namespace ben_bot {
 
 using chess::moves::Move;
-using chess::moves::MoveList;
 using std::size_t;
 
 /** This structure stores killer moves collected during the search.
@@ -49,7 +50,10 @@ struct KillerMoves final {
     /** Stores a killer move. */
     void store(const size_t plyFromRoot, const Move move) noexcept
     {
-        lists[plyFromRoot].emplace_back(move);
+        auto& list = lists[plyFromRoot];
+
+        if (not std::ranges::contains(list, move))
+            list.emplace_back(move);
     }
 
     /** Returns the killer moves for the given ply. */
@@ -59,7 +63,9 @@ struct KillerMoves final {
     }
 
 private:
-    std::array<MoveList, search::MAX_PLY> lists {};
+    using Killers = beman::inplace_vector::inplace_vector<Move, 1000uz>;
+
+    std::array<Killers, search::MAX_PLY> lists {};
 };
 
 } // namespace ben_bot
