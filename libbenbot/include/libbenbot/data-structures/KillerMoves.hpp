@@ -21,12 +21,12 @@
 
 #include <algorithm>
 #include <array>
-#include <beman/inplace_vector/inplace_vector.hpp>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libbenbot/search/Constants.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <span>
+#include <vector>
 
 namespace ben_bot {
 
@@ -48,7 +48,7 @@ struct KillerMoves final {
     }
 
     /** Stores a killer move. */
-    void store(const size_t plyFromRoot, const Move move) noexcept
+    void store(const size_t plyFromRoot, const Move move)
     {
         auto& list = lists[plyFromRoot];
 
@@ -63,7 +63,7 @@ struct KillerMoves final {
     }
 
 private:
-    using Killers = beman::inplace_vector::inplace_vector<Move, 1000uz>;
+    using Killers = std::vector<Move>;
 
     std::array<Killers, search::MAX_PLY> lists {};
 };
