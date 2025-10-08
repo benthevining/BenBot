@@ -298,16 +298,19 @@ struct Position final {
         given type exists on the starting square; this function only verifies that making
         the move does not leave the side's king in check.
      */
-    [[nodiscard]] auto is_legal(const Move& move) const -> bool;
+    [[nodiscard]] auto is_legal(Move move) const -> bool;
 
     /** Returns true if the given move is an en passant capture in the current position. */
-    [[nodiscard]] auto is_en_passant(const Move& move) const noexcept -> bool;
+    [[nodiscard]] auto is_en_passant(Move move) const noexcept -> bool;
 
     /** Returns true if the given move is a capture, including en passant. */
-    [[nodiscard]] auto is_capture(const Move& move) const noexcept -> bool;
+    [[nodiscard]] auto is_capture(Move move) const noexcept -> bool;
+
+    /** Returns true if the given move is quiet - ie, does not alter material. */
+    [[nodiscard]] auto is_quiet(Move move) const noexcept -> bool;
 
     /** Makes a move to alter the position. */
-    void make_move(const Move& move);
+    void make_move(Move move);
 
     /** Makes a null move.
         This essentially represents the side to move "passing" their turn.
@@ -353,7 +356,7 @@ private:
     @see after_null_move()
  */
 [[nodiscard, gnu::const]] auto after_move(
-    const Position& starting, const Move& move)
+    const Position& starting, Move move)
     -> Position;
 
 /** Returns a copy of the starting position with the side to move flipped.
@@ -439,7 +442,7 @@ inline auto Position::is_side_in_check(const Color side) const noexcept -> bool
         whitePieces, blackPieces.king, blackPieces.occupied);
 }
 
-inline auto Position::is_legal(const Move& move) const -> bool
+inline auto Position::is_legal(const Move move) const -> bool
 {
     auto copy { *this };
 
@@ -448,16 +451,21 @@ inline auto Position::is_legal(const Move& move) const -> bool
     return not copy.is_side_in_check(sideToMove);
 }
 
-inline auto Position::is_en_passant(const Move& move) const noexcept -> bool
+inline auto Position::is_en_passant(const Move move) const noexcept -> bool
 {
     return move.piece() == PieceType::Pawn
        and enPassantTargetSquare.has_value()
        and move.to() == *enPassantTargetSquare;
 }
 
-inline auto Position::is_capture(const Move& move) const noexcept -> bool
+inline auto Position::is_capture(const Move move) const noexcept -> bool
 {
     return is_en_passant(move) or their_pieces().occupied.test(move.to());
+}
+
+inline auto Position::is_quiet(const Move move) const noexcept -> bool
+{
+    return not(move.is_promotion() or is_capture(move));
 }
 
 inline auto Position::is_file_open(const File file) const noexcept -> bool
@@ -520,7 +528,7 @@ auto Position::get_backward_pawns() const noexcept -> Bitboard
 }
 
 inline auto after_move(
-    const Position& starting, const Move& move)
+    const Position& starting, const Move move)
     -> Position
 {
     auto copy { starting };

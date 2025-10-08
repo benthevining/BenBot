@@ -18,6 +18,7 @@
 // Quiescence search
 // Principal variation search
 // Reverse futility pruning
+// Killer moves
 // Mate distance pruning
 
 #include "MoveOrdering.hpp"
@@ -29,10 +30,12 @@
 #include <cmath>   // IWYU pragma: keep - for std::max()
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <iterator>
+#include <libbenbot/data-structures/KillerMoves.hpp>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Score.hpp>
 #include <libbenbot/search/Bounds.hpp>
+#include <libbenbot/search/Constants.hpp>
 #include <libbenbot/search/Context.hpp>
 #include <libbenbot/search/Result.hpp>
 #include <libchess/game/Position.hpp>
@@ -80,7 +83,7 @@ namespace {
         }
 
     private:
-        std::array<Move, 255uz> moves {};
+        std::array<Move, MAX_PLY> moves {};
 
         size_t length { 0uz };
     };
@@ -91,7 +94,7 @@ namespace {
             const Bounds bnd, const Position& pos,
             const size_t depthToSearch, const size_t ply,
             TranspositionTable& trans, Interrupter& inter, Stats& statsToUse,
-            PvList& parentPV)
+            PvList& parentPV, KillerMoves& killers)
             : bounds { bnd }
             , position { pos }
             , depthLeft { depthToSearch }
@@ -99,6 +102,7 @@ namespace {
             , transTable { trans }
             , interrupter { inter }
             , stats { statsToUse }
+            , killerMoves { killers }
             , pv { parentPV }
         {
         }
@@ -167,7 +171,8 @@ namespace {
                 return score;
             }
 
-            detail::order_moves_for_search(position, moves, transTable);
+            detail::order_moves_for_search(
+                position, moves, transTable, killerMoves.get(plyFromRoot));
 
             auto evalType { EvalType::Alpha };
 
@@ -210,6 +215,9 @@ namespace {
                                       .bestMove    = bestMove });
 
                     ++stats.betaCutoffs;
+
+                    if (position.is_quiet(move))
+                        killerMoves.store(plyFromRoot, move);
 
                     return bounds.beta;
                 }
@@ -295,7 +303,7 @@ namespace {
                 after_move(position, move),
                 depthLeft > 0uz ? depthLeft - 1uz : 0uz,
                 plyFromRoot + 1uz,
-                transTable, interrupter, stats, childPV };
+                transTable, interrupter, stats, childPV, killerMoves };
         }
 
         Bounds bounds;
@@ -311,6 +319,8 @@ namespace {
         Interrupter& interrupter; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
         Stats& stats; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
+
+        KillerMoves& killerMoves; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
         PvList& pv; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
@@ -344,12 +354,16 @@ namespace {
         const size_t        depth,
         Options&            options,
         TranspositionTable& transTable,
-        Interrupter&        interrupter)
+        Interrupter&        interrupter,
+        KillerMoves&        killerMoves)
         -> RootSearchResult
     {
         const Timer timer;
 
-        detail::order_moves_for_search(options.position, options.movesToSearch, transTable);
+        killerMoves.clear();
+
+        detail::order_moves_for_search(
+            options.position, options.movesToSearch, transTable, {});
 
         Stats    stats;
         Bounds   bounds;
@@ -361,17 +375,17 @@ namespace {
             PvList childPV;
 
             // principal variation search: first try searching with a null window
-            const auto score = [bounds, &options, move, depth, foundPV, &transTable, &interrupter, &stats, &childPV] {
+            const auto score = [bounds, &options, move, depth, foundPV, &transTable, &interrupter, &stats, &childPV, &killerMoves] {
                 const auto newPos = after_move(options.position, move);
 
                 AlphaBetaContext context { bounds.invert(),
-                    newPos, depth, 1uz, transTable, interrupter, stats, childPV };
+                    newPos, depth, 1uz, transTable, interrupter, stats, childPV, killerMoves };
 
                 if (not foundPV)
                     return -context.alpha_beta<true>();
 
                 AlphaBetaContext nullWindowContext { bounds.null_window(),
-                    newPos, depth, 1uz, transTable, interrupter, stats, childPV };
+                    newPos, depth, 1uz, transTable, interrupter, stats, childPV, killerMoves };
 
                 const auto nullWinScore = -nullWindowContext.alpha_beta<false>();
 
@@ -456,7 +470,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         if (interrupter.should_abort())
             break;
 
-        const auto res = root_search(depth, options, transTable, interrupter);
+        const auto res = root_search(depth, options, transTable, interrupter, killerMoves);
 
         if (interrupter.was_aborted())
             break;

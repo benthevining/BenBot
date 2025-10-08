@@ -12,35 +12,18 @@
  * ======================================================================================
  */
 
+/** @file
+    This file defines some constants used throughout the search logic.
+    @ingroup search
+ */
+
 #pragma once
 
-#include <span>
+namespace ben_bot::search {
 
-namespace chess::game {
-struct Position;
-} // namespace chess::game
+/** The maximum depth that the search can reach.
+    @ingroup search
+ */
+static constexpr auto MAX_PLY = 255uz;
 
-namespace chess::moves {
-struct Move;
-} // namespace chess::moves
-
-namespace ben_bot {
-class TranspositionTable;
-} // namespace ben_bot
-
-namespace ben_bot::search::detail {
-
-using chess::game::Position;
-using chess::moves::Move;
-
-void order_moves_for_search(
-    const Position&           currentPosition,
-    std::span<Move>           moves,
-    const TranspositionTable& transTable,
-    std::span<const Move>     killerMoves);
-
-void order_moves_for_q_search(
-    const Position& currentPosition,
-    std::span<Move> moves);
-
-} // namespace ben_bot::search::detail
+} // namespace ben_bot::search

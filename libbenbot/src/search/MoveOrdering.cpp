@@ -53,12 +53,14 @@ namespace {
         const Position& currentPosition, const Move move,
         const TranspositionTable& transTable,
         const Bitboard            opponentPawnAttacks,
-        const std::optional<Move> bestMove)
+        const std::optional<Move> bestMove,
+        std::span<const Move>     killerMoves)
         -> int
     {
         static constexpr auto PV_NODE_BONUS { 15000 };       // cppcheck-suppress variableScope
         static constexpr auto CUT_NODE_PENALTY { 15000 };    // cppcheck-suppress variableScope
-        static constexpr auto CAPTURE_MULTIPLIER { 10 };     // cppcheck-suppress variableScope
+        static constexpr auto CAPTURE_MULTIPLIER { 10000 };  // cppcheck-suppress variableScope
+        static constexpr auto KILLER_MOVE_BONUS { 10000 };   // cppcheck-suppress variableScope
         static constexpr auto PROMOTION_MULTIPLIER { 15 };   // cppcheck-suppress variableScope
         static constexpr auto CASTLING_BONUS { 30 };         // cppcheck-suppress variableScope
         static constexpr auto PAWN_CONTROLS_PENALTY { 350 }; // cppcheck-suppress variableScope
@@ -74,6 +76,8 @@ namespace {
             // we want to prioritize searching moves that capture valuable pieces with less valuable pieces
             score += CAPTURE_MULTIPLIER
                    * (piece_values::get(*capturedType) - piece_values::get(move.piece()));
+        } else if (std::ranges::contains(killerMoves, move)) {
+            score += KILLER_MOVE_BONUS;
         }
 
         if (const auto prom = move.promoted_type()) {
@@ -114,17 +118,18 @@ namespace {
 void order_moves_for_search(
     const Position&           currentPosition,
     const std::span<Move>     moves,
-    const TranspositionTable& transTable)
+    const TranspositionTable& transTable,
+    std::span<const Move>     killerMoves)
 {
     const auto bestMove = transTable.find(currentPosition)
                               .and_then([](const TTData& data) { return data.bestMove; });
 
     std::ranges::sort(
         moves,
-        [&currentPosition, &transTable, bestMove,
+        [&currentPosition, &transTable, bestMove, killerMoves,
             opponentPawnAttacks = get_opponent_pawn_attacks(currentPosition)](const Move first, const Move second) {
-            return move_ordering_score(currentPosition, first, transTable, opponentPawnAttacks, bestMove)
-                 > move_ordering_score(currentPosition, second, transTable, opponentPawnAttacks, bestMove);
+            return move_ordering_score(currentPosition, first, transTable, opponentPawnAttacks, bestMove, killerMoves)
+                 > move_ordering_score(currentPosition, second, transTable, opponentPawnAttacks, bestMove, killerMoves);
         });
 }
 

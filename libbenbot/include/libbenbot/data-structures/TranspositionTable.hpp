@@ -12,6 +12,12 @@
  * ======================================================================================
  */
 
+/** @defgroup benbot_data_structures
+    Data structures used by BenBot's search algorithm.
+
+    @ingroup libbenbot
+ */
+
 /** @file
     This file defines the transposition table data structure.
     @ingroup benbot_data_structures

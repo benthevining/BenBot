@@ -110,7 +110,7 @@ namespace {
 
 } // namespace
 
-void Position::make_move(const Move& move)
+void Position::make_move(const Move move)
 {
     const bool isCapture = is_capture(move);
     const bool isWhite   = is_white_to_move();
