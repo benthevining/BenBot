@@ -103,17 +103,20 @@ struct TranspositionTable::Entry final {
 static constexpr auto CLUSTER_SIZE = 3uz;
 
 struct alignas(32) TranspositionTable::Cluster final {
-    static_assert(sizeof(Entry) == 10uz);
+    // if the Entry size changes, we may need to change CLUSTER_SIZE above
+    static_assert(
+        sizeof(Entry) == 10uz,
+        R"(TranspositionTable::Entry has unexpected size!
+Adjust the TranspositionTable::Cluster implementation appropriately.)");
 
     static constexpr auto RecordsSize = sizeof(Entry) * CLUSTER_SIZE;
 
     std::array<Entry, CLUSTER_SIZE> records {};
 
     // padding bytes
-    // round up to nearest power of 2
     [[maybe_unused, no_unique_address]] std::array<
         std::byte,
-        std::bit_ceil(RecordsSize) - RecordsSize>
+        std::bit_ceil(RecordsSize) - RecordsSize> // round up to nearest power of 2
         padding {};
 };
 
@@ -123,7 +126,9 @@ TranspositionTable::TranspositionTable(TranspositionTable&& other) noexcept
     , generation { std::exchange(other.generation, 0) }
 {
     // check that padding was the correct size to make Cluster have a power of 2 size
-    static_assert(std::has_single_bit(sizeof(Cluster)));
+    static_assert(
+        std::has_single_bit(sizeof(Cluster)),
+        "TranspositionTable::Cluster size should be a power of 2!");
 }
 
 auto TranspositionTable::operator=(TranspositionTable&& other) noexcept -> TranspositionTable&
