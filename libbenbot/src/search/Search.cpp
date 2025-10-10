@@ -113,7 +113,7 @@ namespace {
         template <bool PVNode>
         [[nodiscard]] auto alpha_beta() -> Score // NOLINT(readability-function-cognitive-complexity)
         {
-            if (interrupter.should_abort())
+            if (interrupter.should_abort(plyFromRoot))
                 return {};
 
             transTable.prefetch(position);
@@ -250,7 +250,7 @@ namespace {
         // improve the stability of the static evaluation function
         [[nodiscard]] auto quiescence() -> Score
         {
-            if (interrupter.should_abort() or position.is_draw())
+            if (interrupter.should_abort(plyFromRoot) or position.is_draw())
                 return {};
 
             stats.qDepth = std::max(stats.qDepth, plyFromRoot);
@@ -475,7 +475,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
     auto depth = 1uz;
 
     while (depth <= options.depth) {
-        if (interrupter.should_abort())
+        if (interrupter.should_abort(0uz))
             break;
 
         const auto res = root_search(depth, options, transTable, interrupter, killerMoves);

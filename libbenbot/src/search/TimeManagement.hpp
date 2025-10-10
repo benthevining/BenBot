@@ -17,6 +17,7 @@
 #include <atomic>
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
+#include <libbenbot/search/Constants.hpp>
 #include <optional>
 #include <type_traits>
 
@@ -72,9 +73,10 @@ struct Interrupter final {
 
     // "active" check: queries clock time to check search duration, checks atomic stop flag
     // updates cached internal abort state
-    [[nodiscard]] auto should_abort() noexcept -> bool
+    // note that we also use this interrupter interface to abort the search if plyFromRoot >= MAX_PLY
+    [[nodiscard]] auto should_abort(const size_t plyFromRoot) noexcept -> bool
     {
-        aborted = aborted or should_trigger_abort();
+        aborted = aborted or should_trigger_abort(plyFromRoot);
 
         return aborted;
     }
@@ -85,13 +87,16 @@ struct Interrupter final {
     void iteration_completed() noexcept { anyIterationCompleted = true; }
 
 private:
-    [[nodiscard]] auto should_trigger_abort() const noexcept -> bool
+    [[nodiscard]] auto should_trigger_abort(const size_t plyFromRoot) const noexcept -> bool
     {
         // we don't allow aborting until at least the depth 1 search has been completed
         if (not anyIterationCompleted)
             return false;
 
         if (exitFlag.load())
+            return true;
+
+        if (plyFromRoot >= MAX_PLY)
             return true;
 
         // don't exit the search when in ponder mode
