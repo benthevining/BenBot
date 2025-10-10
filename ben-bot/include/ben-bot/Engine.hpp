@@ -42,7 +42,7 @@ namespace uci = chess::uci;
 /** The ``ben-bot`` UCI engine class.
     @ingroup benbot
  */
-class Engine final : public uci::EngineBase {
+class [[nodiscard]] Engine final : public uci::EngineBase {
     [[nodiscard]] auto get_name() const -> std::string override;
     [[nodiscard]] auto get_author() const -> string_view override { return "Ben Vining"; }
 

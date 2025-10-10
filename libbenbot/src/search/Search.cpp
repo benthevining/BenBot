@@ -330,7 +330,7 @@ namespace {
         PvList childPV;
     };
 
-    struct RootSearchResult final {
+    struct [[nodiscard]] RootSearchResult final {
         MoveList     pv;
         Score        bestScore;
         Stats        stats;

@@ -55,7 +55,7 @@ namespace {
 
     using SearchResult = search::Result;
 
-    struct BenchSearcherThread final {
+    struct [[nodiscard]] BenchSearcherThread final {
         BenchSearcherThread(
             const size_t                 threadNum,
             const notation::EPDPosition& position,
@@ -205,25 +205,26 @@ void Engine::run_bench(const string_view arguments) const
 
     using Placeholder = std::expected<void, std::string>;
 
-    [[maybe_unused]] const auto result = util::load_file_as_string(epdPath)
-                                             .and_then([&absPathStr, this, defaultDepth](const string_view fileContent) {
-                                                 info_string(std::format("Running bench for {}...", absPathStr));
+    [[maybe_unused]] const auto result
+        = util::load_file_as_string(epdPath)
+              .and_then([&absPathStr, this, defaultDepth](const string_view fileContent) {
+                  info_string(std::format("Running bench for {}...", absPathStr));
 
-                                                 // output the filename for CTest to detect & upload with the test info
-                                                 // see https://cmake.org/cmake/help/latest/command/ctest_test.html#attached-files
-                                                 info_string(std::format(
-                                                     R"-(<CTestMeasurementFile type="file" name="BenchData">{}</CTestMeasurementFile>)-",
-                                                     absPathStr));
+                  // output the filename for CTest to detect & upload with the test info
+                  // see https://cmake.org/cmake/help/latest/command/ctest_test.html#attached-files
+                  info_string(std::format(
+                      R"-(<CTestMeasurementFile type="file" name="BenchData">{}</CTestMeasurementFile>)-",
+                      absPathStr));
 
-                                                 do_bench(fileContent, defaultDepth, debugMode.load());
+                  do_bench(fileContent, defaultDepth, debugMode.load());
 
-                                                 return Placeholder {};
-                                             })
-                                             .or_else([](const string_view error) {
-                                                 info_string(error);
+                  return Placeholder {};
+              })
+              .or_else([](const string_view error) {
+                  info_string(error);
 
-                                                 return Placeholder {};
-                                             });
+                  return Placeholder {};
+              });
 }
 
 } // namespace ben_bot

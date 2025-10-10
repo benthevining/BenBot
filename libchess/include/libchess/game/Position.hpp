@@ -71,7 +71,7 @@ using PieceType = pieces::Type;
 
     @ingroup game
  */
-struct Position final {
+struct [[nodiscard]] Position final {
     /** Creates a Position object representing the starting position. */
     Position();
 

@@ -35,7 +35,7 @@ namespace ben_bot {
 
     @ingroup benbot
  */
-struct Arguments final {
+struct [[nodiscard]] Arguments final {
     /** If true, the executable should process the given UCI command and exit
         immediately, not entering the UCI loop waiting for input.
      */

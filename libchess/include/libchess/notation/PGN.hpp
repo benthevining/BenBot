@@ -69,7 +69,7 @@ enum NAG : std::uint_least8_t {
 
     @ingroup notation
  */
-struct GameRecord final {
+struct [[nodiscard]] GameRecord final {
     /** This game's metadata. The keys will be things like
         "Event", "Site", "Date", etc. The values will not include
         surrounding quotes.

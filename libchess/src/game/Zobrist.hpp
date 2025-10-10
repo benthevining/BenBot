@@ -30,7 +30,7 @@ using moves::Move;
 [[nodiscard, gnu::const]] auto calculate(const Position& pos) -> Position::Hash;
 
 // each of these bools should be true if the given right has changed since the last move
-struct CastlingRightsChanges final {
+struct [[nodiscard]] CastlingRightsChanges final {
     bool whiteKingside { false };
     bool whiteQueenside { false };
     bool blackKingside { false };

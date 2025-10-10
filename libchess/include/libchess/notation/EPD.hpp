@@ -35,7 +35,7 @@ using std::string;
 
     @ingroup notation
  */
-struct EPDPosition final {
+struct [[nodiscard]] EPDPosition final {
     /** The position itself. */
     Position position {};
 

@@ -63,7 +63,7 @@ enum class EvalType : std::uint_least8_t {
 
     @ingroup benbot_data_structures
  */
-struct TTData final {
+struct [[nodiscard]] TTData final {
     /** The depth that the position was searched to. */
     size_t searchedDepth { 0uz };
 

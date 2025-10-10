@@ -90,7 +90,7 @@ using RegisterOptions = optional<RegisterNowOptions>;
     @ingroup uci
     @see parse_go_options()
  */
-struct GoCommandOptions final {
+struct [[nodiscard]] GoCommandOptions final {
     /** The search should be restricted to only these moves.
         Empty if the "moves" suboption was not specified.
      */

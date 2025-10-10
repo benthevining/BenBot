@@ -35,7 +35,7 @@ using std::size_t;
     @ingroup moves
     @see perft()
  */
-struct PerftResult final {
+struct [[nodiscard]] PerftResult final {
     /** The total number of nodes in the move tree. */
     size_t nodes { 0uz };
 

@@ -41,7 +41,7 @@ using std::size_t;
     This struct can also represent a still-in-progress search (ie, an update
     on each iterative deepening iteration).
  */
-struct Result final {
+struct [[nodiscard]] Result final {
     /** The total amount of time spent searching to produce this result.
         For depths greater than 1, this value is the duration of the entire
         search, including lower depths of the iterative deepening loop.

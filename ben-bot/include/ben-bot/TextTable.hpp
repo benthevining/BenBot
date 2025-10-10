@@ -37,7 +37,7 @@ using std::string_view;
 
     @ingroup benbot
  */
-struct TextTable final {
+struct [[nodiscard]] TextTable final {
     /** Appends a column to the current row. */
     auto append_column(string_view text) -> TextTable&;
 
