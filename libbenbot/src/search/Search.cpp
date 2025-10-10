@@ -42,6 +42,7 @@
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/util/Threading.hpp>
 #include <optional>
+#include <utility>
 
 namespace ben_bot::search {
 
@@ -71,6 +72,8 @@ namespace {
                 std::next(moves.begin()));
 
             length = child.length + 1;
+
+            assert(length <= moves.size());
         }
 
         void reset() noexcept { length = 0uz; }
@@ -374,23 +377,28 @@ namespace {
         for (const auto move : options.movesToSearch) {
             PvList childPV;
 
+            auto create_context = [depth, &transTable, &interrupter, &stats, &childPV, &killerMoves](const Bounds boundsToUse, const Position& position) {
+                return AlphaBetaContext {
+                    boundsToUse, position, depth, 1uz, transTable, interrupter, stats, childPV, killerMoves
+                };
+            };
+
             // principal variation search: first try searching with a null window
-            const auto score = [bounds, &options, move, depth, foundPV, &transTable, &interrupter, &stats, &childPV, &killerMoves] {
+            const auto score = [bounds, &options, move, foundPV, make_context = std::move(create_context)] {
                 const auto newPos = after_move(options.position, move);
 
-                AlphaBetaContext context { bounds.invert(),
-                    newPos, depth, 1uz, transTable, interrupter, stats, childPV, killerMoves };
+                if (not foundPV) {
+                    return -make_context(bounds.invert(), newPos)
+                                .alpha_beta<true>();
+                }
 
-                if (not foundPV)
-                    return -context.alpha_beta<true>();
+                const auto nullWinScore = -make_context(bounds.null_window(), newPos)
+                                               .alpha_beta<false>();
 
-                AlphaBetaContext nullWindowContext { bounds.null_window(),
-                    newPos, depth, 1uz, transTable, interrupter, stats, childPV, killerMoves };
-
-                const auto nullWinScore = -nullWindowContext.alpha_beta<false>();
-
-                if (bounds.contains(nullWinScore))
-                    return -context.alpha_beta<true>();
+                if (bounds.contains(nullWinScore)) {
+                    return -make_context(bounds.invert(), newPos)
+                                .alpha_beta<true>();
+                }
 
                 return nullWinScore;
             }();
