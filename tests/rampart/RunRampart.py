@@ -32,14 +32,10 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument("-t", "--test", required=True, help="Path to testcase data file")
 parser.add_argument("-e", "--exec", required=True, help="Path to rampart executable")
-parser.add_argument(
-    "-d", "--tmp", required=True, help="Path to directory to use for temporary files"
-)
 
 args = parser.parse_args()
 
 TESTCASE_FILE = Path(args.test).resolve()
-TMP_DIR_PATH = Path(args.tmp).resolve()
 RAMPART_PROGRAM = Path(args.exec).resolve()
 
 test_cases_passed = 0
@@ -50,27 +46,26 @@ print(f"Running tests from {TESTCASE_FILE}...")
 with open(TESTCASE_FILE) as file:
     testcase_data = json.load(file)
 
-output_dir = TMP_DIR_PATH / TESTCASE_FILE.stem
-
 test_idx = 1
 
 for test_case in testcase_data["testCases"]:
     startFEN = test_case["start"]["fen"]
 
-    output_file = output_dir / f"{test_idx}.json"
-
     print(f"Running tests on position {startFEN}")
-    print(f"Output file: {output_file}")
 
-    subprocess.run(
-        [RAMPART_PROGRAM, startFEN, output_file],
+    result = subprocess.run(
+        [RAMPART_PROGRAM, startFEN],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+        text=True,
     )
 
-    with open(output_file) as file:
-        result_data = json.load(file)
+    if result.returncode != 0:
+        print(f"Rampart executable exited with code {result.returncode}")
+        exit(result.returncode)
+
+    result_data = json.loads(result.stdout)
 
     correct_moves = test_case["expected"]
     generated_moves = result_data["generated"]

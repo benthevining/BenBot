@@ -12,16 +12,14 @@
  * ======================================================================================
  */
 
-// This executable is invoked with two positional arguments: a FEN starting position,
-// and a path to a JSON output file. The executable writes JSON output containing every
-// legal move in the given starting position, as well as the FEN after making the move.
+// This executable is invoked with a single positional arguments: a FEN starting position.
+// The executable writes JSON output containing every legal move in the given starting position,
+// as well as the FEN after making the move.
 
 #include <beman/inplace_vector/inplace_vector.hpp>
 #include <cstddef> // IWYU pragma: keep - for std::ptrdiff_t
 #include <cstdlib>
 #include <exception>
-#include <filesystem>
-#include <fstream>
 #include <iostream>
 #include <iterator>
 #include <libchess/moves/MoveGen.hpp>
@@ -47,17 +45,13 @@ try {
 
     args = args.subspan(1uz);
 
-    if (args.size() < 2uz) {
+    if (args.empty()) {
         std::println("Usage:");
-        std::println("{} <fen> <outputFile>", programName);
+        std::println("{} <fen>", programName);
         return EXIT_FAILURE;
     }
 
     const auto fenString = args.front();
-
-    args = args.subspan(1uz);
-
-    const std::filesystem::path outputFile { args.front() };
 
     nlohmann::json json;
 
@@ -86,11 +80,7 @@ try {
 
     json["generated"] = movesJSON;
 
-    create_directories(outputFile.parent_path());
-
-    std::ofstream output { outputFile };
-
-    output << json.dump(1);
+    std::println("{}", json.dump(1));
 
     return EXIT_SUCCESS;
 } catch (const std::exception& exception) {
