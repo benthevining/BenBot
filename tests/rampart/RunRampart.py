@@ -111,5 +111,4 @@ for test_case in testcase_data["testCases"]:
 print(f"{test_cases_passed} test cases passed")
 print(f"{test_cases_failed} test cases failed")
 
-if test_cases_failed > 0:
-    exit(1)
+exit(test_cases_failed)

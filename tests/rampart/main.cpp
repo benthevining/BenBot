@@ -20,19 +20,63 @@
 #include <cstddef> // IWYU pragma: keep - for std::ptrdiff_t
 #include <cstdlib>
 #include <exception>
+#include <expected>
 #include <iostream>
 #include <iterator>
+#include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/Algebraic.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <nlohmann/json.hpp>
 #include <print>
 #include <span>
+#include <string>
 #include <string_view>
+#include <utility>
+
+namespace {
+using nlohmann::json;
+
+[[nodiscard]] auto run_rampart_test(const std::string_view fenString) -> std::expected<json, std::string>
+{
+    return chess::notation::from_fen(fenString)
+        .transform([fenString](const chess::game::Position& position) {
+            json obj;
+
+            obj["startPos"] = fenString;
+
+            auto movesJSON = json::array();
+
+            for (const auto& move : chess::moves::generate(position)) {
+                json moveJSON;
+
+                moveJSON["move"] = chess::notation::to_alg(position, move);
+
+                moveJSON["fen"] = chess::notation::to_fen(
+                    after_move(position, move),
+                    false);
+
+                movesJSON.push_back(moveJSON);
+            }
+
+            obj["generated"] = movesJSON;
+
+            return obj;
+        });
+}
+} // namespace
 
 int main(const int argc, const char** argv)
 try {
-    static constexpr auto MAX_ARGS = 3uz;
+    static constexpr auto MAX_ARGS = 2uz;
+
+    if (std::cmp_greater(argc, MAX_ARGS)) {
+        std::println(std::cerr,
+            "Expected at most {} arguments, received {}",
+            MAX_ARGS, argc);
+
+        return EXIT_FAILURE;
+    }
 
     const beman::inplace_vector::inplace_vector<std::string_view, MAX_ARGS> argStorage {
         argv,
@@ -51,36 +95,18 @@ try {
         return EXIT_FAILURE;
     }
 
-    const auto fenString = args.front();
+    using Placeholder = std::expected<void, std::string>;
 
-    nlohmann::json json;
-
-    json["startPos"] = fenString;
-
-    auto movesJSON = nlohmann::json::array();
-
-    const auto position = chess::notation::from_fen(fenString);
-
-    if (not position.has_value()) {
-        std::println(std::cerr, "{}", position.error());
-        return EXIT_FAILURE;
-    }
-
-    for (const auto& move : chess::moves::generate(position.value())) {
-        nlohmann::json moveJSON;
-
-        moveJSON["move"] = chess::notation::to_alg(position.value(), move);
-
-        moveJSON["fen"] = chess::notation::to_fen(
-            after_move(position.value(), move),
-            false);
-
-        movesJSON.push_back(moveJSON);
-    }
-
-    json["generated"] = movesJSON;
-
-    std::println("{}", json.dump(1));
+    [[maybe_unused]] const auto result
+        = run_rampart_test(args.front())
+              .and_then([](const json& data) {
+                  std::println("{}", data.dump(1));
+                  return Placeholder {};
+              })
+              .or_else([](const std::string_view error) {
+                  std::println(std::cerr, "Error: {}", error);
+                  return Placeholder {};
+              });
 
     return EXIT_SUCCESS;
 } catch (const std::exception& exception) {
