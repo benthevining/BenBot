@@ -268,8 +268,6 @@ auto CastlingRightsChanges::update_hash(Hash value) const noexcept -> Hash
     return value;
 }
 
-using Placeholder = std::optional<int>;
-
 auto calculate(const Position& pos) -> Hash
 {
     Hash value { 0uz };
@@ -294,9 +292,9 @@ auto calculate(const Position& pos) -> Hash
     if (pos.blackCastlingRights.queenside)
         value ^= BLACK_QUEENSIDE_CASTLE;
 
-    pos.enPassantTargetSquare.and_then([&value](const Square& square) {
+    pos.enPassantTargetSquare.transform([&value](const Square& square) {
         value ^= en_passant_key(square.file);
-        return Placeholder {};
+        return std::monostate {};
     });
 
     return value;
@@ -313,15 +311,15 @@ auto update(
     value ^= BLACK_TO_MOVE; // just toggle these bits in/out every other move
 
     // remove old EP target
-    pos.enPassantTargetSquare.and_then([&value](const Square& square) {
+    pos.enPassantTargetSquare.transform([&value](const Square& square) {
         value ^= en_passant_key(square.file);
-        return Placeholder {};
+        return std::monostate {};
     });
 
     // add new EP target
-    newEPTarget.and_then([&value](const Square& square) {
+    newEPTarget.transform([&value](const Square& square) {
         value ^= en_passant_key(square.file);
-        return Placeholder {};
+        return std::monostate {};
     });
 
     // remove moved-from square
@@ -370,9 +368,9 @@ auto after_null_move(const Position& pos) -> Hash
     value ^= BLACK_TO_MOVE; // just toggle these bits in/out every other move
 
     // remove old EP target
-    pos.enPassantTargetSquare.and_then([&value](const Square& square) {
+    pos.enPassantTargetSquare.transform([&value](const Square& square) {
         value ^= en_passant_key(square.file);
-        return Placeholder {};
+        return std::monostate {};
     });
 
     return value;

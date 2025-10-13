@@ -125,7 +125,6 @@ TranspositionTable::TranspositionTable(TranspositionTable&& other) noexcept
     , clusterCount { std::exchange(other.clusterCount, 0uz) }
     , generation { std::exchange(other.generation, 0) }
 {
-    // check that padding was the correct size to make Cluster have a power of 2 size
     static_assert(
         std::has_single_bit(sizeof(Cluster)),
         "TranspositionTable::Cluster size should be a power of 2!");

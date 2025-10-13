@@ -96,12 +96,10 @@ auto from_uci(
                                 .transform([from, dest, movedType](const PieceType promotedType) {
                                     return Move { from, dest, movedType, promotedType };
                                 })
-                                .or_else([](const string_view parseError) -> MoveOrError {
-                                    return std::unexpected {
-                                        std::format(
-                                            "Error parsing promoted type: {}",
-                                            parseError)
-                                    };
+                                .transform_error([](const string_view parseError) {
+                                    return std::format(
+                                        "Error parsing promoted type: {}",
+                                        parseError);
                                 });
                         })
                         .value_or(

@@ -28,6 +28,7 @@
 #include <print>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <variant>
 
 namespace ben_bot {
@@ -151,17 +152,15 @@ void Engine::print_current_position(const string_view arguments) const
     info_string(std::format("Zobrist key: {}", pos.hash));
 
     searcher.context.transTable.find(pos)
-        .and_then([](const TTData& data) {
-            const auto score = eval::Score::from_tt(data.eval, 0uz);
-
+        .transform([](const TTData& data) {
             info_string(std::format(
                 "TT hit: depth {} eval {} type {} probed {} bestmove {}",
                 data.searchedDepth, data.eval,
                 magic_enum::enum_name(data.evalType),
-                score,
+                eval::Score::from_tt(data.eval, 0uz),
                 chess::notation::to_uci(data.bestMove.value_or(Move {}))));
 
-            return std::optional<int> {};
+            return std::monostate {};
         });
 
     info_string(std::format("Static eval: {}", eval::evaluate(pos)));

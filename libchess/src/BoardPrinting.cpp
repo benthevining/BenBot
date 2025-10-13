@@ -55,7 +55,9 @@ namespace {
     template <bool IncludeLabels, SquarePrinter Func>
     [[nodiscard, gnu::cold]] auto generate_board_string(Func getSquareText) -> string
     {
-        static constexpr bool FuncReturnsChar = std::is_same_v<char, std::invoke_result_t<Func, Square>>;
+        static constexpr bool FuncReturnsChar = std::is_same_v<
+            std::invoke_result_t<Func, Square>,
+            char>;
 
         string result;
 

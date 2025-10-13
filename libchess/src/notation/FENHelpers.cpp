@@ -124,19 +124,17 @@ void write_en_passant_target_square(
     const std::optional<Square> targetSquare,
     string&                     output)
 {
-    using Placeholder = std::optional<int>;
-
     targetSquare
-        .and_then([&output](const Square epSquare) {
+        .transform([&output](const Square epSquare) {
             output.push_back(file_to_char(epSquare.file));
             output.push_back(rank_to_char(epSquare.rank));
 
-            return Placeholder { 1 }; // return placeholder with value
+            return std::monostate {};
         })
         .or_else([&output] {
             output.push_back('-');
 
-            return Placeholder {};
+            return std::optional<std::monostate> {};
         });
 }
 
@@ -266,11 +264,11 @@ void parse_en_passant_target_square(
         return;
     }
 
-    [[maybe_unused]] const auto result = Square::from_string(fenFragment)
-                                             .and_then([&position](const Square epSqare) {
-                                                 position.enPassantTargetSquare = epSqare;
-                                                 return std::expected<void, string> {};
-                                             });
+    [[maybe_unused]] const auto result
+        = Square::from_string(fenFragment)
+              .transform([&position](const Square epSqare) {
+                  position.enPassantTargetSquare = epSqare;
+              });
 }
 
 } // namespace chess::notation::fen_helpers

@@ -16,13 +16,13 @@
 #include <ben-bot/Engine.hpp>
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
-#include <expected>
 #include <filesystem>
 #include <format>
 #include <libbenbot/search/Callbacks.hpp>
 #include <libchess/uci/Printing.hpp>
 #include <libchess/util/Logger.hpp>
 #include <string>
+#include <utility>
 
 namespace ben_bot {
 
@@ -75,9 +75,9 @@ void Engine::start_file_logger(const string_view path)
 
     [[maybe_unused]] const auto result
         = chess::util::start_file_logger(std::filesystem::path { path })
-              .or_else([](const string_view error) {
+              .transform_error([](const string_view error) {
                   info_string(error);
-                  return std::expected<void, std::string> {};
+                  return std::monostate {};
               });
 }
 

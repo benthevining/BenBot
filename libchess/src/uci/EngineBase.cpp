@@ -25,6 +25,7 @@
 #include <print>
 #include <string>
 #include <string_view>
+#include <utility>
 
 namespace chess::uci {
 
@@ -145,14 +146,12 @@ void EngineBase::handle_setpos(const string_view arguments)
     // we print an error message via `info string` and keep the old position.
     // See this Stockfish PR discussion: https://github.com/official-stockfish/Stockfish/pull/4563
 
-    using MaybeError = std::expected<void, std::string>;
-
     // NB. enabling this check seems to cost about 8 ELO
     static constexpr bool SanitizeIncomingPositions = false;
 
     [[maybe_unused]] const auto obj
         = parse_position_options(arguments)
-              .and_then([this](const Position& pos) -> MaybeError {
+              .and_then([this](const Position& pos) -> std::expected<void, std::string> {
                   if constexpr (SanitizeIncomingPositions) {
                       if (const auto errorStr = pos.is_illegal()) {
                           [[unlikely]];
@@ -168,11 +167,11 @@ void EngineBase::handle_setpos(const string_view arguments)
 
                   return {};
               })
-              .or_else([this](const string_view error) -> MaybeError {
+              .transform_error([this](const string_view error) {
                   info_string(std::format("Error setting position: {}", error));
                   info_string(std::format("Retained previous position: {}", notation::to_fen(position)));
 
-                  return {};
+                  return std::monostate {};
               });
 }
 

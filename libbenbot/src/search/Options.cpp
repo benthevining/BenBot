@@ -58,19 +58,19 @@ void Options::update_from(const chess::uci::GoCommandOptions& goOptions)
 
     searchTime = goOptions.searchTime
                      .or_else([&goOptions, isWhite = position.is_white_to_move()]() -> std::optional<milliseconds> {
-                         if (not goOptions.infinite) {
-                             const auto& timeLeft = isWhite ? goOptions.whiteTimeLeft : goOptions.blackTimeLeft;
+                         if (goOptions.infinite)
+                             return std::nullopt;
 
-                             // need to know at least our time remaining in order to calculate search time limit
-                             if (timeLeft.has_value()) {
+                         // need to know at least our time remaining in order to calculate search time limit
+                         const auto& timeLeft = isWhite ? goOptions.whiteTimeLeft : goOptions.blackTimeLeft;
+
+                         return timeLeft
+                             .transform([&goOptions, isWhite](const milliseconds msLeft) {
                                  return determine_search_time(
-                                     *timeLeft,
+                                     msLeft,
                                      isWhite ? goOptions.whiteInc : goOptions.blackInc,
                                      goOptions.movesToGo);
-                             }
-                         }
-
-                         return std::nullopt;
+                             });
                      })
                      .transform([overhead = moveOverhead](const milliseconds time) {
                          return time - overhead;

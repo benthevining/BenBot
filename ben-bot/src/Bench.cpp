@@ -36,6 +36,7 @@
 #include <ranges>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace ben_bot {
@@ -203,11 +204,9 @@ void Engine::run_bench(const string_view arguments) const
 
     const auto absPathStr = epdPath.string(); // NOLINT(build/include_what_you_use)
 
-    using Placeholder = std::expected<void, std::string>;
-
     [[maybe_unused]] const auto result
         = util::load_file_as_string(epdPath)
-              .and_then([&absPathStr, this, defaultDepth](const string_view fileContent) {
+              .transform([&absPathStr, this, defaultDepth](const string_view fileContent) {
                   info_string(std::format("Running bench for {}...", absPathStr));
 
                   // output the filename for CTest to detect & upload with the test info
@@ -217,13 +216,11 @@ void Engine::run_bench(const string_view arguments) const
                       absPathStr));
 
                   do_bench(fileContent, defaultDepth, debugMode.load());
-
-                  return Placeholder {};
               })
-              .or_else([](const string_view error) {
+              .transform_error([](const string_view error) {
                   info_string(error);
 
-                  return Placeholder {};
+                  return std::monostate {};
               });
 }
 

@@ -136,6 +136,7 @@ namespace detail {
 
     using board::prev_pawn_rank;
 
+    namespace stdv       = std::views;
     namespace rank_masks = board::masks::ranks;
     namespace shifts     = board::shifts;
 
@@ -157,7 +158,7 @@ namespace detail {
             emptySquares);
 
         auto nonPromotingPushes = (allPushes & NOT_PROMOTION_MASK).squares()
-                                | std::views::transform([](const Square target) {
+                                | stdv::transform([](const Square target) {
                                       return Move {
                                           Square {
                                               .file = target.file,
@@ -168,10 +169,10 @@ namespace detail {
                                 | std::ranges::to<Pushes>();
 
         auto promotingPushes = possiblePromotedTypes
-                             | std::views::transform([pushes = (allPushes & PROMOTION_MASK).squares()](
-                                                         const PieceType promotedType) {
+                             | stdv::transform([pushes = (allPushes & PROMOTION_MASK).squares()](
+                                                   const PieceType promotedType) {
                                    return pushes
-                                        | std::views::transform([promotedType](const Square target) {
+                                        | stdv::transform([promotedType](const Square target) {
                                               return Move {
                                                   Square {
                                                       .file = target.file,
@@ -180,15 +181,15 @@ namespace detail {
                                               };
                                           });
                                })
-                             | std::views::join
+                             | stdv::join
                              | std::ranges::to<Pushes>();
 
         std::array moveLists {
             std::move(nonPromotingPushes), std::move(promotingPushes)
         };
 
-        return std::views::join(std::move(moveLists))
-             | std::views::filter([&position](const Move& move) {
+        return stdv::join(std::move(moveLists))
+             | stdv::filter([&position](const Move& move) {
                    return position.is_legal(move);
                });
     }
@@ -204,7 +205,7 @@ namespace detail {
             allOccupied);
 
         return pushes.squares()
-             | std::views::transform([](const Square target) {
+             | stdv::transform([](const Square target) {
                    return Move {
                        Square {
                            .file = target.file,
@@ -212,7 +213,7 @@ namespace detail {
                        target, PieceType::Pawn
                    };
                })
-             | std::views::filter([&position](const Move& move) {
+             | stdv::filter([&position](const Move& move) {
                    return position.is_legal(move);
                });
     }
@@ -222,9 +223,9 @@ namespace detail {
         const Bitboard           targetBoard,
         std::optional<PieceType> promotedType = std::nullopt)
     {
-        return std::views::zip(
+        return stdv::zip(
                    startingBoard.squares(), targetBoard.squares())
-             | std::views::transform([promotedType](const auto& tuple) {
+             | stdv::transform([promotedType](const auto& tuple) {
                    const auto [starting, target] = tuple;
 
                    return Move { starting, target, PieceType::Pawn, promotedType };
@@ -268,10 +269,10 @@ namespace detail {
 
         auto get_promotion_captures = [](const Bitboard startingBoard, const Bitboard targetBoard) {
             return possiblePromotedTypes
-                 | std::views::transform([startingBoard, targetBoard](const PieceType type) {
+                 | stdv::transform([startingBoard, targetBoard](const PieceType type) {
                        return get_pawn_captures_internal(startingBoard, targetBoard, type);
                    })
-                 | std::views::join
+                 | stdv::join
                  | std::ranges::to<PawnCaptures>();
         };
 
@@ -282,8 +283,8 @@ namespace detail {
             get_promotion_captures(canCapturePromoteWest, westPromotionCaptures)
         };
 
-        return std::views::join(std::move(moveLists))
-             | std::views::filter([&position](const Move& move) {
+        return stdv::join(std::move(moveLists))
+             | stdv::filter([&position](const Move& move) {
                    return position.is_legal(move);
                });
     }
@@ -303,12 +304,12 @@ namespace detail {
                                         | shifts::pawn_inv_capture_west<Side>(targetSquareBoard);
 
                 return (position.pieces_for<Side>().pawns & startSquares).squares()
-                     | std::views::transform([targetSquare](const Square square) {
+                     | stdv::transform([targetSquare](const Square square) {
                            return Move {
                                square, targetSquare, PieceType::Pawn
                            };
                        })
-                     | std::views::filter([&position](const Move& move) {
+                     | stdv::filter([&position](const Move& move) {
                            return position.is_legal(move);
                        })
                      | std::ranges::to<EPMoves>();
@@ -347,9 +348,9 @@ namespace detail {
         const auto& ourPieces = position.pieces_for<Side>();
 
         return ourPieces.knights.subboards()
-             | std::views::transform([ourOccupied      = ourPieces.occupied,
-                                         theirOccupied = position.pieces_for<pieces::other_side<Side>()>().occupied](
-                                         const Bitboard knightPos) {
+             | stdv::transform([ourOccupied      = ourPieces.occupied,
+                                   theirOccupied = position.pieces_for<pieces::other_side<Side>()>().occupied](
+                                   const Bitboard knightPos) {
                    auto knightMoves = pseudo_legal::knight(knightPos, ourOccupied);
 
                    if constexpr (CapturesOnly) {
@@ -357,15 +358,15 @@ namespace detail {
                    }
 
                    return knightMoves.squares()
-                        | std::views::transform([knightPos](const Square targetSquare) {
+                        | stdv::transform([knightPos](const Square targetSquare) {
                               return Move {
                                   Square::from_index(knightPos.first()),
                                   targetSquare, PieceType::Knight
                               };
                           });
                })
-             | std::views::join
-             | std::views::filter([&position](const Move& move) {
+             | stdv::join
+             | stdv::filter([&position](const Move& move) {
                    return position.is_legal(move);
                });
     }
@@ -378,10 +379,10 @@ namespace detail {
         const auto& ourPieces = position.pieces_for<Side>();
 
         return ourPieces.bishops.squares()
-             | std::views::transform([occupiedSquares,
-                                         ourOccupied   = ourPieces.occupied,
-                                         theirOccupied = position.pieces_for<pieces::other_side<Side>()>().occupied](
-                                         const Square bishopPos) {
+             | stdv::transform([occupiedSquares,
+                                   ourOccupied   = ourPieces.occupied,
+                                   theirOccupied = position.pieces_for<pieces::other_side<Side>()>().occupied](
+                                   const Square bishopPos) {
                    auto bishopMoves = magics::bishop(bishopPos, occupiedSquares, ourOccupied);
 
                    if constexpr (CapturesOnly) {
@@ -389,14 +390,14 @@ namespace detail {
                    }
 
                    return bishopMoves.squares()
-                        | std::views::transform([bishopPos](const Square targetSquare) {
+                        | stdv::transform([bishopPos](const Square targetSquare) {
                               return Move {
                                   bishopPos, targetSquare, PieceType::Bishop
                               };
                           });
                })
-             | std::views::join
-             | std::views::filter([&position](const Move& move) {
+             | stdv::join
+             | stdv::filter([&position](const Move& move) {
                    return position.is_legal(move);
                });
     }
@@ -409,10 +410,10 @@ namespace detail {
         const auto& ourPieces = position.pieces_for<Side>();
 
         return ourPieces.rooks.squares()
-             | std::views::transform([occupiedSquares,
-                                         ourOccupied   = ourPieces.occupied,
-                                         theirOccupied = position.pieces_for<pieces::other_side<Side>()>().occupied](
-                                         const Square rookPos) {
+             | stdv::transform([occupiedSquares,
+                                   ourOccupied   = ourPieces.occupied,
+                                   theirOccupied = position.pieces_for<pieces::other_side<Side>()>().occupied](
+                                   const Square rookPos) {
                    auto rookMoves = magics::rook(rookPos, occupiedSquares, ourOccupied);
 
                    if constexpr (CapturesOnly) {
@@ -420,14 +421,14 @@ namespace detail {
                    }
 
                    return rookMoves.squares()
-                        | std::views::transform([rookPos](const Square targetSquare) {
+                        | stdv::transform([rookPos](const Square targetSquare) {
                               return Move {
                                   rookPos, targetSquare, PieceType::Rook
                               };
                           });
                })
-             | std::views::join
-             | std::views::filter([&position](const Move& move) {
+             | stdv::join
+             | stdv::filter([&position](const Move& move) {
                    return position.is_legal(move);
                });
     }
@@ -440,10 +441,10 @@ namespace detail {
         const auto& ourPieces = position.pieces_for<Side>();
 
         return ourPieces.queens.squares()
-             | std::views::transform([occupiedSquares,
-                                         ourOccupied   = ourPieces.occupied,
-                                         theirOccupied = position.pieces_for<pieces::other_side<Side>()>().occupied](
-                                         const Square queenPos) {
+             | stdv::transform([occupiedSquares,
+                                   ourOccupied   = ourPieces.occupied,
+                                   theirOccupied = position.pieces_for<pieces::other_side<Side>()>().occupied](
+                                   const Square queenPos) {
                    auto queenMoves = magics::queen(queenPos, occupiedSquares, ourOccupied);
 
                    if constexpr (CapturesOnly) {
@@ -451,14 +452,14 @@ namespace detail {
                    }
 
                    return queenMoves.squares()
-                        | std::views::transform([queenPos](const Square targetSquare) {
+                        | stdv::transform([queenPos](const Square targetSquare) {
                               return Move {
                                   queenPos, targetSquare, PieceType::Queen
                               };
                           });
                })
-             | std::views::join
-             | std::views::filter([&position](const Move& move) {
+             | stdv::join
+             | stdv::filter([&position](const Move& move) {
                    return position.is_legal(move);
                });
     }
@@ -476,13 +477,13 @@ namespace detail {
         }
 
         return kingMoves.squares()
-             | std::views::transform([kingSquare = ourPieces.get_king_location()](
-                                         const Square targetSquare) {
+             | stdv::transform([kingSquare = ourPieces.get_king_location()](
+                                   const Square targetSquare) {
                    return Move {
                        kingSquare, targetSquare, PieceType::King
                    };
                })
-             | std::views::filter([&position](const Move& move) {
+             | stdv::filter([&position](const Move& move) {
                    return position.is_legal(move);
                });
     }
