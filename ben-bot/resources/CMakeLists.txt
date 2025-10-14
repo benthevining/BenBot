@@ -29,8 +29,12 @@ add_library (ben_bot_resources STATIC)
 target_link_libraries (ben_bot_resources PRIVATE ben_bot_resources_internal)
 
 set_target_properties (
-    ben_bot_resources PROPERTIES CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF DEBUG_POSTFIX -d
-                                 POSITION_INDEPENDENT_CODE ON
+    ben_bot_resources
+    PROPERTIES CXX_STANDARD_REQUIRED ON
+               CXX_EXTENSIONS OFF
+               DEBUG_POSTFIX -d
+               POSITION_INDEPENDENT_CODE ON
+               VERIFY_INTERFACE_HEADER_SETS ON
 )
 
 # generate the config header that provides info such as compiler name, build config, etc.

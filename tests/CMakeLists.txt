@@ -49,8 +49,15 @@ add_subdirectory (position-solver)
 add_subdirectory (rampart)
 add_subdirectory (unit)
 
+#
+
 add_test (NAME ben_bot.bench.engine_nps COMMAND ben_bot::ben_bot bench --no-loop
           CONFIGURATIONS Release
 )
 
 set_tests_properties (ben_bot.bench.engine_nps PROPERTIES RUN_SERIAL TRUE)
+
+add_test (NAME ben_bot.verify_headers
+          COMMAND "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --target
+                  all_verify_interface_header_sets --config "$<CONFIG>"
+)

@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <libchess/uci/CommandParsing.hpp>
 #include <span>
 #include <string>
 #include <string_view>
@@ -33,7 +34,6 @@ using game::Position;
 using std::string_view;
 
 struct Option;
-struct GoCommandOptions;
 
 /** A base class for UCI chess engines.
 
