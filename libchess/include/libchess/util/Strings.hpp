@@ -79,7 +79,7 @@ using StringViewPair = std::pair<string_view, string_view>;
     @see write_integer()
  */
 template <std::integral Int>
-[[nodiscard]] auto int_from_string(
+[[nodiscard]] constexpr auto int_from_string(
     string_view text, Int defaultValue = 0) noexcept
     -> Int;
 
@@ -138,7 +138,7 @@ void write_integer(
  */
 
 template <std::integral Int>
-[[nodiscard]] Int int_from_string(
+[[nodiscard]] constexpr Int int_from_string(
     const string_view text, Int defaultValue) noexcept
 {
     std::from_chars(
