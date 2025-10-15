@@ -227,7 +227,7 @@ void EngineBase::loop()
         std::getline(std::cin, inputBuf);
 
         handle_command(inputBuf);
-    } while (! shouldExit);
+    } while (not shouldExit);
 }
 
 } // namespace chess::uci

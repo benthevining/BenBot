@@ -26,5 +26,5 @@ TEST_CASE("En passant - illegal if capture reveals check", TAGS)
     const auto move = chess::notation::from_alg(position, "exf6")
                           .value();
 
-    REQUIRE(not position.is_legal(move));
+    REQUIRE_FALSE(position.is_legal(move));
 }

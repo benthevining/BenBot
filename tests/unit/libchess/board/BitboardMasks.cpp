@@ -22,10 +22,12 @@
 #include <libchess/board/Square.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <ranges>
+#include <string_view>
 #include <vector>
 
 static constexpr auto TAGS { "[board][Bitboard][masks]" };
 
+using chess::board::Bitboard;
 using chess::board::File;
 using chess::board::Rank;
 using chess::board::Square;
@@ -38,7 +40,7 @@ using magic_enum::enum_values;
 namespace bitboard_masks = chess::board::masks;
 
 namespace {
-[[nodiscard]] constexpr auto get_squares(const chess::board::Bitboard board)
+[[nodiscard]] constexpr auto get_squares(const Bitboard board)
 {
     return board.squares() | std::ranges::to<std::vector>();
 }
@@ -85,94 +87,96 @@ TEST_CASE("Bitboard - dark/light square masks", TAGS)
     }
 }
 
-TEST_CASE("Bitboard - file masks", TAGS) {
-#define TEST_FILE_MASK(str, correctFile, mask)                      \
-    SECTION(str)                                                    \
-    {                                                               \
-        static constexpr auto board = mask;                         \
-                                                                    \
-        STATIC_REQUIRE(board.count() == 8uz);                       \
-        STATIC_REQUIRE(get_squares(board).size() == board.count()); \
-                                                                    \
-        for (const auto rank : enum_values<Rank>()) {               \
-            for (const auto file : enum_values<File>()) {           \
-                const Square square { file, rank };                 \
-                                                                    \
-                const bool isCorrectFile = file == correctFile;     \
-                                                                    \
-                REQUIRE(board.test(square) == isCorrectFile);       \
-            }                                                       \
-        }                                                           \
-                                                                    \
-        for (const auto square : board.squares()) {                 \
-            REQUIRE(square.file == correctFile);                    \
-                                                                    \
-            for (const auto sq2 : board.squares()) {                \
-                REQUIRE(file_distance(square, sq2) == 0uz);         \
-                                                                    \
-                if (square != sq2)                                  \
-                    REQUIRE(not are_on_same_diagonal(square, sq2)); \
-            }                                                       \
-        }                                                           \
+namespace {
+constexpr void test_file_mask(
+    const std::string_view sectionName,
+    const File correctFile, const Bitboard mask)
+{
+    SECTION(sectionName.data())
+    {
+        REQUIRE(mask.count() == 8uz);
+        REQUIRE(get_squares(mask).size() == mask.count());
+
+        for (const auto rank : enum_values<Rank>()) {
+            for (const auto file : enum_values<File>()) {
+                const Square square { file, rank };
+
+                const bool isCorrectFile = file == correctFile;
+
+                REQUIRE(mask.test(square) == isCorrectFile);
+            }
+        }
+
+        for (const auto square : mask.squares()) {
+            REQUIRE(square.file == correctFile);
+
+            for (const auto sq2 : mask.squares()) {
+                REQUIRE(file_distance(square, sq2) == 0uz);
+
+                if (square != sq2)
+                    REQUIRE_FALSE(are_on_same_diagonal(square, sq2));
+            }
+        }
     }
+}
+} // namespace
 
-    // clang-format off
-    TEST_FILE_MASK("A file", File::A, bitboard_masks::files::A)
-    TEST_FILE_MASK("B file", File::B, bitboard_masks::files::B)
-    TEST_FILE_MASK("C file", File::C, bitboard_masks::files::C)
-    TEST_FILE_MASK("D file", File::D, bitboard_masks::files::D)
-    TEST_FILE_MASK("E file", File::E, bitboard_masks::files::E)
-    TEST_FILE_MASK("F file", File::F, bitboard_masks::files::F)
-    TEST_FILE_MASK("G file", File::G, bitboard_masks::files::G)
-    TEST_FILE_MASK("H file", File::H, bitboard_masks::files::H)
-// clang-format on
-
-#undef TEST_FILE_MASK
+TEST_CASE("Bitboard - file masks", TAGS)
+{
+    test_file_mask("A file", File::A, bitboard_masks::files::A);
+    test_file_mask("B file", File::B, bitboard_masks::files::B);
+    test_file_mask("C file", File::C, bitboard_masks::files::C);
+    test_file_mask("D file", File::D, bitboard_masks::files::D);
+    test_file_mask("E file", File::E, bitboard_masks::files::E);
+    test_file_mask("F file", File::F, bitboard_masks::files::F);
+    test_file_mask("G file", File::G, bitboard_masks::files::G);
+    test_file_mask("H file", File::H, bitboard_masks::files::H);
 }
 
-TEST_CASE("Bitboard - rank masks", TAGS) {
-#define TEST_RANK_MASK(str, correctRank, mask)                      \
-    SECTION(str)                                                    \
-    {                                                               \
-        static constexpr auto board = mask;                         \
-                                                                    \
-        STATIC_REQUIRE(board.count() == 8uz);                       \
-        STATIC_REQUIRE(get_squares(board).size() == board.count()); \
-                                                                    \
-        for (const auto rank : enum_values<Rank>()) {               \
-            for (const auto file : enum_values<File>()) {           \
-                const Square square { file, rank };                 \
-                                                                    \
-                const bool isCorrectRank = rank == correctRank;     \
-                                                                    \
-                REQUIRE(board.test(square) == isCorrectRank);       \
-            }                                                       \
-        }                                                           \
-                                                                    \
-        for (const auto square : board.squares()) {                 \
-            REQUIRE(square.rank == correctRank);                    \
-                                                                    \
-            for (const auto sq2 : board.squares()) {                \
-                REQUIRE(rank_distance(square, sq2) == 0uz);         \
-                                                                    \
-                if (square != sq2)                                  \
-                    REQUIRE(not are_on_same_diagonal(square, sq2)); \
-            }                                                       \
-        }                                                           \
+namespace {
+constexpr void test_rank_mask(
+    const std::string_view sectionName,
+    const Rank correctRank, const Bitboard mask)
+{
+    SECTION(sectionName.data())
+    {
+        REQUIRE(mask.count() == 8uz);
+        REQUIRE(get_squares(mask).size() == mask.count());
+
+        for (const auto rank : enum_values<Rank>()) {
+            for (const auto file : enum_values<File>()) {
+                const Square square { file, rank };
+
+                const bool isCorrectRank = rank == correctRank;
+
+                REQUIRE(mask.test(square) == isCorrectRank);
+            }
+        }
+
+        for (const auto square : mask.squares()) {
+            REQUIRE(square.rank == correctRank);
+
+            for (const auto sq2 : mask.squares()) {
+                REQUIRE(rank_distance(square, sq2) == 0uz);
+
+                if (square != sq2)
+                    REQUIRE_FALSE(are_on_same_diagonal(square, sq2));
+            }
+        }
     }
+}
+} // namespace
 
-    // clang-format off
-    TEST_RANK_MASK("Rank 1", Rank::One, bitboard_masks::ranks::ONE)
-    TEST_RANK_MASK("Rank 2", Rank::Two, bitboard_masks::ranks::TWO)
-    TEST_RANK_MASK("Rank 3", Rank::Three, bitboard_masks::ranks::THREE)
-    TEST_RANK_MASK("Rank 4", Rank::Four, bitboard_masks::ranks::FOUR)
-    TEST_RANK_MASK("Rank 5", Rank::Five, bitboard_masks::ranks::FIVE)
-    TEST_RANK_MASK("Rank 6", Rank::Six, bitboard_masks::ranks::SIX)
-    TEST_RANK_MASK("Rank 7", Rank::Seven, bitboard_masks::ranks::SEVEN)
-    TEST_RANK_MASK("Rank 8", Rank::Eight, bitboard_masks::ranks::EIGHT)
-// clang-format on
-
-#undef TEST_RANK_MASK
+TEST_CASE("Bitboard - rank masks", TAGS)
+{
+    test_rank_mask("Rank 1", Rank::One, bitboard_masks::ranks::ONE);
+    test_rank_mask("Rank 2", Rank::Two, bitboard_masks::ranks::TWO);
+    test_rank_mask("Rank 3", Rank::Three, bitboard_masks::ranks::THREE);
+    test_rank_mask("Rank 4", Rank::Four, bitboard_masks::ranks::FOUR);
+    test_rank_mask("Rank 5", Rank::Five, bitboard_masks::ranks::FIVE);
+    test_rank_mask("Rank 6", Rank::Six, bitboard_masks::ranks::SIX);
+    test_rank_mask("Rank 7", Rank::Seven, bitboard_masks::ranks::SEVEN);
+    test_rank_mask("Rank 8", Rank::Eight, bitboard_masks::ranks::EIGHT);
 }
 
 TEST_CASE("Bitboard - diagonal masks", TAGS)

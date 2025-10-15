@@ -44,23 +44,23 @@ TEST_CASE("Transposition table - find()", TAGS)
 
     TranspositionTable table;
 
-    REQUIRE(not table.find(startPos).has_value());
-    REQUIRE(not table.find(pos2).has_value());
+    REQUIRE_FALSE(table.find(startPos));
+    REQUIRE_FALSE(table.find(pos2));
 
     table.store(startPos, record);
 
-    REQUIRE(table.find(startPos).has_value());
-    REQUIRE(not table.find(pos2).has_value());
+    REQUIRE(table.find(startPos));
+    REQUIRE_FALSE(table.find(pos2));
 
     table.store(pos2, record);
 
-    REQUIRE(table.find(startPos).has_value());
-    REQUIRE(table.find(pos2).has_value());
+    REQUIRE(table.find(startPos));
+    REQUIRE(table.find(pos2));
 
     table.clear();
 
-    REQUIRE(not table.find(startPos).has_value());
-    REQUIRE(not table.find(pos2).has_value());
+    REQUIRE_FALSE(table.find(startPos));
+    REQUIRE_FALSE(table.find(pos2));
 }
 
 TEST_CASE("Transposition table - get_best_response()", TAGS)
@@ -73,7 +73,7 @@ TEST_CASE("Transposition table - get_best_response()", TAGS)
 
     TranspositionTable table;
 
-    REQUIRE(not table.get_best_response(startPos, ourMove).has_value());
+    REQUIRE_FALSE(table.get_best_response(startPos, ourMove));
 
     table.store(startPos,
         { .searchedDepth = 2uz,
@@ -81,7 +81,7 @@ TEST_CASE("Transposition table - get_best_response()", TAGS)
             .evalType    = EvalType::Exact,
             .bestMove    = ourMove });
 
-    REQUIRE(not table.get_best_response(startPos, ourMove).has_value());
+    REQUIRE_FALSE(table.get_best_response(startPos, ourMove));
 
     table.store(
         chess::game::after_move(startPos, ourMove),
@@ -92,7 +92,7 @@ TEST_CASE("Transposition table - get_best_response()", TAGS)
 
     const auto bestResponse = table.get_best_response(startPos, ourMove);
 
-    REQUIRE(bestResponse.has_value());
+    REQUIRE(bestResponse);
     REQUIRE(*bestResponse == theirMove);
 }
 
@@ -110,9 +110,7 @@ TEST_CASE("Transposition table - probe_eval()", TAGS)
 
     TranspositionTable table;
 
-    REQUIRE(not table.probe_eval(
-                         startPos, DEPTH, BOUNDS)
-            .has_value());
+    REQUIRE_FALSE(table.probe_eval(startPos, DEPTH, BOUNDS));
 
     SECTION("Exact eval stored")
     {
@@ -124,7 +122,7 @@ TEST_CASE("Transposition table - probe_eval()", TAGS)
 
         const auto probed = table.probe_eval(startPos, DEPTH, BOUNDS);
 
-        REQUIRE(probed.has_value());
+        REQUIRE(probed);
 
         const auto [eval, type] = probed.value();
 
@@ -149,7 +147,7 @@ TEST_CASE("Transposition table - probe_eval()", TAGS)
 
             const auto probed = table.probe_eval(startPos, DEPTH, thisBounds);
 
-            REQUIRE(probed.has_value());
+            REQUIRE(probed);
 
             const auto [eval, type] = probed.value();
 
@@ -162,9 +160,7 @@ TEST_CASE("Transposition table - probe_eval()", TAGS)
             auto thisBounds  = BOUNDS;
             thisBounds.alpha = { EVAL - 1 };
 
-            REQUIRE(not table.probe_eval(
-                                 startPos, DEPTH, thisBounds)
-                    .has_value());
+            REQUIRE_FALSE(table.probe_eval(startPos, DEPTH, thisBounds));
         }
     }
 
@@ -185,7 +181,7 @@ TEST_CASE("Transposition table - probe_eval()", TAGS)
 
             const auto probed = table.probe_eval(startPos, DEPTH, thisBounds);
 
-            REQUIRE(probed.has_value());
+            REQUIRE(probed);
 
             const auto [eval, type] = probed.value();
 
@@ -198,9 +194,7 @@ TEST_CASE("Transposition table - probe_eval()", TAGS)
             auto thisBounds = BOUNDS;
             thisBounds.beta = { EVAL + 1 };
 
-            REQUIRE(not table.probe_eval(
-                                 startPos, DEPTH, thisBounds)
-                    .has_value());
+            REQUIRE_FALSE(table.probe_eval(startPos, DEPTH, thisBounds));
         }
     }
 }

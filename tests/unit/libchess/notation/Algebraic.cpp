@@ -191,7 +191,7 @@ TEST_CASE("Algebraic notation - piece moves", TAGS)
 
             REQUIRE(position.is_check());
             REQUIRE(position.is_checkmate());
-            REQUIRE(not position.is_stalemate());
+            REQUIRE_FALSE(position.is_stalemate());
         }
     }
 
@@ -592,8 +592,8 @@ TEST_CASE("Algebraic notation - promotion (push)", TAGS)
 
         position.make_move(move);
 
-        REQUIRE(not position.whitePieces.pawns.test(Square { File::D, Rank::Seven }));
-        REQUIRE(not position.whitePieces.pawns.test(Square { File::D, Rank::Eight }));
+        REQUIRE_FALSE(position.whitePieces.pawns.test(Square { File::D, Rank::Seven }));
+        REQUIRE_FALSE(position.whitePieces.pawns.test(Square { File::D, Rank::Eight }));
 
         REQUIRE(position.whitePieces.queens.test(Square { File::D, Rank::Eight }));
     }
@@ -616,8 +616,8 @@ TEST_CASE("Algebraic notation - promotion (push)", TAGS)
 
         position.make_move(move);
 
-        REQUIRE(not position.whitePieces.pawns.test(Square { File::D, Rank::Seven }));
-        REQUIRE(not position.whitePieces.pawns.test(Square { File::D, Rank::Eight }));
+        REQUIRE_FALSE(position.whitePieces.pawns.test(Square { File::D, Rank::Seven }));
+        REQUIRE_FALSE(position.whitePieces.pawns.test(Square { File::D, Rank::Eight }));
 
         REQUIRE(position.whitePieces.knights.test(Square { File::D, Rank::Eight }));
 
@@ -666,9 +666,9 @@ TEST_CASE("Algebraic notation - promotion (capture)", TAGS)
 
         position.make_move(move);
 
-        REQUIRE(not position.whitePieces.pawns.test(Square { File::E, Rank::Seven }));
-        REQUIRE(not position.whitePieces.pawns.test(Square { File::E, Rank::Eight }));
-        REQUIRE(not position.whitePieces.pawns.test(Square { File::D, Rank::Eight }));
+        REQUIRE_FALSE(position.whitePieces.pawns.test(Square { File::E, Rank::Seven }));
+        REQUIRE_FALSE(position.whitePieces.pawns.test(Square { File::E, Rank::Eight }));
+        REQUIRE_FALSE(position.whitePieces.pawns.test(Square { File::D, Rank::Eight }));
 
         REQUIRE(position.whitePieces.bishops.test(Square { File::D, Rank::Eight }));
     }

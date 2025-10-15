@@ -31,9 +31,7 @@ foreach (epd_file IN LISTS testcase_files)
     cmake_path (GET epd_file STEM filename)
 
     file (STRINGS "${epd_file}" epd_lines)
-
     list (LENGTH epd_lines num_epds)
-
     math (EXPR num_epds "${num_epds} - 1") # because RANGE includes the end value
 
     foreach (epd_idx RANGE "${num_epds}")

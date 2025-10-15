@@ -18,7 +18,7 @@ if (NOT FASTCHESS_PROGRAM)
 endif ()
 
 add_test (NAME ben_bot.uci_compliance COMMAND "${FASTCHESS_PROGRAM}" --compliance
-                                              $<TARGET_FILE:ben_bot>
+                                              "$<TARGET_FILE:ben_bot>"
 )
 
 #

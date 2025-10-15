@@ -20,6 +20,7 @@
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
 #include <magic_enum/magic_enum.hpp>
+#include <string_view>
 
 static constexpr auto TAGS { "[board][Square]" };
 
@@ -27,93 +28,98 @@ using chess::board::BitboardIndex;
 using chess::board::File;
 using chess::board::Rank;
 using chess::board::Square;
+using std::string_view;
 
 namespace gen = Catch::Generators;
 
-TEST_CASE("Square - to/from index", TAGS) {
-#define SQUARE_TO_FROM_IDX(name, file, rank, idx)          \
-    SECTION(name)                                          \
-    {                                                      \
-        static constexpr Square square { file, rank };     \
-        STATIC_REQUIRE(square.index() == idx);             \
-        STATIC_REQUIRE(square == Square::from_index(idx)); \
+namespace {
+constexpr void square_to_from_idx(
+    const string_view sectionName,
+    const File file, const Rank rank,
+    const size_t index)
+{
+    SECTION(sectionName.data())
+    {
+        const Square square { file, rank };
+        REQUIRE(square.index() == index);
+        REQUIRE(square == Square::from_index(static_cast<BitboardIndex>(index)));
     }
+}
+} // namespace
 
-    // clang-format off
-    SQUARE_TO_FROM_IDX("A1", File::A, Rank::One, 0uz)
-    SQUARE_TO_FROM_IDX("B1", File::B, Rank::One, 1uz)
-    SQUARE_TO_FROM_IDX("C1", File::C, Rank::One, 2uz)
-    SQUARE_TO_FROM_IDX("D1", File::D, Rank::One, 3uz)
-    SQUARE_TO_FROM_IDX("E1", File::E, Rank::One, 4uz)
-    SQUARE_TO_FROM_IDX("F1", File::F, Rank::One, 5uz)
-    SQUARE_TO_FROM_IDX("G1", File::G, Rank::One, 6uz)
-    SQUARE_TO_FROM_IDX("H1", File::H, Rank::One, 7uz)
+TEST_CASE("Square - to/from index", TAGS)
+{
+    square_to_from_idx("A1", File::A, Rank::One, 0uz);
+    square_to_from_idx("B1", File::B, Rank::One, 1uz);
+    square_to_from_idx("C1", File::C, Rank::One, 2uz);
+    square_to_from_idx("D1", File::D, Rank::One, 3uz);
+    square_to_from_idx("E1", File::E, Rank::One, 4uz);
+    square_to_from_idx("F1", File::F, Rank::One, 5uz);
+    square_to_from_idx("G1", File::G, Rank::One, 6uz);
+    square_to_from_idx("H1", File::H, Rank::One, 7uz);
 
-    SQUARE_TO_FROM_IDX("A2", File::A, Rank::Two, 8uz)
-    SQUARE_TO_FROM_IDX("B2", File::B, Rank::Two, 9uz)
-    SQUARE_TO_FROM_IDX("C2", File::C, Rank::Two, 10uz)
-    SQUARE_TO_FROM_IDX("D2", File::D, Rank::Two, 11uz)
-    SQUARE_TO_FROM_IDX("E2", File::E, Rank::Two, 12uz)
-    SQUARE_TO_FROM_IDX("F2", File::F, Rank::Two, 13uz)
-    SQUARE_TO_FROM_IDX("G2", File::G, Rank::Two, 14uz)
-    SQUARE_TO_FROM_IDX("H2", File::H, Rank::Two, 15uz)
+    square_to_from_idx("A2", File::A, Rank::Two, 8uz);
+    square_to_from_idx("B2", File::B, Rank::Two, 9uz);
+    square_to_from_idx("C2", File::C, Rank::Two, 10uz);
+    square_to_from_idx("D2", File::D, Rank::Two, 11uz);
+    square_to_from_idx("E2", File::E, Rank::Two, 12uz);
+    square_to_from_idx("F2", File::F, Rank::Two, 13uz);
+    square_to_from_idx("G2", File::G, Rank::Two, 14uz);
+    square_to_from_idx("H2", File::H, Rank::Two, 15uz);
 
-    SQUARE_TO_FROM_IDX("A3", File::A, Rank::Three, 16uz)
-    SQUARE_TO_FROM_IDX("B3", File::B, Rank::Three, 17uz)
-    SQUARE_TO_FROM_IDX("C3", File::C, Rank::Three, 18uz)
-    SQUARE_TO_FROM_IDX("D3", File::D, Rank::Three, 19uz)
-    SQUARE_TO_FROM_IDX("E3", File::E, Rank::Three, 20uz)
-    SQUARE_TO_FROM_IDX("F3", File::F, Rank::Three, 21uz)
-    SQUARE_TO_FROM_IDX("G3", File::G, Rank::Three, 22uz)
-    SQUARE_TO_FROM_IDX("H3", File::H, Rank::Three, 23uz)
+    square_to_from_idx("A3", File::A, Rank::Three, 16uz);
+    square_to_from_idx("B3", File::B, Rank::Three, 17uz);
+    square_to_from_idx("C3", File::C, Rank::Three, 18uz);
+    square_to_from_idx("D3", File::D, Rank::Three, 19uz);
+    square_to_from_idx("E3", File::E, Rank::Three, 20uz);
+    square_to_from_idx("F3", File::F, Rank::Three, 21uz);
+    square_to_from_idx("G3", File::G, Rank::Three, 22uz);
+    square_to_from_idx("H3", File::H, Rank::Three, 23uz);
 
-    SQUARE_TO_FROM_IDX("A4", File::A, Rank::Four, 24uz)
-    SQUARE_TO_FROM_IDX("B4", File::B, Rank::Four, 25uz)
-    SQUARE_TO_FROM_IDX("C4", File::C, Rank::Four, 26uz)
-    SQUARE_TO_FROM_IDX("D4", File::D, Rank::Four, 27uz)
-    SQUARE_TO_FROM_IDX("E4", File::E, Rank::Four, 28uz)
-    SQUARE_TO_FROM_IDX("F4", File::F, Rank::Four, 29uz)
-    SQUARE_TO_FROM_IDX("G4", File::G, Rank::Four, 30uz)
-    SQUARE_TO_FROM_IDX("H4", File::H, Rank::Four, 31uz)
+    square_to_from_idx("A4", File::A, Rank::Four, 24uz);
+    square_to_from_idx("B4", File::B, Rank::Four, 25uz);
+    square_to_from_idx("C4", File::C, Rank::Four, 26uz);
+    square_to_from_idx("D4", File::D, Rank::Four, 27uz);
+    square_to_from_idx("E4", File::E, Rank::Four, 28uz);
+    square_to_from_idx("F4", File::F, Rank::Four, 29uz);
+    square_to_from_idx("G4", File::G, Rank::Four, 30uz);
+    square_to_from_idx("H4", File::H, Rank::Four, 31uz);
 
-    SQUARE_TO_FROM_IDX("A5", File::A, Rank::Five, 32uz)
-    SQUARE_TO_FROM_IDX("B5", File::B, Rank::Five, 33uz)
-    SQUARE_TO_FROM_IDX("C5", File::C, Rank::Five, 34uz)
-    SQUARE_TO_FROM_IDX("D5", File::D, Rank::Five, 35uz)
-    SQUARE_TO_FROM_IDX("E5", File::E, Rank::Five, 36uz)
-    SQUARE_TO_FROM_IDX("F5", File::F, Rank::Five, 37uz)
-    SQUARE_TO_FROM_IDX("G5", File::G, Rank::Five, 38uz)
-    SQUARE_TO_FROM_IDX("H5", File::H, Rank::Five, 39uz)
+    square_to_from_idx("A5", File::A, Rank::Five, 32uz);
+    square_to_from_idx("B5", File::B, Rank::Five, 33uz);
+    square_to_from_idx("C5", File::C, Rank::Five, 34uz);
+    square_to_from_idx("D5", File::D, Rank::Five, 35uz);
+    square_to_from_idx("E5", File::E, Rank::Five, 36uz);
+    square_to_from_idx("F5", File::F, Rank::Five, 37uz);
+    square_to_from_idx("G5", File::G, Rank::Five, 38uz);
+    square_to_from_idx("H5", File::H, Rank::Five, 39uz);
 
-    SQUARE_TO_FROM_IDX("A6", File::A, Rank::Six, 40uz)
-    SQUARE_TO_FROM_IDX("B6", File::B, Rank::Six, 41uz)
-    SQUARE_TO_FROM_IDX("C6", File::C, Rank::Six, 42uz)
-    SQUARE_TO_FROM_IDX("D6", File::D, Rank::Six, 43uz)
-    SQUARE_TO_FROM_IDX("E6", File::E, Rank::Six, 44uz)
-    SQUARE_TO_FROM_IDX("F6", File::F, Rank::Six, 45uz)
-    SQUARE_TO_FROM_IDX("G6", File::G, Rank::Six, 46uz)
-    SQUARE_TO_FROM_IDX("H6", File::H, Rank::Six, 47uz)
+    square_to_from_idx("A6", File::A, Rank::Six, 40uz);
+    square_to_from_idx("B6", File::B, Rank::Six, 41uz);
+    square_to_from_idx("C6", File::C, Rank::Six, 42uz);
+    square_to_from_idx("D6", File::D, Rank::Six, 43uz);
+    square_to_from_idx("E6", File::E, Rank::Six, 44uz);
+    square_to_from_idx("F6", File::F, Rank::Six, 45uz);
+    square_to_from_idx("G6", File::G, Rank::Six, 46uz);
+    square_to_from_idx("H6", File::H, Rank::Six, 47uz);
 
-    SQUARE_TO_FROM_IDX("A7", File::A, Rank::Seven, 48uz)
-    SQUARE_TO_FROM_IDX("B7", File::B, Rank::Seven, 49uz)
-    SQUARE_TO_FROM_IDX("C7", File::C, Rank::Seven, 50uz)
-    SQUARE_TO_FROM_IDX("D7", File::D, Rank::Seven, 51uz)
-    SQUARE_TO_FROM_IDX("E7", File::E, Rank::Seven, 52uz)
-    SQUARE_TO_FROM_IDX("F7", File::F, Rank::Seven, 53uz)
-    SQUARE_TO_FROM_IDX("G7", File::G, Rank::Seven, 54uz)
-    SQUARE_TO_FROM_IDX("H7", File::H, Rank::Seven, 55uz)
+    square_to_from_idx("A7", File::A, Rank::Seven, 48uz);
+    square_to_from_idx("B7", File::B, Rank::Seven, 49uz);
+    square_to_from_idx("C7", File::C, Rank::Seven, 50uz);
+    square_to_from_idx("D7", File::D, Rank::Seven, 51uz);
+    square_to_from_idx("E7", File::E, Rank::Seven, 52uz);
+    square_to_from_idx("F7", File::F, Rank::Seven, 53uz);
+    square_to_from_idx("G7", File::G, Rank::Seven, 54uz);
+    square_to_from_idx("H7", File::H, Rank::Seven, 55uz);
 
-    SQUARE_TO_FROM_IDX("A8", File::A, Rank::Eight, 56uz)
-    SQUARE_TO_FROM_IDX("B8", File::B, Rank::Eight, 57uz)
-    SQUARE_TO_FROM_IDX("C8", File::C, Rank::Eight, 58uz)
-    SQUARE_TO_FROM_IDX("D8", File::D, Rank::Eight, 59uz)
-    SQUARE_TO_FROM_IDX("E8", File::E, Rank::Eight, 60uz)
-    SQUARE_TO_FROM_IDX("F8", File::F, Rank::Eight, 61uz)
-    SQUARE_TO_FROM_IDX("G8", File::G, Rank::Eight, 62uz)
-    SQUARE_TO_FROM_IDX("H8", File::H, Rank::Eight, 63uz)
-// clang-format on
-
-#undef SQUARE_TO_FROM_IDX
+    square_to_from_idx("A8", File::A, Rank::Eight, 56uz);
+    square_to_from_idx("B8", File::B, Rank::Eight, 57uz);
+    square_to_from_idx("C8", File::C, Rank::Eight, 58uz);
+    square_to_from_idx("D8", File::D, Rank::Eight, 59uz);
+    square_to_from_idx("E8", File::E, Rank::Eight, 60uz);
+    square_to_from_idx("F8", File::F, Rank::Eight, 61uz);
+    square_to_from_idx("G8", File::G, Rank::Eight, 62uz);
+    square_to_from_idx("H8", File::H, Rank::Eight, 63uz);
 }
 
 TEST_CASE("Square - is_light()/is_dark()", TAGS)
@@ -191,91 +197,91 @@ TEST_CASE("Square - is_light()/is_dark()", TAGS)
     STATIC_REQUIRE(Square { File::H, Rank::Eight }.is_dark());
 }
 
-TEST_CASE("Square - to/from string", TAGS) {
-#define SQUARE_TO_FROM_STRING(str, strLower, file, rank)  \
-    SECTION(str)                                          \
-    {                                                     \
-        static constexpr Square square { file, rank };    \
-        REQUIRE(square == Square::from_string(str));      \
-        REQUIRE(square == Square::from_string(strLower)); \
-        REQUIRE(std::format("{}", square) == strLower);   \
-    }
+namespace {
+void square_to_from_string(
+    const string_view str, const string_view strLower,
+    const File file, const Rank rank)
+{
+    const Square square { file, rank };
+    REQUIRE(square == Square::from_string(str));
+    REQUIRE(square == Square::from_string(strLower));
+    REQUIRE(std::format("{}", square) == strLower);
+}
+} // namespace
 
-    // clang-format off
-    SQUARE_TO_FROM_STRING("A1", "a1", File::A, Rank::One)
-    SQUARE_TO_FROM_STRING("B1", "b1", File::B, Rank::One)
-    SQUARE_TO_FROM_STRING("C1", "c1", File::C, Rank::One)
-    SQUARE_TO_FROM_STRING("D1", "d1", File::D, Rank::One)
-    SQUARE_TO_FROM_STRING("E1", "e1", File::E, Rank::One)
-    SQUARE_TO_FROM_STRING("F1", "f1", File::F, Rank::One)
-    SQUARE_TO_FROM_STRING("G1", "g1", File::G, Rank::One)
-    SQUARE_TO_FROM_STRING("H1", "h1", File::H, Rank::One)
+TEST_CASE("Square - to/from string", TAGS)
+{
+    square_to_from_string("A1", "a1", File::A, Rank::One);
+    square_to_from_string("B1", "b1", File::B, Rank::One);
+    square_to_from_string("C1", "c1", File::C, Rank::One);
+    square_to_from_string("D1", "d1", File::D, Rank::One);
+    square_to_from_string("E1", "e1", File::E, Rank::One);
+    square_to_from_string("F1", "f1", File::F, Rank::One);
+    square_to_from_string("G1", "g1", File::G, Rank::One);
+    square_to_from_string("H1", "h1", File::H, Rank::One);
 
-    SQUARE_TO_FROM_STRING("A2", "a2", File::A, Rank::Two)
-    SQUARE_TO_FROM_STRING("B2", "b2", File::B, Rank::Two)
-    SQUARE_TO_FROM_STRING("C2", "c2", File::C, Rank::Two)
-    SQUARE_TO_FROM_STRING("D2", "d2", File::D, Rank::Two)
-    SQUARE_TO_FROM_STRING("E2", "e2", File::E, Rank::Two)
-    SQUARE_TO_FROM_STRING("F2", "f2", File::F, Rank::Two)
-    SQUARE_TO_FROM_STRING("G2", "g2", File::G, Rank::Two)
-    SQUARE_TO_FROM_STRING("H2", "h2", File::H, Rank::Two)
+    square_to_from_string("A2", "a2", File::A, Rank::Two);
+    square_to_from_string("B2", "b2", File::B, Rank::Two);
+    square_to_from_string("C2", "c2", File::C, Rank::Two);
+    square_to_from_string("D2", "d2", File::D, Rank::Two);
+    square_to_from_string("E2", "e2", File::E, Rank::Two);
+    square_to_from_string("F2", "f2", File::F, Rank::Two);
+    square_to_from_string("G2", "g2", File::G, Rank::Two);
+    square_to_from_string("H2", "h2", File::H, Rank::Two);
 
-    SQUARE_TO_FROM_STRING("A3", "a3", File::A, Rank::Three)
-    SQUARE_TO_FROM_STRING("B3", "b3", File::B, Rank::Three)
-    SQUARE_TO_FROM_STRING("C3", "c3", File::C, Rank::Three)
-    SQUARE_TO_FROM_STRING("D3", "d3", File::D, Rank::Three)
-    SQUARE_TO_FROM_STRING("E3", "e3", File::E, Rank::Three)
-    SQUARE_TO_FROM_STRING("F3", "f3", File::F, Rank::Three)
-    SQUARE_TO_FROM_STRING("G3", "g3", File::G, Rank::Three)
-    SQUARE_TO_FROM_STRING("H3", "h3", File::H, Rank::Three)
+    square_to_from_string("A3", "a3", File::A, Rank::Three);
+    square_to_from_string("B3", "b3", File::B, Rank::Three);
+    square_to_from_string("C3", "c3", File::C, Rank::Three);
+    square_to_from_string("D3", "d3", File::D, Rank::Three);
+    square_to_from_string("E3", "e3", File::E, Rank::Three);
+    square_to_from_string("F3", "f3", File::F, Rank::Three);
+    square_to_from_string("G3", "g3", File::G, Rank::Three);
+    square_to_from_string("H3", "h3", File::H, Rank::Three);
 
-    SQUARE_TO_FROM_STRING("A4", "a4", File::A, Rank::Four)
-    SQUARE_TO_FROM_STRING("B4", "b4", File::B, Rank::Four)
-    SQUARE_TO_FROM_STRING("C4", "c4", File::C, Rank::Four)
-    SQUARE_TO_FROM_STRING("D4", "d4", File::D, Rank::Four)
-    SQUARE_TO_FROM_STRING("E4", "e4", File::E, Rank::Four)
-    SQUARE_TO_FROM_STRING("F4", "f4", File::F, Rank::Four)
-    SQUARE_TO_FROM_STRING("G4", "g4", File::G, Rank::Four)
-    SQUARE_TO_FROM_STRING("H4", "h4", File::H, Rank::Four)
+    square_to_from_string("A4", "a4", File::A, Rank::Four);
+    square_to_from_string("B4", "b4", File::B, Rank::Four);
+    square_to_from_string("C4", "c4", File::C, Rank::Four);
+    square_to_from_string("D4", "d4", File::D, Rank::Four);
+    square_to_from_string("E4", "e4", File::E, Rank::Four);
+    square_to_from_string("F4", "f4", File::F, Rank::Four);
+    square_to_from_string("G4", "g4", File::G, Rank::Four);
+    square_to_from_string("H4", "h4", File::H, Rank::Four);
 
-    SQUARE_TO_FROM_STRING("A5", "a5", File::A, Rank::Five)
-    SQUARE_TO_FROM_STRING("B5", "b5", File::B, Rank::Five)
-    SQUARE_TO_FROM_STRING("C5", "c5", File::C, Rank::Five)
-    SQUARE_TO_FROM_STRING("D5", "d5", File::D, Rank::Five)
-    SQUARE_TO_FROM_STRING("E5", "e5", File::E, Rank::Five)
-    SQUARE_TO_FROM_STRING("F5", "f5", File::F, Rank::Five)
-    SQUARE_TO_FROM_STRING("G5", "g5", File::G, Rank::Five)
-    SQUARE_TO_FROM_STRING("H5", "h5", File::H, Rank::Five)
+    square_to_from_string("A5", "a5", File::A, Rank::Five);
+    square_to_from_string("B5", "b5", File::B, Rank::Five);
+    square_to_from_string("C5", "c5", File::C, Rank::Five);
+    square_to_from_string("D5", "d5", File::D, Rank::Five);
+    square_to_from_string("E5", "e5", File::E, Rank::Five);
+    square_to_from_string("F5", "f5", File::F, Rank::Five);
+    square_to_from_string("G5", "g5", File::G, Rank::Five);
+    square_to_from_string("H5", "h5", File::H, Rank::Five);
 
-    SQUARE_TO_FROM_STRING("A6", "a6", File::A, Rank::Six)
-    SQUARE_TO_FROM_STRING("B6", "b6", File::B, Rank::Six)
-    SQUARE_TO_FROM_STRING("C6", "c6", File::C, Rank::Six)
-    SQUARE_TO_FROM_STRING("D6", "d6", File::D, Rank::Six)
-    SQUARE_TO_FROM_STRING("E6", "e6", File::E, Rank::Six)
-    SQUARE_TO_FROM_STRING("F6", "f6", File::F, Rank::Six)
-    SQUARE_TO_FROM_STRING("G6", "g6", File::G, Rank::Six)
-    SQUARE_TO_FROM_STRING("H6", "h6", File::H, Rank::Six)
+    square_to_from_string("A6", "a6", File::A, Rank::Six);
+    square_to_from_string("B6", "b6", File::B, Rank::Six);
+    square_to_from_string("C6", "c6", File::C, Rank::Six);
+    square_to_from_string("D6", "d6", File::D, Rank::Six);
+    square_to_from_string("E6", "e6", File::E, Rank::Six);
+    square_to_from_string("F6", "f6", File::F, Rank::Six);
+    square_to_from_string("G6", "g6", File::G, Rank::Six);
+    square_to_from_string("H6", "h6", File::H, Rank::Six);
 
-    SQUARE_TO_FROM_STRING("A7", "a7", File::A, Rank::Seven)
-    SQUARE_TO_FROM_STRING("B7", "b7", File::B, Rank::Seven)
-    SQUARE_TO_FROM_STRING("C7", "c7", File::C, Rank::Seven)
-    SQUARE_TO_FROM_STRING("D7", "d7", File::D, Rank::Seven)
-    SQUARE_TO_FROM_STRING("E7", "e7", File::E, Rank::Seven)
-    SQUARE_TO_FROM_STRING("F7", "f7", File::F, Rank::Seven)
-    SQUARE_TO_FROM_STRING("G7", "g7", File::G, Rank::Seven)
-    SQUARE_TO_FROM_STRING("H7", "h7", File::H, Rank::Seven)
+    square_to_from_string("A7", "a7", File::A, Rank::Seven);
+    square_to_from_string("B7", "b7", File::B, Rank::Seven);
+    square_to_from_string("C7", "c7", File::C, Rank::Seven);
+    square_to_from_string("D7", "d7", File::D, Rank::Seven);
+    square_to_from_string("E7", "e7", File::E, Rank::Seven);
+    square_to_from_string("F7", "f7", File::F, Rank::Seven);
+    square_to_from_string("G7", "g7", File::G, Rank::Seven);
+    square_to_from_string("H7", "h7", File::H, Rank::Seven);
 
-    SQUARE_TO_FROM_STRING("A8", "a8", File::A, Rank::Eight)
-    SQUARE_TO_FROM_STRING("B8", "b8", File::B, Rank::Eight)
-    SQUARE_TO_FROM_STRING("C8", "c8", File::C, Rank::Eight)
-    SQUARE_TO_FROM_STRING("D8", "d8", File::D, Rank::Eight)
-    SQUARE_TO_FROM_STRING("E8", "e8", File::E, Rank::Eight)
-    SQUARE_TO_FROM_STRING("F8", "f8", File::F, Rank::Eight)
-    SQUARE_TO_FROM_STRING("G8", "g8", File::G, Rank::Eight)
-    SQUARE_TO_FROM_STRING("H8", "h8", File::H, Rank::Eight)
-// clang-format on
-
-#undef SQUARE_TO_FROM_STRING
+    square_to_from_string("A8", "a8", File::A, Rank::Eight);
+    square_to_from_string("B8", "b8", File::B, Rank::Eight);
+    square_to_from_string("C8", "c8", File::C, Rank::Eight);
+    square_to_from_string("D8", "d8", File::D, Rank::Eight);
+    square_to_from_string("E8", "e8", File::E, Rank::Eight);
+    square_to_from_string("F8", "f8", File::F, Rank::Eight);
+    square_to_from_string("G8", "g8", File::G, Rank::Eight);
+    square_to_from_string("H8", "h8", File::H, Rank::Eight);
 }
 
 TEST_CASE("Square - is_white_territory()/is_black_territory()", TAGS)

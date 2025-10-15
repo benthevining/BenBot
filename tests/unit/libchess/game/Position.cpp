@@ -39,7 +39,7 @@ TEST_CASE("Position - starting", TAGS)
     const Position pos {};
 
     REQUIRE(pos.sideToMove == Color::White);
-    REQUIRE(not pos.enPassantTargetSquare.has_value());
+    REQUIRE_FALSE(pos.enPassantTargetSquare);
 
     const auto occupied = pos.occupied();
 
@@ -58,7 +58,7 @@ TEST_CASE("Position - is_file_open()/get_open_files()", TAGS)
     Position pos;
 
     for (const auto file : allFiles)
-        REQUIRE(not pos.is_file_open(file));
+        REQUIRE_FALSE(pos.is_file_open(file));
 
     REQUIRE(std::ranges::empty(pos.get_open_files()));
 
@@ -66,7 +66,7 @@ TEST_CASE("Position - is_file_open()/get_open_files()", TAGS)
     pos.whitePieces.pawns.clear();
 
     for (const auto file : allFiles)
-        REQUIRE(not pos.is_file_open(file));
+        REQUIRE_FALSE(pos.is_file_open(file));
 
     REQUIRE(std::ranges::empty(pos.get_open_files()));
 
@@ -88,7 +88,7 @@ TEST_CASE("Position - is_file_half_open()/get_half_open_files()", TAGS)
     Position pos;
 
     for (const auto file : allFiles)
-        REQUIRE(not pos.is_file_half_open(file));
+        REQUIRE_FALSE(pos.is_file_half_open(file));
 
     REQUIRE(std::ranges::empty(pos.get_half_open_files()));
 
@@ -106,7 +106,7 @@ TEST_CASE("Position - is_file_half_open()/get_half_open_files()", TAGS)
     pos.blackPieces.pawns.clear();
 
     for (const auto file : allFiles)
-        REQUIRE(not pos.is_file_half_open(file));
+        REQUIRE_FALSE(pos.is_file_half_open(file));
 
     REQUIRE(std::ranges::empty(pos.get_half_open_files()));
 }
@@ -117,9 +117,9 @@ TEST_CASE("Position - is_check()", TAGS)
     {
         const Position startingPosition {};
 
-        REQUIRE(not startingPosition.is_check());
-        REQUIRE(not startingPosition.is_checkmate());
-        REQUIRE(not startingPosition.is_stalemate());
+        REQUIRE_FALSE(startingPosition.is_check());
+        REQUIRE_FALSE(startingPosition.is_checkmate());
+        REQUIRE_FALSE(startingPosition.is_stalemate());
     }
 
     SECTION("Blocked ray attack")
@@ -127,9 +127,9 @@ TEST_CASE("Position - is_check()", TAGS)
         const auto pos = from_fen("r1bqkb1r/pppppppp/2n4n/8/2B1P3/5Q2/PPPP1PPP/RNB1K1NR b KQkq - 4 3")
                              .value();
 
-        REQUIRE(not pos.is_check());
-        REQUIRE(not pos.is_checkmate());
-        REQUIRE(not pos.is_stalemate());
+        REQUIRE_FALSE(pos.is_check());
+        REQUIRE_FALSE(pos.is_checkmate());
+        REQUIRE_FALSE(pos.is_stalemate());
     }
 
     SECTION("Check")
@@ -138,8 +138,8 @@ TEST_CASE("Position - is_check()", TAGS)
                              .value();
 
         REQUIRE(pos.is_check());
-        REQUIRE(not pos.is_checkmate());
-        REQUIRE(not pos.is_stalemate());
+        REQUIRE_FALSE(pos.is_checkmate());
+        REQUIRE_FALSE(pos.is_stalemate());
     }
 
     SECTION("Checkmate")
@@ -149,7 +149,7 @@ TEST_CASE("Position - is_check()", TAGS)
 
         REQUIRE(pos.is_check());
         REQUIRE(pos.is_checkmate());
-        REQUIRE(not pos.is_stalemate());
+        REQUIRE_FALSE(pos.is_stalemate());
     }
 
     SECTION("Stalemate")
@@ -157,8 +157,8 @@ TEST_CASE("Position - is_check()", TAGS)
         const auto pos = from_fen("7K/5k2/6q1/8/8/8/8/8 w - - 0 1")
                              .value();
 
-        REQUIRE(not pos.is_check());
-        REQUIRE(not pos.is_checkmate());
+        REQUIRE_FALSE(pos.is_check());
+        REQUIRE_FALSE(pos.is_checkmate());
         REQUIRE(pos.is_stalemate());
     }
 }

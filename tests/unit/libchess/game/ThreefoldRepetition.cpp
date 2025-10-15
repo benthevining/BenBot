@@ -25,22 +25,22 @@ TEST_CASE("Position - threefold repetitions", TAGS)
 {
     chess::game::Position pos {};
 
-    REQUIRE(not pos.is_threefold_repetition());
+    REQUIRE_FALSE(pos.is_threefold_repetition());
 
     pos.make_move(from_alg(pos, "Nc3").value());
     pos.make_move(from_alg(pos, "Nc6").value());
 
-    REQUIRE(not pos.is_threefold_repetition());
+    REQUIRE_FALSE(pos.is_threefold_repetition());
 
     pos.make_move(from_alg(pos, "Nb1").value());
     pos.make_move(from_alg(pos, "Nb8").value());
 
-    REQUIRE(not pos.is_threefold_repetition());
+    REQUIRE_FALSE(pos.is_threefold_repetition());
 
     pos.make_move(from_alg(pos, "Nc3").value());
     pos.make_move(from_alg(pos, "Nc6").value());
 
-    REQUIRE(not pos.is_threefold_repetition());
+    REQUIRE_FALSE(pos.is_threefold_repetition());
 
     pos.make_move(from_alg(pos, "Nb1").value());
     pos.make_move(from_alg(pos, "Nb8").value());
@@ -81,22 +81,22 @@ TEST_CASE("Position - threefold reps - not threefold if EP possible in starting 
     pos.make_move(from_alg(pos, "Be2").value());
     pos.make_move(from_alg(pos, "Bd7").value());
 
-    REQUIRE(not pos.is_threefold_repetition());
+    REQUIRE_FALSE(pos.is_threefold_repetition());
 
     pos.make_move(from_alg(pos, "Bf1").value());
     pos.make_move(from_alg(pos, "Bc8").value());
 
-    REQUIRE(not pos.is_threefold_repetition());
+    REQUIRE_FALSE(pos.is_threefold_repetition());
 
     pos.make_move(from_alg(pos, "Be2").value());
     pos.make_move(from_alg(pos, "Bd7").value());
 
-    REQUIRE(not pos.is_threefold_repetition());
+    REQUIRE_FALSE(pos.is_threefold_repetition());
 
     pos.make_move(from_alg(pos, "Bf1").value());
     pos.make_move(from_alg(pos, "Bc8").value());
 
-    REQUIRE(not pos.is_threefold_repetition());
+    REQUIRE_FALSE(pos.is_threefold_repetition());
 
     pos.make_move(from_alg(pos, "Be2").value());
 

@@ -13,6 +13,9 @@ import argparse
 import json
 import subprocess
 from pathlib import Path
+from typing import Tuple
+
+#
 
 
 def get_result_lines(stdout) -> list[str]:
@@ -32,9 +35,9 @@ def get_result_lines(stdout) -> list[str]:
 
 def get_value_for_key(lines: list[str], key: str) -> int:
     for line in lines:
-        thisKey, value = line.split(":", 1)
+        this_key, value = line.split(":", 1)
 
-        if thisKey == f"info string {key}":
+        if this_key == f"info string {key}":
             return int(value.strip())
 
     raise Exception(f"Result does not contain key {key}")
@@ -71,72 +74,93 @@ def check_result(expected: dict[str, int], actual: dict[str, int]) -> bool:
     return True
 
 
+def parse_args() -> Tuple[Path, Path]:
+    parser = argparse.ArgumentParser(
+        prog="RunPerft",
+        description="Run BenBot perft tests",
+        epilog="This script is intended to be invoked by CTest",
+    )
+
+    parser.add_argument(
+        "-t", "--test", required=True, help="Path to testcase data file"
+    )
+    parser.add_argument(
+        "-e", "--engine", required=True, help="Path to engine executable"
+    )
+
+    parsed = parser.parse_args()
+
+    return Path(parsed.test).resolve(), Path(parsed.engine).resolve()
+
+
 #
 
-parser = argparse.ArgumentParser(
-    prog="RunPerft",
-    description="Run BenBot perft tests",
-    epilog="This script is intended to be invoked by CTest",
-)
 
-parser.add_argument("-t", "--test", required=True, help="Path to testcase data file")
-parser.add_argument("-e", "--engine", required=True, help="Path to engine executable")
+class Engine:
+    def __init__(self, engine_path: Path, pos_fen: str):
+        self.engine = subprocess.Popen(
+            engine_path,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=1,
+            universal_newlines=True,
+            text=True,
+        )
 
-args = parser.parse_args()
+        self.engine.stdin.write("uci\n")
 
-TESTCASE_FILE = Path(args.test).resolve()
-ENGINE_PATH = Path(args.engine).resolve()
+        # skip greeting & info/options output
+        for line in self.engine.stdout:
+            if line.strip() == "uciok":
+                break
+
+        self.engine.stdin.write("ucinewgame\n")
+        self.engine.stdin.write("isready\n")
+
+        self.engine.stdout.readline()  # "readyok" response
+
+        self.engine.stdin.write(f"position fen {pos_fen}\n")
+
+    def run_perft(self, depth: int):
+        self.engine.stdin.write(f"perft {depth}\n")
+
+        return get_result(get_result_lines(self.engine.stdout))
+
+    def quit(self):
+        self.engine.communicate("quit\n", timeout=15)
+        self.engine.kill()
+        self.engine.communicate()
+
+
+#
+
+TESTCASE_FILE, ENGINE_PATH = parse_args()
 
 with open(TESTCASE_FILE) as file:
     CORRECT_DATA = json.load(file)
 
 startingFEN = CORRECT_DATA["position"]
 
-print(f"Running tests for position {startingFEN}")
+print(f"Running tests for position {startingFEN}", flush=True)
 
-engine = subprocess.Popen(
-    ENGINE_PATH,
-    stdin=subprocess.PIPE,
-    stdout=subprocess.PIPE,
-    stderr=subprocess.STDOUT,
-    bufsize=1,
-    universal_newlines=True,
-    text=True,
-)
-
-engine.stdin.write("uci\n")
-
-# skip greeting & info/options output
-for line in engine.stdout:
-    if line.strip() == "uciok":
-        break
-
-engine.stdin.write("ucinewgame\n")
-engine.stdin.write("isready\n")
-
-engine.stdout.readline()  # "readyok" response
-
-engine.stdin.write(f"position fen {startingFEN}\n")
+engine = Engine(engine_path=ENGINE_PATH, pos_fen=startingFEN)
 
 num_failed = 0
 num_passed = 0
 
 for depthObj in CORRECT_DATA["depths"]:
     depth = depthObj["depth"]
-    print(f"Running perft depth {depth}...")
+    print(f"Running perft depth {depth}...", flush=True)
 
-    engine.stdin.write(f"perft {depth}\n")
-
-    result = get_result(get_result_lines(engine.stdout))
+    result = engine.run_perft(depth)
 
     if check_result(depthObj["results"], result):
         num_passed = num_passed + 1
     else:
         num_failed = num_failed + 1
 
-engine.communicate("quit\n", timeout=15)
-engine.kill()
-engine.communicate()
+engine.quit()
 
 print(f"{num_passed} depths passed")
 print(f"{num_failed} depths failed")

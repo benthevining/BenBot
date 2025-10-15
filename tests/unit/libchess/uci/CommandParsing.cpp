@@ -66,17 +66,17 @@ TEST_CASE("UCI parsing - go", TAGS)
         const auto opts = parse_go_options("", startPos);
 
         REQUIRE(opts.moves.empty());
-        REQUIRE(not opts.ponderMode);
-        REQUIRE(not opts.infinite);
-        REQUIRE(not opts.whiteTimeLeft.has_value());
-        REQUIRE(not opts.blackTimeLeft.has_value());
-        REQUIRE(not opts.whiteInc.has_value());
-        REQUIRE(not opts.blackInc.has_value());
-        REQUIRE(not opts.movesToGo.has_value());
-        REQUIRE(not opts.depth.has_value());
-        REQUIRE(not opts.nodes.has_value());
-        REQUIRE(not opts.mateIn.has_value());
-        REQUIRE(not opts.searchTime.has_value());
+        REQUIRE_FALSE(opts.ponderMode);
+        REQUIRE_FALSE(opts.infinite);
+        REQUIRE_FALSE(opts.whiteTimeLeft);
+        REQUIRE_FALSE(opts.blackTimeLeft);
+        REQUIRE_FALSE(opts.whiteInc);
+        REQUIRE_FALSE(opts.blackInc);
+        REQUIRE_FALSE(opts.movesToGo);
+        REQUIRE_FALSE(opts.depth);
+        REQUIRE_FALSE(opts.nodes);
+        REQUIRE_FALSE(opts.mateIn);
+        REQUIRE_FALSE(opts.searchTime);
     }
 
     SECTION("Searchmoves")
@@ -108,7 +108,7 @@ TEST_CASE("UCI parsing - go", TAGS)
     {
         const auto opts = parse_go_options(" depth  8 ", startPos);
 
-        REQUIRE(opts.depth.has_value());
+        REQUIRE(opts.depth);
         REQUIRE(*opts.depth == 8uz);
     }
 }
@@ -119,7 +119,7 @@ TEST_CASE("UCI parsing - register", TAGS)
 
     SECTION("Later")
     {
-        REQUIRE(not parse_register_options("later").has_value());
+        REQUIRE_FALSE(parse_register_options("later"));
     }
 
     SECTION("Now")
@@ -132,7 +132,7 @@ TEST_CASE("UCI parsing - register", TAGS)
         const auto result = parse_register_options(
             std::format("name {} code {}", name, code));
 
-        REQUIRE(result.has_value());
+        REQUIRE(result);
 
         REQUIRE_THAT(
             result->name,

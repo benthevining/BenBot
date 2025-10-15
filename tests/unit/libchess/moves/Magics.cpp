@@ -49,8 +49,8 @@ TEST_CASE("Magics - bishops", TAGS)
         REQUIRE(moves.count() == 9uz);
 
         REQUIRE(moves.test(Square { File::G, Rank::Seven }));
-        REQUIRE(not moves.test(Square { File::B, Rank::Two }));
-        REQUIRE(not moves.test(Square { File::G, Rank::One }));
+        REQUIRE_FALSE(moves.test(Square { File::B, Rank::Two }));
+        REQUIRE_FALSE(moves.test(Square { File::G, Rank::One }));
 
         REQUIRE(moves == Bitboard { 0X41221400142000 });
     }
@@ -74,8 +74,8 @@ TEST_CASE("Magics - bishops", TAGS)
         REQUIRE(moves.count() == 7uz);
 
         REQUIRE(moves.test(Square { File::D, Rank::Three }));
-        REQUIRE(not moves.test(Square { File::C, Rank::Two }));
-        REQUIRE(not moves.test(Square { File::B, Rank::One }));
+        REQUIRE_FALSE(moves.test(Square { File::C, Rank::Two }));
+        REQUIRE_FALSE(moves.test(Square { File::B, Rank::One }));
 
         REQUIRE(moves == Bitboard { 0X10A000A010080000 });
     }

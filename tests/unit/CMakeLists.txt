@@ -43,7 +43,7 @@ function (add_catch_tests target prefix)
             --reporter console::out=-
             TEST_PREFIX "${prefix}.unit."
             PROPERTIES
-            SKIP_REGULAR_EXPRESSION "SKIPPED:"
+                SKIP_REGULAR_EXPRESSION "SKIPPED:"
     )
     # cmake-format: on
 endfunction ()

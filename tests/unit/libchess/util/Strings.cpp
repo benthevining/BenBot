@@ -156,8 +156,8 @@ TEST_CASE("Strings - find_matching_close_paren()", TAGS)
 {
     using chess::util::find_matching_close_paren;
 
-    REQUIRE(not find_matching_close_paren("(").has_value());
-    REQUIRE(not find_matching_close_paren("(()").has_value());
+    REQUIRE_FALSE(find_matching_close_paren("("));
+    REQUIRE_FALSE(find_matching_close_paren("(()"));
 
     REQUIRE(find_matching_close_paren("()").value() == 1uz);
     REQUIRE(find_matching_close_paren("(())").value() == 3uz);

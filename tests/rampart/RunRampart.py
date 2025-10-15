@@ -14,6 +14,9 @@ import json
 import subprocess
 from pathlib import Path
 from typing import Optional
+from typing import Tuple
+
+#
 
 
 def get_move_from_obj(listObj: list[dict], move: str) -> Optional[dict]:
@@ -24,24 +27,34 @@ def get_move_from_obj(listObj: list[dict], move: str) -> Optional[dict]:
     return None
 
 
-parser = argparse.ArgumentParser(
-    prog="RunRampart",
-    description="Run rampart movegen tests",
-    epilog="This script is intended to be invoked by CTest",
-)
+def parse_args() -> Tuple[Path, Path]:
+    parser = argparse.ArgumentParser(
+        prog="RunRampart",
+        description="Run rampart movegen tests",
+        epilog="This script is intended to be invoked by CTest",
+    )
 
-parser.add_argument("-t", "--test", required=True, help="Path to testcase data file")
-parser.add_argument("-e", "--exec", required=True, help="Path to rampart executable")
+    parser.add_argument(
+        "-t", "--test", required=True, help="Path to testcase data file"
+    )
+    parser.add_argument(
+        "-e", "--exec", required=True, help="Path to rampart executable"
+    )
 
-args = parser.parse_args()
+    parsed = parser.parse_args()
 
-TESTCASE_FILE = Path(args.test).resolve()
-RAMPART_PROGRAM = Path(args.exec).resolve()
+    return Path(parsed.test).resolve(), Path(parsed.exec).resolve()
+
+
+#
+
+
+TESTCASE_FILE, RAMPART_PROGRAM = parse_args()
 
 test_cases_passed = 0
 test_cases_failed = 0
 
-print(f"Running tests from {TESTCASE_FILE}...")
+print(f"Running tests from {TESTCASE_FILE}...", flush=True)
 
 with open(TESTCASE_FILE) as file:
     testcase_data = json.load(file)
@@ -51,7 +64,7 @@ test_idx = 1
 for test_case in testcase_data["testCases"]:
     startFEN = test_case["start"]["fen"]
 
-    print(f"Running tests on position {startFEN}")
+    print(f"Running tests on position {startFEN}", flush=True)
 
     result = subprocess.run(
         [RAMPART_PROGRAM, startFEN],
@@ -77,7 +90,9 @@ for test_case in testcase_data["testCases"]:
         generated_move = get_move_from_obj(generated_moves, move)
 
         if generated_move is None:
-            print(f"ERROR: move {move} was not generated, it should be legal!")
+            print(
+                f"ERROR: move {move} was not generated, it should be legal!", flush=True
+            )
             any_errors = True
             continue
 
@@ -85,8 +100,8 @@ for test_case in testcase_data["testCases"]:
         generatedFEN = generated_move["fen"]
 
         if correctFEN != generatedFEN:
-            print(f"ERROR: move {move} resulted in incorrect FEN!")
-            print(f"Expected {correctFEN}, got {generatedFEN}")
+            print(f"ERROR: move {move} resulted in incorrect FEN!", flush=True)
+            print(f"Expected {correctFEN}, got {generatedFEN}", flush=True)
             any_errors = True
 
     # check for moves in generated_moves not in correct_moves
@@ -97,7 +112,8 @@ for test_case in testcase_data["testCases"]:
 
         if correct_move is None:
             print(
-                f"ERROR: move {move} was incorrectly generated, it should not be legal!"
+                f"ERROR: move {move} was incorrectly generated, it should not be legal!",
+                flush=True,
             )
             any_errors = True
 

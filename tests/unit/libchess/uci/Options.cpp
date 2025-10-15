@@ -20,6 +20,8 @@ static constexpr auto TAGS { "[uci][options]" };
 
 namespace uci = chess::uci;
 
+using std::string;
+
 TEST_CASE("UCI options - bool", TAGS)
 {
     uci::BoolOption option { "Toggle parameter", true, "" };
@@ -30,11 +32,11 @@ TEST_CASE("UCI options - bool", TAGS)
 
     option.handle_setvalue("value false\n");
 
-    REQUIRE(not option.get_value());
+    REQUIRE_FALSE(option.get_value());
 
     option.handle_setvalue("value false");
 
-    REQUIRE(not option.get_value());
+    REQUIRE_FALSE(option.get_value());
 }
 
 TEST_CASE("UCI options - int", TAGS)
@@ -71,16 +73,16 @@ TEST_CASE("UCI options - combo", TAGS)
 
     REQUIRE(option.get_declaration_string() == "option name MyEnum type combo default Two var One var Two var Three");
 
-    REQUIRE(std::string { option.get_value() } == "Two");
+    REQUIRE(string { option.get_value() } == "Two");
 
     option.handle_setvalue("value One");
 
-    REQUIRE(std::string { option.get_value() } == "One");
+    REQUIRE(string { option.get_value() } == "One");
 
     // should be set to default if unknown value string is received
     option.handle_setvalue("value Four");
 
-    REQUIRE(std::string { option.get_value() } == "Two");
+    REQUIRE(string { option.get_value() } == "Two");
 }
 
 TEST_CASE("UCI options - string", TAGS)
@@ -89,13 +91,13 @@ TEST_CASE("UCI options - string", TAGS)
         "MyString", "foo", ""
     };
 
-    REQUIRE(std::string { option.get_value() } == "foo");
+    REQUIRE(string { option.get_value() } == "foo");
 
     REQUIRE(option.get_declaration_string() == "option name MyString type string default foo");
 
     option.handle_setvalue("value bar");
 
-    REQUIRE(std::string { option.get_value() } == "bar");
+    REQUIRE(string { option.get_value() } == "bar");
 }
 
 TEST_CASE("UCI options - action", TAGS)

@@ -61,7 +61,7 @@ TEST_CASE("Pieces - is_file_half_open()", TAGS)
     Pieces pieces { Color::White };
 
     for (const auto file : magic_enum::enum_values<File>())
-        REQUIRE(not pieces.is_file_half_open(file));
+        REQUIRE_FALSE(pieces.is_file_half_open(file));
 
     pieces.pawns.unset(Square { File::A, Rank::Two });
 
@@ -77,12 +77,12 @@ TEST_CASE("Pieces - has_bishop_pair()", TAGS)
     // remove LSB
     pieces.bishops.unset(Square { File::F, Rank::One });
 
-    REQUIRE(not pieces.has_bishop_pair());
+    REQUIRE_FALSE(pieces.has_bishop_pair());
 
     // add another DSB
     pieces.bishops.set(Square { File::A, Rank::Five });
 
-    REQUIRE(not pieces.has_bishop_pair());
+    REQUIRE_FALSE(pieces.has_bishop_pair());
 
     // add LSB
     pieces.bishops.set(Square { File::E, Rank::Four });
@@ -92,17 +92,17 @@ TEST_CASE("Pieces - has_bishop_pair()", TAGS)
     // remove all
     pieces.bishops.clear();
 
-    REQUIRE(not pieces.has_bishop_pair());
+    REQUIRE_FALSE(pieces.has_bishop_pair());
 }
 
 TEST_CASE("Pieces - get_piece_on()", TAGS)
 {
     static constexpr Pieces pieces { Color::White };
 
-    STATIC_REQUIRE(not pieces.get_piece_on(Square { File::A, Rank::Three }).has_value());
-    STATIC_REQUIRE(not pieces.get_piece_on(Square { File::C, Rank::Four }).has_value());
-    STATIC_REQUIRE(not pieces.get_piece_on(Square { File::E, Rank::Eight }).has_value());
-    STATIC_REQUIRE(not pieces.get_piece_on(Square { File::H, Rank::Five }).has_value());
+    STATIC_REQUIRE_FALSE(pieces.get_piece_on(Square { File::A, Rank::Three }).has_value());
+    STATIC_REQUIRE_FALSE(pieces.get_piece_on(Square { File::C, Rank::Four }).has_value());
+    STATIC_REQUIRE_FALSE(pieces.get_piece_on(Square { File::E, Rank::Eight }).has_value());
+    STATIC_REQUIRE_FALSE(pieces.get_piece_on(Square { File::H, Rank::Five }).has_value());
 
     using PieceType = chess::pieces::Type;
 

@@ -107,7 +107,7 @@ TEST_CASE("UCI notation - check", TAGS)
     position.make_move(move);
 
     REQUIRE(position.is_check());
-    REQUIRE(not position.is_checkmate());
+    REQUIRE_FALSE(position.is_checkmate());
 }
 
 TEST_CASE("UCI notation - checkmate", TAGS)
