@@ -730,3 +730,18 @@
 * storing killer moves in vectors ([cf7135f](https://github.com/benthevining/BenBot/commit/cf7135f58f819b701db064970c450ba8968db8e4))
 * **TT:** explicitly checking if entries are occupied, not relying solely on key match ([55994c0](https://github.com/benthevining/BenBot/commit/55994c0f5984de72e5ddd7520d1d1ca0771cec6e))
 * UCI printing now uses iostreams explicitly ([7fe8b2b](https://github.com/benthevining/BenBot/commit/7fe8b2b62514a33357e1ba4fe71ed559c3f513ee))
+## [1.7.1](https://github.com/benthevining/BenBot/compare/v1.7.0...v1.7.1) (2025-10-15)
+
+### Features
+
+* build time can now be optionally displayed, or just date ([9b949d4](https://github.com/benthevining/BenBot/commit/9b949d401827710596d71249ac691b6e4728d79d))
+* cmake option BENBOT_ALWAYS_REBUILD_RESOURCES ([da19017](https://github.com/benthevining/BenBot/commit/da19017e5d20802261de26250a0028002a21dee3))
+
+### Bug Fixes
+
+* constexpr build error ([06800f7](https://github.com/benthevining/BenBot/commit/06800f7c273ebfb81f05e356c570c2f429ce9bcb))
+* constexpr build error ([67b2656](https://github.com/benthevining/BenBot/commit/67b2656b70ab31800e673f6d33b97985c504eb44))
+* guarding against search going deeper than MAX_PLY ([#379](https://github.com/benthevining/BenBot/issues/379)) ([0791db4](https://github.com/benthevining/BenBot/commit/0791db406040193dd338859877128672261e2126))
+* lichess bot config [skip ci] ([34325b5](https://github.com/benthevining/BenBot/commit/34325b509415477219285ed2fedbb7a08556a487))
+* making sure build time is always correctly updated ([#384](https://github.com/benthevining/BenBot/issues/384)) ([1f7512c](https://github.com/benthevining/BenBot/commit/1f7512c94a84c60310e1dcd9669be827a8837b4e))
+* pre-commit CI config ([eaed060](https://github.com/benthevining/BenBot/commit/eaed0603807213c63fe5fb5ff65cedcab9415cf4))
