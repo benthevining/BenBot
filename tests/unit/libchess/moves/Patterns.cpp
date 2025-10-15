@@ -34,6 +34,9 @@ namespace board_masks    = chess::board::masks;
 namespace starting_masks = board_masks::starting;
 namespace move_gen       = chess::moves::patterns;
 
+// for _bb bitboard literal
+using namespace chess::board::literals; // NOLINT
+
 TEST_CASE("Patterns - pawn pushes", TAGS)
 {
     SECTION("White")
@@ -548,7 +551,7 @@ TEST_CASE("Patterns - bishop moves", TAGS)
 
         const auto moves = move_gen::bishop(starting);
 
-        REQUIRE(moves == Bitboard { 0Xc061331e001e3361 });
+        REQUIRE(moves == 0Xc061331e001e3361_bb);
     }
 }
 
@@ -613,7 +616,7 @@ TEST_CASE("Patterns - rook moves", TAGS)
 
         const auto moves = move_gen::rook(starting);
 
-        REQUIRE(moves == Bitboard { 0X12fd121212ef1212 });
+        REQUIRE(moves == 0X12fd121212ef1212_bb);
     }
 }
 
@@ -665,7 +668,7 @@ TEST_CASE("Patterns - queen moves", TAGS)
 
         const auto moves = move_gen::queen(starting);
 
-        REQUIRE(moves == Bitboard { 0X74df75aefb2e3524 });
+        REQUIRE(moves == 0X74df75aefb2e3524_bb);
     }
 }
 

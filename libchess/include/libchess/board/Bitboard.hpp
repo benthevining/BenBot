@@ -231,6 +231,24 @@ private:
 
 /// @}
 
+/** This namespace contains user-defined literal operators for applicable types in the ``chess::board`` namespace.
+    @ingroup board
+ */
+namespace literals {
+
+    /** Creates a bitboard from an integer literal value.
+        @ingroup board
+        @relates Bitboard
+     */
+    [[nodiscard, gnu::const]] consteval auto operator""_bb(
+        const unsigned long long value) noexcept // NOLINT(runtime/int)
+        -> Bitboard
+    {
+        return Bitboard { static_cast<Bitboard::Integer>(value) };
+    }
+
+} // namespace literals
+
 } // namespace chess::board
 
 /*

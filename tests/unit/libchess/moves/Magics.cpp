@@ -28,6 +28,9 @@ using chess::board::Square;
 
 namespace move_gen = chess::moves::magics;
 
+// for _bb bitboard literal
+using namespace chess::board::literals; // NOLINT
+
 TEST_CASE("Magics - bishops", TAGS)
 {
     SECTION("From D4")
@@ -52,7 +55,7 @@ TEST_CASE("Magics - bishops", TAGS)
         REQUIRE_FALSE(moves.test(Square { File::B, Rank::Two }));
         REQUIRE_FALSE(moves.test(Square { File::G, Rank::One }));
 
-        REQUIRE(moves == Bitboard { 0X41221400142000 });
+        REQUIRE(moves == 0X41221400142000_bb);
     }
 
     SECTION("From G6")
@@ -77,7 +80,7 @@ TEST_CASE("Magics - bishops", TAGS)
         REQUIRE_FALSE(moves.test(Square { File::C, Rank::Two }));
         REQUIRE_FALSE(moves.test(Square { File::B, Rank::One }));
 
-        REQUIRE(moves == Bitboard { 0X10A000A010080000 });
+        REQUIRE(moves == 0X10A000A010080000_bb);
     }
 }
 
@@ -102,7 +105,7 @@ TEST_CASE("Magics - rooks", TAGS)
         const auto moves = move_gen::rook(
             starting, occupied, friendlyPieces);
 
-        REQUIRE(moves == Bitboard { 0X40404380404 });
+        REQUIRE(moves == 0X40404380404_bb);
     }
 
     SECTION("From E7")
@@ -121,7 +124,7 @@ TEST_CASE("Magics - rooks", TAGS)
         const auto moves = move_gen::rook(
             starting, occupied, friendlyPieces);
 
-        REQUIRE(moves == Bitboard { 0X10EC101000000000 });
+        REQUIRE(moves == 0X10EC101000000000_bb);
     }
 }
 
@@ -147,7 +150,7 @@ TEST_CASE("Magics - queens", TAGS)
         const auto moves = move_gen::queen(
             starting, occupied, friendlyPieces);
 
-        REQUIRE(moves == Bitboard { 0X101418EC38548200 });
+        REQUIRE(moves == 0X101418EC38548200_bb);
     }
 
     SECTION("From B1")
@@ -170,6 +173,6 @@ TEST_CASE("Magics - queens", TAGS)
         const auto moves = move_gen::queen(
             starting, occupied, friendlyPieces);
 
-        REQUIRE(moves == Bitboard { 0X20120A071D });
+        REQUIRE(moves == 0X20120A071D_bb);
     }
 }

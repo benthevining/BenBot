@@ -30,6 +30,9 @@ using chess::pieces::Color;
 
 namespace fills = chess::board::fills;
 
+// for _bb bitboard literal
+using namespace chess::board::literals; // NOLINT
+
 /*
 white pawns         black pawns
 . . . . . . . .     . . . . . . . .
@@ -104,7 +107,7 @@ TEST_CASE("Fills - north", TAGS)
 
         STATIC_REQUIRE(filled.count() == 38uz);
 
-        STATIC_REQUIRE(filled == Bitboard { 0Xe7e7e7e7e7c6c600 });
+        STATIC_REQUIRE(filled == 0Xe7e7e7e7e7c6c600_bb);
 
         STATIC_REQUIRE(filled == fills::pawn_front<Color::White>(start));
     }
@@ -117,7 +120,7 @@ TEST_CASE("Fills - north", TAGS)
 
         STATIC_REQUIRE(filled.count() == 19uz);
 
-        STATIC_REQUIRE(filled == Bitboard { 0Xefef8d0800000000 });
+        STATIC_REQUIRE(filled == 0Xefef8d0800000000_bb);
 
         STATIC_REQUIRE(filled == fills::pawn_rear<Color::Black>(start));
     }
@@ -133,7 +136,7 @@ TEST_CASE("Fills - south", TAGS)
 
         STATIC_REQUIRE(filled.count() == 17uz);
 
-        STATIC_REQUIRE(filled == Bitboard { 0X2125e7e7 });
+        STATIC_REQUIRE(filled == 0X2125e7e7_bb);
 
         STATIC_REQUIRE(filled == fills::pawn_rear<Color::White>(start));
     }
@@ -144,7 +147,7 @@ TEST_CASE("Fills - south", TAGS)
 
         static constexpr auto filled = fills::south(start);
 
-        STATIC_REQUIRE(filled == Bitboard { 0X62e7efefefefef });
+        STATIC_REQUIRE(filled == 0X62e7efefefefef_bb);
 
         STATIC_REQUIRE(filled == fills::pawn_front<Color::Black>(start));
     }
@@ -154,57 +157,45 @@ TEST_CASE("Fills - file", TAGS)
 {
     SECTION("White file fill")
     {
-        static constexpr auto start = white_pawns_start();
+        static constexpr auto filled = fills::file(white_pawns_start());
 
-        static constexpr auto filled = fills::file(start);
-
-        STATIC_REQUIRE(filled == Bitboard { 0Xe7e7e7e7e7e7e7e7 });
+        STATIC_REQUIRE(filled == 0Xe7e7e7e7e7e7e7e7_bb);
     }
 
     SECTION("Black file fill")
     {
-        static constexpr auto start = black_pawns_start();
+        static constexpr auto filled = fills::file(black_pawns_start());
 
-        static constexpr auto filled = fills::file(start);
-
-        STATIC_REQUIRE(filled == Bitboard { 0Xefefefefefefefef });
+        STATIC_REQUIRE(filled == 0Xefefefefefefefef_bb);
     }
 }
 
 TEST_CASE("Fills - east", TAGS)
 {
-    static constexpr Bitboard start { 0X8004001000000240 };
+    static constexpr auto filled = fills::east(0X8004001000000240_bb);
 
-    static constexpr auto filled = fills::east(start);
-
-    STATIC_REQUIRE(filled == Bitboard { 0X80fc00f00000fec0 });
+    STATIC_REQUIRE(filled == 0X80fc00f00000fec0_bb);
 }
 
 TEST_CASE("Fills - west", TAGS)
 {
-    static constexpr Bitboard start { 0X8000080004400201 };
+    static constexpr auto filled = fills::west(0X8000080004400201_bb);
 
-    static constexpr auto filled = fills::west(start);
-
-    STATIC_REQUIRE(filled == Bitboard { 0Xff000f00077f0301 });
+    STATIC_REQUIRE(filled == 0Xff000f00077f0301_bb);
 }
 
 TEST_CASE("Fills - rank", TAGS)
 {
-    static constexpr Bitboard start { 0Xc000181000200002 };
+    static constexpr auto filled = fills::rank(0Xc000181000200002_bb);
 
-    static constexpr auto filled = fills::rank(start);
-
-    STATIC_REQUIRE(filled == Bitboard { 0Xff00ffff00ff00ff });
+    STATIC_REQUIRE(filled == 0Xff00ffff00ff00ff_bb);
 }
 
 TEST_CASE("Fills - northeast", TAGS)
 {
-    static constexpr Bitboard start { 0X10000000044000 };
+    static constexpr auto filled = fills::northeast(0X10000000044000_bb);
 
-    static constexpr auto filled = fills::northeast(start);
-
-    STATIC_REQUIRE(filled == Bitboard { 0Xa050201008844000 });
+    STATIC_REQUIRE(filled == 0Xa050201008844000_bb);
 }
 
 TEST_CASE("Fills - southeast", TAGS)
@@ -213,23 +204,19 @@ TEST_CASE("Fills - southeast", TAGS)
 
     static constexpr auto filled = fills::southeast(start);
 
-    STATIC_REQUIRE(filled == Bitboard { 0X41820c183060e0 });
+    STATIC_REQUIRE(filled == 0X41820c183060e0_bb);
 }
 
 TEST_CASE("Fills - northwest", TAGS)
 {
-    static constexpr Bitboard start { 0X80080040000 };
+    static constexpr auto filled = fills::northwest(0X80080040000_bb);
 
-    static constexpr auto filled = fills::northwest(start);
-
-    STATIC_REQUIRE(filled == Bitboard { 0Xa14284182040000 });
+    STATIC_REQUIRE(filled == 0Xa14284182040000_bb);
 }
 
 TEST_CASE("Fills - southwest", TAGS)
 {
-    static constexpr Bitboard start { 0X8000002100100 };
+    static constexpr auto filled = fills::southwest(0X8000002100100_bb);
 
-    static constexpr auto filled = fills::southwest(start);
-
-    STATIC_REQUIRE(filled == Bitboard { 0X8040203110904 });
+    STATIC_REQUIRE(filled == 0X8040203110904_bb);
 }

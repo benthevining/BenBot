@@ -33,6 +33,9 @@ namespace board_masks    = chess::board::masks;
 namespace starting_masks = board_masks::starting;
 namespace move_gen       = chess::moves::pseudo_legal;
 
+// for _bb bitboard literal
+using namespace chess::board::literals; // NOLINT
+
 TEST_CASE("Pseudo-legal - pawn pushes", TAGS)
 {
     SECTION("White")
@@ -387,7 +390,7 @@ TEST_CASE("Pseudo-legal - knights", TAGS)
 
         REQUIRE(allMoves.count() == 16uz);
 
-        REQUIRE(allMoves == Bitboard { 0x3C6600663C00 });
+        REQUIRE(allMoves == 0x3C6600663C00_bb);
 
         Bitboard friendlyPieces;
 
@@ -402,7 +405,7 @@ TEST_CASE("Pseudo-legal - knights", TAGS)
 
         REQUIRE(moves.count() == 12uz);
 
-        REQUIRE(moves == Bitboard { 0x342600641C00 });
+        REQUIRE(moves == 0x342600641C00_bb);
     }
 }
 
@@ -430,7 +433,7 @@ TEST_CASE("Pseudo-legal - bishops", TAGS)
         REQUIRE_FALSE(moves.test(Square { File::B, Rank::Two }));
         REQUIRE_FALSE(moves.test(Square { File::G, Rank::One }));
 
-        REQUIRE(moves == Bitboard { 0X41221400142000 });
+        REQUIRE(moves == 0X41221400142000_bb);
     }
 
     SECTION("From G6")
@@ -455,7 +458,7 @@ TEST_CASE("Pseudo-legal - bishops", TAGS)
         REQUIRE_FALSE(moves.test(Square { File::C, Rank::Two }));
         REQUIRE_FALSE(moves.test(Square { File::B, Rank::One }));
 
-        REQUIRE(moves == Bitboard { 0X10A000A010080000 });
+        REQUIRE(moves == 0X10A000A010080000_bb);
     }
 }
 
@@ -480,7 +483,7 @@ TEST_CASE("Pseudo-legal - rooks", TAGS)
         const auto moves = move_gen::rook(
             Bitboard::from_square(starting), emptySquares, friendlyPieces);
 
-        REQUIRE(moves == Bitboard { 0X40404380404 });
+        REQUIRE(moves == 0X40404380404_bb);
     }
 
     SECTION("From E7")
@@ -499,7 +502,7 @@ TEST_CASE("Pseudo-legal - rooks", TAGS)
         const auto moves = move_gen::rook(
             Bitboard::from_square(starting), emptySquares, friendlyPieces);
 
-        REQUIRE(moves == Bitboard { 0X10EC101000000000 });
+        REQUIRE(moves == 0X10EC101000000000_bb);
     }
 }
 
@@ -525,7 +528,7 @@ TEST_CASE("Pseudo-legal - queens", TAGS)
         const auto moves = move_gen::queen(
             Bitboard::from_square(starting), emptySquares, friendlyPieces);
 
-        REQUIRE(moves == Bitboard { 0X101418EC38548200 });
+        REQUIRE(moves == 0X101418EC38548200_bb);
     }
 
     SECTION("From B1")
@@ -548,7 +551,7 @@ TEST_CASE("Pseudo-legal - queens", TAGS)
         const auto moves = move_gen::queen(
             Bitboard::from_square(starting), emptySquares, friendlyPieces);
 
-        REQUIRE(moves == Bitboard { 0X20120A071D });
+        REQUIRE(moves == 0X20120A071D_bb);
     }
 }
 
