@@ -10,6 +10,10 @@
 #
 # ======================================================================================
 
+option (BENBOT_ALWAYS_REBUILD_RESOURCES OFF
+        "If on, the resources target is rebuilt every time a build is invoked"
+)
+
 FetchContent_Declare (
     cmrc SYSTEM GIT_REPOSITORY "https://github.com/vector-of-bool/cmrc.git" GIT_TAG origin/master
 )
@@ -59,14 +63,15 @@ target_sources (
 
 target_include_directories (ben_bot_resources PRIVATE "${generated_includes}")
 
-# make sure that the build date source file is always rebuilt, even if it hasn't changed
-add_custom_target (
-    ben_bot_resources_toucher ALL COMMAND "${CMAKE_COMMAND}" -E touch_nocreate
-                                          "${CMAKE_CURRENT_LIST_DIR}/src/BuildTime.cpp"
-    COMMENT "Touching BuildTime.cpp to ensure it rebuilds..." VERBATIM
-)
+if (BENBOT_ALWAYS_REBUILD_RESOURCES)
+    add_custom_target (
+        ben_bot_resources_toucher ALL COMMAND "${CMAKE_COMMAND}" -E touch_nocreate
+                                              "${CMAKE_CURRENT_LIST_DIR}/src/BuildTime.cpp"
+        COMMENT "Touching BuildTime.cpp to ensure it rebuilds..." VERBATIM
+    )
 
-add_dependencies (ben_bot_resources ben_bot_resources_toucher)
+    add_dependencies (ben_bot_resources ben_bot_resources_toucher)
+endif ()
 
 # warning flags
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang|GNU")
