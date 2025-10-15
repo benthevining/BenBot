@@ -88,7 +88,7 @@ TEST_CASE("Bitboard - dark/light square masks", TAGS)
 }
 
 namespace {
-constexpr void test_file_mask(
+void test_file_mask(
     const std::string_view sectionName,
     const File correctFile, const Bitboard mask)
 {
@@ -134,7 +134,7 @@ TEST_CASE("Bitboard - file masks", TAGS)
 }
 
 namespace {
-constexpr void test_rank_mask(
+void test_rank_mask(
     const std::string_view sectionName,
     const Rank correctRank, const Bitboard mask)
 {
