@@ -109,7 +109,7 @@ namespace {
         return chrono::day { dayNum };
     }
 
-    using TimeOfDayResolution = chrono::minutes;
+    using TimeOfDayResolution = chrono::minutes; // we don't need second resolution on compilation time
 
     [[nodiscard, gnu::const]] consteval auto build_time_of_day() noexcept -> TimeOfDayResolution
     {
@@ -124,16 +124,14 @@ namespace {
         return duration_cast<TimeOfDayResolution>(buildHour) + buildMinute;
     }
 
-    using BuildTime = chrono::sys_time<TimeOfDayResolution>;
-
-    [[nodiscard, gnu::const]] consteval auto build_date() noexcept -> BuildTime
+    [[nodiscard, gnu::const]] consteval auto build_date() noexcept -> chrono::sys_time<TimeOfDayResolution>
     {
         static constexpr auto date = chrono::sys_days {
             chrono::year_month_day {
                 build_year(), build_month(), build_day() }
         };
 
-        return time_point_cast<chrono::minutes>(date) + build_time_of_day();
+        return time_point_cast<TimeOfDayResolution>(date) + build_time_of_day();
     }
 
     [[nodiscard, gnu::cold]] auto to_utc_time(const std::time_t time) -> std::tm
@@ -155,13 +153,24 @@ namespace {
 
 auto get_build_time() -> std::string
 {
+    // This defaults to false because the time output by this assumes that the binary
+    // is running on the build machine (we have no way to know what timezone __TIME__
+    // was recorded in), but it can be enabled as a sanity check when developing locally.
+    static constexpr bool IncludeTimeOfDay = false;
+
     static constexpr auto timePoint = build_date();
 
     const auto utcTime = to_utc_time(chrono::system_clock::to_time_t(timePoint));
 
+    std::string timeFormat { "%d %b %Y" };
+
+    if constexpr (IncludeTimeOfDay) {
+        timeFormat.append(" %X");
+    }
+
     std::ostringstream stream;
 
-    stream << std::put_time(&utcTime, "%c %Z");
+    stream << std::put_time(&utcTime, timeFormat.data());
 
     return std::move(stream).str();
 }
