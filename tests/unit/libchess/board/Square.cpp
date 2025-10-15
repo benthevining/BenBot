@@ -33,7 +33,7 @@ using std::string_view;
 namespace gen = Catch::Generators;
 
 namespace {
-constexpr void square_to_from_idx(
+void square_to_from_idx(
     const string_view sectionName,
     const File file, const Rank rank,
     const size_t index)

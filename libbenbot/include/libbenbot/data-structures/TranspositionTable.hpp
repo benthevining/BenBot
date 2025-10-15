@@ -12,7 +12,7 @@
  * ======================================================================================
  */
 
-/** @defgroup benbot_data_structures
+/** @defgroup benbot_data_structures Data structures
     Data structures used by BenBot's search algorithm.
 
     @ingroup libbenbot
