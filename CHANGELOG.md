@@ -745,3 +745,8 @@
 * lichess bot config [skip ci] ([34325b5](https://github.com/benthevining/BenBot/commit/34325b509415477219285ed2fedbb7a08556a487))
 * making sure build time is always correctly updated ([#384](https://github.com/benthevining/BenBot/issues/384)) ([1f7512c](https://github.com/benthevining/BenBot/commit/1f7512c94a84c60310e1dcd9669be827a8837b4e))
 * pre-commit CI config ([eaed060](https://github.com/benthevining/BenBot/commit/eaed0603807213c63fe5fb5ff65cedcab9415cf4))
+## [1.7.2](https://github.com/benthevining/BenBot/compare/v1.7.1...v1.7.2) (2025-10-15)
+
+### Bug Fixes
+
+* Docker build [skip ci] ([6f08773](https://github.com/benthevining/BenBot/commit/6f087735a0138ca52582074fb7940b94da3627a1))
