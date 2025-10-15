@@ -26,6 +26,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <variant>
 
 /** This namespace contains utility functions for printing UCI-style output.
     @ingroup uci
@@ -63,16 +64,22 @@ void best_move(
 struct SearchInfo final {
     /** Represents the engine's evaluation of the line it is currently searching. */
     struct Score {
-        /** Evaluation value in centipawns, from the engine's point of view.
-            If this is ``nullopt``, ``mate`` must have a value.
-         */
-        std::optional<int> cp;
+        /** This type holds a value in internal units (centipawns). */
+        struct Centipawns final {
+            /** The score in centipawns, from the engine's point of view. */
+            int value { 0 };
+        };
 
-        /** Mate in X plies.
-            The value should be negative if the engine is getting mated.
-            If this is ``nullopt``, ``cp`` must have a value.
-         */
-        std::optional<int> mate;
+        /** This struct represents a mate score. */
+        struct MateIn final {
+            /** The number of plies until mate.
+                The value should be negative if the engine is getting mated.
+             */
+            int plies { 0 };
+        };
+
+        /** The evaluation value. */
+        std::variant<Centipawns, MateIn> value;
 
         /** True if the score is just a lower bound (ie, a beta cutoff). */
         bool lowerBound { false };

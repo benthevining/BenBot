@@ -18,10 +18,12 @@
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/UCI.hpp>
 #include <libchess/uci/Printing.hpp>
+#include <libchess/util/Variant.hpp>
 #include <optional>
 #include <print>
 #include <string>
 #include <string_view>
+#include <variant>
 
 namespace chess::uci::printing {
 
@@ -72,21 +74,18 @@ namespace {
         return plies / 2;
     }
 
-    [[nodiscard]] auto base_score_string(const SearchInfo::Score& score) -> string
+    using Score = SearchInfo::Score;
+
+    [[nodiscard]] auto base_score_string(const Score& score) -> string
     {
-        return score.cp
-            .transform([](const int centipawns) {
-                return std::format("cp {}", centipawns);
-            })
-            .or_else([&score] {
-                return score.mate.transform([](const int pliesToMate) {
-                    return std::format("mate {}", plies_to_moves(pliesToMate));
-                });
-            })
-            .value_or(string {});
+        return std::visit(
+            util::Visitor {
+                [](const Score::Centipawns& centipawns) { return std::format("cp {}", centipawns.value); },
+                [](const Score::MateIn& mate) { return std::format("mate {}", plies_to_moves(mate.plies)); } },
+            score.value);
     }
 
-    [[nodiscard]] auto score_string(const SearchInfo::Score& score) -> string
+    [[nodiscard]] auto score_string(const Score& score) -> string
     {
         auto string = base_score_string(score);
 

@@ -182,9 +182,9 @@ inline auto Score::to_libchess() const noexcept -> LibchessScore
         if (is_losing_mate())
             ply *= -1;
 
-        res.mate = ply;
+        res.value = LibchessScore::MateIn { .plies = ply };
     } else {
-        res.cp = value;
+        res.value = LibchessScore::Centipawns { .value = value };
     }
 
     return res;
