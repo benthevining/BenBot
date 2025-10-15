@@ -22,7 +22,7 @@ engine:
   go_commands:
     movetime: 20000 # 20 sec max per move
   uci_options:
-    Hash: 512
+    Hash: 256
 
   draw_or_resign:
     resign_enabled: false
@@ -72,7 +72,7 @@ engine:
 abort_time: 30
 fake_think_time: false
 rate_limiting_delay: 0
-move_overhead: 1000
+move_overhead: 250
 max_takebacks_accepted: 0
 quit_after_all_games_finish: false
 
@@ -83,7 +83,7 @@ correspondence:
   ponder: false
 
 challenge:
-  concurrency: 10
+  concurrency: 5
   sort_by: best
   preference: human
   accept_bot: true
