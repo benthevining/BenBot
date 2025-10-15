@@ -142,6 +142,13 @@ repos:
   hooks:
   - id: black
 
+# Dockerfile
+- repo: https://github.com/hadolint/hadolint
+  rev: v2.14.0
+  hooks:
+  - id: hadolint
+    args: [--ignore, DL3007, --ignore, DL3003, --ignore, DL3008, --ignore, DL3045]
+
     # format justfile
 - repo: local
   hooks:
