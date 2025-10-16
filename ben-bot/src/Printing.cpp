@@ -12,9 +12,11 @@
  * ======================================================================================
  */
 
+#include <beman/inplace_vector/inplace_vector.hpp>
 #include <ben-bot/Engine.hpp>
 #include <ben-bot/Resources.hpp>
 #include <ben-bot/TextTable.hpp>
+#include <cassert>
 #include <format>
 #include <iostream>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
@@ -27,6 +29,7 @@
 #include <libchess/util/Strings.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <print>
+#include <ranges>
 #include <string>
 #include <string_view>
 #include <termcolor/termcolor.hpp>
@@ -141,6 +144,26 @@ void Engine::print_options(const string_view args) const
 }
 
 namespace {
+    void print_colored_board(const Position& pos, const bool utf8)
+    {
+        const auto boardStr = utf8 ? print_utf8(pos) : print_ascii(pos);
+
+        using Lines = beman::inplace_vector::inplace_vector<string_view, 9uz>;
+
+        const auto lines = chess::util::lines_view(boardStr)
+                         | std::ranges::to<Lines>();
+
+        assert(lines.size() == Lines::capacity());
+
+        for (const auto line : lines | std::views::take(Lines::capacity() - 1uz)) {
+            std::cout << termcolor::bright_white << line.substr(0uz, line.length() - 1uz)
+                      << termcolor::white << line.back() << '\n';
+        }
+
+        std::cout << termcolor::white << lines.back() << '\n'
+                  << termcolor::reset;
+    }
+
     void print_labeled_info(const string_view label, const string_view info)
     {
         std::cout << termcolor::white << label << termcolor::bright_white << info << '\n'
@@ -152,10 +175,8 @@ void Engine::print_current_position(const string_view arguments) const
 {
     const auto& pos = searcher.context.options.position;
 
-    const bool utf8 = chess::util::trim(arguments) == "utf8";
-
-    println("{}",
-        utf8 ? print_utf8(pos) : print_ascii(pos));
+    print_colored_board(pos,
+        chess::util::trim(arguments) == "utf8");
 
     println("");
 
