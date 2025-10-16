@@ -70,8 +70,10 @@ void Engine::handle_custom_command(
 
 void Engine::start_file_logger(const string_view path)
 {
-    if (path.empty())
+    if (path.empty()) {
+        info_string("No path provided for file logger, not starting.");
         return;
+    }
 
     [[maybe_unused]] const auto result
         = chess::util::start_file_logger(std::filesystem::path { path })

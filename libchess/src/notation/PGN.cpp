@@ -93,7 +93,7 @@ namespace {
             if (tagValue.back() == '"')
                 tagValue.remove_suffix(1uz);
 
-            metadata[std::string { tagName }] = tagValue;
+            metadata[string { tagName }] = tagValue;
 
             pgnText.remove_prefix(closingBracketIdx + 1uz);
 
@@ -539,7 +539,7 @@ namespace {
     void write_game_result(
         const GameResult result, string& output)
     {
-        result.and_then([&output](const game::Result outcome) {
+        result.transform([&output](const game::Result outcome) {
             switch (outcome) {
                 case game::Result::Draw:
                     output.append("1/2-1/2");
@@ -556,7 +556,7 @@ namespace {
                 default: std::unreachable();
             }
 
-            return std::optional<int> {};
+            return std::monostate {};
         });
     }
 
@@ -574,7 +574,7 @@ auto to_pgn(const GameRecord& game, const bool useBlockComments) -> string
 
     write_game_result(game.result, result);
 
-    if (! result.empty() and result.back() == ' ')
+    if (not result.empty() and result.back() == ' ')
         result.pop_back();
 
     return result;

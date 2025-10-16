@@ -48,9 +48,8 @@ auto to_uci(const Move move) -> string
                 pieces::to_char(promotedType, false));
         })
         .or_else([move] {
-            return std::optional {
-                std::format("{}{}", move.from(), move.to())
-            };
+            return std::make_optional(
+                std::format("{}{}", move.from(), move.to()));
         })
         .value();
 }

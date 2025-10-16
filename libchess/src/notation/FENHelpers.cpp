@@ -134,7 +134,7 @@ void write_en_passant_target_square(
         .or_else([&output] {
             output.push_back('-');
 
-            return std::optional<std::monostate> {};
+            return std::make_optional(std::monostate {});
         });
 }
 
@@ -150,7 +150,7 @@ namespace {
 
         auto index = rankStart;
 
-        do {
+        while (std::cmp_less(index, rankEnd)) {
             if (fenFragment.empty())
                 return std::unexpected { "Unexpected end of piece positions FEN fragment" };
 
@@ -193,7 +193,7 @@ namespace {
 
             ++index;
             fenFragment = fenFragment.substr(1uz);
-        } while (std::cmp_less(index, rankEnd));
+        }
 
         if (not fenFragment.empty() and fenFragment.front() == '/')
             return fenFragment.substr(1uz);

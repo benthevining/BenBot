@@ -190,10 +190,9 @@ namespace {
     {
         const auto [valueStr, rest] = split_at_first_space(options);
 
-        return {
+        return std::make_pair(
             util::int_from_string<size_t>(trim(valueStr)),
-            trim(rest)
-        };
+            trim(rest));
     }
 
     // consumes all the moves following the "searchmoves" token,

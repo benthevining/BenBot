@@ -32,6 +32,9 @@ using util::int_from_string;
 
 namespace {
 
+    constexpr string_view FULL_MOVE_OP_TAG { "fmvn" };
+    constexpr string_view HALF_MOVE_OP_TAG { "hmvc" };
+
     void parse_operations(
         EPDPosition& pos, const string_view text)
     {
@@ -56,9 +59,9 @@ namespace {
 
             pos.operations[std::string { key }] = value;
 
-            if (key == "fmvn")
+            if (key == FULL_MOVE_OP_TAG)
                 pos.position.fullMoveCounter = int_from_string(value, pos.position.fullMoveCounter);
-            else if (key == "hmvc")
+            else if (key == HALF_MOVE_OP_TAG)
                 pos.position.halfmoveClock = int_from_string(value, pos.position.halfmoveClock);
         }
     }
@@ -121,14 +124,19 @@ namespace {
     void write_operations(
         const EPDPosition& pos, string& output)
     {
+        // setting this to false would allow round-tripping of EPDs
+        static constexpr bool AutofillDefaultOps = true;
+
         for (const auto& [key, value] : pos.operations)
             output.append(std::format(" {} \"{}\";", key, value));
 
-        if (not pos.operations.contains("fmvn"))
-            output.append(std::format(" fmvn {}", pos.position.fullMoveCounter));
+        if constexpr (AutofillDefaultOps) {
+            if (not pos.operations.contains(string { FULL_MOVE_OP_TAG }))
+                output.append(std::format(" {} {};", FULL_MOVE_OP_TAG, pos.position.fullMoveCounter));
 
-        if (not pos.operations.contains("hmvc"))
-            output.append(std::format(" hmvc {}", pos.position.halfmoveClock));
+            if (not pos.operations.contains(string { HALF_MOVE_OP_TAG }))
+                output.append(std::format(" {} {};", HALF_MOVE_OP_TAG, pos.position.halfmoveClock));
+        }
     }
 
 } // namespace

@@ -37,6 +37,8 @@ using std::println;
 using std::string;
 using std::string_view;
 
+using MaybeMove = std::optional<Move>;
+
 void info_string(const string_view info)
 {
     println(cout, "info string {}", info);
@@ -44,7 +46,7 @@ void info_string(const string_view info)
 
 namespace {
     [[nodiscard]] auto ponder_move_string(
-        const std::optional<Move> ponderMove)
+        const MaybeMove ponderMove)
         -> string
     {
         return ponderMove
@@ -56,7 +58,7 @@ namespace {
 } // namespace
 
 void best_move(
-    const Move bestMove, const std::optional<Move> ponderMove)
+    const Move bestMove, const MaybeMove ponderMove)
 {
     println(cout,
         "bestmove {}{}",

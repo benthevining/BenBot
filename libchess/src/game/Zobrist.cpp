@@ -249,6 +249,17 @@ namespace {
             });
     }
 
+    [[nodiscard, gnu::const]] constexpr auto apply_en_passant(
+        const Hash prevValue, const std::optional<Square> epSquare)
+        -> Hash
+    {
+        return epSquare
+            .transform([prevValue](const Square square) {
+                return prevValue ^ en_passant_key(square.file);
+            })
+            .value_or(prevValue);
+    }
+
 } // namespace
 
 auto CastlingRightsChanges::update_hash(Hash value) const noexcept -> Hash
@@ -292,10 +303,7 @@ auto calculate(const Position& pos) -> Hash
     if (pos.blackCastlingRights.queenside)
         value ^= BLACK_QUEENSIDE_CASTLE;
 
-    pos.enPassantTargetSquare.transform([&value](const Square& square) {
-        value ^= en_passant_key(square.file);
-        return std::monostate {};
-    });
+    value = apply_en_passant(value, pos.enPassantTargetSquare);
 
     return value;
 }
@@ -311,16 +319,10 @@ auto update(
     value ^= BLACK_TO_MOVE; // just toggle these bits in/out every other move
 
     // remove old EP target
-    pos.enPassantTargetSquare.transform([&value](const Square& square) {
-        value ^= en_passant_key(square.file);
-        return std::monostate {};
-    });
+    value = apply_en_passant(value, pos.enPassantTargetSquare);
 
     // add new EP target
-    newEPTarget.transform([&value](const Square& square) {
-        value ^= en_passant_key(square.file);
-        return std::monostate {};
-    });
+    value = apply_en_passant(value, newEPTarget);
 
     // remove moved-from square
     value ^= piece_key(move.piece(), pos.sideToMove, move.from());
@@ -368,10 +370,7 @@ auto after_null_move(const Position& pos) -> Hash
     value ^= BLACK_TO_MOVE; // just toggle these bits in/out every other move
 
     // remove old EP target
-    pos.enPassantTargetSquare.transform([&value](const Square& square) {
-        value ^= en_passant_key(square.file);
-        return std::monostate {};
-    });
+    value = apply_en_passant(value, pos.enPassantTargetSquare);
 
     return value;
 }

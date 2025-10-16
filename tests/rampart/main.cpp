@@ -37,7 +37,7 @@
 namespace {
 using nlohmann::json;
 
-auto run_rampart_test(const std::string_view fenString) -> std::expected<json, std::string>
+[[nodiscard]] auto run_rampart_test(const std::string_view fenString) -> std::expected<json, std::string>
 {
     return chess::notation::from_fen(fenString)
         .transform([fenString](const chess::game::Position& position) {
@@ -95,14 +95,15 @@ try {
         return EXIT_FAILURE;
     }
 
-    run_rampart_test(args.front())
-        .transform([](const json& data) {
-            std::println("{}", data.dump(1));
-        })
-        .transform_error([](const std::string_view error) {
-            std::println(std::cerr, "Error: {}", error);
-            return std::monostate {};
-        });
+    [[maybe_unused]] const auto result
+        = run_rampart_test(args.front())
+              .transform([](const json& data) {
+                  std::println("{}", data.dump(1));
+              })
+              .transform_error([](const std::string_view error) {
+                  std::println(std::cerr, "Error: {}", error);
+                  return std::monostate {};
+              });
 
     return EXIT_SUCCESS;
 } catch (const std::exception& exception) {
