@@ -15,10 +15,12 @@
 #include <algorithm>
 #include <ben-bot/TextTable.hpp>
 #include <cstddef> // IWYU pragma: keep - for size_t;
+#include <functional>
 #include <numeric>
 #include <ranges>
 #include <span>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace ben_bot {
@@ -88,6 +90,29 @@ auto TextTable::to_string() const -> string
     return result;
 }
 
+void TextTable::print(
+    PrintFunc&&           printHeading,
+    PrintFunc&&           printCell,
+    PrintFunc&&           printOutline,
+    std::function<void()> printNewline) const
+{
+    const auto widths = get_column_widths();
+
+    rows.front().print(
+        std::move(printHeading), printOutline, widths);
+
+    printNewline();
+
+    printOutline(make_header_sep_row(widths));
+
+    printNewline();
+
+    for (const auto& row : rows | std::views::drop(1uz)) {
+        row.print(printCell, printOutline, widths);
+        printNewline();
+    }
+}
+
 auto TextTable::num_columns() const -> size_t
 {
     return std::transform_reduce(
@@ -140,6 +165,34 @@ auto TextTable::Row::to_string(
     result.append(LINE_ENDING);
 
     return result;
+}
+
+void TextTable::Row::print(
+    PrintFunc               printCell,
+    PrintFunc               printOutline,
+    std::span<const size_t> widths) const
+{
+    printOutline(LINE_START);
+
+    auto index { 0uz };
+
+    for (const auto width : widths) {
+        if (index > 0uz)
+            printOutline(COLUMN_SEPARATOR);
+
+        string padded;
+
+        if (index < columns.size())
+            padded = columns[index];
+
+        padded.resize(width, ' ');
+
+        printCell(padded);
+
+        ++index;
+    }
+
+    printOutline(LINE_ENDING);
 }
 
 } // namespace ben_bot

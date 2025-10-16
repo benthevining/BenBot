@@ -57,6 +57,36 @@ void Engine::print_logo_and_version() const
         get_name(), get_author());
 }
 
+namespace {
+    void print_colored_table(const TextTable& table)
+    {
+        table.print(
+            [](const string_view heading) {
+                // we want the heading text to be underlined, but not the
+                // whitespace that follows the text to complete the cell
+                const auto trimmed = chess::util::trim(heading);
+
+                std::cout << termcolor::bold << termcolor::underline << termcolor::bright_white
+                          << trimmed
+                          << termcolor::reset;
+
+                const auto numSpaces = heading.length() - trimmed.length();
+
+                for (auto i = 0uz; i < numSpaces; ++i)
+                    std::cout << ' ';
+            },
+            [](const string_view cell) {
+                std::cout << termcolor::bright_white << cell;
+            },
+            [](const string_view outline) {
+                std::cout << termcolor::white << outline;
+            },
+            [] { std::cout << '\n'; });
+
+        std::cout << termcolor::reset;
+    }
+} // namespace
+
 void Engine::print_help(const string_view args) const
 {
     const bool noLogo = [args] {
@@ -88,7 +118,7 @@ void Engine::print_help(const string_view args) const
             .append_column(command.description);
     }
 
-    println("{}", table.to_string());
+    print_colored_table(table);
 }
 
 void Engine::print_options(const string_view args) const
@@ -137,7 +167,9 @@ void Engine::print_options(const string_view args) const
         }
     }
 
-    println("{}", table.to_string());
+    print_colored_table(table);
+
+    println("");
 
     if (not noCurrent)
         println("Debug mode: {}", debugMode.load());
