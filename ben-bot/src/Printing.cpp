@@ -50,11 +50,24 @@ auto Engine::get_name() const -> std::string
 
 void Engine::print_logo_and_version() const
 {
-    println("{}", resources::get_ascii_logo());
+    using Lines = beman::inplace_vector::inplace_vector<string_view, 11uz>;
 
-    println(
-        "{}, by {}",
-        get_name(), get_author());
+    const auto logoLines = chess::util::lines_view(resources::get_ascii_logo())
+                         | std::views::take(Lines::capacity())
+                         | std::ranges::to<Lines>();
+
+    assert(logoLines.size() == Lines::capacity());
+
+    std::cout << termcolor::grey << logoLines.front() << '\n'
+              << termcolor::blue;
+
+    for (const auto line : logoLines | std::views::drop(1) | std::views::take(Lines::capacity() - 2uz))
+        std::cout << line << '\n';
+
+    std::cout << termcolor::grey << logoLines.back() << "\n\n"
+              << termcolor::bright_white << termcolor::bold << get_name() << ", "
+              << termcolor::reset << "by " << get_author() << '\n'
+              << termcolor::reset;
 }
 
 namespace {
