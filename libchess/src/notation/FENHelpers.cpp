@@ -12,7 +12,7 @@
  * ======================================================================================
  */
 
-#include "FENHelpers.hpp"
+#include "notation/FENHelpers.hpp"
 #include <array>
 #include <expected>
 #include <format>

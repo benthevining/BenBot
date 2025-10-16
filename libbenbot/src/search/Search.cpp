@@ -21,8 +21,8 @@
 // Killer moves
 // Mate distance pruning
 
-#include "MoveOrdering.hpp"
-#include "TimeManagement.hpp"
+#include "search/MoveOrdering.hpp"
+#include "search/TimeManagement.hpp"
 #include <algorithm>
 #include <array>
 #include <atomic>

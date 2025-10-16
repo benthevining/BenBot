@@ -12,7 +12,7 @@
  * ======================================================================================
  */
 
-#include "FENHelpers.hpp"
+#include "notation/FENHelpers.hpp"
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <expected>
 #include <format>

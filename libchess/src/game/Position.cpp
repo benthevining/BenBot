@@ -12,7 +12,7 @@
  * ======================================================================================
  */
 
-#include "Zobrist.hpp"
+#include "game/Zobrist.hpp"
 #include <array>
 #include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
 #include <format>

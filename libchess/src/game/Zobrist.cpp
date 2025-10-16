@@ -12,8 +12,8 @@
  * ======================================================================================
  */
 
-#include "Zobrist.hpp"
-#include "ZobristKeys.hpp"
+#include "game/Zobrist.hpp"
+#include "game/ZobristKeys.hpp"
 #include <functional>
 #include <libchess/board/BitboardIndex.hpp>
 #include <libchess/board/File.hpp>

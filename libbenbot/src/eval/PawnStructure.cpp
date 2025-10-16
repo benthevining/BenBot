@@ -12,7 +12,7 @@
  * ======================================================================================
  */
 
-#include "PawnStructure.hpp"
+#include "eval/PawnStructure.hpp"
 #include <array>
 #include <cmath> // IWYU pragma: keep - for std::abs()
 #include <libchess/board/Bitboard.hpp>

@@ -16,9 +16,9 @@
 // - bonus for bishops on open diagonals
 // - bonus for the bishop pair that increases with fewer pawns on the board, and also a bonus for knights when there are more pawns on the board
 
-#include "PawnStructure.hpp"
-#include "PieceSquareTables.hpp"
-#include "Positional.hpp"
+#include "eval/PawnStructure.hpp"
+#include "eval/PieceSquareTables.hpp"
+#include "eval/Positional.hpp"
 #include <algorithm>
 #include <cmath>
 #include <libbenbot/eval/Evaluation.hpp>

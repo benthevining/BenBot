@@ -12,15 +12,15 @@
  * ======================================================================================
  */
 
-#include "DetectArch.hpp" // IWYU pragma: keep
+#include "util/DetectArch.hpp" // IWYU pragma: keep
 #include <functional>
 #include <libchess/util/Threading.hpp>
 #include <utility>
 
 #ifdef LIBCHESS_ARM
-#    include "ProgressiveBackoff_ARM.hpp"
+#    include "util/ProgressiveBackoff_ARM.hpp"
 #elifdef LIBCHESS_INTEL
-#    include "ProgressiveBackoff_Intel.hpp"
+#    include "util/ProgressiveBackoff_Intel.hpp"
 #else
 #    warning "Neither ARM nor Intel detected, using fallback implementation of progressive backoff"
 

@@ -12,7 +12,7 @@
  * ======================================================================================
  */
 
-#include "PieceSquareTables.hpp"
+#include "eval/PieceSquareTables.hpp"
 #include <array>
 #include <cassert>
 #include <cmath>

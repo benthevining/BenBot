@@ -12,14 +12,14 @@
  * ======================================================================================
  */
 
-#include "DetectArch.hpp" // IWYU pragma: keep
-#include <cstddef>        // IWYU pragma: keep - for size_t
+#include "util/DetectArch.hpp" // IWYU pragma: keep
+#include <cstddef>             // IWYU pragma: keep - for size_t
 #include <libchess/util/Memory.hpp>
 
 #ifdef _WIN32
-#    include "Memory_Windows.hpp"
+#    include "util/Memory_Windows.hpp"
 #else
-#    include "Memory_Posix.hpp"
+#    include "util/Memory_Posix.hpp"
 #endif
 
 #ifdef LIBCHESS_INTEL
