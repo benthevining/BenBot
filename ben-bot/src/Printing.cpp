@@ -16,6 +16,7 @@
 #include <ben-bot/Resources.hpp>
 #include <ben-bot/TextTable.hpp>
 #include <format>
+#include <iostream>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Score.hpp>
@@ -28,6 +29,7 @@
 #include <print>
 #include <string>
 #include <string_view>
+#include <termcolor/termcolor.hpp>
 #include <utility>
 #include <variant>
 
@@ -138,6 +140,14 @@ void Engine::print_options(const string_view args) const
         println("Debug mode: {}", debugMode.load());
 }
 
+namespace {
+    void print_labeled_info(const string_view label, const string_view info)
+    {
+        std::cout << termcolor::white << label << termcolor::bright_white << info << '\n'
+                  << termcolor::reset;
+    }
+} // namespace
+
 void Engine::print_current_position(const string_view arguments) const
 {
     const auto& pos = searcher.context.options.position;
@@ -148,22 +158,26 @@ void Engine::print_current_position(const string_view arguments) const
         utf8 ? print_utf8(pos) : print_ascii(pos));
 
     println("");
-    println("FEN: {}", chess::notation::to_fen(pos));
-    println("Zobrist key: {}", pos.hash);
+
+    print_labeled_info("FEN: ", chess::notation::to_fen(pos));
+
+    print_labeled_info("Zobrist key: ", std::format("{}", pos.hash));
+
+    print_labeled_info("Static eval: ", std::format("{}", eval::evaluate(pos)));
 
     searcher.context.transTable.find(pos)
         .transform([](const TTData& data) {
-            println(
-                "TT hit: depth {} eval {} type {} probed {} bestmove {}",
-                data.searchedDepth, data.eval,
-                magic_enum::enum_name(data.evalType),
-                eval::Score::from_tt(data.eval, 0uz),
-                chess::notation::to_uci(data.bestMove.value_or(Move {})));
+            print_labeled_info(
+                "TT hit: ",
+                std::format(
+                    "depth {} eval {} type {} probed {} bestmove {}",
+                    data.searchedDepth, data.eval,
+                    magic_enum::enum_name(data.evalType),
+                    eval::Score::from_tt(data.eval, 0uz),
+                    chess::notation::to_uci(data.bestMove.value_or(Move {}))));
 
             return std::monostate {};
         });
-
-    println("Static eval: {}", eval::evaluate(pos));
 }
 
 void Engine::print_compiler_info()
