@@ -47,7 +47,7 @@ set_target_properties (
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
     # needed for declaring large arrays of Zobrist keys
-    target_compile_options (libchess PRIVATE -fbracket-depth=767)
+    set_property (SOURCE src/game/Zobrist.cpp APPEND PROPERTY COMPILE_OPTIONS -fbracket-depth=767)
 endif ()
 
 file (GLOB_RECURSE libchess_headers LIST_DIRECTORIES false
@@ -65,8 +65,9 @@ target_sources (
 )
 
 target_include_directories (
-    libchess PRIVATE "${CMAKE_CURRENT_LIST_DIR}/src/notation/"
-                     "${CMAKE_CURRENT_LIST_DIR}/src/game/" "${CMAKE_CURRENT_LIST_DIR}/src/util/"
+    libchess
+    PRIVATE "${CMAKE_CURRENT_LIST_DIR}/src/moves/" "${CMAKE_CURRENT_LIST_DIR}/src/notation/"
+            "${CMAKE_CURRENT_LIST_DIR}/src/game/" "${CMAKE_CURRENT_LIST_DIR}/src/util/"
 )
 
 source_group (TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${libchess_headers} ${libchess_sources})
