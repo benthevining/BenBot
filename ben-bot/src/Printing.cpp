@@ -65,7 +65,7 @@ void Engine::print_logo_and_version() const
         std::cout << line << '\n';
 
     std::cout << termcolor::grey << logoLines.back() << "\n\n"
-              << termcolor::bright_white << termcolor::bold << get_name() << ", "
+              << termcolor::reset << termcolor::bold << get_name() << ", "
               << termcolor::reset << "by " << get_author() << '\n'
               << termcolor::reset;
 }
@@ -79,7 +79,7 @@ namespace {
                 // whitespace that follows the text to complete the cell
                 const auto trimmed = chess::util::trim(heading);
 
-                std::cout << termcolor::bold << termcolor::underline << termcolor::bright_white
+                std::cout << termcolor::bold << termcolor::underline
                           << trimmed
                           << termcolor::reset;
 
@@ -89,10 +89,10 @@ namespace {
                     std::cout << ' ';
             },
             [](const string_view cell) {
-                std::cout << termcolor::bright_white << cell;
+                std::cout << cell;
             },
             [](const string_view outline) {
-                std::cout << termcolor::white << outline;
+                std::cout << termcolor::white << outline << termcolor::reset;
             },
             [] { std::cout << '\n'; });
 
@@ -201,8 +201,9 @@ namespace {
         assert(lines.size() == Lines::capacity());
 
         for (const auto line : lines | std::views::take(Lines::capacity() - 1uz)) {
-            std::cout << termcolor::bright_white << line.substr(0uz, line.length() - 1uz)
-                      << termcolor::white << line.back() << '\n';
+            std::cout << line.substr(0uz, line.length() - 1uz)
+                      << termcolor::white << line.back() << '\n'
+                      << termcolor::reset;
         }
 
         std::cout << termcolor::white << lines.back() << '\n'
@@ -211,8 +212,7 @@ namespace {
 
     void print_labeled_info(const string_view label, const string_view info)
     {
-        std::cout << termcolor::white << label << termcolor::bright_white << info << '\n'
-                  << termcolor::reset;
+        std::cout << termcolor::white << label << termcolor::reset << info << '\n';
     }
 } // namespace
 
