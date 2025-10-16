@@ -90,12 +90,11 @@ auto parse_position_options(string_view options)
     if (moveToken != "moves") // code defensively against unrecognized tokens
         return position;
 
-    moves = trim(moves);
+    auto moveWords = util::words_view(trim(moves))
+                   | std::views::filter([](const string_view word) { return not word.empty(); });
 
-    while (not moves.empty()) {
-        const auto [firstMove, rest2] = split_at_first_space(moves);
-
-        const auto parsed = notation::from_uci(position, firstMove);
+    for (const auto moveStr : moveWords) {
+        const auto parsed = notation::from_uci(position, moveStr);
 
         if (not parsed.has_value())
             return std::unexpected { parsed.error() };
@@ -106,8 +105,6 @@ auto parse_position_options(string_view options)
             return std::unexpected { "Found null move in move list" };
 
         position.make_move(move);
-
-        moves = trim(rest2);
     }
 
     return position;
