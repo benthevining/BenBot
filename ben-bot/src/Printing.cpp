@@ -148,22 +148,22 @@ void Engine::print_current_position(const string_view arguments) const
         utf8 ? print_utf8(pos) : print_ascii(pos));
 
     println("");
-    info_string(std::format("FEN: {}", chess::notation::to_fen(pos)));
-    info_string(std::format("Zobrist key: {}", pos.hash));
+    println("FEN: {}", chess::notation::to_fen(pos));
+    println("Zobrist key: {}", pos.hash);
 
     searcher.context.transTable.find(pos)
         .transform([](const TTData& data) {
-            info_string(std::format(
+            println(
                 "TT hit: depth {} eval {} type {} probed {} bestmove {}",
                 data.searchedDepth, data.eval,
                 magic_enum::enum_name(data.evalType),
                 eval::Score::from_tt(data.eval, 0uz),
-                chess::notation::to_uci(data.bestMove.value_or(Move {}))));
+                chess::notation::to_uci(data.bestMove.value_or(Move {})));
 
             return std::monostate {};
         });
 
-    info_string(std::format("Static eval: {}", eval::evaluate(pos)));
+    println("Static eval: {}", eval::evaluate(pos));
 }
 
 void Engine::print_compiler_info()
