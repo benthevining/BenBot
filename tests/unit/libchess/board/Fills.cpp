@@ -200,9 +200,7 @@ TEST_CASE("Fills - northeast", TAGS)
 
 TEST_CASE("Fills - southeast", TAGS)
 {
-    static constexpr Bitboard start { 0X41000800000020 };
-
-    static constexpr auto filled = fills::southeast(start);
+    static constexpr auto filled = fills::southeast(0X41000800000020_bb);
 
     STATIC_REQUIRE(filled == 0X41820c183060e0_bb);
 }
