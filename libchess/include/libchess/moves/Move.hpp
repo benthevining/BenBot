@@ -135,7 +135,7 @@ private:
     //          : get_flags() declared above returns this integer
     //
     // Special case is a null move, this integer will be 0
-    Integer data { 0 };
+    Integer data { UINT16_C(0) };
 };
 
 /** Provides a strong ordering of moves. This can be useful for sorting lists of moves.
@@ -198,8 +198,8 @@ namespace detail {
 
     static constexpr auto LOWEST_SIX_BITS_MASK = 63uz;
 
-    static constexpr auto START_SQUARE_OFFSET = static_cast<Integer>(6uz);
-    static constexpr auto FLAGS_OFFSET        = static_cast<Integer>(12uz);
+    static constexpr Integer START_SQUARE_OFFSET = UINT16_C(6uz);
+    static constexpr Integer FLAGS_OFFSET        = UINT16_C(12uz);
 
     static constexpr auto PROMOTED_TYPE_OFFSET_WITHIN_FLAGS = 6uz;
 

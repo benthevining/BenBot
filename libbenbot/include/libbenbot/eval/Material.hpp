@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <libbenbot/eval/Score.hpp>
 #include <libchess/board/Pieces.hpp>
 #include <libchess/game/Position.hpp>
@@ -39,25 +40,25 @@ namespace piece_values {
     /// @{
 
     /** The value of a pawn. */
-    static constexpr Value PAWN { 100 };
+    static constexpr Value PAWN { UINT16_C(100) };
 
     /** The value of a knight */
-    static constexpr Value KNIGHT { 320 };
+    static constexpr Value KNIGHT { UINT16_C(320) };
 
     /** The value of a bishop. */
-    static constexpr Value BISHOP { 330 };
+    static constexpr Value BISHOP { UINT16_C(330) };
 
     /** The value of a rook. */
-    static constexpr Value ROOK { 500 };
+    static constexpr Value ROOK { UINT16_C(500) };
 
     /** The value of a queen. */
-    static constexpr Value QUEEN { 900 };
+    static constexpr Value QUEEN { UINT16_C(900) };
 
     /** The value of the king.
         This value isn't really used in counting material, it's just an
         arbitrarily large placeholder value.
      */
-    static constexpr Value KING { 10000 };
+    static constexpr Value KING { UINT16_C(10000) };
 
     /// @}
 

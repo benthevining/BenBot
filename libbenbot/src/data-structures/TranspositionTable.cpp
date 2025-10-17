@@ -47,13 +47,13 @@ static constexpr auto GENERATION_DELTA = 8uz;
 static constexpr auto GENERATION_CYCLE = 255uz + GENERATION_DELTA;
 
 struct TranspositionTable::Entry final {
-    std::uint16_t key { 0 }; // the lowest 16 bits of the position's Zobrist key
+    std::uint16_t key { UINT16_C(0) }; // the lowest 16 bits of the position's Zobrist key
 
-    std::uint8_t depth { 0 }; // empty slots are marked with a depth of 0
+    std::uint8_t depth { UINT8_C(0) }; // empty slots are marked with a depth of 0
 
-    std::uint8_t generation { 0 };
+    std::uint8_t generation { UINT8_C(0) };
 
-    eval::Value eval { 0 };
+    eval::Value eval { UINT16_C(0) };
 
     EvalType evalType { EvalType::Alpha };
 

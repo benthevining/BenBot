@@ -118,13 +118,13 @@ struct [[nodiscard]] Position final {
 
         @see is_fifty_move_draw()
      */
-    std::uint_least8_t halfmoveClock { 0 };
+    std::uint_least8_t halfmoveClock { UINT8_C(0) };
 
     /** The number of full moves in the game.
         This value is monotonically increasing throughout the game,
         and is incremented after every Black move.
      */
-    std::uint_least64_t fullMoveCounter { 1 };
+    std::uint_least64_t fullMoveCounter { UINT64_C(1) };
 
     /** Unsigned 64-bit integer used for hash values. */
     using Hash = std::uint64_t;
@@ -134,7 +134,7 @@ struct [[nodiscard]] Position final {
         function. If you manually change attributes of the position,
         call the ``refresh_zobrist()`` function to recalculate it.
      */
-    Hash hash { 0uz };
+    Hash hash { UINT64_C(0) };
 
     /** Returns true if the two positions have the same Zobrist hash. */
     [[nodiscard]] auto operator==(const Position& other) const noexcept -> bool

@@ -71,7 +71,7 @@ namespace {
                 child.moves.begin(), child.length,
                 std::next(moves.begin()));
 
-            length = child.length + 1;
+            length = child.length + 1uz;
 
             assert(length <= moves.size());
         }
@@ -469,10 +469,10 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
 
     RootSearchResult result;
 
-    size_t totalNodesSearched { 0uz };
+    auto totalNodesSearched { 0uz };
 
     // iterative deepening
-    auto depth = 1uz;
+    auto depth { 1uz };
 
     while (depth <= options.depth) {
         if (interrupter.should_abort(0uz))
