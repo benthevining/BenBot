@@ -63,9 +63,11 @@ constexpr auto vertical(const Bitboard board) noexcept -> Bitboard
 
 constexpr auto horizontal(Bitboard board) noexcept -> Bitboard
 {
-    static constexpr Bitboard k1 { 0x5555555555555555 };
-    static constexpr Bitboard k2 { 0x3333333333333333 };
-    static constexpr Bitboard k4 { 0x0f0f0f0f0f0f0f0f };
+    using namespace literals; // NOLINT
+
+    static constexpr auto k1 = 0x5555555555555555_bb;
+    static constexpr auto k2 = 0x3333333333333333_bb;
+    static constexpr auto k4 = 0x0f0f0f0f0f0f0f0f_bb;
 
     board = ((board >> 1uz) & k1) | ((board & k1) << 1uz);
     board = ((board >> 2uz) & k2) | ((board & k2) << 2uz);
