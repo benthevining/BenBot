@@ -42,7 +42,7 @@ using Value = std::int16_t;
 
     @ingroup eval
  */
-static constexpr Value MAX { std::numeric_limits<Value>::max() - 5 };
+static constexpr Value MAX { std::numeric_limits<Value>::max() - UINT16_C(5) };
 
 /** The maximum possible evaluation score, i.e., if the side to move
     has mate-in-1. If the side to move is in checkmate, the evaluation
@@ -50,12 +50,12 @@ static constexpr Value MAX { std::numeric_limits<Value>::max() - 5 };
 
     @ingroup eval
  */
-static constexpr Value MATE { MAX / 2 };
+static constexpr Value MATE { MAX / UINT16_C(2) };
 
 /** A neutral, or draw, score.
     @ingroup eval
  */
-static constexpr Value DRAW { 0 };
+static constexpr Value DRAW { UINT16_C(0) };
 
 /** An evaluation score.
     This is essentially a wrapper around an integer value, with a few helper
@@ -65,7 +65,7 @@ static constexpr Value DRAW { 0 };
  */
 struct Score final {
     /** The evaluation value, in centipawns. */
-    Value value { 0 };
+    Value value { UINT16_C(0) };
 
     /** Implicitly converts this score object to its integer value.
         This method is intentionally not explicit, which allows score

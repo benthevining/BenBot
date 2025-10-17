@@ -267,13 +267,11 @@ constexpr void Pieces::our_move(const moves::Move move, const Color ourColor) no
 
     occupied ^= movementMask;
 
-    using Placeholder = std::optional<int>;
-
     move.promoted_type()
-        .and_then([move, this](const PieceType type) {
+        .transform([move, this](const PieceType type) {
             get_type(move.piece()).unset(move.from());
             get_type(type).set(move.to());
-            return Placeholder { 1 };
+            return std::monostate {};
         })
         .or_else([move, movementMask, ourColor, this] {
             get_type(move.piece()) ^= movementMask;
@@ -289,7 +287,7 @@ constexpr void Pieces::our_move(const moves::Move move, const Color ourColor) no
                 occupied ^= castleMask;
             }
 
-            return Placeholder {};
+            return std::make_optional(std::monostate {});
         });
 }
 

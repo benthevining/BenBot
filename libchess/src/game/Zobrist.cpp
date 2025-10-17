@@ -14,6 +14,7 @@
 
 #include "game/Zobrist.hpp"
 #include "game/ZobristKeys.hpp"
+#include <cstdint>
 #include <functional>
 #include <libchess/board/BitboardIndex.hpp>
 #include <libchess/board/File.hpp>
@@ -105,7 +106,7 @@ auto CastlingRightsChanges::update_hash(Hash value) const noexcept -> Hash
 
 auto calculate(const Position& pos) -> Hash
 {
-    Hash value { 0uz };
+    Hash value { UINT64_C(0) };
 
     if (pos.is_black_to_move())
         value ^= keys::BLACK_TO_MOVE;

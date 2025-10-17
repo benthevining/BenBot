@@ -70,7 +70,7 @@ struct [[nodiscard]] TTData final {
     /** The evaluation of this position.
         See ``evalType`` to determine the exact meaning of this value.
      */
-    eval::Value eval { 0 };
+    eval::Value eval { UINT16_C(0) };
 
     /** Gives the exact meaning of the ``eval`` value. */
     EvalType evalType { EvalType::Alpha };
@@ -173,7 +173,7 @@ private:
 
     size_t clusterCount { 0uz };
 
-    std::uint8_t generation { 0 };
+    std::uint8_t generation { UINT8_C(0) };
 };
 
 } // namespace ben_bot

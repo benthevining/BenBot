@@ -89,7 +89,7 @@ constexpr auto Bounds::invert() const noexcept -> Bounds
 constexpr auto Bounds::null_window() const noexcept -> Bounds
 {
     return {
-        .alpha = Score { static_cast<eval::Value>(-alpha.value - 1) },
+        .alpha = Score { static_cast<eval::Value>(-alpha.value - UINT16_C(1)) },
         .beta  = -alpha
     };
 }

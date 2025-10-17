@@ -36,13 +36,13 @@ using BitboardIndex = std::uint_fast8_t;
     @ingroup board
     @see MAX_BITBOARD_IDX
  */
-static constexpr auto NUM_SQUARES = static_cast<BitboardIndex>(64);
+static constexpr BitboardIndex NUM_SQUARES = UINT8_C(64);
 
 /** The maximum valid bitboard bit index.
 
     @ingroup board
     @see NUM_SQUARES
  */
-static constexpr auto MAX_BITBOARD_IDX = NUM_SQUARES - static_cast<BitboardIndex>(1);
+static constexpr BitboardIndex MAX_BITBOARD_IDX = NUM_SQUARES - UINT8_C(1);
 
 } // namespace chess::board
