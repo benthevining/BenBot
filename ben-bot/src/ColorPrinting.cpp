@@ -17,7 +17,6 @@
 #include <ben-bot/Engine.hpp>
 #include <ben-bot/Resources.hpp>
 #include <ben-bot/TextTable.hpp>
-#include <cassert>
 #include <iostream>
 #include <libchess/game/Position.hpp>
 #include <libchess/util/Strings.hpp>
@@ -29,20 +28,26 @@ namespace ben_bot {
 
 using std::string_view;
 
+namespace {
+    template <size_t MaxLines>
+    [[nodiscard, gnu::const]] auto get_at_most_n_lines(const string_view input)
+    {
+        using Lines = beman::inplace_vector::inplace_vector<string_view, MaxLines>;
+
+        return chess::util::lines_view(input)
+             | std::views::take(MaxLines)
+             | std::ranges::to<Lines>();
+    }
+} // namespace
+
 void Engine::print_logo_and_version() const
 {
-    using Lines = beman::inplace_vector::inplace_vector<string_view, 11uz>;
-
-    const auto logoLines = chess::util::lines_view(resources::get_ascii_logo())
-                         | std::views::take(Lines::capacity())
-                         | std::ranges::to<Lines>();
-
-    assert(logoLines.size() == Lines::capacity());
+    const auto logoLines = get_at_most_n_lines<11uz>(resources::get_ascii_logo());
 
     std::cout << termcolor::grey << logoLines.front() << '\n'
               << termcolor::blue;
 
-    for (const auto line : logoLines | std::views::drop(1) | std::views::take(Lines::capacity() - 2uz))
+    for (const auto line : logoLines | std::views::drop(1) | std::views::take(logoLines.capacity() - 2uz))
         std::cout << line << '\n';
 
     std::cout << termcolor::grey << logoLines.back() << "\n\n"
@@ -83,14 +88,9 @@ void print_colored_board(const Position& pos, const bool utf8)
 {
     const auto boardStr = utf8 ? print_utf8(pos) : print_ascii(pos);
 
-    using Lines = beman::inplace_vector::inplace_vector<string_view, 9uz>;
+    const auto lines = get_at_most_n_lines<9uz>(boardStr);
 
-    const auto lines = chess::util::lines_view(boardStr)
-                     | std::ranges::to<Lines>();
-
-    assert(lines.size() == Lines::capacity());
-
-    for (const auto line : lines | std::views::take(Lines::capacity() - 1uz)) {
+    for (const auto line : lines | std::views::take(lines.capacity() - 1uz)) {
         std::cout << line.substr(0uz, line.length() - 1uz)
                   << termcolor::white << line.back() << '\n'
                   << termcolor::reset;
