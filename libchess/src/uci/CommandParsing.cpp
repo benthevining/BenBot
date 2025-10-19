@@ -34,8 +34,8 @@ namespace chess::uci {
 using std::chrono::milliseconds;
 using std::string_view;
 
-using util::split_at_first_space;
-using util::trim;
+using util::strings::split_at_first_space;
+using util::strings::trim;
 
 // Note that in all UCI parsing, we need to use trim() defensively a lot,
 // because UCI allows arbitrary whitespace between tokens. Also note that
@@ -90,7 +90,7 @@ auto parse_position_options(string_view options)
     if (moveToken != "moves") // code defensively against unrecognized tokens
         return position;
 
-    auto moveWords = util::words_view(trim(moves))
+    auto moveWords = util::strings::words_view(trim(moves))
                    | std::views::filter([](const string_view word) { return not word.empty(); });
 
     for (const auto moveStr : moveWords) {
@@ -188,7 +188,7 @@ namespace {
         const auto [valueStr, rest] = split_at_first_space(options);
 
         return std::make_pair(
-            util::int_from_string<size_t>(trim(valueStr)),
+            util::strings::int_from_string<size_t>(trim(valueStr)),
             trim(rest));
     }
 

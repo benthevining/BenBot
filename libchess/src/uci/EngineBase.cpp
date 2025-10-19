@@ -33,8 +33,8 @@ using printing::info_string;
 using std::cout;
 using std::println;
 using std::string_view;
-using util::split_at_first_space;
-using util::trim;
+using util::strings::split_at_first_space;
+using util::strings::trim;
 
 // NB. With our println calls, we explicitly provide std::cout as the first parameter, because
 // when the first parameter is omitted, the default overload writes to the FILE* stdout, but we

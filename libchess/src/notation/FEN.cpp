@@ -62,11 +62,13 @@ auto to_fen(const Position& position, const bool alwaysWriteEPSqare) -> std::str
 
     fen.push_back(' ');
 
-    util::write_integer<3uz>(position.halfmoveClock, fen);
+    using util::strings::write_integer;
+
+    write_integer<3uz>(position.halfmoveClock, fen);
 
     fen.push_back(' ');
 
-    util::write_integer<4uz>(position.fullMoveCounter, fen);
+    write_integer<4uz>(position.fullMoveCounter, fen);
 
     return fen;
 }
@@ -75,10 +77,11 @@ using PositionOrError = std::expected<Position, std::string>;
 
 auto from_fen(std::string_view fenString) -> PositionOrError
 {
-    using util::int_from_string;
-    using util::split_at_first_space;
+    using util::strings::int_from_string;
+    using util::strings::split_at_first_space;
+    using util::strings::trim;
 
-    fenString = util::trim(fenString);
+    fenString = trim(fenString);
 
     if (fenString.empty())
         return std::unexpected { "Cannot parse Position from empty FEN string" };
@@ -102,7 +105,7 @@ auto from_fen(std::string_view fenString) -> PositionOrError
                     fen_helpers::parse_en_passant_target_square(epTarget, position);
 
                     // tolerate the final 2 fields being omitted
-                    if (not util::trim(rest4).empty()) {
+                    if (not trim(rest4).empty()) {
                         const auto [halfMoveClock, fullMoveCounter] = split_at_first_space(rest4);
 
                         position.halfmoveClock   = int_from_string(halfMoveClock, position.halfmoveClock);

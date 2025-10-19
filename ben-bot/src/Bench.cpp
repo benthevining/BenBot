@@ -69,7 +69,7 @@ namespace {
 
             if (const auto it = position.operations.find("depth");
                 it != position.operations.end()) {
-                thread.context.options.depth = util::int_from_string(it->second, defaultDepth);
+                thread.context.options.depth = util::strings::int_from_string(it->second, defaultDepth);
             } else {
                 thread.context.options.depth = defaultDepth;
             }
@@ -186,9 +186,9 @@ namespace {
 
 void Engine::run_bench(const string_view arguments) const
 {
-    const auto [depth, filePath] = util::split_at_first_space(arguments);
+    const auto [depth, filePath] = util::strings::split_at_first_space(arguments);
 
-    const auto defaultDepth = util::int_from_string(depth, 3uz);
+    const auto defaultDepth = util::strings::int_from_string(depth, 3uz);
 
     if (filePath.empty()) {
         info_string("Running bench for default position set...");

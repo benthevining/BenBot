@@ -403,7 +403,7 @@ using MoveOrError = std::expected<Move, string>;
 
 auto from_alg(const Position& position, string_view text) -> MoveOrError
 {
-    text = util::trim(text);
+    text = util::strings::trim(text);
 
     if (text.empty())
         return std::unexpected { "Cannot parse Move from empty string" };

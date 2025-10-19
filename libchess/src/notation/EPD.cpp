@@ -28,7 +28,9 @@ namespace chess::notation {
 using std::string;
 using std::string_view;
 
-using util::int_from_string;
+using util::strings::int_from_string;
+using util::strings::split_at_first_space;
+using util::strings::trim;
 
 namespace {
 
@@ -38,15 +40,15 @@ namespace {
     void parse_operations(
         EPDPosition& pos, const string_view text)
     {
-        auto opStrings = util::split_by_delim(util::trim(text), ';')
-                       | std::views::transform([](const string_view str) { return util::trim(str); })
+        auto opStrings = util::strings::split_by_delim(trim(text), ';')
+                       | std::views::transform([](const string_view str) { return trim(str); })
                        | std::views::filter([](const string_view str) { return not str.empty(); });
 
         for (const auto opString : opStrings) {
-            auto [key, value] = util::split_at_first_space(opString);
+            auto [key, value] = split_at_first_space(opString);
 
-            key   = util::trim(key);
-            value = util::trim(value);
+            key   = trim(key);
+            value = trim(value);
 
             if (value.front() == '"')
                 value.remove_prefix(1uz);
@@ -72,9 +74,7 @@ using PositionOrError = std::expected<EPDPosition, string>;
 
 auto from_epd(string_view epdString) -> PositionOrError
 {
-    using util::split_at_first_space;
-
-    epdString = util::trim(epdString);
+    epdString = trim(epdString);
 
     if (epdString.empty())
         return std::unexpected { "Cannot parse Position from empty EPD string" };
@@ -111,7 +111,7 @@ auto from_epd(string_view epdString) -> PositionOrError
 
 auto parse_all_epds(const string_view fileContent) -> std::vector<EPDPosition>
 {
-    return util::lines_view(fileContent)
+    return util::strings::lines_view(fileContent)
          | std::views::filter([](const string_view line) { return not line.empty(); })
          | std::views::transform([](const string_view line) { return from_epd(line); })
          | std::views::filter([](const PositionOrError& pos) { return pos.has_value(); })

@@ -37,7 +37,10 @@
 #include <system_error>
 #include <utility>
 
-namespace chess::util {
+/** This namespace string handling functions.
+    @ingroup strings
+ */
+namespace chess::util::strings {
 
 using std::ptrdiff_t;
 using std::size_t;
@@ -196,4 +199,4 @@ inline auto words_view(const string_view text)
     return split_by_delim(text, ' ');
 }
 
-} // namespace chess::util
+} // namespace chess::util::strings

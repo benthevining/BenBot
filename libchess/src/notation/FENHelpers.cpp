@@ -47,7 +47,7 @@ namespace {
         const board::Rank rank,
         string&           output)
     {
-        using util::write_integer;
+        using util::strings::write_integer;
 
         const auto whitePieces = position.whitePieces.occupied;
         const auto allOccupied = whitePieces | position.blackPieces.occupied;

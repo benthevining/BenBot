@@ -56,8 +56,9 @@ namespace {
     using GameResult          = std::optional<game::Result>;
     using ResultStrOrErrorStr = std::expected<string_view, string_view>;
 
-    using util::int_from_string;
-    using util::split_at_first_space_or_newline;
+    using util::strings::int_from_string;
+    using util::strings::split_at_first_space_or_newline;
+    using util::strings::trim;
 
     // writes tag key/value pairs into metadata and returns
     // the rest of the PGN text that's left
@@ -81,7 +82,7 @@ namespace {
                 closingBracketIdx - openingBracketIdx - 1uz);
 
             // NB. we assume that tag keys cannot include spaces
-            auto [tagName, tagValue] = util::split_at_first_space(tagText);
+            auto [tagName, tagValue] = util::strings::split_at_first_space(tagText);
 
             assert(not tagName.empty());
             assert(not tagValue.empty());
@@ -135,13 +136,13 @@ namespace {
         if (newlineIdx == string_view::npos) {
             // assume that a ; comment was the last thing in the file
             if (not output.empty())
-                output.back().comment = util::trim(pgnText.substr(1uz));
+                output.back().comment = trim(pgnText.substr(1uz));
 
             return {};
         }
 
         if (not output.empty())
-            output.back().comment = util::trim(pgnText.substr(1uz, newlineIdx - 1uz));
+            output.back().comment = trim(pgnText.substr(1uz, newlineIdx - 1uz));
 
         return pgnText.substr(newlineIdx + 1uz);
     }
@@ -161,7 +162,7 @@ namespace {
         const auto [nag, rest] = split_at_first_space_or_newline(pgnText.substr(1uz));
 
         if (not output.empty()) {
-            const auto value = int_from_string<std::uint_least8_t>(util::trim(nag));
+            const auto value = int_from_string<std::uint_least8_t>(trim(nag));
 
             output.back().nags.emplace_back(static_cast<NAG>(value));
         }
@@ -206,7 +207,7 @@ namespace {
         auto lastPos { position };
 
         while (true) {
-            pgnText = util::trim(pgnText);
+            pgnText = trim(pgnText);
 
             if (pgnText.empty())
                 return {};
@@ -260,7 +261,7 @@ namespace {
                     }
 
                     if constexpr (not IsVariation) {
-                        if (firstMove.contains('-') and util::trim(rest).empty()) {
+                        if (firstMove.contains('-') and trim(rest).empty()) {
                             // we're parsing the end of the move list, this token is the game result
                             return firstMove;
                         }
@@ -289,7 +290,7 @@ namespace {
         if (output.empty())
             return std::unexpected { "Cannot parse a variation with an empty move list!" };
 
-        return util::find_matching_close_paren(pgnText)
+        return util::strings::find_matching_close_paren(pgnText)
             .and_then([pgnText, &position, &output](const size_t closeParenIdx) {
                 return parse_moves_internal<true>(
                     pgnText.substr(1uz, closeParenIdx - 1uz),
@@ -322,12 +323,12 @@ namespace {
         if (sepIdx == string_view::npos)
             return game.get_final_position().get_result();
 
-        if (const auto whiteScore = util::trim(text.substr(0uz, sepIdx));
+        if (const auto whiteScore = trim(text.substr(0uz, sepIdx));
             whiteScore == "1") {
             return game::Result::WhiteWon;
         }
 
-        if (const auto blackScore = util::trim(text.substr(sepIdx + 1uz));
+        if (const auto blackScore = trim(text.substr(sepIdx + 1uz));
             blackScore == "1") {
             return game::Result::BlackWon;
         }
@@ -395,7 +396,7 @@ auto parse_all_pgns(string_view fileContent) -> std::vector<GameRecord>
 {
     std::vector<GameRecord> games;
 
-    fileContent = util::trim(fileContent);
+    fileContent = trim(fileContent);
 
     while (not fileContent.empty()) {
         // the move text of this PGN starts at the first line not starting in '['
@@ -422,7 +423,7 @@ auto parse_all_pgns(string_view fileContent) -> std::vector<GameRecord>
         }
 
         fileContent.remove_prefix(nextPGNStart);
-        fileContent = util::trim(fileContent);
+        fileContent = trim(fileContent);
     }
 
     return games;

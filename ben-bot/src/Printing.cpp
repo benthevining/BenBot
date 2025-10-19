@@ -35,6 +35,7 @@ namespace ben_bot {
 
 using Result = search::Result;
 
+using chess::util::strings::trim;
 using std::println;
 using uci::printing::info_string;
 
@@ -58,7 +59,7 @@ void Engine::print_help(const string_view args) const
         if (args.empty())
             return false;
 
-        return chess::util::trim(args) == "--no-logo";
+        return trim(args) == "--no-logo";
     }();
 
     if (not noLogo) {
@@ -92,7 +93,7 @@ void Engine::print_options(const string_view args) const
         if (args.empty())
             return false;
 
-        return chess::util::trim(args) == "--no-current";
+        return trim(args) == "--no-current";
     }();
 
     println("");
@@ -142,7 +143,7 @@ void Engine::print_current_position(const string_view arguments) const
 {
     const auto& pos = searcher.context.options.position;
 
-    const bool utf8 = chess::util::trim(arguments) == "utf8";
+    const bool utf8 = trim(arguments) == "utf8";
 
     println("{}",
         utf8 ? print_utf8(pos) : print_ascii(pos));
