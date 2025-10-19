@@ -216,7 +216,8 @@ void TranspositionTable::new_search() noexcept
 auto TranspositionTable::find_cluster(const Position::Hash key) const noexcept -> std::span<Entry>
 {
     return index_table(
-        chess::util::mul_hi64(key, clusterCount))
+        chess::util::math::mul_hi64(
+            key, clusterCount))
         .records;
 }
 

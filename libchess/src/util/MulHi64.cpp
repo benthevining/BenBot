@@ -16,7 +16,7 @@
 
 #ifdef __SIZEOF_INT128__
 
-namespace chess::util {
+namespace chess::util::math {
 
 auto mul_hi64(
     const uint64_t first, const uint64_t second) noexcept
@@ -27,13 +27,13 @@ auto mul_hi64(
     return (static_cast<uint128_t>(first) * static_cast<uint128_t>(second)) >> static_cast<uint128_t>(64);
 }
 
-} // namespace chess::util
+} // namespace chess::util::math
 
 #elif defined(_M_X64) or defined(_M_ARM64) // MSVC for x86-64 or AArch64
 
 #    include <intrin.h>
 
-namespace chess::util {
+namespace chess::util::math {
 
 auto mul_hi64(
     const uint64_t first, const uint64_t second) noexcept
@@ -42,7 +42,7 @@ auto mul_hi64(
     return __umulh(first, second);
 }
 
-} // namespace chess::util
+} // namespace chess::util::math
 
 #elifdef _M_IA64
 
@@ -51,7 +51,7 @@ auto mul_hi64(
 // https://learn.microsoft.com/en-gb/cpp/intrinsics/umul128
 // incorrectly say that _umul128 is available for ARM
 
-namespace chess::util {
+namespace chess::util::math {
 
 auto mul_hi64(
     const uint64_t first, const uint64_t second) noexcept
@@ -62,7 +62,7 @@ auto mul_hi64(
     return highProduct;
 }
 
-} // namespace chess::util
+} // namespace chess::util::math
 
 #else
 
@@ -70,7 +70,7 @@ auto mul_hi64(
 
 #    warning "No optimized version of mul_hi64() is available, using fallback"
 
-namespace chess::util {
+namespace chess::util::math {
 
 auto mul_hi64(
     const uint64_t first, const uint64_t second) noexcept
@@ -93,6 +93,6 @@ auto mul_hi64(
     return (aHi * bHi) + (c2 >> 32uz) + (c3 >> 32uz);
 }
 
-} // namespace chess::util
+} // namespace chess::util::math
 
 #endif

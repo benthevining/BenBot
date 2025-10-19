@@ -230,7 +230,7 @@ constexpr auto Square::is_black_territory() const noexcept -> bool
 
 constexpr auto Square::is_light() const noexcept -> bool
 {
-    return not util::is_even(
+    return not util::math::is_even(
         std::to_underlying(rank) + std::to_underlying(file));
 }
 
