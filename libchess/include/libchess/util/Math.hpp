@@ -18,9 +18,15 @@
     @ingroup libchess
  */
 
+/** @defgroup math General maths utilities
+    General maths utility functions used throughout the code.
+
+    @ingroup util
+ */
+
 /** @file
     This file provides some basic maths utility functions.
-    @ingroup util
+    @ingroup math
  */
 
 #pragma once
@@ -34,7 +40,7 @@
 namespace chess::util {
 
 /** Returns true if the given value is an even number.
-    @ingroup util
+    @ingroup math
  */
 [[nodiscard, gnu::const]] constexpr auto is_even(
     const std::integral auto value) noexcept
@@ -47,7 +53,7 @@ using std::uint64_t;
 
 /** Multiplies the two integers and returns the highest 64 bits of the
     128-bit result as a 64-bit integer.
-    @ingroup util
+    @ingroup math
  */
 [[nodiscard, gnu::const]] auto mul_hi64(
     uint64_t first, uint64_t second) noexcept

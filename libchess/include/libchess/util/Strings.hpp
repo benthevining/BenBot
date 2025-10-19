@@ -12,9 +12,15 @@
  * ======================================================================================
  */
 
+/** @defgroup strings String utilities
+    String handling utility functions used throughout the code.
+
+    @ingroup util
+ */
+
 /** @file
     This file provides some string handling utility functions.
-    @ingroup util
+    @ingroup strings
  */
 
 #pragma once
@@ -37,9 +43,12 @@ using std::ptrdiff_t;
 using std::size_t;
 using std::string_view;
 
+/** Utility typedef for a pair of string views.
+    @ingroup strings
+ */
 using StringViewPair = std::pair<string_view, string_view>;
 
-/// @ingroup util
+/// @ingroup strings
 /// @{
 
 /** Trims any whitespace characters from the beginning and ending
