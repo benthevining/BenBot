@@ -66,6 +66,13 @@ target_sources (
 
 target_include_directories (libchess PRIVATE "${CMAKE_CURRENT_LIST_DIR}/src/")
 
+set (memory_src_dir "${CMAKE_CURRENT_LIST_DIR}/src/util/memory")
+
+set_property (
+    SOURCE "${memory_src_dir}/PageAlignedAlloc.cpp" APPEND PROPERTY INCLUDE_DIRECTORIES
+                                                                    "${memory_src_dir}"
+)
+
 source_group (TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${libchess_headers} ${libchess_sources})
 
 add_library (ben_bot::libchess ALIAS libchess)

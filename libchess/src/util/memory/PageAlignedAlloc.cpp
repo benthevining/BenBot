@@ -12,37 +12,30 @@
  * ======================================================================================
  */
 
-#pragma once
+#include <cstddef> // IWYU pragma: keep - for size_t
+#include <libchess/util/Memory.hpp>
 
-#include <arm_acle.h>
-#include <functional>
-#include <thread>
+#ifdef _WIN32
+#    include "PageAlignedAlloc_Windows.hpp"
+#else
+#    include "PageAlignedAlloc_Posix.hpp"
+#endif
 
 namespace chess::util {
 
-inline void progressive_backoff_impl(std::function<bool()> pred)
+auto page_aligned_alloc(const std::size_t size) -> void*
 {
-    // approx. 2x10 ns (= 20 ns) and 750x1333 ns (~ 1 ms), respectively,
-    // on an Apple Silicon Mac or an armv8 based phone
-    static constexpr auto N0 = 2uz;   // NOLINT(readability-identifier-length)
-    static constexpr auto N1 = 750uz; // NOLINT(readability-identifier-length)
-
-    for (auto i = 0uz; i < N0; ++i) {
-        if (pred())
-            return;
+    if (size == 0uz) {
+        [[unlikely]];
+        return nullptr;
     }
 
-    while (true) {
-        for (auto i = 0uz; i < N1; ++i) {
-            if (pred())
-                return;
+    return page_aligned_alloc_impl(size);
+}
 
-            __wfe();
-        }
-
-        // waiting longer than we should, let's give other threads a chance to recover
-        std::this_thread::yield();
-    }
+void page_aligned_free([[clang::noescape]] void* mem)
+{
+    page_aligned_free_impl(mem);
 }
 
 } // namespace chess::util
