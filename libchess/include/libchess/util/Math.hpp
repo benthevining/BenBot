@@ -34,8 +34,8 @@
 #include <concepts>
 #include <cstdint> // IWYU pragma: keep - for std::uint64_t
 
-/** This namespace provides general utilities not specific to chess.
-    @ingroup util
+/** This namespace provides some general maths utilities.
+    @ingroup math
  */
 namespace chess::util::math {
 

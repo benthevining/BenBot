@@ -27,6 +27,9 @@
 
 #include <cstddef> // IWYU pragma: keep - for size_t
 
+/** This namespace provides some memory management utility functions.
+    @ingroup memory
+ */
 namespace chess::util::memory {
 
 using std::size_t;

@@ -19,6 +19,9 @@
 
 #pragma once
 
+/** This namespace provides general utilities not specific to chess.
+    @ingroup util
+ */
 namespace chess::util {
 
 /** Ensures that ``std::cout`` will interpret strings as UTF-8.
