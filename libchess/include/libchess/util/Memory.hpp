@@ -27,7 +27,7 @@
 
 #include <cstddef> // IWYU pragma: keep - for size_t
 
-namespace chess::util {
+namespace chess::util::memory {
 
 using std::size_t;
 
@@ -58,4 +58,4 @@ auto page_aligned_alloc(size_t size) -> void*;
  */
 void prefetch(const void* mem);
 
-} // namespace chess::util
+} // namespace chess::util::memory

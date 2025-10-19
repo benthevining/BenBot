@@ -162,7 +162,9 @@ void TranspositionTable::resize(const size_t sizeMB)
 
     clusterCount = newClusterCount;
 
-    table = static_cast<Cluster*>(chess::util::page_aligned_alloc(clusterCount * sizeof(Cluster)));
+    table = static_cast<Cluster*>(
+        chess::util::memory::page_aligned_alloc(
+            clusterCount * sizeof(Cluster)));
 
     if (table == nullptr) {
         clusterCount = 0uz;
@@ -182,7 +184,7 @@ void TranspositionTable::deallocate()
 {
     std::destroy_n(table, clusterCount);
 
-    chess::util::page_aligned_free(table);
+    chess::util::memory::page_aligned_free(table);
 
     table        = nullptr;
     clusterCount = 0uz;
@@ -333,7 +335,7 @@ void TranspositionTable::store(const Position& pos, const TTData& record)
 
 void TranspositionTable::prefetch(const Position& pos) const noexcept
 {
-    chess::util::prefetch(
+    chess::util::memory::prefetch(
         find_cluster(pos.hash).data());
 }
 
