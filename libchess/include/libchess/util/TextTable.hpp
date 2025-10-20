@@ -13,8 +13,8 @@
  */
 
 /** @file
-    This file defines the TextTable utility.
-    @ingroup benbot
+    This file defines the TextTable utility class.
+    @ingroup strings
  */
 
 #pragma once
@@ -25,7 +25,7 @@
 #include <string_view>
 #include <vector>
 
-namespace ben_bot {
+namespace chess::util::strings {
 
 using std::size_t;
 using std::string;
@@ -35,7 +35,7 @@ using std::string_view;
     Rows may have different numbers of columns; the table's size is based on the maximum number of columns.
     The first row is the header, and a separator row will be added between it and the second manually added row.
 
-    @ingroup benbot
+    @ingroup strings
  */
 struct [[nodiscard]] TextTable final {
     /** Appends a column to the current row. */
@@ -73,4 +73,4 @@ private:
     bool startNewRow { true };
 };
 
-} // namespace ben_bot
+} // namespace chess::util::strings

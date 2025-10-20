@@ -14,7 +14,6 @@
 
 #include <ben-bot/Engine.hpp>
 #include <ben-bot/Resources.hpp>
-#include <ben-bot/TextTable.hpp>
 #include <format>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
@@ -24,11 +23,11 @@
 #include <libchess/notation/UCI.hpp>
 #include <libchess/uci/Printing.hpp>
 #include <libchess/util/Strings.hpp>
+#include <libchess/util/TextTable.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <print>
 #include <string>
 #include <string_view>
-#include <utility>
 #include <variant>
 
 namespace ben_bot {
@@ -38,6 +37,8 @@ using Result = search::Result;
 using chess::util::strings::trim;
 using std::println;
 using uci::printing::info_string;
+
+using chess::util::strings::TextTable;
 
 auto Engine::get_name() const -> std::string
 {

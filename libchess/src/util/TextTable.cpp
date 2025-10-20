@@ -13,15 +13,15 @@
  */
 
 #include <algorithm>
-#include <ben-bot/TextTable.hpp>
 #include <cstddef> // IWYU pragma: keep - for size_t;
+#include <libchess/util/TextTable.hpp>
 #include <numeric>
 #include <ranges>
 #include <span>
 #include <string>
 #include <vector>
 
-namespace ben_bot {
+namespace chess::util::strings {
 
 using std::size_t;
 
@@ -142,4 +142,4 @@ auto TextTable::Row::to_string(
     return result;
 }
 
-} // namespace ben_bot
+} // namespace chess::util::strings
