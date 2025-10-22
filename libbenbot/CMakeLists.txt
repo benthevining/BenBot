@@ -16,15 +16,15 @@ target_compile_features (libbenbot PUBLIC cxx_std_23)
 
 target_link_libraries (libbenbot PUBLIC ben_bot::libchess)
 
-# cmake-format: off
 set_target_properties (
-    libbenbot PROPERTIES
-        CXX_STANDARD_REQUIRED ON
-        CXX_EXTENSIONS OFF
-        DEBUG_POSTFIX -d
-        VERIFY_INTERFACE_HEADER_SETS ON
+    libbenbot
+    PROPERTIES CXX_STANDARD_REQUIRED ON
+               CXX_EXTENSIONS OFF
+               CXX_VISIBILITY_PRESET hidden
+               VISIBILITY_INLINES_HIDDEN ON
+               DEBUG_POSTFIX -d
+               VERIFY_INTERFACE_HEADER_SETS ON
 )
-# cmake-format: on
 
 file (GLOB_RECURSE libbenbot_headers LIST_DIRECTORIES false
       CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/include/libbenbot/*.hpp"

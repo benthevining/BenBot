@@ -35,15 +35,15 @@ target_compile_features (libchess PUBLIC cxx_std_23)
 
 target_link_libraries (libchess PUBLIC magic_enum::magic_enum beman::inplace_vector)
 
-# cmake-format: off
 set_target_properties (
-    libchess PROPERTIES
-        CXX_STANDARD_REQUIRED ON
-        CXX_EXTENSIONS OFF
-        DEBUG_POSTFIX -d
-        VERIFY_INTERFACE_HEADER_SETS ON
+    libchess
+    PROPERTIES CXX_STANDARD_REQUIRED ON
+               CXX_EXTENSIONS OFF
+               CXX_VISIBILITY_PRESET hidden
+               VISIBILITY_INLINES_HIDDEN ON
+               DEBUG_POSTFIX -d
+               VERIFY_INTERFACE_HEADER_SETS ON
 )
-# cmake-format: on
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
     # needed for declaring large arrays of Zobrist keys

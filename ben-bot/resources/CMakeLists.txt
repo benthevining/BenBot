@@ -36,6 +36,8 @@ set_target_properties (
     ben_bot_resources
     PROPERTIES CXX_STANDARD_REQUIRED ON
                CXX_EXTENSIONS OFF
+               CXX_VISIBILITY_PRESET hidden
+               VISIBILITY_INLINES_HIDDEN ON
                DEBUG_POSTFIX -d
                POSITION_INDEPENDENT_CODE ON
                VERIFY_INTERFACE_HEADER_SETS ON
