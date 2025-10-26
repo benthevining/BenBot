@@ -74,7 +74,7 @@ namespace {
             if (closingBracketIdx == string_view::npos)
                 return std::unexpected { "Invalid PGN: expected ']' following '['" };
 
-            assert(closingBracketIdx > openingBracketIdx);
+            assert(std::cmp_greater(closingBracketIdx, openingBracketIdx));
 
             // don't include the brackets
             const auto tagText = pgnText.substr(
@@ -370,7 +370,7 @@ namespace {
     {
         size_t lineStart { 0uz };
 
-        while (lineStart < text.size()) {
+        while (std::cmp_less(lineStart, text.size())) {
             if constexpr (SearchForBracket) {
                 if (text[lineStart] == '[')
                     return lineStart;

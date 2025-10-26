@@ -23,6 +23,7 @@
 #include <print>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <variant>
 
 namespace chess::uci::printing {
@@ -70,7 +71,7 @@ void best_move(
 namespace {
     [[nodiscard, gnu::const]] auto plies_to_moves(int plies) noexcept -> int
     {
-        if (plies > 0)
+        if (std::cmp_greater(plies, 0))
             ++plies;
 
         return plies / 2;

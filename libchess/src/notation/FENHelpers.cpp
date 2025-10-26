@@ -62,7 +62,7 @@ namespace {
                 continue;
             }
 
-            if (consecutiveEmpty > 0uz) {
+            if (std::cmp_greater(consecutiveEmpty, 0)) {
                 write_integer<1uz>(consecutiveEmpty, output);
                 consecutiveEmpty = 0uz;
             }
@@ -80,7 +80,7 @@ namespace {
                 false));
         }
 
-        if (consecutiveEmpty > 0uz)
+        if (std::cmp_greater(consecutiveEmpty, 0))
             write_integer<1uz>(consecutiveEmpty, output);
 
         if (rank != board::Rank::One)
@@ -226,7 +226,8 @@ auto parse_side_to_move(
     const string_view fenFragment, Position& position)
     -> std::expected<void, string>
 {
-    if (fenFragment.length() != 1uz) {
+    if (std::cmp_not_equal(fenFragment.length(), 1)) {
+        [[unlikely]];
         return std::unexpected {
             std::format(
                 "Expected single character for side to move, got: {}",

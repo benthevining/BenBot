@@ -88,8 +88,9 @@ IntOption::IntOption(
     , help { std::move(helpString) }
     , onChange { std::move(changeCallback) }
 {
-    assert(optionDefault >= optionMin);
-    assert(optionDefault <= optionMax);
+    assert(std::cmp_greater_equal(optionMax, optionMin));
+    assert(std::cmp_greater_equal(optionDefault, optionMin));
+    assert(std::cmp_less_equal(optionDefault, optionMax));
 }
 
 auto IntOption::get_declaration_string() const -> string

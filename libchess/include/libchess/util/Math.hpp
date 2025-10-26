@@ -33,6 +33,7 @@
 
 #include <concepts>
 #include <cstdint> // IWYU pragma: keep - for std::uint64_t
+#include <utility>
 
 /** This namespace provides some general maths utilities.
     @ingroup math
@@ -42,11 +43,14 @@ namespace chess::util::math {
 /** Returns true if the given value is an even number.
     @ingroup math
  */
+template <std::integral T>
 [[nodiscard, gnu::const]] constexpr auto is_even(
-    const std::integral auto value) noexcept
+    const T value) noexcept
     -> bool
 {
-    return static_cast<int>(value) % 2 == 0;
+    return std::cmp_equal(
+        value % static_cast<T>(2),
+        0);
 }
 
 using std::uint64_t;

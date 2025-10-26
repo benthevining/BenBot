@@ -74,7 +74,7 @@ constexpr void ThreefoldChecker::reset(const HashValue initialPositionHash)
 constexpr void ThreefoldChecker::push(const HashValue newHash)
 {
     // make room for new element
-    if (history.size() < history.capacity())
+    if (std::cmp_less(history.size(), history.capacity()))
         history.emplace_back(0uz);
 
     // move the last element to the front,

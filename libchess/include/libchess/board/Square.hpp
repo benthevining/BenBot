@@ -190,7 +190,7 @@ namespace chess::board {
 
 constexpr auto Square::from_index(const BitboardIndex index) noexcept -> Square
 {
-    assert(index <= MAX_BITBOARD_IDX);
+    assert(std::cmp_less_equal(index, MAX_BITBOARD_IDX));
 
     return {
         .file = static_cast<File>(index & static_cast<BitboardIndex>(7)),
@@ -237,7 +237,7 @@ constexpr auto Square::is_light() const noexcept -> bool
 inline auto Square::from_string(const std::string_view text)
     -> std::expected<Square, std::string>
 {
-    if (text.length() != 2uz) {
+    if (std::cmp_not_equal(text.length(), 2)) {
         return std::unexpected {
             std::format(
                 "Cannot parse Square from invalid input string: {}",

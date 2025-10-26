@@ -73,7 +73,7 @@ namespace {
 
             length = child.length + 1uz;
 
-            assert(length <= moves.size());
+            assert(std::cmp_less_equal(length, moves.size()));
         }
 
         void reset() noexcept { length = 0uz; }
@@ -155,7 +155,7 @@ namespace {
 
                     const auto staticEval = eval::evaluate(position);
 
-                    if (staticEval.value >= bounds.beta.value + margin)
+                    if (std::cmp_greater_equal(staticEval.value, bounds.beta.value + margin))
                         return staticEval;
                 }
             }

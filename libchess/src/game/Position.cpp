@@ -69,7 +69,9 @@ namespace {
         -> std::optional<Square>
     {
         if (move.piece() != PieceType::Pawn
-            or std::cmp_not_equal(rank_distance(move.from(), move.to()), 2uz)) {
+            or std::cmp_not_equal(
+                rank_distance(move.from(), move.to()),
+                2)) {
             [[likely]];
             return std::nullopt;
         }
@@ -123,7 +125,7 @@ void Position::make_move(const Move move)
 
     update_bitboards(*this, move);
 
-    if (move.piece() == PieceType::Pawn || isCapture) {
+    if (isCapture or move.piece() == PieceType::Pawn) {
         // reset half-move counter (for 50-move draws & threefold repetition)
         halfmoveClock = UINT8_C(0);
         threefoldChecker.reset(hash);
@@ -239,8 +241,8 @@ auto Position::is_draw_by_insufficient_material() const noexcept -> bool
     const auto numBlackKnights = blackPieces.knights.count();
     const auto numBlackBishops = blackPieces.bishops.count();
 
-    const bool whiteHasOnlyKing = numWhiteKnights + numWhiteBishops == 0uz;
-    const bool blackHasOnlyKing = numBlackKnights + numBlackBishops == 0uz;
+    const bool whiteHasOnlyKing = std::cmp_equal(numWhiteKnights + numWhiteBishops, 0);
+    const bool blackHasOnlyKing = std::cmp_equal(numBlackKnights + numBlackBishops, 0);
 
     if (not(whiteHasOnlyKing or blackHasOnlyKing)) {
         [[likely]];
@@ -253,9 +255,9 @@ auto Position::is_draw_by_insufficient_material() const noexcept -> bool
     // check if side without the lone king has only 1 knight/bishop
 
     if (whiteHasOnlyKing)
-        return numBlackKnights + numBlackBishops == 1uz;
+        return std::cmp_equal(numBlackKnights + numBlackBishops, 1);
 
-    return numWhiteKnights + numWhiteBishops == 1uz;
+    return std::cmp_equal(numWhiteKnights + numWhiteBishops, 1);
 }
 
 auto Position::is_draw() const -> bool
@@ -292,13 +294,13 @@ auto Position::is_illegal() const -> std::optional<std::string>
     // each side must have exactly 1 king
     {
         if (const auto whiteKings = whitePieces.king.count();
-            whiteKings != 1uz) {
+            std::cmp_not_equal(whiteKings, 1)) {
             return std::format(
                 "White has {} kings, expected 1", whiteKings);
         }
 
         if (const auto blackKings = blackPieces.king.count();
-            blackKings != 1uz) {
+            std::cmp_not_equal(blackKings, 1)) {
             return std::format(
                 "Black has {} kings, expected 1", blackKings);
         }
@@ -319,14 +321,14 @@ auto Position::is_illegal() const -> std::optional<std::string>
         static constexpr auto MAX_PIECES = 16uz;
 
         if (const auto numWhite = whitePieces.occupied.count();
-            numWhite > MAX_PIECES) {
+            std::cmp_greater(numWhite, MAX_PIECES)) {
             return std::format(
                 "White has {} pieces, expected at most {}",
                 numWhite, MAX_PIECES);
         }
 
         if (const auto numBlack = blackPieces.occupied.count();
-            numBlack > MAX_PIECES) {
+            std::cmp_greater(numBlack, MAX_PIECES)) {
             return std::format(
                 "Black has {} pieces, expected at most {}",
                 numBlack, MAX_PIECES);
@@ -347,14 +349,14 @@ auto Position::is_illegal() const -> std::optional<std::string>
 
         for (const auto& [type, maxNum] : PIECES_INFO) {
             if (const auto numWhite = whitePieces.get_type(type).count();
-                numWhite > maxNum) {
+                std::cmp_greater(numWhite, maxNum)) {
                 return std::format(
                     "White has {} {}s, expected at most {}",
                     numWhite, type, maxNum);
             }
 
             if (const auto numBlack = blackPieces.get_type(type).count();
-                numBlack > maxNum) {
+                std::cmp_greater(numBlack, maxNum)) {
                 return std::format(
                     "Black has {} {}s, expected at most {}",
                     numBlack, type, maxNum);

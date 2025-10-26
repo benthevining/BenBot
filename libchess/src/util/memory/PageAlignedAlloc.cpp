@@ -14,6 +14,7 @@
 
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libchess/util/Memory.hpp>
+#include <utility>
 
 #ifdef _WIN32
 #    include "PageAlignedAlloc_Windows.hpp"
@@ -25,7 +26,7 @@ namespace chess::util::memory {
 
 auto page_aligned_alloc(const std::size_t size) -> void*
 {
-    if (size == 0uz) {
+    if (std::cmp_equal(size, 0)) {
         [[unlikely]];
         return nullptr;
     }

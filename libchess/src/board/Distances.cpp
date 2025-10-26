@@ -60,7 +60,7 @@ auto knight_distance(
         return std::abs(rankDist) + std::abs(fileDist);
     }();
 
-    assert(absDist >= 0);
+    assert(std::cmp_greater_equal(absDist, 0));
 
     auto dist = static_cast<size_t>(ndis.at(static_cast<size_t>(absDist)));
 
@@ -73,7 +73,7 @@ auto knight_distance(
         dist += 2uz * (firstMask ^ secondMask);
     }
 
-    assert(dist <= 6uz);
+    assert(std::cmp_less_equal(dist, 6));
 
     return static_cast<BitboardIndex>(dist);
 }
