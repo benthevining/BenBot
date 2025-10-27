@@ -139,7 +139,7 @@ jobs:
       run: cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.DEPLOY_DIR }} --component ben_bot --config Release
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: BenBot-${{ matrix.os }}-${{ matrix.preset }}
         path: ${{ env.DEPLOY_DIR }}
@@ -179,7 +179,7 @@ jobs:
 
     - name: Download artifacts
       id: download
-      uses: actions/download-artifact@v5
+      uses: actions/download-artifact@v6
       with:
         path: artifacts
 
