@@ -56,8 +56,8 @@ namespace {
 
 void Engine::run_perft(const string_view arguments) const
 {
-    const auto depth = util::int_from_string(
-        util::trim(arguments),
+    const auto depth = util::strings::int_from_string(
+        util::strings::trim(arguments),
         4uz);
 
     info_string(std::format("Running perft depth {}...", depth));

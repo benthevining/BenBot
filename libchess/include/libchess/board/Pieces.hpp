@@ -217,7 +217,7 @@ constexpr auto Pieces::has_bishop_pair() const noexcept -> bool
 
 constexpr auto Pieces::get_king_location() const noexcept -> Square
 {
-    assert(king.count() == 1uz);
+    assert(std::cmp_equal(king.count(), 1));
 
     return Square::from_index(king.first());
 }

@@ -12,9 +12,15 @@
  * ======================================================================================
  */
 
+/** @defgroup strings String utilities
+    String handling utility functions used throughout the code.
+
+    @ingroup util
+ */
+
 /** @file
     This file provides some string handling utility functions.
-    @ingroup util
+    @ingroup strings
  */
 
 #pragma once
@@ -31,15 +37,21 @@
 #include <system_error>
 #include <utility>
 
-namespace chess::util {
+/** This namespace string handling functions.
+    @ingroup strings
+ */
+namespace chess::util::strings {
 
 using std::ptrdiff_t;
 using std::size_t;
 using std::string_view;
 
+/** Utility typedef for a pair of string views.
+    @ingroup strings
+ */
 using StringViewPair = std::pair<string_view, string_view>;
 
-/// @ingroup util
+/// @ingroup strings
 /// @{
 
 /** Trims any whitespace characters from the beginning and ending
@@ -187,4 +199,4 @@ inline auto words_view(const string_view text)
     return split_by_delim(text, ' ');
 }
 
-} // namespace chess::util
+} // namespace chess::util::strings

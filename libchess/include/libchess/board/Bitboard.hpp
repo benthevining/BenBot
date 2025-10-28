@@ -28,6 +28,7 @@
 #include <libchess/board/Square.hpp>
 #include <ranges>
 #include <string>
+#include <utility>
 
 namespace chess::board {
 
@@ -63,10 +64,10 @@ struct Bitboard final {
     /// @{
 
     /** Returns true if any of the bits are set. */
-    [[nodiscard]] constexpr auto any() const noexcept -> bool { return value != UINT64_C(0); }
+    [[nodiscard]] constexpr auto any() const noexcept -> bool { return std::cmp_not_equal(value, 0); }
 
     /** Returns true if none of the bits are set. */
-    [[nodiscard]] constexpr auto none() const noexcept -> bool { return value == UINT64_C(0); }
+    [[nodiscard]] constexpr auto none() const noexcept -> bool { return std::cmp_equal(value, 0); }
 
     /** Returns the number of bits that are set. */
     [[nodiscard]] constexpr auto count() const noexcept -> size_t { return static_cast<size_t>(std::popcount(value)); }
@@ -282,19 +283,23 @@ constexpr auto Bitboard::from_square(const Square& square) noexcept -> Bitboard
 
 constexpr auto Bitboard::test(const BitboardIndex index) const noexcept -> bool
 {
-    assert(index <= MAX_BITBOARD_IDX);
-    return ((value >> index) & UINT64_C(1)) != 0;
+    assert(std::cmp_less_equal(index, MAX_BITBOARD_IDX));
+
+    return std::cmp_not_equal(
+        (value >> index) & UINT64_C(1),
+        0);
 }
 
 constexpr void Bitboard::set(const BitboardIndex index) noexcept
 {
-    assert(index <= MAX_BITBOARD_IDX);
+    assert(std::cmp_less_equal(index, MAX_BITBOARD_IDX));
+
     value |= UINT64_C(1) << index;
 }
 
 constexpr void Bitboard::unset(const BitboardIndex index) noexcept
 {
-    assert(index <= MAX_BITBOARD_IDX);
+    assert(std::cmp_less_equal(index, MAX_BITBOARD_IDX));
 
     const Integer mask { UINT64_C(1) << index };
 
@@ -414,7 +419,7 @@ namespace detail {
 
         constexpr auto operator==([[maybe_unused]] std::default_sentinel_t sentinel) const noexcept -> bool
         {
-            return value == UINT64_C(0);
+            return std::cmp_equal(value, 0);
         }
 
         [[nodiscard]] constexpr auto operator*() const noexcept -> value_type
@@ -424,7 +429,7 @@ namespace detail {
 
         constexpr auto operator++() noexcept -> BitboardIterator&
         {
-            assert(value > UINT64_C(0));
+            assert(std::cmp_greater(value, 0));
 
             value &= value - UINT64_C(1);
 

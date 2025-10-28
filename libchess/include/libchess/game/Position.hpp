@@ -165,6 +165,16 @@ struct [[nodiscard]] Position final {
             return blackPieces;
     }
 
+    /** Returns the castling rights for the given color. */
+    template <Color Side>
+    [[nodiscard]] auto castling_rights_for() const noexcept -> CastlingRights
+    {
+        if constexpr (Side == Color::White)
+            return whiteCastlingRights;
+        else
+            return blackCastlingRights;
+    }
+
     /** Returns the pieces belonging to the side to move. */
     [[nodiscard]] auto our_pieces() noexcept -> Pieces&
     {

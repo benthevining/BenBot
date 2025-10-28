@@ -494,7 +494,7 @@ namespace detail {
     template <Color Side>
     [[nodiscard, gnu::const]] consteval auto kingside_castle_mask() noexcept -> Bitboard
     {
-        static constexpr auto rank = Side == Color::White ? Rank::One : Rank::Eight; // cppcheck-suppress knownConditionTrueFalse
+        static constexpr auto rank = board::back_rank_for(Side);
 
         Bitboard board;
 
@@ -509,7 +509,7 @@ namespace detail {
     template <Color Side, bool Occupied>
     [[nodiscard, gnu::const]] consteval auto queenside_castle_mask() noexcept -> Bitboard
     {
-        static constexpr auto rank = Side == Color::White ? Rank::One : Rank::Eight; // cppcheck-suppress knownConditionTrueFalse
+        static constexpr auto rank = board::back_rank_for(Side);
 
         Bitboard board;
 
@@ -524,6 +524,67 @@ namespace detail {
     }
 
     template <Color Side>
+    [[nodiscard, gnu::const]] constexpr auto get_kingside_castling(
+        const Position& position, const Bitboard allOccupied)
+        -> std::optional<Move>
+    {
+        if (not position.castling_rights_for<Side>().kingside)
+            return std::nullopt;
+
+        static constexpr auto OppositeColor = pieces::other_side<Side>();
+
+        const auto& ourPieces   = position.pieces_for<Side>();
+        const auto& theirPieces = position.pieces_for<OppositeColor>();
+
+        assert(ourPieces.rooks.test(Square { File::H, board::back_rank_for(Side) }));
+
+        static constexpr auto requiredSquares = kingside_castle_mask<Side>();
+
+        if ((requiredSquares & allOccupied).any()
+            or squares_attacked<OppositeColor>(theirPieces, requiredSquares, ourPieces.occupied)) {
+            return std::nullopt;
+        }
+
+        if (const auto move = castle_kingside(Side);
+            position.is_legal(move)) {
+            return move;
+        }
+
+        return std::nullopt;
+    }
+
+    template <Color Side>
+    [[nodiscard, gnu::const]] constexpr auto get_queenside_castling(
+        const Position& position, const Bitboard allOccupied)
+        -> std::optional<Move>
+    {
+        if (not position.castling_rights_for<Side>().queenside)
+            return std::nullopt;
+
+        static constexpr auto OppositeColor = pieces::other_side<Side>();
+
+        const auto& ourPieces   = position.pieces_for<Side>();
+        const auto& theirPieces = position.pieces_for<OppositeColor>();
+
+        assert(ourPieces.rooks.test(Square { File::A, board::back_rank_for(Side) }));
+
+        static constexpr auto occupiedMask = queenside_castle_mask<Side, true>();
+        static constexpr auto attackedMask = queenside_castle_mask<Side, false>();
+
+        if ((allOccupied & occupiedMask).any()
+            or squares_attacked<OppositeColor>(theirPieces, attackedMask, ourPieces.occupied)) {
+            return std::nullopt;
+        }
+
+        if (const auto move = castle_queenside(Side);
+            position.is_legal(move)) {
+            return move;
+        }
+
+        return std::nullopt;
+    }
+
+    template <Color Side>
     [[nodiscard, gnu::const]] constexpr auto get_castling(
         const Position& position, const Bitboard allOccupied)
     {
@@ -533,45 +594,17 @@ namespace detail {
         if (position.is_check())
             return moves;
 
-        const auto [kingside, queenside] = Side == Color::White ? position.whiteCastlingRights : position.blackCastlingRights; // cppcheck-suppress knownConditionTrueFalse
+        get_kingside_castling<Side>(position, allOccupied)
+            .transform([&moves](const Move move) {
+                moves.emplace_back(move);
+                return std::monostate {};
+            });
 
-        static constexpr auto OppositeColor = pieces::other_side<Side>();
-
-        const auto& ourPieces   = position.pieces_for<Side>();
-        const auto& theirPieces = position.pieces_for<OppositeColor>();
-
-        if (kingside) {
-            assert(ourPieces.rooks.test(Square { File::H, board::back_rank_for(position.sideToMove) }));
-
-            static constexpr auto requiredSquares = kingside_castle_mask<Side>();
-
-            const bool castlingBlocked = (requiredSquares & allOccupied).any()
-                                      or squares_attacked<OppositeColor>(theirPieces, requiredSquares, ourPieces.occupied);
-
-            if (not castlingBlocked) {
-                if (const auto move = castle_kingside(Side);
-                    position.is_legal(move)) {
-                    moves.emplace_back(move);
-                }
-            }
-        }
-
-        if (queenside) {
-            assert(ourPieces.rooks.test(Square { File::A, board::back_rank_for(position.sideToMove) }));
-
-            static constexpr auto occupiedMask = queenside_castle_mask<Side, true>();
-            static constexpr auto attackedMask = queenside_castle_mask<Side, false>();
-
-            const bool castlingBlocked = (allOccupied & occupiedMask).any()
-                                      or squares_attacked<OppositeColor>(theirPieces, attackedMask, ourPieces.occupied);
-
-            if (not castlingBlocked) {
-                if (const auto move = castle_queenside(Side);
-                    position.is_legal(move)) {
-                    moves.emplace_back(move);
-                }
-            }
-        }
+        get_queenside_castling<Side>(position, allOccupied)
+            .transform([&moves](const Move move) {
+                moves.emplace_back(move);
+                return std::monostate {};
+            });
 
         return moves;
     }

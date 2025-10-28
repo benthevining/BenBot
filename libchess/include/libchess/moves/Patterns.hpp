@@ -175,9 +175,7 @@ constexpr auto queen(const Bitboard starting) noexcept
     const auto diags     = board::fills::diagonal(starting);
     const auto antiDiags = board::fills::antidiagonal(starting);
 
-    const auto notStartingSquare = starting.inverse();
-
-    return (ranks | files | diags | antiDiags) & notStartingSquare;
+    return (ranks | files | diags | antiDiags) & starting.inverse();
 }
 
 constexpr auto king(Bitboard starting) noexcept

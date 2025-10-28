@@ -22,13 +22,15 @@
 
 #include <string_view>
 
+namespace chess::util::strings {
+struct TextTable;
+} // namespace chess::util::strings
+
 namespace chess::game {
 struct Position;
 } // namespace chess::game
 
 namespace ben_bot {
-
-struct TextTable;
 
 using chess::game::Position;
 using std::string_view;
@@ -40,7 +42,7 @@ using std::string_view;
 /** Prints the given table with bold headings, faint outlines,
     and regular content cells.
  */
-void print_colored_table(const TextTable& table);
+void print_colored_table(const chess::util::strings::TextTable& table);
 
 /** Prints the given position with faint file/rank labels. */
 void print_colored_board(const Position& pos, bool utf8);

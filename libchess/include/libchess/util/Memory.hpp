@@ -12,16 +12,25 @@
  * ======================================================================================
  */
 
+/** @defgroup memory Memory utilities
+    Memory handling utility functions used throughout the code.
+
+    @ingroup util
+ */
+
 /** @file
     This file provides some memory management utility functions.
-    @ingroup util
+    @ingroup memory
  */
 
 #pragma once
 
 #include <cstddef> // IWYU pragma: keep - for size_t
 
-namespace chess::util {
+/** This namespace provides some memory management utility functions.
+    @ingroup memory
+ */
+namespace chess::util::memory {
 
 using std::size_t;
 
@@ -30,7 +39,8 @@ using std::size_t;
     must be freed by calling ``page_aligned_free()``. Returns
     ``nullptr`` if the memory could not be allocated.
 
-    @ingroup util
+    @ingroup memory
+    @see page_aligned_free()
  */
 [[nodiscard, gnu::alloc_size(1), gnu::malloc, clang::ownership_returns(malloc)]]
 auto page_aligned_alloc(size_t size) -> void*;
@@ -38,7 +48,8 @@ auto page_aligned_alloc(size_t size) -> void*;
 /** Frees page-aligned memory allocated by ``page_aligned_alloc()``.
     This is a no-op if ``mem`` is ``nullptr``.
 
-    @ingroup util
+    @ingroup memory
+    @see page_aligned_alloc()
  */
 [[clang::ownership_takes(malloc, 1)]] void page_aligned_free([[clang::noescape]] void* mem);
 
@@ -46,8 +57,8 @@ auto page_aligned_alloc(size_t size) -> void*;
     is on. This function is nonblocking, and may be a no-op depending
     on the target platform.
 
-    @ingroup util
+    @ingroup memory
  */
 void prefetch(const void* mem);
 
-} // namespace chess::util
+} // namespace chess::util::memory

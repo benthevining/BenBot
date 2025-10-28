@@ -13,9 +13,9 @@
  */
 
 #include <algorithm>
-#include <ben-bot/TextTable.hpp>
 #include <cstddef> // IWYU pragma: keep - for size_t;
 #include <functional>
+#include <libchess/util/TextTable.hpp>
 #include <numeric>
 #include <ranges>
 #include <span>
@@ -23,7 +23,7 @@
 #include <utility>
 #include <vector>
 
-namespace ben_bot {
+namespace chess::util::strings {
 
 using std::size_t;
 
@@ -195,4 +195,4 @@ void TextTable::Row::print(
     printOutline(LINE_ENDING);
 }
 
-} // namespace ben_bot
+} // namespace chess::util::strings

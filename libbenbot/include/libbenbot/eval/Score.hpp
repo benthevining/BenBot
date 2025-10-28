@@ -26,6 +26,7 @@
 #include <format>
 #include <libchess/uci/Printing.hpp>
 #include <limits>
+#include <utility>
 
 namespace ben_bot::eval {
 
@@ -80,13 +81,13 @@ struct Score final {
     /// @{
 
     /** Returns true if this score represents checkmate (either winning or losing). */
-    [[nodiscard]] auto is_mate() const noexcept -> bool { return std::abs(value) >= MATE; }
+    [[nodiscard]] auto is_mate() const noexcept -> bool { return std::cmp_greater_equal(std::abs(value), MATE); }
 
     /** Returns true if this score is a winning mate score. */
-    [[nodiscard]] constexpr auto is_winning_mate() const noexcept -> bool { return value >= MATE; }
+    [[nodiscard]] constexpr auto is_winning_mate() const noexcept -> bool { return std::cmp_greater_equal(value, MATE); }
 
     /** Returns true if this score is a losing mate score. */
-    [[nodiscard]] constexpr auto is_losing_mate() const noexcept -> bool { return value <= -MATE; }
+    [[nodiscard]] constexpr auto is_losing_mate() const noexcept -> bool { return std::cmp_less_equal(value, -MATE); }
 
     /** For a checkmate score, returns the number of plies from the root of the search
         tree to the checkmate position. This method asserts if the score is not mate.
@@ -163,10 +164,10 @@ constexpr auto Score::from_tt(
     const Value eval, const size_t plyFromRoot) noexcept
     -> Score
 {
-    if (eval <= -MATE)
+    if (std::cmp_less_equal(eval, -MATE))
         return mate(plyFromRoot);
 
-    if (eval >= MATE)
+    if (std::cmp_greater_equal(eval, MATE))
         return -mate(plyFromRoot);
 
     return { eval };

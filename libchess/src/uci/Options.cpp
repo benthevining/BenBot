@@ -27,8 +27,8 @@ namespace chess::uci {
 using std::string;
 using std::string_view;
 
-using util::split_at_first_space;
-using util::trim;
+using util::strings::split_at_first_space;
+using util::strings::trim;
 
 // defined out-of-line to address -Wweak-vtables
 Option::~Option() = default;
@@ -88,8 +88,9 @@ IntOption::IntOption(
     , help { std::move(helpString) }
     , onChange { std::move(changeCallback) }
 {
-    assert(optionDefault >= optionMin);
-    assert(optionDefault <= optionMax);
+    assert(std::cmp_greater_equal(optionMax, optionMin));
+    assert(std::cmp_greater_equal(optionDefault, optionMin));
+    assert(std::cmp_less_equal(optionDefault, optionMax));
 }
 
 auto IntOption::get_declaration_string() const -> string
@@ -108,7 +109,8 @@ void IntOption::handle_setvalue(const string_view arguments)
     if (valueToken != VALUE_TOKEN)
         return;
 
-    const auto newValue = util::int_from_string(trim(valueStr), value);
+    const auto newValue = util::strings::int_from_string(
+        trim(valueStr), value);
 
     value = std::clamp(newValue, optionMin, optionMax);
 

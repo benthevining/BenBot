@@ -15,21 +15,32 @@
 #include <libchess/util/Console.hpp>
 
 #ifdef _WIN32
+
 #    ifndef WIN32_LEAN_AND_MEAN
 #        define WIN32_LEAN_AND_MEAN 1
 #    endif
 
 #    include <Windows.h>
-#endif
 
 namespace chess::util {
 
 void enable_utf8_console_output()
 {
-#ifdef _WIN32
     // set the console's code page to UTF-8
     SetConsoleOutputCP(CP_UTF8);
-#endif
 }
 
 } // namespace chess::util
+
+#else
+
+namespace chess::util {
+
+void enable_utf8_console_output()
+{
+    // no-op
+}
+
+} // namespace chess::util
+
+#endif

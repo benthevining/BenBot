@@ -79,7 +79,7 @@ namespace {
     {
         const auto pieceMoves = get_possible_move_origins(position, move.to(), move.piece());
 
-        if (pieceMoves.size() < 2uz)
+        if (std::cmp_less(pieceMoves.size(), 2))
             return {};
 
         // Order of preference for disambiguation:
@@ -231,7 +231,7 @@ namespace {
             };
         }
 
-        if (possibleOrigins.size() == 1uz)
+        if (std::cmp_equal(possibleOrigins.size(), 1))
             return possibleOrigins.front().from();
 
         if (text.empty()) {
@@ -242,7 +242,7 @@ namespace {
             };
         }
 
-        if (text.length() > 1uz)
+        if (std::cmp_greater(text.length(), 1))
             return Square::from_string(text);
 
         switch (text.front()) {
@@ -403,7 +403,7 @@ using MoveOrError = std::expected<Move, string>;
 
 auto from_alg(const Position& position, string_view text) -> MoveOrError
 {
-    text = util::trim(text);
+    text = util::strings::trim(text);
 
     if (text.empty())
         return std::unexpected { "Cannot parse Move from empty string" };

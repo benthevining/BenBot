@@ -133,7 +133,7 @@ constexpr void CastlingRights::their_move(const Move& move) noexcept
     // rook capture), or must've already moved (meaning the rights to that side
     // must've already been lost)
 
-    static constexpr auto backRank = Side == Color::White ? Rank::One : Rank::Eight;
+    static constexpr auto backRank = board::back_rank_for(Side);
 
     const auto [file, rank] = move.to();
 

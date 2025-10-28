@@ -62,7 +62,7 @@ auto from_uci(
 {
     using board::Square;
 
-    text = util::trim(text);
+    text = util::strings::trim(text);
 
     if (text.empty()) {
         [[unlikely]];

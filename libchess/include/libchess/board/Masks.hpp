@@ -74,7 +74,7 @@ static constexpr auto PERIMETER = 0XFF818181818181FF_bb;
 {
     const auto diag = static_cast<int>(square.file) - static_cast<int>(square.rank);
 
-    if (diag >= 0)
+    if (std::cmp_greater_equal(diag, 0))
         return MAIN_DIAGONAL >> static_cast<size_t>(diag) * 8uz;
 
     return MAIN_DIAGONAL << static_cast<size_t>(-diag) * 8uz;
@@ -85,7 +85,7 @@ static constexpr auto PERIMETER = 0XFF818181818181FF_bb;
 {
     const auto diag = 7 - static_cast<int>(square.file) - static_cast<int>(square.rank);
 
-    if (diag >= 0)
+    if (std::cmp_greater_equal(diag, 0))
         return MAIN_ANTIDIAGONAL >> static_cast<size_t>(diag) * 8uz;
 
     return MAIN_ANTIDIAGONAL << static_cast<size_t>(-diag) * 8uz;
@@ -100,7 +100,7 @@ static constexpr auto PERIMETER = 0XFF818181818181FF_bb;
 [[nodiscard, gnu::const]] constexpr auto queenside_castle_rook_pos_mask(
     const Color side) noexcept -> Bitboard
 {
-    const auto rank = side == Color::White ? Rank::One : Rank::Eight;
+    const auto rank = back_rank_for(side);
 
     Bitboard mask;
 
@@ -119,7 +119,7 @@ static constexpr auto PERIMETER = 0XFF818181818181FF_bb;
 [[nodiscard, gnu::const]] constexpr auto kingside_castle_rook_pos_mask(
     const Color side) noexcept -> Bitboard
 {
-    const auto rank = side == Color::White ? Rank::One : Rank::Eight;
+    const auto rank = back_rank_for(side);
 
     Bitboard mask;
 

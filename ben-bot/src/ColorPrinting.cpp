@@ -16,10 +16,10 @@
 #include <ben-bot/ColorPrinting.hpp>
 #include <ben-bot/Engine.hpp>
 #include <ben-bot/Resources.hpp>
-#include <ben-bot/TextTable.hpp>
 #include <iostream>
 #include <libchess/game/Position.hpp>
 #include <libchess/util/Strings.hpp>
+#include <libchess/util/TextTable.hpp>
 #include <ranges>
 #include <string_view>
 #include <termcolor/termcolor.hpp> // this is the only TU that includes the termcolor library
@@ -34,7 +34,7 @@ namespace {
     {
         using Lines = beman::inplace_vector::inplace_vector<string_view, MaxLines>;
 
-        return chess::util::lines_view(input)
+        return chess::util::strings::lines_view(input)
              | std::views::take(MaxLines)
              | std::ranges::to<Lines>();
     }
@@ -56,13 +56,13 @@ void Engine::print_logo_and_version() const
               << termcolor::reset;
 }
 
-void print_colored_table(const TextTable& table)
+void print_colored_table(const chess::util::strings::TextTable& table)
 {
     table.print(
         [](const string_view heading) {
             // we want the heading text to be underlined, but not the
             // whitespace that follows the text to complete the cell
-            const auto trimmed = chess::util::trim(heading);
+            const auto trimmed = chess::util::strings::trim(heading);
 
             std::cout << termcolor::bold << termcolor::underline
                       << trimmed
