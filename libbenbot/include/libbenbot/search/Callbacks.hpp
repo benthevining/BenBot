@@ -56,10 +56,8 @@ struct Callbacks final {
     /** Can be safely called without checking if ``onIteration`` is null. */
     void iteration_complete(const Result& result) const
     {
-        if (onIteration != nullptr) {
-            [[likely]];
+        if (onIteration != nullptr)
             onIteration(result);
-        }
     }
 
     /** Creates a set of callbacks that print UCI-formatted information and bestmove

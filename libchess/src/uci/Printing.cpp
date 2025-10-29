@@ -103,7 +103,7 @@ namespace {
     [[nodiscard]] auto pv_string(const moves::MoveList& pv) -> string
     {
         if (pv.empty()) {
-            [[unlikely]];
+            // this is possible if we're checkmated
             return {};
         }
 
@@ -123,10 +123,8 @@ namespace {
     {
         const auto seconds = static_cast<double>(info.time.count()) * 0.001;
 
-        if (seconds <= 0.) {
-            [[unlikely]];
+        if (seconds <= 0.)
             return 0uz;
-        }
 
         const auto nps = static_cast<double>(info.nodes) / seconds;
 

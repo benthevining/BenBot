@@ -158,12 +158,10 @@ void ComboOption::handle_setvalue(const string_view arguments)
 
     valueStr = trim(valueStr);
 
-    if (std::ranges::contains(possibleValues, valueStr)) {
+    if (std::ranges::contains(possibleValues, valueStr))
         value = valueStr;
-    } else {
-        [[unlikely]];
+    else
         value = optionDefault;
-    }
 
     onChange(value);
 }

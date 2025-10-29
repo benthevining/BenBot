@@ -182,10 +182,8 @@ void EngineBase::handle_setoption(const string_view arguments)
     firstWord = trim(firstWord);
 
     // code defensively against unrecognized tokens
-    if (firstWord != "name") {
-        [[unlikely]];
+    if (firstWord != "name")
         return;
-    }
 
     rest = trim(rest);
 

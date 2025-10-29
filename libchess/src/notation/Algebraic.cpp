@@ -112,8 +112,6 @@ auto to_alg(const Position& position, const Move move) -> string
     const auto checkStr = get_check_string(position, move);
 
     if (move.is_castling()) {
-        [[unlikely]];
-
         static constexpr string_view KINGSIDE_CASTLE { "O-O" };
         static constexpr string_view QUEENSIDE_CASTLE { "O-O-O" };
 

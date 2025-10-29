@@ -162,8 +162,6 @@ auto update(
         const auto otherColor = pos.is_white_to_move() ? Color::Black : Color::White;
 
         if (pos.is_en_passant(move)) {
-            [[unlikely]];
-
             value ^= piece_key(
                 PieceType::Pawn, otherColor,
                 get_en_passant_captured_square(
@@ -176,7 +174,6 @@ auto update(
                 capturedType.value(), otherColor, move.to());
         }
     } else if (move.is_castling()) {
-        [[unlikely]];
         if (move.to().is_kingside())
             value ^= board::masks::kingside_castle_rook_pos_mask(pos.sideToMove).to_int();
         else

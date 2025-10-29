@@ -315,7 +315,7 @@ constexpr auto Bitboard::first() const noexcept -> BitboardIndex
 constexpr auto Bitboard::last() const noexcept -> BitboardIndex
 {
     if (none()) {
-        [[unlikely]];
+        [[unlikely]]; // this is probably an error condition, but we want this function to be noexcept
         return NUM_SQUARES;
     }
 

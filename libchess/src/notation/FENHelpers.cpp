@@ -227,7 +227,6 @@ auto parse_side_to_move(
     -> std::expected<void, string>
 {
     if (std::cmp_not_equal(fenFragment.length(), 1)) {
-        [[unlikely]];
         return std::unexpected {
             std::format(
                 "Expected single character for side to move, got: {}",
