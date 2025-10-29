@@ -43,8 +43,8 @@ namespace ben_bot {
 
 using std::size_t;
 
-static constexpr auto GENERATION_DELTA = 8uz;
-static constexpr auto GENERATION_CYCLE = 255uz + GENERATION_DELTA;
+inline constexpr auto GENERATION_DELTA = 8uz;
+inline constexpr auto GENERATION_CYCLE = 255uz + GENERATION_DELTA;
 
 struct TranspositionTable::Entry final {
     std::uint16_t key { UINT16_C(0) }; // the lowest 16 bits of the position's Zobrist key
@@ -100,7 +100,7 @@ struct TranspositionTable::Entry final {
     }
 };
 
-static constexpr auto CLUSTER_SIZE = 3uz;
+inline constexpr auto CLUSTER_SIZE = 3uz;
 
 struct alignas(32) TranspositionTable::Cluster final {
     // if the Entry size changes, we may need to change CLUSTER_SIZE above

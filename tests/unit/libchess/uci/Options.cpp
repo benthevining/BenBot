@@ -16,7 +16,7 @@
 #include <libchess/uci/Options.hpp>
 #include <string>
 
-static constexpr auto TAGS { "[uci][options]" };
+inline constexpr auto TAGS { "[uci][options]" };
 
 namespace uci = chess::uci;
 

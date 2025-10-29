@@ -21,7 +21,7 @@
 #include <ranges>
 #include <utility>
 
-static constexpr auto TAGS { "[board][Bitboard]" };
+inline constexpr auto TAGS { "[board][Bitboard]" };
 
 using chess::board::Bitboard;
 using chess::board::File;
@@ -30,7 +30,7 @@ using chess::board::Square;
 
 namespace bitboard_masks = chess::board::masks;
 
-static constexpr auto NUM_SQUARES = chess::board::NUM_SQUARES;
+inline constexpr auto NUM_SQUARES = chess::board::NUM_SQUARES;
 
 TEST_CASE("Bitboard - empty", TAGS)
 {

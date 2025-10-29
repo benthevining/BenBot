@@ -196,14 +196,14 @@ private:
 namespace detail {
     using Integer = std::uint16_t;
 
-    static constexpr auto LOWEST_SIX_BITS_MASK = 63uz;
+    inline constexpr auto LOWEST_SIX_BITS_MASK = 63uz;
 
-    static constexpr Integer START_SQUARE_OFFSET = UINT16_C(6uz);
-    static constexpr Integer FLAGS_OFFSET        = UINT16_C(12uz);
+    inline constexpr Integer START_SQUARE_OFFSET = UINT16_C(6uz);
+    inline constexpr Integer FLAGS_OFFSET        = UINT16_C(12uz);
 
-    static constexpr auto PROMOTED_TYPE_OFFSET_WITHIN_FLAGS = 6uz;
+    inline constexpr auto PROMOTED_TYPE_OFFSET_WITHIN_FLAGS = 6uz;
 
-    [[nodiscard, gnu::const]] static constexpr auto pack_fields(
+    [[nodiscard, gnu::const]] constexpr auto pack_fields(
         const Square start, const Square end, const PieceType type,
         const MaybePieceType promotedType) noexcept
         -> Integer

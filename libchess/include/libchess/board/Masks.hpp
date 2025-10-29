@@ -46,28 +46,28 @@ using namespace board::literals; // NOLINT
 /// @{
 
 /** A bitboard with all bits set to 1. */
-static constexpr auto ALL = 0XFFFFFFFFFFFFFFFF_bb;
+inline constexpr auto ALL = 0XFFFFFFFFFFFFFFFF_bb;
 
 /** A bitboard with all bits set to 0. */
-static constexpr auto NONE = 0X0_bb;
+inline constexpr auto NONE = 0X0_bb;
 
 /** A bitboard with all the dark squares set to 1. */
-static constexpr auto DARK_SQUARES = 0xAA55AA55AA55AA55_bb;
+inline constexpr auto DARK_SQUARES = 0xAA55AA55AA55AA55_bb;
 
 /** A bitboard with all the light squares set to 1. */
-static constexpr auto LIGHT_SQUARES = 0x55AA55AA55AA55AA_bb;
+inline constexpr auto LIGHT_SQUARES = 0x55AA55AA55AA55AA_bb;
 
 /** A bitboard with all squares on the A1-H8 long diagonal set to 1. */
-static constexpr auto MAIN_DIAGONAL = 0x8040201008040201_bb;
+inline constexpr auto MAIN_DIAGONAL = 0x8040201008040201_bb;
 
 /** A bitboard with all squares on the A1-H8 long anti-diagonal set to 1. */
-static constexpr auto MAIN_ANTIDIAGONAL = 0x0102040810204080_bb;
+inline constexpr auto MAIN_ANTIDIAGONAL = 0x0102040810204080_bb;
 
 /** A bitboard with the 4 center squares (D4, D5, E4, E5) set to 1. */
-static constexpr auto CENTER = 0X1818000000_bb;
+inline constexpr auto CENTER = 0X1818000000_bb;
 
 /** A bitboard with all the perimeter squares set to 1. */
-static constexpr auto PERIMETER = 0XFF818181818181FF_bb;
+inline constexpr auto PERIMETER = 0XFF818181818181FF_bb;
 
 /** Returns a bitboard with all squares on the same diagonal as the given square set to 1. */
 [[nodiscard, gnu::const]] constexpr auto diagonal(const Square& square) noexcept -> Bitboard
@@ -140,28 +140,28 @@ namespace files {
     /// @{
 
     /** A bitboard with all squares on the A file set to 1. */
-    static constexpr auto A = 0x0101010101010101_bb;
+    inline constexpr auto A = 0x0101010101010101_bb;
 
     /** A bitboard with all squares on the B file set to 1. */
-    static constexpr auto B = 0X202020202020202_bb;
+    inline constexpr auto B = 0X202020202020202_bb;
 
     /** A bitboard with all squares on the C file set to 1. */
-    static constexpr auto C = 0X404040404040404_bb;
+    inline constexpr auto C = 0X404040404040404_bb;
 
     /** A bitboard with all squares on the D file set to 1. */
-    static constexpr auto D = 0X808080808080808_bb;
+    inline constexpr auto D = 0X808080808080808_bb;
 
     /** A bitboard with all squares on the E file set to 1. */
-    static constexpr auto E = 0X1010101010101010_bb;
+    inline constexpr auto E = 0X1010101010101010_bb;
 
     /** A bitboard with all squares on the F file set to 1. */
-    static constexpr auto F = 0X2020202020202020_bb;
+    inline constexpr auto F = 0X2020202020202020_bb;
 
     /** A bitboard with all squares on the G file set to 1. */
-    static constexpr auto G = 0X4040404040404040_bb;
+    inline constexpr auto G = 0X4040404040404040_bb;
 
     /** A bitboard with all squares on the H file set to 1. */
-    static constexpr auto H = 0x8080808080808080_bb;
+    inline constexpr auto H = 0x8080808080808080_bb;
 
     /** Returns a bitboard with all squares on the requested file set to 1. */
     [[nodiscard, gnu::const]] constexpr auto get(const File file) noexcept -> Bitboard
@@ -182,28 +182,28 @@ namespace ranks {
     /// @{
 
     /** A bitboard with all squares on the first rank set to 1. */
-    static constexpr auto ONE = 0x00000000000000FF_bb;
+    inline constexpr auto ONE = 0x00000000000000FF_bb;
 
     /** A bitboard with all squares on the second rank set to 1. */
-    static constexpr auto TWO = 0XFF00_bb;
+    inline constexpr auto TWO = 0XFF00_bb;
 
     /** A bitboard with all squares on the third rank set to 1. */
-    static constexpr auto THREE = 0XFF0000_bb;
+    inline constexpr auto THREE = 0XFF0000_bb;
 
     /** A bitboard with all squares on the fourth rank set to 1. */
-    static constexpr auto FOUR = 0XFF000000_bb;
+    inline constexpr auto FOUR = 0XFF000000_bb;
 
     /** A bitboard with all squares on the fifth rank set to 1. */
-    static constexpr auto FIVE = 0XFF00000000_bb;
+    inline constexpr auto FIVE = 0XFF00000000_bb;
 
     /** A bitboard with all squares on the sixth rank set to 1. */
-    static constexpr auto SIX = 0XFF0000000000_bb;
+    inline constexpr auto SIX = 0XFF0000000000_bb;
 
     /** A bitboard with all squares on the seventh rank set to 1. */
-    static constexpr auto SEVEN = 0XFF000000000000_bb;
+    inline constexpr auto SEVEN = 0XFF000000000000_bb;
 
     /** A bitboard with all squares on the eighth rank set to 1. */
-    static constexpr auto EIGHT = 0xFF00000000000000_bb;
+    inline constexpr auto EIGHT = 0xFF00000000000000_bb;
 
     /** Returns a bitboard with all squares on the requested rank set to 1. */
     [[nodiscard, gnu::const]] constexpr auto get(const Rank rank) noexcept -> Bitboard
@@ -234,22 +234,22 @@ namespace starting {
         /// @{
 
         /** A bitboard mask for the starting position of White's pawns. */
-        static constexpr auto PAWNS = ranks::TWO;
+        inline constexpr auto PAWNS = ranks::TWO;
 
         /** A bitboard mask for the starting position of White's rooks. */
-        static constexpr auto ROOKS = 0X81_bb;
+        inline constexpr auto ROOKS = 0X81_bb;
 
         /** A bitboard mask for the starting position of White's knights. */
-        static constexpr auto KNIGHTS = 0X42_bb;
+        inline constexpr auto KNIGHTS = 0X42_bb;
 
         /** A bitboard mask for the starting position of White's bishops. */
-        static constexpr auto BISHOPS = 0X24_bb;
+        inline constexpr auto BISHOPS = 0X24_bb;
 
         /** A bitboard mask for the starting position of White's queen. */
-        static constexpr auto QUEEN = 0X8_bb;
+        inline constexpr auto QUEEN = 0X8_bb;
 
         /** A bitboard mask for the starting position of White's king. */
-        static constexpr auto KING = 0X10_bb;
+        inline constexpr auto KING = 0X10_bb;
 
         /// @}
 
@@ -267,22 +267,22 @@ namespace starting {
         /// @{
 
         /** A bitboard mask for the starting position of Black's pawns. */
-        static constexpr auto PAWNS = ranks::SEVEN;
+        inline constexpr auto PAWNS = ranks::SEVEN;
 
         /** A bitboard mask for the starting position of Black's rooks. */
-        static constexpr auto ROOKS = 0X8100000000000000_bb;
+        inline constexpr auto ROOKS = 0X8100000000000000_bb;
 
         /** A bitboard mask for the starting position of Black's knights. */
-        static constexpr auto KNIGHTS = 0X4200000000000000_bb;
+        inline constexpr auto KNIGHTS = 0X4200000000000000_bb;
 
         /** A bitboard mask for the starting position of Black's bishops. */
-        static constexpr auto BISHOPS = 0X2400000000000000_bb;
+        inline constexpr auto BISHOPS = 0X2400000000000000_bb;
 
         /** A bitboard mask for the starting position of Black's queen. */
-        static constexpr auto QUEEN = 0X800000000000000_bb;
+        inline constexpr auto QUEEN = 0X800000000000000_bb;
 
         /** A bitboard mask for the starting position of Black's king. */
-        static constexpr auto KING = 0X1000000000000000_bb;
+        inline constexpr auto KING = 0X1000000000000000_bb;
 
         /// @}
 

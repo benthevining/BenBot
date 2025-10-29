@@ -40,25 +40,25 @@ namespace piece_values {
     /// @{
 
     /** The value of a pawn. */
-    static constexpr Value PAWN { UINT16_C(100) };
+    inline constexpr Value PAWN { UINT16_C(100) };
 
     /** The value of a knight */
-    static constexpr Value KNIGHT { UINT16_C(320) };
+    inline constexpr Value KNIGHT { UINT16_C(320) };
 
     /** The value of a bishop. */
-    static constexpr Value BISHOP { UINT16_C(330) };
+    inline constexpr Value BISHOP { UINT16_C(330) };
 
     /** The value of a rook. */
-    static constexpr Value ROOK { UINT16_C(500) };
+    inline constexpr Value ROOK { UINT16_C(500) };
 
     /** The value of a queen. */
-    static constexpr Value QUEEN { UINT16_C(900) };
+    inline constexpr Value QUEEN { UINT16_C(900) };
 
     /** The value of the king.
         This value isn't really used in counting material, it's just an
         arbitrarily large placeholder value.
      */
-    static constexpr Value KING { UINT16_C(10000) };
+    inline constexpr Value KING { UINT16_C(10000) };
 
     /// @}
 

@@ -16,7 +16,7 @@
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/FEN.hpp>
 
-static constexpr auto TAGS { "[moves][Generation][legal]" };
+inline constexpr auto TAGS { "[moves][Generation][legal]" };
 
 using chess::moves::generate;
 using chess::notation::from_fen;

@@ -21,7 +21,7 @@
 #include <libchess/notation/UCI.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
 
-static constexpr auto TAGS { "[notation][UCI]" };
+inline constexpr auto TAGS { "[notation][UCI]" };
 
 using chess::board::File;
 using chess::board::Rank;

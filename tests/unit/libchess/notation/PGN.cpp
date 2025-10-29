@@ -23,7 +23,7 @@
 #include <libchess/notation/PGN.hpp>
 #include <string_view>
 
-static constexpr auto TAGS { "[notation][PGN]" };
+inline constexpr auto TAGS { "[notation][PGN]" };
 
 using chess::notation::from_pgn;
 using chess::notation::parse_all_pgns;

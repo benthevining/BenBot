@@ -20,7 +20,7 @@
 #include <libchess/notation/FEN.hpp>
 #include <string_view>
 
-static constexpr auto TAGS { "[game][Position][Zobrist]" };
+inline constexpr auto TAGS { "[game][Position][Zobrist]" };
 
 using chess::notation::from_alg;
 using chess::notation::from_fen;

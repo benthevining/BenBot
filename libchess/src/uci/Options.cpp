@@ -49,7 +49,7 @@ auto BoolOption::get_declaration_string() const -> string
         optionName, optionDefault);
 }
 
-static constexpr string_view VALUE_TOKEN { "value" };
+inline constexpr string_view VALUE_TOKEN { "value" };
 
 void BoolOption::handle_setvalue(const string_view arguments)
 {

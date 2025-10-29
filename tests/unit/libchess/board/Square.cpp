@@ -22,7 +22,7 @@
 #include <magic_enum/magic_enum.hpp>
 #include <string_view>
 
-static constexpr auto TAGS { "[board][Square]" };
+inline constexpr auto TAGS { "[board][Square]" };
 
 using chess::board::BitboardIndex;
 using chess::board::File;

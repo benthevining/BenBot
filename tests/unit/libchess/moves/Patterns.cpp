@@ -22,7 +22,7 @@
 #include <libchess/moves/Patterns.hpp>
 #include <libchess/pieces/Colors.hpp>
 
-static constexpr auto TAGS { "[moves][Generation][patterns]" };
+inline constexpr auto TAGS { "[moves][Generation][patterns]" };
 
 using chess::board::Bitboard;
 using chess::board::File;

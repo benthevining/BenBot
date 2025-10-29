@@ -32,7 +32,7 @@ using std::string_view;
 
 using PieceType = pieces::Type;
 
-static constexpr string_view UCI_NULL_MOVE { "0000" };
+inline constexpr string_view UCI_NULL_MOVE { "0000" };
 
 auto to_uci(const Move move) -> string
 {

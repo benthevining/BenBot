@@ -22,7 +22,7 @@
 #include <libchess/notation/FEN.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
 
-static constexpr auto TAGS { "[notation][Algebraic]" };
+inline constexpr auto TAGS { "[notation][Algebraic]" };
 
 using chess::board::File;
 using chess::board::Rank;

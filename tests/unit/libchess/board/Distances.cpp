@@ -21,7 +21,7 @@
 #include <libchess/board/Square.hpp>
 #include <magic_enum/magic_enum.hpp>
 
-static constexpr auto TAGS { "[board][Square][distances]" };
+inline constexpr auto TAGS { "[board][Square][distances]" };
 
 using chess::board::File;
 using chess::board::Rank;

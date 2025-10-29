@@ -17,7 +17,7 @@
 #include <libchess/game/Position.hpp>
 #include <libchess/notation/FEN.hpp>
 
-static constexpr auto TAGS { "[eval][evaluation]" };
+inline constexpr auto TAGS { "[eval][evaluation]" };
 
 using ben_bot::eval::evaluate;
 using chess::game::Position;

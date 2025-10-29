@@ -17,7 +17,7 @@
 #include <libchess/notation/EPD.hpp>
 #include <string>
 
-static constexpr auto TAGS { "[notation][EPD]" };
+inline constexpr auto TAGS { "[notation][EPD]" };
 
 using chess::notation::from_epd;
 

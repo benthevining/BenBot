@@ -30,9 +30,9 @@ using std::size_t;
 // pair of multiplier, offset
 using MagicInfo = std::pair<std::uint64_t, int>;
 
-static constexpr auto BISHOP_SHIFT = 55uz;
+inline constexpr auto BISHOP_SHIFT = 55uz;
 
-static constexpr std::array BISHOP_MAGICS {
+inline constexpr std::array BISHOP_MAGICS {
     MagicInfo { UINT64_C(0x007fbfbfbfbfbfff), 5378 },
     MagicInfo { UINT64_C(0x0000a060401007fc), 4093 },
     MagicInfo { UINT64_C(0x0001004008020000), 4314 },
@@ -99,9 +99,9 @@ static constexpr std::array BISHOP_MAGICS {
     MagicInfo { UINT64_C(0x007fff9fdf7ff813), 16076 }
 };
 
-static constexpr auto ROOK_SHIFT = 52uz;
+inline constexpr auto ROOK_SHIFT = 52uz;
 
-static constexpr std::array ROOK_MAGICS {
+inline constexpr std::array ROOK_MAGICS {
     MagicInfo { UINT64_C(0x00280077ffebfffe), 26304 },
     MagicInfo { UINT64_C(0x2004010201097fff), 35520 },
     MagicInfo { UINT64_C(0x0010020010053fff), 38592 },
