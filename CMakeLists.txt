@@ -28,6 +28,12 @@ set (CMAKE_CXX_STANDARD 23)
 set (CMAKE_C_STANDARD 23)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 
+include (CheckIPOSupported)
+
+check_ipo_supported (RESULT ipo_supported LANGUAGES CXX)
+
+option (CMAKE_INTERPROCEDURAL_OPTIMIZATION "Enable IPO (LTO)" "${ipo_supported}")
+
 include (FetchContent)
 include (CPackComponent)
 
