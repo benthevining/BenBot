@@ -10,8 +10,8 @@
 #
 # ======================================================================================
 
-option (BENBOT_ALWAYS_REBUILD_RESOURCES OFF
-        "If on, the resources target is rebuilt every time a build is invoked"
+option (BENBOT_ALWAYS_REBUILD_RESOURCES
+        "If on, the resources target is rebuilt every time a build is invoked" OFF
 )
 
 FetchContent_Declare (
