@@ -17,7 +17,7 @@
 #include <libchess/notation/Algebraic.hpp>
 #include <libchess/notation/FEN.hpp>
 
-static constexpr auto TAGS { "[game][Position][threefold]" };
+inline constexpr auto TAGS { "[game][Position][threefold]" };
 
 using chess::notation::from_alg;
 

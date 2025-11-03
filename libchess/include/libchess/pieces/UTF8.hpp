@@ -47,22 +47,22 @@ namespace white {
     /// @{
 
     /** A UTF8-encoded symbol for a White pawn. */
-    static constexpr string_view PAWN { "\xE2\x99\x99" };
+    inline constexpr string_view PAWN { "\xE2\x99\x99" };
 
     /** A UTF8-encoded symbol for a White knight. */
-    static constexpr string_view KNIGHT { "\xE2\x99\x98" };
+    inline constexpr string_view KNIGHT { "\xE2\x99\x98" };
 
     /** A UTF8-encoded symbol for a White bishop. */
-    static constexpr string_view BISHOP { "\xE2\x99\x97" };
+    inline constexpr string_view BISHOP { "\xE2\x99\x97" };
 
     /** A UTF8-encoded symbol for a White rook. */
-    static constexpr string_view ROOK { "\xE2\x99\x96" };
+    inline constexpr string_view ROOK { "\xE2\x99\x96" };
 
     /** A UTF8-encoded symbol for a White queen. */
-    static constexpr string_view QUEEN { "\xE2\x99\x95" };
+    inline constexpr string_view QUEEN { "\xE2\x99\x95" };
 
     /** A UTF8-encoded symbol for a White king. */
-    static constexpr string_view KING { "\xE2\x99\x94" };
+    inline constexpr string_view KING { "\xE2\x99\x94" };
 
     /** Returns a UTF8-encoded symbol for a White piece of the given type. */
     [[nodiscard, gnu::const]] constexpr auto get(const Type type) noexcept -> string_view
@@ -93,22 +93,22 @@ namespace black {
     /// @{
 
     /** A UTF8-encoded symbol for a Black pawn. */
-    static constexpr string_view PAWN { "\xE2\x99\x9F" };
+    inline constexpr string_view PAWN { "\xE2\x99\x9F" };
 
     /** A UTF8-encoded symbol for a Black knight. */
-    static constexpr string_view KNIGHT { "\xE2\x99\x9E" };
+    inline constexpr string_view KNIGHT { "\xE2\x99\x9E" };
 
     /** A UTF8-encoded symbol for a Black bishop. */
-    static constexpr string_view BISHOP { "\xE2\x99\x9D" };
+    inline constexpr string_view BISHOP { "\xE2\x99\x9D" };
 
     /** A UTF8-encoded symbol for a Black rook. */
-    static constexpr string_view ROOK { "\xE2\x99\x9C" };
+    inline constexpr string_view ROOK { "\xE2\x99\x9C" };
 
     /** A UTF8-encoded symbol for a Black queen. */
-    static constexpr string_view QUEEN { "\xE2\x99\x9B" };
+    inline constexpr string_view QUEEN { "\xE2\x99\x9B" };
 
     /** A UTF8-encoded symbol for a Black king. */
-    static constexpr string_view KING { "\xE2\x99\x9A" };
+    inline constexpr string_view KING { "\xE2\x99\x9A" };
 
     /** Returns a UTF8-encoded symbol for a Black piece of the given type. */
     [[nodiscard, gnu::const]] constexpr auto get(const Type type) noexcept -> string_view

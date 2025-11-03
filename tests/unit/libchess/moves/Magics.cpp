@@ -19,7 +19,7 @@
 #include <libchess/board/Square.hpp>
 #include <libchess/moves/Magics.hpp>
 
-static constexpr auto TAGS { "[moves][Generation][magics]" };
+inline constexpr auto TAGS { "[moves][Generation][magics]" };
 
 using chess::board::Bitboard;
 using chess::board::File;

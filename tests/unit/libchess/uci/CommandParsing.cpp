@@ -22,7 +22,7 @@
 #include <libchess/uci/CommandParsing.hpp>
 #include <string_view>
 
-static constexpr auto TAGS { "[uci][command-parsing]" };
+inline constexpr auto TAGS { "[uci][command-parsing]" };
 
 using chess::game::Position;
 using chess::notation::from_fen;

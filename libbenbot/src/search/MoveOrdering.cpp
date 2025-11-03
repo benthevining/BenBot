@@ -81,11 +81,9 @@ namespace {
         }
 
         if (const auto prom = move.promoted_type()) {
-            [[unlikely]];
             score += PROMOTION_MULTIPLIER * piece_values::get(prom.value());
         } else if (move.piece() != PieceType::Pawn) {
             if (move.is_castling()) {
-                [[unlikely]];
                 score += CASTLING_BONUS;
             } else if (opponentPawnAttacks.test(move.to())) {
                 // Penalize moving piece to a square attacked by opponent pawn

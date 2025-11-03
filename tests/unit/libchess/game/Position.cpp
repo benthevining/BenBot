@@ -24,7 +24,7 @@
 #include <ranges>
 #include <vector>
 
-static constexpr auto TAGS { "[game][Position]" };
+inline constexpr auto TAGS { "[game][Position]" };
 
 using chess::board::File;
 using chess::board::Rank;

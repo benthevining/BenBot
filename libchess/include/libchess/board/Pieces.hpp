@@ -236,7 +236,9 @@ constexpr auto Pieces::get_piece_on(const Square square) const noexcept
                 return get_type(type).test(index);
             });
         found != allTypes.end()) {
+        // we should find a piece unless the occupied bitboard has gotten out of sync
         [[likely]];
+
         return *found;
     }
 
@@ -277,8 +279,6 @@ constexpr void Pieces::our_move(const moves::Move move, const Color ourColor) no
             get_type(move.piece()) ^= movementMask;
 
             if (move.is_castling()) {
-                [[unlikely]];
-
                 const auto castleMask = move.to().is_queenside()
                                           ? masks::queenside_castle_rook_pos_mask(ourColor)
                                           : masks::kingside_castle_rook_pos_mask(ourColor);

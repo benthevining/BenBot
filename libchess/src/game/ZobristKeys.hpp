@@ -21,14 +21,14 @@ namespace chess::game::zobrist::keys {
 
 using Hash = Position::Hash;
 
-static constexpr Hash BLACK_TO_MOVE { UINT64_C(0x679ebe6f2ed869a4) };
+inline constexpr Hash BLACK_TO_MOVE { UINT64_C(0x679ebe6f2ed869a4) };
 
-static constexpr Hash WHITE_KINGSIDE_CASTLE { UINT64_C(0x6b63254b15e00a87) };
-static constexpr Hash WHITE_QUEENSIDE_CASTLE { UINT64_C(0x098dc1575ddbd151) };
-static constexpr Hash BLACK_KINGSIDE_CASTLE { UINT64_C(0xdbb675f686df04a9) };
-static constexpr Hash BLACK_QUEENSIDE_CASTLE { UINT64_C(0x71588a053b2bd9e5) };
+inline constexpr Hash WHITE_KINGSIDE_CASTLE { UINT64_C(0x6b63254b15e00a87) };
+inline constexpr Hash WHITE_QUEENSIDE_CASTLE { UINT64_C(0x098dc1575ddbd151) };
+inline constexpr Hash BLACK_KINGSIDE_CASTLE { UINT64_C(0xdbb675f686df04a9) };
+inline constexpr Hash BLACK_QUEENSIDE_CASTLE { UINT64_C(0x71588a053b2bd9e5) };
 
-static constexpr std::array EN_PASSANT_KEYS {
+inline constexpr std::array EN_PASSANT_KEYS {
     UINT64_C(0xa72780f845e9076d),
     UINT64_C(0xfcc6f885b6c115dc),
     UINT64_C(0x45b7a9a39104160c),
@@ -40,7 +40,7 @@ static constexpr std::array EN_PASSANT_KEYS {
 };
 
 // each key represents a specific piece type of a given color on a specific square
-static constexpr std::array PIECE_KEYS {
+inline constexpr std::array PIECE_KEYS {
     UINT64_C(0xde0a6308c3df1559), UINT64_C(0x2c4b06b9853875cc), UINT64_C(0x2ab7e75c55f58ce1), UINT64_C(0xd870396170507503),
     UINT64_C(0x2caea0c8b9204cb4), UINT64_C(0x945bed033f6e1d8d), UINT64_C(0xf76d7af05b02529b), UINT64_C(0x775d4b35eec039e6),
     UINT64_C(0x53d5a48216a62191), UINT64_C(0x243dec880916c9a9), UINT64_C(0x29fef5bc3455c011), UINT64_C(0x30a3d546f5c6b927),

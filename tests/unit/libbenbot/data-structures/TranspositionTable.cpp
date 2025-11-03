@@ -19,7 +19,7 @@
 #include <libchess/notation/Algebraic.hpp>
 #include <libchess/notation/FEN.hpp>
 
-static constexpr auto TAGS { "[data-structures][TranspositionTable]" };
+inline constexpr auto TAGS { "[data-structures][TranspositionTable]" };
 
 using ben_bot::TranspositionTable;
 using ben_bot::TTData;

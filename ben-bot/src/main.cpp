@@ -30,10 +30,8 @@ try {
 
     ben_bot::Engine engine;
 
-    if (not uciCommand.empty()) {
-        [[unlikely]];
+    if (not uciCommand.empty())
         engine.handle_command(uciCommand);
-    }
 
     if (not noLoop) {
         [[likely]];

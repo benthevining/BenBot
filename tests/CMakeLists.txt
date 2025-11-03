@@ -61,13 +61,16 @@ add_test (NAME ben_bot.bench.engine_nps
 )
 # cmake-format: on
 
-set_tests_properties (ben_bot.bench.engine_nps PROPERTIES RUN_SERIAL TRUE)
+cmake_host_system_information (RESULT num_cores QUERY NUMBER_OF_PHYSICAL_CORES)
 
 # cmake-format: off
 add_test (NAME ben_bot.verify_headers
           COMMAND "${CMAKE_COMMAND}"
                   --build "${CMAKE_BINARY_DIR}"
-                  --target all_verify_interface_header_sets
+                  --target libchess_verify_interface_header_sets libbenbot_verify_interface_header_sets
                   --config "$<CONFIG>"
+                  --parallel "${num_cores}"
 )
 # cmake-format: on
+
+set_tests_properties (ben_bot.bench.engine_nps ben_bot.verify_headers PROPERTIES RUN_SERIAL TRUE)

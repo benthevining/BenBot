@@ -20,7 +20,7 @@
 #include <libchess/board/Square.hpp>
 #include <libchess/pieces/Colors.hpp>
 
-static constexpr auto TAGS { "[board][Bitboard][fills]" };
+inline constexpr auto TAGS { "[board][Bitboard][fills]" };
 
 using chess::board::Bitboard;
 using chess::board::File;

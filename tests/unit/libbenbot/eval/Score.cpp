@@ -15,7 +15,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <libbenbot/eval/Score.hpp>
 
-static constexpr auto TAGS { "[eval][Score]" };
+inline constexpr auto TAGS { "[eval][Score]" };
 
 using ben_bot::eval::Score;
 

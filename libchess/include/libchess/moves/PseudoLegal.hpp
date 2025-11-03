@@ -176,8 +176,8 @@ namespace detail {
 
         namespace files = board::masks::files;
 
-        static constexpr auto notAFile = files::A.inverse();
-        static constexpr auto notHFile = files::H.inverse();
+        inline constexpr auto notAFile = files::A.inverse();
+        inline constexpr auto notHFile = files::H.inverse();
 
         [[nodiscard, gnu::const]] constexpr auto north(
             Bitboard rooks, Bitboard empty) noexcept -> Bitboard

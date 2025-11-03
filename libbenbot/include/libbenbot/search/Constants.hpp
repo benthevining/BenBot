@@ -24,6 +24,6 @@ namespace ben_bot::search {
 /** The maximum depth that the search can reach.
     @ingroup search
  */
-static constexpr auto MAX_PLY = 255uz;
+inline constexpr auto MAX_PLY = 255uz;
 
 } // namespace ben_bot::search

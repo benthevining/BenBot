@@ -65,8 +65,6 @@ auto knight_distance(
     auto dist = static_cast<size_t>(ndis.at(static_cast<size_t>(absDist)));
 
     if (std::cmp_equal(absDist, 9)) {
-        [[unlikely]];
-
         const auto firstMask  = static_cast<size_t>(corner.at(firstIdx));
         const auto secondMask = static_cast<size_t>(corner.at(secondIdx));
 

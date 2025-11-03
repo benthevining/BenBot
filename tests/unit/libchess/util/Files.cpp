@@ -24,7 +24,7 @@
 #include <libchess/util/Files.hpp>
 #include <string_view>
 
-static constexpr auto TAGS { "[util][files]" };
+inline constexpr auto TAGS { "[util][files]" };
 
 TEST_CASE("load_file_as_string()", TAGS)
 {

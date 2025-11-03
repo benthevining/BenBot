@@ -16,7 +16,7 @@
 #include <libchess/notation/Algebraic.hpp>
 #include <libchess/notation/FEN.hpp>
 
-static constexpr auto TAGS { "[moves][EnPassant]" };
+inline constexpr auto TAGS { "[moves][EnPassant]" };
 
 TEST_CASE("En passant - illegal if capture reveals check", TAGS)
 {

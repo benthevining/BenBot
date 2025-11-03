@@ -73,7 +73,6 @@ void Thread::thread_func()
         });
 
         if (threadShouldExit.load()) {
-            [[unlikely]];
             return;
         }
 

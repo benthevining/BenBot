@@ -53,8 +53,6 @@ namespace {
         ourPieces.our_move(move, position.sideToMove);
 
         if (position.is_en_passant(move)) {
-            [[unlikely]];
-
             const auto idx = board::get_en_passant_captured_square(
                 position.enPassantTargetSquare.value(), isWhite)
                                  .index();
@@ -72,7 +70,6 @@ namespace {
             or std::cmp_not_equal(
                 rank_distance(move.from(), move.to()),
                 2)) {
-            [[likely]];
             return std::nullopt;
         }
 
@@ -231,7 +228,6 @@ auto Position::is_draw_by_insufficient_material() const noexcept -> bool
     if (whitePieces.pawns.any() or blackPieces.pawns.any()
         or whitePieces.rooks.any() or blackPieces.rooks.any()
         or whitePieces.queens.any() or blackPieces.queens.any()) {
-        [[likely]];
         return false;
     }
 
@@ -245,7 +241,6 @@ auto Position::is_draw_by_insufficient_material() const noexcept -> bool
     const bool blackHasOnlyKing = std::cmp_equal(numBlackKnights + numBlackBishops, 0);
 
     if (not(whiteHasOnlyKing or blackHasOnlyKing)) {
-        [[likely]];
         return false;
     }
 

@@ -32,7 +32,7 @@ using std::string_view;
 
 using PieceType = pieces::Type;
 
-static constexpr string_view UCI_NULL_MOVE { "0000" };
+inline constexpr string_view UCI_NULL_MOVE { "0000" };
 
 auto to_uci(const Move move) -> string
 {
@@ -64,15 +64,11 @@ auto from_uci(
 
     text = util::strings::trim(text);
 
-    if (text.empty()) {
-        [[unlikely]];
+    if (text.empty())
         return std::unexpected { "Cannot parse UCI move from empty string" };
-    }
 
-    if (text == UCI_NULL_MOVE) {
-        [[unlikely]];
+    if (text == UCI_NULL_MOVE)
         return Move {};
-    }
 
     return Square::from_string(text.substr(0uz, 2uz))
         .and_then([&text, &position](const Square from) {
@@ -89,8 +85,6 @@ auto from_uci(
                                 return Move { from, dest, movedType };
 
                             // promotion
-                            [[unlikely]];
-
                             return pieces::from_string(text)
                                 .transform([from, dest, movedType](const PieceType promotedType) {
                                     return Move { from, dest, movedType, promotedType };

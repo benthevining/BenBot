@@ -22,14 +22,14 @@ namespace ben_bot::config {
 
 using std::string_view;
 
-static constexpr string_view VERSION_STRING { "@BenBot_VERSION@" };
+inline constexpr string_view VERSION_STRING { "@BenBot_VERSION@" };
 
-static constexpr string_view COMPILER_NAME { "@CMAKE_CXX_COMPILER_ID@" };
+inline constexpr string_view COMPILER_NAME { "@CMAKE_CXX_COMPILER_ID@" };
 
-static constexpr string_view COMPILER_VERSION { "@CMAKE_CXX_COMPILER_VERSION@" };
+inline constexpr string_view COMPILER_VERSION { "@CMAKE_CXX_COMPILER_VERSION@" };
 
-static constexpr string_view SYSTEM_NAME { "@CMAKE_SYSTEM_NAME@" };
+inline constexpr string_view SYSTEM_NAME { "@CMAKE_SYSTEM_NAME@" };
 
-static constexpr string_view BUILD_CONFIG { "$<CONFIG>" };
+inline constexpr string_view BUILD_CONFIG { "$<CONFIG>" };
 
 } // namespace ben_bot::config

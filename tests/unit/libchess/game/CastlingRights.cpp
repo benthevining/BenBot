@@ -17,7 +17,7 @@
 #include <libchess/notation/Algebraic.hpp>
 #include <libchess/notation/FEN.hpp>
 
-static constexpr auto TAGS { "[game][CastlingRights]" };
+inline constexpr auto TAGS { "[game][CastlingRights]" };
 
 using chess::game::CastlingRights;
 

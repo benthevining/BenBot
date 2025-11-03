@@ -25,7 +25,7 @@
 #include <string_view>
 #include <vector>
 
-static constexpr auto TAGS { "[board][Bitboard][masks]" };
+inline constexpr auto TAGS { "[board][Bitboard][masks]" };
 
 using chess::board::Bitboard;
 using chess::board::File;

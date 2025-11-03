@@ -20,7 +20,7 @@
 #include <libchess/pieces/Colors.hpp>
 #include <magic_enum/magic_enum.hpp>
 
-static constexpr auto TAGS { "[moves][Move]" };
+inline constexpr auto TAGS { "[moves][Move]" };
 
 using magic_enum::enum_values;
 
@@ -33,8 +33,8 @@ namespace bitboard_masks = chess::board::masks;
 
 using PieceType = chess::pieces::Type;
 
-static constexpr auto whiteKingStartSquare = bitboard_masks::starting::white::KING.squares().front();
-static constexpr auto blackKingStartSquare = bitboard_masks::starting::black::KING.squares().front();
+inline constexpr auto whiteKingStartSquare = bitboard_masks::starting::white::KING.squares().front();
+inline constexpr auto blackKingStartSquare = bitboard_masks::starting::black::KING.squares().front();
 
 TEST_CASE("Move - castle_kingside()", TAGS)
 {

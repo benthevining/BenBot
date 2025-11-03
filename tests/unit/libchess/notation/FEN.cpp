@@ -22,7 +22,7 @@
 #include <libchess/pieces/Colors.hpp>
 #include <string_view>
 
-static constexpr auto TAGS { "[notation][FEN]" };
+inline constexpr auto TAGS { "[notation][FEN]" };
 
 using chess::board::File;
 using chess::board::Rank;

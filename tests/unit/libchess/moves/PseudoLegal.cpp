@@ -21,7 +21,7 @@
 #include <libchess/moves/PseudoLegal.hpp>
 #include <libchess/pieces/Colors.hpp>
 
-static constexpr auto TAGS { "[moves][Generation][pseudo-legal]" };
+inline constexpr auto TAGS { "[moves][Generation][pseudo-legal]" };
 
 using chess::board::Bitboard;
 using chess::board::File;

@@ -499,7 +499,6 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
 
             // only 1 legal move, don't do a deeper iteration
             if (options.movesToSearch.size() == 1uz) {
-                [[unlikely]];
                 break;
             }
 

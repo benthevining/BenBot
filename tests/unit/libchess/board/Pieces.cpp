@@ -21,7 +21,7 @@
 #include <libchess/pieces/PieceTypes.hpp>
 #include <magic_enum/magic_enum.hpp>
 
-static constexpr auto TAGS { "[board][Pieces]" };
+inline constexpr auto TAGS { "[board][Pieces]" };
 
 using chess::board::File;
 using chess::board::Pieces;

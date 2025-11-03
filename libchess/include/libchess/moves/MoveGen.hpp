@@ -55,7 +55,7 @@ using PieceType = pieces::Type;
 
     @see MoveList
  */
-static constexpr auto MAX_MOVES = 256uz;
+inline constexpr auto MAX_MOVES = 256uz;
 
 /** A stack-allocated array of moves.
     @see MAX_MOVES
@@ -140,10 +140,10 @@ namespace detail {
     namespace rank_masks = board::masks::ranks;
     namespace shifts     = board::shifts;
 
-    static constexpr auto PROMOTION_MASK     = rank_masks::ONE | rank_masks::EIGHT;
-    static constexpr auto NOT_PROMOTION_MASK = PROMOTION_MASK.inverse();
+    inline constexpr auto PROMOTION_MASK     = rank_masks::ONE | rank_masks::EIGHT;
+    inline constexpr auto NOT_PROMOTION_MASK = PROMOTION_MASK.inverse();
 
-    static constexpr std::array possiblePromotedTypes {
+    inline constexpr std::array possiblePromotedTypes {
         PieceType::Knight, PieceType::Bishop, PieceType::Rook, PieceType::Queen
     };
 

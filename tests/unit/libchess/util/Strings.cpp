@@ -18,7 +18,7 @@
 #include <string_view>
 #include <vector>
 
-static constexpr auto TAGS { "[util][strings]" };
+inline constexpr auto TAGS { "[util][strings]" };
 
 TEST_CASE("Strings - trim()", TAGS)
 {

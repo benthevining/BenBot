@@ -17,7 +17,7 @@
 #include <libchess/board/Flips.hpp>
 #include <libchess/board/Masks.hpp>
 
-static constexpr auto TAGS { "[board][Bitboard][flips]" };
+inline constexpr auto TAGS { "[board][Bitboard][flips]" };
 
 using chess::board::Bitboard;
 
