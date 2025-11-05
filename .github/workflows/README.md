@@ -22,7 +22,7 @@ Used by PRs to run gainer-bounds SPRT tests against `main`.
 
 ## `sprt_non_regression.yml`
 
-Triggered on every push to `main` to run non-regression bounds SPRT tests against the latest release.
+Can be triggered to run an SPRT non-regression test of `main` against the last release.
 
 ## `tag_and_release.yml`
 

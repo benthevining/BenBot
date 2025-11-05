@@ -14,8 +14,6 @@ name: SPRT gain
 
 on:
   workflow_dispatch:
-  pull_request:
-    types: [opened, reopened, synchronize]
 
 concurrency:
   group: ${{ github.workflow }}.${{ github.ref }}
