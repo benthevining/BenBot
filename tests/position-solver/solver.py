@@ -69,7 +69,7 @@ operations = board.set_epd(epd_data)
 
 print(f"Testing position {board.fen()}", flush=True)
 
-engine = chess.engine.SimpleEngine.popen_uci(ENGINE_PATH, timeout=None)
+engine = chess.engine.SimpleEngine.popen_uci(str(ENGINE_PATH), timeout=None)
 
 engine.configure({"Debug Log File": str(ENGINE_LOG_PATH.resolve())})
 
@@ -77,7 +77,7 @@ result = engine.play(board, chess.engine.Limit(depth=operations["depth"]))
 
 engine.quit()
 
-exit_code = engine.returncode.result(timeout=None)
+exit_code = engine.returncode.result()
 
 if exit_code != 0:
     print(f"Engine exited with code {exit_code}", flush=True)
