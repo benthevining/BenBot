@@ -10,7 +10,7 @@
 #
 # ======================================================================================
 
-find_package (Python 3.10 COMPONENTS Interpreter)
+find_package (Python 3.9 COMPONENTS Interpreter)
 
 function (check_python_modules_available outputVar)
     if (NOT TARGET Python::Interpreter)

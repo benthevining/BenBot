@@ -54,3 +54,7 @@ endif ()
 if (BENBOT_DOCS)
     add_subdirectory (docs)
 endif ()
+
+if (PROJECT_IS_TOP_LEVEL)
+    feature_summary (WHAT ALL DEFAULT_DESCRIPTION)
+endif ()
