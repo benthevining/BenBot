@@ -63,7 +63,10 @@ cmake_host_system_information (RESULT num_cores QUERY NUMBER_OF_PHYSICAL_CORES)
 add_test (NAME ben_bot.verify_headers
           COMMAND "${CMAKE_COMMAND}"
                   --build "${CMAKE_BINARY_DIR}"
-                  --target libchess_verify_interface_header_sets libbenbot_verify_interface_header_sets
+                  --target
+                    libchess_verify_interface_header_sets
+                    libbenbot_verify_interface_header_sets
+                    ben_bot_resources_verify_interface_header_sets
                   --config "$<CONFIG>"
                   --parallel "${num_cores}"
 )

@@ -26,13 +26,11 @@ FetchContent_Declare (
 
 FetchContent_MakeAvailable (cmrc)
 
-# cmake-format: off
-cmrc_add_resource_library (
-        ben_bot_resources_internal
-        res/license_header.txt
-        res/bench.epd
+set (resource_files # cmake-format: sortable
+                    res/bench.epd res/license_header.txt
 )
-# cmake-format: on
+
+cmrc_add_resource_library (ben_bot_resources_internal ${resource_files})
 
 add_library (ben_bot_resources STATIC)
 
@@ -64,9 +62,18 @@ set (generated_header "${generated_includes}/BenBotConfig.hpp")
 string (CONFIGURE "${config_header_content}" config_header_content @ONLY)
 file (GENERATE OUTPUT "${generated_header}" CONTENT "${config_header_content}")
 
+set (header_file "include/ben-bot/Resources.hpp")
+set (source_files # cmake-format: sortable
+                  src/BuildTime.cpp src/Resources.cpp
+)
+
 target_sources (
-    ben_bot_resources PUBLIC FILE_SET HEADERS BASE_DIRS include FILES include/ben-bot/Resources.hpp
-    PRIVATE src/Resources.cpp src/BuildTime.cpp "${generated_header}"
+    ben_bot_resources PUBLIC FILE_SET HEADERS BASE_DIRS include FILES "${header_file}"
+    PRIVATE ${source_files} "${generated_header}"
+)
+
+source_group (
+    TREE "${CMAKE_CURRENT_LIST_DIR}" FILES "${header_file}" ${source_files} ${resource_files}
 )
 
 target_include_directories (ben_bot_resources PRIVATE "${generated_includes}")

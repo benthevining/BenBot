@@ -12,8 +12,9 @@
 
 add_subdirectory (resources)
 
-file (GLOB benbot_sources LIST_DIRECTORIES false CONFIGURE_DEPENDS
-                                                 "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp"
+set (benbot_sources
+     # cmake-format: sortable
+     src/Bench.cpp src/CLI.cpp src/Engine.cpp src/main.cpp src/Perft.cpp src/Printing.cpp
 )
 
 add_executable (ben_bot ${benbot_sources})
@@ -26,8 +27,9 @@ set_target_properties (
     ben_bot PROPERTIES CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF DEBUG_POSTFIX -d
 )
 
-file (GLOB_RECURSE benbot_headers LIST_DIRECTORIES false CONFIGURE_DEPENDS
-                                                         "${CMAKE_CURRENT_LIST_DIR}/include/*.hpp"
+set (benbot_headers
+     # cmake-format: sortable
+     include/ben-bot/CLI.hpp include/ben-bot/CustomCommand.hpp include/ben-bot/Engine.hpp
 )
 
 target_sources (ben_bot PRIVATE FILE_SET HEADERS BASE_DIRS include FILES ${benbot_headers})
