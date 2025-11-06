@@ -10,7 +10,7 @@
 #
 # ======================================================================================
 
-cmake_minimum_required (VERSION 3.30.0 FATAL_ERROR)
+cmake_minimum_required (VERSION 4.0.0 FATAL_ERROR)
 
 project (
     BenBot
