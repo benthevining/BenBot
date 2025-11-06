@@ -10,6 +10,9 @@
 #
 # ======================================================================================
 
+# NB. even if we don't have a Python interpreter to run the wrapper script, we still want to build
+# the rampart executable
+
 FetchContent_Declare (
     nlohmann_json
     SYSTEM
@@ -34,6 +37,10 @@ add_executable (rampart)
 target_link_libraries (rampart PRIVATE ben_bot::libchess nlohmann_json::nlohmann_json)
 
 target_sources (rampart PRIVATE main.cpp)
+
+add_feature_info (
+    benbot_rampart_testing "TARGET Python::Interpreter" "BenBot rampart movegen testing"
+)
 
 if (NOT TARGET Python::Interpreter)
     return ()

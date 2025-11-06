@@ -24,7 +24,7 @@ FetchContent_Declare (
     SYSTEM
     GIT_REPOSITORY "https://github.com/bemanproject/inplace_vector.git"
     GIT_TAG origin/main
-    FIND_PACKAGE_ARGS
+    FIND_PACKAGE_ARGS 1.0.0
 )
 
 FetchContent_MakeAvailable (magic_enum inplace_vector)
@@ -45,8 +45,8 @@ set_target_properties (
                VERIFY_INTERFACE_HEADER_SETS ON
 )
 
-if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-    # needed for declaring large arrays of Zobrist keys
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    # needed for declaring large array of Zobrist keys
     set_property (SOURCE src/game/Zobrist.cpp APPEND PROPERTY COMPILE_OPTIONS -fbracket-depth=767)
 endif ()
 

@@ -12,8 +12,9 @@
 
 find_package (Doxygen OPTIONAL_COMPONENTS dot)
 
+add_feature_info (benbot_docs DOXYGEN_FOUND "Building BenBot docs with Doxygen")
+
 if (NOT DOXYGEN_FOUND)
-    message (VERBOSE "Doxygen not found, not building BenBot docs")
     return ()
 endif ()
 

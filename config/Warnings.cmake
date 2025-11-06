@@ -10,9 +10,9 @@
 #
 # ======================================================================================
 
-# Including this module globally enables some default warnings.
+# Including this module enables some default warnings at directory scope.
 
-include_guard (GLOBAL)
+include_guard (DIRECTORY)
 
 if (MSVC)
     add_compile_options (
@@ -42,44 +42,46 @@ if (MSVC)
     return ()
 endif ()
 
-add_compile_options (
-    # cmake-format: sortable
-    -pedantic
-    -pedantic-errors
-    -Wall
-    -Wcast-align
-    -Wconversion
-    -Werror=format-security
-    -Wextra
-    -Wformat
-    -Wformat=2
-    -Woverloaded-virtual
-    -Wimplicit-fallthrough
-    -Wpedantic
-    -Wreorder
-    -Wshadow
-    -Wsign-compare
-    -Wsign-conversion
-    -Wstrict-aliasing
-    -Wuninitialized
-    -Wunreachable-code
-    -Wunused-parameter
-    -Wnon-virtual-dtor
-    -Wzero-as-null-pointer-constant
-    -Wunused
-    -Wno-c++98-compat
-    -Wno-c++98-compat-pedantic
-    -Wno-c++20-compat
-    -Wno-padded
-    -Wno-poison-system-directories
-    -Wno-covered-switch-default
-    -Wno-unused-macros
-    -Wno-exit-time-destructors
-    -Wno-global-constructors
-    -Wno-attributes
-)
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+    add_compile_options (
+        # cmake-format: sortable
+        -pedantic
+        -pedantic-errors
+        -Wall
+        -Wcast-align
+        -Wconversion
+        -Werror=format-security
+        -Wextra
+        -Wformat
+        -Wformat=2
+        -Woverloaded-virtual
+        -Wimplicit-fallthrough
+        -Wpedantic
+        -Wreorder
+        -Wshadow
+        -Wsign-compare
+        -Wsign-conversion
+        -Wstrict-aliasing
+        -Wuninitialized
+        -Wunreachable-code
+        -Wunused-parameter
+        -Wnon-virtual-dtor
+        -Wzero-as-null-pointer-constant
+        -Wunused
+        -Wno-c++98-compat
+        -Wno-c++98-compat-pedantic
+        -Wno-c++20-compat
+        -Wno-padded
+        -Wno-poison-system-directories
+        -Wno-covered-switch-default
+        -Wno-unused-macros
+        -Wno-exit-time-destructors
+        -Wno-global-constructors
+        -Wno-attributes
+    )
+endif ()
 
-if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options (
         # cmake-format: sortable
         --extra-warnings
@@ -96,7 +98,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
         -Wunused-variable
         -Weverything
     )
-elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     add_compile_options (
         # cmake-format: sortable
         -Waggressive-loop-optimizations

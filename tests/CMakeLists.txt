@@ -12,10 +12,6 @@
 
 find_package (Python 3.10 COMPONENTS Interpreter)
 
-if (NOT TARGET Python::Interpreter)
-    message (VERBOSE "Python interpreter not found, not adding all test cases")
-endif ()
-
 function (check_python_modules_available outputVar)
     if (NOT TARGET Python::Interpreter)
         set ("${outputVar}" FALSE PARENT_SCOPE)

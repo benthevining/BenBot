@@ -28,8 +28,10 @@ set (CMAKE_CXX_STANDARD 23)
 set (CMAKE_C_STANDARD 23)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 
-include (FetchContent)
+# includes used throughout the various directories
 include (CPackComponent)
+include (FeatureSummary)
+include (FetchContent)
 
 cpack_add_component_group (
     ben_bot_all DISPLAY_NAME "BenBot" DESCRIPTION "All components of BenBot" EXPANDED BOLD_TITLE

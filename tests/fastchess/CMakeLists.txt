@@ -12,8 +12,9 @@
 
 find_program (FASTCHESS_PROGRAM NAMES fastchess fast-chess DOC "fastchess CLI executable")
 
+add_feature_info (benbot_sprt_testing FASTCHESS_PROGRAM "BenBot SPRT tests using fastchess program")
+
 if (NOT FASTCHESS_PROGRAM)
-    message (VERBOSE "fastchess not found, not creating SPRT targets")
     return ()
 endif ()
 

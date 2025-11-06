@@ -10,14 +10,11 @@
 #
 # ======================================================================================
 
-if (NOT TARGET Python::Interpreter)
-    return ()
-endif ()
-
 check_python_modules_available (deps_available chess.engine)
 
+add_feature_info (benbot_pos_solver_testing deps_available "BenBot position solver testing")
+
 if (NOT deps_available)
-    message (VERBOSE "python-chess module not found, not adding position solver tests")
     return ()
 endif ()
 

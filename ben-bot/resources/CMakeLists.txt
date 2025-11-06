@@ -14,8 +14,14 @@ option (BENBOT_ALWAYS_REBUILD_RESOURCES
         "If on, the resources target is rebuilt every time a build is invoked" OFF
 )
 
+mark_as_advanced (BENBOT_ALWAYS_REBUILD_RESOURCES)
+
 FetchContent_Declare (
-    cmrc SYSTEM GIT_REPOSITORY "https://github.com/vector-of-bool/cmrc.git" GIT_TAG origin/master
+    cmrc
+    SYSTEM
+    GIT_REPOSITORY "https://github.com/vector-of-bool/cmrc.git"
+    GIT_TAG origin/master
+    OVERRIDE_FIND_PACKAGE
 )
 
 FetchContent_MakeAvailable (cmrc)
@@ -76,7 +82,7 @@ if (BENBOT_ALWAYS_REBUILD_RESOURCES)
 endif ()
 
 # warning flags
-if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang|GNU")
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     set (not_gnu "$<NOT:$<CXX_COMPILER_ID:GNU>>")
     set (c_or_objc "$<COMPILE_LANGUAGE:C,OBJC>")
 
