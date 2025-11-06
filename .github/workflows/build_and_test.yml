@@ -74,18 +74,21 @@ jobs:
       DEPLOY_DIR: deploy
 
     steps:
+    - name: Install Linux dependencies
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libc++-dev libc++abi-dev
+
+    - name: Ensure CMake 4.0
+      uses: lukka/get-cmake@v4.1.2
+
     - name: Checkout code
       uses: actions/checkout@v5
 
     - name: Install Python dependencies
       run: cmake -P InstallPythonDeps.cmake
       working-directory: .github/scripts
-
-    - name: Install Linux dependencies
-      if: runner.os == 'Linux'
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libc++-dev libc++abi-dev
 
     - name: Configure CMake
       env:
