@@ -92,10 +92,10 @@
       "hidden": true,
       "name": "base",
       "warnings": {
-        "deprecated": false,
-        "dev": false,
+        "deprecated": true,
+        "dev": true,
         "systemVars": false,
-        "uninitialized": false,
+        "uninitialized": true,
         "unusedCli": false
       }
     },
