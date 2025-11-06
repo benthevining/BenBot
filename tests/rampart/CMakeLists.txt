@@ -32,11 +32,9 @@ FetchContent_Declare (
 
 FetchContent_MakeAvailable (nlohmann_json rampart)
 
-add_executable (rampart)
+add_executable (rampart main.cpp)
 
 target_link_libraries (rampart PRIVATE ben_bot::libchess nlohmann_json::nlohmann_json)
-
-target_sources (rampart PRIVATE main.cpp)
 
 add_feature_info (
     benbot_rampart_testing "TARGET Python::Interpreter" "BenBot rampart movegen testing"

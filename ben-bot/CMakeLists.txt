@@ -12,7 +12,11 @@
 
 add_subdirectory (resources)
 
-add_executable (ben_bot)
+file (GLOB benbot_sources LIST_DIRECTORIES false CONFIGURE_DEPENDS
+                                                 "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp"
+)
+
+add_executable (ben_bot ${benbot_sources})
 
 target_compile_features (ben_bot PRIVATE cxx_std_23)
 
@@ -26,14 +30,7 @@ file (GLOB_RECURSE benbot_headers LIST_DIRECTORIES false CONFIGURE_DEPENDS
                                                          "${CMAKE_CURRENT_LIST_DIR}/include/*.hpp"
 )
 
-file (GLOB benbot_sources LIST_DIRECTORIES false CONFIGURE_DEPENDS
-                                                 "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp"
-)
-
-target_sources (
-    ben_bot PRIVATE FILE_SET HEADERS BASE_DIRS include FILES ${benbot_headers}
-    PRIVATE ${benbot_sources}
-)
+target_sources (ben_bot PRIVATE FILE_SET HEADERS BASE_DIRS include FILES ${benbot_headers})
 
 source_group (TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${benbot_headers} ${benbot_sources})
 
