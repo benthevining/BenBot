@@ -458,10 +458,12 @@ namespace {
                 write_metadata_item(tag, pos->second, output);
 
         // write extra metadata tags not part of seven tag roster
-        for (const auto& [key, value] : metadata
-                                            | std::views::filter([](const auto& it) {
-                                                  return not std::ranges::contains(sevenTagRoster, it.first); // cppcheck-suppress internalAstError
-                                              })) {
+        auto otherTags = metadata
+                       | std::views::filter([](const auto& it) {
+                             return not std::ranges::contains(sevenTagRoster, it.first); // cppcheck-suppress internalAstError
+                         });
+
+        for (const auto& [key, value] : otherTags) {
             write_metadata_item(key, value, output);
         }
 

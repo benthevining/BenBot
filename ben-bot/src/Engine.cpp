@@ -22,7 +22,6 @@
 #include <libchess/uci/Printing.hpp>
 #include <libchess/util/Logger.hpp>
 #include <string>
-#include <utility>
 
 namespace ben_bot {
 

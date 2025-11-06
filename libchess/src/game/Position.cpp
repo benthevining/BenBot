@@ -53,7 +53,7 @@ namespace {
         ourPieces.our_move(move, position.sideToMove);
 
         if (position.is_en_passant(move)) {
-            const auto idx = board::get_en_passant_captured_square(
+            const auto idx = get_en_passant_captured_square(
                 position.enPassantTargetSquare.value(), isWhite)
                                  .index();
 
@@ -118,7 +118,7 @@ void Position::make_move(const Move move)
 
     const auto rightsChanges = update_castling_rights(*this, isWhite, move);
 
-    hash = zobrist::update(*this, move, newEPSquare, rightsChanges);
+    hash = update(*this, move, newEPSquare, rightsChanges);
 
     update_bitboards(*this, move);
 

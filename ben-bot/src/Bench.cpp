@@ -111,7 +111,7 @@ namespace {
 
             info.extraInformation = std::format("thread {}", threadNumber);
 
-            uci::printing::search_info(info);
+            search_info(info);
         }
     };
 
