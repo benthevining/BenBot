@@ -92,7 +92,7 @@ repos:
 
     # C++ formatting & linting
 - repo: https://github.com/pre-commit/mirrors-clang-format
-  rev: v21.1.2
+  rev: v21.1.5
   hooks:
   - id: clang-format
     exclude_types: [json]
@@ -117,7 +117,7 @@ repos:
     args: [--config-files, config/.cmake-format.json]
 
 - repo: https://github.com/python-jsonschema/check-jsonschema
-  rev: 0.34.1
+  rev: 0.35.0
   hooks:
   - id: check-github-workflows
   - id: check-jsonschema
@@ -127,7 +127,7 @@ repos:
 
     # Python formatting & linting
 - repo: https://github.com/asottile/pyupgrade
-  rev: v3.21.0
+  rev: v3.21.1
   hooks:
   - id: pyupgrade
 
@@ -137,7 +137,7 @@ repos:
   - id: reorder-python-imports
 
 - repo: https://github.com/psf/black-pre-commit-mirror
-  rev: 25.9.0
+  rev: 25.11.0
   hooks:
   - id: black
 
