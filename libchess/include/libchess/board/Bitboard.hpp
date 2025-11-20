@@ -50,7 +50,7 @@ struct Bitboard final {
     using Integer = std::uint64_t;
 
     /** Constructs an empty bitboard. */
-    constexpr Bitboard() noexcept = default;
+    consteval Bitboard() noexcept = default;
 
     /** Constructs a bitboard from an integer representation.
         @see to_int()
@@ -408,7 +408,7 @@ namespace detail {
         using iterator_category = std::forward_iterator_tag;
         using iterator_concept  = std::forward_iterator_tag;
 
-        constexpr BitboardIterator() = default;
+        consteval BitboardIterator() = default;
 
         explicit constexpr BitboardIterator(const Bitboard& bitboard)
             : value { bitboard.to_int() }

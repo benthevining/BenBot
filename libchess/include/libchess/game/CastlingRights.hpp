@@ -60,7 +60,7 @@ struct CastlingRights final {
     constexpr void rook_moved(bool isKingside) noexcept;
 
     /** Call this any time a move is made by this side to update the castling rights. */
-    constexpr void our_move(const Move& move) noexcept;
+    constexpr void our_move(Move move) noexcept;
 
     /** Call this any time the opponent makes a move to update the castling rights.
         An opponent's move can remove castling rights if they capture a rook.
@@ -68,7 +68,7 @@ struct CastlingRights final {
         @tparam Side The color that this castling rights object represents.
      */
     template <Color Side>
-    constexpr void their_move(const Move& move) noexcept;
+    constexpr void their_move(Move move) noexcept;
 
     /** Returns true if castling either direction is possible. */
     [[nodiscard]] constexpr auto either() const noexcept -> bool { return kingside or queenside; }
@@ -111,7 +111,7 @@ constexpr void CastlingRights::rook_moved(const bool isKingside) noexcept
     queenside = queenside and isKingside;
 }
 
-constexpr void CastlingRights::our_move(const Move& move) noexcept
+constexpr void CastlingRights::our_move(Move move) noexcept
 {
     switch (move.piece()) {
         case PieceType::King  : king_moved(); return;
@@ -125,7 +125,7 @@ constexpr void CastlingRights::our_move(const Move& move) noexcept
 }
 
 template <Color Side>
-constexpr void CastlingRights::their_move(const Move& move) noexcept
+constexpr void CastlingRights::their_move(Move move) noexcept
 {
     // we want to mark castling rights as lost when a rook is captured
     // we simply test if the move's to square is the rook's starting position,

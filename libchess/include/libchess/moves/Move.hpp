@@ -74,7 +74,7 @@ using MaybePieceType = std::optional<PieceType>;
  */
 struct Move final {
     /** Creates a null move. */
-    constexpr Move() = default;
+    consteval Move() = default;
 
     /** Creates a move. */
     constexpr Move(
