@@ -60,7 +60,10 @@ class [[nodiscard]] Engine final : public uci::EngineBase {
 
     auto is_searching() const noexcept -> bool override { return searcher.context.in_progress(); }
 
-    void set_debug(const bool shouldDebug) override { debugMode.store(shouldDebug); }
+    void set_debug(const bool shouldDebug) override
+    {
+        debugMode.store(shouldDebug, std::memory_order::relaxed);
+    }
 
     [[nodiscard]] auto get_options() -> std::span<uci::Option*> override { return options; }
 

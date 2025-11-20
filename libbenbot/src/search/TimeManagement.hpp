@@ -44,6 +44,8 @@ private:
     std::chrono::time_point<Clock> startTime { Clock::now() };
 };
 
+using std::memory_order;
+
 // this object is responsible for interrupting an ongoing search
 // monitors the search's duration, and also watches the exit flag
 struct Interrupter final {
@@ -58,7 +60,7 @@ struct Interrupter final {
         , infiniteMode { infinite }
     {
         // make sure exit flag is false when search starts
-        exitFlagToUse.store(false);
+        exitFlagToUse.store(false, memory_order::release);
     }
 
     [[nodiscard]] auto get_search_duration() const noexcept -> milliseconds { return timer.get_duration(); }
@@ -93,14 +95,14 @@ private:
         if (not anyIterationCompleted)
             return false;
 
-        if (exitFlag.load())
+        if (exitFlag.load(memory_order::acquire))
             return true;
 
         if (plyFromRoot >= MAX_PLY)
             return true;
 
         // don't exit the search when in ponder mode
-        if (infiniteMode or ponderFlag.load())
+        if (infiniteMode or ponderFlag.load(memory_order::acquire))
             return false;
 
         return searchTime

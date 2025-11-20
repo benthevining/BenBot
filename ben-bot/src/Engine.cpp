@@ -13,6 +13,7 @@
  */
 
 #include <algorithm>
+#include <atomic>
 #include <ben-bot/Engine.hpp>
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
@@ -39,7 +40,7 @@ void Engine::new_game(const bool firstCall)
     // initializing them in the constructor to avoid referencing the
     // `this` pointer in the constructor
     searcher.context.callbacks = search::Callbacks::make_uci_printer(
-        [this] { return debugMode.load(); });
+        [this] { return debugMode.load(std::memory_order::relaxed); });
 }
 
 void Engine::go(const uci::GoCommandOptions& opts)
