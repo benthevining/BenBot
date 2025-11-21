@@ -238,9 +238,8 @@ auto Position::is_draw_by_insufficient_material() const noexcept -> bool
     const bool whiteHasOnlyKing = std::cmp_equal(numWhiteKnights + numWhiteBishops, 0);
     const bool blackHasOnlyKing = std::cmp_equal(numBlackKnights + numBlackBishops, 0);
 
-    if (not(whiteHasOnlyKing or blackHasOnlyKing)) {
+    if (not(whiteHasOnlyKing or blackHasOnlyKing))
         return false;
-    }
 
     if (whiteHasOnlyKing and blackHasOnlyKing)
         return true;
