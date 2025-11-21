@@ -183,9 +183,7 @@ void Position::flip()
 
     whiteCastlingRights = std::exchange(blackCastlingRights, whiteCastlingRights);
 
-    enPassantTargetSquare = enPassantTargetSquare.transform([](const Square oldEPSquare) {
-        return square_vertical_flip(oldEPSquare);
-    });
+    enPassantTargetSquare = enPassantTargetSquare.transform(square_vertical_flip);
 
     refresh_zobrist();
 }

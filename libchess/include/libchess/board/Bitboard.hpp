@@ -461,8 +461,7 @@ constexpr auto Bitboard::indices() const noexcept
 constexpr auto Bitboard::squares() const noexcept
 {
     return indices()
-         | std::views::transform(
-             [](const BitboardIndex index) { return Square::from_index(index); });
+         | std::views::transform(Square::from_index);
 }
 
 constexpr auto Bitboard::subboards() const noexcept

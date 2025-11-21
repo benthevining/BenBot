@@ -110,10 +110,10 @@ namespace game {
         return generate_board_string<true>(
             [&position](const Square square) {
                 return position.whitePieces.get_piece_on(square)
-                    .transform([](const PieceType type) { return utf8_pieces::white::get(type); })
+                    .transform(utf8_pieces::white::get)
                     .or_else([&position, square] {
                         return position.blackPieces.get_piece_on(square)
-                            .transform([](const PieceType type) { return utf8_pieces::black::get(type); });
+                            .transform(utf8_pieces::black::get);
                     })
                     .value_or(string_view { " " });
             });
