@@ -50,7 +50,7 @@ struct Bitboard final {
     using Integer = std::uint64_t;
 
     /** Constructs an empty bitboard. */
-    consteval Bitboard() noexcept = default;
+    constexpr Bitboard() noexcept = default;
 
     /** Constructs a bitboard from an integer representation.
         @see to_int()
