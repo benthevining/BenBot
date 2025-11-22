@@ -16,6 +16,7 @@
 #include <ben-bot/CLI.hpp>
 #include <cstddef> // IWYU pragma: keep - for std::ptrdiff_t
 #include <iterator>
+#include <ranges>
 #include <span>
 #include <string>
 #include <string_view>

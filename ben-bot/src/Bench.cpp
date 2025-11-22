@@ -91,7 +91,7 @@ namespace {
 
         bool outputProgress { false };
 
-        SearchResult result {};
+        SearchResult result;
 
         // clang-format off
         search::Thread thread {
@@ -209,11 +209,7 @@ void Engine::run_bench(const string_view arguments) const
 
                   do_bench(fileContent, defaultDepth, debugMode.load());
               })
-              .transform_error([](const string_view error) {
-                  info_string(error);
-
-                  return std::monostate {};
-              });
+              .transform_error(info_string);
 }
 
 } // namespace ben_bot

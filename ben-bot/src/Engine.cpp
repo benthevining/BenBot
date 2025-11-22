@@ -75,10 +75,7 @@ void Engine::start_file_logger(const string_view path)
 
     [[maybe_unused]] const auto result
         = chess::util::start_file_logger(std::filesystem::path { path })
-              .transform_error([](const string_view error) {
-                  info_string(error);
-                  return std::monostate {};
-              });
+              .transform_error(info_string);
 }
 
 void Engine::make_null_move()
