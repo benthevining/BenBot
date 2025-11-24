@@ -52,10 +52,10 @@ jobs:
         sudo apt-get install -y libc++-dev libc++abi-dev
 
     - name: Ensure CMake 4.0
-      uses: lukka/get-cmake@v4.1.2
+      uses: lukka/get-cmake@v4.2.0
 
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Download fastchess release
       id: download_fastchess
@@ -116,7 +116,7 @@ jobs:
 
     - name: Checkout main
       if: ${{ inputs.use_main }}
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       with:
         ref: main
         path: tmp-main

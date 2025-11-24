@@ -81,10 +81,10 @@ jobs:
         sudo apt-get install -y libc++-dev libc++abi-dev
 
     - name: Ensure CMake 4.0
-      uses: lukka/get-cmake@v4.1.2
+      uses: lukka/get-cmake@v4.2.0
 
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Install Python dependencies
       run: cmake -P InstallPythonDeps.cmake
