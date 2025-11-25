@@ -53,7 +53,7 @@ struct KillerMoves final {
     {
         assert(plyFromRoot < search::MAX_PLY);
 
-        auto& list = lists[plyFromRoot];
+        auto& list = lists.at(plyFromRoot);
 
         if (not std::ranges::contains(list, move))
             list.emplace_back(move);
@@ -62,7 +62,7 @@ struct KillerMoves final {
     /** Returns the killer moves for the given ply. */
     [[nodiscard]] auto get(const size_t plyFromRoot) const noexcept -> std::span<const Move>
     {
-        return lists[plyFromRoot];
+        return lists.at(plyFromRoot);
     }
 
 private:

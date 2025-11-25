@@ -148,7 +148,7 @@ namespace {
 
             // king stranded in center without castling rights
             if (castlingRights.neither()
-                && (location.file == File::D or location.file == File::E))
+                and (location.file == File::D or location.file == File::E))
                 score += STRANDED_KING_PENALTY;
 
             // open/stranded king penalties matter less in endgame

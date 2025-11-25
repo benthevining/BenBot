@@ -114,10 +114,10 @@ Adjust the TranspositionTable::Cluster implementation appropriately.)");
     std::array<Entry, CLUSTER_SIZE> records {};
 
     // padding bytes
-    [[maybe_unused, no_unique_address]] std::array<
+    [[maybe_unused, no_unique_address, indeterminate]] std::array<
         std::byte,
         std::bit_ceil(RecordsSize) - RecordsSize> // round up to nearest power of 2
-        padding {};
+        padding;
 };
 
 TranspositionTable::TranspositionTable(TranspositionTable&& other) noexcept
@@ -218,8 +218,7 @@ void TranspositionTable::new_search() noexcept
 auto TranspositionTable::find_cluster(const Position::Hash key) const noexcept -> std::span<Entry>
 {
     return index_table(
-        chess::util::math::mul_hi64(
-            key, clusterCount))
+        chess::util::math::mul_hi64(key, clusterCount))
         .records;
 }
 

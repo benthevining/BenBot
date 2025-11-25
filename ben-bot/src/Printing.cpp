@@ -171,7 +171,7 @@ void Engine::print_current_position(const string_view arguments) const
 void Engine::print_compiler_info()
 {
     info_string(std::format(
-        "Compiled by {} version {} for {}",
+        "Compiled by {}, version {}, for {}",
         resources::get_compiler_name(),
         resources::get_compiler_version(),
         resources::get_system_name()));

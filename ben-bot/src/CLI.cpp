@@ -14,6 +14,7 @@
 
 #include <beman/inplace_vector/inplace_vector.hpp>
 #include <ben-bot/CLI.hpp>
+#include <cassert>
 #include <cstddef> // IWYU pragma: keep - for std::ptrdiff_t
 #include <iterator>
 #include <ranges>
@@ -45,6 +46,9 @@ auto Arguments::parse(
     const int argc, const char** argv)
     -> Arguments
 {
+    assert(argc > 0);
+    assert(argv != nullptr);
+
     static constexpr auto MAX_ARGS = 128uz;
 
     const beman::inplace_vector::inplace_vector<string_view, MAX_ARGS> argStorage {

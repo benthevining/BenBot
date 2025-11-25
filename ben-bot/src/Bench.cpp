@@ -132,7 +132,7 @@ namespace {
             searcherThreads.emplace_back(
                 std::make_unique<BenchSearcherThread>(
                     idx + 1uz, // display 1-based thread numbers
-                    epds[idx], defaultDepth, printProgressOutput));
+                    epds.at(idx), defaultDepth, printProgressOutput));
         }
 
         // wait for all threads to finish searching

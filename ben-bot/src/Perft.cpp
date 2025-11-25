@@ -67,6 +67,7 @@ void Engine::run_perft(const string_view arguments) const
 
     std::println("");
     print_root_nodes(result);
+
     std::println("");
     print_results(result);
 }

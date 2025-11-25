@@ -110,7 +110,7 @@ namespace impl {
             // were actually obtained.
 
             if (AdjustTokenPrivileges_f(hProcessToken, FALSE, &tp, sizeof(TOKEN_PRIVILEGES), &prevTp, &prevTpLen)
-                && GetLastError() == ERROR_SUCCESS) {
+                and GetLastError() == ERROR_SUCCESS) {
                 // round up size to full pages and allocate
                 const auto actualSize = (size + largePageSize - 1uz) & ~(largePageSize - 1uz);
 
