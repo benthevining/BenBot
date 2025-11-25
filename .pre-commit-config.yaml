@@ -92,7 +92,7 @@ repos:
 
     # C++ formatting & linting
 - repo: https://github.com/pre-commit/mirrors-clang-format
-  rev: v21.1.5
+  rev: v21.1.6
   hooks:
   - id: clang-format
     exclude_types: [json]
@@ -127,7 +127,7 @@ repos:
 
     # Python formatting & linting
 - repo: https://github.com/asottile/pyupgrade
-  rev: v3.21.1
+  rev: v3.21.2
   hooks:
   - id: pyupgrade
 
@@ -210,7 +210,7 @@ repos:
 
     # check editorconfig rules
 - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
-  rev: 3.4.1
+  rev: 3.5.0
   hooks:
   - id: editorconfig-checker
     args: [-config, config/.editorconfig-checker.json]
