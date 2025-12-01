@@ -210,7 +210,7 @@ repos:
 
     # check editorconfig rules
 - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
-  rev: 3.5.0
+  rev: 3.6.0
   hooks:
   - id: editorconfig-checker
     args: [-config, config/.editorconfig-checker.json]
