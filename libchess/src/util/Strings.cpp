@@ -72,7 +72,7 @@ auto find_matching_close_paren(const string_view input) -> std::expected<size_t,
     auto numCloseParens { 0uz };
 
     for (auto idx = 1uz; idx < input.size(); ++idx) {
-        switch (input[idx]) {
+        switch (input.at(idx)) {
             case '(': {
                 ++numOpenParens;
                 continue;
@@ -113,7 +113,6 @@ auto split_at_first_space(const string_view input) -> StringViewPair
 
 auto split_at_first_space_or_newline(const string_view input) -> StringViewPair
 {
-    // TODO: will \r\n sequences on Windows mess this up?
     const auto firstDelimIdx = std::min(
         input.find(' '),
         input.find('\n'));

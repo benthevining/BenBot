@@ -372,10 +372,10 @@ namespace {
 
         while (std::cmp_less(lineStart, text.size())) {
             if constexpr (SearchForBracket) {
-                if (text[lineStart] == '[')
+                if (text.at(lineStart) == '[')
                     return lineStart;
             } else {
-                if (text[lineStart] != '[')
+                if (text.at(lineStart) != '[')
                     return lineStart;
             }
 

@@ -92,8 +92,8 @@ namespace {
         return result;
     }
 
-    constexpr auto BISHOP_MASKS = calculate_bishop_masks();
-    constexpr auto ROOK_MASKS   = calculate_rook_masks();
+    inline constexpr auto BISHOP_MASKS = calculate_bishop_masks();
+    inline constexpr auto ROOK_MASKS   = calculate_rook_masks();
 
     // the next two functions calculate indices within the MagicMoves
     // array for the given piece type, square, and occupied squares
