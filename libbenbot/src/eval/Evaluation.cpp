@@ -20,7 +20,7 @@
 #include "eval/PieceSquareTables.hpp"
 #include "eval/Positional.hpp"
 #include <algorithm>
-#include <cmath>
+#include <cmath> // IWYU pragma: keep - for std::round
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Material.hpp>
 #include <libbenbot/eval/Score.hpp>

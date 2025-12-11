@@ -28,6 +28,7 @@ Checks: >
   llvm-namespace-comment,
   misc-*,
   -misc-no-recursion,
+  -misc-override-with-different-visibility,
   modernize-*,
   -modernize-use-trailing-return-type,
   performance-*,
