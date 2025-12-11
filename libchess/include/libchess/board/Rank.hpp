@@ -184,11 +184,11 @@ inline auto rank_from_char(const char character)
     }
 }
 
-constexpr auto rank_to_char(const Rank rank) noexcept -> char
+constexpr auto rank_to_char(const Rank rank) noexcept -> char // NOLINT(bugprone-exception-escape)
 {
     constexpr std::string_view ranks { "12345678" };
 
-    return ranks[std::to_underlying(rank)];
+    return ranks.at(std::to_underlying(rank));
 }
 
 } // namespace chess::board

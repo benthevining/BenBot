@@ -111,7 +111,7 @@ constexpr void CastlingRights::rook_moved(const bool isKingside) noexcept
     queenside = queenside and isKingside;
 }
 
-constexpr void CastlingRights::our_move(Move move) noexcept
+constexpr void CastlingRights::our_move(const Move move) noexcept
 {
     switch (move.piece()) {
         case PieceType::King  : king_moved(); return;
@@ -125,7 +125,7 @@ constexpr void CastlingRights::our_move(Move move) noexcept
 }
 
 template <Color Side>
-constexpr void CastlingRights::their_move(Move move) noexcept
+constexpr void CastlingRights::their_move(const Move move) noexcept
 {
     // we want to mark castling rights as lost when a rook is captured
     // we simply test if the move's to square is the rook's starting position,

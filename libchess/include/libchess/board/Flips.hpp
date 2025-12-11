@@ -65,9 +65,11 @@ constexpr auto horizontal(Bitboard board) noexcept -> Bitboard
 {
     using namespace literals; // NOLINT
 
+    // NOLINTBEGIN(readability-identifier-length)
     static constexpr auto k1 = 0x5555555555555555_bb;
     static constexpr auto k2 = 0x3333333333333333_bb;
     static constexpr auto k4 = 0x0f0f0f0f0f0f0f0f_bb;
+    // NOLINTEND(readability-identifier-length)
 
     board = ((board >> 1uz) & k1) | ((board & k1) << 1uz);
     board = ((board >> 2uz) & k2) | ((board & k2) << 2uz);

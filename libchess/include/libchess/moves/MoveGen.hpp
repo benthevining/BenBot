@@ -588,11 +588,13 @@ namespace detail {
     [[nodiscard, gnu::const]] constexpr auto get_castling(
         const Position& position, const Bitboard allOccupied)
     {
-        beman::inplace_vector::inplace_vector<Move, 2uz> moves;
+        using Moves = beman::inplace_vector::inplace_vector<Move, 2uz>;
 
         // castling out of check is not allowed
         if (position.is_check())
-            return moves;
+            return Moves {};
+
+        beman::inplace_vector::inplace_vector<Move, 2uz> moves;
 
         get_kingside_castling<Side>(position, allOccupied)
             .transform([&moves](const Move move) {

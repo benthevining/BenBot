@@ -37,7 +37,7 @@ using std::string;
  */
 struct [[nodiscard]] EPDPosition final {
     /** The position itself. */
-    Position position {};
+    Position position;
 
     /** This position's EPD operations.
         Values should not be quoted.

@@ -198,8 +198,8 @@ namespace detail {
 
     inline constexpr auto LOWEST_SIX_BITS_MASK = 63uz;
 
-    inline constexpr Integer START_SQUARE_OFFSET = UINT16_C(6uz);
-    inline constexpr Integer FLAGS_OFFSET        = UINT16_C(12uz);
+    inline constexpr Integer START_SQUARE_OFFSET = UINT16_C(6);
+    inline constexpr Integer FLAGS_OFFSET        = UINT16_C(12);
 
     inline constexpr auto PROMOTED_TYPE_OFFSET_WITHIN_FLAGS = 6uz;
 
