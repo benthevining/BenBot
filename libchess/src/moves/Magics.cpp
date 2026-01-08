@@ -45,8 +45,12 @@ namespace {
     {
         MaskArray result {};
 
-        for (const auto square : masks::ALL.subboards())
-            result.at(square.first()) = patterns::bishop(square) & masks::PERIMETER.inverse();
+        std::ranges::transform(
+            masks::ALL.subboards(),
+            result.data(),
+            [](const Bitboard square) {
+                return patterns::bishop(square) & masks::PERIMETER.inverse();
+            });
 
         return result;
     }

@@ -54,9 +54,7 @@ void Engine::go(const uci::GoCommandOptions& opts)
 void Engine::handle_custom_command(
     const string_view command, const string_view opts)
 {
-    if (const auto it = std::ranges::find_if(
-            customCommands,
-            [command](const CustomCommand& cmd) { return cmd.name == command; });
+    if (const auto it = std::ranges::find(customCommands, command, &CustomCommand::name);
         it != customCommands.end()) {
         it->action(opts);
         return;

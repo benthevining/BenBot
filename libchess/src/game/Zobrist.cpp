@@ -14,6 +14,7 @@
 
 #include "game/Zobrist.hpp"
 #include "game/ZobristKeys.hpp"
+#include <algorithm>
 #include <cstdint>
 #include <functional>
 #include <libchess/board/BitboardIndex.hpp>
@@ -111,10 +112,13 @@ auto calculate(const Position& pos) -> Hash
     if (pos.is_black_to_move())
         value ^= keys::BLACK_TO_MOVE;
 
-    for (const auto type : magic_enum::enum_values<PieceType>()) {
-        value = add_piece_positions<Color::White>(value, type, pos);
-        value = add_piece_positions<Color::Black>(value, type, pos);
-    }
+    value = std::ranges::fold_left(
+        magic_enum::enum_values<PieceType>(),
+        value,
+        [&pos](Hash prevValue, const PieceType type) {
+            prevValue = add_piece_positions<Color::White>(prevValue, type, pos);
+            return add_piece_positions<Color::Black>(prevValue, type, pos);
+        });
 
     if (pos.whiteCastlingRights.kingside)
         value ^= keys::WHITE_KINGSIDE_CASTLE;
