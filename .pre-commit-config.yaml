@@ -66,7 +66,7 @@ repos:
 
     # insert license header
 - repo: https://github.com/Lucas-C/pre-commit-hooks
-  rev: v1.5.5
+  rev: v1.5.6
   hooks:
       # we have to run this step once for each different comment style
   - id: insert-license
@@ -137,7 +137,7 @@ repos:
   - id: reorder-python-imports
 
 - repo: https://github.com/psf/black-pre-commit-mirror
-  rev: 25.12.0
+  rev: 26.1.0
   hooks:
   - id: black
 
