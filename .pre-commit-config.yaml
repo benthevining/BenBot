@@ -203,7 +203,7 @@ repos:
 
 # check for dead links in markdown
 - repo: https://github.com/AlexanderDokuchaev/md-dead-link-check
-  rev: "v1.2.0"
+  rev: "v1.3.0"
   hooks:
   - id: md-dead-link-check
     args: [--config, config/link-checker.toml]
