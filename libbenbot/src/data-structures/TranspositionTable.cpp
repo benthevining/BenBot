@@ -100,7 +100,11 @@ struct TranspositionTable::Entry final {
     }
 };
 
+#if defined(__cpp_lib_hardware_interference_size) and (__cpp_lib_hardware_interference_size >= 201703L)
 inline constexpr auto CACHE_LINE_SIZE = std::hardware_constructive_interference_size;
+#else
+inline constexpr auto CACHE_LINE_SIZE = 32uz;
+#endif
 
 struct alignas(CACHE_LINE_SIZE) TranspositionTable::Cluster final {
     static constexpr auto NumRecords = CACHE_LINE_SIZE / sizeof(Entry);
