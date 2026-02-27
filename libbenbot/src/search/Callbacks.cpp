@@ -44,6 +44,7 @@ auto Callbacks::make_uci_printer(
     };
 
     return {
+        .onSearchStart    = nullptr,
         .onSearchComplete = [printInfo](const Result& res) {
             printInfo(res);
             chess::uci::printing::best_move(res.best_move(), res.ponder_move()); },
@@ -234,6 +235,26 @@ namespace {
         return result;
     }
 
+    void print_table_header()
+    {
+        print_column_text<Alignment::Center>("Depth");
+
+        print_column_text<Alignment::Right>("Time");
+
+        print_column_text<Alignment::Right>("Nodes");
+
+        print_column_text<Alignment::Center>("NPS");
+
+        print_column_text<Alignment::Center>("Hashfull");
+
+        print_column_text<Alignment::Center>("Score");
+
+        std::println(
+            std::cout,
+            "{}",
+            "PV");
+    }
+
     void pretty_print(const Result& res)
     {
         // depth
@@ -257,7 +278,7 @@ namespace {
             format_hashfull(res.hashfull));
 
         // score
-        print_column_text<Alignment::Left>(
+        print_column_text<Alignment::Center>(
             format_score(res.score.to_libchess()));
 
         // PV
@@ -272,6 +293,9 @@ auto Callbacks::make_pretty_printer()
     -> Callbacks
 {
     return {
+        .onSearchStart = []([[maybe_unused]] const Options& options) {
+            print_table_header();
+        },
         .onSearchComplete = pretty_print,
         .onIteration      = pretty_print
     };

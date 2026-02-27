@@ -461,6 +461,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
     Interrupter interrupter { exitFlag, pondering, options.searchTime, options.infinite };
 
     transTable.new_search();
+    callbacks.search_start(options);
 
     // if the movesToSearch was empty, then we search all legal moves
     if (options.movesToSearch.empty()) {

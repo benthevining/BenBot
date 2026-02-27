@@ -96,6 +96,7 @@ namespace {
         // clang-format off
         search::Thread thread {
             search::Callbacks {
+                .onSearchStart    = nullptr,
                 .onSearchComplete = [this](const SearchResult& res) { print_info(res); result = res; },
                 .onIteration      = [this](const SearchResult& res) { print_info(res); }
             }

@@ -23,6 +23,7 @@
 
 namespace ben_bot::search {
 
+struct Options;
 struct Result;
 
 /** This struct encapsulates a set of functions that will be called to
@@ -36,6 +37,9 @@ struct Callbacks final {
     /** Function type that accepts a single Result argument. */
     using Callback = std::function<void(const Result&)>;
 
+    /** Function object that will be invoked when a new search is started. */
+    std::function<void(const Options&)> onSearchStart;
+
     /** Function object that will be invoked with results from a completed search. */
     Callback onSearchComplete;
 
@@ -43,6 +47,13 @@ struct Callbacks final {
         the iterative deepening loop.
      */
     Callback onIteration;
+
+    /** Can be safely called without checking if ``onSearchStart`` is null. */
+    void search_start(const Options& options) const
+    {
+        if (onSearchStart != nullptr)
+            onSearchStart(options);
+    }
 
     /** Can be safely called without checking if ``onSearchComplete`` is null. */
     void search_complete(const Result& result) const
