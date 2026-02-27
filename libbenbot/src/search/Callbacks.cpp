@@ -22,6 +22,7 @@
 #include <libchess/uci/Printing.hpp>
 #include <optional>
 #include <print>
+#include <ratio>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -47,10 +48,13 @@ auto Callbacks::make_uci_printer(
 namespace {
     // TODO: do column padding via std::format width specifiers?
 
+    enum class Alignment { Left,
+        Right };
+
+    template <Alignment Align>
     [[nodiscard]] auto get_column_text(
         const std::string_view text,
-        const size_t           totalColumnWidth,
-        const bool             leftAlign) -> std::string
+        const size_t           totalColumnWidth) -> std::string
     {
         assert(text.size() < totalColumnWidth);
 
@@ -58,7 +62,7 @@ namespace {
 
         std::string padded;
 
-        if (leftAlign) {
+        if constexpr (Align == Alignment::Left) {
             padded = trimmedInput;
 
             padded.resize(totalColumnWidth, ' ');
@@ -71,15 +75,15 @@ namespace {
         return padded;
     }
 
+    template <Alignment Align>
     void print_column_text(
         const std::string_view text,
-        const size_t           totalColumnWidth,
-        const bool             leftAlign = true)
+        const size_t           totalColumnWidth)
     {
-        std::print(std::cout,
+        std::print(
+            std::cout,
             "{}",
-            get_column_text(
-                text, totalColumnWidth, leftAlign));
+            get_column_text<Align>(text, totalColumnWidth));
     }
 
     template <typename Duration>
@@ -110,20 +114,50 @@ namespace {
             .value();
     }
 
+    template <typename Ratio, char Suffix>
+    [[nodiscard]] auto get_nodes_string(
+        const size_t nodes) -> std::optional<std::string>
+    {
+        if (nodes >= Ratio::num) {
+            const auto display = static_cast<float>(nodes) / static_cast<float>(Ratio::num);
+
+            return std::format(
+                "{:.2f}{}",
+                display, Suffix);
+        }
+
+        return std::nullopt;
+    }
+
+    [[nodiscard]] auto format_nodes(
+        const size_t nodes) -> std::string
+    {
+        return get_nodes_string<std::mega, 'M'>(nodes)
+            .or_else([nodes] { return get_nodes_string<std::kilo, 'k'>(nodes); })
+            .or_else([nodes] { return std::make_optional(std::format("{}", nodes)); })
+            .value();
+    }
+
     constexpr auto COL_DEPTH = 10uz;
     constexpr auto COL_TIME  = 10uz;
+    constexpr auto COL_NODES = 10uz;
 
     void pretty_print(const Result& res)
     {
         // depth
-        print_column_text(
+        print_column_text<Alignment::Left>(
             std::format("{}/{}", res.depth, res.qDepth),
             COL_DEPTH);
 
         // time
-        print_column_text(
+        print_column_text<Alignment::Right>(
             format_duration(res.duration),
-            COL_TIME, false);
+            COL_TIME);
+
+        // nodes
+        print_column_text<Alignment::Right>(
+            format_nodes(res.nodesSearched),
+            COL_NODES);
 
         // final newline
         std::print(std::cout, "\n");
