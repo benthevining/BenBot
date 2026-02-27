@@ -79,6 +79,11 @@ struct SearchInfo final {
                 The value should be negative if the engine is getting mated.
              */
             int plies { 0 };
+
+            /** Returns the number of full moves to mate.
+                The value is negative if the engine is getting mated.
+             */
+            [[nodiscard]] auto moves() const noexcept -> int;
         };
 
         /** The evaluation value. */
@@ -119,6 +124,9 @@ struct SearchInfo final {
         with the rest of the search information.
      */
     std::string extraInformation;
+
+    /** Returns the nodes-per-second for this search. */
+    [[nodiscard]] auto get_nps() const noexcept -> size_t;
 };
 
 /** Prints a UCI-formatted search info string to standard output.

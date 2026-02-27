@@ -14,7 +14,7 @@
 
 #include <cassert>
 #include <chrono>
-#include <cmath>
+#include <cmath> // IWYU pragma: keep - for std::abs()
 #include <format>
 #include <functional>
 #include <iostream>
@@ -161,18 +161,6 @@ namespace {
             .value();
     }
 
-    [[nodiscard, gnu::const]] auto get_nps(const Result& res) -> size_t
-    {
-        const auto seconds = static_cast<double>(res.duration.count()) * 0.001;
-
-        if (seconds <= 0.)
-            return 0uz;
-
-        const auto nps = static_cast<double>(res.nodesSearched) / seconds;
-
-        return static_cast<size_t>(std::round(nps));
-    }
-
     [[nodiscard]] auto format_nps(const size_t nps) -> string
     {
         return std::format(
@@ -185,14 +173,6 @@ namespace {
         return std::format(
             "{}%",
             permille / 10uz);
-    }
-
-    [[nodiscard, gnu::const]] auto plies_to_moves(int plies) noexcept -> int
-    {
-        if (std::cmp_greater(plies, 0))
-            ++plies;
-
-        return plies / 2;
     }
 
     using Score = chess::uci::printing::SearchInfo::Score;
@@ -210,7 +190,7 @@ namespace {
                 [](const Score::MateIn& mate) {
                     return std::format(
                         "#{}",
-                        std::abs(plies_to_moves(mate.plies)));
+                        std::abs(mate.moves()));
                 } },
             score.value);
     }
@@ -269,9 +249,11 @@ namespace {
         print_column_text<Alignment::Right>(
             format_nodes(res.nodesSearched));
 
+        const auto libchess = res.to_libchess(false);
+
         // nodes per second
         print_column_text<Alignment::Right>(
-            format_nps(get_nps(res)));
+            format_nps(libchess.get_nps()));
 
         // hashfull
         print_column_text<Alignment::Center>(
@@ -279,7 +261,7 @@ namespace {
 
         // score
         print_column_text<Alignment::Center>(
-            format_score(res.score.to_libchess()));
+            format_score(libchess.score));
 
         // PV
         std::println(

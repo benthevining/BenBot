@@ -71,15 +71,29 @@ void best_move(
     cout.flush();
 }
 
+auto SearchInfo::Score::MateIn::moves() const noexcept -> int
+{
+    return [ply = plies]() mutable {
+        if (std::cmp_greater(ply, 0))
+            ++ply;
+
+        return ply / 2;
+    }();
+}
+
+auto SearchInfo::get_nps() const noexcept -> size_t
+{
+    const auto seconds = static_cast<double>(time.count()) * 0.001;
+
+    if (seconds <= 0.)
+        return 0uz;
+
+    const auto nps = static_cast<double>(nodes) / seconds;
+
+    return static_cast<size_t>(std::round(nps));
+}
+
 namespace {
-    [[nodiscard, gnu::const]] auto plies_to_moves(int plies) noexcept -> int
-    {
-        if (std::cmp_greater(plies, 0))
-            ++plies;
-
-        return plies / 2;
-    }
-
     using Score = SearchInfo::Score;
 
     [[nodiscard]] auto base_score_string(const Score& score) -> string
@@ -87,7 +101,7 @@ namespace {
         return std::visit(
             util::Visitor {
                 [](const Score::Centipawns& centipawns) { return std::format("cp {}", centipawns.value); },
-                [](const Score::MateIn& mate) { return std::format("mate {}", plies_to_moves(mate.plies)); } },
+                [](const Score::MateIn& mate) { return std::format("mate {}", mate.moves()); } },
             score.value);
     }
 
@@ -122,18 +136,6 @@ namespace {
         return result;
     }
 
-    [[nodiscard, gnu::const]] auto get_nodes_per_second(const SearchInfo& info) -> size_t
-    {
-        const auto seconds = static_cast<double>(info.time.count()) * 0.001;
-
-        if (seconds <= 0.)
-            return 0uz;
-
-        const auto nps = static_cast<double>(info.nodes) / seconds;
-
-        return static_cast<size_t>(std::round(nps));
-    }
-
     [[nodiscard]] auto get_extra_info_string(const string_view info) -> string
     {
         if (info.empty())
@@ -150,7 +152,7 @@ void search_info(const SearchInfo& info)
         info.depth,
         score_string(info.score),
         info.time.count(), info.hashfull, info.nodes,
-        get_nodes_per_second(info),
+        info.get_nps(),
         info.selDepth, info.tbHits,
         pv_string(info.pv),
         get_extra_info_string(info.extraInformation));
