@@ -13,6 +13,7 @@
  */
 
 #include "moves/MagicData.hpp"
+#include <algorithm>
 #include <array>
 #include <libchess/board/BitboardIndex.hpp>
 #include <libchess/board/File.hpp>
