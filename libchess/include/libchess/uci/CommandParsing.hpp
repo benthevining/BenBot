@@ -81,7 +81,6 @@ using RegisterOptions = optional<RegisterNowOptions>;
     If this returns ``nullopt``, then the user sent a ``register later`` command.
 
     @ingroup uci
-    @relates RegisterOptions
  */
 [[nodiscard]] auto parse_register_options(string_view options) -> RegisterOptions;
 

@@ -239,7 +239,7 @@ namespace literals {
 
     /** Creates a bitboard from an integer literal value.
         @ingroup board
-        @relates Bitboard
+        @relates chess::board::Bitboard
      */
     [[nodiscard, gnu::const]] consteval auto operator""_bb(
         const unsigned long long value) noexcept // NOLINT(runtime/int)
