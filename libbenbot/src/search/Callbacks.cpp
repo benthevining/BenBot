@@ -20,11 +20,14 @@
 #include <iostream>
 #include <libbenbot/search/Callbacks.hpp>
 #include <libbenbot/search/Result.hpp>
+#include <libchess/moves/Move.hpp>
+#include <libchess/notation/UCI.hpp>
 #include <libchess/uci/Printing.hpp>
 #include <libchess/util/Variant.hpp>
 #include <optional>
 #include <print>
 #include <ratio>
+#include <span>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -211,6 +214,26 @@ namespace {
             score.value);
     }
 
+    [[nodiscard]] auto format_pv(
+        const std::span<const Move> pv) -> string
+    {
+        if (pv.empty()) {
+            // this is possible if we're checkmated
+            return { };
+        }
+
+        string result;
+
+        for (const auto move : pv) {
+            result.append(chess::notation::to_uci(move));
+            result.append(1uz, ' ');
+        }
+
+        result.pop_back(); // trim last space
+
+        return result;
+    }
+
     void pretty_print(const Result& res)
     {
         // depth
@@ -238,9 +261,10 @@ namespace {
             format_score(res.score.to_libchess()));
 
         // PV
-
-        // final newline
-        std::print(std::cout, "\n");
+        std::println(
+            std::cout,
+            "{}",
+            format_pv(res.pv));
     }
 } // namespace
 
