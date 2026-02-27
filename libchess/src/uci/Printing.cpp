@@ -21,6 +21,7 @@
 #include <libchess/util/Variant.hpp>
 #include <optional>
 #include <print>
+#include <span>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -102,7 +103,7 @@ namespace {
         return string;
     }
 
-    [[nodiscard]] auto pv_string(const moves::MoveList& pv) -> string
+    [[nodiscard]] auto pv_string(const std::span<const Move> pv) -> string
     {
         if (pv.empty()) {
             // this is possible if we're checkmated

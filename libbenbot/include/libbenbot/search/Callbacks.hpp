@@ -67,7 +67,7 @@ struct Callbacks final {
         should be included in the information output.
      */
     [[nodiscard]] static auto make_uci_printer(
-        std::function<bool()> isDebugMode)
+        std::function<bool()>&& isDebugMode)
         -> Callbacks;
 };
 
