@@ -15,6 +15,7 @@
 #include "eval/PieceSquareTables.hpp"
 #include "eval/PSTData.hpp"
 #include <cassert>
+#include <cmath> // IWYU pragma: keep - for std::round()
 #include <functional>
 #include <libchess/board/Flips.hpp>
 #include <libchess/board/Pieces.hpp>
