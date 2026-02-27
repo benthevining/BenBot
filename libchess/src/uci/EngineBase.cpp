@@ -165,13 +165,13 @@ void EngineBase::handle_setpos(const string_view arguments)
 
                   set_position(pos);
 
-                  return {};
+                  return { };
               })
               .transform_error([this](const string_view error) {
                   info_string(std::format("Error setting position: {}", error));
                   info_string(std::format("Retained previous position: {}", notation::to_fen(position)));
 
-                  return std::monostate {};
+                  return std::monostate { };
               });
 }
 
@@ -209,7 +209,7 @@ void EngineBase::handle_setoption(const string_view arguments)
         auto* option = *it;
 
         if (isNPos)
-            option->handle_setvalue({});
+            option->handle_setvalue({ });
         else
             option->handle_setvalue(trim(rest.substr(valueTokenIdx)));
     } else {

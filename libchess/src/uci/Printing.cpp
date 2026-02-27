@@ -44,7 +44,7 @@ std::monostate info_string(const string_view info)
 {
     println(cout, "info string {}", info);
 
-    return std::monostate {};
+    return std::monostate { };
 }
 
 namespace {
@@ -56,7 +56,7 @@ namespace {
             .transform([](const Move move) {
                 return std::format(" ponder {}", to_uci(move));
             })
-            .value_or(string {});
+            .value_or(string { });
     }
 } // namespace
 
@@ -106,7 +106,7 @@ namespace {
     {
         if (pv.empty()) {
             // this is possible if we're checkmated
-            return {};
+            return { };
         }
 
         string result { " pv " };
@@ -136,7 +136,7 @@ namespace {
     [[nodiscard]] auto get_extra_info_string(const string_view info) -> string
     {
         if (info.empty())
-            return {};
+            return { };
 
         return std::format(" string {}", info);
     }

@@ -44,7 +44,7 @@ auto load_file_as_string(
 
         using Iterator = std::istreambuf_iterator<char>;
 
-        return string { Iterator { input }, Iterator {} };
+        return string { Iterator { input }, Iterator { } };
     } catch (const std::exception& exception) {
         return std::unexpected { std::format(
             "Error while reading file at path '{}': {}",

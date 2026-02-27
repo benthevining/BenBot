@@ -161,13 +161,13 @@ namespace {
         const auto totalNodes = std::transform_reduce(
             results.begin(), results.end(),
             0uz,
-            std::plus {},
+            std::plus { },
             [](const SearchResult& result) { return result.nodesSearched; });
 
         const auto totalTime = std::transform_reduce(
             results.begin(), results.end(),
             milliseconds { 0 },
-            std::plus {},
+            std::plus { },
             [](const SearchResult& result) { return result.duration; });
 
         const auto seconds = static_cast<double>(totalTime.count()) * 0.001;

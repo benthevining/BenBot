@@ -133,7 +133,7 @@ auto Logger::start(const path& logFile) -> MaybeError
     logger.close_log_file();
 
     if (logFile.empty())
-        return {};
+        return { };
 
     logger.file.open(logFile, std::ios_base::out);
 
@@ -148,7 +148,7 @@ auto Logger::start(const path& logFile) -> MaybeError
     std::cin.rdbuf(&logger.in);
     std::cout.rdbuf(&logger.out);
 
-    return {};
+    return { };
 }
 
 void Logger::close_log_file()

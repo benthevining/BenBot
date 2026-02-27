@@ -68,7 +68,7 @@ auto from_uci(
         return std::unexpected { "Cannot parse UCI move from empty string" };
 
     if (text == UCI_NULL_MOVE)
-        return Move {};
+        return Move { };
 
     return Square::from_string(text.substr(0uz, 2uz))
         .and_then([&text, &position](const Square from) {

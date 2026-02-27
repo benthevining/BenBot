@@ -314,7 +314,7 @@ namespace detail {
                        })
                      | std::ranges::to<EPMoves>();
             })
-            .value_or(EPMoves {});
+            .value_or(EPMoves { });
     }
 
     template <Color Side, bool CapturesOnly>
@@ -592,20 +592,20 @@ namespace detail {
 
         // castling out of check is not allowed
         if (position.is_check())
-            return Moves {};
+            return Moves { };
 
         beman::inplace_vector::inplace_vector<Move, 2uz> moves;
 
         get_kingside_castling<Side>(position, allOccupied)
             .transform([&moves](const Move move) {
                 moves.emplace_back(move);
-                return std::monostate {};
+                return std::monostate { };
             });
 
         get_queenside_castling<Side>(position, allOccupied)
             .transform([&moves](const Move move) {
                 moves.emplace_back(move);
-                return std::monostate {};
+                return std::monostate { };
             });
 
         return moves;

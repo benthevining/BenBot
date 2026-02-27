@@ -132,7 +132,7 @@ namespace {
 
     [[nodiscard, gnu::cold]] auto to_utc_time(const std::time_t time) -> std::tm
     {
-        std::tm ret {};
+        std::tm ret { };
 
         // this is written this way to avoid using the thread-unsafe function gmtime()
         // gmtime_s() doesn't appear to be present on MacOS, and Windows's argument order

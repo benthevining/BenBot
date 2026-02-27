@@ -129,12 +129,12 @@ void write_en_passant_target_square(
             output.push_back(file_to_char(epSquare.file));
             output.push_back(rank_to_char(epSquare.rank));
 
-            return std::monostate {};
+            return std::monostate { };
         })
         .or_else([&output] {
             output.push_back('-');
 
-            return std::make_optional(std::monostate {});
+            return std::make_optional(std::monostate { });
         });
 }
 
@@ -219,7 +219,7 @@ auto parse_piece_positions(
     position.whitePieces.refresh_occupied();
     position.blackPieces.refresh_occupied();
 
-    return {};
+    return { };
 }
 
 auto parse_side_to_move(
@@ -238,7 +238,7 @@ auto parse_side_to_move(
 
     position.sideToMove = isBlack ? Color::Black : Color::White;
 
-    return {};
+    return { };
 }
 
 void parse_castling_rights(

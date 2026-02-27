@@ -81,7 +81,7 @@ auto from_epd(string_view epdString) -> PositionOrError
 
     EPDPosition pos {
         .position   = Position::empty(),
-        .operations = {}
+        .operations = { }
     };
 
     const auto [piecePositions, rest1] = split_at_first_space(epdString);

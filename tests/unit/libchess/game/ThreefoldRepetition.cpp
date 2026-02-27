@@ -23,7 +23,7 @@ using chess::notation::from_alg;
 
 TEST_CASE("Position - threefold repetitions", TAGS)
 {
-    chess::game::Position pos {};
+    chess::game::Position pos { };
 
     REQUIRE_FALSE(pos.is_threefold_repetition());
 
@@ -58,7 +58,7 @@ TEST_CASE("Position - threefold repetitions", TAGS)
 
 TEST_CASE("Threefold repetition from differing moves", TAGS)
 {
-    chess::game::Position pos {};
+    chess::game::Position pos { };
 
     pos.make_move(from_alg(pos, "Nf3").value());
     pos.make_move(from_alg(pos, "Nf6").value());

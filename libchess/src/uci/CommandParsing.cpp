@@ -50,7 +50,7 @@ auto parse_position_options(string_view options)
 
     options = trim(options);
 
-    Position position {};
+    Position position { };
 
     auto [secondWord, rest] = split_at_first_space(options);
 

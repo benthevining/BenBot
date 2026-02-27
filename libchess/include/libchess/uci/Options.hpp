@@ -251,14 +251,14 @@ struct StringOption final : Option {
     [[nodiscard]] auto get_value() const noexcept -> string_view
     {
         if (value == "<empty>")
-            return {};
+            return { };
 
         return value;
     }
 
     [[nodiscard]] auto get_value_variant() const -> Variant override { return get_value(); }
 
-    [[nodiscard]] auto get_default_value_variant() const -> Variant override { return string_view {}; }
+    [[nodiscard]] auto get_default_value_variant() const -> Variant override { return string_view { }; }
 
     [[nodiscard]] auto get_name() const noexcept -> string_view override { return optionName; }
 

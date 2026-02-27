@@ -86,7 +86,7 @@ namespace {
         }
 
     private:
-        std::array<Move, MAX_PLY> moves {};
+        std::array<Move, MAX_PLY> moves { };
 
         size_t length { 0uz };
     };
@@ -114,7 +114,7 @@ namespace {
         [[nodiscard]] auto alpha_beta() -> Score // NOLINT(readability-function-cognitive-complexity)
         {
             if (interrupter.should_abort(plyFromRoot))
-                return {};
+                return { };
 
             transTable.prefetch(position);
 
@@ -122,7 +122,7 @@ namespace {
             // because the table only contains static evaluations and doesn't consider game
             // history, so its stored evaluations can't detect threefold repetition draws
             if (position.is_threefold_repetition())
-                return {};
+                return { };
 
             if (const auto cutoff = bounds.mate_distance_pruning(plyFromRoot)) {
                 ++stats.mdpCutoffs;
@@ -143,7 +143,7 @@ namespace {
                                   .evalType    = EvalType::Exact,
                                   .bestMove    = std::nullopt });
 
-                return {};
+                return { };
             }
 
             const bool inCheck = position.is_check();
@@ -208,7 +208,7 @@ namespace {
                 ++stats.nodesSearched;
 
                 if (interrupter.was_aborted())
-                    return {};
+                    return { };
 
                 if (eval >= bounds.beta) {
                     transTable.store(
@@ -251,7 +251,7 @@ namespace {
         [[nodiscard]] auto quiescence() -> Score
         {
             if (interrupter.should_abort(plyFromRoot) or position.is_draw())
-                return {};
+                return { };
 
             stats.qDepth = std::max(stats.qDepth, plyFromRoot);
 
@@ -287,7 +287,7 @@ namespace {
                 ++stats.nodesSearched;
 
                 if (interrupter.was_aborted())
-                    return {};
+                    return { };
 
                 if (evaluation >= bounds.beta) {
                     ++stats.betaCutoffs;
@@ -366,7 +366,7 @@ namespace {
         killerMoves.clear();
 
         detail::order_moves_for_search(
-            options.position, options.movesToSearch, transTable, {});
+            options.position, options.movesToSearch, transTable, { });
 
         Stats    stats;
         Bounds   bounds;

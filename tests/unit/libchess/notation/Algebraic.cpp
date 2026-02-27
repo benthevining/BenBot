@@ -39,7 +39,7 @@ TEST_CASE("Algebraic notation - piece moves", TAGS)
 {
     SECTION("Knights")
     {
-        Position position {};
+        Position position { };
 
         {
             const auto move = from_alg(position, "Nc3").value();
@@ -405,7 +405,7 @@ TEST_CASE("Algebraic notation - pawn pushes", TAGS)
 {
     SECTION("Normal")
     {
-        const Position startingPosition {};
+        const Position startingPosition { };
 
         const auto move = from_alg(startingPosition, "e3").value();
 
@@ -457,7 +457,7 @@ TEST_CASE("Algebraic notation - pawn double pushes", TAGS)
 {
     SECTION("Normal")
     {
-        Position startingPosition {};
+        Position startingPosition { };
 
         const auto move = from_alg(startingPosition, "e4").value();
 

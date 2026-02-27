@@ -166,7 +166,7 @@ void write_integer(
     const std::integral auto value,
     std::string&             output)
 {
-    std::array<char, MaxLen + 1uz> buffer {};
+    std::array<char, MaxLen + 1uz> buffer { };
 
     const auto result = std::to_chars(
         buffer.data(),
@@ -174,7 +174,7 @@ void write_integer(
         value);
 
     // simply do nothing on failure
-    if (result.ec != std::errc {})
+    if (result.ec != std::errc { })
         return;
 
     output.append(

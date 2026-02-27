@@ -66,7 +66,7 @@ namespace {
         const auto newPos = after_move(position, move);
 
         if (not newPos.is_check())
-            return {};
+            return { };
 
         if (not moves::any_legal_moves(newPos))
             return "#"; // checkmate
@@ -80,7 +80,7 @@ namespace {
         const auto pieceMoves = get_possible_move_origins(position, move.to(), move.piece());
 
         if (std::cmp_less(pieceMoves.size(), 2))
-            return {};
+            return { };
 
         // Order of preference for disambiguation:
         // 1. file of departure if different

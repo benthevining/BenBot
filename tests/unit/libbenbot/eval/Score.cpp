@@ -21,7 +21,7 @@ using ben_bot::eval::Score;
 
 TEST_CASE("Score - is_mate()", TAGS)
 {
-    REQUIRE_FALSE(Score {}.is_mate());
+    REQUIRE_FALSE(Score { }.is_mate());
 
     static constexpr auto mate = Score::mate(0uz);
 
