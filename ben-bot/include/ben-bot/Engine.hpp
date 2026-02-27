@@ -87,7 +87,7 @@ class [[nodiscard]] Engine final : public uci::EngineBase {
 
     static void start_file_logger(string_view path);
 
-    static constexpr bool PRETTY_PRINT_DEFAULT = false;
+    static constexpr bool PRETTY_PRINT_DEFAULT = true;
 
     std::atomic_bool debugMode { false };
     std::atomic_bool prettyPrinting { PRETTY_PRINT_DEFAULT };
@@ -136,7 +136,7 @@ class [[nodiscard]] Engine final : public uci::EngineBase {
     uci::StringOption logFile {
         "Debug Log File", "<empty>",
         "If not empty, engine I/O will be mirrored to this file",
-        [](const string_view path) { start_file_logger(path); }
+        start_file_logger
     };
 
     uci::BoolOption prettyPrintMode {
