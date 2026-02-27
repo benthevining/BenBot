@@ -12,19 +12,6 @@
 
 add_subdirectory (resources)
 
-FetchContent_Declare (
-    termcolor
-    SYSTEM
-    GIT_REPOSITORY "https://github.com/ikalnytskyi/termcolor.git"
-    GIT_TAG v2.1.0
-    GIT_SHALLOW ON
-    SOURCE_SUBDIR foo # we need to disable adding termcolor as a subdirectory, because they list a
-                      # too-old cmake version
-    FIND_PACKAGE_ARGS 2.1.0
-)
-
-FetchContent_MakeAvailable (termcolor)
-
 add_executable (ben_bot)
 
 target_compile_features (ben_bot PRIVATE cxx_std_23)
@@ -32,8 +19,7 @@ target_compile_features (ben_bot PRIVATE cxx_std_23)
 target_link_libraries (ben_bot PRIVATE ben_bot::libbenbot ben_bot::resources)
 
 set_property (
-    SOURCE src/ColorPrinting.cpp APPEND PROPERTY INCLUDE_DIRECTORIES
-                                                 "${termcolor_SOURCE_DIR}/include"
+    SOURCE src/ColorPrinting.cpp APPEND PROPERTY INCLUDE_DIRECTORIES "${TERMCOLOR_INCLUDES}"
 )
 
 set_target_properties (

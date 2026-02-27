@@ -22,7 +22,7 @@
 #include <libchess/util/TextTable.hpp>
 #include <ranges>
 #include <string_view>
-#include <termcolor/termcolor.hpp> // this is the only TU that includes the termcolor library
+#include <termcolor/termcolor.hpp>
 
 namespace ben_bot {
 

@@ -16,6 +16,10 @@ target_compile_features (libbenbot PUBLIC cxx_std_23)
 
 target_link_libraries (libbenbot PUBLIC ben_bot::libchess)
 
+set_property (
+    SOURCE src/search/Callbacks.cpp APPEND PROPERTY INCLUDE_DIRECTORIES "${TERMCOLOR_INCLUDES}"
+)
+
 set_target_properties (
     libbenbot
     PROPERTIES CXX_STANDARD_REQUIRED ON

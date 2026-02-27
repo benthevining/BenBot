@@ -25,11 +25,11 @@
 #include <libchess/uci/Printing.hpp>
 #include <libchess/util/Variant.hpp>
 #include <optional>
-#include <print>
 #include <ratio>
 #include <span>
 #include <string>
 #include <string_view>
+#include <termcolor/termcolor.hpp>
 #include <utility>
 #include <variant>
 
@@ -102,10 +102,7 @@ namespace {
     void print_column_text(
         const std::string_view text)
     {
-        std::print(
-            std::cout,
-            "{}",
-            get_column_text<Align>(text));
+        std::cout << get_column_text<Align>(text);
     }
 
     template <typename Duration>
@@ -195,6 +192,52 @@ namespace {
             score.value);
     }
 
+    void print_score(
+        const Score& score)
+    {
+        enum class ScoreType {
+            Winning,
+            Losing,
+            Equal
+        };
+
+        const auto type = std::visit(
+            chess::util::Visitor {
+                [](const Score::Centipawns& value) {
+                    if (value.value == 0)
+                        return ScoreType::Equal;
+
+                    if (value.value > 0)
+                        return ScoreType::Winning;
+
+                    return ScoreType::Losing;
+                },
+                [](const Score::MateIn& mate) {
+                    if (mate.plies > 0)
+                        return ScoreType::Winning;
+
+                    return ScoreType::Losing;
+                } },
+            score.value);
+
+        switch (type) {
+            case ScoreType::Winning:
+                std::cout << termcolor::green;
+                break;
+            case ScoreType::Losing:
+                std::cout << termcolor::red;
+                break;
+            case ScoreType::Equal:
+                std::cout << termcolor::grey;
+                break;
+        }
+
+        print_column_text<Alignment::Center>(
+            format_score(score));
+
+        std::cout << termcolor::reset;
+    }
+
     [[nodiscard]] auto format_pv(
         const std::span<const Move> pv) -> string
     {
@@ -217,6 +260,8 @@ namespace {
 
     void print_table_header()
     {
+        std::cout << termcolor::bold;
+
         print_column_text<Alignment::Center>("Depth");
 
         print_column_text<Alignment::Right>("Time");
@@ -229,10 +274,8 @@ namespace {
 
         print_column_text<Alignment::Center>("Score");
 
-        std::println(
-            std::cout,
-            "{}",
-            "PV");
+        std::cout << "PV\n"
+                  << termcolor::reset;
     }
 
     void pretty_print(const Result& res)
@@ -260,14 +303,10 @@ namespace {
             format_hashfull(res.hashfull));
 
         // score
-        print_column_text<Alignment::Center>(
-            format_score(libchess.score));
+        print_score(libchess.score);
 
         // PV
-        std::println(
-            std::cout,
-            "{}",
-            format_pv(res.pv));
+        std::cout << format_pv(res.pv) << '\n';
     }
 } // namespace
 
