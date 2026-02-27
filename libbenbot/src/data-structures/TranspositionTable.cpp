@@ -103,6 +103,7 @@ struct TranspositionTable::Entry final {
 #if defined(__cpp_lib_hardware_interference_size) and (__cpp_lib_hardware_interference_size >= 201703L)
 inline constexpr auto CACHE_LINE_SIZE = std::hardware_constructive_interference_size;
 #else
+#    warning std::hardware_constructive_interference_size not available, using default value
 inline constexpr auto CACHE_LINE_SIZE = 32uz;
 #endif
 
