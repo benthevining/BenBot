@@ -14,6 +14,7 @@
 
 #include <cassert>
 #include <chrono>
+#include <cmath>
 #include <format>
 #include <functional>
 #include <iostream>
@@ -48,19 +49,23 @@ auto Callbacks::make_uci_printer(
 namespace {
     // TODO: do column padding via std::format width specifiers?
 
-    enum class Alignment { Left,
-        Right };
+    using std::string;
+
+    enum class Alignment {
+        Left,
+        Right
+    };
 
     template <Alignment Align>
     [[nodiscard]] auto get_column_text(
         const std::string_view text,
-        const size_t           totalColumnWidth) -> std::string
+        const size_t           totalColumnWidth) -> string
     {
         assert(text.size() < totalColumnWidth);
 
         const auto trimmedInput = text.substr(0uz, totalColumnWidth);
 
-        std::string padded;
+        string padded;
 
         if constexpr (Align == Alignment::Left) {
             padded = trimmedInput;
@@ -88,7 +93,7 @@ namespace {
 
     template <typename Duration>
     [[nodiscard]] auto get_duration_string(
-        const milliseconds duration) -> std::optional<std::string>
+        const milliseconds duration) -> std::optional<string>
     {
         static constexpr auto msPerUnit = duration_cast<milliseconds>(Duration { 1uz });
 
@@ -104,7 +109,7 @@ namespace {
     }
 
     [[nodiscard]] auto format_duration(
-        const milliseconds duration) -> std::string
+        const milliseconds duration) -> string
     {
         // NB. it should be quite rare that a search will run for 1 day or more...
         return get_duration_string<std::chrono::hours>(duration)
@@ -114,33 +119,54 @@ namespace {
             .value();
     }
 
-    template <typename Ratio, char Suffix>
+    template <typename Ratio, char Suffix, size_t Precision>
     [[nodiscard]] auto get_nodes_string(
-        const size_t nodes) -> std::optional<std::string>
+        const size_t nodes) -> std::optional<string>
     {
         if (nodes >= Ratio::num) {
             const auto display = static_cast<float>(nodes) / static_cast<float>(Ratio::num);
 
             return std::format(
-                "{:.2f}{}",
-                display, Suffix);
+                "{:.{}f}{}",
+                display, Precision, Suffix);
         }
 
         return std::nullopt;
     }
 
+    template <size_t Precision = 2uz>
     [[nodiscard]] auto format_nodes(
-        const size_t nodes) -> std::string
+        const size_t nodes) -> string
     {
-        return get_nodes_string<std::mega, 'M'>(nodes)
-            .or_else([nodes] { return get_nodes_string<std::kilo, 'k'>(nodes); })
+        return get_nodes_string<std::mega, 'M', Precision>(nodes)
+            .or_else([nodes] { return get_nodes_string<std::kilo, 'k', Precision>(nodes); })
             .or_else([nodes] { return std::make_optional(std::format("{}", nodes)); })
             .value();
+    }
+
+    [[nodiscard, gnu::const]] auto get_nps(const Result& res) -> size_t
+    {
+        const auto seconds = static_cast<double>(res.duration.count()) * 0.001;
+
+        if (seconds <= 0.)
+            return 0uz;
+
+        const auto nps = static_cast<double>(res.nodesSearched) / seconds;
+
+        return static_cast<size_t>(std::round(nps));
+    }
+
+    [[nodiscard]] auto format_nps(const size_t nps) -> string
+    {
+        return std::format(
+            "{}/s",
+            format_nodes<1uz>(nps));
     }
 
     constexpr auto COL_DEPTH = 10uz;
     constexpr auto COL_TIME  = 10uz;
     constexpr auto COL_NODES = 10uz;
+    constexpr auto COL_NPS   = 10uz;
 
     void pretty_print(const Result& res)
     {
@@ -158,6 +184,11 @@ namespace {
         print_column_text<Alignment::Right>(
             format_nodes(res.nodesSearched),
             COL_NODES);
+
+        // nodes per second
+        print_column_text<Alignment::Right>(
+            format_nps(get_nps(res)),
+            COL_NPS);
 
         // final newline
         std::print(std::cout, "\n");
