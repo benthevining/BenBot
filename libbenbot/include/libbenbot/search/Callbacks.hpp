@@ -56,8 +56,10 @@ struct Callbacks final {
     /** Can be safely called without checking if ``onIteration`` is null. */
     void iteration_complete(const Result& result) const
     {
-        if (onIteration != nullptr)
+        if (onIteration != nullptr) {
+            [[likely]];
             onIteration(result);
+        }
     }
 
     /** Creates a set of callbacks that print UCI-formatted information and bestmove
@@ -68,6 +70,14 @@ struct Callbacks final {
      */
     [[nodiscard]] static auto make_uci_printer(
         std::function<bool()>&& isDebugMode)
+        -> Callbacks;
+
+    /** Creates a set of callbacks that print search information in a human-readable
+        table-aligned format.
+
+        @note The output produced by these callbacks does not conform to the UCI protocol!
+     */
+    [[nodiscard]] static auto make_pretty_printer()
         -> Callbacks;
 };
 

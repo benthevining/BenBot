@@ -36,4 +36,17 @@ auto Callbacks::make_uci_printer(
     };
 }
 
+auto Callbacks::make_pretty_printer()
+    -> Callbacks
+{
+    return {
+        .onSearchComplete = [](const Result& res) {
+
+        },
+        .onIteration = [](const Result& res) {
+
+        }
+    };
+}
+
 } // namespace ben_bot::search

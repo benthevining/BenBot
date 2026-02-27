@@ -26,6 +26,7 @@
 
 namespace ben_bot {
 
+using std::memory_order_relaxed;
 using std::size_t;
 using uci::printing::info_string;
 
@@ -39,8 +40,30 @@ void Engine::new_game(const bool firstCall)
     // we use delayed initialization for these callbacks instead of
     // initializing them in the constructor to avoid referencing the
     // `this` pointer in the constructor
-    searcher.context.callbacks = search::Callbacks::make_uci_printer(
-        [this] { return debugMode.load(std::memory_order::relaxed); });
+    if (prettyPrinting.load()) {
+        searcher.context.callbacks = search::Callbacks::make_pretty_printer();
+    } else {
+        searcher.context.callbacks = search::Callbacks::make_uci_printer(
+            [this] noexcept { // cppcheck-suppress syntaxError
+                return debugMode.load(memory_order_relaxed);
+            });
+    }
+}
+
+void Engine::set_pretty_printing(const bool shouldPrettyPrint)
+{
+    // check if the requested printing mode was already active
+    if (prettyPrinting.exchange(shouldPrettyPrint, memory_order_relaxed) == shouldPrettyPrint)
+        return;
+
+    wait();
+
+    if (shouldPrettyPrint) {
+        searcher.context.callbacks = search::Callbacks::make_pretty_printer();
+    } else {
+        searcher.context.callbacks = search::Callbacks::make_uci_printer(
+            [this] noexcept { return debugMode.load(memory_order_relaxed); });
+    }
 }
 
 void Engine::go(const uci::GoCommandOptions& opts)
