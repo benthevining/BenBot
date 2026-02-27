@@ -56,23 +56,24 @@ namespace {
         Right
     };
 
+    constexpr auto COLUMN_WIDTH = 10uz;
+
     template <Alignment Align>
     [[nodiscard]] auto get_column_text(
-        const std::string_view text,
-        const size_t           totalColumnWidth) -> string
+        const std::string_view text) -> string
     {
-        assert(text.size() < totalColumnWidth);
+        assert(text.size() < COLUMN_WIDTH);
 
-        const auto trimmedInput = text.substr(0uz, totalColumnWidth);
+        const auto trimmedInput = text.substr(0uz, COLUMN_WIDTH);
 
         string padded;
 
         if constexpr (Align == Alignment::Left) {
             padded = trimmedInput;
 
-            padded.resize(totalColumnWidth, ' ');
+            padded.resize(COLUMN_WIDTH, ' ');
         } else {
-            padded.resize(totalColumnWidth - trimmedInput.size(), ' ');
+            padded.resize(COLUMN_WIDTH - trimmedInput.size(), ' ');
 
             padded.append(trimmedInput);
         }
@@ -82,13 +83,12 @@ namespace {
 
     template <Alignment Align>
     void print_column_text(
-        const std::string_view text,
-        const size_t           totalColumnWidth)
+        const std::string_view text)
     {
         std::print(
             std::cout,
             "{}",
-            get_column_text<Align>(text, totalColumnWidth));
+            get_column_text<Align>(text));
     }
 
     template <typename Duration>
@@ -160,35 +160,37 @@ namespace {
     {
         return std::format(
             "{}/s",
-            format_nodes<1uz>(nps));
+            format_nodes<1uz>(nps)); // use this function for its transformation of the value to a k/M representation
     }
 
-    constexpr auto COL_DEPTH = 10uz;
-    constexpr auto COL_TIME  = 10uz;
-    constexpr auto COL_NODES = 10uz;
-    constexpr auto COL_NPS   = 10uz;
+    [[nodiscard]] auto format_hashfull(const size_t permille) -> string
+    {
+        return std::format(
+            "{}%",
+            permille / 10uz);
+    }
 
     void pretty_print(const Result& res)
     {
         // depth
         print_column_text<Alignment::Left>(
-            std::format("{}/{}", res.depth, res.qDepth),
-            COL_DEPTH);
+            std::format("{}/{}", res.depth, res.qDepth));
 
         // time
         print_column_text<Alignment::Right>(
-            format_duration(res.duration),
-            COL_TIME);
+            format_duration(res.duration));
 
         // nodes
         print_column_text<Alignment::Right>(
-            format_nodes(res.nodesSearched),
-            COL_NODES);
+            format_nodes(res.nodesSearched));
 
         // nodes per second
         print_column_text<Alignment::Right>(
-            format_nps(get_nps(res)),
-            COL_NPS);
+            format_nps(get_nps(res)));
+
+        // hashfull
+        print_column_text<Alignment::Right>(
+            format_hashfull(res.hashfull));
 
         // final newline
         std::print(std::cout, "\n");
