@@ -21,12 +21,14 @@
 #include <libbenbot/search/Callbacks.hpp>
 #include <libbenbot/search/Result.hpp>
 #include <libchess/uci/Printing.hpp>
+#include <libchess/util/Variant.hpp>
 #include <optional>
 #include <print>
 #include <ratio>
 #include <string>
 #include <string_view>
 #include <utility>
+#include <variant>
 
 namespace ben_bot::search {
 
@@ -53,7 +55,8 @@ namespace {
 
     enum class Alignment {
         Left,
-        Right
+        Right,
+        Center
     };
 
     constexpr auto COLUMN_WIDTH = 10uz;
@@ -73,9 +76,19 @@ namespace {
 
             padded.resize(COLUMN_WIDTH, ' ');
         } else {
-            padded.resize(COLUMN_WIDTH - trimmedInput.size(), ' ');
+            auto padding = COLUMN_WIDTH - trimmedInput.size();
+
+            if constexpr (Align == Alignment::Center) {
+                padding /= 2uz;
+            }
+
+            padded.resize(padding, ' ');
 
             padded.append(trimmedInput);
+
+            if constexpr (Align == Alignment::Center) {
+                padded.append(COLUMN_WIDTH - padded.size(), ' ');
+            }
         }
 
         return padded;
@@ -170,10 +183,38 @@ namespace {
             permille / 10uz);
     }
 
+    [[nodiscard, gnu::const]] auto plies_to_moves(int plies) noexcept -> int
+    {
+        if (std::cmp_greater(plies, 0))
+            ++plies;
+
+        return plies / 2;
+    }
+
+    using Score = chess::uci::printing::SearchInfo::Score;
+
+    [[nodiscard]] auto format_score(
+        const Score& score) -> string
+    {
+        return std::visit(
+            chess::util::Visitor {
+                [](const Score::Centipawns& centipawns) {
+                    return std::format(
+                        "{:+}",
+                        centipawns.value);
+                },
+                [](const Score::MateIn& mate) {
+                    return std::format(
+                        "#{}",
+                        std::abs(plies_to_moves(mate.plies)));
+                } },
+            score.value);
+    }
+
     void pretty_print(const Result& res)
     {
         // depth
-        print_column_text<Alignment::Left>(
+        print_column_text<Alignment::Center>(
             std::format("{}/{}", res.depth, res.qDepth));
 
         // time
@@ -189,8 +230,14 @@ namespace {
             format_nps(get_nps(res)));
 
         // hashfull
-        print_column_text<Alignment::Right>(
+        print_column_text<Alignment::Center>(
             format_hashfull(res.hashfull));
+
+        // score
+        print_column_text<Alignment::Left>(
+            format_score(res.score.to_libchess()));
+
+        // PV
 
         // final newline
         std::print(std::cout, "\n");
