@@ -66,7 +66,7 @@ repos:
 
     # insert license header
 - repo: https://github.com/Lucas-C/pre-commit-hooks
-  rev: v1.5.5
+  rev: v1.5.6
   hooks:
       # we have to run this step once for each different comment style
   - id: insert-license
@@ -92,7 +92,7 @@ repos:
 
     # C++ formatting & linting
 - repo: https://github.com/pre-commit/mirrors-clang-format
-  rev: v21.1.2
+  rev: v22.1.0
   hooks:
   - id: clang-format
     exclude_types: [json]
@@ -117,7 +117,7 @@ repos:
     args: [--config-files, config/.cmake-format.json]
 
 - repo: https://github.com/python-jsonschema/check-jsonschema
-  rev: 0.34.1
+  rev: 0.36.2
   hooks:
   - id: check-github-workflows
   - id: check-jsonschema
@@ -127,7 +127,7 @@ repos:
 
     # Python formatting & linting
 - repo: https://github.com/asottile/pyupgrade
-  rev: v3.21.0
+  rev: v3.21.2
   hooks:
   - id: pyupgrade
 
@@ -137,7 +137,7 @@ repos:
   - id: reorder-python-imports
 
 - repo: https://github.com/psf/black-pre-commit-mirror
-  rev: 25.9.0
+  rev: 26.1.0
   hooks:
   - id: black
 
@@ -194,7 +194,7 @@ repos:
   - id: forbid-bidi-controls
 
 - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks.git
-  rev: v2.15.0
+  rev: v2.16.0
   hooks:
   - id: pretty-format-ini
     args: [--autofix]
@@ -203,14 +203,14 @@ repos:
 
 # check for dead links in markdown
 - repo: https://github.com/AlexanderDokuchaev/md-dead-link-check
-  rev: "v1.2.0"
+  rev: "v1.3.0"
   hooks:
   - id: md-dead-link-check
     args: [--config, config/link-checker.toml]
 
     # check editorconfig rules
 - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
-  rev: 3.4.1
+  rev: 3.6.0
   hooks:
   - id: editorconfig-checker
     args: [-config, config/.editorconfig-checker.json]
