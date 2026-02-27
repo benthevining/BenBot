@@ -12,6 +12,7 @@
  * ======================================================================================
  */
 
+#include <chrono>
 #include <cmath>
 #include <format>
 #include <iostream>
@@ -21,6 +22,7 @@
 #include <libchess/util/Variant.hpp>
 #include <optional>
 #include <print>
+#include <span>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -44,7 +46,7 @@ std::monostate info_string(const string_view info)
 {
     println(cout, "info string {}", info);
 
-    return std::monostate {};
+    return std::monostate { };
 }
 
 namespace {
@@ -56,7 +58,7 @@ namespace {
             .transform([](const Move move) {
                 return std::format(" ponder {}", to_uci(move));
             })
-            .value_or(string {});
+            .value_or(string { });
     }
 } // namespace
 
@@ -70,15 +72,31 @@ void best_move(
     cout.flush();
 }
 
+auto SearchInfo::Score::MateIn::moves() const noexcept -> int
+{
+    return [ply = plies]() mutable {
+        if (std::cmp_greater(ply, 0))
+            ++ply;
+
+        return ply / 2;
+    }();
+}
+
+auto SearchInfo::get_nps() const noexcept -> size_t
+{
+    using FractionalSeconds = std::chrono::duration<double, std::chrono::seconds::period>;
+
+    const auto seconds = duration_cast<FractionalSeconds>(time).count();
+
+    if (seconds <= 0.)
+        return 0uz;
+
+    const auto nps = static_cast<double>(nodes) / seconds;
+
+    return static_cast<size_t>(std::round(nps));
+}
+
 namespace {
-    [[nodiscard, gnu::const]] auto plies_to_moves(int plies) noexcept -> int
-    {
-        if (std::cmp_greater(plies, 0))
-            ++plies;
-
-        return plies / 2;
-    }
-
     using Score = SearchInfo::Score;
 
     [[nodiscard]] auto base_score_string(const Score& score) -> string
@@ -86,7 +104,7 @@ namespace {
         return std::visit(
             util::Visitor {
                 [](const Score::Centipawns& centipawns) { return std::format("cp {}", centipawns.value); },
-                [](const Score::MateIn& mate) { return std::format("mate {}", plies_to_moves(mate.plies)); } },
+                [](const Score::MateIn& mate) { return std::format("mate {}", mate.moves()); } },
             score.value);
     }
 
@@ -102,11 +120,11 @@ namespace {
         return string;
     }
 
-    [[nodiscard]] auto pv_string(const moves::MoveList& pv) -> string
+    [[nodiscard]] auto pv_string(const std::span<const Move> pv) -> string
     {
         if (pv.empty()) {
             // this is possible if we're checkmated
-            return {};
+            return { };
         }
 
         string result { " pv " };
@@ -121,22 +139,10 @@ namespace {
         return result;
     }
 
-    [[nodiscard, gnu::const]] auto get_nodes_per_second(const SearchInfo& info) -> size_t
-    {
-        const auto seconds = static_cast<double>(info.time.count()) * 0.001;
-
-        if (seconds <= 0.)
-            return 0uz;
-
-        const auto nps = static_cast<double>(info.nodes) / seconds;
-
-        return static_cast<size_t>(std::round(nps));
-    }
-
     [[nodiscard]] auto get_extra_info_string(const string_view info) -> string
     {
         if (info.empty())
-            return {};
+            return { };
 
         return std::format(" string {}", info);
     }
@@ -149,7 +155,7 @@ void search_info(const SearchInfo& info)
         info.depth,
         score_string(info.score),
         info.time.count(), info.hashfull, info.nodes,
-        get_nodes_per_second(info),
+        info.get_nps(),
         info.selDepth, info.tbHits,
         pv_string(info.pv),
         get_extra_info_string(info.extraInformation));

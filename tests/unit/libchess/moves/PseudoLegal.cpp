@@ -126,7 +126,7 @@ TEST_CASE("Pseudo-legal - pawn double pushes", TAGS)
         static constexpr auto starting = starting_masks::white::PAWNS;
 
         static constexpr auto allPushes = move_gen::pawn_double_pushes<Color::White>(
-            starting, {});
+            starting, { });
 
         STATIC_REQUIRE(allPushes == board_masks::ranks::FOUR);
 
@@ -153,7 +153,7 @@ TEST_CASE("Pseudo-legal - pawn double pushes", TAGS)
         static constexpr auto starting = starting_masks::black::PAWNS;
 
         static constexpr auto allPushes = move_gen::pawn_double_pushes<Color::Black>(
-            starting, {});
+            starting, { });
 
         STATIC_REQUIRE(allPushes == board_masks::ranks::FIVE);
 
@@ -357,7 +357,7 @@ TEST_CASE("Pseudo-legal - knights", TAGS)
     {
         static constexpr auto starting = Bitboard::from_square(Square { File::D, Rank::One });
 
-        static constexpr auto allMoves = move_gen::knight(starting, {});
+        static constexpr auto allMoves = move_gen::knight(starting, { });
 
         STATIC_REQUIRE(allMoves.count() == 4uz);
 
@@ -386,7 +386,7 @@ TEST_CASE("Pseudo-legal - knights", TAGS)
         starting.set(Square { File::E, Rank::Four });
         starting.set(Square { File::D, Rank::Four });
 
-        const auto allMoves = move_gen::knight(starting, {});
+        const auto allMoves = move_gen::knight(starting, { });
 
         REQUIRE(allMoves.count() == 16uz);
 

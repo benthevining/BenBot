@@ -426,10 +426,10 @@ private:
 
 inline auto Position::empty() -> Position
 {
-    Position pos {};
+    Position pos { };
 
-    pos.whitePieces = {};
-    pos.blackPieces = {};
+    pos.whitePieces = { };
+    pos.blackPieces = { };
 
     pos.refresh_zobrist();
 

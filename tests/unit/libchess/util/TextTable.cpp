@@ -13,76 +13,52 @@
  */
 
 #include <catch2/catch_test_macros.hpp>
-#include <libbenbot/eval/Score.hpp>
+#include <libchess/util/TextTable.hpp>
+#include <string>
+#include <string_view>
 
-inline constexpr auto TAGS { "[eval][Score]" };
+static constexpr auto TAGS { "[util][strings][TextTable]" };
 
-using ben_bot::eval::Score;
+using chess::util::strings::TextTable;
 
-TEST_CASE("Score - is_mate()", TAGS)
+namespace {
+[[nodiscard]] auto get_printed_string(const TextTable& table) -> std::string
 {
-    REQUIRE_FALSE(Score { }.is_mate());
+    std::string result;
 
-    static constexpr auto mate = Score::mate(0uz);
+    auto appendToString = [&result](const std::string_view toAdd) {
+        result.append(toAdd);
+    };
 
-    REQUIRE(mate.is_mate());
-    REQUIRE(-mate.is_mate());
+    table.print(
+        appendToString, appendToString, appendToString,
+        [&result] { result.append(1uz, '\n'); });
+
+    return result;
 }
+} // namespace
 
-TEST_CASE("Score - is_winning_mate()/is_losing_mate()", TAGS)
+TEST_CASE("TextTable - to_string() should give same result as print()", TAGS)
 {
-    static constexpr auto mate = Score::mate(1uz);
+    TextTable table;
 
-    REQUIRE(mate.is_mate());
-    STATIC_REQUIRE(mate.is_losing_mate());
+    table.append_column("Option")
+        .append_column("Type")
+        .append_column("Notes")
+        .append_column("Default");
 
-    static constexpr auto flipped = -mate;
+    table.new_row()
+        .append_column("Option 1")
+        .append_column("Integer")
+        .append_column("Comments")
+        .append_column("0");
 
-    REQUIRE(flipped.is_mate());
-    STATIC_REQUIRE(flipped.is_winning_mate());
-}
+    table.new_row()
+        .append_column("Option 2")
+        .append_column("String")
+        .append_column("More comments")
+        .append_column("foo");
 
-TEST_CASE("Score - ply_to_mate()", TAGS)
-{
-    for (auto ply = 0uz; ply <= 500uz; ++ply) {
-        const auto mate = Score::mate(ply);
-
-        REQUIRE(mate.is_mate());
-        REQUIRE(mate.ply_to_mate() == ply);
-
-        const auto flipped = -mate;
-
-        REQUIRE(flipped.is_mate());
-        REQUIRE(flipped.ply_to_mate() == ply);
-    }
-}
-
-TEST_CASE("Score - to/from TT", TAGS)
-{
-    using ben_bot::eval::MATE;
-
-    for (auto ply = 0uz; ply <= 500uz; ++ply) {
-        const auto mate = Score::mate(ply);
-
-        {
-            const auto ttVal = mate.to_tt();
-
-            REQUIRE(ttVal == -MATE);
-
-            const auto roundTripped = Score::from_tt(ttVal, ply);
-
-            REQUIRE(roundTripped == mate);
-        }
-        {
-            const auto flipped = -mate;
-
-            const auto ttVal = flipped.to_tt();
-
-            REQUIRE(ttVal == MATE);
-
-            const auto roundTripped = Score::from_tt(ttVal, ply);
-
-            REQUIRE(roundTripped == flipped);
-        }
-    }
+    REQUIRE(
+        get_printed_string(table) == table.to_string());
 }

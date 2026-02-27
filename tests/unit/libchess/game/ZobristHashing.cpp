@@ -27,7 +27,7 @@ using chess::notation::from_fen;
 
 TEST_CASE("Zobrist - starting position", TAGS)
 {
-    const chess::game::Position startPosition {};
+    const chess::game::Position startPosition { };
 
     const auto startPos = from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
                               .value();
@@ -40,7 +40,7 @@ TEST_CASE("Zobrist - reaching identical positions", TAGS)
     const auto position = from_fen("rnbqkbnr/ppp1pppp/8/3P4/8/8/PPPP1PPP/RNBQKBNR b KQkq - 0 2")
                               .value();
 
-    chess::game::Position pos {};
+    chess::game::Position pos { };
 
     pos.make_move(from_alg(pos, "e4").value());
     pos.make_move(from_alg(pos, "d5").value());
@@ -55,7 +55,7 @@ TEST_CASE("Zobrist - hash changes", TAGS)
 
     SECTION("From start pos")
     {
-        const chess::game::Position pos {};
+        const chess::game::Position pos { };
 
         const auto oldHash = pos.hash;
 
@@ -102,7 +102,7 @@ TEST_CASE("Zobrist - loading identical FENs", TAGS)
 
 TEST_CASE("Zobrist - repeated positions", TAGS)
 {
-    chess::game::Position pos {};
+    chess::game::Position pos { };
 
     const auto origHash = pos.hash;
 

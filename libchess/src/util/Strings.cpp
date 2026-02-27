@@ -103,7 +103,7 @@ auto split_at_first_space(const string_view input) -> StringViewPair
     const auto spaceIdx = input.find(' ');
 
     if (spaceIdx == string_view::npos)
-        return { input, {} };
+        return { input, { } };
 
     return {
         input.substr(0uz, spaceIdx),
@@ -118,7 +118,7 @@ auto split_at_first_space_or_newline(const string_view input) -> StringViewPair
         input.find('\n'));
 
     if (firstDelimIdx == string_view::npos)
-        return { input, {} };
+        return { input, { } };
 
     return {
         input.substr(0uz, firstDelimIdx),

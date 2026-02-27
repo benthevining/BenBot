@@ -68,7 +68,7 @@ struct KillerMoves final {
 private:
     using Killers = std::vector<Move>;
 
-    std::array<Killers, search::MAX_PLY + 1uz> lists {};
+    std::array<Killers, search::MAX_PLY + 1uz> lists { };
 };
 
 } // namespace ben_bot

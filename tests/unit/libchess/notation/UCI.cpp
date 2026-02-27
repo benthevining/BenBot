@@ -35,7 +35,7 @@ using chess::notation::to_uci;
 
 TEST_CASE("UCI notation - normal moves", TAGS)
 {
-    const chess::game::Position startingPosition {};
+    const chess::game::Position startingPosition { };
 
     SECTION("Pawn move")
     {
@@ -238,11 +238,11 @@ TEST_CASE("UCI notation - promotions", TAGS)
 
 TEST_CASE("UCI notation - null moves", TAGS)
 {
-    const chess::game::Position position {};
+    const chess::game::Position position { };
 
     const auto move = from_uci(position, "0000").value();
 
     REQUIRE(move.is_null());
 
-    REQUIRE(to_uci(chess::moves::Move {}) == "0000");
+    REQUIRE(to_uci(chess::moves::Move { }) == "0000");
 }

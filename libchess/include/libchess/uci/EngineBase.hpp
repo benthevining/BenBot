@@ -68,7 +68,7 @@ struct EngineBase {
     [[nodiscard]] virtual auto get_author() const -> string_view = 0;
 
     /** This must return the list of all options the engine supports. */
-    [[nodiscard]] virtual auto get_options() -> std::span<Option*> { return {}; }
+    [[nodiscard]] virtual auto get_options() -> std::span<Option*> { return { }; }
 
     /** This function will be called when the "isready" command is received,
         and may block while waiting for background tasks to complete. This

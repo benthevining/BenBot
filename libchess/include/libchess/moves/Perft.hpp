@@ -131,7 +131,7 @@ auto perft( // NOLINT(readability-function-cognitive-complexity)
             .checks            = 0uz,
             .checkmates        = 0uz,
             .stalemates        = 0uz,
-            .rootNodes         = {}
+            .rootNodes         = { }
         };
 
     PerftResult result;

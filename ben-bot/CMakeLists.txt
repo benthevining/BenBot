@@ -12,27 +12,32 @@
 
 add_subdirectory (resources)
 
-set (benbot_sources
-     # cmake-format: sortable
-     src/Bench.cpp src/CLI.cpp src/Engine.cpp src/main.cpp src/Perft.cpp src/Printing.cpp
-)
-
-add_executable (ben_bot ${benbot_sources})
+add_executable (ben_bot)
 
 target_compile_features (ben_bot PRIVATE cxx_std_23)
 
 target_link_libraries (ben_bot PRIVATE ben_bot::libbenbot ben_bot::resources)
 
+set_property (
+    SOURCE src/ColorPrinting.cpp APPEND PROPERTY INCLUDE_DIRECTORIES "${TERMCOLOR_INCLUDES}"
+)
+
 set_target_properties (
     ben_bot PROPERTIES CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF DEBUG_POSTFIX -d
 )
 
-set (benbot_headers
-     # cmake-format: sortable
-     include/ben-bot/CLI.hpp include/ben-bot/CustomCommand.hpp include/ben-bot/Engine.hpp
+file (GLOB_RECURSE benbot_headers LIST_DIRECTORIES false CONFIGURE_DEPENDS
+                                                         "${CMAKE_CURRENT_LIST_DIR}/include/*.hpp"
 )
 
-target_sources (ben_bot PRIVATE FILE_SET HEADERS BASE_DIRS include FILES ${benbot_headers})
+file (GLOB benbot_sources LIST_DIRECTORIES false CONFIGURE_DEPENDS
+                                                 "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp"
+)
+
+target_sources (
+    ben_bot PRIVATE FILE_SET HEADERS BASE_DIRS include FILES ${benbot_headers}
+    PRIVATE ${benbot_sources}
+)
 
 source_group (TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${benbot_headers} ${benbot_sources})
 
@@ -50,9 +55,9 @@ set (
         "Apple developer ID string, for example 'Developer ID Application: Your Name (2DO8NL92GO)'"
 )
 
-add_feature_info (
-    benbot_codesigning "CODESIGN_PROGRAM AND CODESIGN_ID" "Signing of BenBot binaries"
-)
+include (FeatureSummary)
+
+add_feature_info (codesigning "CODESIGN_PROGRAM AND CODESIGN_ID" "Signing of BenBot binaries")
 
 if (CODESIGN_PROGRAM AND CODESIGN_ID)
     add_custom_command (

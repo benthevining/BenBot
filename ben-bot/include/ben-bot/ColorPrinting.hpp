@@ -12,77 +12,44 @@
  * ======================================================================================
  */
 
-#include <catch2/catch_test_macros.hpp>
-#include <libbenbot/eval/Score.hpp>
+/** @file
+    This file provides functions for colored printing.
 
-inline constexpr auto TAGS { "[eval][Score]" };
+    @ingroup benbot
+ */
 
-using ben_bot::eval::Score;
+#pragma once
 
-TEST_CASE("Score - is_mate()", TAGS)
-{
-    REQUIRE_FALSE(Score { }.is_mate());
+#include <string_view>
 
-    static constexpr auto mate = Score::mate(0uz);
+namespace chess::util::strings {
+struct TextTable;
+} // namespace chess::util::strings
 
-    REQUIRE(mate.is_mate());
-    REQUIRE(-mate.is_mate());
-}
+namespace chess::game {
+struct Position;
+} // namespace chess::game
 
-TEST_CASE("Score - is_winning_mate()/is_losing_mate()", TAGS)
-{
-    static constexpr auto mate = Score::mate(1uz);
+namespace ben_bot {
 
-    REQUIRE(mate.is_mate());
-    STATIC_REQUIRE(mate.is_losing_mate());
+using chess::game::Position;
+using std::string_view;
 
-    static constexpr auto flipped = -mate;
+/** @ingroup benbot
+    @{
+ */
 
-    REQUIRE(flipped.is_mate());
-    STATIC_REQUIRE(flipped.is_winning_mate());
-}
+/** Prints the given table with bold headings, faint outlines,
+    and regular content cells.
+ */
+void print_colored_table(const chess::util::strings::TextTable& table);
 
-TEST_CASE("Score - ply_to_mate()", TAGS)
-{
-    for (auto ply = 0uz; ply <= 500uz; ++ply) {
-        const auto mate = Score::mate(ply);
+/** Prints the given position with faint file/rank labels. */
+void print_colored_board(const Position& pos, bool utf8);
 
-        REQUIRE(mate.is_mate());
-        REQUIRE(mate.ply_to_mate() == ply);
+/** Prints the given label faintly, and the info as regular text. */
+void print_labeled_info(string_view label, string_view info);
 
-        const auto flipped = -mate;
+/** @} */
 
-        REQUIRE(flipped.is_mate());
-        REQUIRE(flipped.ply_to_mate() == ply);
-    }
-}
-
-TEST_CASE("Score - to/from TT", TAGS)
-{
-    using ben_bot::eval::MATE;
-
-    for (auto ply = 0uz; ply <= 500uz; ++ply) {
-        const auto mate = Score::mate(ply);
-
-        {
-            const auto ttVal = mate.to_tt();
-
-            REQUIRE(ttVal == -MATE);
-
-            const auto roundTripped = Score::from_tt(ttVal, ply);
-
-            REQUIRE(roundTripped == mate);
-        }
-        {
-            const auto flipped = -mate;
-
-            const auto ttVal = flipped.to_tt();
-
-            REQUIRE(ttVal == MATE);
-
-            const auto roundTripped = Score::from_tt(ttVal, ply);
-
-            REQUIRE(roundTripped == flipped);
-        }
-    }
-}
+} // namespace ben_bot

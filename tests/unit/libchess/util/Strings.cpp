@@ -24,7 +24,7 @@ TEST_CASE("Strings - trim()", TAGS)
 {
     using chess::util::strings::trim;
 
-    REQUIRE(trim({}).empty());
+    REQUIRE(trim({ }).empty());
     REQUIRE(trim(" ").empty());
     REQUIRE(trim("\n").empty());
 
@@ -44,7 +44,7 @@ TEST_CASE("Strings - split_at_first_space()", TAGS)
 
     SECTION("Empty string")
     {
-        const auto [before, after] = split_at_first_space({});
+        const auto [before, after] = split_at_first_space({ });
 
         REQUIRE(before.empty());
         REQUIRE(after.empty());
@@ -89,7 +89,7 @@ TEST_CASE("Strings - split_at_first_space_or_newline()", TAGS)
 
     SECTION("Empty string")
     {
-        const auto [before, after] = split_at_first_space_or_newline({});
+        const auto [before, after] = split_at_first_space_or_newline({ });
 
         REQUIRE(before.empty());
         REQUIRE(after.empty());
@@ -173,7 +173,7 @@ TEST_CASE("Strings - lines_view()", TAGS)
              | std::ranges::to<std::vector>();
     };
 
-    REQUIRE(lines_vector({}).empty());
+    REQUIRE(lines_vector({ }).empty());
 
     SECTION("Single line")
     {
@@ -201,7 +201,7 @@ TEST_CASE("Strings - words_view()", TAGS)
              | std::ranges::to<std::vector>();
     };
 
-    REQUIRE(words_vector({}).empty());
+    REQUIRE(words_vector({ }).empty());
 
     SECTION("Single word")
     {

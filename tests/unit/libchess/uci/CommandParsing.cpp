@@ -33,7 +33,7 @@ TEST_CASE("UCI parsing - position", TAGS)
 
     SECTION("From start position")
     {
-        const Position startPos {};
+        const Position startPos { };
 
         REQUIRE(parse_position_options("  startpos  \n") == startPos);
 
@@ -59,7 +59,7 @@ TEST_CASE("UCI parsing - go", TAGS)
 {
     using chess::uci::parse_go_options;
 
-    const Position startPos {};
+    const Position startPos { };
 
     SECTION("No arguments")
     {

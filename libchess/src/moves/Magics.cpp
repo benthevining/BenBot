@@ -43,7 +43,7 @@ namespace {
 
     [[nodiscard]] consteval auto calculate_bishop_masks() -> MaskArray
     {
-        MaskArray result {};
+        MaskArray result { };
 
         std::ranges::transform(
             masks::ALL.subboards(),
@@ -60,7 +60,7 @@ namespace {
         using board::File;
         using board::Rank;
 
-        MaskArray result {};
+        MaskArray result { };
 
         for (const auto square : masks::ALL.squares()) {
             auto& value = result.at(square.index());
@@ -153,7 +153,7 @@ namespace {
 
                     value = pseudo_legal::bishop(
                         Bitboard::from_square(square),
-                        occupied.inverse(), {});
+                        occupied.inverse(), { });
 
                     occupied = permute(BISHOP_MASKS.at(i), occupied);
                 } while (occupied.any());
@@ -168,7 +168,7 @@ namespace {
 
                     value = pseudo_legal::rook(
                         Bitboard::from_square(square),
-                        occupied.inverse(), {});
+                        occupied.inverse(), { });
 
                     occupied = permute(ROOK_MASKS.at(i), occupied);
                 } while (occupied.any());

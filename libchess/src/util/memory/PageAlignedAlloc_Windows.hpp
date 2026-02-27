@@ -86,19 +86,19 @@ namespace impl {
 
         // We need SeLockMemoryPrivilege, so try to enable it for the process
 
-        HANDLE hProcessToken {};
+        HANDLE hProcessToken { };
 
         if (! OpenProcessToken_f(
                 GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hProcessToken)) {
             return nullptr;
         }
 
-        LUID  luid {};
+        LUID  luid { };
         void* mem { nullptr };
 
         if (LookupPrivilegeValueA_f(nullptr, "SeLockMemoryPrivilege", &luid)) {
-            TOKEN_PRIVILEGES tp {}; // NOLINT(readability-identifier-length)
-            TOKEN_PRIVILEGES prevTp {};
+            TOKEN_PRIVILEGES tp { }; // NOLINT(readability-identifier-length)
+            TOKEN_PRIVILEGES prevTp { };
             DWORD            prevTpLen = 0;
 
             tp.PrivilegeCount           = 1;

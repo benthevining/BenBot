@@ -138,7 +138,7 @@ namespace {
             if (not output.empty())
                 output.back().comment = trim(pgnText.substr(1uz));
 
-            return {};
+            return { };
         }
 
         if (not output.empty())
@@ -210,7 +210,7 @@ namespace {
             pgnText = trim(pgnText);
 
             if (pgnText.empty())
-                return {};
+                return { };
 
             switch (pgnText.front()) {
                 case '{': {
@@ -348,7 +348,7 @@ auto from_pgn(const string_view pgnText) -> GameOrError
         .and_then([&game](const string_view afterMeta) -> GameOrError {
             if (const auto posStr = game.metadata.find("FEN");
                 posStr != game.metadata.end()) {
-                game.startingPosition = from_fen(posStr->second).value_or(Position {});
+                game.startingPosition = from_fen(posStr->second).value_or(Position { });
             }
 
             return parse_move_list(afterMeta, game.startingPosition, game.moves)
@@ -467,7 +467,7 @@ namespace {
             write_metadata_item(key, value, output);
         }
 
-        static const Position startPos {};
+        static const Position startPos { };
 
         if (startingPosition != startPos) {
             if (not metadata.contains("FEN"s)) {
@@ -559,7 +559,7 @@ namespace {
                 default: std::unreachable();
             }
 
-            return std::monostate {};
+            return std::monostate { };
         });
     }
 

@@ -81,13 +81,20 @@ class [[nodiscard]] Engine final : public uci::EngineBase {
     void print_options(string_view args) const;
     void print_current_position(string_view arguments) const;
 
+    void set_pretty_printing(bool shouldPrettyPrint);
+
     static void print_compiler_info();
 
     static void start_file_logger(string_view path);
 
+    static constexpr bool PRETTY_PRINT_DEFAULT = false;
+
     std::atomic_bool debugMode { false };
+    std::atomic_bool prettyPrinting { PRETTY_PRINT_DEFAULT };
 
     search::Thread searcher;
+
+    /* ----- UCI options ----- */
 
     uci::IntOption ttSize {
         "Hash",
@@ -129,10 +136,21 @@ class [[nodiscard]] Engine final : public uci::EngineBase {
     uci::StringOption logFile {
         "Debug Log File", "<empty>",
         "If not empty, engine I/O will be mirrored to this file",
-        [](const string_view path) { start_file_logger(path); }
+        start_file_logger
     };
 
-    std::array<uci::Option*, 6uz> options { &ttSize, &clearTT, &ponder, &threads, &moveOverhead, &logFile };
+    uci::BoolOption prettyPrintMode {
+        "Pretty Print",
+        PRETTY_PRINT_DEFAULT,
+        "When on, search output is pretty-printed instead of printed in UCI format",
+        [this](const bool usePretty) { set_pretty_printing(usePretty); }
+    };
+
+    std::array<uci::Option*, 7uz> options {
+        &ttSize, &clearTT, &ponder, &threads, &moveOverhead, &logFile, &prettyPrintMode
+    };
+
+    /* ----- Custom commands ----- */
 
     // clang-format off
     std::array<CustomCommand, 8uz> customCommands {

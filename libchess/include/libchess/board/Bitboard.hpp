@@ -453,7 +453,7 @@ constexpr auto Bitboard::indices() const noexcept
 {
     return std::ranges::subrange {
         detail::BitboardIterator { *this },
-        detail::BitboardIterator {},
+        detail::BitboardIterator { },
         count()
     };
 }

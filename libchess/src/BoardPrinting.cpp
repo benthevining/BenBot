@@ -53,7 +53,7 @@ namespace {
     // and must return the text to go inside that square, or
     // a space if it's empty
     template <bool IncludeLabels, SquarePrinter Func>
-    [[nodiscard, gnu::cold]] auto generate_board_string(Func getSquareText) -> string
+    [[nodiscard]] auto generate_board_string(Func getSquareText) -> string
     {
         static constexpr bool FuncReturnsChar = std::is_same_v<
             std::invoke_result_t<Func, Square>,

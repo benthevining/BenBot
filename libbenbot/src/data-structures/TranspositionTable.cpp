@@ -96,7 +96,7 @@ struct TranspositionTable::Entry final {
         generation = gen;
         eval       = static_cast<std::int16_t>(data.eval);
         evalType   = data.evalType;
-        move       = data.bestMove.value_or(Move {});
+        move       = data.bestMove.value_or(Move { });
     }
 };
 
@@ -105,7 +105,7 @@ inline constexpr auto CACHE_LINE_SIZE = std::hardware_constructive_interference_
 struct alignas(CACHE_LINE_SIZE) TranspositionTable::Cluster final {
     static constexpr auto NumRecords = CACHE_LINE_SIZE / sizeof(Entry);
 
-    std::array<Entry, NumRecords> records {};
+    std::array<Entry, NumRecords> records { };
 };
 
 TranspositionTable::TranspositionTable(TranspositionTable&& other) noexcept
@@ -162,7 +162,7 @@ void TranspositionTable::resize(const size_t sizeMB)
 
     if (table == nullptr) {
         clusterCount = 0uz;
-        throw std::bad_alloc {};
+        throw std::bad_alloc { };
     }
 
     std::uninitialized_default_construct_n(table, clusterCount);
@@ -171,7 +171,7 @@ void TranspositionTable::resize(const size_t sizeMB)
 void TranspositionTable::clear()
 {
     for (auto i = 0uz; i < clusterCount; ++i)
-        std::ranges::fill(index_table(i).records, Entry {});
+        std::ranges::fill(index_table(i).records, Entry { });
 }
 
 void TranspositionTable::deallocate()
@@ -193,7 +193,7 @@ auto TranspositionTable::hashfull() const -> size_t
     const auto count = std::transform_reduce(
         indices.begin(), indices.end(),
         0uz,
-        std::plus {},
+        std::plus { },
         [this](const size_t idx) {
             return static_cast<size_t>(std::ranges::count_if(
                 index_table(idx).records,

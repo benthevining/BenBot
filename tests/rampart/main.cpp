@@ -102,7 +102,7 @@ try {
               })
               .transform_error([](const std::string_view error) {
                   std::println(std::cerr, "Error: {}", error);
-                  return std::monostate {};
+                  return std::monostate { };
               });
 
     return EXIT_SUCCESS;

@@ -25,7 +25,7 @@ namespace {
         const Result& res, const bool includeDebugInfo) -> std::string
     {
         if (not includeDebugInfo)
-            return {};
+            return { };
 
         if (res.nodesSearched == 0uz) {
             return std::format(

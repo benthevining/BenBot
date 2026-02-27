@@ -36,7 +36,7 @@ using chess::notation::from_fen;
 
 TEST_CASE("Position - starting", TAGS)
 {
-    const Position pos {};
+    const Position pos { };
 
     REQUIRE(pos.sideToMove == Color::White);
     REQUIRE_FALSE(pos.enPassantTargetSquare);
@@ -115,7 +115,7 @@ TEST_CASE("Position - is_check()", TAGS)
 {
     SECTION("Starting position")
     {
-        const Position startingPosition {};
+        const Position startingPosition { };
 
         REQUIRE_FALSE(startingPosition.is_check());
         REQUIRE_FALSE(startingPosition.is_checkmate());
@@ -248,7 +248,7 @@ TEST_CASE("Position - passed pawns", TAGS)
 {
     SECTION("Starting position")
     {
-        const Position startingPosition {};
+        const Position startingPosition { };
 
         REQUIRE(startingPosition.get_passed_pawns<Color::White>().none());
         REQUIRE(startingPosition.get_passed_pawns<Color::Black>().none());
@@ -277,7 +277,7 @@ TEST_CASE("Position - backward pawns", TAGS)
 {
     SECTION("Starting position")
     {
-        const Position startingPosition {};
+        const Position startingPosition { };
 
         REQUIRE(startingPosition.get_backward_pawns<Color::White>().none());
         REQUIRE(startingPosition.get_backward_pawns<Color::Black>().none());
@@ -307,7 +307,7 @@ TEST_CASE("Position - backward pawns", TAGS)
 
 TEST_CASE("Position - null move", TAGS)
 {
-    const Position startingPosition {};
+    const Position startingPosition { };
 
     const auto afterNull = after_null_move(startingPosition);
 
@@ -316,7 +316,7 @@ TEST_CASE("Position - null move", TAGS)
 
 TEST_CASE("Position - fifty-move draws", TAGS)
 {
-    REQUIRE(! Position {}.is_fifty_move_draw());
+    REQUIRE(! Position { }.is_fifty_move_draw());
 
     REQUIRE(from_fen("7k/4NK2/5r2/5BN1/8/8/8/8 w - - 103 115").value().is_fifty_move_draw());
     REQUIRE(from_fen("8/7k/8/1r3KR1/5B2/8/8/8 w - - 105 122").value().is_fifty_move_draw());

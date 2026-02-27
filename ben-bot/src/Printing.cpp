@@ -12,6 +12,7 @@
  * ======================================================================================
  */
 
+#include <ben-bot/ColorPrinting.hpp>
 #include <ben-bot/Engine.hpp>
 #include <ben-bot/Resources.hpp>
 #include <format>
@@ -45,15 +46,6 @@ auto Engine::get_name() const -> std::string
     return std::format("BenBot {}", resources::get_version_string());
 }
 
-void Engine::print_logo_and_version() const
-{
-    println("{}", resources::get_ascii_logo());
-
-    println(
-        "{}, by {}",
-        get_name(), get_author());
-}
-
 void Engine::print_help(const string_view args) const
 {
     const bool noLogo = [args] {
@@ -85,7 +77,7 @@ void Engine::print_help(const string_view args) const
             .append_column(command.description);
     }
 
-    println("{}", table.to_string());
+    print_colored_table(table);
 }
 
 void Engine::print_options(const string_view args) const
@@ -134,7 +126,9 @@ void Engine::print_options(const string_view args) const
         }
     }
 
-    println("{}", table.to_string());
+    print_colored_table(table);
+
+    println("");
 
     if (not noCurrent)
         println("Debug mode: {}", debugMode.load());
@@ -144,28 +138,31 @@ void Engine::print_current_position(const string_view arguments) const
 {
     const auto& pos = searcher.context.options.position;
 
-    const bool utf8 = trim(arguments) == "utf8";
-
-    println("{}",
-        utf8 ? print_utf8(pos) : print_ascii(pos));
+    print_colored_board(pos,
+        trim(arguments) == "utf8");
 
     println("");
-    info_string(std::format("FEN: {}", chess::notation::to_fen(pos)));
-    info_string(std::format("Zobrist key: {}", pos.hash));
 
-    searcher.context.transTable.find(pos)
+    print_labeled_info("FEN: ", chess::notation::to_fen(pos));
+
+    print_labeled_info("Zobrist key: ", std::format("{}", pos.hash));
+
+    print_labeled_info("Static eval: ", std::format("{}", eval::evaluate(pos)));
+
+    searcher.context.transTable
+        .find(pos)
         .transform([](const TTData& data) {
-            info_string(std::format(
-                "TT hit: depth {} eval {} type {} probed {} bestmove {}",
-                data.searchedDepth, data.eval,
-                magic_enum::enum_name(data.evalType),
-                eval::Score::from_tt(data.eval, 0uz),
-                chess::notation::to_uci(data.bestMove.value_or(Move {}))));
+            print_labeled_info(
+                "TT hit: ",
+                std::format(
+                    "depth {} eval {} type {} probed {} bestmove {}",
+                    data.searchedDepth, data.eval,
+                    magic_enum::enum_name(data.evalType),
+                    eval::Score::from_tt(data.eval, 0uz),
+                    chess::notation::to_uci(data.bestMove.value_or(Move { }))));
 
-            return std::monostate {};
+            return std::monostate { };
         });
-
-    info_string(std::format("Static eval: {}", eval::evaluate(pos)));
 }
 
 void Engine::print_compiler_info()
