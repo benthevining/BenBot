@@ -40,9 +40,11 @@ using std::string_view;
 
 using MaybeMove = std::optional<Move>;
 
-void info_string(const string_view info)
+std::monostate info_string(const string_view info)
 {
     println(cout, "info string {}", info);
+
+    return std::monostate {};
 }
 
 namespace {

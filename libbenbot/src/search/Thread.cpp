@@ -12,12 +12,15 @@
  * ======================================================================================
  */
 
+#include <atomic>
 #include <libbenbot/search/Thread.hpp>
 #include <libchess/uci/CommandParsing.hpp>
 #include <libchess/util/Threading.hpp>
 #include <utility>
 
 namespace ben_bot::search {
+
+using std::memory_order;
 
 Thread::Thread(Callbacks&& callbacksToUse)
     : context { std::move(callbacksToUse) }
@@ -26,7 +29,7 @@ Thread::Thread(Callbacks&& callbacksToUse)
 
 Thread::~Thread()
 {
-    threadShouldExit.store(true);
+    threadShouldExit.store(true, memory_order::release);
     context.abort();
     searcherThread.join();
 }
@@ -52,14 +55,14 @@ void Thread::start(
     context.options.moveOverhead = moveOverheadTime;
     context.options.update_from(options);
 
-    startSearch.store(true);
+    startSearch.store(true, memory_order::release);
 }
 
 void Thread::start()
 {
     context.wait(); // shouldn't have been searching, but better safe than sorry
 
-    startSearch.store(true);
+    startSearch.store(true, memory_order::release);
 }
 
 void Thread::thread_func()
@@ -69,10 +72,11 @@ void Thread::thread_func()
         // but we also need to exit the PB loop if the threadShouldExit flag
         // gets set
         chess::util::progressive_backoff([this] {
-            return threadShouldExit.load() or startSearch.exchange(false);
+            return threadShouldExit.load(memory_order::acquire)
+                or startSearch.exchange(false, memory_order::acq_rel);
         });
 
-        if (threadShouldExit.load()) {
+        if (threadShouldExit.load(memory_order::acquire)) {
             return;
         }
 

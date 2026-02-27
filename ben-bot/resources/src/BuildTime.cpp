@@ -29,39 +29,42 @@ namespace ben_bot::resources {
 namespace {
     using std::string_view;
 
+    namespace chrono = std::chrono;
+
     // format is "MMM DD YYYY", e.g., "Feb 01 1994"
-    constexpr string_view BUILD_DATE_STR { __DATE__ };
+    inline constexpr string_view BUILD_DATE_STR { __DATE__ };
 
     // format is "HH:MM:SS", e.g., 14:30:15
-    constexpr string_view BUILD_TIME_STR { __TIME__ };
-
-    namespace chrono = std::chrono;
+    inline constexpr string_view BUILD_TIME_STR { __TIME__ };
 
     // NB. This is duplicated from libchess's string utility header, but I didn't
     // want to introduce a dependency on libchess just for this one function.
-    [[nodiscard]] constexpr auto int_from_string(const string_view text) noexcept -> size_t
+    [[nodiscard]] consteval auto int_from_string(const string_view text) noexcept -> size_t
     {
         auto value { 0uz };
 
         std::from_chars(
-            text.data(),
+            text.data(), // NOLINT(bugprone-suspicious-stringview-data-usage)
             std::next(text.data(), static_cast<std::ptrdiff_t>(text.length())),
             value);
 
         return value;
     }
 
-    [[nodiscard, gnu::const]] consteval auto build_year() noexcept -> chrono::year
+    [[nodiscard, gnu::const]] consteval auto build_year() noexcept -> chrono::year // NOLINT(bugprone-exception-escape)
     {
+        // the year is the last 4 characters of the date string
+        static constexpr auto yearStrLen = 4uz;
+
+        static constexpr auto yearStr = BUILD_DATE_STR.substr(
+            BUILD_DATE_STR.size() - yearStrLen, yearStrLen);
+
         return chrono::year {
-            ((BUILD_DATE_STR[7] - '0') * 1000)
-            + ((BUILD_DATE_STR[8] - '0') * 100)
-            + ((BUILD_DATE_STR[9] - '0') * 10)
-            + (BUILD_DATE_STR[10] - '0')
+            static_cast<int>(int_from_string(yearStr))
         };
     }
 
-    [[nodiscard, gnu::const]] consteval auto build_month() noexcept -> chrono::month
+    [[nodiscard, gnu::const]] consteval auto build_month() noexcept -> chrono::month // NOLINT(bugprone-exception-escape)
     {
         switch (BUILD_DATE_STR.front()) {
             case 'F': return std::chrono::February;
@@ -71,7 +74,7 @@ namespace {
             case 'D': return std::chrono::December;
 
             case 'J': {
-                switch (BUILD_DATE_STR[1]) {
+                switch (BUILD_DATE_STR.at(1uz)) {
                     case 'a': return std::chrono::January;
                     case 'n': return std::chrono::June;
                     default : return std::chrono::July;
@@ -79,14 +82,14 @@ namespace {
             }
 
             case 'M': {
-                if constexpr (BUILD_DATE_STR[2] == 'r')
+                if constexpr (BUILD_DATE_STR.at(2uz) == 'r')
                     return std::chrono::March;
                 else
                     return std::chrono::May;
             }
 
             case 'A': {
-                if constexpr (BUILD_DATE_STR[1] == 'p')
+                if constexpr (BUILD_DATE_STR.at(1uz) == 'p')
                     return std::chrono::April;
                 else
                     return std::chrono::August;
@@ -97,21 +100,14 @@ namespace {
         }
     }
 
-    [[nodiscard, gnu::const]] consteval auto build_day() noexcept -> chrono::day
+    [[nodiscard, gnu::const]] consteval auto build_day() noexcept -> chrono::day // NOLINT(bugprone-exception-escape)
     {
-        static constexpr auto dayNum = [] {
-            if constexpr (BUILD_DATE_STR[4] == ' ')
-                return static_cast<unsigned>(BUILD_DATE_STR[5] - '0');
-            else
-                return static_cast<unsigned>(((BUILD_DATE_STR[4] - '0') * 10) + (BUILD_DATE_STR[5] - '0'));
-        }();
-
-        return chrono::day { dayNum };
+        return chrono::day {
+            int_from_string(BUILD_DATE_STR.substr(4uz, 2uz))
+        };
     }
 
-    using TimeOfDayResolution = chrono::minutes; // we don't need second resolution on compilation time
-
-    [[nodiscard, gnu::const]] consteval auto build_time_of_day() noexcept -> TimeOfDayResolution
+    [[nodiscard, gnu::const]] consteval auto build_time_of_day() noexcept -> chrono::minutes
     {
         static constexpr auto buildHour = chrono::hours {
             int_from_string(BUILD_TIME_STR.substr(0uz, 2uz))
@@ -121,17 +117,17 @@ namespace {
             int_from_string(BUILD_TIME_STR.substr(3uz, 2uz))
         };
 
-        return duration_cast<TimeOfDayResolution>(buildHour) + buildMinute;
+        return duration_cast<chrono::minutes>(buildHour) + buildMinute;
     }
 
-    [[nodiscard, gnu::const]] consteval auto build_date() noexcept -> chrono::sys_time<TimeOfDayResolution>
+    [[nodiscard, gnu::const]] consteval auto build_date() noexcept -> chrono::sys_time<chrono::minutes>
     {
         static constexpr auto date = chrono::sys_days {
             chrono::year_month_day {
                 build_year(), build_month(), build_day() }
         };
 
-        return time_point_cast<TimeOfDayResolution>(date) + build_time_of_day();
+        return time_point_cast<chrono::minutes>(date) + build_time_of_day();
     }
 
     [[nodiscard, gnu::cold]] auto to_utc_time(const std::time_t time) -> std::tm

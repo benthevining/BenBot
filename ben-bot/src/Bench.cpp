@@ -91,7 +91,7 @@ namespace {
 
         bool outputProgress { false };
 
-        SearchResult result {};
+        SearchResult result;
 
         // clang-format off
         search::Thread thread {
@@ -111,7 +111,7 @@ namespace {
 
             info.extraInformation = std::format("thread {}", threadNumber);
 
-            uci::printing::search_info(info);
+            search_info(info);
         }
     };
 
@@ -132,7 +132,7 @@ namespace {
             searcherThreads.emplace_back(
                 std::make_unique<BenchSearcherThread>(
                     idx + 1uz, // display 1-based thread numbers
-                    epds[idx], defaultDepth, printProgressOutput));
+                    epds.at(idx), defaultDepth, printProgressOutput));
         }
 
         // wait for all threads to finish searching
@@ -209,11 +209,7 @@ void Engine::run_bench(const string_view arguments) const
 
                   do_bench(fileContent, defaultDepth, debugMode.load());
               })
-              .transform_error([](const string_view error) {
-                  info_string(error);
-
-                  return std::monostate {};
-              });
+              .transform_error(info_string);
 }
 
 } // namespace ben_bot

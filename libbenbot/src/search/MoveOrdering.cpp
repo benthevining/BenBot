@@ -121,7 +121,7 @@ void order_moves_for_search(
 {
     const auto bestMove = transTable
                               .find(currentPosition)
-                              .and_then([](const TTData& data) { return data.bestMove; });
+                              .and_then(&TTData::bestMove);
 
     std::ranges::sort(
         moves,

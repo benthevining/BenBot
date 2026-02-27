@@ -13,6 +13,7 @@
  */
 
 #include <algorithm>
+#include <atomic>
 #include <ben-bot/Engine.hpp>
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
@@ -22,7 +23,6 @@
 #include <libchess/uci/Printing.hpp>
 #include <libchess/util/Logger.hpp>
 #include <string>
-#include <utility>
 
 namespace ben_bot {
 
@@ -40,7 +40,7 @@ void Engine::new_game(const bool firstCall)
     // initializing them in the constructor to avoid referencing the
     // `this` pointer in the constructor
     searcher.context.callbacks = search::Callbacks::make_uci_printer(
-        [this] { return debugMode.load(); });
+        [this] { return debugMode.load(std::memory_order::relaxed); });
 }
 
 void Engine::go(const uci::GoCommandOptions& opts)
@@ -54,9 +54,7 @@ void Engine::go(const uci::GoCommandOptions& opts)
 void Engine::handle_custom_command(
     const string_view command, const string_view opts)
 {
-    if (const auto it = std::ranges::find_if(
-            customCommands,
-            [command](const CustomCommand& cmd) { return cmd.name == command; });
+    if (const auto it = std::ranges::find(customCommands, command, &CustomCommand::name);
         it != customCommands.end()) {
         it->action(opts);
         return;
@@ -75,10 +73,7 @@ void Engine::start_file_logger(const string_view path)
 
     [[maybe_unused]] const auto result
         = chess::util::start_file_logger(std::filesystem::path { path })
-              .transform_error([](const string_view error) {
-                  info_string(error);
-                  return std::monostate {};
-              });
+              .transform_error(info_string);
 }
 
 void Engine::make_null_move()

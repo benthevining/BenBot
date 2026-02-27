@@ -96,7 +96,7 @@ struct [[nodiscard]] Result final {
         if (pv.size() < 2uz)
             return std::nullopt;
 
-        return pv[1uz];
+        return pv.at(1uz);
     }
 
     /** Typedef for the libchess type used for printing UCI-formatted output. */

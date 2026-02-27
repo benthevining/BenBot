@@ -53,7 +53,7 @@ namespace {
         ourPieces.our_move(move, position.sideToMove);
 
         if (position.is_en_passant(move)) {
-            const auto idx = board::get_en_passant_captured_square(
+            const auto idx = get_en_passant_captured_square(
                 position.enPassantTargetSquare.value(), isWhite)
                                  .index();
 
@@ -118,7 +118,7 @@ void Position::make_move(const Move move)
 
     const auto rightsChanges = update_castling_rights(*this, isWhite, move);
 
-    hash = zobrist::update(*this, move, newEPSquare, rightsChanges);
+    hash = update(*this, move, newEPSquare, rightsChanges);
 
     update_bitboards(*this, move);
 
@@ -183,9 +183,7 @@ void Position::flip()
 
     whiteCastlingRights = std::exchange(blackCastlingRights, whiteCastlingRights);
 
-    enPassantTargetSquare = enPassantTargetSquare.transform([](const Square oldEPSquare) {
-        return square_vertical_flip(oldEPSquare);
-    });
+    enPassantTargetSquare = enPassantTargetSquare.transform(square_vertical_flip);
 
     refresh_zobrist();
 }
@@ -240,9 +238,8 @@ auto Position::is_draw_by_insufficient_material() const noexcept -> bool
     const bool whiteHasOnlyKing = std::cmp_equal(numWhiteKnights + numWhiteBishops, 0);
     const bool blackHasOnlyKing = std::cmp_equal(numBlackKnights + numBlackBishops, 0);
 
-    if (not(whiteHasOnlyKing or blackHasOnlyKing)) {
+    if (not(whiteHasOnlyKing or blackHasOnlyKing))
         return false;
-    }
 
     if (whiteHasOnlyKing and blackHasOnlyKing)
         return true;

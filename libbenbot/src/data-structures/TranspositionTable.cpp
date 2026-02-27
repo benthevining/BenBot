@@ -100,24 +100,12 @@ struct TranspositionTable::Entry final {
     }
 };
 
-inline constexpr auto CLUSTER_SIZE = 3uz;
+inline constexpr auto CACHE_LINE_SIZE = std::hardware_constructive_interference_size;
 
-struct alignas(32) TranspositionTable::Cluster final {
-    // if the Entry size changes, we may need to change CLUSTER_SIZE above
-    static_assert(
-        sizeof(Entry) == 10uz,
-        R"(TranspositionTable::Entry has unexpected size!
-Adjust the TranspositionTable::Cluster implementation appropriately.)");
+struct alignas(CACHE_LINE_SIZE) TranspositionTable::Cluster final {
+    static constexpr auto NumRecords = CACHE_LINE_SIZE / sizeof(Entry);
 
-    static constexpr auto RecordsSize = sizeof(Entry) * CLUSTER_SIZE;
-
-    std::array<Entry, CLUSTER_SIZE> records {};
-
-    // padding bytes
-    [[maybe_unused, no_unique_address]] std::array<
-        std::byte,
-        std::bit_ceil(RecordsSize) - RecordsSize> // round up to nearest power of 2
-        padding {};
+    std::array<Entry, NumRecords> records {};
 };
 
 TranspositionTable::TranspositionTable(TranspositionTable&& other) noexcept
@@ -125,9 +113,15 @@ TranspositionTable::TranspositionTable(TranspositionTable&& other) noexcept
     , clusterCount { std::exchange(other.clusterCount, 0uz) }
     , generation { std::exchange(other.generation, 0) }
 {
+    // NB. need to do these asserts within class scope so Cluster is available
+
     static_assert(
         std::has_single_bit(sizeof(Cluster)),
         "TranspositionTable::Cluster size should be a power of 2!");
+
+    static_assert(
+        sizeof(Cluster) <= CACHE_LINE_SIZE,
+        "TranspositionTable::Cluster should fit in a CPU cache line!");
 }
 
 auto TranspositionTable::operator=(TranspositionTable&& other) noexcept -> TranspositionTable&
@@ -192,7 +186,9 @@ void TranspositionTable::deallocate()
 
 auto TranspositionTable::hashfull() const -> size_t
 {
-    const auto indices = std::views::iota(0uz, std::min(1000uz, clusterCount));
+    const auto indices = std::views::iota(
+        0uz,
+        std::min(1000uz, clusterCount));
 
     const auto count = std::transform_reduce(
         indices.begin(), indices.end(),
@@ -207,7 +203,7 @@ auto TranspositionTable::hashfull() const -> size_t
                 }));
         });
 
-    return count / CLUSTER_SIZE;
+    return count / Cluster::NumRecords;
 }
 
 void TranspositionTable::new_search() noexcept
@@ -218,8 +214,7 @@ void TranspositionTable::new_search() noexcept
 auto TranspositionTable::find_cluster(const Position::Hash key) const noexcept -> std::span<Entry>
 {
     return index_table(
-        chess::util::math::mul_hi64(
-            key, clusterCount))
+        chess::util::math::mul_hi64(key, clusterCount))
         .records;
 }
 
@@ -282,8 +277,7 @@ auto TranspositionTable::get_best_response(
     const Position& pos, const Move move) const -> std::optional<Move>
 {
     return find(after_move(pos, move))
-        .transform([](const TTData& data) { return data.bestMove; })
-        .value_or(std::nullopt);
+        .and_then(&TTData::bestMove);
 }
 
 void TranspositionTable::store(const Position& pos, const TTData& record)

@@ -10,15 +10,13 @@
 #
 # ======================================================================================
 
-add_executable (libbenbot_tests)
-
-target_link_libraries (libbenbot_tests PRIVATE ben_bot::libbenbot Catch2::Catch2WithMain)
-
 file (GLOB_RECURSE sources LIST_DIRECTORIES false CONFIGURE_DEPENDS
                                                   "${CMAKE_CURRENT_LIST_DIR}/*.cpp"
 )
 
-target_sources (libbenbot_tests PRIVATE ${sources})
+add_executable (libbenbot_tests ${sources})
+
+target_link_libraries (libbenbot_tests PRIVATE ben_bot::libbenbot Catch2::Catch2WithMain)
 
 source_group (TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${sources})
 

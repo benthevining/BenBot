@@ -10,22 +10,20 @@
 #
 # ======================================================================================
 
-#[[
-On the Windows CI runner, if we just call python3 from the command line, it uses
-a different version than CMake will find. I addressed this issue by also using the
-CMake find module for locating the python executable used to install dependencies.
-]]
+# This script is invoked to download & extract an opening book file for use in SPRT tests
 
 cmake_minimum_required (VERSION 4.0.0 FATAL_ERROR)
 
-find_package (Python 3.10 COMPONENTS Interpreter REQUIRED)
+if (NOT DEFINED BOOK_NAME)
+    message (FATAL_ERROR "BOOK_NAME must be defined!")
+endif ()
 
-# cmake-format: off
-execute_process (
-    COMMAND "${Python_EXECUTABLE}" -m pip install --break-system-packages --upgrade
-        python-chess tqdm cpplint cppcheck clang-tidy
-    COMMAND_ECHO STDOUT
-    OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_STRIP_TRAILING_WHITESPACE
-    COMMAND_ERROR_IS_FATAL ANY
-)
-# cmake-format: on
+set (zip_file "${BOOK_NAME}.zip")
+
+if (NOT EXISTS "${zip_file}")
+    file (DOWNLOAD "https://github.com/official-stockfish/books/raw/refs/heads/master/${zip_file}"
+          "${zip_file}"
+    )
+endif ()
+
+file (ARCHIVE_EXTRACT INPUT "${zip_file}")

@@ -156,9 +156,9 @@ for depthObj in CORRECT_DATA["depths"]:
     result = engine.run_perft(depth)
 
     if check_result(depthObj["results"], result):
-        num_passed = num_passed + 1
+        num_passed += 1
     else:
-        num_failed = num_failed + 1
+        num_failed += 1
 
 engine.quit()
 

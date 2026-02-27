@@ -14,7 +14,7 @@
 # the engine's help & options output to replace placeholders in the template text defined in
 # engine-docs.txt
 
-cmake_minimum_required (VERSION 3.30.0 FATAL_ERROR)
+cmake_minimum_required (VERSION 4.0.0 FATAL_ERROR)
 
 if (NOT DEFINED OUTPUT_FILE)
     message (FATAL_ERROR "OUTPUT_FILE must be defined!")

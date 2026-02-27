@@ -12,7 +12,6 @@
  * ======================================================================================
  */
 
-#include <cassert>
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libbenbot/search/Options.hpp>
@@ -36,7 +35,8 @@ namespace {
 
         const auto movesToGo = movesToNextTimeControl.value_or(40uz);
 
-        assert(movesToGo > 0uz);
+        if (movesToGo <= 1uz)
+            return timeRemaining + inc;
 
         return milliseconds {
             (static_cast<size_t>(timeRemaining.count()) / movesToGo)

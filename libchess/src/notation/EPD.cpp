@@ -41,7 +41,7 @@ namespace {
         EPDPosition& pos, const string_view text)
     {
         auto opStrings = util::strings::split_by_delim(trim(text), ';')
-                       | std::views::transform([](const string_view str) { return trim(str); })
+                       | std::views::transform(trim)
                        | std::views::filter([](const string_view str) { return not str.empty(); });
 
         for (const auto opString : opStrings) {
@@ -113,8 +113,8 @@ auto parse_all_epds(const string_view fileContent) -> std::vector<EPDPosition>
 {
     return util::strings::lines_view(fileContent)
          | std::views::filter([](const string_view line) { return not line.empty(); })
-         | std::views::transform([](const string_view line) { return from_epd(line); })
-         | std::views::filter([](const PositionOrError& pos) { return pos.has_value(); })
+         | std::views::transform(from_epd)
+         | std::views::filter(&PositionOrError::has_value)
          | std::views::transform([](const PositionOrError& pos) { return pos.value(); })
          | std::ranges::to<std::vector>();
 }

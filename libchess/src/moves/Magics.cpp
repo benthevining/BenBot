@@ -45,8 +45,12 @@ namespace {
     {
         MaskArray result {};
 
-        for (const auto square : masks::ALL.subboards())
-            result.at(square.first()) = patterns::bishop(square) & masks::PERIMETER.inverse();
+        std::ranges::transform(
+            masks::ALL.subboards(),
+            result.data(),
+            [](const Bitboard square) {
+                return patterns::bishop(square) & masks::PERIMETER.inverse();
+            });
 
         return result;
     }
@@ -92,8 +96,8 @@ namespace {
         return result;
     }
 
-    constexpr auto BISHOP_MASKS = calculate_bishop_masks();
-    constexpr auto ROOK_MASKS   = calculate_rook_masks();
+    inline constexpr auto BISHOP_MASKS = calculate_bishop_masks();
+    inline constexpr auto ROOK_MASKS   = calculate_rook_masks();
 
     // the next two functions calculate indices within the MagicMoves
     // array for the given piece type, square, and occupied squares

@@ -29,7 +29,6 @@
 #include <cstdint> // IWYU pragma: keep - for std::uint_fast8_t
 #include <expected>
 #include <format>
-#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -118,17 +117,17 @@ struct std::formatter<chess::pieces::Type> final {
 
 namespace chess::pieces {
 
-constexpr auto to_char(const Type type, const bool uppercase) noexcept -> char
+constexpr auto to_char(const Type type, const bool uppercase) noexcept -> char // NOLINT(bugprone-exception-escape)
 {
     if (uppercase) {
         static constexpr std::string_view upperChars { "PNBRQK" };
 
-        return upperChars[std::to_underlying(type)];
+        return upperChars.at(std::to_underlying(type));
     }
 
     static constexpr std::string_view lowerChars { "pnbrqk" };
 
-    return lowerChars[std::to_underlying(type)];
+    return lowerChars.at(std::to_underlying(type));
 }
 
 inline auto from_string(std::string_view text)

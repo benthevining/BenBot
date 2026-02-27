@@ -408,7 +408,7 @@ namespace detail {
         using iterator_category = std::forward_iterator_tag;
         using iterator_concept  = std::forward_iterator_tag;
 
-        constexpr BitboardIterator() = default;
+        consteval BitboardIterator() = default;
 
         explicit constexpr BitboardIterator(const Bitboard& bitboard)
             : value { bitboard.to_int() }
@@ -461,8 +461,7 @@ constexpr auto Bitboard::indices() const noexcept
 constexpr auto Bitboard::squares() const noexcept
 {
     return indices()
-         | std::views::transform(
-             [](const BitboardIndex index) { return Square::from_index(index); });
+         | std::views::transform(Square::from_index);
 }
 
 constexpr auto Bitboard::subboards() const noexcept

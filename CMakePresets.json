@@ -40,8 +40,8 @@
     }
   ],
   "cmakeMinimumRequired": {
-    "major": 3,
-    "minor": 30,
+    "major": 4,
+    "minor": 0,
     "patch": 0
   },
   "configurePresets": [
@@ -91,11 +91,16 @@
       },
       "hidden": true,
       "name": "base",
+      "vendor": {
+        "jetbrains.com/clion": {
+          "enablePythonIntegration": true
+        }
+      },
       "warnings": {
-        "deprecated": false,
-        "dev": false,
+        "deprecated": true,
+        "dev": true,
         "systemVars": false,
-        "uninitialized": false,
+        "uninitialized": true,
         "unusedCli": false
       }
     },
@@ -191,5 +196,5 @@
       "name": "msvc"
     }
   ],
-  "version": 6
+  "version": 10
 }

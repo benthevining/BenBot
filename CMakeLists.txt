@@ -10,7 +10,7 @@
 #
 # ======================================================================================
 
-cmake_minimum_required (VERSION 3.30.0 FATAL_ERROR)
+cmake_minimum_required (VERSION 4.0.0 FATAL_ERROR)
 
 project (
     BenBot
@@ -28,8 +28,10 @@ set (CMAKE_CXX_STANDARD 23)
 set (CMAKE_C_STANDARD 23)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 
-include (FetchContent)
+# includes used throughout the various directories
 include (CPackComponent)
+include (FeatureSummary)
+include (FetchContent)
 
 cpack_add_component_group (
     ben_bot_all DISPLAY_NAME "BenBot" DESCRIPTION "All components of BenBot" EXPANDED BOLD_TITLE
@@ -51,4 +53,8 @@ endif ()
 
 if (BENBOT_DOCS)
     add_subdirectory (docs)
+endif ()
+
+if (PROJECT_IS_TOP_LEVEL)
+    feature_summary (WHAT ALL DEFAULT_DESCRIPTION)
 endif ()

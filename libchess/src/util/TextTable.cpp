@@ -132,7 +132,7 @@ auto TextTable::get_column_widths() const -> std::vector<size_t>
         const auto columns = row.get_columns();
 
         for (auto i = 0uz; i < columns.size(); ++i)
-            widths[i] = std::max(widths[i], columns[i].length());
+            widths.at(i) = std::max(widths.at(i), columns[i].length());
     }
 
     return widths;
@@ -153,7 +153,7 @@ auto TextTable::Row::to_string(
         string padded;
 
         if (index < columns.size())
-            padded = columns[index];
+            padded = columns.at(index);
 
         padded.resize(width, ' ');
 

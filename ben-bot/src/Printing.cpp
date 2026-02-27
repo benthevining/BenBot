@@ -159,16 +159,16 @@ void Engine::print_current_position(const string_view arguments) const
                     data.searchedDepth, data.eval,
                     magic_enum::enum_name(data.evalType),
                     eval::Score::from_tt(data.eval, 0uz),
-                    chess::notation::to_uci(data.bestMove.value_or(Move {}))));
+                    chess::notation::to_uci(data.bestMove.value_or(Move { }))));
 
-            return std::monostate {};
+            return std::monostate { };
         });
 }
 
 void Engine::print_compiler_info()
 {
     info_string(std::format(
-        "Compiled by {} version {} for {}",
+        "Compiled by {}, version {}, for {}",
         resources::get_compiler_name(),
         resources::get_compiler_version(),
         resources::get_system_name()));

@@ -428,14 +428,16 @@ namespace {
         };
     }
 
+    using std::memory_order;
+
     struct ActiveFlagSetter final {
         explicit ActiveFlagSetter(std::atomic_bool& flag)
             : value { flag }
         {
-            value.store(true);
+            value.store(true, memory_order::relaxed);
         }
 
-        ~ActiveFlagSetter() { value.store(false); }
+        ~ActiveFlagSetter() { value.store(false, memory_order::relaxed); }
 
         ActiveFlagSetter(const ActiveFlagSetter&)            = delete;
         ActiveFlagSetter& operator=(const ActiveFlagSetter&) = delete;
@@ -464,7 +466,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
     if (options.movesToSearch.empty()) {
         chess::moves::generate(options.position, std::back_inserter(options.movesToSearch));
 
-        assert(! options.movesToSearch.empty());
+        assert(not options.movesToSearch.empty());
     }
 
     RootSearchResult result;
@@ -489,7 +491,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
 
         interrupter.iteration_completed();
 
-        if (not(options.infinite or pondering.load())) {
+        if (not(options.infinite or pondering.load(memory_order::acquire))) {
             // check "mate in X" search bound
             if (options.mateIn.has_value() and result.bestScore.is_mate()) {
                 if (const auto targetPliesToMate = *options.mateIn * 2uz;
@@ -532,13 +534,14 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
 
     // when in ponder mode, we don't want to exit the search
     // until we've received either a stop or ponderhit command
-    if (pondering.load()) {
+    if (pondering.load(memory_order::acquire)) {
         chess::util::progressive_backoff([this] {
-            return exitFlag.load() or not pondering.load();
+            return exitFlag.load(memory_order::acquire)
+                or not pondering.load(memory_order::acquire);
         });
     } else if (options.infinite) {
         chess::util::progressive_backoff([this] {
-            return exitFlag.load();
+            return exitFlag.load(memory_order::acquire);
         });
     }
 
@@ -549,7 +552,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
 void Context::wait() const
 {
     chess::util::progressive_backoff([this] {
-        return not activeFlag.load();
+        return not activeFlag.load(memory_order::relaxed);
     });
 }
 

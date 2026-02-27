@@ -78,7 +78,7 @@ struct Context final {
         immediately; to wait for the search to complete, call ``wait()`` after
         calling this method.
      */
-    void abort() noexcept { exitFlag.store(true); }
+    void abort() noexcept { exitFlag.store(true, std::memory_order::release); }
 
     /** Clears the transposition table.
         If a search is in progress, this method blocks until it returns.
@@ -91,7 +91,7 @@ struct Context final {
     }
 
     /** Returns true if a search is currently in progress. */
-    [[nodiscard]] auto in_progress() const noexcept -> bool { return activeFlag.load(); }
+    [[nodiscard]] auto in_progress() const noexcept -> bool { return activeFlag.load(std::memory_order::acquire); }
 
     /** Blocks the calling thread until the search in progress is complete.
         Returns immediately if no search was in progress when this function was called.
@@ -102,12 +102,12 @@ struct Context final {
         When in ponder mode, the search will not exit until ``abort()`` or
         ``ponder_hit()`` are called.
      */
-    void set_pondering(const bool isPonderMode) noexcept { pondering.store(isPonderMode); }
+    void set_pondering(const bool isPonderMode) noexcept { pondering.store(isPonderMode, std::memory_order::release); }
 
     /** When in a ponder mode search, this exits the search. A ponder mode search
         will not exit until this method or ``abort()`` are called.
      */
-    void ponder_hit() noexcept { pondering.store(false); }
+    void ponder_hit() noexcept { pondering.store(false, std::memory_order::release); }
 
 private:
     std::atomic_bool exitFlag { false };

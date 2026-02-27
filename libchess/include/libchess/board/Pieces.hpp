@@ -52,7 +52,7 @@ struct Pieces final {
     explicit constexpr Pieces(Color color) noexcept;
 
     /** Creates an empty Pieces object with none of its bitboards initialized. */
-    constexpr Pieces() noexcept = default;
+    consteval Pieces() noexcept = default;
 
     /** This bitboard holds the locations of this side's pawns. */
     Bitboard pawns;

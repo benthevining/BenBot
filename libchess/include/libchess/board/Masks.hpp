@@ -139,6 +139,8 @@ namespace files {
     /// @ingroup bitboard_masks
     /// @{
 
+    // NOLINTBEGIN(readability-identifier-length)
+
     /** A bitboard with all squares on the A file set to 1. */
     inline constexpr auto A = 0x0101010101010101_bb;
 
@@ -162,6 +164,8 @@ namespace files {
 
     /** A bitboard with all squares on the H file set to 1. */
     inline constexpr auto H = 0x8080808080808080_bb;
+
+    // NOLINTEND(readability-identifier-length)
 
     /** Returns a bitboard with all squares on the requested file set to 1. */
     [[nodiscard, gnu::const]] constexpr auto get(const File file) noexcept -> Bitboard

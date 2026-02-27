@@ -16,6 +16,7 @@
 #include <filesystem>
 #include <format>
 #include <fstream>
+#include <functional>
 #include <ios>
 #include <iostream>
 #include <libchess/util/Logger.hpp>
@@ -40,23 +41,25 @@ struct Tie final : streambuf {
     {
     }
 
-    [[nodiscard]] auto buffer() const noexcept -> streambuf* { return &buf; }
+    [[nodiscard]] auto buffer() const noexcept -> streambuf* { return &buf.get(); }
 
 private:
     auto sync() -> int override;
 
     auto overflow(int_type character) -> int_type override;
 
-    auto underflow() -> int_type override { return buf.sgetc(); }
+    auto underflow() -> int_type override { return buf.get().sgetc(); }
 
-    auto uflow() -> int_type override { return log(buf.sbumpc(), ">> "); }
+    auto uflow() -> int_type override { return log(buf.get().sbumpc(), ">> "); }
 
     [[nodiscard]] auto log(
         int_type         character,
         std::string_view prefix) const -> int_type;
 
-    streambuf& buf;    // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
-    streambuf& logBuf; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
+    using BufRef = std::reference_wrapper<streambuf>;
+
+    BufRef buf;
+    BufRef logBuf;
 };
 
 // NB. virtual member functions defined out-of-line to address -Wweak-vtables
@@ -65,8 +68,8 @@ auto Tie::sync() -> int
 {
     static constexpr auto SUCCESS = 0;
 
-    const bool logSuccess = logBuf.pubsync() == SUCCESS;
-    const bool bufSuccess = buf.pubsync() == SUCCESS;
+    const bool logSuccess = logBuf.get().pubsync() == SUCCESS;
+    const bool bufSuccess = buf.get().pubsync() == SUCCESS;
 
     return logSuccess and bufSuccess ? SUCCESS : -1;
 }
@@ -74,7 +77,7 @@ auto Tie::sync() -> int
 auto Tie::overflow(const int_type character) -> int_type
 {
     return log(
-        buf.sputc(static_cast<char_type>(character)),
+        buf.get().sputc(static_cast<char_type>(character)),
         "<< ");
 }
 
@@ -87,12 +90,12 @@ auto Tie::log(
     static int_type last = '\n';
 
     if (last == '\n') {
-        logBuf.sputn(
+        logBuf.get().sputn(
             prefix.data(),
             static_cast<std::streamsize>(prefix.size()));
     }
 
-    last = logBuf.sputc(static_cast<char_type>(character));
+    last = logBuf.get().sputc(static_cast<char_type>(character));
 
     return last;
 }

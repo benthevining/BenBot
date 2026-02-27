@@ -40,9 +40,12 @@ using std::size_t;
     This function should be used for any informational or debug output that
     an engine wants to print.
 
+    @note This function returns a ``std::monostate`` object so that it is suitable
+    for passing to functions such as ``std::expected::transform_error``.
+
     @ingroup uci
  */
-void info_string(std::string_view info);
+std::monostate info_string(std::string_view info);
 
 /** Prints a UCI-formatted best move string to standard output.
     Specifying a ponder move is optional.

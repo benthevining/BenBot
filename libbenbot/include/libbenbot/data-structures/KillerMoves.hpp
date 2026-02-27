@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <libbenbot/search/Constants.hpp>
 #include <libchess/moves/Move.hpp>
@@ -50,7 +51,9 @@ struct KillerMoves final {
     /** Stores a killer move. */
     void store(const size_t plyFromRoot, const Move move)
     {
-        auto& list = lists[plyFromRoot];
+        assert(plyFromRoot < search::MAX_PLY);
+
+        auto& list = lists.at(plyFromRoot);
 
         if (not std::ranges::contains(list, move))
             list.emplace_back(move);
@@ -59,13 +62,13 @@ struct KillerMoves final {
     /** Returns the killer moves for the given ply. */
     [[nodiscard]] auto get(const size_t plyFromRoot) const noexcept -> std::span<const Move>
     {
-        return lists[plyFromRoot];
+        return lists.at(plyFromRoot);
     }
 
 private:
     using Killers = std::vector<Move>;
 
-    std::array<Killers, search::MAX_PLY> lists {};
+    std::array<Killers, search::MAX_PLY + 1uz> lists {};
 };
 
 } // namespace ben_bot

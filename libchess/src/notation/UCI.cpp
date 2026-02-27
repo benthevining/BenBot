@@ -45,7 +45,7 @@ auto to_uci(const Move move) -> string
         .transform([move](const PieceType promotedType) {
             return std::format("{}{}{}",
                 move.from(), move.to(),
-                pieces::to_char(promotedType, false));
+                to_char(promotedType, false));
         })
         .or_else([move] {
             return std::make_optional(

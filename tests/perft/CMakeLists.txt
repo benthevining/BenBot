@@ -10,6 +10,8 @@
 #
 # ======================================================================================
 
+add_feature_info (benbot_perft_testing "TARGET Python::Interpreter" "BenBot perft testing")
+
 if (NOT TARGET Python::Interpreter)
     return ()
 endif ()

@@ -12,8 +12,9 @@
 
 find_program (FASTCHESS_PROGRAM NAMES fastchess fast-chess DOC "fastchess CLI executable")
 
+add_feature_info (benbot_sprt_testing FASTCHESS_PROGRAM "BenBot SPRT tests using fastchess program")
+
 if (NOT FASTCHESS_PROGRAM)
-    message (VERBOSE "fastchess not found, not creating SPRT targets")
     return ()
 endif ()
 
@@ -47,9 +48,22 @@ file (GENERATE OUTPUT "${BenBot_BINARY_DIR}/InjectSPRTBaseline-$<CONFIG>.cmake"
 
 #
 
-cmake_host_system_information (RESULT num_cores QUERY NUMBER_OF_PHYSICAL_CORES)
+set (book_name "8moves_v3.pgn")
+set (openings_file "${CMAKE_CURRENT_BINARY_DIR}/${book_name}")
+set (download_script "${CMAKE_CURRENT_LIST_DIR}/DownloadBook.cmake")
 
-set (openings_file "${CMAKE_CURRENT_LIST_DIR}/book.pgn")
+add_custom_command (
+    OUTPUT "${openings_file}"
+    COMMAND "${CMAKE_COMMAND}" -D "BOOK_NAME=${book_name}" -P "${download_script}"
+    DEPENDS "${download_script}"
+    BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/${book_name}.zip"
+    COMMENT "Downloading openings book for SPRT tests..."
+    VERBATIM USES_TERMINAL
+)
+
+#
+
+cmake_host_system_information (RESULT num_cores QUERY NUMBER_OF_PHYSICAL_CORES)
 
 set (logs_dir "${BenBot_SOURCE_DIR}/logs/sprt")
 

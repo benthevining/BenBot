@@ -56,8 +56,11 @@ jobs:
         sudo apt-get update
         sudo apt install -y doxygen graphviz libc++-dev libc++abi-dev
 
+    - name: Ensure CMake 4.0
+      uses: lukka/get-cmake@v4.2.1
+
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       with:
         ref: ${{ inputs.ref || github.ref }}
 

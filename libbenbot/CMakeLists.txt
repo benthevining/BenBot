@@ -31,8 +31,7 @@ file (GLOB_RECURSE libbenbot_headers LIST_DIRECTORIES false
 )
 
 file (GLOB_RECURSE libbenbot_sources LIST_DIRECTORIES false
-      CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp"
-      "${CMAKE_CURRENT_LIST_DIR}/src/*.hpp" # include private headers too
+      CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/src/*.[c,h]pp" # include private headers too
 )
 
 target_sources (

@@ -10,14 +10,11 @@
 #
 # ======================================================================================
 
-if (NOT TARGET Python::Interpreter)
-    return ()
-endif ()
-
 check_python_modules_available (deps_available chess tqdm)
 
+add_feature_info (benbot_matetrack_testing deps_available "BenBot matetrack testing")
+
 if (NOT deps_available)
-    message (VERBOSE "matetrack dependencies not found, not adding these test cases")
     return ()
 endif ()
 
