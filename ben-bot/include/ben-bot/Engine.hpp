@@ -87,7 +87,7 @@ class [[nodiscard]] Engine final : public uci::EngineBase {
 
     static void start_file_logger(string_view path);
 
-    static constexpr bool PRETTY_PRINT_DEFAULT = true;
+    static constexpr bool PRETTY_PRINT_DEFAULT = false;
 
     std::atomic_bool debugMode { false };
     std::atomic_bool prettyPrinting { PRETTY_PRINT_DEFAULT };

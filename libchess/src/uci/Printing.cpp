@@ -12,6 +12,7 @@
  * ======================================================================================
  */
 
+#include <chrono>
 #include <cmath>
 #include <format>
 #include <iostream>
@@ -83,7 +84,9 @@ auto SearchInfo::Score::MateIn::moves() const noexcept -> int
 
 auto SearchInfo::get_nps() const noexcept -> size_t
 {
-    const auto seconds = static_cast<double>(time.count()) * 0.001;
+    using FractionalSeconds = std::chrono::duration<double, std::chrono::seconds::period>;
+
+    const auto seconds = duration_cast<FractionalSeconds>(time).count();
 
     if (seconds <= 0.)
         return 0uz;
