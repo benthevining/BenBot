@@ -13,7 +13,7 @@
  */
 
 #include <algorithm>
-#include <cstddef> // IWYU pragma: keep - for size_t;
+#include <cstddef> // IWYU pragma: keep - for size_t
 #include <functional>
 #include <libchess/util/TextTable.hpp>
 #include <numeric>
