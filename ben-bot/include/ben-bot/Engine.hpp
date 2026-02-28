@@ -25,7 +25,6 @@
 #include <functional>
 #include <libbenbot/search/Thread.hpp>
 #include <libchess/game/Position.hpp>
-#include <libchess/moves/Move.hpp>
 #include <libchess/uci/CommandParsing.hpp>
 #include <libchess/uci/EngineBase.hpp>
 #include <libchess/uci/Options.hpp>
@@ -93,6 +92,8 @@ class [[nodiscard]] Engine final : public uci::EngineBase {
 
     static constexpr bool PRETTY_PRINT_DEFAULT = false;
 
+    [[nodiscard]] static auto create_move_format_option() -> uci::ComboOption;
+
     std::atomic_bool debugMode { false };
     std::atomic_bool prettyPrinting { PRETTY_PRINT_DEFAULT };
 
@@ -150,12 +151,7 @@ class [[nodiscard]] Engine final : public uci::EngineBase {
         [this](const bool usePretty) { set_pretty_printing(usePretty); }
     };
 
-    uci::ComboOption moveFormat {
-        "Move Format",
-        { "UCI", "Algebraic", "ICCF" },
-        "Algebraic",
-        "Notation format used to display moves in pretty printing mode."
-    };
+    uci::ComboOption moveFormat { create_move_format_option() };
 
     std::array<uci::Option*, 8uz> options {
         &ttSize, &clearTT, &ponder, &threads, &moveOverhead, &logFile, &prettyPrintMode, &moveFormat
