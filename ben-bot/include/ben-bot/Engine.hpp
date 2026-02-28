@@ -25,6 +25,7 @@
 #include <functional>
 #include <libbenbot/search/Thread.hpp>
 #include <libchess/game/Position.hpp>
+#include <libchess/moves/Move.hpp>
 #include <libchess/uci/CommandParsing.hpp>
 #include <libchess/uci/EngineBase.hpp>
 #include <libchess/uci/Options.hpp>
@@ -35,6 +36,7 @@
 namespace ben_bot {
 
 using chess::game::Position;
+using chess::moves::Move;
 using std::string_view;
 
 namespace uci = chess::uci;
@@ -83,6 +85,8 @@ class [[nodiscard]] Engine final : public uci::EngineBase {
 
     void set_pretty_printing(bool shouldPrettyPrint);
 
+    [[nodiscard]] auto pretty_print_move(Move move) const -> std::string;
+
     static void print_compiler_info();
 
     static void start_file_logger(string_view path);
@@ -99,7 +103,7 @@ class [[nodiscard]] Engine final : public uci::EngineBase {
     uci::IntOption ttSize {
         "Hash",
         1, 2048, 16,
-        "Sets the maximum transposition table size (in MB)",
+        "Sets the maximum transposition table size (in MB).",
         [this](const int sizeMB) {
             wait();
             searcher.context.transTable.resize(
@@ -110,7 +114,7 @@ class [[nodiscard]] Engine final : public uci::EngineBase {
     uci::Action clearTT {
         "Clear Hash",
         [this] { searcher.context.clear_transposition_table(); },
-        "Press to clear the transposition table"
+        "Press to clear the transposition table."
     };
 
     // The engine doesn't start pondering on its own without explicitly being told to
@@ -120,12 +124,12 @@ class [[nodiscard]] Engine final : public uci::EngineBase {
     uci::BoolOption ponder {
         "Ponder",
         true,
-        "Controls whether pondering is allowed"
+        "Controls whether pondering is allowed."
     };
 
     uci::IntOption threads {
         "Threads", 1, 1, 1,
-        "Number of searcher threads (currently a dummy)"
+        "Number of searcher threads (currently a dummy)."
     };
 
     uci::IntOption moveOverhead {
@@ -135,19 +139,26 @@ class [[nodiscard]] Engine final : public uci::EngineBase {
 
     uci::StringOption logFile {
         "Debug Log File", "<empty>",
-        "If not empty, engine I/O will be mirrored to this file",
+        "If not empty, engine I/O will be mirrored to this file.",
         start_file_logger
     };
 
     uci::BoolOption prettyPrintMode {
         "Pretty Print",
         PRETTY_PRINT_DEFAULT,
-        "When on, search output is pretty-printed instead of printed in UCI format",
+        "When on, search output is pretty-printed instead of printed in UCI format.",
         [this](const bool usePretty) { set_pretty_printing(usePretty); }
     };
 
-    std::array<uci::Option*, 7uz> options {
-        &ttSize, &clearTT, &ponder, &threads, &moveOverhead, &logFile, &prettyPrintMode
+    uci::ComboOption moveFormat {
+        "Move Format",
+        { "UCI", "Algebraic", "ICCF" },
+        "Algebraic",
+        "Notation format used to display moves in pretty printing mode."
+    };
+
+    std::array<uci::Option*, 8uz> options {
+        &ttSize, &clearTT, &ponder, &threads, &moveOverhead, &logFile, &prettyPrintMode, &moveFormat
     };
 
     /* ----- Custom commands ----- */

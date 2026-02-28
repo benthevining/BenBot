@@ -22,7 +22,6 @@
 #include <libbenbot/search/Callbacks.hpp>
 #include <libbenbot/search/Result.hpp>
 #include <libchess/moves/Move.hpp>
-#include <libchess/notation/UCI.hpp>
 #include <libchess/uci/Printing.hpp>
 #include <libchess/util/Chrono.hpp>
 #include <libchess/util/Variant.hpp>
@@ -242,8 +241,11 @@ namespace {
         std::cout << termcolor::reset;
     }
 
+    using MovePrinter = std::function<std::string(Move)>;
+
     [[nodiscard]] auto format_pv(
-        const std::span<const Move> pv) -> string
+        const std::span<const Move> pv,
+        const MovePrinter&          printMove) -> string
     {
         if (pv.empty()) {
             // this is possible if we're checkmated
@@ -253,7 +255,7 @@ namespace {
         string result;
 
         for (const auto move : pv) {
-            result.append(chess::notation::to_uci(move));
+            result.append(printMove(move));
             result.append(1uz, ' ');
         }
 
@@ -282,7 +284,8 @@ namespace {
                   << termcolor::reset;
     }
 
-    void pretty_print(const Result& res)
+    void pretty_print(
+        const Result& res, const MovePrinter& printMove)
     {
         // depth
         print_column_text<Alignment::Center>(
@@ -310,19 +313,25 @@ namespace {
         print_score(libchess.score);
 
         // PV
-        std::cout << format_pv(res.pv) << '\n';
+        std::cout << format_pv(res.pv, printMove)
+                  << '\n';
     }
 } // namespace
 
-auto Callbacks::make_pretty_printer()
+auto Callbacks::make_pretty_printer(
+    MovePrinter&& printMove)
     -> Callbacks
 {
+    auto printIteration = [formatMove = std::move(printMove)](const Result& res) {
+        pretty_print(res, formatMove);
+    };
+
     return {
         .onSearchStart = []([[maybe_unused]] const Options& options) {
             print_table_header();
         },
-        .onSearchComplete = pretty_print,
-        .onIteration      = pretty_print
+        .onSearchComplete = printIteration,
+        .onIteration      = printIteration
     };
 }
 

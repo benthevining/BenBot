@@ -41,7 +41,8 @@ void Engine::new_game(const bool firstCall)
     // initializing them in the constructor to avoid referencing the
     // `this` pointer in the constructor
     if (prettyPrinting.load()) {
-        searcher.context.callbacks = search::Callbacks::make_pretty_printer();
+        searcher.context.callbacks = search::Callbacks::make_pretty_printer(
+            [this](const Move move) { return pretty_print_move(move); });
     } else {
         searcher.context.callbacks = search::Callbacks::make_uci_printer(
             [this] noexcept { // cppcheck-suppress syntaxError
@@ -59,7 +60,8 @@ void Engine::set_pretty_printing(const bool shouldPrettyPrint)
     wait();
 
     if (shouldPrettyPrint) {
-        searcher.context.callbacks = search::Callbacks::make_pretty_printer();
+        searcher.context.callbacks = search::Callbacks::make_pretty_printer(
+            [this](const Move move) { return pretty_print_move(move); });
     } else {
         searcher.context.callbacks = search::Callbacks::make_uci_printer(
             [this] noexcept { return debugMode.load(memory_order_relaxed); });
