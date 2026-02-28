@@ -20,7 +20,9 @@
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Score.hpp>
 #include <libbenbot/search/Result.hpp>
+#include <libchess/notation/Algebraic.hpp>
 #include <libchess/notation/FEN.hpp>
+#include <libchess/notation/ICCF.hpp>
 #include <libchess/notation/UCI.hpp>
 #include <libchess/uci/Printing.hpp>
 #include <libchess/util/Strings.hpp>
@@ -29,6 +31,7 @@
 #include <print>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <variant>
 
 namespace ben_bot {
@@ -184,7 +187,20 @@ void Engine::print_compiler_info()
 
 auto Engine::pretty_print_move(const Move move) const -> std::string
 {
-    return chess::notation::to_uci(move);
+    const auto format = moveFormat.get_value();
+
+    if (format == "UCI")
+        return chess::notation::to_uci(move);
+
+    if (format == "Algebraic")
+        return chess::notation::to_alg(
+            searcher.context.options.position, move);
+
+    if (format == "ICCF")
+        return chess::notation::to_iccf(move);
+
+    std::unreachable();
+    return { };
 }
 
 } // namespace ben_bot
