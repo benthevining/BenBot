@@ -39,9 +39,9 @@ void write_piece_positions(
     string&         output);
 
 void write_castling_rights(
-    const game::CastlingRights& whiteRights,
-    const game::CastlingRights& blackRights,
-    string&                     output);
+    game::CastlingRights whiteRights,
+    game::CastlingRights blackRights,
+    string&              output);
 
 void write_en_passant_target_square(
     std::optional<Square> targetSquare,

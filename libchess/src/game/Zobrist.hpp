@@ -16,11 +16,8 @@
 
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
+#include <libchess/moves/Move.hpp>
 #include <optional>
-
-namespace chess::moves {
-struct Move;
-} // namespace chess::moves
 
 namespace chess::game::zobrist {
 
@@ -31,21 +28,21 @@ using moves::Move;
 
 // each of these bools should be true if the given right has changed since the last move
 struct [[nodiscard]] CastlingRightsChanges final {
-    bool whiteKingside { false };
-    bool whiteQueenside { false };
-    bool blackKingside { false };
-    bool blackQueenside { false };
+    bool whiteKingside : 1 { false }; // cppcheck-suppress syntaxError
+    bool whiteQueenside : 1 { false };
+    bool blackKingside : 1 { false };
+    bool blackQueenside : 1 { false };
 
     [[nodiscard]] auto update_hash(Position::Hash value) const noexcept -> Position::Hash;
 };
 
 [[nodiscard, gnu::const]] auto update(
-    const Position& pos, const Move& move,
-    std::optional<Square>        newEPTarget,
-    const CastlingRightsChanges& rightsChanges)
+    const Position& pos, Move move,
+    std::optional<Square> newEPTarget,
+    CastlingRightsChanges rightsChanges)
     -> Position::Hash;
 
-[[nodiscard, gnu::const, gnu::cold]] auto after_null_move(
+[[nodiscard, gnu::const]] auto after_null_move(
     const Position& pos)
     -> Position::Hash;
 

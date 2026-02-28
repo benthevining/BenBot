@@ -138,7 +138,7 @@ struct Square final {
     captured pawn was on.
  */
 [[nodiscard, gnu::const]] constexpr auto get_en_passant_captured_square(
-    const Square& targetSquare, bool isWhite) noexcept
+    Square targetSquare, bool isWhite) noexcept
     -> Square;
 
 /// @}
@@ -258,7 +258,7 @@ inline auto Square::from_string(const std::string_view text)
 }
 
 constexpr auto get_en_passant_captured_square(
-    const Square& targetSquare, const bool isWhite) noexcept
+    const Square targetSquare, const bool isWhite) noexcept
     -> Square
 {
     // the captured pawn is on the file of the target square, but

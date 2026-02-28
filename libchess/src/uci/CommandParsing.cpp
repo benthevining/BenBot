@@ -183,7 +183,8 @@ namespace {
 
     // consumes one argument from ``options``,
     // and returns pair of the option value & the rest of the ``options`` that are left
-    [[nodiscard]] auto parse_int_value(const string_view options) -> std::pair<size_t, string_view>
+    [[nodiscard, gnu::const]] auto parse_int_value(const string_view options)
+        -> std::pair<size_t, string_view>
     {
         const auto [valueStr, rest] = split_at_first_space(options);
 

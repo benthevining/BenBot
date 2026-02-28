@@ -46,7 +46,7 @@ using board::Square;
     is located), and also considers blocking friendly pieces.
  */
 [[nodiscard]] auto bishop(
-    const Square& bishopPos, Bitboard occupiedSquares, Bitboard friendlyPieces)
+    Square bishopPos, Bitboard occupiedSquares, Bitboard friendlyPieces)
     -> Bitboard;
 
 /** Calculates all pseudo-legal rook moves.
@@ -55,7 +55,7 @@ using board::Square;
     is located), and also considers blocking friendly pieces.
  */
 [[nodiscard]] auto rook(
-    const Square& rookPos, Bitboard occupiedSquares, Bitboard friendlyPieces)
+    Square rookPos, Bitboard occupiedSquares, Bitboard friendlyPieces)
     -> Bitboard;
 
 /** Calculates all pseudo-legal queen moves.
@@ -64,7 +64,7 @@ using board::Square;
     is located), and also considers blocking friendly pieces.
  */
 [[nodiscard]] auto queen(
-    const Square& queenPos, Bitboard occupiedSquares, Bitboard friendlyPieces)
+    Square queenPos, Bitboard occupiedSquares, Bitboard friendlyPieces)
     -> Bitboard;
 
 /// @}

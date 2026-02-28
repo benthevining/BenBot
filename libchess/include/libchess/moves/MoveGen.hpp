@@ -189,7 +189,7 @@ namespace detail {
         };
 
         return stdv::join(std::move(moveLists))
-             | stdv::filter([&position](const Move& move) {
+             | stdv::filter([&position](const Move move) {
                    return position.is_legal(move);
                });
     }
@@ -213,15 +213,15 @@ namespace detail {
                        target, PieceType::Pawn
                    };
                })
-             | stdv::filter([&position](const Move& move) {
+             | stdv::filter([&position](const Move move) {
                    return position.is_legal(move);
                });
     }
 
     [[nodiscard, gnu::const]] constexpr auto get_pawn_captures_internal(
-        const Bitboard           startingBoard,
-        const Bitboard           targetBoard,
-        std::optional<PieceType> promotedType = std::nullopt)
+        const Bitboard                 startingBoard,
+        const Bitboard                 targetBoard,
+        const std::optional<PieceType> promotedType = std::nullopt)
     {
         return stdv::zip(
                    startingBoard.squares(), targetBoard.squares())
@@ -284,7 +284,7 @@ namespace detail {
         };
 
         return stdv::join(std::move(moveLists))
-             | stdv::filter([&position](const Move& move) {
+             | stdv::filter([&position](const Move move) {
                    return position.is_legal(move);
                });
     }
@@ -309,7 +309,7 @@ namespace detail {
                                square, targetSquare, PieceType::Pawn
                            };
                        })
-                     | stdv::filter([&position](const Move& move) {
+                     | stdv::filter([&position](const Move move) {
                            return position.is_legal(move);
                        })
                      | std::ranges::to<EPMoves>();
@@ -366,7 +366,7 @@ namespace detail {
                           });
                })
              | stdv::join
-             | stdv::filter([&position](const Move& move) {
+             | stdv::filter([&position](const Move move) {
                    return position.is_legal(move);
                });
     }
@@ -397,7 +397,7 @@ namespace detail {
                           });
                })
              | stdv::join
-             | stdv::filter([&position](const Move& move) {
+             | stdv::filter([&position](const Move move) {
                    return position.is_legal(move);
                });
     }
@@ -428,7 +428,7 @@ namespace detail {
                           });
                })
              | stdv::join
-             | stdv::filter([&position](const Move& move) {
+             | stdv::filter([&position](const Move move) {
                    return position.is_legal(move);
                });
     }
@@ -459,7 +459,7 @@ namespace detail {
                           });
                })
              | stdv::join
-             | stdv::filter([&position](const Move& move) {
+             | stdv::filter([&position](const Move move) {
                    return position.is_legal(move);
                });
     }
@@ -483,7 +483,7 @@ namespace detail {
                        kingSquare, targetSquare, PieceType::King
                    };
                })
-             | stdv::filter([&position](const Move& move) {
+             | stdv::filter([&position](const Move move) {
                    return position.is_legal(move);
                });
     }

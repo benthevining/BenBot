@@ -34,8 +34,8 @@ using util::strings::trim;
 
 namespace {
 
-    constexpr string_view FULL_MOVE_OP_TAG { "fmvn" };
-    constexpr string_view HALF_MOVE_OP_TAG { "hmvc" };
+    inline constexpr string_view FULL_MOVE_OP_TAG { "fmvn" };
+    inline constexpr string_view HALF_MOVE_OP_TAG { "hmvc" };
 
     void parse_operations(
         EPDPosition& pos, const string_view text)

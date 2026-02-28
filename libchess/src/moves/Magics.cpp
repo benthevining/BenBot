@@ -188,7 +188,7 @@ namespace {
 } // namespace
 
 auto bishop(
-    const Square& bishopPos, const Bitboard occupiedSquares, const Bitboard friendlyPieces)
+    const Square bishopPos, const Bitboard occupiedSquares, const Bitboard friendlyPieces)
     -> Bitboard
 {
     const auto moves = MAGIC_MOVES.at(
@@ -198,7 +198,7 @@ auto bishop(
 }
 
 auto rook(
-    const Square& rookPos, const Bitboard occupiedSquares, const Bitboard friendlyPieces)
+    const Square rookPos, const Bitboard occupiedSquares, const Bitboard friendlyPieces)
     -> Bitboard
 {
     const auto moves = MAGIC_MOVES.at(
@@ -208,7 +208,7 @@ auto rook(
 }
 
 auto queen(
-    const Square& queenPos, const Bitboard occupiedSquares, const Bitboard friendlyPieces)
+    const Square queenPos, const Bitboard occupiedSquares, const Bitboard friendlyPieces)
     -> Bitboard
 {
     const auto squareIdx = queenPos.index();

@@ -50,9 +50,9 @@ auto TextTable::new_row() -> TextTable&
 }
 
 namespace {
-    constexpr string_view COLUMN_SEPARATOR { " | " };
-    constexpr string_view LINE_START { "| " };
-    constexpr string_view LINE_ENDING { " |" };
+    inline constexpr string_view COLUMN_SEPARATOR { " | " };
+    inline constexpr string_view LINE_START { "| " };
+    inline constexpr string_view LINE_ENDING { " |" };
 
     [[nodiscard, gnu::cold]] auto make_header_sep_row(
         const std::span<const size_t> widths)

@@ -51,10 +51,10 @@ namespace {
     // higher scored moves will be searched first
     [[nodiscard, gnu::const]] auto move_ordering_score(
         const Position& currentPosition, const Move move,
-        const TranspositionTable& transTable,
-        const Bitboard            opponentPawnAttacks,
-        const std::optional<Move> bestMove,
-        std::span<const Move>     killerMoves)
+        const TranspositionTable&   transTable,
+        const Bitboard              opponentPawnAttacks,
+        const std::optional<Move>   bestMove,
+        const std::span<const Move> killerMoves)
         -> int
     {
         static constexpr auto PV_NODE_BONUS { 15000 };       // cppcheck-suppress variableScope
@@ -114,10 +114,10 @@ namespace {
 } // namespace
 
 void order_moves_for_search(
-    const Position&           currentPosition,
-    const std::span<Move>     moves,
-    const TranspositionTable& transTable,
-    std::span<const Move>     killerMoves)
+    const Position&             currentPosition,
+    const std::span<Move>       moves,
+    const TranspositionTable&   transTable,
+    const std::span<const Move> killerMoves)
 {
     const auto bestMove = transTable
                               .find(currentPosition)

@@ -57,7 +57,7 @@ void Options::update_from(const chess::uci::GoCommandOptions& goOptions)
     maxNodes = goOptions.nodes.value_or(MAX);
 
     searchTime = goOptions.searchTime
-                     .or_else([&goOptions, isWhite = position.is_white_to_move()]() -> std::optional<milliseconds> {
+                     .or_else([&goOptions, isWhite = position.is_white_to_move()] -> std::optional<milliseconds> {
                          if (goOptions.infinite)
                              return std::nullopt;
 

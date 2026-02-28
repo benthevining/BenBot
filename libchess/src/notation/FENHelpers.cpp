@@ -98,9 +98,9 @@ void write_piece_positions(
 }
 
 void write_castling_rights(
-    const game::CastlingRights& whiteRights,
-    const game::CastlingRights& blackRights,
-    string&                     output)
+    const game::CastlingRights whiteRights,
+    const game::CastlingRights blackRights,
+    string&                    output)
 {
     if (whiteRights.neither() and blackRights.neither()) {
         output.push_back('-');
@@ -260,7 +260,7 @@ void parse_en_passant_target_square(
     const string_view fenFragment, Position& position)
 {
     if (fenFragment.contains('-')) {
-        position.enPassantTargetSquare = std::nullopt;
+        position.enPassantTargetSquare.reset();
         return;
     }
 

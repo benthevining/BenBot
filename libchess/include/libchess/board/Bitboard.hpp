@@ -187,7 +187,7 @@ struct Bitboard final {
     /// @}
 
     /** Returns a bitboard with only a single bit set. */
-    [[nodiscard, gnu::const]] static constexpr auto from_square(const Square& square) noexcept -> Bitboard;
+    [[nodiscard, gnu::const]] static constexpr auto from_square(Square square) noexcept -> Bitboard;
 
 private:
     Integer value { UINT64_C(0) };
@@ -276,7 +276,7 @@ constexpr Bitboard::Bitboard(const Integer val) noexcept
 {
 }
 
-constexpr auto Bitboard::from_square(const Square& square) noexcept -> Bitboard
+constexpr auto Bitboard::from_square(const Square square) noexcept -> Bitboard
 {
     return Bitboard { UINT64_C(1) << square.index() };
 }

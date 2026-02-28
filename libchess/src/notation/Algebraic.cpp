@@ -44,8 +44,8 @@ namespace {
 
     // returns a vector containing all legal moves for the
     // given piece type that have the given target square
-    [[nodiscard]] auto get_possible_move_origins(
-        const Position& position, const Square& targetSquare, const PieceType piece)
+    [[nodiscard, gnu::const]] auto get_possible_move_origins(
+        const Position& position, const Square targetSquare, const PieceType piece)
         -> moves::MoveList
     {
         auto moves = moves::generate_for(position, piece);
@@ -53,14 +53,15 @@ namespace {
         // erase moves not to the given target square
         moves.erase(
             std::ranges::remove_if(moves,
-                [targetSquare](const Move& candidate) { return candidate.to() != targetSquare; })
+                [targetSquare](const Move candidate) { return candidate.to() != targetSquare; })
                 .begin(),
             moves.end());
 
         return moves;
     }
 
-    [[nodiscard]] auto get_check_string(const Position& position, const Move& move)
+    [[nodiscard, gnu::const]] auto get_check_string(
+        const Position& position, const Move move)
         -> string_view
     {
         const auto newPos = after_move(position, move);
@@ -74,7 +75,8 @@ namespace {
         return "+"; // check
     }
 
-    [[nodiscard]] auto get_disambig_string(const Position& position, const Move& move)
+    [[nodiscard]] auto get_disambig_string(
+        const Position& position, const Move move)
         -> string
     {
         const auto pieceMoves = get_possible_move_origins(position, move.to(), move.piece());
@@ -90,14 +92,14 @@ namespace {
 
         if (std::cmp_equal(
                 std::ranges::count_if(pieceMoves,
-                    [file](const Move& candidate) { return candidate.from().file == file; }),
+                    [file](const Move candidate) { return candidate.from().file == file; }),
                 1)) {
             return std::format("{}", file);
         }
 
         assert(std::cmp_equal(
             std::ranges::count_if(pieceMoves,
-                [rank](const Move& candidate) { return candidate.from().rank == rank; }),
+                [rank](const Move candidate) { return candidate.from().rank == rank; }),
             1));
 
         return std::format("{}", rank);
@@ -160,7 +162,7 @@ namespace {
         const MoveSpan possibleOrigins, const File file)
         -> SquareOrError
     {
-        auto moveStartsOnFile = [file](const Move& move) { return move.from().file == file; };
+        auto moveStartsOnFile = [file](const Move move) { return move.from().file == file; };
 
         if (std::cmp_greater(
                 std::ranges::count_if(possibleOrigins, moveStartsOnFile),
@@ -189,7 +191,7 @@ namespace {
         const MoveSpan possibleOrigins, const Rank rank)
         -> SquareOrError
     {
-        auto moveStartsOnRank = [rank](const Move& move) { return move.from().rank == rank; };
+        auto moveStartsOnRank = [rank](const Move move) { return move.from().rank == rank; };
 
         if (std::cmp_greater(
                 std::ranges::count_if(possibleOrigins, moveStartsOnRank),
@@ -215,7 +217,7 @@ namespace {
     }
 
     [[nodiscard]] auto get_starting_square(
-        const Position& position, const Square& targetSquare, const PieceType piece,
+        const Position& position, const Square targetSquare, const PieceType piece,
         const string_view text)
         -> SquareOrError
     {
@@ -295,8 +297,8 @@ namespace {
         }
     }
 
-    [[nodiscard]] constexpr auto create_pawn_capture(
-        const Square& targetSquare, const File startingFile, const Color color)
+    [[nodiscard, gnu::const]] constexpr auto create_pawn_capture(
+        const Square targetSquare, const File startingFile, const Color color)
         -> Move
     {
         const auto fromRank = color == Color::White
@@ -311,8 +313,8 @@ namespace {
         };
     }
 
-    [[nodiscard]] constexpr auto parse_pawn_capture(
-        const Square& targetSquare, const string_view startingFileText, const Color color)
+    [[nodiscard, gnu::const]] constexpr auto parse_pawn_capture(
+        const Square targetSquare, const string_view startingFileText, const Color color)
         -> MaybeMove
     {
         assert(not startingFileText.empty());
@@ -356,7 +358,7 @@ namespace {
         }
     }
 
-    [[nodiscard]] constexpr auto parse_promotion(
+    [[nodiscard, gnu::const]] constexpr auto parse_promotion(
         const string_view text, const Color color)
         -> MaybeMove
     {

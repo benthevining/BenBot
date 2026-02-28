@@ -41,10 +41,8 @@ using std::uint_least8_t;
 namespace {
 
     void update_bitboards(
-        Position& position, const Move& move) noexcept
+        Position& position, const Move move) noexcept
     {
-        const bool isWhite = position.is_white_to_move();
-
         auto& ourPieces      = position.our_pieces();
         auto& opponentPieces = position.their_pieces();
 
@@ -54,7 +52,8 @@ namespace {
 
         if (position.is_en_passant(move)) {
             const auto idx = get_en_passant_captured_square(
-                position.enPassantTargetSquare.value(), isWhite)
+                position.enPassantTargetSquare.value(),
+                position.is_white_to_move())
                                  .index();
 
             opponentPieces.pawns.unset(idx);
@@ -63,7 +62,7 @@ namespace {
     }
 
     [[nodiscard, gnu::const]] constexpr auto get_en_passant_target_square(
-        const Move& move, const bool isWhite) noexcept
+        const Move move, const bool isWhite) noexcept
         -> std::optional<Square>
     {
         if (move.piece() != PieceType::Pawn
@@ -83,8 +82,8 @@ namespace {
         Position& pos, const bool isWhite, const Move& move) noexcept
         -> zobrist::CastlingRightsChanges
     {
-        const auto whiteOldRights { pos.whiteCastlingRights };
-        const auto blackOldRights { pos.blackCastlingRights };
+        const auto whiteOldRights = pos.whiteCastlingRights;
+        const auto blackOldRights = pos.blackCastlingRights;
 
         auto& ourRights   = isWhite ? pos.whiteCastlingRights : pos.blackCastlingRights;
         auto& theirRights = isWhite ? pos.blackCastlingRights : pos.whiteCastlingRights;
@@ -96,8 +95,8 @@ namespace {
         else
             theirRights.their_move<Color::White>(move);
 
-        const auto& whiteNewRights = pos.whiteCastlingRights;
-        const auto& blackNewRights = pos.blackCastlingRights;
+        const auto whiteNewRights = pos.whiteCastlingRights;
+        const auto blackNewRights = pos.blackCastlingRights;
 
         return {
             .whiteKingside  = whiteOldRights.kingside != whiteNewRights.kingside,
@@ -150,7 +149,7 @@ void Position::make_null_move()
     ++halfmoveClock;
     threefoldChecker.push(hash);
 
-    enPassantTargetSquare = std::nullopt;
+    enPassantTargetSquare.reset();
 
     // increment full move counter after every Black move
     if (not isWhite)
@@ -163,7 +162,8 @@ void Position::make_null_move()
 namespace {
     using board::Square;
 
-    [[nodiscard, gnu::const, gnu::cold]] constexpr auto square_vertical_flip(const Square starting) noexcept -> Square
+    [[nodiscard, gnu::const]] constexpr auto square_vertical_flip(
+        const Square starting) noexcept -> Square
     {
         const auto board = board::Bitboard::from_square(starting);
 
@@ -190,9 +190,7 @@ void Position::flip()
 
 Position::Position()
 {
-    hash = zobrist::calculate(*this); // NOLINT(cppcoreguidelines-prefer-member-initializer)
-
-    threefoldChecker.reset(hash);
+    refresh_zobrist();
 }
 
 void Position::refresh_zobrist()

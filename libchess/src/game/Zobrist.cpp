@@ -138,9 +138,9 @@ auto calculate(const Position& pos) -> Hash
 }
 
 auto update(
-    const Position& pos, const Move& move,
-    const std::optional<Square>  newEPTarget,
-    const CastlingRightsChanges& rightsChanges)
+    const Position& pos, const Move move,
+    const std::optional<Square> newEPTarget,
+    const CastlingRightsChanges rightsChanges)
     -> Hash
 {
     auto value = pos.hash;

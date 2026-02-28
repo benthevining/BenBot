@@ -187,7 +187,7 @@ namespace {
         output.emplace_back(move);
     }
 
-    auto parse_variation(
+    [[nodiscard]] auto parse_variation(
         string_view pgnText, const Position& position, Moves& output)
         -> std::expected<string_view, string>;
 
@@ -195,7 +195,7 @@ namespace {
     // if IsVariation is true, always returns an empty string_view
     // if IsVariation is false (i.e. parsing root PGN), returns text of the game result
     template <bool IsVariation>
-    auto parse_moves_internal(
+    [[nodiscard]] auto parse_moves_internal(
         string_view pgnText,
         Position    position, // intentionally by copy!
         Moves&      output)
