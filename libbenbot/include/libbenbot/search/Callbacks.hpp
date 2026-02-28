@@ -20,6 +20,11 @@
 #pragma once
 
 #include <functional>
+#include <string>
+
+namespace chess::moves {
+struct Move;
+}
 
 namespace ben_bot::search {
 
@@ -86,9 +91,13 @@ struct Callbacks final {
     /** Creates a set of callbacks that print search information in a human-readable
         table-aligned format.
 
+        @param printMove Function object that will be used to format Move objects to display
+        the PV.
+
         @note The output produced by these callbacks does not conform to the UCI protocol!
      */
-    [[nodiscard]] static auto make_pretty_printer()
+    [[nodiscard]] static auto make_pretty_printer(
+        std::function<std::string(chess::moves::Move)>&& printMove)
         -> Callbacks;
 };
 

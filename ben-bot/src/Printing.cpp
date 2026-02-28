@@ -151,7 +151,7 @@ void Engine::print_current_position(const string_view arguments) const
 
     searcher.context.transTable
         .find(pos)
-        .transform([](const TTData& data) {
+        .transform([this](const TTData& data) {
             print_labeled_info(
                 "TT hit: ",
                 std::format(
@@ -159,7 +159,7 @@ void Engine::print_current_position(const string_view arguments) const
                     data.searchedDepth, data.eval,
                     magic_enum::enum_name(data.evalType),
                     eval::Score::from_tt(data.eval, 0uz),
-                    chess::notation::to_uci(data.bestMove.value_or(Move { }))));
+                    pretty_print_move(data.bestMove.value_or(Move { }))));
 
             return std::monostate { };
         });
@@ -180,6 +180,11 @@ void Engine::print_compiler_info()
     info_string(std::format(
         "Build date: {}",
         resources::get_build_time()));
+}
+
+auto Engine::pretty_print_move(const Move move) const -> std::string
+{
+    return chess::notation::to_uci(move);
 }
 
 } // namespace ben_bot

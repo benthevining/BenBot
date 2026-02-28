@@ -25,6 +25,7 @@
 #include <functional>
 #include <libbenbot/search/Thread.hpp>
 #include <libchess/game/Position.hpp>
+#include <libchess/moves/Move.hpp>
 #include <libchess/uci/CommandParsing.hpp>
 #include <libchess/uci/EngineBase.hpp>
 #include <libchess/uci/Options.hpp>
@@ -35,6 +36,7 @@
 namespace ben_bot {
 
 using chess::game::Position;
+using chess::moves::Move;
 using std::string_view;
 
 namespace uci = chess::uci;
@@ -82,6 +84,8 @@ class [[nodiscard]] Engine final : public uci::EngineBase {
     void print_current_position(string_view arguments) const;
 
     void set_pretty_printing(bool shouldPrettyPrint);
+
+    [[nodiscard]] auto pretty_print_move(Move move) const -> std::string;
 
     static void print_compiler_info();
 
