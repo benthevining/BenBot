@@ -12,7 +12,6 @@
  * ======================================================================================
  */
 
-#include <array>
 #include <cassert>
 #include <concepts>
 #include <expected>
@@ -45,7 +44,7 @@ namespace {
     }
 
     [[nodiscard, gnu::const]] auto to_iccf_string(const Square square)
-        -> std::array<char, 2uz>
+        -> string
     {
         return {
             digit_to_char(std::to_underlying(square.file) + 1),
