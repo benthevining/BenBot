@@ -14,28 +14,31 @@
 
 #include <ben-bot/Engine.hpp>
 #include <format>
+#include <functional>
+#include <libchess/moves/Move.hpp>
 #include <libchess/moves/Perft.hpp>
-#include <libchess/notation/UCI.hpp>
 #include <libchess/uci/Printing.hpp>
 #include <libchess/util/Strings.hpp>
 #include <print>
+#include <string>
 
 namespace ben_bot {
 
-namespace util     = chess::util;
-namespace notation = chess::notation;
+namespace util = chess::util;
 
 using uci::printing::info_string;
 
 namespace {
     using chess::moves::PerftResult;
 
-    void print_root_nodes(const PerftResult& result)
+    void print_root_nodes(
+        const PerftResult&                      result,
+        const std::function<std::string(Move)>& printMove)
     {
         for (const auto& [move, numChildren] : result.rootNodes) {
             info_string(std::format(
                 "Move {}: {} child nodes",
-                notation::to_uci(move), numChildren));
+                printMove(move), numChildren));
         }
     }
 
@@ -66,7 +69,10 @@ void Engine::run_perft(const string_view arguments) const
         depth, searcher.context.options.position);
 
     std::println("");
-    print_root_nodes(result);
+
+    print_root_nodes(
+        result,
+        [this](const Move move) { return pretty_print_move(move); });
 
     std::println("");
     print_results(result);
