@@ -17,13 +17,13 @@
 #include <expected>
 #include <format>
 #include <libchess/board/BitboardIndex.hpp>
-#include <libchess/board/Distances.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/notation/ICCF.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
 #include <libchess/util/Strings.hpp>
+#include <magic_enum/magic_enum.hpp>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -40,10 +40,11 @@ namespace {
     {
         assert(digit >= 0 and digit <= 9);
 
-        return '0' + digit;
+        return static_cast<char>(
+            static_cast<int>('0') + static_cast<int>(digit));
     }
 
-    [[nodiscard, gnu::const]] auto to_iccf_string(const Square square)
+    [[nodiscard]] auto to_iccf_string(const Square square)
         -> string
     {
         return {
@@ -59,9 +60,9 @@ namespace {
             case PieceType::Rook  : return '2';
             case PieceType::Bishop: return '3';
             case PieceType::Knight: return '4';
-            default:
-                std::unreachable();
-                return '0';
+            case PieceType::Pawn  : [[fallthrough]];
+            case PieceType::King  : [[fallthrough]];
+            default               : std::unreachable();
         }
     }
 } // namespace
@@ -168,21 +169,15 @@ auto from_iccf(
 
                     return position.our_pieces()
                         .get_piece_on(fromSq)
-                        .transform([text, fromSq, toSq, side = position.sideToMove](const PieceType movedType) -> MoveOrError {
+                        .transform([text, fromSq, toSq](const PieceType movedType) -> MoveOrError {
                             if (text.empty()) {
                                 // non-promotion
-
-                                if (movedType == PieceType::King and file_distance(fromSq, toSq) > 1) {
-                                    if (toSq.is_kingside())
-                                        return moves::castle_kingside(side);
-
-                                    return moves::castle_queenside(side);
-                                }
-
                                 return Move { fromSq, toSq, movedType };
                             }
 
                             // promotion
+                            assert(movedType == PieceType::Pawn);
+
                             return parse_piece_type(text.front())
                                 .transform([fromSq, toSq](const PieceType promotedType) {
                                     return Move { fromSq, toSq, PieceType::Pawn, promotedType };

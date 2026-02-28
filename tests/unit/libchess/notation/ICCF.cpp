@@ -20,7 +20,6 @@
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/ICCF.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
-#include <print>
 
 inline constexpr auto TAGS { "[notation][ICCF]" };
 
