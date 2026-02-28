@@ -10,6 +10,9 @@
 #
 # ======================================================================================
 
+# needed to fix ABI issues that manifest as linker errors if Catch2 isn't built with C++23
+set (CMAKE_CXX_STANDARD 23)
+
 FetchContent_Declare (
     Catch2
     SYSTEM

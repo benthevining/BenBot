@@ -24,7 +24,7 @@ function (check_python_modules_available outputVar)
             OUTPUT_QUIET ERROR_QUIET
         )
 
-        if (NOT "${module_found}" EQUAL 0)
+        if (NOT module_found EQUAL 0)
             message (VERBOSE "Python module ${moduleName} not found")
             set ("${outputVar}" FALSE PARENT_SCOPE)
             return ()

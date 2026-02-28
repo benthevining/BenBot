@@ -34,6 +34,8 @@ FetchContent_MakeAvailable (nlohmann_json rampart)
 
 add_executable (rampart main.cpp)
 
+target_compile_features (rampart PRIVATE cxx_std_23)
+
 target_link_libraries (rampart PRIVATE ben_bot::libchess nlohmann_json::nlohmann_json)
 
 add_feature_info (

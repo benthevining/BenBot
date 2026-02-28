@@ -34,17 +34,13 @@ cmrc_add_resource_library (ben_bot_resources_internal ${resource_files})
 
 add_library (ben_bot_resources STATIC)
 
+target_compile_features (ben_bot_resources PRIVATE cxx_std_23 PUBLIC cxx_std_17)
+
 target_link_libraries (ben_bot_resources PRIVATE ben_bot_resources_internal)
 
 set_target_properties (
-    ben_bot_resources
-    PROPERTIES CXX_STANDARD_REQUIRED ON
-               CXX_EXTENSIONS OFF
-               CXX_VISIBILITY_PRESET hidden
-               VISIBILITY_INLINES_HIDDEN ON
-               DEBUG_POSTFIX -d
-               POSITION_INDEPENDENT_CODE ON
-               VERIFY_INTERFACE_HEADER_SETS ON
+    ben_bot_resources PROPERTIES CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN ON
+                                 POSITION_INDEPENDENT_CODE ON VERIFY_INTERFACE_HEADER_SETS ON
 )
 
 # generate the config header that provides info such as compiler name, build config, etc.
@@ -86,26 +82,6 @@ if (BENBOT_ALWAYS_REBUILD_RESOURCES)
     )
 
     add_dependencies (ben_bot_resources ben_bot_resources_toucher)
-endif ()
-
-# warning flags
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
-    set (not_gnu "$<NOT:$<CXX_COMPILER_ID:GNU>>")
-    set (c_or_objc "$<COMPILE_LANGUAGE:C,OBJC>")
-
-    target_compile_options (
-        ben_bot_resources_internal
-        PRIVATE
-            # cmake-format: sortable
-            -Wno-newline-eof
-            -Wno-exit-time-destructors
-            "$<$<OR:${c_or_objc},${not_gnu}>:-Wno-missing-variable-declarations;-Wno-missing-prototypes>"
-    )
-
-    target_compile_options (
-        ben_bot_resources PRIVATE # cmake-format: sortable
-                                  -Wno-date-time -Wno-unreachable-code
-    )
 endif ()
 
 add_library (ben_bot::resources ALIAS ben_bot_resources)

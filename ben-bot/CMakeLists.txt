@@ -22,10 +22,6 @@ set_property (
     SOURCE src/ColorPrinting.cpp APPEND PROPERTY INCLUDE_DIRECTORIES "${TERMCOLOR_INCLUDES}"
 )
 
-set_target_properties (
-    ben_bot PROPERTIES CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF DEBUG_POSTFIX -d
-)
-
 file (GLOB_RECURSE benbot_headers LIST_DIRECTORIES false CONFIGURE_DEPENDS
                                                          "${CMAKE_CURRENT_LIST_DIR}/include/*.hpp"
 )

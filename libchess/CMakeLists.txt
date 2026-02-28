@@ -36,13 +36,8 @@ target_compile_features (libchess PUBLIC cxx_std_23)
 target_link_libraries (libchess PUBLIC magic_enum::magic_enum beman::inplace_vector)
 
 set_target_properties (
-    libchess
-    PROPERTIES CXX_STANDARD_REQUIRED ON
-               CXX_EXTENSIONS OFF
-               CXX_VISIBILITY_PRESET hidden
-               VISIBILITY_INLINES_HIDDEN ON
-               DEBUG_POSTFIX -d
-               VERIFY_INTERFACE_HEADER_SETS ON
+    libchess PROPERTIES CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN ON
+                        VERIFY_INTERFACE_HEADER_SETS ON
 )
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")

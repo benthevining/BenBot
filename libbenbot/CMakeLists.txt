@@ -21,13 +21,8 @@ set_property (
 )
 
 set_target_properties (
-    libbenbot
-    PROPERTIES CXX_STANDARD_REQUIRED ON
-               CXX_EXTENSIONS OFF
-               CXX_VISIBILITY_PRESET hidden
-               VISIBILITY_INLINES_HIDDEN ON
-               DEBUG_POSTFIX -d
-               VERIFY_INTERFACE_HEADER_SETS ON
+    libbenbot PROPERTIES CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN ON
+                         VERIFY_INTERFACE_HEADER_SETS ON
 )
 
 file (GLOB_RECURSE libbenbot_headers LIST_DIRECTORIES false
