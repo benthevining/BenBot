@@ -86,8 +86,8 @@ auto from_uci(
 
                             // promotion
                             return pieces::from_string(text)
-                                .transform([from, dest, movedType](const PieceType promotedType) {
-                                    return Move { from, dest, movedType, promotedType };
+                                .transform([from, dest](const PieceType promotedType) {
+                                    return Move { from, dest, PieceType::Pawn, promotedType };
                                 })
                                 .transform_error([](const string_view parseError) {
                                     return std::format(
