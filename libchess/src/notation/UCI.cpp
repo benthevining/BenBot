@@ -12,6 +12,7 @@
  * ======================================================================================
  */
 
+#include <cassert>
 #include <expected>
 #include <format>
 #include <libchess/board/Square.hpp>
@@ -81,13 +82,17 @@ auto from_uci(
                     return position.our_pieces()
                         .get_piece_on(from)
                         .transform([text, from, dest](const PieceType movedType) -> MoveOrError {
-                            if (text.empty())
+                            if (text.empty()) {
+                                // non-promotion
                                 return Move { from, dest, movedType };
+                            }
 
                             // promotion
+                            assert(movedType == PieceType::Pawn);
+
                             return pieces::from_string(text)
-                                .transform([from, dest, movedType](const PieceType promotedType) {
-                                    return Move { from, dest, movedType, promotedType };
+                                .transform([from, dest](const PieceType promotedType) {
+                                    return Move { from, dest, PieceType::Pawn, promotedType };
                                 })
                                 .transform_error([](const string_view parseError) {
                                     return std::format(

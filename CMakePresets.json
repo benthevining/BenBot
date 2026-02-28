@@ -128,11 +128,11 @@
       "cacheVariables": {
         "CMAKE_CXX_FLAGS_DEBUG": {
           "type": "STRING",
-          "value": "-fsanitize=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer"
+          "value": "-g -fsanitize=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer"
         },
         "CMAKE_C_FLAGS_DEBUG": {
           "type": "STRING",
-          "value": "-fsanitize=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer"
+          "value": "-g -fsanitize=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer"
         }
       },
       "displayName": "Build with Ninja & Clang (ASAN)",
@@ -143,11 +143,11 @@
       "cacheVariables": {
         "CMAKE_CXX_FLAGS_DEBUG": {
           "type": "STRING",
-          "value": "-fsanitize=undefined"
+          "value": "-g -fsanitize=undefined"
         },
         "CMAKE_C_FLAGS_DEBUG": {
           "type": "STRING",
-          "value": "-fsanitize=undefined"
+          "value": "-g -fsanitize=undefined"
         }
       },
       "displayName": "Build with Ninja & Clang (UBSAN)",

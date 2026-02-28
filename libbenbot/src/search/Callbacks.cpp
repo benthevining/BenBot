@@ -15,6 +15,7 @@
 #include <cassert>
 #include <chrono>
 #include <cmath> // IWYU pragma: keep - for std::abs()
+#include <cstdint>
 #include <format>
 #include <functional>
 #include <iostream>
@@ -23,6 +24,7 @@
 #include <libchess/moves/Move.hpp>
 #include <libchess/notation/UCI.hpp>
 #include <libchess/uci/Printing.hpp>
+#include <libchess/util/Chrono.hpp>
 #include <libchess/util/Variant.hpp>
 #include <optional>
 #include <ratio>
@@ -57,7 +59,7 @@ namespace {
 
     using std::string;
 
-    enum class Alignment {
+    enum class Alignment : std::uint_least8_t {
         Left,
         Right,
         Center
@@ -105,14 +107,14 @@ namespace {
         std::cout << get_column_text<Align>(text);
     }
 
-    template <typename Duration>
+    template <chess::util::ChronoDuration Duration>
     [[nodiscard]] auto get_duration_string(
         const milliseconds duration) -> std::optional<string>
     {
         static constexpr auto msPerUnit = duration_cast<milliseconds>(Duration { 1uz });
 
         if (duration >= msPerUnit) {
-            using FractionalDuration = std::chrono::duration<float, typename Duration::period>;
+            using FractionalDuration = chess::util::FractionalDuration<Duration>;
 
             return std::format(
                 "{:.2%Q %q}",
@@ -195,7 +197,7 @@ namespace {
     void print_score(
         const Score& score)
     {
-        enum class ScoreType {
+        enum class ScoreType : std::uint_least8_t {
             Winning,
             Losing,
             Equal

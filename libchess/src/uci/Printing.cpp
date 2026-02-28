@@ -19,6 +19,7 @@
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/UCI.hpp>
 #include <libchess/uci/Printing.hpp>
+#include <libchess/util/Chrono.hpp>
 #include <libchess/util/Variant.hpp>
 #include <optional>
 #include <print>
@@ -84,7 +85,7 @@ auto SearchInfo::Score::MateIn::moves() const noexcept -> int
 
 auto SearchInfo::get_nps() const noexcept -> size_t
 {
-    using FractionalSeconds = std::chrono::duration<double, std::chrono::seconds::period>;
+    using FractionalSeconds = util::FractionalDuration<std::chrono::seconds, double>;
 
     const auto seconds = duration_cast<FractionalSeconds>(time).count();
 
