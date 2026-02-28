@@ -14,8 +14,8 @@
 
 #include <cassert>
 #include <chrono>
-#include <cmath> // IWYU pragma: keep - for std::abs()
-#include <cstdint>
+#include <cmath>   // IWYU pragma: keep - for std::abs()
+#include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
 #include <format>
 #include <functional>
 #include <iostream>
@@ -232,6 +232,8 @@ namespace {
             case ScoreType::Equal:
                 std::cout << termcolor::grey;
                 break;
+            default:
+                std::unreachable();
         }
 
         print_column_text<Alignment::Center>(

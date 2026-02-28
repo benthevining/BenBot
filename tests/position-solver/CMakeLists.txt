@@ -42,7 +42,12 @@ foreach (epd_file IN LISTS testcase_files)
                     "--index=${epd_idx}" "--engine=$<TARGET_FILE:ben_bot>" "--log=${engine_log}"
         )
 
-        set_tests_properties ("${test_name}" PROPERTIES ATTACHED_FILES_ON_FAIL "${engine_log}")
+        # cmake-format: off
+        set_tests_properties (
+            "${test_name}" PROPERTIES ATTACHED_FILES_ON_FAIL "${engine_log}"
+                                      RESOURCE_LOCK BenBotPositionSolver
+        )
+        # cmake-format: on
 
         set_property (DIRECTORY APPEND PROPERTY ADDITIONAL_CLEAN_FILES "${engine_log}")
     endforeach ()
