@@ -66,7 +66,7 @@ jobs:
       run: pre-commit install --install-hooks
 
     - name: Import GPG key
-      uses: crazy-max/ghaction-import-gpg@v6
+      uses: crazy-max/ghaction-import-gpg@v7
       with:
         gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
         passphrase: ${{ secrets.GPG_PASSPHRASE }}
@@ -142,7 +142,7 @@ jobs:
       run: cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.DEPLOY_DIR }} --component ben_bot --config Release
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: BenBot-${{ matrix.os }}-${{ matrix.preset }}
         path: ${{ env.DEPLOY_DIR }}
@@ -182,7 +182,7 @@ jobs:
 
     - name: Download artifacts
       id: download
-      uses: actions/download-artifact@v7
+      uses: actions/download-artifact@v8
       with:
         path: artifacts
 
