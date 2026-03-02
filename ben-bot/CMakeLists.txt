@@ -41,6 +41,19 @@ add_executable (ben_bot::ben_bot ALIAS ben_bot)
 
 #
 
+include (CheckIPOSupported)
+include (CMakeDependentOption)
+
+check_ipo_supported (RESULT ipo_supported LANGUAGES CXX)
+
+cmake_dependent_option (BENBOT_IPO "Enable IPO/LTO" TRUE ipo_supported FALSE)
+
+if (BENBOT_IPO)
+    set_target_properties (ben_bot PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif ()
+
+#
+
 find_program (CODESIGN_PROGRAM codesign DOC "Path to the codesign executable")
 
 set (
