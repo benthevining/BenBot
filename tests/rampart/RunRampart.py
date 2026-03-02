@@ -96,12 +96,21 @@ for test_case in testcase_data["testCases"]:
             any_errors = True
             continue
 
+        # The expected FEN strings are inconsistent with their handling of
+        # en passant squares; they may match the strict FEN, or they may
+        # match the XFEN, so our test executable produces both and we only
+        # fail if neither matches.
+        # See this issue: https://github.com/schnitzi/rampart/issues/4
         correctFEN = correct_move["fen"]
-        generatedFEN = generated_move["fen"]
 
-        if correctFEN != generatedFEN:
+        generatedFEN = generated_move["fen"]
+        generatedXFEN = generated_move["xfen"]
+
+        if generatedFEN != correctFEN and generatedXFEN != correctFEN:
             print(f"ERROR: move {move} resulted in incorrect FEN!", flush=True)
-            print(f"Expected {correctFEN}, got {generatedFEN}", flush=True)
+            print(f"Expected FEN: {correctFEN}", flush=True)
+            print(f"Got FEN: {generatedFEN}", flush=True)
+            print(f"Got XFEN: {generatedXFEN}", flush=True)
             any_errors = True
 
     # check for moves in generated_moves not in correct_moves

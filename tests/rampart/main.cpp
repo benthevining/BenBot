@@ -52,11 +52,15 @@ using nlohmann::json;
 
                 moveJSON["move"] = chess::notation::to_alg(position, move);
 
-                moveJSON["fen"] = chess::notation::to_fen(
-                    after_move(position, move),
-                    false);
+                const auto newPos = after_move(position, move);
 
-                movesJSON.push_back(moveJSON);
+                moveJSON["fen"] = chess::notation::to_fen(
+                    newPos, true);
+
+                moveJSON["xfen"] = chess::notation::to_fen(
+                    newPos, false);
+
+                movesJSON.emplace_back(std::move(moveJSON));
             }
 
             obj["generated"] = movesJSON;
