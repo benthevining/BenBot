@@ -6,7 +6,7 @@
     },
     {
       "name": "catch2",
-      "version>=": "3.8.1"
+      "version>=": "3.13.0"
     },
     {
       "name": "nlohmann-json",

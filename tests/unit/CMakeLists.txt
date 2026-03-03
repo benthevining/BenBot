@@ -17,9 +17,9 @@ FetchContent_Declare (
     Catch2
     SYSTEM
     GIT_REPOSITORY "https://github.com/catchorg/Catch2.git"
-    GIT_TAG v3.8.1
+    GIT_TAG v3.13.0
     GIT_SHALLOW ON
-    FIND_PACKAGE_ARGS 3.8.1
+    FIND_PACKAGE_ARGS 3.13.0
 )
 
 FetchContent_MakeAvailable (Catch2)
