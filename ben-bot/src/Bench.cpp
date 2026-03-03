@@ -28,6 +28,7 @@
 #include <libbenbot/search/Thread.hpp>
 #include <libchess/notation/EPD.hpp>
 #include <libchess/uci/Printing.hpp>
+#include <libchess/util/Chrono.hpp>
 #include <libchess/util/Files.hpp>
 #include <libchess/util/Strings.hpp>
 #include <libchess/util/Threading.hpp>
@@ -171,12 +172,14 @@ namespace {
             std::plus { },
             [](const SearchResult& result) { return result.duration; });
 
-        const auto seconds = static_cast<double>(totalTime.count()) * 0.001;
+        using Seconds = util::FractionalDuration<std::chrono::seconds>;
 
-        assert(seconds > 0.);
+        const auto seconds = duration_cast<Seconds>(totalTime);
+
+        assert(seconds > Seconds { 0.f });
 
         const auto nps = static_cast<size_t>(std::round(
-            static_cast<double>(totalNodes) / seconds));
+            static_cast<Seconds::rep>(totalNodes) / seconds.count()));
 
         info_string(std::format("Total nodes: {}", totalNodes));
         info_string(std::format("Total seconds: {}", seconds));
