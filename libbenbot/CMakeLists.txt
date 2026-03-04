@@ -25,7 +25,7 @@ FetchContent_Declare (
     GIT_TAG v2.1.0
     GIT_SHALLOW ON
     SOURCE_SUBDIR foo # we need to disable adding termcolor as a subdirectory, because they list a
-    # too-old cmake version
+                      # too-old cmake version
     FIND_PACKAGE_ARGS 2.1.0
 )
 

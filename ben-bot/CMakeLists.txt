@@ -38,23 +38,23 @@ add_feature_info (benbot_ipo BENBOT_IPO "Enable IPO/LTO")
 find_program (CODESIGN_PROGRAM codesign DOC "Path to the codesign executable")
 
 set (
-    CODESIGN_ID
-    "$ENV{CODESIGN_ID}"
+    BENBOT_CODESIGN_ID
+    "$ENV{BENBOT_CODESIGN_ID}"
     CACHE
         STRING
-        "Apple developer ID string, for example 'Developer ID Application: Your Name (2DO8NL92GO)'"
+        "Apple developer ID string used for signing BenBot, for example 'Developer ID Application: Your Name (2DO8NL92GO)'"
 )
 
 add_feature_info (
-    benbot_codesigning "CODESIGN_PROGRAM AND CODESIGN_ID" "Signing of BenBot binaries"
+    benbot_codesigning "CODESIGN_PROGRAM AND BENBOT_CODESIGN_ID" "Signing of BenBot binaries"
 )
 
-if (CODESIGN_PROGRAM AND CODESIGN_ID)
+if (CODESIGN_PROGRAM AND BENBOT_CODESIGN_ID)
     add_custom_command (
         TARGET ben_bot
         POST_BUILD
         COMMAND "${CODESIGN_PROGRAM}" --force --deep --strict --options=runtime --timestamp -s
-                "${CODESIGN_ID}" -v "$<TARGET_FILE:ben_bot>"
+                "${BENBOT_CODESIGN_ID}" -v "$<TARGET_FILE:ben_bot>"
         COMMENT "[codesign] - Signing ben_bot..."
         VERBATIM COMMAND_EXPAND_LISTS USES_TERMINAL
     )
