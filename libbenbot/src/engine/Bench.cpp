@@ -13,7 +13,6 @@
  */
 
 #include <algorithm>
-#include <ben-bot/Resources.hpp>
 #include <cassert>
 #include <chrono>
 #include <cmath>
@@ -22,6 +21,7 @@
 #include <filesystem>
 #include <format>
 #include <functional>
+#include <libbenbot/Resources.hpp>
 #include <libbenbot/engine/Engine.hpp>
 #include <libbenbot/search/Callbacks.hpp>
 #include <libbenbot/search/Result.hpp>

@@ -12,8 +12,8 @@
  * ======================================================================================
  */
 
-#include <ben-bot/Resources.hpp>
 #include <format>
+#include <libbenbot/Resources.hpp>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/engine/ColorPrinting.hpp>
 #include <libbenbot/engine/Engine.hpp>

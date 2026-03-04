@@ -4,7 +4,7 @@ This directory defines the `ben-bot` engine's resources library.
 
 The main include is:
 ```cpp
-#include <ben-bot/Resources.hpp>
+#include <libbenbot/Resources.hpp>
 ```
 
 ## CMake

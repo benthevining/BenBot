@@ -12,13 +12,13 @@
  * ======================================================================================
  */
 
-#include <ben-bot/Resources.hpp>
 #include <charconv>
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for std::ptrdiff_t
 #include <ctime>
 #include <iomanip>
 #include <iterator>
+#include <libbenbot/Resources.hpp>
 #include <sstream>
 #include <string>
 #include <string_view>

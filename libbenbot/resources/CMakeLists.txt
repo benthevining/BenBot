@@ -58,7 +58,7 @@ set (generated_header "${generated_includes}/BenBotConfig.hpp")
 string (CONFIGURE "${config_header_content}" config_header_content @ONLY)
 file (GENERATE OUTPUT "${generated_header}" CONTENT "${config_header_content}")
 
-set (header_file "include/ben-bot/Resources.hpp")
+set (header_file "include/libbenbot/Resources.hpp")
 set (source_files # cmake-format: sortable
                   src/BuildTime.cpp src/Resources.cpp
 )

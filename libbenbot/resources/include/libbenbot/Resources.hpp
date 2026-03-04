@@ -19,7 +19,7 @@
 
 /** @defgroup benbot_data Resources
     Binary data embedded into the engine executable.
-    @ingroup benbot
+    @ingroup libbenbot
  */
 
 /** @file

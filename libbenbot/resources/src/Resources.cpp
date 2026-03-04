@@ -13,9 +13,9 @@
  */
 
 #include <BenBotConfig.hpp>
-#include <ben-bot/Resources.hpp>
 #include <cmrc/cmrc.hpp>
 #include <format>
+#include <libbenbot/Resources.hpp>
 #include <string>
 #include <string_view>
 
