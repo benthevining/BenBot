@@ -54,7 +54,6 @@ add_custom_command (
 
 get_target_property (libchess_headers ben_bot::libchess HEADER_SET)
 get_target_property (libbenbot_headers ben_bot::libbenbot HEADER_SET)
-get_target_property (benbot_headers ben_bot::ben_bot HEADER_SET)
 get_target_property (resource_headers ben_bot::resources HEADER_SET)
 
 doxygen_add_docs (
@@ -67,7 +66,6 @@ doxygen_add_docs (
     "${engine_doc_page}"
     ${libchess_headers}
     ${libbenbot_headers}
-    ${benbot_headers}
     ${resource_headers}
     WORKING_DIRECTORY "${BenBot_SOURCE_DIR}"
     COMMENT "Building Doxygen documentation..." USE_STAMP_FILE
