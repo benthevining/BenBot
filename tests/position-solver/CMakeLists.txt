@@ -24,17 +24,6 @@ file (GLOB testcase_files LIST_DIRECTORIES false CONFIGURE_DEPENDS
 
 set_property (DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${testcase_files})
 
-get_cmake_property (debug_configs DEBUG_CONFIGURATIONS)
-
-if (NOT debug_configs)
-    set (debug_configs Debug)
-endif ()
-
-list (JOIN debug_configs "," debug_configs)
-
-set (config_debug "$<CONFIG:${debug_configs}>")
-set (config_release "$<NOT:${config_debug}>")
-
 foreach (epd_file IN LISTS testcase_files)
     cmake_path (GET epd_file STEM filename)
 
@@ -51,6 +40,7 @@ foreach (epd_file IN LISTS testcase_files)
             NAME "${test_name}"
             COMMAND Python::Interpreter "${CMAKE_CURRENT_LIST_DIR}/solver.py" "--test=${epd_file}"
                     "--index=${epd_idx}" "--engine=$<TARGET_FILE:ben_bot>" "--log=${engine_log}"
+            CONFIGURATIONS Release
         )
 
         # cmake-format: off
@@ -58,7 +48,6 @@ foreach (epd_file IN LISTS testcase_files)
             "${test_name}" PROPERTIES
                 ATTACHED_FILES_ON_FAIL "${engine_log}"
                 RESOURCE_LOCK BenBotPositionSolver # only allow one position solver test to run at a time
-                DISABLED "$<IF:${config_release},False,True>" # only enable for release configs, it's way too slow in debug
         )
         # cmake-format: on
 
