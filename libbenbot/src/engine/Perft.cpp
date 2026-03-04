@@ -12,9 +12,9 @@
  * ======================================================================================
  */
 
-#include <ben-bot/Engine.hpp>
 #include <format>
 #include <functional>
+#include <libbenbot/engine/Engine.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/moves/Perft.hpp>
 #include <libchess/uci/Printing.hpp>

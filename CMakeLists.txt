@@ -33,25 +33,6 @@ cpack_add_component_group (
     ben_bot_all DISPLAY_NAME "BenBot" DESCRIPTION "All components of BenBot" EXPANDED BOLD_TITLE
 )
 
-FetchContent_Declare (
-    termcolor
-    SYSTEM
-    GIT_REPOSITORY "https://github.com/ikalnytskyi/termcolor.git"
-    GIT_TAG v2.1.0
-    GIT_SHALLOW ON
-    SOURCE_SUBDIR foo # we need to disable adding termcolor as a subdirectory, because they list a
-                      # too-old cmake version
-    FIND_PACKAGE_ARGS 2.1.0
-)
-
-FetchContent_MakeAvailable (termcolor)
-
-if (termcolor_SOURCE_DIR)
-    set (TERMCOLOR_INCLUDES "${termcolor_SOURCE_DIR}/include")
-elseif (termcolor_DIR)
-    set (TERMCOLOR_INCLUDES "${termcolor_DIR}/include")
-endif ()
-
 add_subdirectory (libchess)
 add_subdirectory (libbenbot)
 add_subdirectory (ben-bot)

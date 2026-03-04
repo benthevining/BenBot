@@ -13,10 +13,10 @@
  */
 
 #include <ben-bot/CLI.hpp>
-#include <ben-bot/Engine.hpp>
 #include <cstdlib>
 #include <exception>
 #include <format>
+#include <libbenbot/engine/Engine.hpp>
 #include <libchess/uci/Printing.hpp>
 #include <libchess/util/Console.hpp>
 

@@ -14,11 +14,7 @@ add_executable (ben_bot)
 
 target_compile_features (ben_bot PRIVATE cxx_std_23)
 
-target_link_libraries (ben_bot PRIVATE ben_bot::libbenbot ben_bot::resources)
-
-set_property (
-    SOURCE src/ColorPrinting.cpp APPEND PROPERTY INCLUDE_DIRECTORIES "${TERMCOLOR_INCLUDES}"
-)
+target_link_libraries (ben_bot PRIVATE ben_bot::libbenbot)
 
 file (GLOB_RECURSE benbot_headers LIST_DIRECTORIES false CONFIGURE_DEPENDS
                                                          "${CMAKE_CURRENT_LIST_DIR}/include/*.hpp"

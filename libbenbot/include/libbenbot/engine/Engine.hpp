@@ -14,15 +14,15 @@
 
 /** @file
     This file defines the top-level engine class used by the BenBot executable.
-    @ingroup benbot
+    @ingroup libbenbot
  */
 
 #pragma once
 
 #include <array>
 #include <atomic>
-#include <ben-bot/CustomCommand.hpp>
 #include <functional>
+#include <libbenbot/engine/CustomCommand.hpp>
 #include <libbenbot/search/Thread.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/uci/CommandParsing.hpp>
@@ -41,7 +41,7 @@ using std::string_view;
 namespace uci = chess::uci;
 
 /** The ``ben-bot`` UCI engine class.
-    @ingroup benbot
+    @ingroup libbenbot
  */
 class [[nodiscard]] Engine final : public uci::EngineBase {
     [[nodiscard]] auto get_name() const -> std::string override;

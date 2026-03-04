@@ -18,3 +18,7 @@ The core search logic does not depend on the UCI protocol; the `ben-bot/` direct
 ### Targets
 
 * `ben_bot::libbenbot`: library target
+
+## Dependencies
+
+* [termcolor](https://github.com/ikalnytskyi/termcolor), for printing colored terminal output

@@ -13,56 +13,43 @@
  */
 
 /** @file
-    This file defines the custom command struct used by the engine to implement
-    non-standard UCI commands.
+    This file provides functions for colored printing.
 
-    @ingroup benbot
+    @ingroup libbenbot
  */
 
 #pragma once
 
-#include <functional>
 #include <string_view>
-#include <utility>
+
+namespace chess::util::strings {
+struct TextTable;
+} // namespace chess::util::strings
+
+namespace chess::game {
+struct Position;
+} // namespace chess::game
 
 namespace ben_bot {
 
+using chess::game::Position;
 using std::string_view;
 
-/** A custom UCI command that the engine can respond to.
-    @ingroup benbot
+/** @ingroup libbenbot
+    @{
  */
-struct CustomCommand final {
-    /** Function type that is invoked when this command is executed. */
-    using Callback = std::function<void(string_view)>;
 
-    /** The name of the command.
-        This is the token the user should type in the CLI to execute the command.
-     */
-    string_view name;
+/** Prints the given table with bold headings, faint outlines,
+    and regular content cells.
+ */
+void print_colored_table(const chess::util::strings::TextTable& table);
 
-    /** Function object that will be called when the command is executed.
-        This callback will receive the rest of the command line as its argument.
-     */
-    Callback action;
+/** Prints the given position with faint file/rank labels. */
+void print_colored_board(const Position& pos, bool utf8);
 
-    /** Brief description of this command. This will be shown in the engine's help output. */
-    string_view description;
+/** Prints the given label faintly, and the info as regular text. */
+void print_labeled_info(string_view label, string_view info);
 
-    /** A brief string to provide some documentation for the command's arguments.
-        This will be shown in the engine's help output.
-        For example, if the command expects a single filepath argument, this help string
-        might be ``<path>``.
-     */
-    string_view argsHelp;
-
-    /** Wraps a callback taking no arguments into a ``Callback`` for a command. */
-    [[nodiscard]] static auto void_cb(std::function<void()>&& func) -> Callback
-    {
-        return [callback = std::move(func)]([[maybe_unused]] const string_view args) {
-            callback();
-        };
-    }
-};
+/** @} */
 
 } // namespace ben_bot

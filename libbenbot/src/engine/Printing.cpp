@@ -12,11 +12,11 @@
  * ======================================================================================
  */
 
-#include <ben-bot/ColorPrinting.hpp>
-#include <ben-bot/Engine.hpp>
 #include <ben-bot/Resources.hpp>
 #include <format>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
+#include <libbenbot/engine/ColorPrinting.hpp>
+#include <libbenbot/engine/Engine.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Score.hpp>
 #include <libbenbot/search/Result.hpp>

@@ -14,11 +14,11 @@
 
 #include <algorithm>
 #include <atomic>
-#include <ben-bot/Engine.hpp>
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <filesystem>
 #include <format>
+#include <libbenbot/engine/Engine.hpp>
 #include <libbenbot/search/Callbacks.hpp>
 #include <libchess/notation/MoveFormats.hpp>
 #include <libchess/uci/Printing.hpp>

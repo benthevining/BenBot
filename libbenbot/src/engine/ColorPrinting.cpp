@@ -13,10 +13,10 @@
  */
 
 #include <beman/inplace_vector/inplace_vector.hpp>
-#include <ben-bot/ColorPrinting.hpp>
-#include <ben-bot/Engine.hpp>
 #include <ben-bot/Resources.hpp>
 #include <iostream>
+#include <libbenbot/engine/ColorPrinting.hpp>
+#include <libbenbot/engine/Engine.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/util/Strings.hpp>
 #include <libchess/util/TextTable.hpp>
