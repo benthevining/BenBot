@@ -23,8 +23,14 @@ file (GLOB testcase_files LIST_DIRECTORIES false CONFIGURE_DEPENDS
 foreach (data_file IN LISTS testcase_files)
     cmake_path (GET data_file STEM filename)
 
-    add_test (NAME "ben_bot.perft.${filename}"
-              COMMAND Python::Interpreter "${CMAKE_CURRENT_LIST_DIR}/perft.py"
-                      "--test=${data_file}" "--engine=$<TARGET_FILE:ben_bot>"
+    set (test_name "ben_bot.perft.${filename}")
+
+    add_test (NAME "${test_name}" COMMAND Python::Interpreter "${CMAKE_CURRENT_LIST_DIR}/perft.py"
+                                          "--test=${data_file}" "--engine=$<TARGET_FILE:ben_bot>"
+    )
+
+    set_tests_properties (
+        "${test_name}" PROPERTIES RESOURCE_LOCK BenBotPerft # only allow one perft test to run at a
+                                                            # time
     )
 endforeach ()
