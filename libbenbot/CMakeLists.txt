@@ -10,6 +10,8 @@
 #
 # ======================================================================================
 
+add_subdirectory (resources)
+
 add_library (libbenbot STATIC)
 
 target_compile_features (libbenbot PUBLIC cxx_std_23)

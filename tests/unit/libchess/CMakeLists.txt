@@ -25,7 +25,7 @@ set_property (
     APPEND
     PROPERTY
         COMPILE_DEFINITIONS
-        "BENBOT_LICENSE_HEADER_FILE=\"${BenBot_SOURCE_DIR}/ben-bot/resources/res/license_header.txt\""
+        "BENBOT_LICENSE_HEADER_FILE=\"${BenBot_SOURCE_DIR}/libbenbot/resources/res/license_header.txt\""
 )
 
 source_group (TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${sources})

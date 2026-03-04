@@ -10,8 +10,6 @@
 #
 # ======================================================================================
 
-add_subdirectory (resources)
-
 add_executable (ben_bot)
 
 target_compile_features (ben_bot PRIVATE cxx_std_23)
