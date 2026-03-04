@@ -28,19 +28,12 @@ FetchContent_Declare (
 
 FetchContent_MakeAvailable (matetrack)
 
-# cmake-format: off
 add_test (
     NAME ben_bot.matetrack
-    COMMAND Python::Interpreter matecheck.py
-        --engine "$<TARGET_FILE:ben_bot>"
-        --epdFile mates2000.epd
-        --nodes 10000
-        --depth 10
-        --time 30
-        --showAllIssues --showAllStats --bench
+    COMMAND Python::Interpreter matecheck.py --engine "$<TARGET_FILE:ben_bot>" --epdFile
+            mates2000.epd --nodes 10000 --depth 10 --time 30 --showAllIssues --showAllStats --bench
     WORKING_DIRECTORY "${matetrack_SOURCE_DIR}"
 )
-# cmake-format: on
 
 set_property (
     TEST ben_bot.matetrack APPEND

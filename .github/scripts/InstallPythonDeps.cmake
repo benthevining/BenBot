@@ -20,12 +20,8 @@ cmake_minimum_required (VERSION 4.0.0 FATAL_ERROR)
 
 find_package (Python 3.10 COMPONENTS Interpreter REQUIRED)
 
-# cmake-format: off
 execute_process (
-    COMMAND "${Python_EXECUTABLE}" -m pip install --break-system-packages --upgrade
-        python-chess tqdm cpplint cppcheck clang-tidy
-    COMMAND_ECHO STDOUT
-    OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_STRIP_TRAILING_WHITESPACE
-    COMMAND_ERROR_IS_FATAL ANY
+    COMMAND "${Python_EXECUTABLE}" -m pip install --break-system-packages --upgrade python-chess
+            tqdm cpplint cppcheck clang-tidy COMMAND_ECHO STDOUT
+    OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY
 )
-# cmake-format: on

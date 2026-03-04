@@ -29,8 +29,5 @@ foreach (data_file IN LISTS testcase_files)
                                           "--test=${data_file}" "--engine=$<TARGET_FILE:ben_bot>"
     )
 
-    set_tests_properties (
-        "${test_name}" PROPERTIES RESOURCE_LOCK BenBotPerft # only allow one perft test to run at a
-                                                            # time
-    )
+    set_tests_properties ("${test_name}" PROPERTIES RESOURCE_LOCK BenBotPerft)
 endforeach ()

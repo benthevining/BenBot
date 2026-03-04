@@ -41,19 +41,14 @@ file (TOUCH "${engine_doc_page}")
 
 set (generator_script "${CMAKE_CURRENT_LIST_DIR}/GenerateEngineDocs.cmake")
 
-# cmake-format: off
 add_custom_command (
     OUTPUT "${engine_doc_page}"
-    COMMAND "${CMAKE_COMMAND}"
-        -D "OUTPUT_FILE=${engine_doc_page}"
-        -D "ENGINE_PATH=$<TARGET_FILE:ben_bot::ben_bot>"
-        -P "${generator_script}"
-    DEPENDS ben_bot::ben_bot "${generator_script}"
-        "${CMAKE_CURRENT_LIST_DIR}/engine-docs.txt"
+    COMMAND "${CMAKE_COMMAND}" -D "OUTPUT_FILE=${engine_doc_page}" -D
+            "ENGINE_PATH=$<TARGET_FILE:ben_bot::ben_bot>" -P "${generator_script}"
+    DEPENDS ben_bot::ben_bot "${generator_script}" "${CMAKE_CURRENT_LIST_DIR}/engine-docs.txt"
     COMMENT "Generating engine docs page..."
     VERBATIM USES_TERMINAL
 )
-# cmake-format: on
 
 #
 
@@ -62,22 +57,21 @@ get_target_property (libbenbot_headers ben_bot::libbenbot HEADER_SET)
 get_target_property (benbot_headers ben_bot::ben_bot HEADER_SET)
 get_target_property (resource_headers ben_bot::resources HEADER_SET)
 
-# cmake-format: off
 doxygen_add_docs (
-        ben_bot_docs
-        "${DOXYGEN_LAYOUT_FILE}"
-        "${DOXYGEN_USE_MDFILE_AS_MAINPAGE}"
-        "${CMAKE_CURRENT_LIST_DIR}/uci-spec.txt"
-        "${CMAKE_CURRENT_LIST_DIR}/top-level-groups.txt"
-        "${CMAKE_CURRENT_LIST_DIR}/CodeStyle.md"
-        "${engine_doc_page}"
-        ${libchess_headers} ${libbenbot_headers}
-        ${benbot_headers} ${resource_headers}
-        WORKING_DIRECTORY "${BenBot_SOURCE_DIR}"
-        COMMENT "Building Doxygen documentation..."
-        USE_STAMP_FILE
+    ben_bot_docs
+    "${DOXYGEN_LAYOUT_FILE}"
+    "${DOXYGEN_USE_MDFILE_AS_MAINPAGE}"
+    "${CMAKE_CURRENT_LIST_DIR}/uci-spec.txt"
+    "${CMAKE_CURRENT_LIST_DIR}/top-level-groups.txt"
+    "${CMAKE_CURRENT_LIST_DIR}/CodeStyle.md"
+    "${engine_doc_page}"
+    ${libchess_headers}
+    ${libbenbot_headers}
+    ${benbot_headers}
+    ${resource_headers}
+    WORKING_DIRECTORY "${BenBot_SOURCE_DIR}"
+    COMMENT "Building Doxygen documentation..." USE_STAMP_FILE
 )
-# cmake-format: on
 
 set (html_output_dir "${DOXYGEN_OUTPUT_DIRECTORY}/html")
 
