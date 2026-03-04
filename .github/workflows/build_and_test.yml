@@ -28,8 +28,6 @@ defaults:
 
 permissions:
   contents: read
-  checks: write
-  pull-requests: write
 
 jobs:
 
@@ -68,6 +66,7 @@ jobs:
       CTEST_PARALLEL_LEVEL: '' # empty value to make ctest detect the number of cores
       CTEST_NO_TESTS_ACTION: error
       CTEST_OUTPUT_ON_FAILURE: 1
+      JUNIT_FILENAME: junit-${{ matrix.os }}-${{ matrix.preset }}-${{ matrix.config }}.xml
       # NB. Windows runners may error out if we make these absolute paths prefixed with
       # ${{ github.workspace }}, because that may contain Windows-style backslashes
       BUILD_DIR: Builds/${{ matrix.preset }}
@@ -96,8 +95,15 @@ jobs:
       run: cmake --preset ${{ matrix.preset }} -D BENBOT_DOCS=OFF -D BUILDNAME=${{ env.BUILD_NAME }}
 
     - name: Build and test
-      run: ctest -D ${{ inputs.dashboard_type }} -C ${{ matrix.config }} --schedule-random --output-junit junit.xml
+      run: ctest -D ${{ inputs.dashboard_type }} -C ${{ matrix.config }} --schedule-random --output-junit ${{ env.JUNIT_FILENAME }}
       working-directory: ${{ env.BUILD_DIR }}
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{ env.JUNIT_FILENAME }}
+        path: ${{ env.BUILD_DIR }}/${{ env.JUNIT_FILENAME }}
 
     - name: Run cmake install
       if: always() && matrix.config == 'Release'
@@ -110,3 +116,29 @@ jobs:
         name: BenBot-${{ matrix.os }}-${{ matrix.preset }}
         path: deploy # using the full path here errors on Windows due to mixed forward/backslash usage in the path
         if-no-files-found: error
+
+  report_aggregate_test_results:
+    runs-on: ubuntu-latest
+    name: Report aggregate test results
+    timeout-minutes: 10
+    needs: build_and_test
+    permissions:
+      checks: write
+      pull-requests: write
+
+    steps:
+    - name: Download JUnit results
+      uses: actions/download-artifact@v7
+      with:
+        path: junit
+        pattern: junit-*
+        merge-multiple: true
+
+    - name: Report aggregate results
+      uses: EnricoMi/publish-unit-test-result-action@v2.23.0
+      with:
+        check_name: "Test Results (${{ github.event.workflow_run.event || github.event_name }})"
+        files: junit/*.xml
+        comment_mode: changes in failures
+        large_files: true
+        report_individual_runs: true
