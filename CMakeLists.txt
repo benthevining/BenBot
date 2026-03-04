@@ -71,5 +71,6 @@ if (BENBOT_DOCS)
 endif ()
 
 if (PROJECT_IS_TOP_LEVEL)
+    include (CPack)
     feature_summary (WHAT ALL DEFAULT_DESCRIPTION)
 endif ()
