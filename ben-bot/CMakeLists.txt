@@ -52,6 +52,8 @@ if (BENBOT_IPO)
     set_target_properties (ben_bot PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif ()
 
+add_feature_info (benbot_ipo BENBOT_IPO "Enable IPO/LTO")
+
 #
 
 find_program (CODESIGN_PROGRAM codesign DOC "Path to the codesign executable")
@@ -64,9 +66,9 @@ set (
         "Apple developer ID string, for example 'Developer ID Application: Your Name (2DO8NL92GO)'"
 )
 
-include (FeatureSummary)
-
-add_feature_info (codesigning "CODESIGN_PROGRAM AND CODESIGN_ID" "Signing of BenBot binaries")
+add_feature_info (
+    benbot_codesigning "CODESIGN_PROGRAM AND CODESIGN_ID" "Signing of BenBot binaries"
+)
 
 if (CODESIGN_PROGRAM AND CODESIGN_ID)
     add_custom_command (
