@@ -28,9 +28,9 @@ pre-commit:
 alias pc := pre-commit
 
 install:
-    pre-commit install --install-hooks
     python3 -m pip install -r {{ justfile_directory() }}/config/requirements.txt
     npm install
+    pre-commit install --install-hooks
 
 # Updates pre-commit hooks to latest tags
 pc-update:
