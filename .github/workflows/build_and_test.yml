@@ -60,10 +60,10 @@ jobs:
         exclude:
         - os: windows-latest
           preset: clang
-          config: UBSAN
+          config: ASAN
         - os: windows-latest
           preset: clang
-          config: ASAN
+          config: UBSAN
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }}.${{ matrix.preset }}.${{ matrix.config }}.${{ inputs.dashboard_type }}
     permissions:
