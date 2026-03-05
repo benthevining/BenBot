@@ -129,6 +129,13 @@ jobs:
     - name: Ensure CMake 4.0
       uses: lukka/get-cmake@v4.2.3
 
+    - name: Import signing certificate to keychain
+      if: runner.os == 'macOS'
+      uses: Apple-Actions/import-codesign-certs@v6.0.0
+      with:
+        p12-file-base64: ${{ secrets.CODESIGN_CERT_FILE_BASE64 }}
+        p12-password: ${{ secrets.CODESIGN_CERT_PASSWORD }}
+
     - name: Checkout code
       uses: actions/checkout@v6
       with:
