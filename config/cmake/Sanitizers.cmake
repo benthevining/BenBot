@@ -67,8 +67,8 @@ endfunction ()
 # ASAN
 
 if (MSVC)
-    set (asan_flags "/fsanitize=address /fsanitize-address-use-after-return /DEBUG")
-    set (asan_link_flags "")
+    set (asan_flags "/fsanitize=address /fsanitize-address-use-after-return /DEBUG /Zi")
+    set (asan_link_flags "/DEBUG")
 else ()
     set (asan_flags
          "-g -fno-omit-frame-pointer -fsanitize=address -fsanitize-address-use-after-scope"
