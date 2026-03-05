@@ -108,10 +108,12 @@ add_custom_target (
 
 # set up coverage reports
 
-find_program (GCOV_PROGRAM gcov DOC "gcov executable")
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    find_program (GCOV_PROGRAM gcov DOC "gcov executable")
 
-if (GCOV_PROGRAM)
-    set (CTEST_COVERAGE_COMMAND "${GCOV_PROGRAM}" CACHE FILEPATH "CTest coverage command")
+    if (GCOV_PROGRAM)
+        set (CTEST_COVERAGE_COMMAND "${GCOV_PROGRAM}" CACHE FILEPATH "CTest coverage command")
+    endif ()
 endif ()
 
 find_program (GENINFO_PROGRAM geninfo DOC "geninfo executable")
