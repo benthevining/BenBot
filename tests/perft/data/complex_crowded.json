@@ -52,19 +52,6 @@
         "stalemates": 0,
         "totalNodes": 422333
       }
-    },
-    {
-      "depth": 5,
-      "results": {
-        "captures": 2046173,
-        "castles": 0,
-        "checkmates": 50562,
-        "checks": 200568,
-        "en_passants": 6512,
-        "promotions": 329464,
-        "stalemates": 0,
-        "totalNodes": 15833292
-      }
     }
   ],
   "position": "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1"
