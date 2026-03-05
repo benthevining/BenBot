@@ -35,9 +35,6 @@ defaults:
   run:
     shell: bash
 
-permissions:
-  contents: read
-
 jobs:
 
   build:
@@ -46,6 +43,7 @@ jobs:
     name: Build docs
     timeout-minutes: 10
     env:
+      CMAKE_PRESET: clang
       CMAKE_BUILD_PARALLEL_LEVEL: 8
       BUILD_DIR: ${{ github.workspace }}/Builds/clang
       DEPLOY_DIR: ${{ github.workspace }}/deploy
@@ -65,7 +63,7 @@ jobs:
         ref: ${{ inputs.ref || github.ref }}
 
     - name: Configure CMake
-      run: cmake --preset clang -D BENBOT_TESTS=OFF
+      run: cmake --preset ${{ env.CMAKE_PRESET }} -D BENBOT_TESTS=OFF
 
     - name: Build docs
       run: cmake --build . --target ben_bot_docs
@@ -78,8 +76,8 @@ jobs:
         cmake -E cat logs/Doxygen.log >> $GITHUB_STEP_SUMMARY
 
     - name: Run CMake install
-      run: cmake --install . --prefix ${{ env.DEPLOY_DIR }} --component ben_bot_docs
-      working-directory: ${{ env.BUILD_DIR }}
+      run: |
+        cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.DEPLOY_DIR }} --component ben_bot_docs
 
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v4
@@ -89,6 +87,8 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
+    name: Deploy docs
+    timeout-minutes: 5
     needs: build
     environment:
       name: github-pages

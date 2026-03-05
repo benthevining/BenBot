@@ -30,9 +30,6 @@ defaults:
   run:
     shell: bash
 
-permissions:
-  contents: read
-
 jobs:
 
   sprt:
@@ -41,9 +38,15 @@ jobs:
     name: Run SPRT test
     timeout-minutes: 300 # 5 hours
     env:
+      CMAKE_PRESET: clang
       CMAKE_BUILD_PARALLEL_LEVEL: 8
       BUILD_DIR: ${{ github.workspace }}/Builds/clang
       SPRT_OUTPUT_LOG: ${{ github.workspace }}/logs/sprt/output.log
+      # these directories are used for building & installing the latest
+      # main, in the case that we're using main as the SPRT baseline
+      TMP_ROOT: ${{ github.workspace }}/tmp-main
+      TMP_BUILD_DIR: ${{ github.workspace }}/tmp-main/Builds/clang
+      TMP_DEPLOY_DIR: ${{ github.workspace }}/tmp-main/deploy
 
     steps:
     - name: Install dependencies
@@ -63,7 +66,6 @@ jobs:
       with:
         repository: Disservin/fastchess
         latest: true
-        preRelease: true # so far, fastchess only has prereleases
         fileName: '*-linux-x86-64*'
         tarBall: false
         zipBall: false
@@ -119,26 +121,28 @@ jobs:
       uses: actions/checkout@v6
       with:
         ref: main
-        path: tmp-main
+        path: ${{ env.TMP_ROOT }}
 
     - name: Configure main
       if: ${{ inputs.use_main }}
-      run: cmake --preset clang -D BENBOT_DOCS=OFF
-      working-directory: tmp-main
+      run: cmake --preset ${{ env.CMAKE_PRESET }} -D BENBOT_DOCS=OFF
+      working-directory: ${{ env.TMP_ROOT }}
 
     - name: Build main
       if: ${{ inputs.use_main }}
       run: cmake --build . --target ben_bot --config Release
-      working-directory: tmp-main/Builds/clang
+      working-directory: ${{ env.TMP_BUILD_DIR }}
 
     - name: Install main
       if: ${{ inputs.use_main }}
-      run: cmake --install tmp-main/Builds/clang --prefix tmp-main/deploy --component ben_bot --config Release
+      run: |
+        cmake --install ${{ env.TMP_BUILD_DIR }} --prefix ${{ env.TMP_DEPLOY_DIR }} --component ben_bot --config Release
 
       # --- configure SPRT build ---
 
     - name: Configure CMake
-      run: cmake --preset clang -D BENBOT_DOCS=OFF -D FASTCHESS_PROGRAM=${{ steps.fastchess_filename.outputs.fastchess }}
+      run: |
+        cmake --preset ${{ env.CMAKE_PRESET }} -D BENBOT_DOCS=OFF -D FASTCHESS_PROGRAM=${{ steps.fastchess_filename.outputs.fastchess }}
 
     - name: Inject baseline binary
       if: ${{ !inputs.use_main }}
@@ -147,7 +151,8 @@ jobs:
 
     - name: Inject baseline binary
       if: ${{ inputs.use_main }}
-      run: cmake -D BASELINE_BINARY=tmp-main/deploy/bin/ben_bot -P ${{ env.BUILD_DIR }}/InjectSPRTBaseline-Release.cmake
+      run: cmake -D BASELINE_BINARY=${{ env.TMP_DEPLOY_DIR }}/bin/ben_bot -P InjectSPRTBaseline-Release.cmake
+      working-directory: ${{ env.BUILD_DIR }}
 
     - name: Build
       run: cmake --build . --target ben_bot --config Release
