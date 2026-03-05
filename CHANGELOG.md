@@ -750,3 +750,45 @@
 ### Bug Fixes
 
 * Docker build [skip ci] ([6f08773](https://github.com/benthevining/BenBot/commit/6f087735a0138ca52582074fb7940b94da3627a1))
+## [1.7.3](https://github.com/benthevining/BenBot/compare/v1.7.2...v1.7.3) (2026-03-05)
+
+### Features
+
+* added dependency injection pattern for pretty printing PV moves ([#440](https://github.com/benthevining/BenBot/issues/440)) ([1b5042d](https://github.com/benthevining/BenBot/commit/1b5042dab11418fc7be0a45b8b88c807611a77b6))
+* added dependency injection pattern for pretty printing PV moves ([#440](https://github.com/benthevining/BenBot/issues/440)) ([23215b4](https://github.com/benthevining/BenBot/commit/23215b4ff206c20d9a09dbaa3067d6641168ae88))
+* building with IPO if supported ([#394](https://github.com/benthevining/BenBot/issues/394)) ([7976ffb](https://github.com/benthevining/BenBot/commit/7976ffbdd25882f865e4402f84b4f4cffec13479))
+* code signing support ([#398](https://github.com/benthevining/BenBot/issues/398)) ([47292b8](https://github.com/benthevining/BenBot/commit/47292b88a6cd7b84dcd7c1a7ee54afe77ef7e038))
+* color printing in pretty output ([2be8e23](https://github.com/benthevining/BenBot/commit/2be8e23b35cbebb6de885f4f3f5b3e2c0ddfff25))
+* initial commit of ICCF notation functions ([2fa6291](https://github.com/benthevining/BenBot/commit/2fa62916c30f53b878f8cf1ac3b6e6d75794e6f8))
+* initial commit of pretty printing depth & time ([da60d9a](https://github.com/benthevining/BenBot/commit/da60d9a0928d32af509c95ec308e47ea70dd7512))
+* initial commit of termcolor dependency ([#385](https://github.com/benthevining/BenBot/issues/385)) ([8ae96f4](https://github.com/benthevining/BenBot/commit/8ae96f45c0d8c46d3b5d7c995548bacac5a4edd4))
+* move format UCI parameter ([#440](https://github.com/benthevining/BenBot/issues/440)) ([23c88f8](https://github.com/benthevining/BenBot/commit/23c88f8ce634e2dc292fa011b632a21b0d8beda3))
+* position printing now uses some color ([#385](https://github.com/benthevining/BenBot/issues/385)) ([14f51c2](https://github.com/benthevining/BenBot/commit/14f51c2239673e12d1910c5734bc768d7bb33841))
+* pretty printing hashfull ([0eaf8f2](https://github.com/benthevining/BenBot/commit/0eaf8f220967ec5bafe1bab04a510a0a8d111255))
+* pretty printing NPS ([7913f41](https://github.com/benthevining/BenBot/commit/7913f41fd8b0b0f0e37df67eca1f724906682080))
+* pretty printing number of nodes ([5ab8c31](https://github.com/benthevining/BenBot/commit/5ab8c31c5fb114179a46a9457569b225a54c9a13))
+* pretty printing PV ([a12b241](https://github.com/benthevining/BenBot/commit/a12b2411cc6f7166290285ede010ebe3b7346915))
+* pretty printing score ([78c7df9](https://github.com/benthevining/BenBot/commit/78c7df911d84c7c75643cf090452e678d89a0a71))
+* printing logo in color ([#385](https://github.com/benthevining/BenBot/issues/385)) ([925f125](https://github.com/benthevining/BenBot/commit/925f1256e872461fcfae97be83241d9968e53859))
+* printing table header ([f8df078](https://github.com/benthevining/BenBot/commit/f8df0780aab956f67287c2532f62e1af71ee88ae))
+* printing text tables using color ([#385](https://github.com/benthevining/BenBot/issues/385)) ([5f676f8](https://github.com/benthevining/BenBot/commit/5f676f813a7e8ba5fa43b506e130d0d509b4e956))
+* UCI option to switch between pretty/UCI printing ([0f713f1](https://github.com/benthevining/BenBot/commit/0f713f18870fb6bb1efea130eb49b80cdbf989a6))
+
+### Bug Fixes
+
+* better text colors ([385ea56](https://github.com/benthevining/BenBot/commit/385ea566c6f6770c17cd689502aae381e70eb493))
+* checking __cpp_lib_hardware_interference_size feature macro ([d45b5f0](https://github.com/benthevining/BenBot/commit/d45b5f002c6f3031dba8419ac12c0c659c8b713f))
+* **ci:** installing cmake 4.0 ([b618940](https://github.com/benthevining/BenBot/commit/b618940fbbb0d57eba19fcbd04bf90fb5e9a7fa7))
+* **ci:** installing cmake 4.0 ([#408](https://github.com/benthevining/BenBot/issues/408)) ([d03ff41](https://github.com/benthevining/BenBot/commit/d03ff41085f00e81d16f9623c682bada9a1bb809))
+* cmake ([996f3c7](https://github.com/benthevining/BenBot/commit/996f3c7b1cfc5db08d1188a3745e53f9773dcf1f))
+* **docs:** Doxygen warnings ([329b9c3](https://github.com/benthevining/BenBot/commit/329b9c37d56ece9e227aada23a6f5137030d5625))
+* linter warnings ([3c221f7](https://github.com/benthevining/BenBot/commit/3c221f7954533668e57c7e22b62725b082743869))
+* linter warnings ([ea78abd](https://github.com/benthevining/BenBot/commit/ea78abd137603a746bd9da179cfeb3c7ade7e6d4))
+* missing include ([2da3618](https://github.com/benthevining/BenBot/commit/2da361847c1309d21c8333ed3d4b92425a8762d0))
+* missing include ([fec78d5](https://github.com/benthevining/BenBot/commit/fec78d5a4871a83f2e5cae3e05e4f8c2f182fa46))
+* MSVC build error ([32352dd](https://github.com/benthevining/BenBot/commit/32352dd48dd588b95ba3b9591f52e5a44e4dfc53))
+* MSVC build error ([8a7da06](https://github.com/benthevining/BenBot/commit/8a7da06de9295f765d8238bdaae1465deb8b1e9a))
+* reporting aggregate JUnit results ([#451](https://github.com/benthevining/BenBot/issues/451)) ([d43e08b](https://github.com/benthevining/BenBot/commit/d43e08b35dbaf92dedc92de7df1ac820e5c8ed13))
+* SPRTs are now only manually triggered ([#403](https://github.com/benthevining/BenBot/issues/403)) ([d25350c](https://github.com/benthevining/BenBot/commit/d25350c81e9a8063934b4534198676629896437b))
+* **test:** workaround for rampart's inconsistent handling of EP squares ([#392](https://github.com/benthevining/BenBot/issues/392)) ([7079201](https://github.com/benthevining/BenBot/commit/7079201ad5045cf6d76e6b3b73b99144b22fd52e))
+* using inline constexpr for global constants ([3bc916d](https://github.com/benthevining/BenBot/commit/3bc916dc6d9e0b5d78aae214a71797e992fcfd91))
