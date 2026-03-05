@@ -108,6 +108,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     name: Build (${{ matrix.os }}.${{ matrix.preset }})
     timeout-minutes: 10
+    environment:
+      name: codesigning
+      url: https://github.com/benthevining/BenBot/releases/tag/${{ needs.bump_version.outputs.tag_name }}
     env:
       CMAKE_OSX_ARCHITECTURES: arm64;x86_64
       CMAKE_BUILD_PARALLEL_LEVEL: 8
@@ -132,7 +135,7 @@ jobs:
         ref: ${{ needs.bump_version.outputs.tag_name }}
 
     - name: Configure CMake
-      run: cmake --preset ${{ matrix.preset }} -D BENBOT_DOCS=OFF -D BENBOT_TESTS=OFF
+      run: cmake --preset ${{ matrix.preset }} -D "BENBOT_CODESIGN_ID=${{ secrets.BENBOT_CODESIGN_ID }}" -D BENBOT_DOCS=OFF -D BENBOT_TESTS=OFF
 
     - name: Build
       run: cmake --build . --config Release --target ben_bot
