@@ -9,10 +9,27 @@
     },
     {
       "configuration": "Release",
-      "configurePreset": "clang",
       "displayName": "Build with Ninja/Clang (Release)",
-      "jobs": 8,
+      "inherits": "clang-debug",
       "name": "clang-release"
+    },
+    {
+      "configuration": "ASAN",
+      "displayName": "Build with Ninja/Clang (ASAN)",
+      "inherits": "clang-debug",
+      "name": "clang-asan"
+    },
+    {
+      "configuration": "UBSAN",
+      "displayName": "Build with Ninja/Clang (UBSAN)",
+      "inherits": "clang-debug",
+      "name": "clang-ubsan"
+    },
+    {
+      "configuration": "TSAN",
+      "displayName": "Build with Ninja/Clang (TSAN)",
+      "inherits": "clang-debug",
+      "name": "clang-tsan"
     },
     {
       "condition": {
@@ -66,11 +83,11 @@
         },
         "CMAKE_OPTIMIZE_DEPENDENCIES": {
           "type": "BOOL",
-          "value": "OFF"
+          "value": "ON"
         },
         "CMAKE_PROJECT_INCLUDE": {
           "type": "STRING",
-          "value": "${sourceDir}/config/Warnings.cmake"
+          "value": "${sourceDir}/config/cmake/All.cmake"
         },
         "CTEST_NO_TESTS_ACTION": {
           "type": "STRING",
@@ -126,51 +143,13 @@
     },
     {
       "cacheVariables": {
-        "CMAKE_CXX_FLAGS_DEBUG": {
-          "type": "STRING",
-          "value": "-g -fsanitize=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer"
-        },
-        "CMAKE_C_FLAGS_DEBUG": {
-          "type": "STRING",
-          "value": "-g -fsanitize=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer"
-        }
-      },
-      "displayName": "Build with Ninja & Clang (ASAN)",
-      "inherits": "clang",
-      "name": "clang-asan"
-    },
-    {
-      "cacheVariables": {
-        "CMAKE_CXX_FLAGS_DEBUG": {
-          "type": "STRING",
-          "value": "-g -fsanitize=undefined"
-        },
-        "CMAKE_C_FLAGS_DEBUG": {
-          "type": "STRING",
-          "value": "-g -fsanitize=undefined"
-        }
-      },
-      "displayName": "Build with Ninja & Clang (UBSAN)",
-      "inherits": "clang",
-      "name": "clang-ubsan"
-    },
-    {
-      "cacheVariables": {
         "CMAKE_CXX_COMPILER": {
           "type": "STRING",
           "value": "g++-14"
         },
-        "CMAKE_CXX_FLAGS_DEBUG": {
-          "type": "STRING",
-          "value": "-g -fprofile-arcs -ftest-coverage"
-        },
         "CMAKE_C_COMPILER": {
           "type": "STRING",
           "value": "gcc-14"
-        },
-        "CMAKE_C_FLAGS_DEBUG": {
-          "type": "STRING",
-          "value": "-g -fprofile-arcs -ftest-coverage"
         }
       },
       "displayName": "Build with Ninja & GCC",
@@ -179,12 +158,6 @@
       "name": "gcc"
     },
     {
-      "cacheVariables": {
-        "CMAKE_MSVC_RUNTIME_LIBRARY": {
-          "type": "STRING",
-          "value": "MultiThreaded$<$<CONFIG:Debug>:Debug>"
-        }
-      },
       "condition": {
         "lhs": "${hostSystemName}",
         "rhs": "Windows",

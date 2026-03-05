@@ -32,8 +32,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # - gcc is Linux only
+        # - MSVC is Windows only, no sanitizers
+        # - clang sanitizers don't seem to work on Windows
         os: [ubuntu-latest, windows-latest, macos-15]
-        config: [Debug, Release]
+        config: [Debug, Release, ASAN, UBSAN]
         preset: [clang]
         include:
         - os: windows-latest
@@ -49,11 +52,18 @@ jobs:
           preset: gcc
           config: Release
         - os: ubuntu-latest
-          preset: clang-asan
-          config: Debug
+          preset: gcc
+          config: ASAN
         - os: ubuntu-latest
-          preset: clang-ubsan
-          config: Debug
+          preset: gcc
+          config: UBSAN
+        exclude:
+        - os: windows-latest
+          preset: clang
+          config: ASAN
+        - os: windows-latest
+          preset: clang
+          config: UBSAN
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }}.${{ matrix.preset }}.${{ matrix.config }}.${{ inputs.dashboard_type }}
     permissions:
