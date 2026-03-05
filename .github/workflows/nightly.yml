@@ -23,6 +23,7 @@ concurrency:
   group: ${{ github.workflow }}
 
 permissions:
+  contents: read
   checks: write
   pull-requests: write
 
