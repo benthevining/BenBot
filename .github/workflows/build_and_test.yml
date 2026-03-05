@@ -32,9 +32,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # - clang preset works on every platform
-        # - MSVC is Windows only, no UBSAN
         # - gcc is Linux only
+        # - MSVC is Windows only, no sanitizers
+        # - clang sanitizers don't seem to work on Windows
         os: [ubuntu-latest, windows-latest, macos-15]
         config: [Debug, Release, ASAN, UBSAN]
         preset: [clang]
@@ -45,9 +45,6 @@ jobs:
         - os: windows-latest
           preset: msvc
           config: Release
-        - os: windows-latest
-          preset: msvc
-          config: ASAN
         - os: ubuntu-latest
           preset: gcc
           config: Debug
@@ -60,6 +57,13 @@ jobs:
         - os: ubuntu-latest
           preset: gcc
           config: UBSAN
+        exclude:
+        - os: windows-latest
+          preset: clang
+          config: UBSAN
+        - os: windows-latest
+          preset: clang
+          config: ASAN
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }}.${{ matrix.preset }}.${{ matrix.config }}.${{ inputs.dashboard_type }}
     permissions:
