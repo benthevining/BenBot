@@ -14,7 +14,7 @@ cmake_minimum_required (VERSION 4.0.0 FATAL_ERROR)
 
 project (
     BenBot
-    VERSION 1.7.3
+    VERSION 1.7.4
     LANGUAGES CXX C
     DESCRIPTION "A chess engine"
     HOMEPAGE_URL "https://github.com/benthevining/BenBot"

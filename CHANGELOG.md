@@ -792,3 +792,8 @@
 * SPRTs are now only manually triggered ([#403](https://github.com/benthevining/BenBot/issues/403)) ([d25350c](https://github.com/benthevining/BenBot/commit/d25350c81e9a8063934b4534198676629896437b))
 * **test:** workaround for rampart's inconsistent handling of EP squares ([#392](https://github.com/benthevining/BenBot/issues/392)) ([7079201](https://github.com/benthevining/BenBot/commit/7079201ad5045cf6d76e6b3b73b99144b22fd52e))
 * using inline constexpr for global constants ([3bc916d](https://github.com/benthevining/BenBot/commit/3bc916dc6d9e0b5d78aae214a71797e992fcfd91))
+## [1.7.4](https://github.com/benthevining/BenBot/compare/v1.7.3...v1.7.4) (2026-03-05)
+
+### Bug Fixes
+
+* importing codesigning certificate to keychain for macOS release build ([#456](https://github.com/benthevining/BenBot/issues/456)) ([474bd25](https://github.com/benthevining/BenBot/commit/474bd2555c4b6036d268381fe920aa0c37d1c39c))
