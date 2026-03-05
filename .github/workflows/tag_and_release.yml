@@ -110,6 +110,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     name: Build (${{ matrix.os }}.${{ matrix.preset }})
     timeout-minutes: 10
+    permissions:
+      contents: read
     environment:
       name: codesigning
       url: https://github.com/benthevining/BenBot/releases/tag/${{ needs.bump_version.outputs.tag_name }}
@@ -221,6 +223,8 @@ jobs:
     runs-on: ubuntu-latest
     name: Update lichess-bot Docker image
     timeout-minutes: 20
+    permissions:
+      contents: read
     environment:
       name: lichess-bot-image
       url: ${{ steps.print_url.outputs.url }}
@@ -266,6 +270,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Deploy Docker image to VPS
     timeout-minutes: 10
+    permissions: {} # no permissions needed
     environment:
       name: vps
       url: https://cloud.digitalocean.com/droplets/517152619
