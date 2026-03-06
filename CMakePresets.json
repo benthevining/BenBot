@@ -127,10 +127,6 @@
           "type": "STRING",
           "value": "clang++"
         },
-        "CMAKE_CXX_FLAGS": {
-          "type": "STRING",
-          "value": "-stdlib=libc++"
-        },
         "CMAKE_C_COMPILER": {
           "type": "STRING",
           "value": "clang"
