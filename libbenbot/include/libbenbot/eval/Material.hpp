@@ -24,7 +24,6 @@
 #include <libchess/board/Pieces.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
-#include <utility> // IWYU pragma: keep - for std::unreachable()
 
 namespace ben_bot::eval {
 
