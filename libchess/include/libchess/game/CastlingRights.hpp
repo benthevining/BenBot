@@ -120,7 +120,6 @@ constexpr void CastlingRights::our_move(const Move move) noexcept
         case PieceType::Bishop: return;
         case PieceType::Knight: return;
         case PieceType::Queen : return;
-        default               : return;
     }
 }
 

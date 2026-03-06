@@ -708,8 +708,6 @@ namespace detail {
 
                 return;
             }
-
-            default: std::unreachable();
         }
     }
 

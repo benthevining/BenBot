@@ -231,8 +231,6 @@ namespace {
             case ScoreType::Equal:
                 std::cout << termcolor::grey;
                 break;
-            default:
-                std::unreachable();
         }
 
         print_column_text<Alignment::Center>(

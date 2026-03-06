@@ -270,8 +270,6 @@ auto TranspositionTable::probe_eval(
 
                     break;
                 }
-
-                default: break;
             }
 
             return std::nullopt;

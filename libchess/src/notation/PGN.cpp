@@ -555,8 +555,6 @@ namespace {
                 case game::Result::BlackWon:
                     output.append("0-1");
                     break;
-
-                default: std::unreachable();
             }
 
             return std::monostate { };

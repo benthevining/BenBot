@@ -16,36 +16,19 @@ include_guard (DIRECTORY)
 
 if (MSVC)
     add_compile_options (
-        # cmake-format: sortable
         /W4
         /Wall
         /WL
         /external:W0
-        /wd4820
-        /wd5045
-        /wd4514
-        /wd5030
-        /wd4625
-        /wd4626
-        /wd5027
-        /wd4061
+        #
+        /wd4820 # don't warn for struct padding
         /wd4324 # don't warn when structures are padded due to alignof
-        /wd4464
-        /wd4710
-        /wd4711
-        /wd5026
-        /wd4623
-        /wd5246
-        /wd5264
-        /wd4868
-        /wd4365
     )
     return ()
 endif ()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     add_compile_options (
-        # cmake-format: sortable
         -pedantic
         -pedantic-errors
         -Wall
@@ -69,23 +52,22 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
         -Wnon-virtual-dtor
         -Wzero-as-null-pointer-constant
         -Wunused
+        #
         -Wno-c++98-compat
         -Wno-c++98-compat-pedantic
         -Wno-c++20-compat
-        -Wno-padded
-        -Wno-poison-system-directories
-        -Wno-covered-switch-default
-        -Wno-unused-macros
-        -Wno-exit-time-destructors
-        -Wno-global-constructors
-        -Wno-attributes
+        -Wno-pre-c++20-compat-pedantic
         -Wno-date-time
+        -Wno-padded
+        -Wno-switch-default
+        -Wno-poison-system-directories
+        -Wno-global-constructors
+        -Wno-exit-time-destructors
     )
 endif ()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options (
-        # cmake-format: sortable
         --extra-warnings
         -fcolor-diagnostics
         -Wbool-conversion
@@ -106,12 +88,9 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     endif ()
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     add_compile_options (
-        # cmake-format: sortable
         -Waggressive-loop-optimizations
-        -Wno-strict-overflow
         -Wpointer-arith
         -Wredundant-decls
-        -Wno-undef
         -Wwrite-strings
         -Wdelete-non-virtual-dtor
         -Wsuggest-override

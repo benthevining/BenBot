@@ -61,8 +61,7 @@ namespace {
             case PieceType::Bishop: return '3';
             case PieceType::Knight: return '4';
             case PieceType::Pawn  : [[fallthrough]];
-            case PieceType::King  : [[fallthrough]];
-            default               : std::unreachable();
+            case PieceType::King  : std::unreachable();
         }
     }
 } // namespace

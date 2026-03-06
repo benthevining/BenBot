@@ -104,7 +104,6 @@ namespace piece_values {
             case PieceType::Rook  : return ROOK;
             case PieceType::Queen : return QUEEN;
             case PieceType::King  : return KING;
-            default               : std::unreachable();
         }
     }
 

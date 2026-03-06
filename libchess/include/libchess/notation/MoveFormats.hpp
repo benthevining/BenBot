@@ -27,7 +27,6 @@
 #include <libchess/notation/ICCF.hpp>
 #include <libchess/notation/UCI.hpp>
 #include <string>
-#include <utility> // IWYU pragma: keep - for std::unreachable()
 
 namespace chess::notation {
 
@@ -62,9 +61,6 @@ enum class MoveFormat : std::uint_least8_t {
 
         case MoveFormat::UCI:
             return to_uci(move);
-
-        default:
-            std::unreachable();
     }
 }
 
