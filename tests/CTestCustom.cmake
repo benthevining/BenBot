@@ -34,7 +34,7 @@ list (
     "@FETCHCONTENT_BASE_DIR@"
     "(_cmrc)+"
     "(_deps)+"
-    "catch2/internal/catch_stringref.hpp"
+    "bits/sigaction.h"
     "libbenbot/resources/__cmrc_ben_bot_resources_internal/"
     "Program Files\\Microsoft Visual Studio\\2022\\"
 )
