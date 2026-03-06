@@ -114,10 +114,10 @@
         }
       },
       "warnings": {
-        "deprecated": true,
+        "deprecated": false,
         "dev": true,
         "systemVars": false,
-        "uninitialized": true,
+        "uninitialized": false,
         "unusedCli": false
       }
     },
