@@ -26,7 +26,7 @@ TEST_CASE("Score - is_mate()", TAGS)
     static constexpr auto mate = Score::mate(0uz);
 
     REQUIRE(mate.is_mate());
-    REQUIRE(-mate.is_mate());
+    REQUIRE((-mate).is_mate());
 }
 
 TEST_CASE("Score - is_winning_mate()/is_losing_mate()", TAGS)

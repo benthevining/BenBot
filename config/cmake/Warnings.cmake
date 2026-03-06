@@ -100,6 +100,10 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         -Wunused-variable
         -Weverything
     )
+
+    if (WIN32)
+        add_compile_options (-Wno-reserved-macro-identifier)
+    endif ()
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     add_compile_options (
         # cmake-format: sortable
