@@ -35,6 +35,8 @@ list (
     "@FETCHCONTENT_BASE_DIR@"
     "(_cmrc)+"
     "(_deps)+"
+    "catch2"
     "warning: argument unused during compilation"
     "libbenbot/resources/__cmrc_ben_bot_resources_internal/"
+    "-Wdate-time"
 )
