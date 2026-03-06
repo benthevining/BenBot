@@ -143,7 +143,7 @@ constexpr auto file_distance(
 
     const auto [minFile, maxFile] = std::minmax(firstFile, secondFile);
 
-    return maxFile - minFile;
+    return static_cast<BitboardIndex>(maxFile - minFile);
 }
 
 constexpr auto rank_distance(
@@ -155,7 +155,7 @@ constexpr auto rank_distance(
 
     const auto [minRank, maxRank] = std::minmax(firstRank, secondRank);
 
-    return maxRank - minRank;
+    return static_cast<BitboardIndex>(maxRank - minRank);
 }
 
 constexpr auto are_on_same_diagonal(
@@ -169,7 +169,7 @@ constexpr auto manhattan_distance(
     const Square& first, const Square& second) noexcept
     -> BitboardIndex
 {
-    return file_distance(first, second) + rank_distance(first, second);
+    return static_cast<BitboardIndex>(file_distance(first, second) + rank_distance(first, second));
 }
 
 constexpr auto center_manhattan_distance(
@@ -182,7 +182,7 @@ constexpr auto center_manhattan_distance(
     file ^= (file - 4) >> 8;
     rank ^= (rank - 4) >> 8;
 
-    return (file + rank) & 7;
+    return static_cast<BitboardIndex>((file + rank) & 7);
 }
 
 constexpr auto chebyshev_distance(

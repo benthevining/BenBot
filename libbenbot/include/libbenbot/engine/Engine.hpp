@@ -44,6 +44,16 @@ namespace uci = chess::uci;
     @ingroup libbenbot
  */
 class [[nodiscard]] Engine final : public uci::EngineBase {
+public:
+    Engine() = default;
+
+    Engine(const Engine&)            = delete;
+    Engine& operator=(const Engine&) = delete;
+
+    Engine(Engine&&)            = delete;
+    Engine& operator=(Engine&&) = delete;
+
+private:
     [[nodiscard]] auto get_name() const -> std::string override;
     [[nodiscard]] auto get_author() const -> string_view override { return "Ben Vining"; }
 

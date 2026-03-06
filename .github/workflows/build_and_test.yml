@@ -35,14 +35,14 @@ jobs:
         # - gcc is Linux only
         # - MSVC is Windows only, no sanitizers
         # - clang sanitizers don't seem to work on Windows
-        os: [ubuntu-latest, windows-latest, macos-15]
+        os: [ubuntu-latest, windows-2025-vs2026, macos-15]
         config: [Debug, Release, ASAN, UBSAN]
         preset: [clang]
         include:
-        - os: windows-latest
+        - os: windows-2025-vs2026
           preset: msvc
           config: Debug
-        - os: windows-latest
+        - os: windows-2025-vs2026
           preset: msvc
           config: Release
         - os: ubuntu-latest
@@ -58,10 +58,10 @@ jobs:
           preset: gcc
           config: UBSAN
         exclude:
-        - os: windows-latest
+        - os: windows-2025-vs2026
           preset: clang
           config: ASAN
-        - os: windows-latest
+        - os: windows-2025-vs2026
           preset: clang
           config: UBSAN
     runs-on: ${{ matrix.os }}

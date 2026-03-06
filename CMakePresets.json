@@ -164,7 +164,7 @@
         "type": "equals"
       },
       "displayName": "Build with MSVC",
-      "generator": "Visual Studio 17 2022",
+      "generator": "Visual Studio 18 2026",
       "inherits": "base",
       "name": "msvc"
     }
