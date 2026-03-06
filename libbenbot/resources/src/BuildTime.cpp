@@ -14,6 +14,7 @@
 
 #include <charconv>
 #include <chrono>
+#include <concepts>
 #include <cstddef> // IWYU pragma: keep - for std::ptrdiff_t
 #include <ctime>
 #include <iomanip>
@@ -39,9 +40,10 @@ namespace {
 
     // NB. This is duplicated from libchess's string utility header, but I didn't
     // want to introduce a dependency on libchess just for this one function.
-    [[nodiscard]] consteval auto int_from_string(const string_view text) noexcept -> size_t
+    template <std::integral T = size_t>
+    [[nodiscard]] consteval auto int_from_string(const string_view text) noexcept -> T
     {
-        auto value { 0uz };
+        T value { 0 };
 
         std::from_chars(
             text.data(), // NOLINT(bugprone-suspicious-stringview-data-usage)
@@ -103,7 +105,7 @@ namespace {
     [[nodiscard, gnu::const]] consteval auto build_day() noexcept -> chrono::day // NOLINT(bugprone-exception-escape)
     {
         return chrono::day {
-            int_from_string(BUILD_DATE_STR.substr(4uz, 2uz))
+            int_from_string<unsigned>(BUILD_DATE_STR.substr(4uz, 2uz))
         };
     }
 

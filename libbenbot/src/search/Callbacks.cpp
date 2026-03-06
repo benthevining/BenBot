@@ -313,8 +313,9 @@ namespace {
         print_score(libchess.score);
 
         // PV
-        std::cout << format_pv(res.pv, printMove)
-                  << '\n';
+        // NB. passing PV to operator<< by value gives a warning on MSVC
+        const auto pv = format_pv(res.pv, printMove);
+        std::cout << pv << '\n';
     }
 } // namespace
 
