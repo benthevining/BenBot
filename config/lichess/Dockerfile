@@ -14,14 +14,27 @@
 
 FROM lichessbotdevs/lichess-bot:latest
 
+ARG CMAKE_VERSION=4.2.3
+
 RUN --mount=type=bind,source=.,target=BenBot,rw \
+  # install dependencies \
   apt-get update && \
-  apt-get install -y --no-install-recommends git cmake ninja-build clang libc++-dev libc++abi-dev && \
+  apt-get install -y --no-install-recommends git ninja-build clang libc++-dev libc++abi-dev build-essential wget && \
+  # install CMake \
+  wget "https://github.com/Kitware/CMake/releases/download/v$CMAKE_VERSION/cmake-$CMAKE_VERSION-linux-$(uname -m).sh" -q -O /tmp/cmake-install.sh && \
+  chmod u+x /tmp/cmake-install.sh && \
+  mkdir /opt/cmake-$CMAKE_VERSION && \
+  /tmp/cmake-install.sh --skip-license --prefix=/opt/cmake-$CMAKE_VERSION && \
+  rm /tmp/cmake-install.sh && \
+  ln -s /opt/cmake-$CMAKE_VERSION/bin/* /usr/local/bin && \
+  # configure & build \
   cd BenBot && \
   cmake --preset clang -D BENBOT_DOCS=OFF -D BENBOT_TESTS=OFF && \
   cmake --build Builds/clang -j4 --target ben_bot --config Release && \
+  # install \
   cd .. && \
   cmake --install BenBot/Builds/clang --prefix deploy --component ben_bot --config Release && \
+  # clean up \
   apt-get remove -y git cmake ninja-build clang libc++-dev libc++abi-dev && \
   rm -rf /var/lib/apt/lists
 
