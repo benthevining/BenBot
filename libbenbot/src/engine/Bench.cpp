@@ -163,13 +163,13 @@ namespace {
         const auto totalNodes = std::transform_reduce(
             results.begin(), results.end(),
             0uz,
-            std::plus { },
+            std::plus<void> { },
             [](const SearchResult& result) { return result.nodesSearched; });
 
         const auto totalTime = std::transform_reduce(
             results.begin(), results.end(),
             milliseconds { 0 },
-            std::plus { },
+            std::plus<void> { },
             [](const SearchResult& result) { return result.duration; });
 
         using Seconds = util::FractionalDuration<std::chrono::seconds>;

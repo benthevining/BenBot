@@ -44,7 +44,7 @@ namespace {
         return std::transform_reduce(
             indices.begin(), indices.end(),
             0,
-            std::plus { },
+            std::plus<void> { },
             [table](const auto idx) {
                 assert(idx < table.size());
                 return table[idx];

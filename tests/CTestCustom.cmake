@@ -36,4 +36,5 @@ list (
     "(_cmrc)+"
     "(_deps)+"
     "warning: argument unused during compilation"
+    "libbenbot/resources/__cmrc_ben_bot_resources_internal/"
 )

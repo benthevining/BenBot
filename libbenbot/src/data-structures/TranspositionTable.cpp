@@ -198,7 +198,7 @@ auto TranspositionTable::hashfull() const -> size_t
     const auto count = std::transform_reduce(
         indices.begin(), indices.end(),
         0uz,
-        std::plus { },
+        std::plus<void> { },
         [this](const size_t idx) {
             return static_cast<size_t>(std::ranges::count_if(
                 index_table(idx).records,
