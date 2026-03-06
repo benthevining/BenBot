@@ -36,6 +36,5 @@ list (
     "(_deps)+"
     "catch2/internal/catch_stringref.hpp"
     "libbenbot/resources/__cmrc_ben_bot_resources_internal/"
-    [[Program Files\Microsoft Visual Studio\2022\]]
-    "warning: argument unused during compilation"
+    "Program Files\\Microsoft Visual Studio\\2022\\"
 )
