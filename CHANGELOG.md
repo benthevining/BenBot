@@ -797,3 +797,16 @@
 ### Bug Fixes
 
 * importing codesigning certificate to keychain for macOS release build ([#456](https://github.com/benthevining/BenBot/issues/456)) ([474bd25](https://github.com/benthevining/BenBot/commit/474bd2555c4b6036d268381fe920aa0c37d1c39c))
+## [1.7.5](https://github.com/benthevining/BenBot/compare/v1.7.4...v1.7.5) (2026-03-06)
+
+### Bug Fixes
+
+* Actions permissions ([ac26e03](https://github.com/benthevining/BenBot/commit/ac26e03a27e5b2a59d565fd6f76933ce6a687213))
+* ASAN flags for MSVC ([18cdc78](https://github.com/benthevining/BenBot/commit/18cdc780c8399260c90dff8c92e876001bad840f))
+* excluding broken/missing sanitizer configs from test matrix ([3dc76a8](https://github.com/benthevining/BenBot/commit/3dc76a8bad3f9391c4eaba4d5679170431352485))
+* installing CMake from Kitware releases in Lichess Dockerfile ([#463](https://github.com/benthevining/BenBot/issues/463)) ([cc9331d](https://github.com/benthevining/BenBot/commit/cc9331dd3871eb11d69a2c1407dc784030d9f31d))
+* not setting CTEST_COVERAGE_COMMAND from Coverage.cmake ([9492434](https://github.com/benthevining/BenBot/commit/9492434af7676a2490cfd20df8f468a15211ba14))
+* only setting gcov as CTEST_COVERAGE_COMMAND if compiler is gcc ([f3b837f](https://github.com/benthevining/BenBot/commit/f3b837f8cad927fddbcd74ee73b26df7374b7d6f))
+* only setting gcov as CTEST_COVERAGE_COMMAND if compiler is gcc ([4961295](https://github.com/benthevining/BenBot/commit/496129507c76e78c1e300fd78ae25bdcb9a6e4d5))
+* order of operations in Justfile install command ([7c0a52b](https://github.com/benthevining/BenBot/commit/7c0a52bda655fae9d1d9906ad595f0420d256d07))
+* removed coverage flags ([e6823e4](https://github.com/benthevining/BenBot/commit/e6823e41abc74d04b9937ed42e07b13fb05ee0ed))
