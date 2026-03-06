@@ -29,21 +29,21 @@ Building or using `ben-bot`, `libbenbot` or `libchess` requires CMake and C++23.
 
 All dependencies are fetched via `FetchContent`, so everything should "just work" out of the box.
 
-CMake presets are provided for IDE integration, but are not mandatory. Using the presets will enable some default warnings (defined in `config/Warnings.cmake`).
+CMake presets are provided for IDE integration, but are not mandatory.
 
 Notes on building:
-* Using `clang` requires `-stdlib=libc++`, without this flag `clang` can't find `std::expected` (this is added automatically by the `clang` configure preset)
 * If using `gcc`, at least version 14 is required
+* Clang on Linux may need the `-stdlib=libc++` flag in order to find `std::expected`. This flag is added by the `clang` configure preset.
 
 Our automated CI & releases include the following builds:
 
-|    OS    | Compiler |               Notes                |
-|:--------:|:--------:|:----------------------------------:|
-|  Ubuntu  |  Clang   |    Also built with ASAN & UBSAN    |
-|  Ubuntu  |   GCC    | Collects test coverage information |
-| Windows  |  Clang   |                                    |
-| Windows  |   MSVC   |                                    |
-|  MacOS   |  Clang   |      Builds universal binary       |
+|    OS    | Compiler |
+|:--------:|:--------:|
+|  Ubuntu  |  Clang   |
+|  Ubuntu  |   GCC    |
+| Windows  |  Clang   |
+| Windows  |   MSVC   |
+|  MacOS   |  Clang   |
 
 ### CMake options
 

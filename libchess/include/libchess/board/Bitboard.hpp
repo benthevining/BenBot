@@ -319,9 +319,9 @@ constexpr auto Bitboard::last() const noexcept -> BitboardIndex
         return NUM_SQUARES;
     }
 
-    const auto trailingZeroes = static_cast<BitboardIndex>(std::countl_zero(value));
+    const auto trailingZeroes = std::countl_zero(value);
 
-    return NUM_SQUARES - trailingZeroes - static_cast<BitboardIndex>(1);
+    return static_cast<BitboardIndex>(NUM_SQUARES - trailingZeroes - 1);
 }
 
 constexpr auto Bitboard::operator&=(const Bitboard& other) noexcept -> Bitboard&

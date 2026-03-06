@@ -29,6 +29,7 @@ if (MSVC)
         /wd4626
         /wd5027
         /wd4061
+        /wd4324 # don't warn when structures are padded due to alignof
         /wd4464
         /wd4710
         /wd4711
@@ -78,6 +79,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
         -Wno-exit-time-destructors
         -Wno-global-constructors
         -Wno-attributes
+        -Wno-date-time
     )
 endif ()
 
@@ -98,6 +100,10 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         -Wunused-variable
         -Weverything
     )
+
+    if (WIN32)
+        add_compile_options (-Wno-reserved-macro-identifier)
+    endif ()
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     add_compile_options (
         # cmake-format: sortable

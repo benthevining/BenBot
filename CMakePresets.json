@@ -129,7 +129,7 @@
         },
         "CMAKE_CXX_FLAGS": {
           "type": "STRING",
-          "value": "-stdlib=libc++"
+          "value": "-stdlib=libc++ -Wno-unused-command-line-argument"
         },
         "CMAKE_C_COMPILER": {
           "type": "STRING",
