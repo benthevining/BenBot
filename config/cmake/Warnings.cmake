@@ -22,10 +22,10 @@ if (MSVC)
         /external:W0
         #
         /wd4820 # struct padding
-        /wd4324 # struct padding due to alignof
+        /wd4324 # struct padding due to alignas
         /wd4514 # unreferenced functions removed
         /wd4710 # function not inlined
-        /wd4711 # function selected for inline expansion
+        /wd4711 # function selected for inlining
         /wd5030 # unrecognized attributes
     )
     return ()
