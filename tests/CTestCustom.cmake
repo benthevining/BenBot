@@ -36,5 +36,5 @@ list (
     "(_deps)+"
     "bits/sigaction.h"
     "libbenbot/resources/__cmrc_ben_bot_resources_internal/"
-    "Program Files\\Microsoft Visual Studio\\2022\\"
+    "Program Files\\Microsoft Visual Studio\\2022"
 )

@@ -21,8 +21,12 @@ if (MSVC)
         /WL
         /external:W0
         #
-        /wd4820 # don't warn for struct padding
-        /wd4324 # don't warn when structures are padded due to alignof
+        /wd4820 # struct padding
+        /wd4324 # struct padding due to alignof
+        /wd4514 # unreferenced functions removed
+        /wd4710 # function not inlined
+        /wd4711 # function selected for inline expansion
+        /wd5030 # unrecognized attributes
     )
     return ()
 endif ()
@@ -96,5 +100,7 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
         -Wsuggest-override
         -Wtrampolines
         -Wbidi-chars=any
+        #
+        -Wno-attributes
     )
 endif ()
