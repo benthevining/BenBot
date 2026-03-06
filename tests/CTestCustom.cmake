@@ -27,6 +27,13 @@ list (APPEND CTEST_CUSTOM_COVERAGE_EXCLUDE # cmake-format: sortable
       @CMAKE_PREFIX_PATH@ "@FETCHCONTENT_BASE_DIR@" "(_cmrc)+" "(_deps)+"
 )
 
-list (APPEND CTEST_CUSTOM_WARNING_EXCEPTION # cmake-format: sortable
-      @CMAKE_PREFIX_PATH@ "@FETCHCONTENT_BASE_DIR@" "(_cmrc)+" "(_deps)+"
+list (
+    APPEND
+    CTEST_CUSTOM_WARNING_EXCEPTION
+    # cmake-format: sortable
+    @CMAKE_PREFIX_PATH@
+    "@FETCHCONTENT_BASE_DIR@"
+    "(_cmrc)+"
+    "(_deps)+"
+    "warning: argument unused during compilation"
 )

@@ -33,6 +33,7 @@ CMake presets are provided for IDE integration, but are not mandatory.
 
 Notes on building:
 * If using `gcc`, at least version 14 is required
+* Clang on Linux may need the `-stdlib=libc++` flag in order to find `std::expected`. This flag is added by the `clang` configure preset.
 
 Our automated CI & releases include the following builds:
 
