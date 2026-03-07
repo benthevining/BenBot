@@ -32,7 +32,7 @@ list (
     "@FETCHCONTENT_BASE_DIR@"
     "_deps"
     "bits/sigaction.h"
-    "libbenbot[/\\]resources[/\\]__cmrc_ben_bot_resources_internal[/\\]" # this one needs to match
-                                                                         # forward- or back-slashes
     "Program Files\\\\Microsoft Visual Studio"
+    # this one needs to match forward- or back-slashes
+    "libbenbot[/\\]resources[/\\]__cmrc_ben_bot_resources_internal[/\\]"
 )

@@ -94,6 +94,10 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     if (WIN32)
         add_compile_options (-Wno-reserved-macro-identifier)
     endif ()
+
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 21)
+        add_compile_options (-Wno-nrvo)
+    endif ()
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     add_compile_options (
         -Waggressive-loop-optimizations
