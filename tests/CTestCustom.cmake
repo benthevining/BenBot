@@ -38,4 +38,12 @@ list (
     "Program Files\\\\Microsoft Visual Studio"
     "libbenbot${slash}resources${slash}__cmrc_ben_bot_resources_internal${slash}"
     "libchess${slash}src${slash}util${slash}memory${slash}PageAlignedAlloc_Windows.hpp"
+    # cpplint annoyingly prints a warning line first, then the actual info on the next line, so we
+    # need to exclude its warning line and match its actual warnings output
+    "Warning: cpplint diagnostics:"
+)
+
+list (APPEND CTEST_CUSTOM_WARNING_MATCH
+      # match cpplint warning output, eg '[build/include_what_you_use]'
+      "[[]([a-z_])+\/([a-z_])+[]]"
 )
