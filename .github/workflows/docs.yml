@@ -47,7 +47,7 @@ jobs:
     env:
       CMAKE_PRESET: gcc
       CMAKE_BUILD_PARALLEL_LEVEL: 8
-      BUILD_DIR: ${{ github.workspace }}/Builds/clang
+      BUILD_DIR: ${{ github.workspace }}/Builds/gcc
       DEPLOY_DIR: ${{ github.workspace }}/deploy
 
     steps:
