@@ -21,6 +21,7 @@
 
 #include <array>
 #include <atomic>
+#include <filesystem>
 #include <functional>
 #include <libbenbot/engine/CustomCommand.hpp>
 #include <libbenbot/search/Thread.hpp>
@@ -47,11 +48,16 @@ class [[nodiscard]] Engine final : public uci::EngineBase {
 public:
     Engine() = default;
 
+    ~Engine() override = default;
+
     Engine(const Engine&)            = delete;
     Engine& operator=(const Engine&) = delete;
 
     Engine(Engine&&)            = delete;
     Engine& operator=(Engine&&) = delete;
+
+    /** Loads the engine's state from a configuration file at the given path. */
+    void read_config_file(const std::filesystem::path& file);
 
 private:
     [[nodiscard]] auto get_name() const -> std::string override;
@@ -98,10 +104,10 @@ private:
 
     static void print_compiler_info();
 
-    static void start_file_logger(string_view path);
+    static void start_file_logger(string_view arg);
 
-    void write_config_file(string_view path) const;
-    void read_config_file(string_view path);
+    void write_config_file(string_view arg) const;
+    void read_config_file(string_view arg);
 
     static constexpr bool PRETTY_PRINT_DEFAULT = false;
 

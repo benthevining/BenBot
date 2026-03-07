@@ -38,6 +38,7 @@
 
 namespace ben_bot {
 
+using std::filesystem::path;
 using std::memory_order_relaxed;
 using std::size_t;
 using uci::printing::info_string;
@@ -129,15 +130,15 @@ void Engine::handle_custom_command(
     info_string("Type help for a list of supported commands");
 }
 
-void Engine::start_file_logger(const string_view path)
+void Engine::start_file_logger(const string_view arg)
 {
-    if (path.empty()) {
+    if (arg.empty()) {
         info_string("No path provided for file logger, not starting.");
         return;
     }
 
     [[maybe_unused]] const auto result
-        = chess::util::start_file_logger(std::filesystem::path { path })
+        = chess::util::start_file_logger(path { arg })
               .transform_error(info_string);
 }
 
@@ -160,9 +161,9 @@ using nlohmann::json;
 inline constexpr string_view TAG_OPTIONS { "uci_options" };
 inline constexpr string_view TAG_DEBUG { "debug" };
 
-void Engine::write_config_file(const string_view path) const
+void Engine::write_config_file(const string_view arg) const
 {
-    if (path.empty()) {
+    if (arg.empty()) {
         info_string("No filepath provided for writeconfig");
         return;
     }
@@ -186,7 +187,7 @@ void Engine::write_config_file(const string_view path) const
     data[TAG_OPTIONS] = optionsData;
     data[TAG_DEBUG]   = debugMode.load(memory_order_relaxed);
 
-    const auto filePath = absolute(std::filesystem::path { path });
+    const auto filePath = absolute(path { arg });
 
     [[maybe_unused]] const auto result
         = chess::util::overwrite_file(
@@ -198,14 +199,19 @@ void Engine::write_config_file(const string_view path) const
               .transform_error(info_string);
 }
 
-void Engine::read_config_file(const string_view path)
+void Engine::read_config_file(const string_view arg)
 {
-    if (path.empty()) {
+    if (arg.empty()) {
         info_string("No filepath provided for readconfig");
         return;
     }
 
-    const auto filePath = absolute(std::filesystem::path { path });
+    read_config_file(path { arg });
+}
+
+void Engine::read_config_file(const path& file)
+{
+    const auto filePath = absolute(file);
 
     [[maybe_unused]] const auto result
         = chess::util::load_file_as_string(filePath)
