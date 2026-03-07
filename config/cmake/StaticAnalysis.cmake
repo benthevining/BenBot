@@ -23,3 +23,13 @@ if (CPPLINT_PROGRAM)
         )
     endforeach ()
 endif ()
+
+find_program (IWYU_PROGRAM NAMES include-what-you-use iwyu DOC "include-what-you-use executable")
+
+if (IWYU_PROGRAM)
+    foreach (lang IN ITEMS CXX C)
+        set ("CMAKE_${lang}_INCLUDE_WHAT_YOU_USE" "${IWYU_PROGRAM};-Xiwyu;--no-comments"
+             CACHE STRING "Command used to run include-what-you-use"
+        )
+    endforeach ()
+endif ()
