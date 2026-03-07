@@ -694,6 +694,7 @@ namespace detail {
                 return;
             }
 
+            default             : [[fallthrough]];
             case PieceType::King: {
                 std::ranges::copy(
                     get_king_moves<Side, CapturesOnly>(position),

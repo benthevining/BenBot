@@ -59,6 +59,7 @@ enum class MoveFormat : std::uint_least8_t {
         case MoveFormat::ICCF:
             return to_iccf(move);
 
+        default: [[fallthrough]];
         case MoveFormat::UCI:
             return to_uci(move);
     }

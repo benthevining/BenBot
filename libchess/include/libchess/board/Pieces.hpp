@@ -182,7 +182,9 @@ constexpr auto Pieces::get_type(const PieceType type) noexcept -> Bitboard&
         case PieceType::Rook  : return rooks;
         case PieceType::Queen : return queens;
         case PieceType::King  : return king;
-        case PieceType::Pawn  : return pawns;
+        case PieceType::Pawn  : [[fallthrough]];
+        default:
+            return pawns;
     }
 }
 
@@ -194,7 +196,9 @@ constexpr auto Pieces::get_type(const PieceType type) const noexcept -> Bitboard
         case PieceType::Rook  : return rooks;
         case PieceType::Queen : return queens;
         case PieceType::King  : return king;
-        case PieceType::Pawn  : return pawns;
+        case PieceType::Pawn  : [[fallthrough]];
+        default:
+            return pawns;
     }
 }
 

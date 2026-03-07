@@ -73,6 +73,9 @@ namespace white {
             case Type::Queen : return QUEEN;
             case Type::King  : return KING;
             case Type::Pawn  : return PAWN;
+            default:
+                [[unlikely]];
+                return { };
         }
     }
 
@@ -118,6 +121,9 @@ namespace black {
             case Type::Queen : return QUEEN;
             case Type::King  : return KING;
             case Type::Pawn  : return PAWN;
+            default:
+                [[unlikely]];
+                return { };
         }
     }
 

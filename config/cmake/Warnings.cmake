@@ -67,10 +67,10 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
         -Wno-pre-c++20-compat-pedantic
         -Wno-date-time
         -Wno-padded
-        -Wno-switch-default
         -Wno-poison-system-directories
         -Wno-global-constructors
         -Wno-exit-time-destructors
+        -Wno-covered-switch-default
     )
 endif ()
 

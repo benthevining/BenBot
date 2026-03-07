@@ -102,6 +102,7 @@ namespace piece_values {
             case PieceType::Bishop: return BISHOP;
             case PieceType::Rook  : return ROOK;
             case PieceType::Queen : return QUEEN;
+            default               : [[fallthrough]];
             case PieceType::King  : return KING;
         }
     }
