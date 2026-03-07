@@ -26,6 +26,8 @@ set (resource_files # cmake-format: sortable
 
 cmrc_add_resource_library (ben_bot_resources_internal ${resource_files})
 
+set_target_properties (ben_bot_resources_internal PROPERTIES SKIP_LINTING ON)
+
 add_library (ben_bot_resources STATIC)
 
 target_compile_features (ben_bot_resources PRIVATE cxx_std_23 PUBLIC cxx_std_17)

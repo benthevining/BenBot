@@ -33,3 +33,34 @@ if (IWYU_PROGRAM)
         )
     endforeach ()
 endif ()
+
+find_program (CPPCHECK_PROGRAM cppcheck DOC "cppcheck executable")
+
+if (CPPCHECK_PROGRAM)
+    set (cppcheck_build_dir "${CMAKE_BINARY_DIR}/cppcheck")
+
+    file (MAKE_DIRECTORY "${cppcheck_build_dir}")
+
+    set (
+        cppcheck_cmd
+        "${CPPCHECK_PROGRAM}"
+        "--cppcheck-build-dir=${cppcheck_build_dir}"
+        --quiet
+        --inline-suppr
+        --std=c++23
+        --language=c++
+        --check-level=exhaustive
+        --force
+        --enable=all
+        --suppress=unusedFunction
+        --suppress=unusedStructMember
+        --suppress=unmatchedSuppression
+        --suppress=class_X_Y
+        --suppress=missingIncludeSystem
+        --suppress=missingInclude
+        --suppress=internalAstError
+        --suppress=checkersReport
+    )
+
+    set (CMAKE_CXX_CPPCHECK "${cppcheck_cmd}" CACHE STRING "Command used to run cppcheck")
+endif ()
