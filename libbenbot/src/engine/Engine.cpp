@@ -22,6 +22,7 @@
 #include <libbenbot/engine/Engine.hpp>
 #include <libbenbot/search/Callbacks.hpp>
 #include <libchess/notation/MoveFormats.hpp>
+#include <libchess/uci/Options.hpp>
 #include <libchess/uci/Printing.hpp>
 #include <libchess/util/Files.hpp>
 #include <libchess/util/Logger.hpp>
@@ -185,11 +186,16 @@ void Engine::write_config_file(const string_view path) const
     data[TAG_OPTIONS] = optionsData;
     data[TAG_DEBUG]   = debugMode.load(memory_order_relaxed);
 
+    const auto filePath = absolute(std::filesystem::path { path });
+
     [[maybe_unused]] const auto result
         = chess::util::overwrite_file(
-            std::filesystem::path { path }, data.dump(2))
+            filePath, data.dump(2))
+              .transform([&filePath] {
+                  info_string(std::format(
+                      "Wrote configuration file to: {}", filePath.string()));
+              })
               .transform_error(info_string);
-    ;
 }
 
 void Engine::read_config_file(const string_view path)
@@ -199,9 +205,11 @@ void Engine::read_config_file(const string_view path)
         return;
     }
 
+    const auto filePath = absolute(std::filesystem::path { path });
+
     [[maybe_unused]] const auto result
-        = chess::util::load_file_as_string(std::filesystem::path { path })
-              .transform([this](const string_view fileContent) {
+        = chess::util::load_file_as_string(filePath)
+              .transform([this, &filePath](const string_view fileContent) {
                   const auto data = json::parse(fileContent);
 
                   debugMode.store(
@@ -210,17 +218,36 @@ void Engine::read_config_file(const string_view path)
 
                   const auto& optionsData = data.at(TAG_OPTIONS);
 
-                  for (const auto* opt : options) {
+                  for (auto* opt : options) {
                       if (not opt->has_value())
                           continue;
 
-                      std::visit(
-                          chess::util::Visitor {
-                              [&optionsData, name = opt->get_name()](const auto value) {
-                                  // TODO: set option value from optionsData.at(name)
-                              } },
-                          opt->get_value_variant());
+                      const auto& optValue = optionsData.at(opt->get_name());
+
+                      namespace uci = chess::uci;
+
+                      if (auto* boolOpt = dynamic_cast<uci::BoolOption*>(opt)) {
+                          boolOpt->set_value(optValue.get<bool>());
+                          continue;
+                      }
+
+                      if (auto* intOpt = dynamic_cast<uci::IntOption*>(opt)) {
+                          intOpt->set_value(optValue.get<int>());
+                          continue;
+                      }
+
+                      if (auto* comboOpt = dynamic_cast<uci::ComboOption*>(opt)) {
+                          comboOpt->set_value(optValue.get<string_view>());
+                          continue;
+                      }
+
+                      if (auto* stringOpt = dynamic_cast<uci::StringOption*>(opt)) {
+                          stringOpt->set_value(optValue.get<string_view>());
+                      }
                   }
+
+                  info_string(std::format(
+                      "Read configuration from file: {}", filePath.string()));
 
                   return std::monostate { };
               })

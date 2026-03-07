@@ -73,6 +73,13 @@ void BoolOption::handle_setvalue(const string_view arguments)
     onChange(value);
 }
 
+void BoolOption::set_value(const bool newValue)
+{
+    value = newValue;
+
+    onChange(value);
+}
+
 /*------------------------------------------------------------------------------------------------------------------*/
 
 IntOption::IntOption(
@@ -112,6 +119,13 @@ void IntOption::handle_setvalue(const string_view arguments)
     const auto newValue = util::strings::int_from_string(
         trim(valueStr), value);
 
+    value = std::clamp(newValue, optionMin, optionMax);
+
+    onChange(value);
+}
+
+void IntOption::set_value(const int newValue)
+{
     value = std::clamp(newValue, optionMin, optionMax);
 
     onChange(value);
@@ -166,6 +180,18 @@ void ComboOption::handle_setvalue(const string_view arguments)
     onChange(value);
 }
 
+void ComboOption::set_value(string_view newValue)
+{
+    newValue = trim(newValue);
+
+    if (std::ranges::contains(possibleValues, newValue))
+        value = newValue;
+    else
+        value = optionDefault;
+
+    onChange(value);
+}
+
 /*------------------------------------------------------------------------------------------------------------------*/
 
 StringOption::StringOption(
@@ -197,6 +223,13 @@ void StringOption::handle_setvalue(const string_view arguments)
         return;
 
     value = trim(valueStr);
+
+    onChange(value);
+}
+
+void StringOption::set_value(const string_view newValue)
+{
+    value = trim(newValue);
 
     onChange(value);
 }
