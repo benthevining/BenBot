@@ -100,6 +100,9 @@ private:
 
     static void start_file_logger(string_view path);
 
+    void write_config_file(string_view path) const;
+    void read_config_file(string_view path);
+
     static constexpr bool PRETTY_PRINT_DEFAULT = false;
 
     [[nodiscard]] static auto create_move_format_option() -> uci::ComboOption;
@@ -134,7 +137,7 @@ private:
     // management algorithm when pondering is enabled.
     uci::BoolOption ponder {
         "Ponder",
-        true,
+        false,
         "Controls whether pondering is allowed."
     };
 
@@ -170,7 +173,7 @@ private:
     /* ----- Custom commands ----- */
 
     // clang-format off
-    std::array<CustomCommand, 8uz> customCommands {
+    std::array<CustomCommand, 10uz> customCommands {
         CustomCommand {
             .name = "showpos",
             .action = [this](const string_view args){ print_current_position(args); },
@@ -212,6 +215,18 @@ private:
             .action = CustomCommand::void_cb([]{ print_compiler_info(); }),
             .description = "Print compiler info",
             .argsHelp = {}
+        },
+        CustomCommand {
+            .name = "writeconfig",
+            .action = [this](const string_view args) { write_config_file(args); },
+            .description = "Writes the engine's current state to a configuration file at the given path",
+            .argsHelp = "<path>"
+        },
+        CustomCommand {
+            .name = "readconfig",
+            .action = [this](const string_view args) { read_config_file(args); },
+            .description = "Loads engine state from a configuration file at the given path",
+            .argsHelp = "<path>"
         },
         CustomCommand {
             .name = "help",

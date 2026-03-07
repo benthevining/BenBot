@@ -18,16 +18,21 @@
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <filesystem>
 #include <format>
+#include <fstream>
 #include <libbenbot/engine/Engine.hpp>
 #include <libbenbot/search/Callbacks.hpp>
 #include <libchess/notation/MoveFormats.hpp>
 #include <libchess/uci/Printing.hpp>
+#include <libchess/util/Files.hpp>
 #include <libchess/util/Logger.hpp>
+#include <libchess/util/Variant.hpp>
 #include <magic_enum/magic_enum.hpp>
+#include <nlohmann/json.hpp>
 #include <ranges>
 #include <string>
 #include <string_view>
 #include <utility>
+#include <variant>
 #include <vector>
 
 namespace ben_bot {
@@ -146,6 +151,76 @@ void Engine::color_flip()
     wait();
 
     searcher.context.options.position.flip();
+}
+
+using nlohmann::json;
+
+inline constexpr string_view TAG_OPTIONS { "uci_options" };
+inline constexpr string_view TAG_DEBUG { "debug" };
+
+void Engine::write_config_file(const string_view path) const
+{
+    if (path.empty()) {
+        info_string("No filepath provided for writeconfig");
+        return;
+    }
+
+    json optionsData;
+
+    for (const auto* opt : options) {
+        if (not opt->has_value())
+            continue;
+
+        std::visit(
+            chess::util::Visitor {
+                [&optionsData, name = opt->get_name()](const auto value) {
+                    optionsData[name] = value;
+                } },
+            opt->get_value_variant());
+    }
+
+    json data;
+
+    data[TAG_OPTIONS] = optionsData;
+    data[TAG_DEBUG]   = debugMode.load(memory_order_relaxed);
+
+    std::ofstream stream { std::filesystem::path { path } };
+
+    stream << data.dump(2) << '\n';
+}
+
+void Engine::read_config_file(const string_view path)
+{
+    if (path.empty()) {
+        info_string("No filepath provided for readconfig");
+        return;
+    }
+
+    [[maybe_unused]] const auto result = chess::util::load_file_as_string(std::filesystem::path { path })
+                                             .transform([this](const string_view fileContent) {
+                                                 const auto data = json::parse(fileContent);
+
+                                                 debugMode.store(
+                                                     data.at(TAG_DEBUG).get<bool>(),
+                                                     memory_order_relaxed);
+
+                                                 const auto& optionsData = data.at(TAG_OPTIONS);
+
+                                                 for (const auto* opt : options) {
+                                                     if (not opt->has_value())
+                                                         continue;
+
+                                                     std::visit(
+                                                         chess::util::Visitor {
+                                                             [&optionsData, name = opt->get_name()](const auto value) {
+                                                                 // TODO: set option value from optionsData.at(name)
+                                                             } },
+                                                         opt->get_value_variant());
+                                                 }
+
+                                                 return std::monostate { };
+                                             })
+                                             .transform_error(info_string);
 }
 
 } // namespace ben_bot

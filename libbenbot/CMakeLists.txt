@@ -10,13 +10,26 @@
 #
 # ======================================================================================
 
+FetchContent_Declare (
+    nlohmann_json
+    SYSTEM
+    GIT_REPOSITORY "https://github.com/nlohmann/json.git"
+    GIT_TAG v3.12.0
+    GIT_SHALLOW ON
+    FIND_PACKAGE_ARGS 3.12.0
+)
+
+FetchContent_MakeAvailable (nlohmann_json)
+
 add_subdirectory (resources)
 
 add_library (libbenbot STATIC)
 
 target_compile_features (libbenbot PUBLIC cxx_std_23)
 
-target_link_libraries (libbenbot PUBLIC ben_bot::libchess PRIVATE ben_bot::resources)
+target_link_libraries (
+    libbenbot PUBLIC ben_bot::libchess PRIVATE ben_bot::resources nlohmann_json::nlohmann_json
+)
 
 FetchContent_Declare (
     termcolor
