@@ -14,6 +14,7 @@
 
 #include <concepts>
 #include <format>
+#include <iostream>
 #include <libbenbot/engine/Engine.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/moves/Perft.hpp>
@@ -88,6 +89,8 @@ namespace {
         json["totalNodes"]  = result.nodes;
 
         std::println("{}", json.dump());
+
+        std::cout.flush();
     }
 } // namespace
 
@@ -101,6 +104,8 @@ void Engine::run_perft(
     const auto depth = util::strings::int_from_string(trim(depthStr), 4uz);
 
     info_string(std::format("Running perft depth {}...", depth));
+
+    std::cout.flush();
 
     const auto result = chess::moves::perft(
         depth, searcher.context.options.position);
