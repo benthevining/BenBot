@@ -18,7 +18,6 @@
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <filesystem>
 #include <format>
-#include <fstream>
 #include <libbenbot/engine/Engine.hpp>
 #include <libbenbot/search/Callbacks.hpp>
 #include <libchess/notation/MoveFormats.hpp>
