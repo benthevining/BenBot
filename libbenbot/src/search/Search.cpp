@@ -110,6 +110,9 @@ namespace {
         {
         }
 
+        AlphaBetaContext(const AlphaBetaContext&)            = delete;
+        AlphaBetaContext& operator=(const AlphaBetaContext&) = delete;
+
         template <bool PVNode>
         [[nodiscard]] auto alpha_beta() -> Score // NOLINT(readability-function-cognitive-complexity)
         {

@@ -254,6 +254,7 @@ auto TranspositionTable::probe_eval(
         })
         .and_then([bounds](const TTData& data) -> std::optional<ProbedEval> {
             switch (data.evalType) {
+                default: [[fallthrough]];
                 case EvalType::Exact:
                     return std::make_pair(data.eval, data.evalType);
 
@@ -270,8 +271,6 @@ auto TranspositionTable::probe_eval(
 
                     break;
                 }
-
-                default: break;
             }
 
             return std::nullopt;

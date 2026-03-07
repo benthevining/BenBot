@@ -31,7 +31,6 @@
 #include <libchess/pieces/PieceTypes.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <optional>
-#include <utility> // IWYU pragma: keep - for std::unreachable()
 
 namespace chess::board {
 
@@ -183,8 +182,9 @@ constexpr auto Pieces::get_type(const PieceType type) noexcept -> Bitboard&
         case PieceType::Rook  : return rooks;
         case PieceType::Queen : return queens;
         case PieceType::King  : return king;
-        case PieceType::Pawn  : return pawns;
-        default               : std::unreachable();
+        case PieceType::Pawn  : [[fallthrough]];
+        default:
+            return pawns;
     }
 }
 
@@ -196,8 +196,9 @@ constexpr auto Pieces::get_type(const PieceType type) const noexcept -> Bitboard
         case PieceType::Rook  : return rooks;
         case PieceType::Queen : return queens;
         case PieceType::King  : return king;
-        case PieceType::Pawn  : return pawns;
-        default               : std::unreachable();
+        case PieceType::Pawn  : [[fallthrough]];
+        default:
+            return pawns;
     }
 }
 

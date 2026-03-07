@@ -44,6 +44,12 @@ struct Context final {
     {
     }
 
+    Context(const Context&)            = delete;
+    Context& operator=(const Context&) = delete;
+
+    Context(Context&&)            = delete;
+    Context& operator=(Context&&) = delete;
+
     /** The options to use for the search.
         This object can only be safely mutated when no search is executing.
      */

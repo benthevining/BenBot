@@ -63,6 +63,12 @@ struct Interrupter final {
         exitFlagToUse.store(false, memory_order::release);
     }
 
+    Interrupter(const Interrupter&)            = delete;
+    Interrupter& operator=(const Interrupter&) = delete;
+
+    Interrupter(Interrupter&&)            = delete;
+    Interrupter& operator=(Interrupter&&) = delete;
+
     [[nodiscard]] auto get_search_duration() const noexcept -> milliseconds { return timer.get_duration(); }
 
     // returns time remaining until abort time, or nullopt if there's no time bound

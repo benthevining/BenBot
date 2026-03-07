@@ -596,17 +596,13 @@ namespace detail {
 
         beman::inplace_vector::inplace_vector<Move, 2uz> moves;
 
-        get_kingside_castling<Side>(position, allOccupied)
-            .transform([&moves](const Move move) {
-                moves.emplace_back(move);
-                return std::monostate { };
-            });
+        auto add_move = [&moves](const Move move) {
+            moves.emplace_back(move);
+            return std::monostate { };
+        };
 
-        get_queenside_castling<Side>(position, allOccupied)
-            .transform([&moves](const Move move) {
-                moves.emplace_back(move);
-                return std::monostate { };
-            });
+        get_kingside_castling<Side>(position, allOccupied).transform(add_move);
+        get_queenside_castling<Side>(position, allOccupied).transform(add_move);
 
         return moves;
     }
@@ -694,6 +690,7 @@ namespace detail {
                 return;
             }
 
+            default             : [[fallthrough]];
             case PieceType::King: {
                 std::ranges::copy(
                     get_king_moves<Side, CapturesOnly>(position),
@@ -708,8 +705,6 @@ namespace detail {
 
                 return;
             }
-
-            default: std::unreachable();
         }
     }
 

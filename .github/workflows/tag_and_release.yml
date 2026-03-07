@@ -100,10 +100,10 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-15]
+        os: [ubuntu-latest, windows-2025-vs2026, macos-15]
         preset: [clang]
         include:
-        - os: windows-latest
+        - os: windows-2025-vs2026
           preset: msvc
         - os: ubuntu-latest
           preset: gcc
@@ -125,10 +125,16 @@ jobs:
 
     steps:
     - name: Install Linux dependencies
-      if: runner.os == 'Linux'
+      if: runner.os == 'Linux' && matrix.preset == 'clang'
       run: |
         sudo apt-get update
         sudo apt-get install -y libc++-dev libc++abi-dev
+
+    - name: Ensure Clang version
+      if: runner.os == 'Linux' && matrix.preset == 'clang'
+      uses: egor-tensin/setup-clang@v2.1
+      with:
+        version: 21
 
     - name: Ensure CMake 4.0
       uses: lukka/get-cmake@v4.2.3

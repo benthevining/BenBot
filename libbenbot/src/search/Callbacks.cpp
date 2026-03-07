@@ -228,11 +228,10 @@ namespace {
             case ScoreType::Losing:
                 std::cout << termcolor::red;
                 break;
+            default: [[fallthrough]];
             case ScoreType::Equal:
                 std::cout << termcolor::grey;
                 break;
-            default:
-                std::unreachable();
         }
 
         print_column_text<Alignment::Center>(

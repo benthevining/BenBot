@@ -78,6 +78,12 @@ namespace {
             thread.start();
         }
 
+        BenchSearcherThread(const BenchSearcherThread&)            = delete;
+        BenchSearcherThread& operator=(const BenchSearcherThread&) = delete;
+
+        BenchSearcherThread(BenchSearcherThread&&)            = delete;
+        BenchSearcherThread& operator=(BenchSearcherThread&&) = delete;
+
         [[nodiscard]] auto finished() const noexcept -> bool { return not thread.context.in_progress(); }
 
         [[nodiscard]] auto get_result() const noexcept -> SearchResult

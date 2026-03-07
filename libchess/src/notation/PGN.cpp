@@ -556,7 +556,7 @@ namespace {
                     output.append("0-1");
                     break;
 
-                default: std::unreachable();
+                default: break;
             }
 
             return std::monostate { };

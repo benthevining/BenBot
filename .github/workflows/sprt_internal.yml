@@ -41,7 +41,7 @@ jobs:
     name: Run SPRT test
     timeout-minutes: 300 # 5 hours
     env:
-      CMAKE_PRESET: clang
+      CMAKE_PRESET: gcc
       CMAKE_BUILD_PARALLEL_LEVEL: 8
       BUILD_DIR: ${{ github.workspace }}/Builds/clang
       SPRT_OUTPUT_LOG: ${{ github.workspace }}/logs/sprt/output.log
@@ -52,11 +52,6 @@ jobs:
       TMP_DEPLOY_DIR: ${{ github.workspace }}/tmp-main/deploy
 
     steps:
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libc++-dev libc++abi-dev
-
     - name: Ensure CMake 4.0
       uses: lukka/get-cmake@v4.2.3
 
