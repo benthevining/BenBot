@@ -208,7 +208,7 @@ private:
             .name = "perft",
             .action = [this](const string_view args) { run_perft(args); },
             .description = "Computes perft of the current position to the given depth",
-            .argsHelp = "<N>"
+            .argsHelp = "<N> [json]"
         },
         CustomCommand {
             .name = "bench",
