@@ -176,10 +176,6 @@ void Engine::print_compiler_info()
     info_string(std::format(
         "Build configuration: {}",
         resources::get_build_config()));
-
-    info_string(std::format(
-        "Build date: {}",
-        resources::get_build_time()));
 }
 
 auto Engine::pretty_print_move(const Move move) const -> std::string

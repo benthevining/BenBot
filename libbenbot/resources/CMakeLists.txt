@@ -10,12 +10,6 @@
 #
 # ======================================================================================
 
-option (BENBOT_ALWAYS_REBUILD_RESOURCES
-        "If on, the resources target is rebuilt every time a build is invoked" OFF
-)
-
-mark_as_advanced (BENBOT_ALWAYS_REBUILD_RESOURCES)
-
 FetchContent_Declare (
     cmrc
     SYSTEM
@@ -59,29 +53,17 @@ string (CONFIGURE "${config_header_content}" config_header_content @ONLY)
 file (GENERATE OUTPUT "${generated_header}" CONTENT "${config_header_content}")
 
 set (header_file "include/libbenbot/Resources.hpp")
-set (source_files # cmake-format: sortable
-                  src/BuildTime.cpp src/Resources.cpp
-)
+set (source_file "src/Resources.cpp")
 
 target_sources (
     ben_bot_resources PUBLIC FILE_SET HEADERS BASE_DIRS include FILES "${header_file}"
-    PRIVATE ${source_files} "${generated_header}"
+    PRIVATE ${source_file} "${generated_header}"
 )
 
 source_group (
-    TREE "${CMAKE_CURRENT_LIST_DIR}" FILES "${header_file}" ${source_files} ${resource_files}
+    TREE "${CMAKE_CURRENT_LIST_DIR}" FILES "${header_file}" "${source_file}" ${resource_files}
 )
 
 target_include_directories (ben_bot_resources PRIVATE "${generated_includes}")
-
-if (BENBOT_ALWAYS_REBUILD_RESOURCES)
-    add_custom_target (
-        ben_bot_resources_toucher ALL COMMAND "${CMAKE_COMMAND}" -E touch_nocreate
-                                              "${CMAKE_CURRENT_LIST_DIR}/src/BuildTime.cpp"
-        COMMENT "Touching BuildTime.cpp to ensure it rebuilds..." VERBATIM
-    )
-
-    add_dependencies (ben_bot_resources ben_bot_resources_toucher)
-endif ()
 
 add_library (ben_bot::resources ALIAS ben_bot_resources)

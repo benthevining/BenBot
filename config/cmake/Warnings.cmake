@@ -65,7 +65,6 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
         -Wno-c++98-compat-pedantic
         -Wno-c++20-compat
         -Wno-pre-c++20-compat-pedantic
-        -Wno-date-time
         -Wno-padded
         -Wno-poison-system-directories
         -Wno-global-constructors

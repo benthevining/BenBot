@@ -14,7 +14,6 @@
 
 #pragma once
 
-#include <string>
 #include <string_view>
 
 /** @defgroup benbot_data Resources
@@ -57,9 +56,6 @@ using std::string_view;
 
 /** Returns the name of the build configuration that the engine was built for. */
 [[nodiscard, gnu::const]] auto get_build_config() -> string_view;
-
-/** Returns the build time (of the resources library) as a string. */
-[[nodiscard]] auto get_build_time() -> std::string;
 
 /// @}
 
