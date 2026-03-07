@@ -16,6 +16,8 @@
 
 #ifdef __SIZEOF_INT128__
 
+#    include <cstdint>
+
 namespace chess::util::math {
 
 auto mul_hi64(
@@ -24,7 +26,7 @@ auto mul_hi64(
 {
     __extension__ using uint128_t = unsigned __int128;
 
-    return (static_cast<uint128_t>(first) * static_cast<uint128_t>(second)) >> static_cast<uint128_t>(64);
+    return (static_cast<uint128_t>(first) * static_cast<uint128_t>(second)) >> UINT64_C(64);
 }
 
 } // namespace chess::util::math
