@@ -30,6 +30,7 @@ if (MSVC)
         /wd5246 # don't require braces around every subobject of std::array initializer list
         /wd5045 # don't tell us about Spectre mitigations
         /wd4868 # compiler may not enforce left-to-right evaluation in initializer lists
+        /wd5264 # unused variables - this warning causes too many false positives
     )
     return ()
 endif ()
