@@ -66,14 +66,9 @@ jobs:
     env:
       LANGUAGE: c-cpp
       CMAKE_BUILD_PARALLEL_LEVEL: 8
-      PRESET: clang
+      PRESET: gcc
 
     steps:
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libc++-dev libc++abi-dev
-
     - name: Ensure CMake 4.0
       uses: lukka/get-cmake@v4.2.3
 

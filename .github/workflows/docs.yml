@@ -45,17 +45,12 @@ jobs:
     permissions:
       contents: read
     env:
-      CMAKE_PRESET: clang
+      CMAKE_PRESET: gcc
       CMAKE_BUILD_PARALLEL_LEVEL: 8
       BUILD_DIR: ${{ github.workspace }}/Builds/clang
       DEPLOY_DIR: ${{ github.workspace }}/deploy
 
     steps:
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt install -y doxygen graphviz libc++-dev libc++abi-dev
-
     - name: Ensure CMake 4.0
       uses: lukka/get-cmake@v4.2.3
 
