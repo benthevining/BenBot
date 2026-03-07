@@ -89,9 +89,10 @@ jobs:
 
     - name: Ensure latest Clang
       if: runner.os == 'Linux' && matrix.preset == 'clang'
-      uses: egor-tensin/setup-clang@v2.1
+      uses: KyleMayes/install-llvm-action@v2
       with:
-        version: 21
+        version: 21.1.8
+        env: true
 
     - name: Ensure CMake 4.0
       uses: lukka/get-cmake@v4.2.3
