@@ -18,44 +18,6 @@ from typing import Tuple
 #
 
 
-def get_result_lines(stdout) -> list[str]:
-    lines = []
-
-    for line in stdout:
-        if ":" in line:
-            lines.append(line)
-
-            # a bit hacky, but we need to check for the end of the perft output
-            # or we'll spin forever waiting for EOF from the engine's stdout
-            if line.split(":", 1)[0] == f"info string Stalemates":
-                break
-
-    return lines
-
-
-def get_value_for_key(lines: list[str], key: str) -> int:
-    for line in lines:
-        this_key, value = line.split(":", 1)
-
-        if this_key == f"info string {key}":
-            return int(value.strip())
-
-    raise Exception(f"Result does not contain key {key}")
-
-
-def get_result(lines: list[str]) -> dict[str, int]:
-    return {
-        "captures": get_value_for_key(lines, "Captures"),
-        "castles": get_value_for_key(lines, "Castles"),
-        "checkmates": get_value_for_key(lines, "Checkmates"),
-        "checks": get_value_for_key(lines, "Checks"),
-        "en_passants": get_value_for_key(lines, "En passant captures"),
-        "promotions": get_value_for_key(lines, "Promotions"),
-        "stalemates": get_value_for_key(lines, "Stalemates"),
-        "totalNodes": get_value_for_key(lines, "Nodes"),
-    }
-
-
 def check_result(expected: dict[str, int], actual: dict[str, int]) -> bool:
     for key in (
         "totalNodes",
@@ -122,10 +84,13 @@ class Engine:
 
         self.engine.stdin.write(f"position fen {pos_fen}\n")
 
-    def run_perft(self, depth: int):
-        self.engine.stdin.write(f"perft {depth}\n")
+    def run_perft(self, depth: int) -> dict[str, int]:
+        self.engine.stdin.write(f"perft {depth} json\n")
 
-        return get_result(get_result_lines(self.engine.stdout))
+        # info line
+        self.engine.stdout.readline()
+
+        return json.loads(self.engine.stdout.readline())
 
     def quit(self):
         self.engine.communicate("quit\n", timeout=15)
