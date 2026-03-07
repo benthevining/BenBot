@@ -16,6 +16,8 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+  pull_request:
+    types: [opened, reopened, synchronize]
   workflow_call:
     inputs:
       ref:
@@ -72,7 +74,6 @@ jobs:
       working-directory: ${{ env.BUILD_DIR }}
 
     - name: Report Doxygen warnings
-      if: always()
       run: |
         cmake -E echo "# Doxygen warnings" >> $GITHUB_STEP_SUMMARY
         cmake -E cat logs/Doxygen.log >> $GITHUB_STEP_SUMMARY
@@ -88,6 +89,7 @@ jobs:
         path: ${{ env.DEPLOY_DIR }}/share/doc/html
 
   deploy:
+    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     name: Deploy docs
     timeout-minutes: 5
