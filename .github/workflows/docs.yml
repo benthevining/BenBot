@@ -93,7 +93,7 @@ jobs:
       uses: LouisBrunner/checks-action@v2
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        check_id: ${{ job.check_run_id }}
+        name: Docs warnings
         conclusion: ${{ job.status }} # expands to failure if any step has failed, success otherwise
         output: ${{ steps.parse_doxygen_warnings.outputs.summary }}
         annotations: ${{ steps.parse_doxygen_warnings.outputs.annotations }}
