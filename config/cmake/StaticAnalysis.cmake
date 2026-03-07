@@ -10,28 +10,16 @@
 #
 # ======================================================================================
 
-include ("${CMAKE_CURRENT_LIST_DIR}/Sanitizers.cmake")
-# include ("${CMAKE_CURRENT_LIST_DIR}/Coverage.cmake")
-include ("${CMAKE_CURRENT_LIST_DIR}/Warnings.cmake")
-include ("${CMAKE_CURRENT_LIST_DIR}/StaticAnalysis.cmake")
+# Including this module enables static analysis integrations.
 
-# General settings
+include_guard (GLOBAL)
 
-set_property (GLOBAL PROPERTY USE_FOLDERS YES)
+find_program (CPPLINT_PROGRAM cpplint DOC "cpplint executable")
 
-set_property (
-    GLOBAL PROPERTY REPORT_UNDEFINED_PROPERTIES "${CMAKE_BINARY_DIR}/UndefinedProperties.log"
-)
-
-# MSVC static runtime
-block ()
-get_cmake_property (debug_configs DEBUG_CONFIGURATIONS)
-
-if (NOT debug_configs)
-    set (debug_configs Debug)
+if (CPPLINT_PROGRAM)
+    foreach (lang IN ITEMS CXX C)
+        set ("CMAKE_${lang}_CPPLINT" "${CPPLINT_PROGRAM};--verbose=0;--quiet;--counting=detailed"
+             CACHE STRING "Command used to run cpplint"
+        )
+    endforeach ()
 endif ()
-
-list (JOIN debug_configs "," debug_configs)
-
-set (CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:${debug_configs}>:Debug>" CACHE STRING "")
-endblock ()
