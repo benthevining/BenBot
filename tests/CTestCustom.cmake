@@ -36,7 +36,6 @@ list (
     "_deps"
     "bits/sigaction.h"
     "Program Files\\\\Microsoft Visual Studio"
-    # this one needs to match forward- or back-slashes
     "libbenbot${slash}resources${slash}__cmrc_ben_bot_resources_internal${slash}"
     "libchess${slash}src${slash}util${slash}memory${slash}PageAlignedAlloc_Windows.hpp"
 )
