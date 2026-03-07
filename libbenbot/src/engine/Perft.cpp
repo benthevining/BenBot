@@ -12,8 +12,8 @@
  * ======================================================================================
  */
 
+#include <concepts>
 #include <format>
-#include <functional>
 #include <libbenbot/engine/Engine.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/moves/Perft.hpp>
@@ -32,12 +32,14 @@ using uci::printing::info_string;
 namespace {
     using chess::moves::PerftResult;
 
-    // TODO: use a concept to match lambda type
-    using MovePrinter = std::function<std::string(Move)>;
+    template <typename Func>
+    concept MovePrinter = std::regular_invocable<Func, Move>
+                      and std::same_as<std::invoke_result_t<Func, Move>, std::string>;
 
+    template <MovePrinter Printer>
     void print_root_nodes(
         const PerftResult& result,
-        const MovePrinter& printMove)
+        const Printer&     printMove)
     {
         for (const auto& [move, numChildren] : result.rootNodes) {
             info_string(std::format(
@@ -56,14 +58,13 @@ namespace {
         info_string(std::format("Promotions: {}", result.promotions));
         info_string(std::format("Checks: {}", result.checks));
         info_string(std::format("Checkmates: {}", result.checkmates));
-
-        // NB. the python wrapper script relies on this being printed last
         info_string(std::format("Stalemates: {}", result.stalemates));
     }
 
+    template <MovePrinter Printer>
     void pretty_print(
         const PerftResult& result,
-        const MovePrinter& printMove)
+        const Printer&     printMove)
     {
         std::println("");
         print_root_nodes(result, printMove);
