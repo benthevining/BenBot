@@ -51,6 +51,11 @@ jobs:
       DEPLOY_DIR: ${{ github.workspace }}/deploy
 
     steps:
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt install -y doxygen graphviz
+
     - name: Ensure CMake 4.0
       uses: lukka/get-cmake@v4.2.3
 
