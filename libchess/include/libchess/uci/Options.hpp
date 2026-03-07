@@ -102,6 +102,9 @@ struct BoolOption final : Option {
      */
     [[nodiscard]] auto get_value() const noexcept -> bool { return value; }
 
+    /** Sets the option's value directly. */
+    void set_value(bool newValue);
+
     [[nodiscard]] auto get_value_variant() const -> Variant override { return value; }
 
     /** Returns this option's default value. */
@@ -152,6 +155,9 @@ struct IntOption final : Option {
      */
     [[nodiscard]] auto get_value() const noexcept -> int { return value; }
 
+    /** Sets the option's value directly. */
+    void set_value(int newValue);
+
     [[nodiscard]] auto get_value_variant() const -> Variant override { return value; }
 
     /** Returns this option's default value. */
@@ -201,6 +207,9 @@ struct ComboOption final : Option {
         Callback&&          changeCallback = [](string_view) { });
 
     [[nodiscard]] auto get_value() const noexcept -> string_view { return value; } // cppcheck-suppress returnByReference
+
+    /** Sets the option's value directly. */
+    void set_value(string_view newValue);
 
     [[nodiscard]] auto get_value_variant() const -> Variant override { return get_value(); }
 
@@ -255,6 +264,9 @@ struct StringOption final : Option {
 
         return value;
     }
+
+    /** Sets the option's value directly. */
+    void set_value(string_view newValue);
 
     [[nodiscard]] auto get_value_variant() const -> Variant override { return get_value(); }
 

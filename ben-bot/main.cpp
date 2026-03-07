@@ -17,6 +17,7 @@
 #include <cstddef>
 #include <cstdlib>
 #include <exception>
+#include <filesystem>
 #include <format>
 #include <iterator>
 #include <libbenbot/engine/Engine.hpp>
@@ -108,6 +109,9 @@ try {
     const auto [noLoop, uciCommand] = Arguments::parse(argc, argv);
 
     ben_bot::Engine engine;
+
+    if (const auto* var = std::getenv("BENBOT_CONFIG"))
+        engine.read_config_file(std::filesystem::path { var });
 
     if (not uciCommand.empty())
         engine.handle_command(uciCommand);

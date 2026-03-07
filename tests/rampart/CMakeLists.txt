@@ -14,15 +14,6 @@
 # the rampart executable
 
 FetchContent_Declare (
-    nlohmann_json
-    SYSTEM
-    GIT_REPOSITORY "https://github.com/nlohmann/json.git"
-    GIT_TAG v3.12.0
-    GIT_SHALLOW ON
-    FIND_PACKAGE_ARGS 3.12.0
-)
-
-FetchContent_Declare (
     rampart
     SYSTEM
     GIT_REPOSITORY "https://github.com/schnitzi/rampart.git"
@@ -30,7 +21,7 @@ FetchContent_Declare (
     OVERRIDE_FIND_PACKAGE
 )
 
-FetchContent_MakeAvailable (nlohmann_json rampart)
+FetchContent_MakeAvailable (rampart)
 
 add_executable (rampart main.cpp)
 

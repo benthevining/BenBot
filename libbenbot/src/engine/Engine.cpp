@@ -21,17 +21,23 @@
 #include <libbenbot/engine/Engine.hpp>
 #include <libbenbot/search/Callbacks.hpp>
 #include <libchess/notation/MoveFormats.hpp>
+#include <libchess/uci/Options.hpp>
 #include <libchess/uci/Printing.hpp>
+#include <libchess/util/Files.hpp>
 #include <libchess/util/Logger.hpp>
+#include <libchess/util/Variant.hpp>
 #include <magic_enum/magic_enum.hpp>
+#include <nlohmann/json.hpp>
 #include <ranges>
 #include <string>
 #include <string_view>
 #include <utility>
+#include <variant>
 #include <vector>
 
 namespace ben_bot {
 
+using std::filesystem::path;
 using std::memory_order_relaxed;
 using std::size_t;
 using uci::printing::info_string;
@@ -86,6 +92,7 @@ void Engine::new_game(const bool firstCall)
 
 void Engine::set_pretty_printing(const bool shouldPrettyPrint)
 {
+    // TODO: remove this
     // check if the requested printing mode was already active
     if (prettyPrinting.exchange(shouldPrettyPrint, memory_order_relaxed) == shouldPrettyPrint)
         return;
@@ -122,15 +129,15 @@ void Engine::handle_custom_command(
     info_string("Type help for a list of supported commands");
 }
 
-void Engine::start_file_logger(const string_view path)
+void Engine::start_file_logger(const string_view arg)
 {
-    if (path.empty()) {
+    if (arg.empty()) {
         info_string("No path provided for file logger, not starting.");
         return;
     }
 
     [[maybe_unused]] const auto result
-        = chess::util::start_file_logger(std::filesystem::path { path })
+        = chess::util::start_file_logger(path { arg })
               .transform_error(info_string);
 }
 
@@ -146,6 +153,110 @@ void Engine::color_flip()
     wait();
 
     searcher.context.options.position.flip();
+}
+
+using nlohmann::json;
+
+inline constexpr string_view TAG_OPTIONS { "uci_options" };
+inline constexpr string_view TAG_DEBUG { "debug" };
+
+void Engine::write_config_file(const string_view arg) const
+{
+    if (arg.empty()) {
+        info_string("No filepath provided for writeconfig");
+        return;
+    }
+
+    json optionsData;
+
+    for (const auto* opt : options) {
+        if (not opt->has_value())
+            continue;
+
+        std::visit(
+            chess::util::Visitor {
+                [&optionsData, name = opt->get_name()](const auto value) {
+                    optionsData[name] = value;
+                } },
+            opt->get_value_variant());
+    }
+
+    json data;
+
+    data[TAG_OPTIONS] = optionsData;
+    data[TAG_DEBUG]   = debugMode.load(memory_order_relaxed);
+
+    const auto filePath = absolute(path { arg });
+
+    [[maybe_unused]] const auto result
+        = chess::util::overwrite_file(
+            filePath, data.dump(2))
+              .transform([&filePath] {
+                  info_string(std::format(
+                      "Wrote configuration file to: {}", filePath.string()));
+              })
+              .transform_error(info_string);
+}
+
+void Engine::read_config_file(const string_view arg)
+{
+    if (arg.empty()) {
+        info_string("No filepath provided for readconfig");
+        return;
+    }
+
+    read_config_file(path { arg });
+}
+
+void Engine::read_config_file(const path& file)
+{
+    const auto filePath = absolute(file);
+
+    [[maybe_unused]] const auto result
+        = chess::util::load_file_as_string(filePath)
+              .transform([this, &filePath](const string_view fileContent) {
+                  const auto data = json::parse(fileContent);
+
+                  debugMode.store(
+                      data.at(TAG_DEBUG).get<bool>(),
+                      memory_order_relaxed);
+
+                  const auto& optionsData = data.at(TAG_OPTIONS);
+
+                  for (auto* opt : options) {
+                      if (not opt->has_value())
+                          continue;
+
+                      const auto& optValue = optionsData.at(opt->get_name());
+
+                      namespace uci = chess::uci;
+
+                      if (auto* boolOpt = dynamic_cast<uci::BoolOption*>(opt)) {
+                          boolOpt->set_value(optValue.get<bool>());
+                          continue;
+                      }
+
+                      if (auto* intOpt = dynamic_cast<uci::IntOption*>(opt)) {
+                          intOpt->set_value(optValue.get<int>());
+                          continue;
+                      }
+
+                      if (auto* comboOpt = dynamic_cast<uci::ComboOption*>(opt)) {
+                          comboOpt->set_value(optValue.get<string_view>());
+                          continue;
+                      }
+
+                      if (auto* stringOpt = dynamic_cast<uci::StringOption*>(opt)) {
+                          stringOpt->set_value(optValue.get<string_view>());
+                      }
+                  }
+
+                  info_string(std::format(
+                      "Read configuration from file: {}", filePath.string()));
+
+                  return std::monostate { };
+              })
+              .transform_error(info_string);
 }
 
 } // namespace ben_bot
