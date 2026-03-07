@@ -16,6 +16,8 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+  pull_request:
+    types: [opened, reopened, synchronize]
   workflow_call:
     inputs:
       ref:
@@ -44,6 +46,7 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
+      checks: write
     env:
       CMAKE_PRESET: gcc
       CMAKE_BUILD_PARALLEL_LEVEL: 8
@@ -71,11 +74,29 @@ jobs:
       run: cmake --build . --target ben_bot_docs
       working-directory: ${{ env.BUILD_DIR }}
 
-    - name: Report Doxygen warnings
+    # Parse Doxygen warnings to create JSON data for check status
+    - name: Produce summary for check
       if: always()
+      id: parse_doxygen_warnings
+      env:
+        SCRIPT: ${{ github.workspace }}/.github/scripts/ReportDoxygenWarnings.py
+        DOXYGEN_LOG: ${{ github.workspace }}/logs/Doxygen.log
       run: |
-        cmake -E echo "# Doxygen warnings" >> $GITHUB_STEP_SUMMARY
-        cmake -E cat logs/Doxygen.log >> $GITHUB_STEP_SUMMARY
+        summary="$(python3 ${{ env.SCRIPT }}  --summary --doxygen-log=${{ env.DOXYGEN_LOG }})"
+        echo "summary=$summary" >> "$GITHUB_OUTPUT"
+        annotations="$(python3 ${{ env.SCRIPT }} --doxygen-log=${{ env.DOXYGEN_LOG }} --repo-root ${{ github.workspace }})"
+        echo "annotations=$annotations" >> "$GITHUB_OUTPUT"
+
+    # Create status check to report warnings
+    - name: Report check state
+      if: always()
+      uses: LouisBrunner/checks-action@v2
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        name: Docs warnings
+        conclusion: ${{ job.status }} # expands to failure if any step has failed, success otherwise
+        output: ${{ steps.parse_doxygen_warnings.outputs.summary }}
+        annotations: ${{ steps.parse_doxygen_warnings.outputs.annotations }}
 
     - name: Run CMake install
       run: |
@@ -88,6 +109,7 @@ jobs:
         path: ${{ env.DEPLOY_DIR }}/share/doc/html
 
   deploy:
+    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     name: Deploy docs
     timeout-minutes: 5
