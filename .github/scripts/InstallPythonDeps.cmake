@@ -22,6 +22,6 @@ find_package (Python 3.10 COMPONENTS Interpreter REQUIRED)
 
 execute_process (
     COMMAND "${Python_EXECUTABLE}" -m pip install --break-system-packages --upgrade python-chess
-            tqdm COMMAND_ECHO STDOUT OUTPUT_STRIP_TRAILING_WHITESPACE
-                                     ERROR_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY
+            tqdm cpplint COMMAND_ECHO STDOUT
+    OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY
 )
