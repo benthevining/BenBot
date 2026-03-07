@@ -15,6 +15,7 @@
 #pragma once
 
 #include <cstddef> // IWYU pragma: keep - for size_t
+#include <type_traits>
 
 #ifndef WIN32_LEAN_AND_MEAN
 #    define WIN32_LEAN_AND_MEAN 1
@@ -37,13 +38,14 @@ namespace chess::util::memory {
 using std::size_t;
 
 namespace impl {
-    template <typename Func>
+    template <typename T>
+    concept FunctionPointer = std::is_pointer_v<T>
+                          and std::is_function_v<std::remove_pointer_t<T>>;
+
+    template <FunctionPointer Func>
     [[nodiscard]] auto find_function(HMODULE handle, LPCSTR name) -> Func
     {
-        using VoidFuncPtr = void (*)();
-
-        return reinterpret_cast<Func>(
-            reinterpret_cast<VoidFuncPtr>(GetProcAddress(handle, name)));
+        return reinterpret_cast<Func>(GetProcAddress(handle, name));
     }
 
     [[nodiscard, gnu::alloc_size(1), gnu::malloc, clang::ownership_returns(malloc)]]
