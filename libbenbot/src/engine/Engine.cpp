@@ -91,6 +91,7 @@ void Engine::new_game(const bool firstCall)
 
 void Engine::set_pretty_printing(const bool shouldPrettyPrint)
 {
+    // TODO: remove this
     // check if the requested printing mode was already active
     if (prettyPrinting.exchange(shouldPrettyPrint, memory_order_relaxed) == shouldPrettyPrint)
         return;
@@ -184,9 +185,11 @@ void Engine::write_config_file(const string_view path) const
     data[TAG_OPTIONS] = optionsData;
     data[TAG_DEBUG]   = debugMode.load(memory_order_relaxed);
 
-    std::ofstream stream { std::filesystem::path { path } };
-
-    stream << data.dump(2) << '\n';
+    [[maybe_unused]] const auto result
+        = chess::util::overwrite_file(
+            std::filesystem::path { path }, data.dump(2))
+              .transform_error(info_string);
+    ;
 }
 
 void Engine::read_config_file(const string_view path)
@@ -196,31 +199,32 @@ void Engine::read_config_file(const string_view path)
         return;
     }
 
-    [[maybe_unused]] const auto result = chess::util::load_file_as_string(std::filesystem::path { path })
-                                             .transform([this](const string_view fileContent) {
-                                                 const auto data = json::parse(fileContent);
+    [[maybe_unused]] const auto result
+        = chess::util::load_file_as_string(std::filesystem::path { path })
+              .transform([this](const string_view fileContent) {
+                  const auto data = json::parse(fileContent);
 
-                                                 debugMode.store(
-                                                     data.at(TAG_DEBUG).get<bool>(),
-                                                     memory_order_relaxed);
+                  debugMode.store(
+                      data.at(TAG_DEBUG).get<bool>(),
+                      memory_order_relaxed);
 
-                                                 const auto& optionsData = data.at(TAG_OPTIONS);
+                  const auto& optionsData = data.at(TAG_OPTIONS);
 
-                                                 for (const auto* opt : options) {
-                                                     if (not opt->has_value())
-                                                         continue;
+                  for (const auto* opt : options) {
+                      if (not opt->has_value())
+                          continue;
 
-                                                     std::visit(
-                                                         chess::util::Visitor {
-                                                             [&optionsData, name = opt->get_name()](const auto value) {
-                                                                 // TODO: set option value from optionsData.at(name)
-                                                             } },
-                                                         opt->get_value_variant());
-                                                 }
+                      std::visit(
+                          chess::util::Visitor {
+                              [&optionsData, name = opt->get_name()](const auto value) {
+                                  // TODO: set option value from optionsData.at(name)
+                              } },
+                          opt->get_value_variant());
+                  }
 
-                                                 return std::monostate { };
-                                             })
-                                             .transform_error(info_string);
+                  return std::monostate { };
+              })
+              .transform_error(info_string);
 }
 
 } // namespace ben_bot

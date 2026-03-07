@@ -21,6 +21,7 @@
 #include <iterator>
 #include <libchess/util/Files.hpp>
 #include <string>
+#include <string_view>
 
 namespace chess::util {
 
@@ -34,7 +35,7 @@ auto load_file_as_string(
 
     if (not input.is_open()) {
         return std::unexpected { std::format(
-            "Could not open file at path '{}'",
+            "Could not open file for reading at path '{}'",
             file.string()) };
     }
 
@@ -49,6 +50,34 @@ auto load_file_as_string(
         return std::unexpected { std::format(
             "Error while reading file at path '{}': {}",
             file.string(), exception.what()) };
+    }
+}
+
+auto overwrite_file(
+    const std::filesystem::path& file, const std::string_view text)
+    -> std::expected<void, std::string>
+{
+    std::ofstream output { absolute(file) };
+
+    if (not output.is_open()) {
+        return std::unexpected { std::format(
+            "Could not open file for writing at path '{}'",
+            file.string()) };
+    }
+
+    try {
+        output.exceptions(
+            std::ios_base::badbit | std::ios_base::failbit);
+
+        output << text;
+
+        return { };
+    } catch (const std::exception& exception) {
+        return std::unexpected {
+            std::format(
+                "Error while writing file at path '{}': {}",
+                file.string(), exception.what())
+        };
     }
 }
 
