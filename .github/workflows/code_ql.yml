@@ -51,6 +51,7 @@ jobs:
       with:
         languages: ${{ matrix.language }}
         build-mode: none
+        analysis-kinds: code-scanning, code-quality
         queries: security-and-quality
 
     - name: Perform CodeQL Analysis
@@ -80,6 +81,7 @@ jobs:
       with:
         languages: ${{ env.LANGUAGE }}
         build-mode: manual
+        analysis-kinds: code-scanning, code-quality
         queries: security-and-quality
 
     - name: Configure CMake
