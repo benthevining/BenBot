@@ -54,7 +54,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
         fetch-depth: 0
 
@@ -68,7 +68,7 @@ jobs:
       run: pre-commit install --install-hooks
 
     - name: Import GPG key
-      uses: crazy-max/ghaction-import-gpg@v7
+      uses: crazy-max/ghaction-import-gpg@2dc316deee8e90f13e1a351ab510b4d5bc0c82cd # v7
       with:
         gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
         passphrase: ${{ secrets.GPG_PASSPHRASE }}
@@ -132,22 +132,22 @@ jobs:
 
     - name: Ensure Clang version
       if: runner.os == 'Linux' && matrix.preset == 'clang'
-      uses: egor-tensin/setup-clang@v2.1
+      uses: egor-tensin/setup-clang@471a6f8ef1d449dba8e1a51780e7f943572a3f99 # v2.1
       with:
         version: 21
 
     - name: Ensure CMake 4.0
-      uses: lukka/get-cmake@v4.2.3
+      uses: lukka/get-cmake@f176ccd3f28bda569c43aae4894f06b2435a3375 # v4.2.3
 
     - name: Import signing certificate to keychain
       if: runner.os == 'macOS'
-      uses: Apple-Actions/import-codesign-certs@v6.0.0
+      uses: Apple-Actions/import-codesign-certs@b610f78488812c1e56b20e6df63ec42d833f2d14 # v6.0.0
       with:
         p12-file-base64: ${{ secrets.CODESIGN_CERT_FILE_BASE64 }}
         p12-password: ${{ secrets.CODESIGN_CERT_PASSWORD }}
 
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
         ref: ${{ needs.bump_version.outputs.tag_name }}
 
@@ -164,7 +164,7 @@ jobs:
         cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.DEPLOY_DIR }} --component ben_bot --config Release
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v7
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
       with:
         name: BenBot-${{ matrix.os }}-${{ matrix.preset }}
         path: ${{ env.DEPLOY_DIR }}
@@ -197,7 +197,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
         ref: ${{ needs.bump_version.outputs.tag_name }}
 
@@ -207,7 +207,7 @@ jobs:
 
     - name: Download artifacts
       id: download
-      uses: actions/download-artifact@v8
+      uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8
       with:
         path: artifacts
 
@@ -216,7 +216,7 @@ jobs:
       working-directory: .github/scripts
 
     - name: Create release
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2
       with:
         tag_name: ${{ needs.bump_version.outputs.tag_name }}
         files: ${{ env.REZIPPED_ARTIFACTS }}/**
@@ -243,13 +243,13 @@ jobs:
 
     steps:
     - name: Login to Docker
-      uses: docker/login-action@v4
+      uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4
       with:
         username: benvining
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
         ref: ${{ needs.bump_version.outputs.tag_name }}
 
@@ -288,7 +288,7 @@ jobs:
 
     steps:
     - name: Update & restart Docker image
-      uses: appleboy/ssh-action@v1
+      uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1
       with:
         host: ${{ secrets.VPS_IP_V4 }}
         username: root

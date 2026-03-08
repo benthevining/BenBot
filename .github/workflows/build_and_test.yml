@@ -93,15 +93,15 @@ jobs:
     # TODO: ensure install of runtime libraries for sanitizers, set LD_LIBRARY_PATH
     - name: Ensure Clang version
       if: runner.os == 'Linux' && matrix.preset == 'clang'
-      uses: egor-tensin/setup-clang@v2.1
+      uses: egor-tensin/setup-clang@471a6f8ef1d449dba8e1a51780e7f943572a3f99 # v2.1
       with:
         version: 21
 
     - name: Ensure CMake 4.0
-      uses: lukka/get-cmake@v4.2.3
+      uses: lukka/get-cmake@f176ccd3f28bda569c43aae4894f06b2435a3375 # v4.2.3
 
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
     - name: Install Python dependencies
       run: cmake -P InstallPythonDeps.cmake
@@ -119,7 +119,7 @@ jobs:
       continue-on-error: true
 
     - name: Upload test results
-      uses: actions/upload-artifact@v7
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
       with:
         name: ${{ env.JUNIT_FILENAME }}
         path: ${{ env.BUILD_DIR }}/${{ env.JUNIT_FILENAME }}
@@ -129,7 +129,7 @@ jobs:
       run: cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.DEPLOY_DIR }} --component ben_bot --config ${{ matrix.config }}
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v7
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
       if: matrix.config == 'Release'
       with:
         name: BenBot-${{ matrix.os }}-${{ matrix.preset }}
@@ -147,14 +147,14 @@ jobs:
 
     steps:
     - name: Download JUnit results
-      uses: actions/download-artifact@v8
+      uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8
       with:
         path: junit
         pattern: junit-*
         merge-multiple: true
 
     - name: Report aggregate results
-      uses: EnricoMi/publish-unit-test-result-action@v2.23.0
+      uses: EnricoMi/publish-unit-test-result-action@c950f6fb443cb5af20a377fd0dfaa78838901040 # v2.23.0
       with:
         check_name: "Test Results (${{ github.event.workflow_run.event || github.event_name }})"
         files: junit/*.xml

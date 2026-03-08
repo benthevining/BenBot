@@ -44,10 +44,10 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v4
+      uses: github/codeql-action/init@0d579ffd059c29b07949a3cce3983f0780820c98 # v4
       with:
         languages: ${{ matrix.language }}
         build-mode: none
@@ -55,7 +55,7 @@ jobs:
         queries: security-and-quality
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v4
+      uses: github/codeql-action/analyze@0d579ffd059c29b07949a3cce3983f0780820c98 # v4
       with:
         category: "/language:${{matrix.language}}"
 
@@ -71,13 +71,13 @@ jobs:
 
     steps:
     - name: Ensure CMake 4.0
-      uses: lukka/get-cmake@v4.2.3
+      uses: lukka/get-cmake@f176ccd3f28bda569c43aae4894f06b2435a3375 # v4.2.3
 
     - name: Checkout repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v4
+      uses: github/codeql-action/init@0d579ffd059c29b07949a3cce3983f0780820c98 # v4
       with:
         languages: ${{ env.LANGUAGE }}
         build-mode: manual
@@ -92,6 +92,6 @@ jobs:
       working-directory: Builds/${{ env.PRESET }}
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v4
+      uses: github/codeql-action/analyze@0d579ffd059c29b07949a3cce3983f0780820c98 # v4
       with:
         category: "/language:${{ env.LANGUAGE }}"
