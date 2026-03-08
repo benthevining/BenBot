@@ -12,9 +12,10 @@
 
 # This Dockerfile expects the context to be the repo root
 
-FROM lichessbotdevs/lichess-bot:latest
+FROM lichessbotdevs/lichess-bot:2026.3.7.1
 
 ARG CMAKE_VERSION=4.2.3
+ARG CMAKE_PRESET=clang
 
 RUN --mount=type=bind,source=.,target=BenBot,rw \
   # install dependencies \
@@ -29,11 +30,11 @@ RUN --mount=type=bind,source=.,target=BenBot,rw \
   ln -s /opt/cmake-$CMAKE_VERSION/bin/* /usr/local/bin && \
   # configure & build \
   cd BenBot && \
-  cmake --preset clang -D BENBOT_DOCS=OFF -D BENBOT_TESTS=OFF && \
-  cmake --build Builds/clang -j4 --target ben_bot --config Release && \
+  cmake --preset $CMAKE_PRESET -D BENBOT_DOCS=OFF -D BENBOT_TESTS=OFF && \
+  cmake --build Builds/$CMAKE_PRESET -j4 --target ben_bot --config Release && \
   # install \
   cd .. && \
-  cmake --install BenBot/Builds/clang --prefix deploy --component ben_bot --config Release && \
+  cmake --install BenBot/Builds/$CMAKE_PRESET --prefix deploy --component ben_bot --config Release && \
   # clean up \
   apt-get remove -y git cmake ninja-build clang libc++-dev libc++abi-dev && \
   rm -rf /var/lib/apt/lists
