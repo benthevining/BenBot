@@ -17,28 +17,33 @@ version: 2
 multi-ecosystem-groups:
   dependencies:
     schedule:
-      interval: "weekly"
+      interval: weekly
     commit-message:
-      prefix: "chore(deps)"
+      prefix: chore(deps)
 
 updates:
 
-- package-ecosystem: "github-actions"
-  directory: "/"
+- package-ecosystem: github-actions
+  directory: /
   patterns: ["*"]
-  multi-ecosystem-group: "dependencies"
+  multi-ecosystem-group: dependencies
 
-- package-ecosystem: "pip"
-  directory: "/config"
+- package-ecosystem: pip
+  directory: /config
   patterns: ["*"]
-  multi-ecosystem-group: "dependencies"
+  multi-ecosystem-group: dependencies
 
-- package-ecosystem: "npm"
-  directory: "/"
+- package-ecosystem: npm
+  directory: /
   patterns: ["*"]
-  multi-ecosystem-group: "dependencies"
+  multi-ecosystem-group: dependencies
 
-- package-ecosystem: "vcpkg"
-  directory: "/"
+- package-ecosystem: vcpkg
+  directory: /
   patterns: ["*"]
-  multi-ecosystem-group: "dependencies"
+  multi-ecosystem-group: dependencies
+
+- package-ecosystem: pre-commit
+  directory: /
+  patterns: ["*"]
+  multi-ecosystem-group: dependencies
