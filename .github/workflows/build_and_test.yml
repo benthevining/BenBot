@@ -147,7 +147,7 @@ jobs:
 
     steps:
     - name: Download JUnit results
-      uses: actions/download-artifact@v7
+      uses: actions/download-artifact@v8
       with:
         path: junit
         pattern: junit-*
