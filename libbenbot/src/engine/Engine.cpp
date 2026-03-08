@@ -79,7 +79,7 @@ void Engine::new_game(const bool firstCall)
     // we use delayed initialization for these callbacks instead of
     // initializing them in the constructor to avoid referencing the
     // `this` pointer in the constructor
-    if (prettyPrinting.load()) {
+    if (prettyPrintMode.get_value()) {
         searcher.context.callbacks = search::Callbacks::make_pretty_printer(
             [this](const Move move) { return pretty_print_move(move); });
     } else {
@@ -92,11 +92,6 @@ void Engine::new_game(const bool firstCall)
 
 void Engine::set_pretty_printing(const bool shouldPrettyPrint)
 {
-    // TODO: remove this
-    // check if the requested printing mode was already active
-    if (prettyPrinting.exchange(shouldPrettyPrint, memory_order_relaxed) == shouldPrettyPrint)
-        return;
-
     wait();
 
     if (shouldPrettyPrint) {

@@ -109,12 +109,9 @@ private:
     void write_config_file(string_view arg) const;
     void read_config_file(string_view arg);
 
-    static constexpr bool PRETTY_PRINT_DEFAULT = false;
-
     [[nodiscard]] static auto create_move_format_option() -> uci::ComboOption;
 
     std::atomic_bool debugMode { false };
-    std::atomic_bool prettyPrinting { PRETTY_PRINT_DEFAULT };
 
     search::Thread searcher;
 
@@ -165,7 +162,7 @@ private:
 
     uci::BoolOption prettyPrintMode {
         "Pretty Print",
-        PRETTY_PRINT_DEFAULT,
+        false,
         "When on, search output is pretty-printed instead of printed in UCI format.",
         [this](const bool usePretty) { set_pretty_printing(usePretty); }
     };
