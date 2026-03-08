@@ -54,8 +54,6 @@ auto Callbacks::make_uci_printer(
 }
 
 namespace {
-    // TODO: do column padding via std::format width specifiers?
-
     using std::string;
 
     enum class Alignment : std::uint_least8_t {
@@ -64,7 +62,7 @@ namespace {
         Center
     };
 
-    constexpr auto COLUMN_WIDTH = 10uz;
+    inline constexpr auto COLUMN_WIDTH = 10uz;
 
     template <Alignment Align>
     [[nodiscard]] auto get_column_text(
@@ -72,31 +70,21 @@ namespace {
     {
         assert(text.size() < COLUMN_WIDTH);
 
-        const auto trimmedInput = text.substr(0uz, COLUMN_WIDTH);
-
-        string padded;
-
-        if constexpr (Align == Alignment::Left) {
-            padded = trimmedInput;
-
-            padded.resize(COLUMN_WIDTH, ' ');
-        } else {
-            auto padding = COLUMN_WIDTH - trimmedInput.size();
-
-            if constexpr (Align == Alignment::Center) {
-                padding /= 2uz;
+        static constexpr auto formatStr = [] {
+            if constexpr (Align == Alignment::Left) {
+                return "{:<{}}";
+            } else if constexpr (Align == Alignment::Center) {
+                return "{:^{}}";
+            } else {
+                static_assert(Align == Alignment::Right);
+                return "{:>{}}";
             }
+        }();
 
-            padded.resize(padding, ' ');
-
-            padded.append(trimmedInput);
-
-            if constexpr (Align == Alignment::Center) {
-                padded.append(COLUMN_WIDTH - padded.size(), ' ');
-            }
-        }
-
-        return padded;
+        return std::format(
+            formatStr,
+            text.substr(0uz, COLUMN_WIDTH),
+            COLUMN_WIDTH);
     }
 
     template <Alignment Align>
