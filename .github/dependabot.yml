@@ -28,11 +28,6 @@ updates:
   patterns: ["*"]
   multi-ecosystem-group: dependencies
 
-- package-ecosystem: pip
-  directory: /config
-  patterns: ["*"]
-  multi-ecosystem-group: dependencies
-
 - package-ecosystem: npm
   directory: /
   patterns: ["*"]
@@ -45,5 +40,15 @@ updates:
 
 - package-ecosystem: pre-commit
   directory: /
+  patterns: ["*"]
+  multi-ecosystem-group: dependencies
+
+- package-ecosystem: pip
+  directory: /config
+  patterns: ["*"]
+  multi-ecosystem-group: dependencies
+
+- package-ecosystem: docker
+  directory: /config/lichess
   patterns: ["*"]
   multi-ecosystem-group: dependencies
