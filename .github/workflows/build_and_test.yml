@@ -116,7 +116,7 @@ jobs:
 
     - name: Build and test
       run: |
-        ctest -D ${{ inputs.dashboard_type }} -C ${{ matrix.config }} --schedule-random --output-junit ${{ env.JUNIT_FILENAME }} -D CTEST_TEST_TIMEOUT=300
+        ctest -D ${{ inputs.dashboard_type }} -C ${{ matrix.config }} --schedule-random --output-junit ${{ env.JUNIT_FILENAME }} --timeout 300
       working-directory: ${{ env.BUILD_DIR }}
       continue-on-error: true
 
