@@ -30,7 +30,7 @@
 /** This namespace provides some memory management utility functions.
     @ingroup memory
  */
-namespace chess::util::memory {
+namespace util::memory {
 
 using std::size_t;
 
@@ -61,4 +61,4 @@ auto page_aligned_alloc(size_t size) -> void*;
  */
 void prefetch(const void* mem);
 
-} // namespace chess::util::memory
+} // namespace util::memory

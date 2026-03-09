@@ -22,9 +22,9 @@
 
 #include <string_view>
 
-namespace chess::util::strings {
+namespace util::strings {
 struct TextTable;
-} // namespace chess::util::strings
+} // namespace util::strings
 
 namespace chess::game {
 struct Position;
@@ -42,13 +42,16 @@ using std::string_view;
 /** Prints the given table with bold headings, faint outlines,
     and regular content cells.
  */
-void print_colored_table(const chess::util::strings::TextTable& table);
+void print_colored_table(
+    const util::strings::TextTable& table);
 
 /** Prints the given position with faint file/rank labels. */
-void print_colored_board(const Position& pos, bool utf8);
+void print_colored_board(
+    const Position& pos, bool utf8);
 
 /** Prints the given label faintly, and the info as regular text. */
-void print_labeled_info(string_view label, string_view info);
+void print_labeled_info(
+    string_view label, string_view info);
 
 /** @} */
 

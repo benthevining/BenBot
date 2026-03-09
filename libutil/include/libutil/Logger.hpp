@@ -23,7 +23,7 @@
 #include <filesystem>
 #include <string>
 
-namespace chess::util {
+namespace util {
 
 /** Starts a file logger.
     This works by duplicating ``std::cout`` and ``std::cerr`` output
@@ -37,4 +37,4 @@ namespace chess::util {
 [[nodiscard]] auto start_file_logger(const std::filesystem::path& logFile)
     -> std::expected<void, std::string>;
 
-} // namespace chess::util
+} // namespace util

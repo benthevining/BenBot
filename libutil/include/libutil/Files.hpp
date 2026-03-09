@@ -24,7 +24,7 @@
 #include <string>
 #include <string_view>
 
-namespace chess::util {
+namespace util {
 
 /** Loads the file's content as a string.
     If the file cannot be loaded, returns an explanatory error message.
@@ -45,4 +45,4 @@ namespace chess::util {
     const std::filesystem::path& file, std::string_view text)
     -> std::expected<void, std::string>;
 
-} // namespace chess::util
+} // namespace util

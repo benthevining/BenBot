@@ -32,5 +32,5 @@ TEST_CASE("load_file_as_string()", TAGS)
 
     const std::filesystem::path LICENSE_HEADER_FILE { BENBOT_LICENSE_HEADER_FILE };
 
-    REQUIRE(chess::util::load_file_as_string(LICENSE_HEADER_FILE) == CORRECT_FILE_CONTENT);
+    REQUIRE(util::load_file_as_string(LICENSE_HEADER_FILE) == CORRECT_FILE_CONTENT);
 }

@@ -19,7 +19,7 @@
 
 #pragma once
 
-namespace chess::util {
+namespace util {
 
 /** A handy utility to make using ``std::visit`` a bit easier.
 
@@ -44,4 +44,4 @@ struct Visitor final : Callable... {
     using Callable::operator()...;
 };
 
-} // namespace chess::util
+} // namespace util

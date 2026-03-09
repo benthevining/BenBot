@@ -22,7 +22,7 @@
 #include <chrono>
 #include <concepts>
 
-namespace chess::util {
+namespace util {
 
 namespace detail {
     template <typename>
@@ -52,4 +52,4 @@ concept ChronoDuration = detail::IsChronoDuration<T>;
 template <ChronoDuration Duration, std::floating_point F = float>
 using FractionalDuration = std::chrono::duration<F, typename Duration::period>;
 
-} // namespace chess::util
+} // namespace util

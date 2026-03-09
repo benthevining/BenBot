@@ -57,7 +57,7 @@ using std::string_view;
 
 } // namespace
 
-namespace chess::util::strings {
+namespace util::strings {
 
 auto trim(const string_view text) -> string_view
 {
@@ -126,4 +126,4 @@ auto split_at_first_space_or_newline(const string_view input) -> StringViewPair
     };
 }
 
-} // namespace chess::util::strings
+} // namespace util::strings

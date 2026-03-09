@@ -47,7 +47,6 @@ using std::size_t;
 using std::string_view;
 using uci::printing::info_string;
 
-namespace util     = chess::util;
 namespace notation = chess::notation;
 
 namespace {

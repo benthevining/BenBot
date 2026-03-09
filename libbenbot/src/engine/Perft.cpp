@@ -26,8 +26,6 @@
 
 namespace ben_bot {
 
-namespace util = chess::util;
-
 using uci::printing::info_string;
 
 namespace {

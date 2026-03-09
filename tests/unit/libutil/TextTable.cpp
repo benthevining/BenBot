@@ -19,7 +19,7 @@
 
 static constexpr auto TAGS { "[util][strings][TextTable]" };
 
-using chess::util::strings::TextTable;
+using util::strings::TextTable;
 
 namespace {
 [[nodiscard]] auto get_printed_string(const TextTable& table) -> std::string

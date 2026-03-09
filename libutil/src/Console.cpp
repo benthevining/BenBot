@@ -22,7 +22,7 @@
 
 #    include <Windows.h>
 
-namespace chess::util {
+namespace util {
 
 void enable_utf8_console_output()
 {
@@ -30,17 +30,17 @@ void enable_utf8_console_output()
     SetConsoleOutputCP(CP_UTF8);
 }
 
-} // namespace chess::util
+} // namespace util
 
 #else
 
-namespace chess::util {
+namespace util {
 
 void enable_utf8_console_output()
 {
     // no-op
 }
 
-} // namespace chess::util
+} // namespace util
 
 #endif

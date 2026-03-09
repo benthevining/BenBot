@@ -24,7 +24,7 @@
 #include <string>
 #include <string_view>
 
-namespace chess::util {
+namespace util {
 
 // Credit to Stockfish for this idea:
 // https://github.com/official-stockfish/Stockfish/blob/3073d82ccf25a8ab31e0e0215a2a661d0dcdadd7/src/misc.cpp
@@ -171,4 +171,4 @@ auto start_file_logger(const path& logFile) -> MaybeError
     return Logger::start(path);
 }
 
-} // namespace chess::util
+} // namespace util

@@ -21,7 +21,7 @@
 
 #include <functional>
 
-namespace chess::util {
+namespace util {
 
 /** Blocks the calling thread until ``pred`` returns true.
     Blocking is implemented by spinning on the predicate and
@@ -39,4 +39,4 @@ namespace chess::util {
  */
 void progressive_backoff(std::function<bool()> pred);
 
-} // namespace chess::util
+} // namespace util

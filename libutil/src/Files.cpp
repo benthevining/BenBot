@@ -23,7 +23,7 @@
 #include <string>
 #include <string_view>
 
-namespace chess::util {
+namespace util {
 
 using std::string;
 
@@ -81,4 +81,4 @@ auto overwrite_file(
     }
 }
 
-} // namespace chess::util
+} // namespace util

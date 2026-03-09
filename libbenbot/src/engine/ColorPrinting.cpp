@@ -35,7 +35,7 @@ namespace {
     {
         using Lines = beman::inplace_vector::inplace_vector<string_view, MaxLines>;
 
-        return chess::util::strings::lines_view(input)
+        return util::strings::lines_view(input)
              | std::views::take(MaxLines)
              | std::ranges::to<Lines>();
     }
@@ -57,13 +57,14 @@ void Engine::print_logo_and_version() const
          << termcolor::reset;
 }
 
-void print_colored_table(const chess::util::strings::TextTable& table)
+void print_colored_table(
+    const util::strings::TextTable& table)
 {
     table.print(
         [](const string_view heading) {
             // we want the heading text to be underlined, but not the
             // whitespace that follows the text to complete the cell
-            const auto trimmed = chess::util::strings::trim(heading);
+            const auto trimmed = util::strings::trim(heading);
 
             cout << termcolor::bold << termcolor::underline
                  << trimmed
@@ -85,7 +86,8 @@ void print_colored_table(const chess::util::strings::TextTable& table)
     cout << termcolor::reset;
 }
 
-void print_colored_board(const Position& pos, const bool utf8)
+void print_colored_board(
+    const Position& pos, const bool utf8)
 {
     const auto boardStr = utf8 ? print_utf8(pos) : print_ascii(pos);
 
@@ -101,7 +103,8 @@ void print_colored_board(const Position& pos, const bool utf8)
          << termcolor::reset;
 }
 
-void print_labeled_info(const string_view label, const string_view info)
+void print_labeled_info(
+    const string_view label, const string_view info)
 {
     cout << termcolor::white << label << termcolor::reset << info << '\n';
 }

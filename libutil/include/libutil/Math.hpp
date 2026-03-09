@@ -38,7 +38,7 @@
 /** This namespace provides some general maths utilities.
     @ingroup math
  */
-namespace chess::util::math {
+namespace util::math {
 
 /** Returns true if the given value is an even number.
     @ingroup math
@@ -63,4 +63,4 @@ using std::uint64_t;
     uint64_t first, uint64_t second) noexcept
     -> uint64_t;
 
-} // namespace chess::util::math
+} // namespace util::math

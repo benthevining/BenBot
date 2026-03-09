@@ -33,7 +33,7 @@
 
 #include <Windows.h>
 
-namespace chess::util::memory {
+namespace util::memory {
 
 using std::size_t;
 
@@ -145,4 +145,4 @@ inline auto page_aligned_alloc_impl(const size_t size) -> void*
         VirtualFree(mem, 0, MEM_RELEASE);
 }
 
-} // namespace chess::util::memory
+} // namespace util::memory

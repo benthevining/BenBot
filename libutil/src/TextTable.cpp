@@ -23,7 +23,7 @@
 #include <utility>
 #include <vector>
 
-namespace chess::util::strings {
+namespace util::strings {
 
 using std::size_t;
 
@@ -195,4 +195,4 @@ void TextTable::Row::print(
     printOutline(LINE_ENDING);
 }
 
-} // namespace chess::util::strings
+} // namespace util::strings

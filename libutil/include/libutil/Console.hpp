@@ -22,7 +22,7 @@
 /** This namespace provides general utilities not specific to chess.
     @ingroup util
  */
-namespace chess::util {
+namespace util {
 
 /** Ensures that ``std::cout`` will interpret strings as UTF-8.
     On non-Windows platforms, this is a no-op.
@@ -31,4 +31,4 @@ namespace chess::util {
  */
 void enable_utf8_console_output();
 
-} // namespace chess::util
+} // namespace util

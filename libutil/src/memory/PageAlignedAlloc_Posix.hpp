@@ -21,7 +21,7 @@
 #    include <sys/mman.h>
 #endif
 
-namespace chess::util::memory {
+namespace util::memory {
 
 [[nodiscard, gnu::alloc_size(1), gnu::malloc, clang::ownership_returns(malloc)]]
 inline auto page_aligned_alloc_impl(const std::size_t size) -> void*
@@ -49,4 +49,4 @@ inline auto page_aligned_alloc_impl(const std::size_t size) -> void*
     std::free(mem);
 }
 
-} // namespace chess::util::memory
+} // namespace util::memory

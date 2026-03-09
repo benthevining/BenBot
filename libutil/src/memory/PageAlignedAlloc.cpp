@@ -22,7 +22,7 @@
 #    include "PageAlignedAlloc_Posix.hpp"
 #endif
 
-namespace chess::util::memory {
+namespace util::memory {
 
 auto page_aligned_alloc(const std::size_t size) -> void*
 {
@@ -39,4 +39,4 @@ void page_aligned_free([[clang::noescape]] void* mem)
     page_aligned_free_impl(mem);
 }
 
-} // namespace chess::util::memory
+} // namespace util::memory
