@@ -23,12 +23,12 @@
 #include <string>
 #include <string_view>
 
-namespace util {
+namespace util::files {
 
 using std::string;
 
-auto load_file_as_string(
-    const std::filesystem::path& file)
+auto load(
+    const path& file)
     -> std::expected<string, string>
 {
     std::ifstream input { absolute(file) };
@@ -53,8 +53,8 @@ auto load_file_as_string(
     }
 }
 
-auto overwrite_file(
-    const std::filesystem::path& file, const std::string_view text)
+auto overwrite(
+    const path& file, const std::string_view text)
     -> std::expected<void, std::string>
 {
     std::ofstream output { absolute(file) };
@@ -81,4 +81,4 @@ auto overwrite_file(
     }
 }
 
-} // namespace util
+} // namespace util::files

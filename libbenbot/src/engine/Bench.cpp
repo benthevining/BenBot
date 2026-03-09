@@ -217,7 +217,7 @@ void Engine::run_bench(const string_view arguments) const
     const auto epdPath = absolute(std::filesystem::path { filePath });
 
     [[maybe_unused]] const auto result
-        = util::load_file_as_string(epdPath)
+        = util::files::load(epdPath)
               .transform([this, defaultDepth, absPathStr = epdPath.string()](const string_view fileContent) {
                   info_string(std::format("Running bench for {}...", absPathStr));
 

@@ -182,7 +182,7 @@ void Engine::write_config_file(const string_view arg) const
     const auto filePath = absolute(path { arg });
 
     [[maybe_unused]] const auto result
-        = util::overwrite_file(
+        = util::files::overwrite(
             filePath, data.dump(2))
               .transform([&filePath] {
                   info_string(std::format(
@@ -206,7 +206,7 @@ void Engine::read_config_file(const path& file)
     const auto filePath = absolute(file);
 
     [[maybe_unused]] const auto result
-        = util::load_file_as_string(filePath)
+        = util::files::load(filePath)
               .transform([this, &filePath](const string_view fileContent) {
                   const auto data = json::parse(fileContent);
 

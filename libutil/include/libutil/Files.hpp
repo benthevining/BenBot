@@ -24,25 +24,27 @@
 #include <string>
 #include <string_view>
 
-namespace util {
+namespace util::files {
+
+using std::filesystem::path;
 
 /** Loads the file's content as a string.
     If the file cannot be loaded, returns an explanatory error message.
 
     @ingroup util
-    @see overwrite_file()
+    @see overwrite()
  */
-[[nodiscard]] auto load_file_as_string(const std::filesystem::path& file)
+[[nodiscard]] auto load(const path& file)
     -> std::expected<std::string, std::string>;
 
 /** Overwrites the given filepath with the given text.
     If the file cannot be written, returns an explanatory error message.
 
     @ingroup util
-    @see load_file_as_string()
+    @see load()
  */
-[[nodiscard]] auto overwrite_file(
-    const std::filesystem::path& file, std::string_view text)
+[[nodiscard]] auto overwrite(
+    const path& file, std::string_view text)
     -> std::expected<void, std::string>;
 
-} // namespace util
+} // namespace util::files
