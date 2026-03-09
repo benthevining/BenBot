@@ -10,21 +10,24 @@
 #
 # ======================================================================================
 
-name: SPRT (internal)
+name: SPRT
 
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       sprt_target:
         description: Name of the CMake target to build to execute the SPRT test
-        type: string
+        type: choice
+        options:
+        - sprt_gain
+        - sprt_non_regression
         required: true
       use_main:
         description: If true, runs SPRT against the latest main; if false, runs against the latest release
         type: boolean
         required: true
 
-run-name: Build & test (${{ inputs.sprt_target }})
+run-name: SPRT (${{ inputs.sprt_target }} - ${{ inputs.use_main }})
 
 defaults:
   run:
