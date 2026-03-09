@@ -467,7 +467,6 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
     transTable.new_search();
     callbacks.search_start(options);
 
-    // TODO: use a separate MoveList
     // if the movesToSearch was empty, then we search all legal moves
     if (options.movesToSearch.empty()) {
         chess::moves::generate(position, std::back_inserter(options.movesToSearch));
