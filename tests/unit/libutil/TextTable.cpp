@@ -13,13 +13,13 @@
  */
 
 #include <catch2/catch_test_macros.hpp>
-#include <libchess/util/TextTable.hpp>
+#include <libutil/TextTable.hpp>
 #include <string>
 #include <string_view>
 
 static constexpr auto TAGS { "[util][strings][TextTable]" };
 
-using chess::util::strings::TextTable;
+using util::strings::TextTable;
 
 namespace {
 [[nodiscard]] auto get_printed_string(const TextTable& table) -> std::string

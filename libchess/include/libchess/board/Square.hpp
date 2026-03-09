@@ -35,7 +35,7 @@
 #include <libchess/board/BitboardIndex.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Rank.hpp>
-#include <libchess/util/Math.hpp>
+#include <libutil/Math.hpp>
 #include <string>
 #include <string_view>
 #include <utility>

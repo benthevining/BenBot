@@ -51,5 +51,6 @@ function (add_catch_tests target prefix)
     # cmake-format: on
 endfunction ()
 
+add_subdirectory (libutil)
 add_subdirectory (libchess)
 add_subdirectory (libbenbot)

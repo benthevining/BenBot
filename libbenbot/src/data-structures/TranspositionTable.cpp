@@ -29,8 +29,8 @@
 #include <libbenbot/eval/Score.hpp>
 #include <libbenbot/search/Bounds.hpp>
 #include <libchess/game/Position.hpp>
-#include <libchess/util/Math.hpp>
-#include <libchess/util/Memory.hpp>
+#include <libutil/Math.hpp>
+#include <libutil/Memory.hpp>
 #include <memory>
 #include <new>
 #include <numeric>
@@ -162,7 +162,7 @@ void TranspositionTable::resize(const size_t sizeMB)
     clusterCount = newClusterCount;
 
     table = static_cast<Cluster*>(
-        chess::util::memory::page_aligned_alloc(
+        util::memory::page_aligned_alloc(
             clusterCount * sizeof(Cluster)));
 
     if (table == nullptr) {
@@ -183,7 +183,7 @@ void TranspositionTable::deallocate()
 {
     std::destroy_n(table, clusterCount);
 
-    chess::util::memory::page_aligned_free(table);
+    util::memory::page_aligned_free(table);
 
     table        = nullptr;
     clusterCount = 0uz;
@@ -219,7 +219,7 @@ void TranspositionTable::new_search() noexcept
 auto TranspositionTable::find_cluster(const Position::Hash key) const noexcept -> std::span<Entry>
 {
     return index_table(
-        chess::util::math::mul_hi64(key, clusterCount))
+        util::math::mul_hi64(key, clusterCount))
         .records;
 }
 
@@ -333,7 +333,7 @@ void TranspositionTable::store(const Position& pos, const TTData& record)
 
 void TranspositionTable::prefetch(const Position& pos) const noexcept
 {
-    chess::util::memory::prefetch(
+    util::memory::prefetch(
         find_cluster(pos.hash).data());
 }
 

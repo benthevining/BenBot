@@ -12,53 +12,39 @@
  * ======================================================================================
  */
 
-/** @defgroup memory Memory utilities
-    Memory handling utility functions used throughout the code.
-
-    @ingroup util
- */
-
 /** @file
-    This file provides some memory management utility functions.
-    @ingroup memory
+    This file provides some basic file handling utilities.
+    @ingroup util
  */
 
 #pragma once
 
-#include <cstddef> // IWYU pragma: keep - for size_t
+#include <expected>
+#include <filesystem>
+#include <string>
+#include <string_view>
 
-/** This namespace provides some memory management utility functions.
-    @ingroup memory
+namespace util::files {
+
+using std::filesystem::path;
+
+/** Loads the file's content as a string.
+    If the file cannot be loaded, returns an explanatory error message.
+
+    @ingroup util
+    @see overwrite()
  */
-namespace chess::util::memory {
+[[nodiscard]] auto load(const path& file)
+    -> std::expected<std::string, std::string>;
 
-using std::size_t;
+/** Overwrites the given filepath with the given text.
+    If the file cannot be written, returns an explanatory error message.
 
-/** Allocates memory aligned by page size, with a minimum
-    alignment of 4096 bytes. Memory allocated by this function
-    must be freed by calling ``page_aligned_free()``. Returns
-    ``nullptr`` if the memory could not be allocated.
-
-    @ingroup memory
-    @see page_aligned_free()
+    @ingroup util
+    @see load()
  */
-[[nodiscard, gnu::alloc_size(1), gnu::malloc, clang::ownership_returns(malloc)]]
-auto page_aligned_alloc(size_t size) -> void*;
+[[nodiscard]] auto overwrite(
+    const path& file, std::string_view text)
+    -> std::expected<void, std::string>;
 
-/** Frees page-aligned memory allocated by ``page_aligned_alloc()``.
-    This is a no-op if ``mem`` is ``nullptr``.
-
-    @ingroup memory
-    @see page_aligned_alloc()
- */
-[[clang::ownership_takes(malloc, 1)]] void page_aligned_free([[clang::noescape]] void* mem);
-
-/** Hints the CPU to prefetch the page that the given memory address
-    is on. This function is nonblocking, and may be a no-op depending
-    on the target platform.
-
-    @ingroup memory
- */
-void prefetch(const void* mem);
-
-} // namespace chess::util::memory
+} // namespace util::files

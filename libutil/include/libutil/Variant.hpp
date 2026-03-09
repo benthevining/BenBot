@@ -13,36 +13,35 @@
  */
 
 /** @file
-    This file provides some basic file handling utilities.
+    This file provides some utilities for working with ``std::variant``.
     @ingroup util
  */
 
 #pragma once
 
-#include <expected>
-#include <filesystem>
-#include <string>
-#include <string_view>
+namespace util {
 
-namespace chess::util {
+/** A handy utility to make using ``std::visit`` a bit easier.
 
-/** Loads the file's content as a string.
-    If the file cannot be loaded, returns an explanatory error message.
+    Example usage:
+    @code{.cpp}
+    std::variant<int, float, double> data;
+
+    std::visit(
+        Visitor {
+            [](int i){ std::println("Integer value: {}", i); },
+            [](float f){ std::println("Float value: {}", f); },
+            [](double d){ std::println("Double value: {}", d); }
+        },
+        data
+    );
+    @endcode
 
     @ingroup util
-    @see overwrite_file()
  */
-[[nodiscard]] auto load_file_as_string(const std::filesystem::path& file)
-    -> std::expected<std::string, std::string>;
+template <typename... Callable>
+struct Visitor final : Callable... {
+    using Callable::operator()...;
+};
 
-/** Overwrites the given filepath with the given text.
-    If the file cannot be written, returns an explanatory error message.
-
-    @ingroup util
-    @see load_file_as_string()
- */
-[[nodiscard]] auto overwrite_file(
-    const std::filesystem::path& file, std::string_view text)
-    -> std::expected<void, std::string>;
-
-} // namespace chess::util
+} // namespace util

@@ -22,7 +22,7 @@
 #include <iterator>
 #include <libbenbot/engine/Engine.hpp>
 #include <libchess/uci/Printing.hpp>
-#include <libchess/util/Console.hpp>
+#include <libutil/Console.hpp>
 #include <span>
 #include <string>
 #include <string_view>
@@ -104,7 +104,7 @@ using chess::uci::printing::info_string;
 
 int main(const int argc, const char** argv)
 try {
-    chess::util::enable_utf8_console_output();
+    util::enable_utf8_console_output();
 
     const auto [noLoop, uciCommand] = Arguments::parse(argc, argv);
 

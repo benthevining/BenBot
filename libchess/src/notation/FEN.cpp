@@ -21,7 +21,7 @@
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/pieces/Colors.hpp>
-#include <libchess/util/Strings.hpp>
+#include <libutil/Strings.hpp>
 #include <ranges>
 #include <string>
 

@@ -12,23 +12,31 @@
  * ======================================================================================
  */
 
-/** @file
-    This file provides some utility functions related to the console input/output.
-    @ingroup util
- */
+#include <cstddef> // IWYU pragma: keep - for size_t
+#include <libutil/Memory.hpp>
+#include <utility>
 
-#pragma once
+#ifdef _WIN32
+#    include "PageAlignedAlloc_Windows.hpp"
+#else
+#    include "PageAlignedAlloc_Posix.hpp"
+#endif
 
-/** This namespace provides general utilities not specific to chess.
-    @ingroup util
- */
-namespace chess::util {
+namespace util::memory {
 
-/** Ensures that ``std::cout`` will interpret strings as UTF-8.
-    On non-Windows platforms, this is a no-op.
+auto page_aligned_alloc(const std::size_t size) -> void*
+{
+    if (std::cmp_equal(size, 0)) {
+        [[unlikely]];
+        return nullptr;
+    }
 
-    @ingroup util
- */
-void enable_utf8_console_output();
+    return page_aligned_alloc_impl(size);
+}
 
-} // namespace chess::util
+void page_aligned_free([[clang::noescape]] void* mem)
+{
+    page_aligned_free_impl(mem);
+}
+
+} // namespace util::memory

@@ -12,44 +12,35 @@
  * ======================================================================================
  */
 
-/** @file
-    This file provides some utilities for working with the ``std::chrono`` library.
-    @ingroup util
- */
+#include <libutil/Console.hpp>
 
-#pragma once
+#ifdef _WIN32
 
-#include <chrono>
-#include <concepts>
+#    ifndef WIN32_LEAN_AND_MEAN
+#        define WIN32_LEAN_AND_MEAN 1
+#    endif
 
-namespace chess::util {
+#    include <Windows.h>
 
-namespace detail {
-    template <typename>
-    inline constexpr bool IsChronoDuration = false;
+namespace util {
 
-    template <class Rep, class Period>
-    inline constexpr bool IsChronoDuration<std::chrono::duration<Rep, Period>> = true;
-} // namespace detail
+void enable_utf8_console_output()
+{
+    // set the console's code page to UTF-8
+    SetConsoleOutputCP(CP_UTF8);
+}
 
-/** This concept matches any specialization of ``std::chrono::duration``.
+} // namespace util
 
-    @ingroup util
- */
-template <typename T>
-concept ChronoDuration = detail::IsChronoDuration<T>;
+#else
 
-/** This typedef allows converting a chrono duration to one with the same period,
-    but with a floating-point tick type.
+namespace util {
 
-    Example usage:
-    @code{.cpp}
-    using PartialSeconds = FractionalDuration<std::chrono::seconds>;
+void enable_utf8_console_output()
+{
+    // no-op
+}
 
-    PartialSeconds secs { 1.5f };
-    @endcode
- */
-template <ChronoDuration Duration, std::floating_point F = float>
-using FractionalDuration = std::chrono::duration<F, typename Duration::period>;
+} // namespace util
 
-} // namespace chess::util
+#endif

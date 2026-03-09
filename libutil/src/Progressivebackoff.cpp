@@ -12,16 +12,16 @@
  * ======================================================================================
  */
 
-#include "util/DetectArch.hpp" // IWYU pragma: keep
+#include "DetectArch.hpp" // NOLINT(build/include_subdir)
 #include <functional>
-#include <libchess/util/Threading.hpp>
+#include <libutil/Threading.hpp>
 #include <thread>
 
 #ifdef LIBCHESS_ARM
 
 #    include <arm_acle.h>
 
-namespace chess::util {
+namespace util {
 
 void progressive_backoff(std::function<bool()> pred)
 {
@@ -48,13 +48,13 @@ void progressive_backoff(std::function<bool()> pred)
     }
 }
 
-} // namespace chess::util
+} // namespace util
 
 #elifdef LIBCHESS_INTEL
 
 #    include <emmintrin.h>
 
-namespace chess::util {
+namespace util {
 
 void progressive_backoff(std::function<bool()> pred)
 {
@@ -99,12 +99,12 @@ void progressive_backoff(std::function<bool()> pred)
     }
 }
 
-} // namespace chess::util
+} // namespace util
 
 #else
 #    warning "Neither ARM nor Intel detected, using fallback implementation of progressive backoff"
 
-namespace chess::util {
+namespace util {
 
 void progressive_backoff(std::function<bool()> pred)
 {
@@ -112,6 +112,6 @@ void progressive_backoff(std::function<bool()> pred)
         std::this_thread::yield();
 }
 
-} // namespace chess::util
+} // namespace util
 
 #endif

@@ -23,8 +23,8 @@
 #include <libbenbot/search/Result.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/uci/Printing.hpp>
-#include <libchess/util/Chrono.hpp>
-#include <libchess/util/Variant.hpp>
+#include <libutil/Chrono.hpp>
+#include <libutil/Variant.hpp>
 #include <optional>
 #include <ratio>
 #include <span>
@@ -94,14 +94,14 @@ namespace {
         std::cout << get_column_text<Align>(text);
     }
 
-    template <chess::util::ChronoDuration Duration>
+    template <util::ChronoDuration Duration>
     [[nodiscard]] auto get_duration_string(
         const milliseconds duration) -> std::optional<string>
     {
         static constexpr auto msPerUnit = duration_cast<milliseconds>(Duration { 1uz });
 
         if (duration >= msPerUnit) {
-            using FractionalDuration = chess::util::FractionalDuration<Duration>;
+            using FractionalDuration = util::FractionalDuration<Duration>;
 
             return std::format(
                 "{:.2%Q %q}",
@@ -167,7 +167,7 @@ namespace {
         const Score& score) -> string
     {
         return std::visit(
-            chess::util::Visitor {
+            util::Visitor {
                 [](const Score::Centipawns& centipawns) {
                     return std::format(
                         "{:+}",
@@ -191,8 +191,8 @@ namespace {
         };
 
         const auto type = std::visit(
-            chess::util::Visitor {
-                [](const Score::Centipawns& value) {
+            util::Visitor {
+                [](const Score::Centipawns& value) noexcept {
                     if (value.value == 0)
                         return ScoreType::Equal;
 

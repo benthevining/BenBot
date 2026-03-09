@@ -1,11 +1,26 @@
+/** @defgroup util Utilities
+    General utilities not specifically related to chess.
+ */
+
+/** @namespace util
+    This namespace contains generic utilities.
+    @ingroup util
+ */
+
 /** @defgroup libchess libchess
     A general purpose chess library and generic chess engine backend.
+ */
+
+/** @namespace chess
+    This namespace contains the libchess chess library.
+    @ingroup libchess
  */
 
 /** @defgroup libbenbot libbenbot
     BenBot's evaluation and search logic, implemented as a library.
  */
 
-/** @defgroup benbot BenBot
-    Code outside the libraries, in the engine executable itself.
+/** @namespace ben_bot
+    This namespace contains all BenBot-specific code.
+    @ingroup libbenbot
  */

@@ -21,7 +21,7 @@
 #include <libchess/uci/EngineBase.hpp>
 #include <libchess/uci/Options.hpp>
 #include <libchess/uci/Printing.hpp>
-#include <libchess/util/Strings.hpp>
+#include <libutil/Strings.hpp>
 #include <print>
 #include <string>
 #include <string_view>

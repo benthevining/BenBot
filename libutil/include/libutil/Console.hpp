@@ -13,28 +13,22 @@
  */
 
 /** @file
-    This file provides some basic logging utilities.
+    This file provides some utility functions related to the console input/output.
     @ingroup util
  */
 
 #pragma once
 
-#include <expected>
-#include <filesystem>
-#include <string>
+/** This namespace provides general utilities not specific to chess.
+    @ingroup util
+ */
+namespace util {
 
-namespace chess::util {
-
-/** Starts a file logger.
-    This works by duplicating ``std::cout`` and ``std::cerr`` output
-    to a file at the given path. If the operation fails, returns an
-    explanatory error string. This may be called multiple times with
-    different file paths; each call will flush output to the previous
-    log file and start writing output to the new log file.
+/** Ensures that ``std::cout`` will interpret strings as UTF-8.
+    On non-Windows platforms, this is a no-op.
 
     @ingroup util
  */
-[[nodiscard]] auto start_file_logger(const std::filesystem::path& logFile)
-    -> std::expected<void, std::string>;
+void enable_utf8_console_output();
 
-} // namespace chess::util
+} // namespace util

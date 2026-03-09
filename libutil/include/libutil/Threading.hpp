@@ -12,31 +12,31 @@
  * ======================================================================================
  */
 
-#include <cstddef> // IWYU pragma: keep - for size_t
-#include <libchess/util/Memory.hpp>
-#include <utility>
+/** @file
+    This file provides some threading and synchronization utilities.
+    @ingroup util
+ */
 
-#ifdef _WIN32
-#    include "PageAlignedAlloc_Windows.hpp"
-#else
-#    include "PageAlignedAlloc_Posix.hpp"
-#endif
+#pragma once
 
-namespace chess::util::memory {
+#include <functional>
 
-auto page_aligned_alloc(const std::size_t size) -> void*
-{
-    if (std::cmp_equal(size, 0)) {
-        [[unlikely]];
-        return nullptr;
-    }
+namespace util {
 
-    return page_aligned_alloc_impl(size);
-}
+/** Blocks the calling thread until ``pred`` returns true.
+    Blocking is implemented by spinning on the predicate and
+    using a progressive backoff strategy.
 
-void page_aligned_free([[clang::noescape]] void* mem)
-{
-    page_aligned_free_impl(mem);
-}
+    This progressive backoff strategy avoids wasting energy,
+    and allows other threads to make progress by yielding the
+    waiting thread after a certain amount of time. This time
+    is chosen to be about 1 millisecond.
 
-} // namespace chess::util::memory
+    On platforms other than x86, x86_64, or arm64, a simple
+    implementation will be used.
+
+    @ingroup util
+ */
+void progressive_backoff(std::function<bool()> pred);
+
+} // namespace util

@@ -26,7 +26,7 @@
 #include <string_view>
 #include <vector>
 
-namespace chess::util::strings {
+namespace util::strings {
 
 using std::size_t;
 using std::string;
@@ -105,4 +105,4 @@ private:
     bool startNewRow { true };
 };
 
-} // namespace chess::util::strings
+} // namespace util::strings

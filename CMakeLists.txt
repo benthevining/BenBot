@@ -33,6 +33,7 @@ cpack_add_component_group (
     ben_bot_all DISPLAY_NAME "BenBot" DESCRIPTION "All components of BenBot" EXPANDED BOLD_TITLE
 )
 
+add_subdirectory (libutil)
 add_subdirectory (libchess)
 add_subdirectory (libbenbot)
 add_subdirectory (ben-bot)

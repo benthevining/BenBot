@@ -12,25 +12,73 @@
  * ======================================================================================
  */
 
-// this symbol must be defined as a quoted string,
-// the absolute path to the license header file
-#ifndef BENBOT_LICENSE_HEADER_FILE
-#    error
-#endif
-
-#include <catch2/catch_test_macros.hpp>
+#include <exception>
+#include <expected>
 #include <filesystem>
-#include <libbenbot/Resources.hpp>
-#include <libchess/util/Files.hpp>
+#include <format>
+#include <fstream>
+#include <ios>
+#include <iterator>
+#include <libutil/Files.hpp>
+#include <string>
 #include <string_view>
 
-inline constexpr auto TAGS { "[util][files]" };
+namespace util::files {
 
-TEST_CASE("load_file_as_string()", TAGS)
+using std::string;
+
+auto load(
+    const path& file)
+    -> std::expected<string, string>
 {
-    const std::string_view CORRECT_FILE_CONTENT = ben_bot::resources::get_ascii_logo();
+    std::ifstream input { absolute(file) };
 
-    const std::filesystem::path LICENSE_HEADER_FILE { BENBOT_LICENSE_HEADER_FILE };
+    if (not input.is_open()) {
+        return std::unexpected { std::format(
+            "Could not open file for reading at path '{}'",
+            file.string()) };
+    }
 
-    REQUIRE(chess::util::load_file_as_string(LICENSE_HEADER_FILE) == CORRECT_FILE_CONTENT);
+    try {
+        input.exceptions(
+            std::ios_base::badbit | std::ios_base::failbit);
+
+        using Iterator = std::istreambuf_iterator<char>;
+
+        return string { Iterator { input }, Iterator { } };
+    } catch (const std::exception& exception) {
+        return std::unexpected { std::format(
+            "Error while reading file at path '{}': {}",
+            file.string(), exception.what()) };
+    }
 }
+
+auto overwrite(
+    const path& file, const std::string_view text)
+    -> std::expected<void, std::string>
+{
+    std::ofstream output { absolute(file) };
+
+    if (not output.is_open()) {
+        return std::unexpected { std::format(
+            "Could not open file for writing at path '{}'",
+            file.string()) };
+    }
+
+    try {
+        output.exceptions(
+            std::ios_base::badbit | std::ios_base::failbit);
+
+        output << text;
+
+        return { };
+    } catch (const std::exception& exception) {
+        return std::unexpected {
+            std::format(
+                "Error while writing file at path '{}': {}",
+                file.string(), exception.what())
+        };
+    }
+}
+
+} // namespace util::files

@@ -12,55 +12,43 @@
  * ======================================================================================
  */
 
-/** @defgroup util General utilities
-    General utilities not specific to chess, but used by libchess.
+#include "DetectArch.hpp" // NOLINT(build/include_subdir)
+#include <libutil/Memory.hpp>
 
-    @ingroup libchess
- */
+#ifdef LIBCHESS_INTEL
 
-/** @defgroup math General maths utilities
-    General maths utility functions used throughout the code.
+#    include <mmintrin.h>
+#    include <xmmintrin.h>
 
-    @ingroup util
- */
+namespace util::memory {
 
-/** @file
-    This file provides some basic maths utility functions.
-    @ingroup math
- */
-
-#pragma once
-
-#include <concepts>
-#include <cstdint> // IWYU pragma: keep - for std::uint64_t
-#include <utility>
-
-/** This namespace provides some general maths utilities.
-    @ingroup math
- */
-namespace chess::util::math {
-
-/** Returns true if the given value is an even number.
-    @ingroup math
- */
-template <std::integral T>
-[[nodiscard, gnu::const]] constexpr auto is_even(
-    const T value) noexcept
-    -> bool
+void prefetch(const void* mem)
 {
-    return std::cmp_equal(
-        value % static_cast<T>(2),
-        0);
+    _mm_prefetch(static_cast<const char*>(mem), _MM_HINT_T0);
 }
 
-using std::uint64_t;
+} // namespace util::memory
 
-/** Multiplies the two integers and returns the highest 64 bits of the
-    128-bit result as a 64-bit integer.
-    @ingroup math
- */
-[[nodiscard, gnu::const]] auto mul_hi64(
-    uint64_t first, uint64_t second) noexcept
-    -> uint64_t;
+#elif defined(__has_builtin) and __has_builtin(__builtin_prefetch)
 
-} // namespace chess::util::math
+namespace util::memory {
+
+void prefetch(const void* mem)
+{
+    __builtin_prefetch(mem);
+}
+
+} // namespace util::memory
+
+#else
+
+namespace util::memory {
+
+void prefetch([[maybe_unused]] const void* mem)
+{
+#    warning "No implementation of prefetch available"
+}
+
+} // namespace util::memory
+
+#endif

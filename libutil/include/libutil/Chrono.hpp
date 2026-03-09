@@ -12,41 +12,44 @@
  * ======================================================================================
  */
 
+/** @file
+    This file provides some utilities for working with the ``std::chrono`` library.
+    @ingroup util
+ */
+
 #pragma once
 
-#include <cstddef> // IWYU pragma: keep - for size_t
-#include <cstdlib>
+#include <chrono>
+#include <concepts>
 
-#if __has_include(<sys/mman.h>)
-#    include <sys/mman.h>
-#endif
+namespace util {
 
-namespace chess::util::memory {
+namespace detail {
+    template <typename>
+    inline constexpr bool IsChronoDuration = false;
 
-[[nodiscard, gnu::alloc_size(1), gnu::malloc, clang::ownership_returns(malloc)]]
-inline auto page_aligned_alloc_impl(const std::size_t size) -> void*
-{
-#ifdef __linux__
-    static constexpr auto alignment = 2uz * 1024uz * 1024uz; // 2MB page size assumed
-#else
-    static constexpr auto alignment = 4096uz; // small page size assumed
-#endif
+    template <class Rep, class Period>
+    inline constexpr bool IsChronoDuration<std::chrono::duration<Rep, Period>> = true;
+} // namespace detail
 
-    // round up to multiple of page alignment
-    const auto actualSize = ((size + alignment - 1uz) / alignment) * alignment;
+/** This concept matches any specialization of ``std::chrono::duration``.
 
-    auto* mem = std::aligned_alloc(alignment, actualSize);
+    @ingroup util
+ */
+template <typename T>
+concept ChronoDuration = detail::IsChronoDuration<T>;
 
-#ifdef MADV_HUGEPAGE
-    madvise(mem, size, MADV_HUGEPAGE);
-#endif
+/** This typedef allows converting a chrono duration to one with the same period,
+    but with a floating-point tick type.
 
-    return mem;
-}
+    Example usage:
+    @code{.cpp}
+    using PartialSeconds = FractionalDuration<std::chrono::seconds>;
 
-[[clang::ownership_takes(malloc, 1)]] inline void page_aligned_free_impl([[clang::noescape]] void* mem)
-{
-    std::free(mem);
-}
+    PartialSeconds secs { 1.5f };
+    @endcode
+ */
+template <ChronoDuration Duration, std::floating_point F = float>
+using FractionalDuration = std::chrono::duration<F, typename Duration::period>;
 
-} // namespace chess::util::memory
+} // namespace util

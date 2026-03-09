@@ -40,7 +40,7 @@
 #include <libbenbot/search/Result.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
-#include <libchess/util/Threading.hpp>
+#include <libutil/Threading.hpp>
 #include <optional>
 #include <utility>
 
@@ -541,12 +541,12 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
     // when in ponder mode, we don't want to exit the search
     // until we've received either a stop or ponderhit command
     if (pondering.load(memory_order::acquire)) {
-        chess::util::progressive_backoff([this] {
+        util::progressive_backoff([this] {
             return exitFlag.load(memory_order::acquire)
                 or not pondering.load(memory_order::acquire);
         });
     } else if (options.infinite) {
-        chess::util::progressive_backoff([this] {
+        util::progressive_backoff([this] {
             return exitFlag.load(memory_order::acquire);
         });
     }
@@ -557,7 +557,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
 
 void Context::wait() const
 {
-    chess::util::progressive_backoff([this] {
+    util::progressive_backoff([this] {
         return not activeFlag.load(memory_order::relaxed);
     });
 }

@@ -20,7 +20,7 @@
 #include <libchess/notation/UCI.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
-#include <libchess/util/Strings.hpp>
+#include <libutil/Strings.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <optional>
 #include <string>

@@ -29,10 +29,10 @@
 #include <libbenbot/search/Thread.hpp>
 #include <libchess/notation/EPD.hpp>
 #include <libchess/uci/Printing.hpp>
-#include <libchess/util/Chrono.hpp>
-#include <libchess/util/Files.hpp>
-#include <libchess/util/Strings.hpp>
-#include <libchess/util/Threading.hpp>
+#include <libutil/Chrono.hpp>
+#include <libutil/Files.hpp>
+#include <libutil/Strings.hpp>
+#include <libutil/Threading.hpp>
 #include <memory>
 #include <numeric>
 #include <ranges>
@@ -47,7 +47,6 @@ using std::size_t;
 using std::string_view;
 using uci::printing::info_string;
 
-namespace util     = chess::util;
 namespace notation = chess::notation;
 
 namespace {
@@ -218,7 +217,7 @@ void Engine::run_bench(const string_view arguments) const
     const auto epdPath = absolute(std::filesystem::path { filePath });
 
     [[maybe_unused]] const auto result
-        = util::load_file_as_string(epdPath)
+        = util::files::load(epdPath)
               .transform([this, defaultDepth, absPathStr = epdPath.string()](const string_view fileContent) {
                   info_string(std::format("Running bench for {}...", absPathStr));
 

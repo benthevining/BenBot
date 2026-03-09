@@ -39,9 +39,9 @@ list (
     "bits/sigaction.h"
     "Program Files\\\\Microsoft Visual Studio"
     "libbenbot${slash}resources${slash}__cmrc_ben_bot_resources_internal${slash}"
-    "libchess${slash}src${slash}util${slash}memory${slash}PageAlignedAlloc_Windows.hpp"
+    "libutil${slash}src${slash}memory${slash}PageAlignedAlloc_Windows.hpp"
     # MSVC warnings about the Visitor class's move operators being implicitly deleted
-    "chess::util::Visitor<"
+    "util::Visitor<"
     # warnings about std::getenv() being deprecated/thread-unsafe
     "main.cpp.+getenv"
     "note: 'getenv' has been explicitly marked deprecated here"

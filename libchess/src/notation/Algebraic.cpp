@@ -26,7 +26,7 @@
 #include <libchess/notation/Algebraic.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
-#include <libchess/util/Strings.hpp>
+#include <libutil/Strings.hpp>
 #include <optional>
 #include <span>
 #include <string>

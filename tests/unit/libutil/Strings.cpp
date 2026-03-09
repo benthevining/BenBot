@@ -13,7 +13,7 @@
  */
 
 #include <catch2/catch_test_macros.hpp>
-#include <libchess/util/Strings.hpp>
+#include <libutil/Strings.hpp>
 #include <ranges>
 #include <string_view>
 #include <vector>
@@ -22,7 +22,7 @@ inline constexpr auto TAGS { "[util][strings]" };
 
 TEST_CASE("Strings - trim()", TAGS)
 {
-    using chess::util::strings::trim;
+    using util::strings::trim;
 
     REQUIRE(trim({ }).empty());
     REQUIRE(trim(" ").empty());
@@ -40,7 +40,7 @@ TEST_CASE("Strings - trim()", TAGS)
 
 TEST_CASE("Strings - split_at_first_space()", TAGS)
 {
-    using chess::util::strings::split_at_first_space;
+    using util::strings::split_at_first_space;
 
     SECTION("Empty string")
     {
@@ -85,7 +85,7 @@ TEST_CASE("Strings - split_at_first_space()", TAGS)
 
 TEST_CASE("Strings - split_at_first_space_or_newline()", TAGS)
 {
-    using chess::util::strings::split_at_first_space_or_newline;
+    using util::strings::split_at_first_space_or_newline;
 
     SECTION("Empty string")
     {
@@ -154,7 +154,7 @@ TEST_CASE("Strings - split_at_first_space_or_newline()", TAGS)
 
 TEST_CASE("Strings - find_matching_close_paren()", TAGS)
 {
-    using chess::util::strings::find_matching_close_paren;
+    using util::strings::find_matching_close_paren;
 
     REQUIRE_FALSE(find_matching_close_paren("("));
     REQUIRE_FALSE(find_matching_close_paren("(()"));
@@ -169,7 +169,7 @@ TEST_CASE("Strings - find_matching_close_paren()", TAGS)
 TEST_CASE("Strings - lines_view()", TAGS)
 {
     auto lines_vector = [](const std::string_view input) {
-        return chess::util::strings::lines_view(input)
+        return util::strings::lines_view(input)
              | std::ranges::to<std::vector>();
     };
 
@@ -197,7 +197,7 @@ TEST_CASE("Strings - lines_view()", TAGS)
 TEST_CASE("Strings - words_view()", TAGS)
 {
     auto words_vector = [](const std::string_view input) {
-        return chess::util::strings::words_view(input)
+        return util::strings::words_view(input)
              | std::ranges::to<std::vector>();
     };
 

@@ -24,9 +24,9 @@
 #include <libchess/notation/MoveFormats.hpp>
 #include <libchess/uci/Options.hpp>
 #include <libchess/uci/Printing.hpp>
-#include <libchess/util/Files.hpp>
-#include <libchess/util/Logger.hpp>
-#include <libchess/util/Variant.hpp>
+#include <libutil/Files.hpp>
+#include <libutil/Logger.hpp>
+#include <libutil/Variant.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <nlohmann/json.hpp>
 #include <ranges>
@@ -132,7 +132,7 @@ void Engine::start_file_logger(const string_view arg)
     }
 
     [[maybe_unused]] const auto result
-        = chess::util::start_file_logger(path { arg })
+        = util::start_file_logger(path { arg })
               .transform_error(info_string);
 }
 
@@ -167,7 +167,7 @@ void Engine::write_config_file(const string_view arg) const
             continue;
 
         std::visit(
-            chess::util::Visitor {
+            util::Visitor {
                 [&optionsData, name = opt->get_name()](const auto value) {
                     optionsData[name] = value;
                 } },
@@ -182,7 +182,7 @@ void Engine::write_config_file(const string_view arg) const
     const auto filePath = absolute(path { arg });
 
     [[maybe_unused]] const auto result
-        = chess::util::overwrite_file(
+        = util::files::overwrite(
             filePath, data.dump(2))
               .transform([&filePath] {
                   info_string(std::format(
@@ -206,7 +206,7 @@ void Engine::read_config_file(const path& file)
     const auto filePath = absolute(file);
 
     [[maybe_unused]] const auto result
-        = chess::util::load_file_as_string(filePath)
+        = util::files::load(filePath)
               .transform([this, &filePath](const string_view fileContent) {
                   const auto data = json::parse(fileContent);
 

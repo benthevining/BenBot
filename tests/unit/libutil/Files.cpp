@@ -12,31 +12,25 @@
  * ======================================================================================
  */
 
-/** @file
-    This file provides some threading and synchronization utilities.
-    @ingroup util
- */
+// this symbol must be defined as a quoted string,
+// the absolute path to the license header file
+#ifndef BENBOT_LICENSE_HEADER_FILE
+#    error
+#endif
 
-#pragma once
+#include <catch2/catch_test_macros.hpp>
+#include <filesystem>
+#include <libbenbot/Resources.hpp>
+#include <libutil/Files.hpp>
+#include <string_view>
 
-#include <functional>
+inline constexpr auto TAGS { "[util][files]" };
 
-namespace chess::util {
+TEST_CASE("load_file_as_string()", TAGS)
+{
+    const std::string_view CORRECT_FILE_CONTENT = ben_bot::resources::get_ascii_logo();
 
-/** Blocks the calling thread until ``pred`` returns true.
-    Blocking is implemented by spinning on the predicate and
-    using a progressive backoff strategy.
+    const std::filesystem::path LICENSE_HEADER_FILE { BENBOT_LICENSE_HEADER_FILE };
 
-    This progressive backoff strategy avoids wasting energy,
-    and allows other threads to make progress by yielding the
-    waiting thread after a certain amount of time. This time
-    is chosen to be about 1 millisecond.
-
-    On platforms other than x86, x86_64, or arm64, a simple
-    implementation will be used.
-
-    @ingroup util
- */
-void progressive_backoff(std::function<bool()> pred);
-
-} // namespace chess::util
+    REQUIRE(util::files::load(LICENSE_HEADER_FILE) == CORRECT_FILE_CONTENT);
+}

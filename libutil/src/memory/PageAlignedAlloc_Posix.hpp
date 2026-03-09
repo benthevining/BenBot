@@ -12,35 +12,41 @@
  * ======================================================================================
  */
 
-#include <libchess/util/Console.hpp>
+#pragma once
 
-#ifdef _WIN32
+#include <cstddef> // IWYU pragma: keep - for size_t
+#include <cstdlib>
 
-#    ifndef WIN32_LEAN_AND_MEAN
-#        define WIN32_LEAN_AND_MEAN 1
-#    endif
-
-#    include <Windows.h>
-
-namespace chess::util {
-
-void enable_utf8_console_output()
-{
-    // set the console's code page to UTF-8
-    SetConsoleOutputCP(CP_UTF8);
-}
-
-} // namespace chess::util
-
-#else
-
-namespace chess::util {
-
-void enable_utf8_console_output()
-{
-    // no-op
-}
-
-} // namespace chess::util
-
+#if __has_include(<sys/mman.h>)
+#    include <sys/mman.h>
 #endif
+
+namespace util::memory {
+
+[[nodiscard, gnu::alloc_size(1), gnu::malloc, clang::ownership_returns(malloc)]]
+inline auto page_aligned_alloc_impl(const std::size_t size) -> void*
+{
+#ifdef __linux__
+    static constexpr auto alignment = 2uz * 1024uz * 1024uz; // 2MB page size assumed
+#else
+    static constexpr auto alignment = 4096uz; // small page size assumed
+#endif
+
+    // round up to multiple of page alignment
+    const auto actualSize = ((size + alignment - 1uz) / alignment) * alignment;
+
+    auto* mem = std::aligned_alloc(alignment, actualSize);
+
+#ifdef MADV_HUGEPAGE
+    madvise(mem, size, MADV_HUGEPAGE);
+#endif
+
+    return mem;
+}
+
+[[clang::ownership_takes(malloc, 1)]] inline void page_aligned_free_impl([[clang::noescape]] void* mem)
+{
+    std::free(mem);
+}
+
+} // namespace util::memory

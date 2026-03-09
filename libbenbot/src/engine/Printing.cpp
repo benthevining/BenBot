@@ -23,8 +23,8 @@
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/MoveFormats.hpp>
 #include <libchess/uci/Printing.hpp>
-#include <libchess/util/Strings.hpp>
-#include <libchess/util/TextTable.hpp>
+#include <libutil/Strings.hpp>
+#include <libutil/TextTable.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <print>
 #include <string>
@@ -33,13 +33,12 @@
 
 namespace ben_bot {
 
-using Result = search::Result;
-
-using chess::util::strings::trim;
 using std::println;
 using uci::printing::info_string;
+using util::strings::trim;
 
-using chess::util::strings::TextTable;
+using Result = search::Result;
+using util::strings::TextTable;
 
 auto Engine::get_name() const -> std::string
 {
