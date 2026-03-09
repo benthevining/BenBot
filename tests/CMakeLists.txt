@@ -58,9 +58,9 @@ add_test (
     NAME ben_bot.verify_headers
     COMMAND
         "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --target
-        libchess_verify_interface_header_sets libbenbot_verify_interface_header_sets
-        ben_bot_resources_verify_interface_header_sets --config "$<CONFIG>" --parallel
-        "${num_cores}"
+        libutil_verify_interface_header_sets libchess_verify_interface_header_sets
+        libbenbot_verify_interface_header_sets ben_bot_resources_verify_interface_header_sets
+        --config "$<CONFIG>" --parallel "${num_cores}"
 )
 
 set_tests_properties (ben_bot.bench.engine_nps ben_bot.verify_headers PROPERTIES RUN_SERIAL TRUE)
