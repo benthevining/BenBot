@@ -28,6 +28,4 @@ foreach (data_file IN LISTS testcase_files)
     add_test (NAME "${test_name}" COMMAND Python::Interpreter "${CMAKE_CURRENT_LIST_DIR}/perft.py"
                                           "--test=${data_file}" "--engine=$<TARGET_FILE:ben_bot>"
     )
-
-    set_tests_properties ("${test_name}" PROPERTIES RESOURCE_LOCK BenBotPerft)
 endforeach ()
