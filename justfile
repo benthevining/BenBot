@@ -29,7 +29,7 @@ alias pc := pre-commit
 
 # Installs all development dependencies
 install:
-    python3 -m pip install -r {{ justfile_directory() }}/config/requirements.txt
+    python3 -m pip install -r config/requirements.txt
     npm install
     pre-commit install --install-hooks
 
@@ -47,6 +47,5 @@ bump part='major':
     bump-my-version bump --verbose {{ part }}
 
 # Reports codebase size & stats
-[no-exit-message]
 cloc:
     cloc --exclude-dir=Builds,.venv,logs,node_modules .
