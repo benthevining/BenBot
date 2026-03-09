@@ -89,7 +89,7 @@ void Engine::set_pretty_printing(const bool shouldPrettyPrint)
             [this](const Move move) { return pretty_print_move(move); }));
     } else {
         searcher.context.set_callbacks(search::Callbacks::make_uci_printer(
-            [this] noexcept { // cppcheck-suppress syntaxError
+            [this]() noexcept {
                 return debugMode.load(memory_order_relaxed);
             }));
     }

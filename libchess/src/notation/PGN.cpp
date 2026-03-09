@@ -460,7 +460,7 @@ namespace {
         // write extra metadata tags not part of seven tag roster
         auto otherTags = metadata
                        | std::views::filter([](const auto& it) {
-                             return not std::ranges::contains(sevenTagRoster, it.first); // cppcheck-suppress internalAstError
+                             return not std::ranges::contains(sevenTagRoster, it.first);
                          });
 
         for (const auto& [key, value] : otherTags) {
