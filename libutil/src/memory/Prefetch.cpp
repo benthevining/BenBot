@@ -20,14 +20,14 @@
 #    include <mmintrin.h>
 #    include <xmmintrin.h>
 
-namespace chess::util::memory {
+namespace util::memory {
 
 void prefetch(const void* mem)
 {
     _mm_prefetch(static_cast<const char*>(mem), _MM_HINT_T0);
 }
 
-} // namespace chess::util::memory
+} // namespace util::memory
 
 #elif defined(__has_builtin) and __has_builtin(__builtin_prefetch)
 
