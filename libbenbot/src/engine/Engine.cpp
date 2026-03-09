@@ -20,6 +20,7 @@
 #include <format>
 #include <libbenbot/engine/Engine.hpp>
 #include <libbenbot/search/Callbacks.hpp>
+#include <libbenbot/search/Options.hpp>
 #include <libchess/notation/MoveFormats.hpp>
 #include <libchess/uci/Options.hpp>
 #include <libchess/uci/Printing.hpp>
@@ -92,6 +93,17 @@ void Engine::set_pretty_printing(const bool shouldPrettyPrint)
                 return debugMode.load(memory_order_relaxed);
             }));
     }
+}
+
+void Engine::go(const uci::GoCommandOptions& opts)
+{
+    auto newOpts = search::Options::from_libchess(
+        opts, searcher.context.get_position().is_white_to_move());
+
+    newOpts.moveOverhead = std::chrono::milliseconds { moveOverhead.get_value() };
+
+    searcher.context.set_options(newOpts);
+    searcher.start();
 }
 
 // this function implements non-standard UCI commands that we support
