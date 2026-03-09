@@ -43,12 +43,12 @@ jobs:
     env:
       CMAKE_PRESET: gcc
       CMAKE_BUILD_PARALLEL_LEVEL: 8
-      BUILD_DIR: ${{ github.workspace }}/Builds/clang
+      BUILD_DIR: ${{ github.workspace }}/Builds/gcc
       SPRT_OUTPUT_LOG: ${{ github.workspace }}/logs/sprt/output.log
       # these directories are used for building & installing the latest
       # main, in the case that we're using main as the SPRT baseline
       TMP_ROOT: ${{ github.workspace }}/tmp-main
-      TMP_BUILD_DIR: ${{ github.workspace }}/tmp-main/Builds/clang
+      TMP_BUILD_DIR: ${{ github.workspace }}/tmp-main/Builds/gcc
       TMP_DEPLOY_DIR: ${{ github.workspace }}/tmp-main/deploy
 
     steps:

@@ -359,6 +359,7 @@ namespace {
     [[nodiscard]] auto root_search(
         const size_t        depth,
         Options&            options,
+        const Position&     position,
         TranspositionTable& transTable,
         Interrupter&        interrupter,
         KillerMoves&        killerMoves)
@@ -369,7 +370,7 @@ namespace {
         killerMoves.clear();
 
         detail::order_moves_for_search(
-            options.position, options.movesToSearch, transTable, { });
+            position, options.movesToSearch, transTable, { });
 
         Stats    stats;
         Bounds   bounds;
@@ -380,15 +381,15 @@ namespace {
         for (const auto move : options.movesToSearch) {
             PvList childPV;
 
-            auto create_context = [depth, &transTable, &interrupter, &stats, &childPV, &killerMoves](const Bounds boundsToUse, const Position& position) {
+            auto create_context = [depth, &transTable, &interrupter, &stats, &childPV, &killerMoves](const Bounds boundsToUse, const Position& pos) {
                 return AlphaBetaContext {
-                    boundsToUse, position, depth, 1uz, transTable, interrupter, stats, childPV, killerMoves
+                    boundsToUse, pos, depth, 1uz, transTable, interrupter, stats, childPV, killerMoves
                 };
             };
 
             // principal variation search: first try searching with a null window
-            const auto score = [bounds, &options, move, foundPV, make_context = std::move(create_context)] {
-                const auto newPos = after_move(options.position, move);
+            const auto score = [bounds, &position, move, foundPV, make_context = std::move(create_context)] {
+                const auto newPos = after_move(position, move);
 
                 if (not foundPV) {
                     return -make_context(bounds.invert(), newPos)
@@ -466,9 +467,10 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
     transTable.new_search();
     callbacks.search_start(options);
 
+    // TODO: use a separate MoveList
     // if the movesToSearch was empty, then we search all legal moves
     if (options.movesToSearch.empty()) {
-        chess::moves::generate(options.position, std::back_inserter(options.movesToSearch));
+        chess::moves::generate(position, std::back_inserter(options.movesToSearch));
 
         assert(not options.movesToSearch.empty());
     }
@@ -484,7 +486,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         if (interrupter.should_abort(0uz))
             break;
 
-        const auto res = root_search(depth, options, transTable, interrupter, killerMoves);
+        const auto res = root_search(depth, options, position, transTable, interrupter, killerMoves);
 
         if (interrupter.was_aborted())
             break;

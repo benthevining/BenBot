@@ -27,7 +27,6 @@
 
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
-#include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <limits>
 #include <optional>
@@ -51,9 +50,6 @@ using std::size_t;
     @see Context
  */
 struct Options final {
-    /** The root position to be searched. */
-    chess::game::Position position;
-
     /** The maximum search depth (in plies). */
     size_t depth { std::numeric_limits<size_t>::max() };
 
@@ -81,8 +77,10 @@ struct Options final {
     /** Search for mate in this many moves. */
     std::optional<size_t> mateIn;
 
-    /** Updates the values in this options struct with the UCI "go" command options. */
-    void update_from(const chess::uci::GoCommandOptions& goOptions);
+    /** Translates the raw UCI "go" command options into this struct's fields. */
+    [[nodiscard]] static auto from_libchess(
+        const chess::uci::GoCommandOptions& goOptions,
+        bool                                isWhiteToMove) -> Options;
 };
 
 } // namespace ben_bot::search

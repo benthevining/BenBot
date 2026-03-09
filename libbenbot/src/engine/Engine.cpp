@@ -20,6 +20,7 @@
 #include <format>
 #include <libbenbot/engine/Engine.hpp>
 #include <libbenbot/search/Callbacks.hpp>
+#include <libbenbot/search/Options.hpp>
 #include <libchess/notation/MoveFormats.hpp>
 #include <libchess/uci/Options.hpp>
 #include <libchess/uci/Printing.hpp>
@@ -71,43 +72,42 @@ auto Engine::create_move_format_option() -> uci::ComboOption
 
 void Engine::new_game(const bool firstCall)
 {
-    if (not firstCall) {
-        searcher.context.clear_transposition_table();
-        return;
-    }
-
-    // we use delayed initialization for these callbacks instead of
-    // initializing them in the constructor to avoid referencing the
-    // `this` pointer in the constructor
-    if (prettyPrintMode.get_value()) {
-        searcher.context.callbacks = search::Callbacks::make_pretty_printer(
-            [this](const Move move) { return pretty_print_move(move); });
+    if (firstCall) {
+        // we use delayed initialization for the callbacks instead of
+        // initializing them in the constructor to avoid referencing
+        // the `this` pointer in the constructor
+        set_pretty_printing(prettyPrintMode.get_value());
     } else {
-        searcher.context.callbacks = search::Callbacks::make_uci_printer(
-            [this] noexcept { // cppcheck-suppress syntaxError
-                return debugMode.load(memory_order_relaxed);
-            });
+        searcher.context.clear_transposition_table();
     }
 }
 
 void Engine::set_pretty_printing(const bool shouldPrettyPrint)
 {
-    wait();
-
     if (shouldPrettyPrint) {
-        searcher.context.callbacks = search::Callbacks::make_pretty_printer(
-            [this](const Move move) { return pretty_print_move(move); });
+        searcher.context.set_callbacks(search::Callbacks::make_pretty_printer(
+            [this](const Move move) { return pretty_print_move(move); }));
     } else {
-        searcher.context.callbacks = search::Callbacks::make_uci_printer(
-            [this] noexcept { return debugMode.load(memory_order_relaxed); });
+        searcher.context.set_callbacks(search::Callbacks::make_uci_printer(
+            [this] noexcept { // cppcheck-suppress syntaxError
+                return debugMode.load(memory_order_relaxed);
+            }));
     }
 }
 
 void Engine::go(const uci::GoCommandOptions& opts)
 {
-    searcher.start(
-        opts,
-        std::chrono::milliseconds { moveOverhead.get_value() });
+    auto newOpts = search::Options::from_libchess(
+        opts, searcher.context.get_position().is_white_to_move());
+
+    newOpts.moveOverhead = std::chrono::milliseconds { moveOverhead.get_value() };
+
+    searcher.context.set_options(newOpts);
+
+    searcher.context.set_pondering(
+        opts.ponderMode and ponder.get_value());
+
+    searcher.start();
 }
 
 // this function implements non-standard UCI commands that we support
@@ -138,16 +138,14 @@ void Engine::start_file_logger(const string_view arg)
 
 void Engine::make_null_move()
 {
-    wait();
-
-    searcher.context.options.position.make_null_move();
+    searcher.context.set_position(
+        after_null_move(searcher.context.get_position()));
 }
 
 void Engine::color_flip()
 {
-    wait();
-
-    searcher.context.options.position.flip();
+    searcher.context.set_position(
+        flipped(searcher.context.get_position()));
 }
 
 using nlohmann::json;

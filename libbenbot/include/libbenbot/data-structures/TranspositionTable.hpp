@@ -104,7 +104,7 @@ public:
     TranspositionTable& operator=(TranspositionTable&& other) noexcept;
 
     /** Retrieves the stored record for the given position,
-        or nullptr if the given position isn't in the table.
+        or ``nullopt`` if the given position isn't in the table.
      */
     [[nodiscard]] auto find(const Position& pos) const -> std::optional<TTData>;
 

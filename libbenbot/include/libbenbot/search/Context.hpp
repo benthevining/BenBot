@@ -24,9 +24,13 @@
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/search/Callbacks.hpp>
 #include <libbenbot/search/Options.hpp>
+#include <libchess/game/Position.hpp>
+#include <optional>
 #include <utility>
 
 namespace ben_bot::search {
+
+using chess::game::Position;
 
 /** This struct encapsulates everything needed to perform a search.
     You can keep one of these alive between searches by simply updating
@@ -50,19 +54,6 @@ struct Context final {
     Context(Context&&)            = delete;
     Context& operator=(Context&&) = delete;
 
-    /** The options to use for the search.
-        This object can only be safely mutated when no search is executing.
-     */
-    Options options;
-
-    /** The transposition table used for this search.
-        This object's methods can only be safely called when no search is executing.
-     */
-    TranspositionTable transTable;
-
-    /** The callbacks used to provide results about the search. */
-    Callbacks callbacks;
-
     /** Performs a search.
         Results will be propagated via the ``callbacks`` that have been
         assigned.
@@ -70,11 +61,6 @@ struct Context final {
         The search may execute for a potentially unbounded amount of time.
         The search can be interrupted by calling the ``abort()`` method while
         ``search()`` is executing.
-
-        This function accesses ``options`` and ``transTable``; these objects
-        must not be mutated while ``search()`` is executing. ``abort()``,
-        ``wait()``, ``in_progress()``, and ``reset()`` may be called while
-        ``search()`` is executing without introducing data races.
      */
     void search();
 
@@ -88,12 +74,27 @@ struct Context final {
 
     /** Clears the transposition table.
         If a search is in progress, this method blocks until it returns.
-        Invoking this method is thread-safe, even if a search was in progress.
      */
     void clear_transposition_table()
     {
         wait();
         transTable.clear();
+    }
+
+    /** Resizes the transposition table.
+        If a search is in progress, this method blocks until it returns.
+     */
+    void resize_transposition_table(size_t sizeMB)
+    {
+        wait();
+        transTable.resize(sizeMB);
+    }
+
+    /** Probes the transposition table for the given position. */
+    [[nodiscard]] auto probe_transposition_table(const Position& pos) const
+        -> std::optional<TTData>
+    {
+        return transTable.find(pos);
     }
 
     /** Returns true if a search is currently in progress. */
@@ -115,12 +116,62 @@ struct Context final {
      */
     void ponder_hit() noexcept { pondering.store(false, std::memory_order::release); }
 
+    /** Sets the position to be searched by the next search.
+        If a search is in progress, this function blocks until it completes.
+     */
+    void set_position(const Position& pos)
+    {
+        wait();
+        position = pos;
+
+        // clear this so that all legal moves will be searched by default
+        options.movesToSearch.clear();
+    }
+
+    /** Sets the options to be used by the next search.
+        If a search is in progress, this function blocks until it completes.
+     */
+    void set_options(const Options& opts)
+    {
+        wait();
+        options = opts;
+    }
+
+    /** Sets the options to be used by the next search.
+        If a search is in progress, this function blocks until it completes.
+     */
+    void set_options(const chess::uci::GoCommandOptions& opts)
+    {
+        wait();
+        options = Options::from_libchess(opts, position.is_white_to_move());
+    }
+
+    /** Sets the result callbacks that will be used for the next search.
+        If a search is in progress, this function blocks until it completes.
+     */
+    void set_callbacks(Callbacks&& callbacksToUse)
+    {
+        wait();
+        callbacks = std::move(callbacksToUse);
+    }
+
+    /** Returns the current position. */
+    [[nodiscard]] auto get_position() const noexcept -> const Position& { return position; }
+
 private:
     std::atomic_bool exitFlag { false };
 
     std::atomic_bool activeFlag { false };
 
     std::atomic_bool pondering { false };
+
+    Position position;
+
+    Options options;
+
+    Callbacks callbacks;
+
+    TranspositionTable transTable;
 
     KillerMoves killerMoves;
 };

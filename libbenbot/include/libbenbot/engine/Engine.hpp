@@ -26,12 +26,15 @@
 #include <libbenbot/engine/CustomCommand.hpp>
 #include <libbenbot/search/Thread.hpp>
 #include <libchess/game/Position.hpp>
-#include <libchess/uci/CommandParsing.hpp>
 #include <libchess/uci/EngineBase.hpp>
 #include <libchess/uci/Options.hpp>
 #include <span>
 #include <string>
 #include <string_view>
+
+namespace chess::uci {
+struct GoCommandOptions;
+} // namespace chess::uci
 
 namespace ben_bot {
 
@@ -65,7 +68,7 @@ private:
 
     void new_game(bool firstCall) override;
 
-    void set_position(const Position& pos) override { searcher.set_position(pos); }
+    void set_position(const Position& pos) override { searcher.context.set_position(pos); }
 
     void go(const uci::GoCommandOptions& opts) override;
 
@@ -122,9 +125,7 @@ private:
         1, 2048, 16,
         "Sets the maximum transposition table size (in MB).",
         [this](const int sizeMB) {
-            wait();
-            searcher.context.transTable.resize(
-                static_cast<size_t>(sizeMB));
+            searcher.context.resize_transposition_table(static_cast<size_t>(sizeMB));
         }
     };
 
@@ -141,7 +142,13 @@ private:
     uci::BoolOption ponder {
         "Ponder",
         false,
-        "Controls whether pondering is allowed."
+        "Controls whether pondering is allowed.",
+        [this](const bool shouldPonder) {
+            // the ponder flag is only ever turned on via the go options,
+            // but it can be turned off by disabling this UCI option
+            if (not shouldPonder)
+                searcher.context.set_pondering(false);
+        }
     };
 
     uci::IntOption threads {
