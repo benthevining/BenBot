@@ -12,12 +12,6 @@
  * ======================================================================================
  */
 
-/** @defgroup util General utilities
-    General utilities not specific to chess, but used by libchess.
-
-    @ingroup libchess
- */
-
 /** @defgroup math General maths utilities
     General maths utility functions used throughout the code.
 

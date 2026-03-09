@@ -52,6 +52,7 @@ add_custom_command (
 
 #
 
+get_target_property (libutil_headers ben_bot::libutil HEADER_SET)
 get_target_property (libchess_headers ben_bot::libchess HEADER_SET)
 get_target_property (libbenbot_headers ben_bot::libbenbot HEADER_SET)
 get_target_property (resource_headers ben_bot::resources HEADER_SET)
@@ -64,6 +65,7 @@ doxygen_add_docs (
     "${CMAKE_CURRENT_LIST_DIR}/top-level-groups.txt"
     "${CMAKE_CURRENT_LIST_DIR}/CodeStyle.md"
     "${engine_doc_page}"
+    ${libutil_headers}
     ${libchess_headers}
     ${libbenbot_headers}
     ${resource_headers}
