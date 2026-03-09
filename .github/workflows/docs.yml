@@ -54,10 +54,13 @@ jobs:
       DEPLOY_DIR: ${{ github.workspace }}/deploy
 
     steps:
-    - name: Install dependencies
+    - name: Install graphviz
       run: |
         sudo apt-get update
-        sudo apt install -y doxygen graphviz
+        sudo apt-get install -y graphviz
+
+    - name: Install latest Doxygen
+      uses: ssciwr/doxygen-install@329d88f5a303066a5bd006db7516b1925b86350e # v2.0.1
 
     - name: Ensure CMake 4.0
       uses: lukka/get-cmake@f176ccd3f28bda569c43aae4894f06b2435a3375 # v4.2.3
@@ -68,7 +71,8 @@ jobs:
         ref: ${{ inputs.ref || github.ref }}
 
     - name: Configure CMake
-      run: cmake --preset ${{ env.CMAKE_PRESET }} -D BENBOT_TESTS=OFF
+      run: |
+        cmake --preset ${{ env.CMAKE_PRESET }} -D BENBOT_TESTS=OFF -D CMAKE_REQUIRE_FIND_PACKAGE_Doxygen=TRUE
 
     - name: Build docs
       run: cmake --build . --target ben_bot_docs
