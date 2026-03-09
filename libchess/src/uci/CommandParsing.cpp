@@ -200,7 +200,7 @@ namespace {
         std::output_iterator<moves::Move> auto outputIt)
         -> string_view
     {
-        using namespace std::literals::string_view_literals; // NOLINT
+        using namespace std::literals::string_view_literals; // NOLINT(build/namespaces_literals)
 
         static constexpr std::array argumentTokens {
             "ponder"sv, "wtime"sv, "btime"sv, "winc"sv, "binc"sv, "infinite"sv,
@@ -213,7 +213,7 @@ namespace {
             firstMove = trim(firstMove);
 
             if (std::ranges::contains(argumentTokens, firstMove))
-                return options; // NOLINT
+                return options;
 
             options = trim(rest);
 
@@ -221,7 +221,7 @@ namespace {
                 *outputIt = move.value();
         }
 
-        return options; // NOLINT
+        return options;
     }
 
 } // namespace

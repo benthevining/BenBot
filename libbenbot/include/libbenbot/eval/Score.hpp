@@ -72,7 +72,7 @@ struct Score final {
         This method is intentionally not explicit, which allows score
         objects to be transparently compared as integers.
      */
-    constexpr operator Value() const noexcept { return value; } // NOLINT;
+    constexpr operator Value() const noexcept { return value; }
 
     /** Inverts the score. */
     [[nodiscard]] constexpr auto operator-() const noexcept -> Score { return { static_cast<Value>(-value) }; }

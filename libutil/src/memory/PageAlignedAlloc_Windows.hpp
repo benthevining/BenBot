@@ -99,19 +99,19 @@ namespace impl {
         void* mem { nullptr };
 
         if (LookupPrivilegeValueA_f(nullptr, "SeLockMemoryPrivilege", &luid)) {
-            TOKEN_PRIVILEGES tp { }; // NOLINT(readability-identifier-length)
+            TOKEN_PRIVILEGES tokenPrivileges { };
             TOKEN_PRIVILEGES prevTp { };
             DWORD            prevTpLen = 0;
 
-            tp.PrivilegeCount           = 1;
-            tp.Privileges[0].Luid       = luid;
-            tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+            tokenPrivileges.PrivilegeCount           = 1;
+            tokenPrivileges.Privileges[0].Luid       = luid;
+            tokenPrivileges.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 
             // Try to enable SeLockMemoryPrivilege. Note that even if AdjustTokenPrivileges()
             // succeeds, we still need to query GetLastError() to ensure that the privileges
             // were actually obtained.
 
-            if (AdjustTokenPrivileges_f(hProcessToken, FALSE, &tp, sizeof(TOKEN_PRIVILEGES), &prevTp, &prevTpLen)
+            if (AdjustTokenPrivileges_f(hProcessToken, FALSE, &tokenPrivileges, sizeof(TOKEN_PRIVILEGES), &prevTp, &prevTpLen)
                 and GetLastError() == ERROR_SUCCESS) {
                 // round up size to full pages and allocate
                 const auto actualSize = (size + largePageSize - 1uz) & ~(largePageSize - 1uz);

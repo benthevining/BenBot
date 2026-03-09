@@ -198,7 +198,7 @@ namespace {
         if (not fenFragment.empty() and fenFragment.front() == '/')
             return fenFragment.substr(1uz);
 
-        return fenFragment; // NOLINT
+        return fenFragment;
     }
 
 } // namespace

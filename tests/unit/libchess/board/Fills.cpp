@@ -31,7 +31,7 @@ using chess::pieces::Color;
 namespace fills = chess::board::fills;
 
 // for _bb bitboard literal
-using namespace chess::board::literals; // NOLINT
+using namespace chess::board::literals; // NOLINT(build/namespaces_literals)
 
 /*
 white pawns         black pawns

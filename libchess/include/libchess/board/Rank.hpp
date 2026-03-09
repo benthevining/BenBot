@@ -82,7 +82,7 @@ template <Color Side>
     @ingroup board
     @see Rank
  */
-[[nodiscard, gnu::const]] constexpr auto rank_to_char(Rank rank) noexcept -> char;
+[[nodiscard, gnu::const]] constexpr auto rank_to_char(Rank rank) -> char;
 
 } // namespace chess::board
 
@@ -106,8 +106,7 @@ struct std::formatter<chess::board::Rank> final {
         const chess::board::Rank rank, FormatContext& ctx) const
         -> typename FormatContext::iterator
     {
-        return std::format_to(ctx.out(), "{}",
-            chess::board::rank_to_char(rank));
+        return std::format_to(ctx.out(), "{}", rank_to_char(rank));
     }
 };
 
@@ -184,7 +183,7 @@ inline auto rank_from_char(const char character)
     }
 }
 
-constexpr auto rank_to_char(const Rank rank) noexcept -> char // NOLINT(bugprone-exception-escape)
+constexpr auto rank_to_char(const Rank rank) -> char
 {
     constexpr std::string_view ranks { "12345678" };
 

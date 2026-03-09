@@ -101,7 +101,7 @@ namespace {
             openingBracketIdx = pgnText.find('[');
         }
 
-        return pgnText; // NOLINT
+        return pgnText;
     }
 
     // writes the content of the block comment to the last move in output
@@ -446,7 +446,7 @@ namespace {
         const Position& startingPosition,
         string&         output)
     {
-        using namespace std::literals::string_literals; // NOLINT
+        using namespace std::literals::string_literals; // NOLINT(build/namespaces_literals)
 
         // if these tags are present, they must appear before any other tags and in this order
         static const std::array sevenTagRoster {

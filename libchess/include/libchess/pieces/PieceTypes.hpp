@@ -70,7 +70,7 @@ enum class Type : std::uint_fast8_t {
     @ingroup pieces
  */
 [[nodiscard, gnu::const]] constexpr auto to_char(
-    Type type, bool uppercase = true) noexcept
+    Type type, bool uppercase = true)
     -> char;
 
 } // namespace chess::pieces
@@ -94,7 +94,7 @@ struct std::formatter<chess::pieces::Type> final {
         chess::pieces::Type piece, FormatContext& ctx) const
         -> typename FormatContext::iterator
     {
-        return std::format_to(ctx.out(), "{}", chess::pieces::to_char(piece));
+        return std::format_to(ctx.out(), "{}", to_char(piece));
     }
 };
 
@@ -117,7 +117,7 @@ struct std::formatter<chess::pieces::Type> final {
 
 namespace chess::pieces {
 
-constexpr auto to_char(const Type type, const bool uppercase) noexcept -> char // NOLINT(bugprone-exception-escape)
+constexpr auto to_char(const Type type, const bool uppercase) -> char
 {
     if (uppercase) {
         static constexpr std::string_view upperChars { "PNBRQK" };

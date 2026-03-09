@@ -29,7 +29,7 @@ using chess::board::Square;
 namespace move_gen = chess::moves::magics;
 
 // for _bb bitboard literal
-using namespace chess::board::literals; // NOLINT
+using namespace chess::board::literals; // NOLINT(build/namespaces_literals)
 
 TEST_CASE("Magics - bishops", TAGS)
 {

@@ -35,7 +35,7 @@ using std::string_view;
     return std::isspace(static_cast<unsigned char>(text)) == 0;
 }
 
-[[nodiscard]] auto trim_start(string_view text) noexcept -> string_view // NOLINT(bugprone-exception-escape)
+[[nodiscard]] auto trim_start(string_view text) noexcept -> string_view
 {
     return text.substr(
         static_cast<size_t>(

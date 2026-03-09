@@ -45,7 +45,9 @@ struct ThreefoldChecker final {
 private:
     // stores a history of hash values
     // the most recent value is at front() and the oldest is at back()
-    beman::inplace_vector::inplace_vector<HashValue, 50uz> history;
+    using History = beman::inplace_vector::inplace_vector<HashValue, 50uz>;
+
+    History history;
 };
 
 /*
@@ -74,7 +76,7 @@ constexpr void ThreefoldChecker::reset(const HashValue initialPositionHash)
 constexpr void ThreefoldChecker::push(const HashValue newHash)
 {
     // make room for new element
-    if (std::cmp_less(history.size(), history.capacity())) // NOLINT(readability-static-accessed-through-instance)
+    if (std::cmp_less(history.size(), History::capacity()))
         history.emplace_back(0uz);
 
     // move the last element to the front,

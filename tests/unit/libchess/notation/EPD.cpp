@@ -33,7 +33,7 @@ TEST_CASE("EPD - start position", TAGS)
 
 TEST_CASE("EPD - operations", TAGS)
 {
-    using namespace std::literals::string_literals; // NOLINT
+    using namespace std::literals::string_literals; // NOLINT(build/namespaces_literals)
 
     const auto epd = from_epd(
         R"-(r1bqk2r/p1pp1ppp/2p2n2/8/1b2P3/2N5/PPP2PPP/R1BQKB1R w KQkq - bm Bd3; id "Crafty Test Pos.28"; c0 "DB/GK Philadelphia 1996, Game 5, move 7W (Bd3)";)-")
@@ -46,7 +46,7 @@ TEST_CASE("EPD - operations", TAGS)
 
 TEST_CASE("EPD - round tripping", TAGS)
 {
-    using namespace std::literals::string_literals; // NOLINT
+    using namespace std::literals::string_literals; // NOLINT(build/namespaces_literals)
 
     // note that fmvn & hmvc operations will be added by to_epd() by default if not present in the input EPD
     const auto epd1 = from_epd(
@@ -60,7 +60,7 @@ TEST_CASE("EPD - round tripping", TAGS)
 
 TEST_CASE("EPD - parse_all_epds()", TAGS)
 {
-    using namespace std::literals::string_literals; // NOLINT
+    using namespace std::literals::string_literals; // NOLINT(build/namespaces_literals)
 
     static constexpr auto epdText =
         R"-(r1bqk2r/p1pp1ppp/2p2n2/8/1b2P3/2N5/PPP2PPP/R1BQKB1R w KQkq - bm Bd3; id "Crafty Test Pos.28"; c0 "DB/GK Philadelphia 1996, Game 5, move 7W (Bd3)";

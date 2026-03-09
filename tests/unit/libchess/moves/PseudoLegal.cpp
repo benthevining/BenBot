@@ -34,7 +34,7 @@ namespace starting_masks = board_masks::starting;
 namespace move_gen       = chess::moves::pseudo_legal;
 
 // for _bb bitboard literal
-using namespace chess::board::literals; // NOLINT
+using namespace chess::board::literals; // NOLINT(build/namespaces_literals)
 
 TEST_CASE("Pseudo-legal - pawn pushes", TAGS)
 {

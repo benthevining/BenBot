@@ -82,17 +82,17 @@ auto mul_hi64(
         return static_cast<uint64_t>(static_cast<std::uint32_t>(value));
     };
 
-    const auto also = get_lo_32_bits(first);
-    const auto aHi  = first >> 32uz;
+    const auto a_lo = get_lo_32_bits(first);
+    const auto a_hi = first >> 32uz;
 
-    const auto bLo = get_lo_32_bits(second);
-    const auto bHi = second >> 32uz;
+    const auto b_lo = get_lo_32_bits(second);
+    const auto b_hi = second >> 32uz;
 
-    const auto c1 = (also * bLo) >> 32uz;              // NOLINT(readability-identifier-length)
-    const auto c2 = (aHi * bLo) + c1;                  // NOLINT(readability-identifier-length)
-    const auto c3 = (also * bHi) + get_lo_32_bits(c2); // NOLINT(readability-identifier-length)
+    const auto c_1 = (a_lo * b_lo) >> 32uz;
+    const auto c_2 = (a_hi * b_lo) + c_1;
+    const auto c_3 = (a_lo * b_hi) + get_lo_32_bits(c_2);
 
-    return (aHi * bHi) + (c2 >> 32uz) + (c3 >> 32uz);
+    return (a_hi * b_hi) + (c_2 >> 32uz) + (c_3 >> 32uz);
 }
 
 } // namespace util::math

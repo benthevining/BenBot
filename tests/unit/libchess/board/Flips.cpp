@@ -22,7 +22,7 @@ inline constexpr auto TAGS { "[board][Bitboard][flips]" };
 using chess::board::Bitboard;
 
 // for _bb bitboard literal
-using namespace chess::board::literals; // NOLINT
+using namespace chess::board::literals; // NOLINT(build/namespaces_literals)
 
 TEST_CASE("Flips - vertical", TAGS)
 {

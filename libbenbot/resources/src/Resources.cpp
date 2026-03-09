@@ -33,7 +33,7 @@ namespace {
         const auto file = cmrc::ben_bot_resources_internal::get_filesystem()
                               .open(relPath);
 
-        return string_view { file }; // NOLINT
+        return string_view { file };
     }
 } // namespace
 

@@ -40,7 +40,7 @@ namespace chess::board::masks {
 using pieces::Color;
 using std::size_t;
 
-using namespace board::literals; // NOLINT
+using namespace board::literals; // NOLINT(build/namespaces_literals)
 
 /// @ingroup bitboard_masks
 /// @{

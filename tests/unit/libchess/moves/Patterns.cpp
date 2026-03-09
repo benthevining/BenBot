@@ -35,7 +35,7 @@ namespace starting_masks = board_masks::starting;
 namespace move_gen       = chess::moves::patterns;
 
 // for _bb bitboard literal
-using namespace chess::board::literals; // NOLINT
+using namespace chess::board::literals; // NOLINT(build/namespaces_literals)
 
 TEST_CASE("Patterns - pawn pushes", TAGS)
 {

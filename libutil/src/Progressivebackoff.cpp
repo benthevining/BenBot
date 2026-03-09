@@ -25,18 +25,17 @@ namespace util {
 
 void progressive_backoff(std::function<bool()> pred)
 {
-    // approx. 2x10 ns (= 20 ns) and 750x1333 ns (~ 1 ms), respectively,
-    // on an Apple Silicon Mac or an armv8 based phone
-    static constexpr auto N0 = 2uz;   // NOLINT(readability-identifier-length)
-    static constexpr auto N1 = 750uz; // NOLINT(readability-identifier-length)
+    // measurements on an Apple Silicon Mac or an armv8 based phone
 
-    for (auto i = 0uz; i < N0; ++i) {
+    // stage 1: approx. 2x10 ns (= 20 ns)
+    for (auto i = 0uz; i < 2uz; ++i) {
         if (pred())
             return;
     }
 
     while (true) {
-        for (auto i = 0uz; i < N1; ++i) {
+        // stage 2: approx. 750x1333 ns (~ 1 ms)
+        for (auto i = 0uz; i < 750uz; ++i) {
             if (pred())
                 return;
 
@@ -58,18 +57,16 @@ namespace util {
 
 void progressive_backoff(std::function<bool()> pred)
 {
-    // approx. 5x5 ns (= 25 ns), 10x40 ns (= 400 ns), and 3000x350 ns (~ 1 ms),
-    // respectively, when measured on a 2.9 GHz Intel i9
-    static constexpr auto N0 = 5uz;    // NOLINT(readability-identifier-length)
-    static constexpr auto N1 = 10uz;   // NOLINT(readability-identifier-length)
-    static constexpr auto N2 = 3000uz; // NOLINT(readability-identifier-length)
+    // measurements on a 2.9 GHz Intel i9
 
-    for (auto i = 0uz; i < N0; ++i) {
+    // stage 1: approx. 5x5 ns (= 25 ns)
+    for (auto i = 0uz; i < 5uz; ++i) {
         if (pred())
             return;
     }
 
-    for (auto i = 0uz; i < N1; ++i) {
+    // stage 2: approx. 10x40 ns (= 400 ns)
+    for (auto i = 0uz; i < 10uz; ++i) {
         if (pred())
             return;
 
@@ -77,7 +74,8 @@ void progressive_backoff(std::function<bool()> pred)
     }
 
     while (true) {
-        for (auto i = 0uz; i < N2; ++i) {
+        // stage 3: approx. 3000x350 ns (~ 1 ms)
+        for (auto i = 0uz; i < 3000uz; ++i) {
             if (pred())
                 return;
 
