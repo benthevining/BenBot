@@ -15,7 +15,7 @@
 #include <algorithm>
 #include <cassert>
 #include <chrono>
-#include <cmath>
+#include <cmath>   // IWYU pragma: keep - for std::round()
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <expected>
 #include <filesystem>
@@ -24,6 +24,7 @@
 #include <libbenbot/Resources.hpp>
 #include <libbenbot/engine/Engine.hpp>
 #include <libbenbot/search/Callbacks.hpp>
+#include <libbenbot/search/Options.hpp>
 #include <libbenbot/search/Result.hpp>
 #include <libbenbot/search/Thread.hpp>
 #include <libchess/notation/EPD.hpp>
@@ -66,14 +67,18 @@ namespace {
             : threadNumber { threadNum }
             , outputProgress { printProgressOutput }
         {
-            thread.set_position(position.position);
+            thread.context.set_position(position.position);
+
+            search::Options options;
 
             if (const auto it = position.operations.find("depth");
                 it != position.operations.end()) {
-                thread.context.options.depth = util::strings::int_from_string(it->second, defaultDepth);
+                options.depth = util::strings::int_from_string(it->second, defaultDepth);
             } else {
-                thread.context.options.depth = defaultDepth;
+                options.depth = defaultDepth;
             }
+
+            thread.context.set_options(options);
 
             thread.start();
         }

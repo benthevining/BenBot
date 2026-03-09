@@ -45,36 +45,42 @@ namespace {
     }
 } // namespace
 
-void Options::update_from(const chess::uci::GoCommandOptions& goOptions)
+auto Options::from_libchess(
+    const chess::uci::GoCommandOptions& goOptions,
+    const bool                          isWhiteToMove) -> Options
 {
-    movesToSearch = goOptions.moves;
-    infinite      = goOptions.infinite;
-    mateIn        = goOptions.mateIn;
+    Options opts { };
+
+    opts.movesToSearch = goOptions.moves;
+    opts.infinite      = goOptions.infinite;
+    opts.mateIn        = goOptions.mateIn;
 
     static constexpr auto MAX = std::numeric_limits<size_t>::max();
 
-    depth    = goOptions.depth.value_or(MAX);
-    maxNodes = goOptions.nodes.value_or(MAX);
+    opts.depth    = goOptions.depth.value_or(MAX);
+    opts.maxNodes = goOptions.nodes.value_or(MAX);
 
-    searchTime = goOptions.searchTime
-                     .or_else([&goOptions, isWhite = position.is_white_to_move()] -> std::optional<milliseconds> {
-                         if (goOptions.infinite)
-                             return std::nullopt;
+    opts.searchTime = goOptions.searchTime
+                          .or_else([isWhiteToMove, &goOptions] -> std::optional<milliseconds> {
+                              if (goOptions.infinite)
+                                  return std::nullopt;
 
-                         // need to know at least our time remaining in order to calculate search time limit
-                         const auto& timeLeft = isWhite ? goOptions.whiteTimeLeft : goOptions.blackTimeLeft;
+                              // need to know at least our time remaining in order to calculate search time limit
+                              const auto& timeLeft = isWhiteToMove ? goOptions.whiteTimeLeft : goOptions.blackTimeLeft;
 
-                         return timeLeft
-                             .transform([&goOptions, isWhite](const milliseconds msLeft) {
-                                 return determine_search_time(
-                                     msLeft,
-                                     isWhite ? goOptions.whiteInc : goOptions.blackInc,
-                                     goOptions.movesToGo);
-                             });
-                     })
-                     .transform([overhead = moveOverhead](const milliseconds time) {
-                         return time - overhead;
-                     });
+                              return timeLeft
+                                  .transform([isWhiteToMove, &goOptions](const milliseconds msLeft) {
+                                      return determine_search_time(
+                                          msLeft,
+                                          isWhiteToMove ? goOptions.whiteInc : goOptions.blackInc,
+                                          goOptions.movesToGo);
+                                  });
+                          })
+                          .transform([overhead = opts.moveOverhead](const milliseconds time) {
+                              return time - overhead;
+                          });
+
+    return opts;
 }
 
 } // namespace ben_bot::search

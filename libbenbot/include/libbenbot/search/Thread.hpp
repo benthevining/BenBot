@@ -60,22 +60,16 @@ struct Thread final {
      */
     Context context;
 
-    /** Sets the position to be searched by the next search invocation.
-        This method blocks waiting for any previously executing search to complete.
-     */
-    void set_position(const Position& pos);
-
     /** Begins searching asynchronously.
         This method returns immediately, and the actual search will be performed by
         a background thread.
      */
-    /// @{
-    void start(
-        const chess::uci::GoCommandOptions& options,
-        milliseconds                        moveOverheadTime = milliseconds { 0uz });
+    void start()
+    {
+        context.wait(); // shouldn't have been searching, but better safe than sorry
 
-    void start();
-    /// @}
+        startSearch.store(true, std::memory_order::release);
+    }
 
 private:
     void thread_func();

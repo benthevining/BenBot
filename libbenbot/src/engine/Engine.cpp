@@ -103,13 +103,6 @@ void Engine::set_pretty_printing(const bool shouldPrettyPrint)
     }
 }
 
-void Engine::go(const uci::GoCommandOptions& opts)
-{
-    searcher.start(
-        opts,
-        std::chrono::milliseconds { moveOverhead.get_value() });
-}
-
 // this function implements non-standard UCI commands that we support
 void Engine::handle_custom_command(
     const string_view command, const string_view opts)
@@ -138,16 +131,14 @@ void Engine::start_file_logger(const string_view arg)
 
 void Engine::make_null_move()
 {
-    wait();
-
-    searcher.context.options.position.make_null_move();
+    searcher.context.set_position(
+        after_null_move(searcher.context.get_position()));
 }
 
 void Engine::color_flip()
 {
-    wait();
-
-    searcher.context.options.position.flip();
+    searcher.context.set_position(
+        flipped(searcher.context.get_position()));
 }
 
 using nlohmann::json;

@@ -24,9 +24,12 @@
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/search/Callbacks.hpp>
 #include <libbenbot/search/Options.hpp>
+#include <libchess/game/Position.hpp>
 #include <utility>
 
 namespace ben_bot::search {
+
+using chess::game::Position;
 
 /** This struct encapsulates everything needed to perform a search.
     You can keep one of these alive between searches by simply updating
@@ -50,11 +53,6 @@ struct Context final {
     Context(Context&&)            = delete;
     Context& operator=(Context&&) = delete;
 
-    /** The options to use for the search.
-        This object can only be safely mutated when no search is executing.
-     */
-    Options options;
-
     /** The transposition table used for this search.
         This object's methods can only be safely called when no search is executing.
      */
@@ -70,11 +68,6 @@ struct Context final {
         The search may execute for a potentially unbounded amount of time.
         The search can be interrupted by calling the ``abort()`` method while
         ``search()`` is executing.
-
-        This function accesses ``options`` and ``transTable``; these objects
-        must not be mutated while ``search()`` is executing. ``abort()``,
-        ``wait()``, ``in_progress()``, and ``reset()`` may be called while
-        ``search()`` is executing without introducing data races.
      */
     void search();
 
@@ -115,7 +108,44 @@ struct Context final {
      */
     void ponder_hit() noexcept { pondering.store(false, std::memory_order::release); }
 
+    /** Sets the position to be searched by the next ``start()``.
+        If a search is in progress, this function blocks until it completes.
+     */
+    void set_position(const Position& pos)
+    {
+        wait();
+        position = pos;
+
+        // clear this so that all legal moves will be searched by default
+        options.movesToSearch.clear();
+    }
+
+    /** Sets the options to be used by the next ``start()``.
+        If a search is in progress, this function blocks until it completes.
+     */
+    void set_options(const Options& opts)
+    {
+        wait();
+        options = opts;
+    }
+
+    /** Sets the options to be used by the next ``start()``.
+        If a search is in progress, this function blocks until it completes.
+     */
+    void set_options(const chess::uci::GoCommandOptions& opts)
+    {
+        wait();
+        options = Options::from_libchess(opts, position.is_white_to_move());
+    }
+
+    /** Returns the current position. */
+    [[nodiscard]] auto get_position() const noexcept -> const Position& { return position; }
+
 private:
+    Position position;
+
+    Options options;
+
     std::atomic_bool exitFlag { false };
 
     std::atomic_bool activeFlag { false };

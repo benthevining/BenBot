@@ -65,9 +65,13 @@ private:
 
     void new_game(bool firstCall) override;
 
-    void set_position(const Position& pos) override { searcher.set_position(pos); }
+    void set_position(const Position& pos) override { searcher.context.set_position(pos); }
 
-    void go(const uci::GoCommandOptions& opts) override;
+    void go(const uci::GoCommandOptions& opts) override
+    {
+        searcher.context.set_options(opts);
+        searcher.start();
+    }
 
     void abort_search() override { searcher.context.abort(); }
 

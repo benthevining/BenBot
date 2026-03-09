@@ -136,7 +136,7 @@ void Engine::print_options(const string_view args) const
 
 void Engine::print_current_position(const string_view arguments) const
 {
-    const auto& pos = searcher.context.options.position;
+    const auto& pos = searcher.context.get_position();
 
     print_colored_board(pos,
         trim(arguments) == "utf8");
@@ -184,7 +184,7 @@ auto Engine::pretty_print_move(const Move move) const -> std::string
 
     return magic_enum::enum_cast<MoveFormat>(moveFormat.get_value())
         .transform([this, move](const MoveFormat format) {
-            return format_move(format, searcher.context.options.position, move);
+            return format_move(format, searcher.context.get_position(), move);
         })
         .value_or(std::string { });
 }

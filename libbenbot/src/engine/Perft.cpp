@@ -108,7 +108,7 @@ void Engine::run_perft(
     std::cout.flush();
 
     const auto result = chess::moves::perft(
-        depth, searcher.context.options.position);
+        depth, searcher.context.get_position());
 
     if (trim(jsonFlag) == "json") {
         print_json(result);
