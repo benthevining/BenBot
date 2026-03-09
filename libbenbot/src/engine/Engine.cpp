@@ -71,35 +71,26 @@ auto Engine::create_move_format_option() -> uci::ComboOption
 
 void Engine::new_game(const bool firstCall)
 {
-    if (not firstCall) {
-        searcher.context.clear_transposition_table();
-        return;
-    }
-
-    // we use delayed initialization for these callbacks instead of
-    // initializing them in the constructor to avoid referencing the
-    // `this` pointer in the constructor
-    if (prettyPrintMode.get_value()) {
-        searcher.context.callbacks = search::Callbacks::make_pretty_printer(
-            [this](const Move move) { return pretty_print_move(move); });
+    if (firstCall) {
+        // we use delayed initialization for the callbacks instead of
+        // initializing them in the constructor to avoid referencing
+        // the `this` pointer in the constructor
+        set_pretty_printing(prettyPrintMode.get_value());
     } else {
-        searcher.context.callbacks = search::Callbacks::make_uci_printer(
-            [this] noexcept { // cppcheck-suppress syntaxError
-                return debugMode.load(memory_order_relaxed);
-            });
+        searcher.context.clear_transposition_table();
     }
 }
 
 void Engine::set_pretty_printing(const bool shouldPrettyPrint)
 {
-    wait();
-
     if (shouldPrettyPrint) {
-        searcher.context.callbacks = search::Callbacks::make_pretty_printer(
-            [this](const Move move) { return pretty_print_move(move); });
+        searcher.context.set_callbacks(search::Callbacks::make_pretty_printer(
+            [this](const Move move) { return pretty_print_move(move); }));
     } else {
-        searcher.context.callbacks = search::Callbacks::make_uci_printer(
-            [this] noexcept { return debugMode.load(memory_order_relaxed); });
+        searcher.context.set_callbacks(search::Callbacks::make_uci_printer(
+            [this] noexcept { // cppcheck-suppress syntaxError
+                return debugMode.load(memory_order_relaxed);
+            }));
     }
 }
 

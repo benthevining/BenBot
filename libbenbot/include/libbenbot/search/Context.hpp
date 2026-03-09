@@ -58,9 +58,6 @@ struct Context final {
      */
     TranspositionTable transTable;
 
-    /** The callbacks used to provide results about the search. */
-    Callbacks callbacks;
-
     /** Performs a search.
         Results will be propagated via the ``callbacks`` that have been
         assigned.
@@ -108,7 +105,7 @@ struct Context final {
      */
     void ponder_hit() noexcept { pondering.store(false, std::memory_order::release); }
 
-    /** Sets the position to be searched by the next ``start()``.
+    /** Sets the position to be searched by the next search.
         If a search is in progress, this function blocks until it completes.
      */
     void set_position(const Position& pos)
@@ -120,7 +117,7 @@ struct Context final {
         options.movesToSearch.clear();
     }
 
-    /** Sets the options to be used by the next ``start()``.
+    /** Sets the options to be used by the next search.
         If a search is in progress, this function blocks until it completes.
      */
     void set_options(const Options& opts)
@@ -129,13 +126,22 @@ struct Context final {
         options = opts;
     }
 
-    /** Sets the options to be used by the next ``start()``.
+    /** Sets the options to be used by the next search.
         If a search is in progress, this function blocks until it completes.
      */
     void set_options(const chess::uci::GoCommandOptions& opts)
     {
         wait();
         options = Options::from_libchess(opts, position.is_white_to_move());
+    }
+
+    /** Sets the result callbacks that will be used for the next search.
+        If a search is in progress, this function blocks until it completes.
+     */
+    void set_callbacks(Callbacks&& callbacksToUse)
+    {
+        wait();
+        callbacks = std::move(callbacksToUse);
     }
 
     /** Returns the current position. */
@@ -153,6 +159,8 @@ private:
     std::atomic_bool pondering { false };
 
     KillerMoves killerMoves;
+
+    Callbacks callbacks;
 };
 
 } // namespace ben_bot::search
