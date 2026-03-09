@@ -57,7 +57,8 @@ void EngineBase::handle_command(string_view command)
 
     if (command == "isready") {
         // reply immediately if search is in progress
-        if (is_searching())
+        // if not searching, wait on any background tasks before replying
+        if (not is_searching())
             wait();
 
         println(cout, "readyok");
