@@ -10,7 +10,7 @@
 #
 # ======================================================================================
 
-find_package (Doxygen OPTIONAL_COMPONENTS dot)
+find_package (Doxygen 1.16.1 OPTIONAL_COMPONENTS dot)
 
 add_feature_info (benbot_docs DOXYGEN_FOUND "Building BenBot docs with Doxygen")
 
