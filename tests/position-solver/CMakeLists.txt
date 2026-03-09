@@ -44,8 +44,10 @@ foreach (epd_file IN LISTS testcase_files)
         )
 
         set_tests_properties (
-            "${test_name}" PROPERTIES ATTACHED_FILES_ON_FAIL "${engine_log}" RESOURCE_LOCK
-                                      BenBotPositionSolver
+            "${test_name}"
+            PROPERTIES ATTACHED_FILES_ON_FAIL "${engine_log}" RESOURCE_LOCK BenBotPositionSolver
+                       # allow 5 minutes after the go command is received
+                       TIMEOUT_AFTER_MATCH "300;: << go"
         )
 
         set_property (DIRECTORY APPEND PROPERTY ADDITIONAL_CLEAN_FILES "${engine_log}")

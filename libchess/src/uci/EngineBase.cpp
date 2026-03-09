@@ -57,6 +57,7 @@ void EngineBase::handle_command(string_view command)
 
     if (command == "isready") {
         // reply immediately if search is in progress
+        // if not searching, wait on any background tasks before replying
         if (not is_searching())
             wait();
 
@@ -66,7 +67,7 @@ void EngineBase::handle_command(string_view command)
     }
 
     if (command == "ucinewgame") { // isready will be queried after this
-        new_game(! initialized);
+        new_game(not initialized);
         initialized = true;
         return;
     }
