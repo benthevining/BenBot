@@ -15,7 +15,7 @@
 #include <algorithm>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <functional>
-#include <libchess/util/TextTable.hpp>
+#include <libutil/TextTable.hpp>
 #include <numeric>
 #include <ranges>
 #include <span>

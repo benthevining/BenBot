@@ -21,7 +21,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <filesystem>
 #include <libbenbot/Resources.hpp>
-#include <libchess/util/Files.hpp>
+#include <libutil/Files.hpp>
 #include <string_view>
 
 inline constexpr auto TAGS { "[util][files]" };

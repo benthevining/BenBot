@@ -23,8 +23,8 @@
 #include <libbenbot/search/Result.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/uci/Printing.hpp>
-#include <libchess/util/Chrono.hpp>
-#include <libchess/util/Variant.hpp>
+#include <libutil/Chrono.hpp>
+#include <libutil/Variant.hpp>
 #include <optional>
 #include <ratio>
 #include <span>

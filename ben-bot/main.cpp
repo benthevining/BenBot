@@ -22,7 +22,7 @@
 #include <iterator>
 #include <libbenbot/engine/Engine.hpp>
 #include <libchess/uci/Printing.hpp>
-#include <libchess/util/Console.hpp>
+#include <libutil/Console.hpp>
 #include <span>
 #include <string>
 #include <string_view>

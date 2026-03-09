@@ -22,7 +22,7 @@
 #include <libchess/moves/Move.hpp>
 #include <libchess/notation/ICCF.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
-#include <libchess/util/Strings.hpp>
+#include <libutil/Strings.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <optional>
 #include <string>

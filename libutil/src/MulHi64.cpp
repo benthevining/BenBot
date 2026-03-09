@@ -12,7 +12,7 @@
  * ======================================================================================
  */
 
-#include <libchess/util/Math.hpp>
+#include <libutil/Math.hpp>
 
 #ifdef __SIZEOF_INT128__
 

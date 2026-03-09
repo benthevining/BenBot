@@ -12,73 +12,43 @@
  * ======================================================================================
  */
 
-#include <exception>
-#include <expected>
-#include <filesystem>
-#include <format>
-#include <fstream>
-#include <ios>
-#include <iterator>
-#include <libchess/util/Files.hpp>
-#include <string>
-#include <string_view>
+#include "DetectArch.hpp" // NOLINT(build/include_subdir)
+#include <libutil/Memory.hpp>
 
-namespace chess::util {
+#ifdef LIBCHESS_INTEL
 
-using std::string;
+#    include <mmintrin.h>
+#    include <xmmintrin.h>
 
-auto load_file_as_string(
-    const std::filesystem::path& file)
-    -> std::expected<string, string>
+namespace chess::util::memory {
+
+void prefetch(const void* mem)
 {
-    std::ifstream input { absolute(file) };
-
-    if (not input.is_open()) {
-        return std::unexpected { std::format(
-            "Could not open file for reading at path '{}'",
-            file.string()) };
-    }
-
-    try {
-        input.exceptions(
-            std::ios_base::badbit | std::ios_base::failbit);
-
-        using Iterator = std::istreambuf_iterator<char>;
-
-        return string { Iterator { input }, Iterator { } };
-    } catch (const std::exception& exception) {
-        return std::unexpected { std::format(
-            "Error while reading file at path '{}': {}",
-            file.string(), exception.what()) };
-    }
+    _mm_prefetch(static_cast<const char*>(mem), _MM_HINT_T0);
 }
 
-auto overwrite_file(
-    const std::filesystem::path& file, const std::string_view text)
-    -> std::expected<void, std::string>
+} // namespace chess::util::memory
+
+#elif defined(__has_builtin) and __has_builtin(__builtin_prefetch)
+
+namespace chess::util::memory {
+
+void prefetch(const void* mem)
 {
-    std::ofstream output { absolute(file) };
-
-    if (not output.is_open()) {
-        return std::unexpected { std::format(
-            "Could not open file for writing at path '{}'",
-            file.string()) };
-    }
-
-    try {
-        output.exceptions(
-            std::ios_base::badbit | std::ios_base::failbit);
-
-        output << text;
-
-        return { };
-    } catch (const std::exception& exception) {
-        return std::unexpected {
-            std::format(
-                "Error while writing file at path '{}': {}",
-                file.string(), exception.what())
-        };
-    }
+    __builtin_prefetch(mem);
 }
 
-} // namespace chess::util
+} // namespace chess::util::memory
+
+#else
+
+namespace chess::util::memory {
+
+void prefetch([[maybe_unused]] const void* mem)
+{
+#    warning "No implementation of prefetch available"
+}
+
+} // namespace chess::util::memory
+
+#endif

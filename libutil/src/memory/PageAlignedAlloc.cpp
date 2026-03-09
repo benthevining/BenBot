@@ -12,43 +12,31 @@
  * ======================================================================================
  */
 
-#include "util/DetectArch.hpp" // IWYU pragma: keep
-#include <libchess/util/Memory.hpp>
+#include <cstddef> // IWYU pragma: keep - for size_t
+#include <libutil/Memory.hpp>
+#include <utility>
 
-#ifdef LIBCHESS_INTEL
-
-#    include <mmintrin.h>
-#    include <xmmintrin.h>
-
-namespace chess::util::memory {
-
-void prefetch(const void* mem)
-{
-    _mm_prefetch(static_cast<const char*>(mem), _MM_HINT_T0);
-}
-
-} // namespace chess::util::memory
-
-#elif defined(__has_builtin) and __has_builtin(__builtin_prefetch)
-
-namespace chess::util::memory {
-
-void prefetch(const void* mem)
-{
-    __builtin_prefetch(mem);
-}
-
-} // namespace chess::util::memory
-
+#ifdef _WIN32
+#    include "PageAlignedAlloc_Windows.hpp"
 #else
+#    include "PageAlignedAlloc_Posix.hpp"
+#endif
 
 namespace chess::util::memory {
 
-void prefetch([[maybe_unused]] const void* mem)
+auto page_aligned_alloc(const std::size_t size) -> void*
 {
-#    warning "No implementation of prefetch available"
+    if (std::cmp_equal(size, 0)) {
+        [[unlikely]];
+        return nullptr;
+    }
+
+    return page_aligned_alloc_impl(size);
+}
+
+void page_aligned_free([[clang::noescape]] void* mem)
+{
+    page_aligned_free_impl(mem);
 }
 
 } // namespace chess::util::memory
-
-#endif

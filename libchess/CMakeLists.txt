@@ -33,7 +33,9 @@ add_library (libchess STATIC)
 
 target_compile_features (libchess PUBLIC cxx_std_23)
 
-target_link_libraries (libchess PUBLIC magic_enum::magic_enum beman::inplace_vector)
+target_link_libraries (
+    libchess PUBLIC magic_enum::magic_enum beman::inplace_vector ben_bot::libutil
+)
 
 set_target_properties (
     libchess PROPERTIES CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN ON
@@ -59,13 +61,6 @@ target_sources (
 )
 
 target_include_directories (libchess PRIVATE "${CMAKE_CURRENT_LIST_DIR}/src/")
-
-set (memory_src_dir "${CMAKE_CURRENT_LIST_DIR}/src/util/memory")
-
-set_property (
-    SOURCE "${memory_src_dir}/PageAlignedAlloc.cpp" APPEND PROPERTY INCLUDE_DIRECTORIES
-                                                                    "${memory_src_dir}"
-)
 
 source_group (TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${libchess_headers} ${libchess_sources})
 

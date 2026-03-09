@@ -13,7 +13,7 @@
  */
 
 #include <catch2/catch_test_macros.hpp>
-#include <libchess/util/TextTable.hpp>
+#include <libutil/TextTable.hpp>
 #include <string>
 #include <string_view>
 

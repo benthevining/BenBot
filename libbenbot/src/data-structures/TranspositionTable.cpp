@@ -29,8 +29,8 @@
 #include <libbenbot/eval/Score.hpp>
 #include <libbenbot/search/Bounds.hpp>
 #include <libchess/game/Position.hpp>
-#include <libchess/util/Math.hpp>
-#include <libchess/util/Memory.hpp>
+#include <libutil/Math.hpp>
+#include <libutil/Memory.hpp>
 #include <memory>
 #include <new>
 #include <numeric>

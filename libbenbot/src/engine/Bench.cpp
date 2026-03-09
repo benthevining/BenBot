@@ -29,10 +29,10 @@
 #include <libbenbot/search/Thread.hpp>
 #include <libchess/notation/EPD.hpp>
 #include <libchess/uci/Printing.hpp>
-#include <libchess/util/Chrono.hpp>
-#include <libchess/util/Files.hpp>
-#include <libchess/util/Strings.hpp>
-#include <libchess/util/Threading.hpp>
+#include <libutil/Chrono.hpp>
+#include <libutil/Files.hpp>
+#include <libutil/Strings.hpp>
+#include <libutil/Threading.hpp>
 #include <memory>
 #include <numeric>
 #include <ranges>

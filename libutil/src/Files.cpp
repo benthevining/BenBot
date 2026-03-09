@@ -12,31 +12,73 @@
  * ======================================================================================
  */
 
-#include <cstddef> // IWYU pragma: keep - for size_t
-#include <libchess/util/Memory.hpp>
-#include <utility>
+#include <exception>
+#include <expected>
+#include <filesystem>
+#include <format>
+#include <fstream>
+#include <ios>
+#include <iterator>
+#include <libutil/Files.hpp>
+#include <string>
+#include <string_view>
 
-#ifdef _WIN32
-#    include "PageAlignedAlloc_Windows.hpp"
-#else
-#    include "PageAlignedAlloc_Posix.hpp"
-#endif
+namespace chess::util {
 
-namespace chess::util::memory {
+using std::string;
 
-auto page_aligned_alloc(const std::size_t size) -> void*
+auto load_file_as_string(
+    const std::filesystem::path& file)
+    -> std::expected<string, string>
 {
-    if (std::cmp_equal(size, 0)) {
-        [[unlikely]];
-        return nullptr;
+    std::ifstream input { absolute(file) };
+
+    if (not input.is_open()) {
+        return std::unexpected { std::format(
+            "Could not open file for reading at path '{}'",
+            file.string()) };
     }
 
-    return page_aligned_alloc_impl(size);
+    try {
+        input.exceptions(
+            std::ios_base::badbit | std::ios_base::failbit);
+
+        using Iterator = std::istreambuf_iterator<char>;
+
+        return string { Iterator { input }, Iterator { } };
+    } catch (const std::exception& exception) {
+        return std::unexpected { std::format(
+            "Error while reading file at path '{}': {}",
+            file.string(), exception.what()) };
+    }
 }
 
-void page_aligned_free([[clang::noescape]] void* mem)
+auto overwrite_file(
+    const std::filesystem::path& file, const std::string_view text)
+    -> std::expected<void, std::string>
 {
-    page_aligned_free_impl(mem);
+    std::ofstream output { absolute(file) };
+
+    if (not output.is_open()) {
+        return std::unexpected { std::format(
+            "Could not open file for writing at path '{}'",
+            file.string()) };
+    }
+
+    try {
+        output.exceptions(
+            std::ios_base::badbit | std::ios_base::failbit);
+
+        output << text;
+
+        return { };
+    } catch (const std::exception& exception) {
+        return std::unexpected {
+            std::format(
+                "Error while writing file at path '{}': {}",
+                file.string(), exception.what())
+        };
+    }
 }
 
-} // namespace chess::util::memory
+} // namespace chess::util

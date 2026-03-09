@@ -19,8 +19,8 @@
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/UCI.hpp>
 #include <libchess/uci/Printing.hpp>
-#include <libchess/util/Chrono.hpp>
-#include <libchess/util/Variant.hpp>
+#include <libutil/Chrono.hpp>
+#include <libutil/Variant.hpp>
 #include <optional>
 #include <print>
 #include <span>

@@ -23,8 +23,8 @@
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/MoveFormats.hpp>
 #include <libchess/uci/Printing.hpp>
-#include <libchess/util/Strings.hpp>
-#include <libchess/util/TextTable.hpp>
+#include <libutil/Strings.hpp>
+#include <libutil/TextTable.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <print>
 #include <string>

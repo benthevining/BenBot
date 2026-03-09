@@ -24,7 +24,7 @@
 #include <libchess/notation/Algebraic.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/PGN.hpp>
-#include <libchess/util/Strings.hpp>
+#include <libutil/Strings.hpp>
 #include <numeric>
 #include <optional>
 #include <ranges>

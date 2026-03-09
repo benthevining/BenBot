@@ -12,9 +12,9 @@
  * ======================================================================================
  */
 
-#include "util/DetectArch.hpp" // IWYU pragma: keep
+#include "DetectArch.hpp" // NOLINT(build/include_subdir)
 #include <functional>
-#include <libchess/util/Threading.hpp>
+#include <libutil/Threading.hpp>
 #include <thread>
 
 #ifdef LIBCHESS_ARM

@@ -24,9 +24,9 @@
 #include <libchess/notation/MoveFormats.hpp>
 #include <libchess/uci/Options.hpp>
 #include <libchess/uci/Printing.hpp>
-#include <libchess/util/Files.hpp>
-#include <libchess/util/Logger.hpp>
-#include <libchess/util/Variant.hpp>
+#include <libutil/Files.hpp>
+#include <libutil/Logger.hpp>
+#include <libutil/Variant.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <nlohmann/json.hpp>
 #include <ranges>

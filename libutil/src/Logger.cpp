@@ -19,7 +19,7 @@
 #include <functional>
 #include <ios>
 #include <iostream>
-#include <libchess/util/Logger.hpp>
+#include <libutil/Logger.hpp>
 #include <streambuf>
 #include <string>
 #include <string_view>

@@ -17,7 +17,7 @@
 #include <expected>
 #include <format>
 #include <libchess/notation/EPD.hpp>
-#include <libchess/util/Strings.hpp>
+#include <libutil/Strings.hpp>
 #include <ranges>
 #include <string>
 #include <string_view>

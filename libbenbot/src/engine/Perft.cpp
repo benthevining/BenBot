@@ -19,7 +19,7 @@
 #include <libchess/moves/Move.hpp>
 #include <libchess/moves/Perft.hpp>
 #include <libchess/uci/Printing.hpp>
-#include <libchess/util/Strings.hpp>
+#include <libutil/Strings.hpp>
 #include <nlohmann/json.hpp>
 #include <print>
 #include <string>

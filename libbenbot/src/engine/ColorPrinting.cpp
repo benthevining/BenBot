@@ -18,8 +18,8 @@
 #include <libbenbot/engine/ColorPrinting.hpp>
 #include <libbenbot/engine/Engine.hpp>
 #include <libchess/game/Position.hpp>
-#include <libchess/util/Strings.hpp>
-#include <libchess/util/TextTable.hpp>
+#include <libutil/Strings.hpp>
+#include <libutil/TextTable.hpp>
 #include <ranges>
 #include <string_view>
 #include <termcolor/termcolor.hpp>

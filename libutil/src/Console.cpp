@@ -12,7 +12,7 @@
  * ======================================================================================
  */
 
-#include <libchess/util/Console.hpp>
+#include <libutil/Console.hpp>
 
 #ifdef _WIN32
 

@@ -16,7 +16,7 @@
 #include <cassert>
 #include <format>
 #include <libchess/uci/Options.hpp>
-#include <libchess/util/Strings.hpp>
+#include <libutil/Strings.hpp>
 #include <string>
 #include <string_view>
 #include <utility>

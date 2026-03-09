@@ -40,7 +40,7 @@
 #include <libbenbot/search/Result.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
-#include <libchess/util/Threading.hpp>
+#include <libutil/Threading.hpp>
 #include <optional>
 #include <utility>
 

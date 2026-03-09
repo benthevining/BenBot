@@ -14,7 +14,7 @@
 
 #include <atomic>
 #include <libbenbot/search/Thread.hpp>
-#include <libchess/util/Threading.hpp>
+#include <libutil/Threading.hpp>
 #include <utility>
 
 namespace ben_bot::search {

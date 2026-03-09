@@ -22,7 +22,7 @@
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/UCI.hpp>
 #include <libchess/uci/CommandParsing.hpp>
-#include <libchess/util/Strings.hpp>
+#include <libutil/Strings.hpp>
 #include <optional>
 #include <stdexcept>
 #include <string>
