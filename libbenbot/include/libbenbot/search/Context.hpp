@@ -25,6 +25,7 @@
 #include <libbenbot/search/Callbacks.hpp>
 #include <libbenbot/search/Options.hpp>
 #include <libchess/game/Position.hpp>
+#include <optional>
 #include <utility>
 
 namespace ben_bot::search {
@@ -53,11 +54,6 @@ struct Context final {
     Context(Context&&)            = delete;
     Context& operator=(Context&&) = delete;
 
-    /** The transposition table used for this search.
-        This object's methods can only be safely called when no search is executing.
-     */
-    TranspositionTable transTable;
-
     /** Performs a search.
         Results will be propagated via the ``callbacks`` that have been
         assigned.
@@ -78,12 +74,27 @@ struct Context final {
 
     /** Clears the transposition table.
         If a search is in progress, this method blocks until it returns.
-        Invoking this method is thread-safe, even if a search was in progress.
      */
     void clear_transposition_table()
     {
         wait();
         transTable.clear();
+    }
+
+    /** Resizes the transposition table.
+        If a search is in progress, this method blocks until it returns.
+     */
+    void resize_transposition_table(size_t sizeMB)
+    {
+        wait();
+        transTable.resize(sizeMB);
+    }
+
+    /** Probes the transposition table for the given position. */
+    [[nodiscard]] auto probe_transposition_table(const Position& pos) const
+        -> std::optional<TTData>
+    {
+        return transTable.find(pos);
     }
 
     /** Returns true if a search is currently in progress. */
@@ -148,19 +159,21 @@ struct Context final {
     [[nodiscard]] auto get_position() const noexcept -> const Position& { return position; }
 
 private:
-    Position position;
-
-    Options options;
-
     std::atomic_bool exitFlag { false };
 
     std::atomic_bool activeFlag { false };
 
     std::atomic_bool pondering { false };
 
-    KillerMoves killerMoves;
+    Position position;
+
+    Options options;
 
     Callbacks callbacks;
+
+    TranspositionTable transTable;
+
+    KillerMoves killerMoves;
 };
 
 } // namespace ben_bot::search

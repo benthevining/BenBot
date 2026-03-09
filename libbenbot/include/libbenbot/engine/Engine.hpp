@@ -126,8 +126,7 @@ private:
         1, 2048, 16,
         "Sets the maximum transposition table size (in MB).",
         [this](const int sizeMB) {
-            wait();
-            searcher.context.transTable.resize(
+            searcher.context.resize_transposition_table(
                 static_cast<size_t>(sizeMB));
         }
     };

@@ -149,8 +149,7 @@ void Engine::print_current_position(const string_view arguments) const
 
     print_labeled_info("Static eval: ", std::format("{}", eval::evaluate(pos)));
 
-    searcher.context.transTable
-        .find(pos)
+    searcher.context.probe_transposition_table(pos)
         .transform([this](const TTData& data) {
             print_labeled_info(
                 "TT hit: ",
