@@ -44,4 +44,5 @@ list (
     "chess::util::Visitor<"
     # warnings about std::getenv() being deprecated/thread-unsafe
     "main.cpp.+getenv"
+    "note: 'getenv' has been explicitly marked deprecated here"
 )
