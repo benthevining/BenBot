@@ -142,7 +142,13 @@ private:
     uci::BoolOption ponder {
         "Ponder",
         false,
-        "Controls whether pondering is allowed."
+        "Controls whether pondering is allowed.",
+        [this](const bool shouldPonder) {
+            // the ponder flag is only ever turned on via the go options,
+            // but it can be turned off by disabling this UCI option
+            if (not shouldPonder)
+                searcher.context.set_pondering(false);
+        }
     };
 
     uci::IntOption threads {

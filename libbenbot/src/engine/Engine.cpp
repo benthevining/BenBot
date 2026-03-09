@@ -97,15 +97,16 @@ void Engine::set_pretty_printing(const bool shouldPrettyPrint)
 
 void Engine::go(const uci::GoCommandOptions& opts)
 {
-    searcher.context.set_pondering(
-        opts.ponderMode and ponder.get_value());
-
     auto newOpts = search::Options::from_libchess(
         opts, searcher.context.get_position().is_white_to_move());
 
     newOpts.moveOverhead = std::chrono::milliseconds { moveOverhead.get_value() };
 
     searcher.context.set_options(newOpts);
+
+    searcher.context.set_pondering(
+        opts.ponderMode and ponder.get_value());
+
     searcher.start();
 }
 
