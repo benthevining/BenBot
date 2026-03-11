@@ -52,7 +52,10 @@ auto mul_hi64(
 {
     __extension__ using uint128_t = unsigned __int128;
 
-    return (static_cast<uint128_t>(first) * static_cast<uint128_t>(second)) >> UINT64_C(64);
+    const uint128_t prod = static_cast<uint128_t>(first) * static_cast<uint128_t>(second);
+
+    return static_cast<uint64_t>(
+        prod >> static_cast<uint128_t>(64));
 }
 
 } // namespace util::math
