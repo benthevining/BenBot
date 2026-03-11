@@ -35,7 +35,7 @@ if (MSVC)
     return ()
 endif ()
 
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|[Cc]lang")
     add_compile_options (
         -pedantic
         -pedantic-errors
@@ -73,7 +73,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     )
 endif ()
 
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+if (CMAKE_CXX_COMPILER_ID MATCHES "[Cc]lang")
     add_compile_options (
         --extra-warnings
         -fcolor-diagnostics

@@ -42,7 +42,7 @@ set_target_properties (
                         VERIFY_INTERFACE_HEADER_SETS ON
 )
 
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+if (CMAKE_CXX_COMPILER_ID MATCHES "[Cc]lang")
     # needed for declaring large array of Zobrist keys
     set_property (SOURCE src/game/Zobrist.cpp APPEND PROPERTY COMPILE_OPTIONS -fbracket-depth=767)
 endif ()
