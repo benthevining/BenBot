@@ -87,13 +87,11 @@ if (HAVE_cxx_fprofile_abs_path)
     add_compile_options ("$<${config_debug}:-fprofile-abs-path>")
 endif ()
 
-#[[
 check_cxx_compiler_flag (-fprofile-update=atomic HAVE_cxx_fprofile_update_atomic)
 
 if (HAVE_cxx_fprofile_update_atomic)
     add_compile_options ("$<${config_debug}:-fprofile-update=atomic>")
 endif ()
-]]
 
 check_cxx_compiler_flag (-fprofile-arcs HAVE_cxx_fprofile_arcs)
 
@@ -103,11 +101,9 @@ endif ()
 
 check_cxx_compiler_flag (-ftest-coverage HAVE_cxx_ftest_coverage)
 
-#[[
 if (HAVE_cxx_ftest_coverage)
     add_compile_options ("$<${config_debug}:-ftest-coverage>")
 endif ()
-]]
 
 if (CMAKE_CXX_COMPILER MATCHES "GNU")
     link_libraries (gcov)
