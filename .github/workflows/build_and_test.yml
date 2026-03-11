@@ -94,7 +94,7 @@ jobs:
       # TODO: ensure install of runtime libraries for sanitizers, set LD_LIBRARY_PATH
     - name: Ensure Clang version
       if: runner.os == 'Linux' && matrix.preset == 'clang'
-      uses: aminya/setup-cpp@v1.8.0
+      uses: aminya/setup-cpp@1f17f92d6a52bfcb1a25348e2c526c2e5cbb1134 # v1.8.0
       with:
         llvm: 21
         clang: 21
