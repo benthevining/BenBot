@@ -53,14 +53,20 @@ repos:
   - id: check-useless-excludes
     always_run: true
 
+  # sync additional-dependencies version with repo rev where relevant
+- repo: https://github.com/pre-commit/sync-pre-commit-deps
+  rev: v0.0.3
+  hooks:
+  - id: sync-pre-commit-deps
+
     # local scripts
 - repo: local
   hooks:
       # create build directory for cppcheck & logs directory
   - id: cppcheck-build-dir
     name: Create cache dir for cppcheck
-    entry: cmake -E make_directory Builds/cppcheck/ logs/
     language: system
+    entry: cmake -E make_directory Builds/cppcheck/ logs/
     always_run: true
     pass_filenames: false
 
@@ -105,7 +111,7 @@ repos:
     additional_dependencies: [cppcheck>=1.5.1]
   - id: cpplint
     args: [--verbose=0]
-    additional_dependencies: [cpplint]
+    additional_dependencies: [cpplint>=2.0.2]
 
     # CMake formatting & linting
 - repo: https://github.com/cheshirekow/cmake-format-precommit
@@ -149,10 +155,17 @@ repos:
   hooks:
   - id: format_justfile
     name: Autoformat justfile
-    entry: just --fmt --unstable
     language: system
+    entry: just --fmt --unstable
     files: justfile
     pass_filenames: false
+  - id: pin_github_actions
+    name: Pin GitHub Action dependencies to commit hashes
+    language: system
+    entry: pin-github-action
+    args: [--continue-on-error]
+    files: .github/workflows/
+    types: [yaml]
 
     # general
 - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -202,6 +215,7 @@ repos:
   hooks:
   - id: md-dead-link-check
     args: [--config, config/link-checker.toml]
+    always_run: true
 
     # check editorconfig rules
 - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
@@ -228,5 +242,4 @@ repos:
 ci:
   autofix_commit_msg: 'chore: pre-commit autofix'
   autoupdate_commit_msg: 'chore(deps): pre-commit autoupdate'
-  # just & hadolint executables won't be present in CI, and CI hooks can't connect to the internet
-  skip: [hadolint, format_justfile, check-jsonschema, md-dead-link-check]
+  skip: [hadolint, format_justfile, pin_github_actions, check-jsonschema, md-dead-link-check]
