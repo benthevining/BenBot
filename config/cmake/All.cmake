@@ -34,3 +34,12 @@ list (JOIN debug_configs "," debug_configs)
 
 set (CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:${debug_configs}>:Debug>" CACHE STRING "")
 endblock ()
+
+# Enhance error reporting and compiler messages
+if (CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
+    add_compile_options (-fcolor-diagnostics)
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    add_compile_options (-fdiagnostics-color=always)
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC" AND MSVC_VERSION GREATER 1900)
+    add_compile_options (/diagnostics:column)
+endif ()
