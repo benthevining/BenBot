@@ -76,15 +76,27 @@ if (MSVC)
     return ()
 endif ()
 
-add_compile_options ("$<${config_debug}:-g;-O0;--coverage;-fprofile-arcs;-ftest-coverage>")
-add_link_options ("$<${config_debug}:--coverage>")
+add_compile_options ("$<${config_debug}:-g;--coverage>")
+# add_link_options ("$<${config_debug}:--coverage>")
 
-if (CMAKE_C_COMPILER_ID MATCHES "Clang")
-    add_compile_options (
-        "$<${config_debug}:-ftest-coverage;-fprofile-instr-generate;-fcoverage-mapping>"
-    )
-elseif (CMAKE_C_COMPILER_ID MATCHES "GNU")
+include (CheckCXXCompilerFlag)
+
+check_cxx_compiler_flag (-fprofile-abs-path HAVE_cxx_fprofile_abs_path)
+
+if (HAVE_cxx_fprofile_abs_path)
     add_compile_options ("$<${config_debug}:-fprofile-abs-path>")
+endif ()
+
+check_cxx_compiler_flag (-fprofile-update=atomic HAVE_cxx_fprofile_update_atomic)
+
+if (HAVE_cxx_fprofile_update_atomic)
+    add_compile_options ("$<${config_debug}:-fprofile-update=atomic>")
+endif ()
+
+# -fprofile-arcs -ftest-coverage
+
+if (CMAKE_CXX_COMPILER MATCHES "GNU")
+    link_libraries (gcov)
 endif ()
 
 # add custom target to clean old coverage output
