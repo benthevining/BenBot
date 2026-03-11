@@ -76,18 +76,15 @@ if (MSVC)
     return ()
 endif ()
 
-add_compile_options ("$<${config_debug}:--coverage>")
+add_compile_options ("$<${config_debug}:-g;-O0;--coverage;-fprofile-arcs;-ftest-coverage>")
 add_link_options ("$<${config_debug}:--coverage>")
-
-if (APPLE)
-    add_compile_options ("$<${config_debug}:-fprofile-arcs>")
-    add_link_options ("$<${config_debug}:-fprofile-arcs>")
-endif ()
 
 if (CMAKE_C_COMPILER_ID MATCHES "Clang")
     add_compile_options (
         "$<${config_debug}:-ftest-coverage;-fprofile-instr-generate;-fcoverage-mapping>"
     )
+elseif (CMAKE_C_COMPILER_ID MATCHES "GNU")
+    add_compile_options ("$<${config_debug}:-fprofile-abs-path>")
 endif ()
 
 # add custom target to clean old coverage output
