@@ -43,12 +43,14 @@ namespace {
 
 void Engine::print_logo_and_version() const
 {
-    const auto logoLines = get_at_most_n_lines<11uz>(resources::get_ascii_logo());
+    static constexpr auto NumLogoLines = 11uz;
+
+    const auto logoLines = get_at_most_n_lines<NumLogoLines>(resources::get_ascii_logo());
 
     cout << termcolor::grey << logoLines.front() << '\n'
          << termcolor::blue;
 
-    for (const auto line : logoLines | std::views::drop(1) | std::views::take(logoLines.capacity() - 2uz))
+    for (const auto line : logoLines | std::views::drop(1) | std::views::take(NumLogoLines - 2uz))
         cout << line << '\n';
 
     cout << termcolor::grey << logoLines.back() << "\n\n"
@@ -91,9 +93,11 @@ void print_colored_board(
 {
     const auto boardStr = utf8 ? print_utf8(pos) : print_ascii(pos);
 
-    const auto lines = get_at_most_n_lines<9uz>(boardStr);
+    static constexpr auto BoardLines = 9uz;
 
-    for (const auto line : lines | std::views::take(lines.capacity() - 1uz)) {
+    const auto lines = get_at_most_n_lines<BoardLines>(boardStr);
+
+    for (const auto line : lines | std::views::take(BoardLines - 1uz)) {
         cout << line.substr(0uz, line.length() - 1uz)
              << termcolor::white << line.back() << '\n'
              << termcolor::reset;

@@ -110,7 +110,7 @@ namespace {
         {
         }
 
-        AlphaBetaContext(const AlphaBetaContext&)            = delete;
+        AlphaBetaContext(const AlphaBetaContext&)            = default;
         AlphaBetaContext& operator=(const AlphaBetaContext&) = delete;
 
         template <bool PVNode>

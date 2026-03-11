@@ -204,7 +204,7 @@ private:
         },
         CustomCommand {
             .name = "options",
-            .action = [this](const string_view args){ print_options(); },
+            .action = CustomCommand::void_cb([this]{ print_options(); }),
             .description = "Dump current UCI option values",
             .argsHelp = {}
         },
