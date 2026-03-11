@@ -36,7 +36,7 @@ set (CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:${debug_configs}>:Debug
 endblock ()
 
 # Enhance error reporting and compiler messages
-if (CMAKE_CXX_COMPILER_ID MATCHES "[Cc]lang")
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options (-fcolor-diagnostics)
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     add_compile_options (-fdiagnostics-color=always)

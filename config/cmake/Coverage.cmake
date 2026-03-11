@@ -14,7 +14,7 @@
 
 include_guard (GLOBAL)
 
-if (CMAKE_CXX_COMPILER MATCHES "GNU|[Cc]lang")
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     get_cmake_property (debug_configs DEBUG_CONFIGURATIONS)
 
     if (NOT debug_configs)
@@ -28,7 +28,9 @@ if (CMAKE_CXX_COMPILER MATCHES "GNU|[Cc]lang")
     add_compile_options ("$<${config_debug}:-g;-O0;--coverage>")
     add_link_options ("$<${config_debug}:--coverage>")
 
-    if (CMAKE_CXX_COMPILER MATCHES "GNU")
+    if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
         link_libraries (gcov)
     endif ()
+
+    message (STATUS "Coverage enabled")
 endif ()
