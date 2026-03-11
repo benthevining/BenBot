@@ -32,24 +32,6 @@ set (DOXYGEN_STRIP_FROM_INC_PATH
      "${BenBot_SOURCE_DIR}/ben-bot/include" "${BenBot_SOURCE_DIR}/ben-bot/resources/include"
 )
 
-# generate the engine docs page
-
-set (engine_doc_page "${CMAKE_CURRENT_BINARY_DIR}/engine_docs.txt")
-
-# all files must exist at configure time when using doxygen_add_docs()'s stamp file option
-file (TOUCH "${engine_doc_page}")
-
-set (generator_script "${CMAKE_CURRENT_LIST_DIR}/GenerateEngineDocs.cmake")
-
-add_custom_command (
-    OUTPUT "${engine_doc_page}"
-    COMMAND "${CMAKE_COMMAND}" -D "OUTPUT_FILE=${engine_doc_page}" -D
-            "ENGINE_PATH=$<TARGET_FILE:ben_bot::ben_bot>" -P "${generator_script}"
-    DEPENDS ben_bot::ben_bot "${generator_script}" "${CMAKE_CURRENT_LIST_DIR}/engine-docs.txt"
-    COMMENT "Generating engine docs page..."
-    VERBATIM USES_TERMINAL
-)
-
 #
 
 get_target_property (libutil_headers ben_bot::libutil HEADER_SET)
@@ -64,7 +46,6 @@ doxygen_add_docs (
     "${CMAKE_CURRENT_LIST_DIR}/uci-spec.txt"
     "${CMAKE_CURRENT_LIST_DIR}/top-level-groups.txt"
     "${CMAKE_CURRENT_LIST_DIR}/CodeStyle.md"
-    "${engine_doc_page}"
     ${libutil_headers}
     ${libchess_headers}
     ${libbenbot_headers}

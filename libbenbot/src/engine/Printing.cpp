@@ -79,15 +79,8 @@ void Engine::print_help(const string_view args) const
     print_colored_table(table);
 }
 
-void Engine::print_options(const string_view args) const
+void Engine::print_options() const
 {
-    const bool noCurrent = [args] {
-        if (args.empty())
-            return false;
-
-        return trim(args) == "--no-current";
-    }();
-
     println("");
     println("The following UCI options are supported:");
     println("");
@@ -97,10 +90,8 @@ void Engine::print_options(const string_view args) const
     table.append_column("Option")
         .append_column("Type")
         .append_column("Notes")
-        .append_column("Default");
-
-    if (not noCurrent)
-        table.append_column("Current");
+        .append_column("Default")
+        .append_column("Current");
 
     for (const auto* option : options) {
         table.new_row()
@@ -115,22 +106,18 @@ void Engine::print_options(const string_view args) const
                 },
                 option->get_default_value_variant());
 
-            if (not noCurrent) {
-                std::visit(
-                    [&table](auto value) {
-                        table.append_column(std::format("{}", value));
-                    },
-                    option->get_value_variant());
-            }
+            std::visit(
+                [&table](auto value) {
+                    table.append_column(std::format("{}", value));
+                },
+                option->get_value_variant());
         }
     }
 
     print_colored_table(table);
 
     println("");
-
-    if (not noCurrent)
-        println("Debug mode: {}", debugMode.load());
+    println("Debug mode: {}", debugMode.load());
 }
 
 void Engine::print_current_position(const string_view arguments) const

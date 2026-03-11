@@ -98,7 +98,7 @@ private:
 
     void print_logo_and_version() const;
     void print_help(string_view args) const;
-    void print_options(string_view args) const;
+    void print_options() const;
     void print_current_position(string_view arguments) const;
 
     void set_pretty_printing(bool shouldPrettyPrint);
@@ -204,9 +204,9 @@ private:
         },
         CustomCommand {
             .name = "options",
-            .action = [this](const string_view args){ print_options(args); },
+            .action = [this](const string_view args){ print_options(); },
             .description = "Dump current UCI option values",
-            .argsHelp = "[--no-current]"
+            .argsHelp = {}
         },
         CustomCommand {
             .name = "perft",
