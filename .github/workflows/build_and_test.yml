@@ -94,9 +94,10 @@ jobs:
       # TODO: ensure install of runtime libraries for sanitizers, set LD_LIBRARY_PATH
     - name: Ensure Clang version
       if: runner.os == 'Linux' && matrix.preset == 'clang'
-      uses: egor-tensin/setup-clang@471a6f8ef1d449dba8e1a51780e7f943572a3f99 # v2.1
+      uses: aminya/setup-cpp@v1.8.0
       with:
-        version: 21
+        llvm: 21
+        clang: 21
 
     - name: Ensure CMake 4.0
       uses: lukka/get-cmake@f176ccd3f28bda569c43aae4894f06b2435a3375 # v4.2.3

@@ -12,7 +12,7 @@
 
 # Including this module enables some default warnings at directory scope.
 
-include_guard (DIRECTORY)
+include_guard (GLOBAL)
 
 if (MSVC)
     add_compile_options (
