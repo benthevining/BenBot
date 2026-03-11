@@ -77,7 +77,7 @@ if (MSVC)
 endif ()
 
 add_compile_options ("$<${config_debug}:-g;--coverage>")
-# add_link_options ("$<${config_debug}:--coverage>")
+add_link_options ("$<${config_debug}:--coverage>")
 
 include (CheckCXXCompilerFlag)
 
@@ -93,7 +93,17 @@ if (HAVE_cxx_fprofile_update_atomic)
     add_compile_options ("$<${config_debug}:-fprofile-update=atomic>")
 endif ()
 
-# -fprofile-arcs -ftest-coverage
+check_cxx_compiler_flag (-fprofile-arcs HAVE_cxx_fprofile_arcs)
+
+if (HAVE_cxx_fprofile_arcs)
+    add_compile_options ("$<${config_debug}:-fprofile-arcs>")
+endif ()
+
+check_cxx_compiler_flag (-ftest-coverage HAVE_cxx_ftest_coverage)
+
+if (HAVE_cxx_ftest_coverage)
+    add_compile_options ("$<${config_debug}:-ftest-coverage>")
+endif ()
 
 if (CMAKE_CXX_COMPILER MATCHES "GNU")
     link_libraries (gcov)
