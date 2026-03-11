@@ -43,7 +43,7 @@ doxygen_add_docs (
     ben_bot_docs
     "${DOXYGEN_LAYOUT_FILE}"
     "${DOXYGEN_USE_MDFILE_AS_MAINPAGE}"
-    "${CMAKE_CURRENT_LIST_DIR}/uci-spec.txt"
+    "${CMAKE_CURRENT_LIST_DIR}/uci-spec.md"
     "${CMAKE_CURRENT_LIST_DIR}/top-level-groups.txt"
     "${CMAKE_CURRENT_LIST_DIR}/CodeStyle.md"
     ${libutil_headers}
