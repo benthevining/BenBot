@@ -27,7 +27,7 @@ set (CTEST_CUSTOM_MAXIMUM_NUMBER_OF_WARNINGS 100)
 set (slash "[/\\]")
 
 list (APPEND CTEST_CUSTOM_COVERAGE_EXCLUDE @CMAKE_PREFIX_PATH@ "@FETCHCONTENT_BASE_DIR@"
-      "${slash}_deps${slash}"
+      "${slash}_deps${slash}" "tests${slash}"
 )
 
 list (
