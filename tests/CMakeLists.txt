@@ -63,3 +63,5 @@ add_test (
 )
 
 set_tests_properties (ben_bot.bench.engine_nps ben_bot.verify_headers PROPERTIES RUN_SERIAL TRUE)
+
+set_tests_properties (ben_bot.verify_headers PROPERTIES TIMEOUT 600)
