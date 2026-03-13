@@ -12,7 +12,7 @@
 
 # Including this module enables some default warnings at directory scope.
 
-include_guard (DIRECTORY)
+include_guard (GLOBAL)
 
 if (MSVC)
     add_compile_options (
@@ -35,7 +35,7 @@ if (MSVC)
     return ()
 endif ()
 
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     add_compile_options (
         -pedantic
         -pedantic-errors
