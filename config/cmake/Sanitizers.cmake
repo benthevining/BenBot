@@ -62,6 +62,8 @@ function (__add_build_config name flags linkerFlags)
         CMAKE_CXX_FLAGS_${name} CMAKE_C_FLAGS_${name} CMAKE_EXE_LINKER_FLAGS_${name}
         CMAKE_SHARED_LINKER_FLAGS_${name} CMAKE_MODULE_LINKER_FLAGS_${name}
     )
+
+    message (VERBOSE "Added build configuration ${name}")
 endfunction ()
 
 # ASAN
