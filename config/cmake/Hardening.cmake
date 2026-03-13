@@ -12,37 +12,26 @@
 
 include_guard (GLOBAL)
 
-include ("${CMAKE_CURRENT_LIST_DIR}/Sanitizers.cmake")
-include ("${CMAKE_CURRENT_LIST_DIR}/Coverage.cmake")
-include ("${CMAKE_CURRENT_LIST_DIR}/Hardening.cmake")
-include ("${CMAKE_CURRENT_LIST_DIR}/Warnings.cmake")
+if (MSVC)
+    add_compile_options (/sdl /DYNAMICBASE /guard:cf)
+    add_link_options (/NXCOMPAT /CETCOMPAT)
 
-# General settings
-
-set_property (GLOBAL PROPERTY USE_FOLDERS YES)
-
-set_property (
-    GLOBAL PROPERTY REPORT_UNDEFINED_PROPERTIES "${CMAKE_BINARY_DIR}/UndefinedProperties.log"
-)
-
-# MSVC static runtime
-block ()
-get_cmake_property (debug_configs DEBUG_CONFIGURATIONS)
-
-if (NOT debug_configs)
-    set (debug_configs Debug)
+    return ()
 endif ()
 
-list (JOIN debug_configs "," debug_configs)
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    get_cmake_property (debug_configs DEBUG_CONFIGURATIONS)
 
-set (CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:${debug_configs}>:Debug>" CACHE STRING "")
-endblock ()
+    if (NOT debug_configs)
+        set (debug_configs Debug)
+    endif ()
 
-# Enhance error reporting and compiler messages
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    add_compile_options (-fcolor-diagnostics)
-elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    add_compile_options (-fdiagnostics-color=always)
-elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC" AND MSVC_VERSION GREATER 1900)
-    add_compile_options (/diagnostics:column)
+    list (JOIN debug_configs "," debug_configs)
+
+    set (config_debug "$<CONFIG:${debug_configs}>")
+    set (config_release "$<NOT:${config_debug}>")
+
+    add_compile_options ("$<${config_release}:-U_FORTIFY_SOURCE>")
+
+    add_compile_definitions (_GLIBCXX_ASSERTIONS "$<${config_release}:_FORTIFY_SOURCE=3>")
 endif ()
