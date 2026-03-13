@@ -40,7 +40,7 @@ using std::string;
 
     @ingroup notation
  */
-enum NAG : std::uint_least8_t {  // NOLINT(cppcoreguidelines-use-enum-class)
+enum class NAG : std::uint_least8_t {
     Null                   = 0,  ///< A null annotation. Provided for usage as a placeholder value; should not appear in PGN files and has no typographic representation.
     Good                   = 1,  ///< A good move, typically displayed as ``!``.
     Brilliant              = 3,  ///< A brilliant move, typically displayed as ``!!``.
