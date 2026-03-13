@@ -14,6 +14,7 @@ include_guard (GLOBAL)
 
 include ("${CMAKE_CURRENT_LIST_DIR}/Sanitizers.cmake")
 include ("${CMAKE_CURRENT_LIST_DIR}/Coverage.cmake")
+include ("${CMAKE_CURRENT_LIST_DIR}/Hardening.cmake")
 include ("${CMAKE_CURRENT_LIST_DIR}/Warnings.cmake")
 
 # General settings

@@ -18,6 +18,10 @@ target_link_libraries (ben_bot PRIVATE ben_bot::libbenbot)
 
 add_executable (ben_bot::ben_bot ALIAS ben_bot)
 
+if (MSVC)
+    target_compile_definitions (ben_bot PRIVATE _CRT_SECURE_NO_WARNINGS)
+endif ()
+
 #
 
 include (CheckIPOSupported)

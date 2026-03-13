@@ -10,51 +10,47 @@
 #
 # ======================================================================================
 
-check_python_modules_available (deps_available chess.engine)
+include_guard (GLOBAL)
 
-add_feature_info (benbot_pos_solver_testing deps_available "BenBot position solver testing")
+if (MSVC)
+    add_compile_options (/sdl /DYNAMICBASE /guard:cf)
+    add_link_options (/NXCOMPAT /CETCOMPAT)
 
-if (NOT deps_available)
     return ()
 endif ()
 
-file (GLOB testcase_files LIST_DIRECTORIES false CONFIGURE_DEPENDS
-                                                 "${CMAKE_CURRENT_LIST_DIR}/data/*.epd"
-)
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    get_cmake_property (debug_configs DEBUG_CONFIGURATIONS)
 
-set_property (DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${testcase_files})
+    if (NOT debug_configs)
+        set (debug_configs Debug)
+    endif ()
 
-foreach (epd_file IN LISTS testcase_files)
-    cmake_path (GET epd_file STEM filename)
+    list (JOIN debug_configs "," debug_configs)
 
-    file (STRINGS "${epd_file}" epd_lines)
-    list (LENGTH epd_lines num_epds)
-    math (EXPR num_epds "${num_epds} - 1") # because RANGE includes the end value
+    set (config_debug "$<CONFIG:${debug_configs}>")
+    set (config_release "$<NOT:${config_debug}>")
 
-    foreach (epd_idx RANGE "${num_epds}")
-        set (test_name "ben_bot.position_solver.${filename}.${epd_idx}")
+    add_compile_options ("$<${config_release}:-U_FORTIFY_SOURCE>")
 
-        set (engine_log "${BenBot_SOURCE_DIR}/logs/position-solver/${filename}-${epd_idx}.log")
+    add_compile_definitions (_GLIBCXX_ASSERTIONS "$<${config_release}:_FORTIFY_SOURCE=3>")
 
-        add_test (
-            NAME "${test_name}"
-            COMMAND Python::Interpreter "${CMAKE_CURRENT_LIST_DIR}/solver.py" "--test=${epd_file}"
-                    "--index=${epd_idx}" "--engine=$<TARGET_FILE:ben_bot>" "--log=${engine_log}"
-            CONFIGURATIONS Release
-        )
+    include (CheckCXXCompilerFlag)
 
-        # cmake-format: off
-        set_tests_properties (
-            "${test_name}"
-            PROPERTIES
-                ATTACHED_FILES_ON_FAIL "${engine_log}"
-                RESOURCE_LOCK BenBotPositionSolver
-                REQUIRED_FILES "$<TARGET_FILE:ben_bot>"
-                # allow 10 minutes after the go command is received
-                TIMEOUT_AFTER_MATCH "600;: << go"
-        )
-        # cmake-format: on
+    check_cxx_compiler_flag (-fstack-protector-strong HAVE_fstack_protector_strong)
+    if (HAVE_fstack_protector_strong)
+        add_compile_options (-fstack-protector-strong)
+    endif ()
 
-        set_property (DIRECTORY APPEND PROPERTY ADDITIONAL_CLEAN_FILES "${engine_log}")
-    endforeach ()
-endforeach ()
+    check_cxx_compiler_flag (-fcf-protection HAVE_fcf_protection)
+    if (HAVE_fcf_protection)
+        add_compile_options (-fcf-protection)
+    endif ()
+
+    if (LINUX OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+        check_cxx_compiler_flag (-fstack-clash-protection HAVE_fstack_clash_protection)
+        if (HAVE_fstack_clash_protection)
+            add_compile_options (-fstack-clash-protection)
+        endif ()
+    endif ()
+endif ()
