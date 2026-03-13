@@ -57,7 +57,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y graphviz perl
+        sudo apt-get install -y graphviz perl texlive-binaries
 
     - name: Install latest Doxygen
       uses: ssciwr/doxygen-install@329d88f5a303066a5bd006db7516b1925b86350e # v2.0.1
