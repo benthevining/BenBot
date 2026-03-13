@@ -40,15 +40,11 @@ foreach (data_file IN LISTS testcase_files)
         )
         # cmake-format: on
 
-        set (test_name "ben_bot.perft.${filename}.${depth}")
-
         add_test (
-            NAME "${test_name}"
+            NAME "ben_bot.perft.${filename}.${depth}"
             COMMAND Python::Interpreter "${CMAKE_CURRENT_LIST_DIR}/perft.py" "--test=${data_file}"
                     "--engine=$<TARGET_FILE:ben_bot>" "--depth=${depth}"
         )
-
-        set_tests_properties ("${test_name}" PROPERTIES RESOURCE_LOCK BenBotPerft)
     endforeach ()
 
     set_property (DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${data_file}")

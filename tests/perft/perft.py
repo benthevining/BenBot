@@ -102,7 +102,7 @@ class Engine:
 
         return json.loads(self.engine.stdout.readline())
 
-    def quit(self):
+    def __del__(self):
         self.engine.communicate("quit\n", timeout=15)
         self.engine.kill()
         self.engine.communicate()
