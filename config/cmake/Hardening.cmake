@@ -34,4 +34,23 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     add_compile_options ("$<${config_release}:-U_FORTIFY_SOURCE>")
 
     add_compile_definitions (_GLIBCXX_ASSERTIONS "$<${config_release}:_FORTIFY_SOURCE=3>")
+
+    include (CheckCXXCompilerFlag)
+
+    check_cxx_compiler_flag (-fstack-protector-strong HAVE_fstack_protector_strong)
+    if (HAVE_fstack_protector_strong)
+        add_compile_options (-fstack-protector-strong)
+    endif ()
+
+    check_cxx_compiler_flag (-fcf-protection HAVE_fcf_protection)
+    if (HAVE_fcf_protection)
+        add_compile_options (-fcf-protection)
+    endif ()
+
+    if (LINUX OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+        check_cxx_compiler_flag (-fstack-clash-protection HAVE_fstack_clash_protection)
+        if (HAVE_fstack_clash_protection)
+            add_compile_options (-fstack-clash-protection)
+        endif ()
+    endif ()
 endif ()
