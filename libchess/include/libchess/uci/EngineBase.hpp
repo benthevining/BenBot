@@ -13,7 +13,7 @@
  */
 
 /** @file
-    This file defines the UCI engine base class.
+    This file defines the UCI @cite Meyer-Kahlen_2006 engine base class.
     @ingroup uci
  */
 
@@ -35,7 +35,7 @@ using std::string_view;
 
 struct Option;
 
-/** A base class for UCI chess engines.
+/** A base class for UCI @cite Meyer-Kahlen_2006 chess engines.
 
     This class provides handling of UCI command parsing, so that
     the engine implementation can focus purely on implementing

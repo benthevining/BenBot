@@ -13,7 +13,7 @@
  */
 
 /** @file
-    This file provides classes for declaring UCI engine parameters.
+    This file provides classes for declaring UCI @cite Meyer-Kahlen_2006 engine parameters.
     @ingroup uci
  */
 
@@ -31,7 +31,7 @@ namespace chess::uci {
 using std::string;
 using std::string_view;
 
-/** Base class for UCI options.
+/** Base class for UCI @cite Meyer-Kahlen_2006 options.
 
     @ingroup uci
  */

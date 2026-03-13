@@ -14,7 +14,7 @@
 
 /** @file
     This file provides functions for converting Move objects to and from
-    UCI-format algebraic notation.
+    UCI-format @cite Meyer-Kahlen_2006 algebraic notation.
 
     @ingroup notation
  */
@@ -35,14 +35,14 @@ namespace chess::notation {
 using game::Position;
 using moves::Move;
 
-/** Returns the UCI-format algebraic notation for the given Move object.
+/** Returns the UCI-format @cite Meyer-Kahlen_2006 algebraic notation for the given Move object.
 
     @ingroup notation
     @see from_uci()
  */
 [[nodiscard]] auto to_uci(Move move) -> std::string;
 
-/** Parses the UCI-format algebraic notation string into a Move object.
+/** Parses the UCI-format @cite Meyer-Kahlen_2006 algebraic notation string into a Move object.
     The current position is used to determine the type of the moved piece.
 
     If the input string cannot be parsed correctly, returns an explanatory error string.

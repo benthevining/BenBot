@@ -13,7 +13,7 @@
  */
 
 /** @file
-    This file provides some utility functions for printing UCI-style output.
+    This file provides some utility functions for printing UCI-style @cite Meyer-Kahlen_2006 output.
     @ingroup uci
  */
 
@@ -28,7 +28,7 @@
 #include <string_view>
 #include <variant>
 
-/** This namespace contains utility functions for printing UCI-style output.
+/** This namespace contains utility functions for printing UCI-style @cite Meyer-Kahlen_2006 output.
     @ingroup uci
  */
 namespace chess::uci::printing {
@@ -36,7 +36,7 @@ namespace chess::uci::printing {
 using moves::Move;
 using std::size_t;
 
-/** Prints a UCI-formatted information string to standard output.
+/** Prints a UCI-formatted @cite Meyer-Kahlen_2006 information string to standard output.
     This function should be used for any informational or debug output that
     an engine wants to print.
 
@@ -47,7 +47,7 @@ using std::size_t;
  */
 std::monostate info_string(std::string_view info);
 
-/** Prints a UCI-formatted best move string to standard output.
+/** Prints a UCI-formatted @cite Meyer-Kahlen_2006 best move string to standard output.
     Specifying a ponder move is optional.
 
     @ingroup uci
@@ -129,7 +129,7 @@ struct SearchInfo final {
     [[nodiscard]] auto get_nps() const noexcept -> size_t;
 };
 
-/** Prints a UCI-formatted search info string to standard output.
+/** Prints a UCI-formatted @cite Meyer-Kahlen_2006 search info string to standard output.
 
     @ingroup uci
     @relates SearchInfo
