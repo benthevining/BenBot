@@ -14,15 +14,18 @@
 
 include_guard (GLOBAL)
 
-if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang" AND NOT WIN32)
     get_cmake_property (debug_configs DEBUG_CONFIGURATIONS)
 
     if (NOT debug_configs)
         set (debug_configs Debug)
     endif ()
 
-    # UBSAN seems to interfere with coverage collection, it erroneously reports 0-4%
-    list (REMOVE_ITEM debug_configs UBSAN)
+    if (APPLE)
+        # On MacOS, UBSAN seems to interfere with coverage collection, it erroneously reports 0-4%,
+        # so just disable it
+        list (REMOVE_ITEM debug_configs UBSAN)
+    endif ()
 
     list (JOIN debug_configs "," debug_configs)
 
