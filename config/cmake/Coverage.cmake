@@ -21,6 +21,9 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         set (debug_configs Debug)
     endif ()
 
+    # UBSAN seems to interfere with coverage collection, it erroneously reports 0-4%
+    list (REMOVE_ITEM debug_configs UBSAN)
+
     list (JOIN debug_configs "," debug_configs)
 
     set (config_debug "$<CONFIG:${debug_configs}>")
