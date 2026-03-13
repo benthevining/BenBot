@@ -67,7 +67,8 @@ board = chess.Board()
 
 operations = board.set_epd(epd_data)
 
-print(f"Testing position {board.fen()}", flush=True)
+print(f"Position ID: {operations['id']}")
+print(f"FEN: {board.fen()}", flush=True)
 
 engine = chess.engine.SimpleEngine.popen_uci(str(ENGINE_PATH), timeout=None)
 
