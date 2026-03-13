@@ -32,7 +32,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     add_link_options ("$<${config_debug}:--coverage>")
 
     if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-        link_libraries (gcov)
+        link_libraries ("$<${config_debug}:gcov>")
     endif ()
 
     message (STATUS "Coverage enabled")
