@@ -76,6 +76,9 @@ struct [[nodiscard]] TextTable final {
         PrintFunc&&           printOutline,
         std::function<void()> printNewline) const;
 
+    /** @internal */
+    using Widths = std::span<const size_t>;
+
 private:
     struct Row final {
         void add_column(string_view text) { columns.emplace_back(text); }
@@ -85,7 +88,7 @@ private:
             return columns;
         }
 
-        [[nodiscard]] auto to_string(std::span<const size_t> widths) const -> string;
+        [[nodiscard]] auto to_string(Widths widths) const -> string;
 
         void print(
             PrintFunc               printCell,

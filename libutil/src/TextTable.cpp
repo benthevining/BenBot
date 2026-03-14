@@ -29,10 +29,8 @@ using std::size_t;
 
 auto TextTable::append_column(const string_view text) -> TextTable&
 {
-    if (startNewRow) {
+    if (std::exchange(startNewRow, false))
         rows.emplace_back();
-        startNewRow = false;
-    }
 
     rows.back().add_column(text);
 
@@ -41,10 +39,8 @@ auto TextTable::append_column(const string_view text) -> TextTable&
 
 auto TextTable::new_row() -> TextTable&
 {
-    if (startNewRow)
+    if (std::exchange(startNewRow, true))
         rows.emplace_back();
-    else
-        startNewRow = true;
 
     return *this;
 }
@@ -54,20 +50,27 @@ namespace {
     inline constexpr string_view LINE_START { "| " };
     inline constexpr string_view LINE_ENDING { " |" };
 
-    [[nodiscard, gnu::cold]] auto make_header_sep_row(
-        const std::span<const size_t> widths)
-        -> string
+    void add_header_sep_row(
+        const TextTable::Widths widths, string& output)
     {
-        string result { LINE_START };
+        output.append(LINE_START);
 
-        for (const auto width : widths.first(widths.size() - 1uz)) {
-            result.append(width, '-');
-            result.append(COLUMN_SEPARATOR);
-        }
+        std::ranges::for_each(
+            widths.first(widths.size() - 1uz),
+            [&output](const size_t width) {
+                output.append(width, '-');
+                output.append(COLUMN_SEPARATOR);
+            });
 
-        result.append(widths.back(), '-');
-        result.append(LINE_ENDING);
+        output.append(widths.back(), '-');
+        output.append(LINE_ENDING);
+    }
 
+    [[nodiscard]] auto make_header_sep_row(
+        const TextTable::Widths widths) -> string
+    {
+        string result;
+        add_header_sep_row(widths, result);
         return result;
     }
 } // namespace
@@ -79,13 +82,16 @@ auto TextTable::to_string() const -> string
     auto result = rows.front().to_string(widths);
     result.append(1uz, '\n');
 
-    result.append(make_header_sep_row(widths));
+    add_header_sep_row(widths, result);
+
     result.append(1uz, '\n');
 
-    for (const auto& row : rows | std::views::drop(1uz)) {
-        result.append(row.to_string(widths));
-        result.append(1uz, '\n');
-    }
+    std::ranges::for_each(
+        rows | std::views::drop(1uz),
+        [&result, &widths](const Row& row) {
+            result.append(row.to_string(widths));
+            result.append(1uz, '\n');
+        });
 
     return result;
 }
@@ -107,10 +113,15 @@ void TextTable::print(
 
     printNewline();
 
-    for (const auto& row : rows | std::views::drop(1uz)) {
-        row.print(printCell, printOutline, widths);
-        printNewline();
-    }
+    std::ranges::for_each(
+        rows | std::views::drop(1uz),
+        [cell       = std::move(printCell),
+            outline = std::move(printOutline),
+            newLine = std::move(printNewline),
+            &widths](const Row& row) mutable {
+            row.print(std::move(cell), std::move(outline), widths);
+            newLine();
+        });
 }
 
 auto TextTable::num_columns() const -> size_t
@@ -139,7 +150,7 @@ auto TextTable::get_column_widths() const -> std::vector<size_t>
 }
 
 auto TextTable::Row::to_string(
-    const std::span<const size_t> widths) const
+    const Widths widths) const
     -> string
 {
     string result { LINE_START };
@@ -150,14 +161,17 @@ auto TextTable::Row::to_string(
         if (index > 0uz)
             result.append(COLUMN_SEPARATOR);
 
-        string padded;
+        const auto colLen = [this, index, &result] {
+            if (index < columns.size()) {
+                const auto& colText = columns.at(index);
+                result.append(colText);
+                return colText.length();
+            }
 
-        if (index < columns.size())
-            padded = columns.at(index);
+            return 0uz;
+        }();
 
-        padded.resize(width, ' ');
-
-        result.append(padded);
+        result.append(width - colLen, ' ');
 
         ++index;
     }
@@ -174,16 +188,18 @@ void TextTable::Row::print(
 {
     printOutline(LINE_START);
 
+    string padded;
+
     auto index { 0uz };
 
     for (const auto width : widths) {
         if (index > 0uz)
             printOutline(COLUMN_SEPARATOR);
 
-        string padded;
-
         if (index < columns.size())
-            padded = columns[index];
+            padded = columns.at(index);
+        else
+            padded.clear();
 
         padded.resize(width, ' ');
 
