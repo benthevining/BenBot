@@ -91,8 +91,8 @@ private:
         [[nodiscard]] auto to_string(Widths widths) const -> string;
 
         void print(
-            PrintFunc               printCell,
-            PrintFunc               printOutline,
+            const PrintFunc&        printCell,
+            const PrintFunc&        printOutline,
             std::span<const size_t> widths) const;
 
     private:

@@ -105,7 +105,7 @@ void TextTable::print(
     const auto widths = get_column_widths();
 
     rows.front().print(
-        std::move(printHeading), printOutline, widths);
+        printHeading, printOutline, widths);
 
     printNewline();
 
@@ -118,8 +118,8 @@ void TextTable::print(
         [cell       = std::move(printCell),
             outline = std::move(printOutline),
             newLine = std::move(printNewline),
-            &widths](const Row& row) mutable {
-            row.print(std::move(cell), std::move(outline), widths);
+            &widths](const Row& row) {
+            row.print(cell, outline, widths);
             newLine();
         });
 }
@@ -182,8 +182,8 @@ auto TextTable::Row::to_string(
 }
 
 void TextTable::Row::print(
-    PrintFunc               printCell,
-    PrintFunc               printOutline,
+    const PrintFunc&        printCell,
+    const PrintFunc&        printOutline,
     std::span<const size_t> widths) const
 {
     printOutline(LINE_START);
