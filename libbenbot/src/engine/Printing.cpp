@@ -13,6 +13,7 @@
  */
 
 #include <format>
+#include <iostream>
 #include <libbenbot/Resources.hpp>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/engine/ColorPrinting.hpp>
@@ -77,6 +78,8 @@ void Engine::print_help(const string_view args) const
     }
 
     print_colored_table(table);
+
+    std::cout.flush();
 }
 
 void Engine::print_options() const
@@ -118,6 +121,8 @@ void Engine::print_options() const
 
     println("");
     println("Debug mode: {}", debugMode.load());
+
+    std::cout.flush();
 }
 
 void Engine::print_current_position(const string_view arguments) const
@@ -148,6 +153,8 @@ void Engine::print_current_position(const string_view arguments) const
 
             return std::monostate { };
         });
+
+    std::cout.flush();
 }
 
 void Engine::print_compiler_info()

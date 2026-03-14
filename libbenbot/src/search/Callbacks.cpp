@@ -66,8 +66,8 @@ namespace {
     inline constexpr auto COLUMN_WIDTH = 10uz;
 
     template <Alignment Align>
-    [[nodiscard]] auto get_column_text(
-        const string_view text) -> string
+    void print_column_text(
+        const string_view text)
     {
         assert(text.size() < COLUMN_WIDTH);
 
@@ -82,17 +82,10 @@ namespace {
             }
         }();
 
-        return std::format(
+        std::cout << std::format(
             formatStr,
             text.substr(0uz, COLUMN_WIDTH),
             COLUMN_WIDTH);
-    }
-
-    template <Alignment Align>
-    void print_column_text(
-        const string_view text)
-    {
-        std::cout << get_column_text<Align>(text);
     }
 
     inline constexpr string_view FRACTIONAL_DURATION_FMT { "{:.2%Q %q}" };
