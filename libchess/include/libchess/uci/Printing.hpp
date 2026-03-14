@@ -111,6 +111,11 @@ struct SearchInfo final {
     /** The total number of nodes searched. */
     size_t nodes { 0uz };
 
+    /** In MultiPV mode, this integer should be the number of the line that this info is for.
+        In non-MultiPV mode, this should be ``nullopt``.
+     */
+    std::optional<size_t> multiPV;
+
     /** The principal variation found. */
     moves::MoveList pv;
 

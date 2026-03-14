@@ -44,32 +44,27 @@ using std::string_view;
 
 using MaybeMove = std::optional<Move>;
 
-std::monostate info_string(const string_view info)
+auto info_string(const string_view info) -> std::monostate
 {
     println(cout, "info string {}", info);
+
+    cout.flush();
 
     return std::monostate { };
 }
 
-namespace {
-    [[nodiscard]] auto ponder_move_string(
-        const MaybeMove ponderMove)
-        -> string
-    {
-        return ponderMove
-            .transform([](const Move move) {
-                return std::format(" ponder {}", to_uci(move));
-            })
-            .value_or(string { });
-    }
-} // namespace
-
 void best_move(
     const Move bestMove, const MaybeMove ponderMove)
 {
+    const auto ponderMoveString = ponderMove
+                                      .transform([](const Move move) {
+                                          return std::format(" ponder {}", to_uci(move));
+                                      })
+                                      .value_or(string { });
+
     println(cout,
         "bestmove {}{}",
-        to_uci(bestMove), ponder_move_string(ponderMove));
+        to_uci(bestMove), ponderMoveString);
 
     cout.flush();
 }
@@ -101,18 +96,14 @@ auto SearchInfo::get_nps() const noexcept -> size_t
 namespace {
     using Score = SearchInfo::Score;
 
-    [[nodiscard]] auto base_score_string(const Score& score) -> string
+    // [cp <x>]|[mate <x>] [lowerbound|upperbound]
+    [[nodiscard]] auto score_string(const Score& score) -> string
     {
-        return std::visit(
+        auto string = std::visit(
             util::Visitor {
                 [](const Score::Centipawns& centipawns) { return std::format("cp {}", centipawns.value); },
                 [](const Score::MateIn& mate) { return std::format("mate {}", mate.moves()); } },
             score.value);
-    }
-
-    [[nodiscard]] auto score_string(const Score& score) -> string
-    {
-        auto string = base_score_string(score);
 
         assert(not(score.lowerBound and score.upperBound));
 
@@ -124,6 +115,9 @@ namespace {
         return string;
     }
 
+    // if not empty, begins with a space:
+    // * ""
+    // * " pv <move...>"
     [[nodiscard]] auto pv_string(const std::span<const Move> pv) -> string
     {
         if (pv.empty()) {
@@ -139,6 +133,22 @@ namespace {
         return result;
     }
 
+    // if not empty, begins with a space:
+    // * ""
+    // * " multipv <n>"
+    [[nodiscard]] auto multipv_string(
+        const std::optional<size_t> multiPV) -> string
+    {
+        return multiPV
+            .transform([](const size_t lineNum) {
+                return std::format(" multipv {}", lineNum);
+            })
+            .value_or(string { });
+    }
+
+    // if not empty, begins with a space:
+    // * ""
+    // * " string <text>"
     [[nodiscard]] auto get_extra_info_string(const string_view info) -> string
     {
         if (info.empty())
@@ -151,12 +161,13 @@ namespace {
 void search_info(const SearchInfo& info)
 {
     println(cout,
-        "info depth {} score {} time {} hashfull {} nodes {} nps {} seldepth {} tbhits {}{}{}",
-        info.depth,
+        "info depth {} seldepth {}{} score {} time {} hashfull {} nodes {} nps {} tbhits {}{}{}",
+        info.depth, info.selDepth,
+        multipv_string(info.multiPV),
         score_string(info.score),
         info.time.count(), info.hashfull, info.nodes,
         info.get_nps(),
-        info.selDepth, info.tbHits,
+        info.tbHits,
         pv_string(info.pv),
         get_extra_info_string(info.extraInformation));
 

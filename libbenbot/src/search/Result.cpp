@@ -55,6 +55,7 @@ auto Result::to_libchess(const bool includeDebugInfo) const -> LibchessResult
         .selDepth         = qDepth,
         .time             = duration,
         .nodes            = nodesSearched,
+        .multiPV          = std::nullopt,
         .pv               = pv,
         .hashfull         = hashfull,
         .tbHits           = 0uz,
