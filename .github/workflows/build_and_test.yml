@@ -74,6 +74,7 @@ jobs:
       contents: read
     timeout-minutes: 180 # 3 hours
     env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       CMAKE_BUILD_PARALLEL_LEVEL: 8
       CTEST_PARALLEL_LEVEL: '' # empty value to make ctest detect the number of cores
       CTEST_NO_TESTS_ACTION: error
@@ -100,8 +101,6 @@ jobs:
         clang: 21
 
     - name: Install CMake 4.0
-      env:
-        FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       uses: lukka/get-cmake@f176ccd3f28bda569c43aae4894f06b2435a3375 # v4.2.3
 
     - name: Checkout code
