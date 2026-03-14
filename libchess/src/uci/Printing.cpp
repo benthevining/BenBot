@@ -12,6 +12,7 @@
  * ======================================================================================
  */
 
+#include <cassert>
 #include <chrono>
 #include <cmath>
 #include <format>
@@ -113,6 +114,8 @@ namespace {
     {
         auto string = base_score_string(score);
 
+        assert(not(score.lowerBound and score.upperBound));
+
         if (score.lowerBound)
             string.append(" lowerbound");
         else if (score.upperBound)
@@ -128,14 +131,10 @@ namespace {
             return { };
         }
 
-        string result { " pv " };
+        string result { " pv" };
 
-        for (const auto move : pv) {
-            result.append(to_uci(move));
-            result.append(1uz, ' ');
-        }
-
-        result.pop_back(); // trim last space
+        for (const auto move : pv)
+            result.append(std::format(" {}", to_uci(move)));
 
         return result;
     }
