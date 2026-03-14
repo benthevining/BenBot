@@ -34,7 +34,7 @@ namespace {
         const auto err = _dupenv_s(&value, &len, name);
 
         if (value != nullptr and len > 0uz)
-            return { value, len };
+            return string { value, len };
 
         return std::nullopt;
     }
