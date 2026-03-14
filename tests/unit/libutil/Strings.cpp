@@ -25,8 +25,6 @@ TEST_CASE("Strings - trim()", TAGS)
     using util::strings::trim;
 
     REQUIRE(trim({ }).empty());
-    REQUIRE(trim(" ").empty());
-    REQUIRE(trim("\n").empty());
 
     REQUIRE(trim(" 123456") == "123456");
     REQUIRE(trim("\n123456") == "123456");

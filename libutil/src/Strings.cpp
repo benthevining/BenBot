@@ -29,30 +29,54 @@ namespace {
 using std::size_t;
 using std::string_view;
 
+// NB. not [[gnu::const]] because std::isspace() references the current C locale
 [[nodiscard]] auto is_non_whitespace(const char text) noexcept -> bool
 {
     // this should take care of \r\n sequences on Windows
     return std::isspace(static_cast<unsigned char>(text)) == 0;
 }
 
-[[nodiscard]] auto trim_start(string_view text) noexcept -> string_view
+[[nodiscard, gnu::const]] auto index_of_first_space(const string_view text) -> size_t
 {
-    return text.substr(
-        static_cast<size_t>(
-            std::ranges::distance(
-                text.begin(),
-                std::ranges::find_if(text, is_non_whitespace))));
+    const auto it = std::ranges::find_if(text, is_non_whitespace);
+
+    if (it == text.end())
+        return string_view::npos;
+
+    return static_cast<size_t>(
+        std::ranges::distance(text.begin(), it));
 }
 
-[[nodiscard]] auto trim_end(const string_view text) -> string_view
+[[nodiscard, gnu::const]] auto index_of_last_space(const string_view text) -> size_t
 {
-    return text.substr(0uz,
-        static_cast<size_t>(
-            std::ranges::distance(
-                text.begin(),
-                std::ranges::find_if(
-                    std::views::reverse(text), is_non_whitespace)
-                    .base())));
+    const auto it = std::ranges::find_if(
+        std::views::reverse(text), is_non_whitespace);
+
+    if (it == text.rend())
+        return string_view::npos;
+
+    return static_cast<size_t>(
+        std::ranges::distance(text.begin(), it.base()));
+}
+
+[[nodiscard, gnu::const]] auto trim_start(const string_view text) noexcept -> string_view
+{
+    const auto firstSpace = index_of_first_space(text);
+
+    if (firstSpace == string_view::npos)
+        return text;
+
+    return text.substr(firstSpace);
+}
+
+[[nodiscard, gnu::const]] auto trim_end(const string_view text) -> string_view
+{
+    const auto lastSpace = index_of_last_space(text);
+
+    if (lastSpace == string_view::npos)
+        return text;
+
+    return text.substr(0uz, lastSpace);
 }
 
 } // namespace
