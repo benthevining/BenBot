@@ -48,7 +48,6 @@ def parse_args() -> Tuple[Path, Path]:
 
 #
 
-
 TESTCASE_FILE, RAMPART_PROGRAM = parse_args()
 
 test_cases_passed = 0
@@ -58,8 +57,6 @@ print(f"Running tests from {TESTCASE_FILE}...", flush=True)
 
 with open(TESTCASE_FILE) as file:
     testcase_data = json.load(file)
-
-test_idx = 1
 
 for test_case in testcase_data["testCases"]:
     startFEN = test_case["start"]["fen"]
@@ -71,6 +68,8 @@ for test_case in testcase_data["testCases"]:
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+        bufsize=1,
+        universal_newlines=True,
         text=True,
     )
 
@@ -78,7 +77,13 @@ for test_case in testcase_data["testCases"]:
         print(f"Rampart executable exited with code {result.returncode}")
         exit(result.returncode)
 
-    result_data = json.loads(result.stdout)
+    output = str(result.stdout)
+
+    jsonText = output[output.find("{") : output.rfind("}") + 1]
+
+    print(f"Found JSON output:\n{jsonText}")
+
+    result_data = json.loads(jsonText)
 
     correct_moves = test_case["expected"]
     generated_moves = result_data["generated"]
@@ -130,8 +135,6 @@ for test_case in testcase_data["testCases"]:
             test_cases_failed += 1
         else:
             test_cases_passed += 1
-
-    test_idx += 1
 
 print(f"{test_cases_passed} test cases passed")
 print(f"{test_cases_failed} test cases failed")
