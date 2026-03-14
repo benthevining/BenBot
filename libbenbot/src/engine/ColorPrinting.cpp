@@ -12,6 +12,7 @@
  * ======================================================================================
  */
 
+#include <algorithm>
 #include <beman/inplace_vector/inplace_vector.hpp>
 #include <iostream>
 #include <libbenbot/Resources.hpp>
@@ -50,8 +51,11 @@ void Engine::print_logo_and_version() const
     cout << termcolor::grey << logoLines.front() << '\n'
          << termcolor::blue;
 
-    for (const auto line : logoLines | std::views::drop(1) | std::views::take(NumLogoLines - 2uz))
-        cout << line << '\n';
+    std::ranges::for_each(
+        logoLines | std::views::drop(1) | std::views::take(NumLogoLines - 2uz),
+        [](const string_view line) {
+            cout << line << '\n';
+        });
 
     cout << termcolor::grey << logoLines.back() << "\n\n"
          << termcolor::reset << termcolor::bold << get_name() << ", "
@@ -97,11 +101,13 @@ void print_colored_board(
 
     const auto lines = get_at_most_n_lines<BoardLines>(boardStr);
 
-    for (const auto line : lines | std::views::take(BoardLines - 1uz)) {
-        cout << line.substr(0uz, line.length() - 1uz)
-             << termcolor::white << line.back() << '\n'
-             << termcolor::reset;
-    }
+    std::ranges::for_each(
+        lines | std::views::take(BoardLines - 1uz),
+        [](const string_view line) {
+            cout << line.substr(0uz, line.length() - 1uz)
+                 << termcolor::white << line.back() << '\n'
+                 << termcolor::reset;
+        });
 
     cout << termcolor::white << lines.back() << '\n'
          << termcolor::reset;

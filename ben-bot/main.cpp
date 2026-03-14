@@ -37,10 +37,8 @@ namespace {
 {
     std::string result;
 
-    for (const auto fragment : strings) {
-        result += fragment;
-        result += ' ';
-    }
+    for (const auto fragment : strings)
+        result.append(std::format("{} ", fragment));
 
     return result;
 }

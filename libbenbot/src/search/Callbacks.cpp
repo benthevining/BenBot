@@ -55,6 +55,7 @@ auto Callbacks::make_uci_printer(
 
 namespace {
     using std::string;
+    using std::string_view;
 
     enum class Alignment : std::uint_least8_t {
         Left,
@@ -66,7 +67,7 @@ namespace {
 
     template <Alignment Align>
     [[nodiscard]] auto get_column_text(
-        const std::string_view text) -> string
+        const string_view text) -> string
     {
         assert(text.size() < COLUMN_WIDTH);
 
@@ -89,10 +90,13 @@ namespace {
 
     template <Alignment Align>
     void print_column_text(
-        const std::string_view text)
+        const string_view text)
     {
         std::cout << get_column_text<Align>(text);
     }
+
+    inline constexpr string_view FRACTIONAL_DURATION_FMT { "{:.2%Q %q}" };
+    inline constexpr string_view INTEGER_DURATION_FMT { "{:%Q %q}" };
 
     template <util::ChronoDuration Duration>
     [[nodiscard]] auto get_duration_string(
@@ -104,7 +108,7 @@ namespace {
             using FractionalDuration = util::FractionalDuration<Duration>;
 
             return std::format(
-                "{:.2%Q %q}",
+                FRACTIONAL_DURATION_FMT,
                 duration_cast<FractionalDuration>(duration));
         }
 
@@ -118,7 +122,9 @@ namespace {
         return get_duration_string<std::chrono::hours>(duration)
             .or_else([duration] { return get_duration_string<std::chrono::minutes>(duration); })
             .or_else([duration] { return get_duration_string<std::chrono::seconds>(duration); })
-            .or_else([duration] { return std::make_optional(std::format("{:%Q %q}", duration)); })
+            .or_else([duration] {
+                return std::make_optional(std::format(INTEGER_DURATION_FMT, duration));
+            })
             .value();
     }
 
@@ -241,12 +247,8 @@ namespace {
 
         string result;
 
-        for (const auto move : pv) {
-            result.append(printMove(move));
-            result.append(1uz, ' ');
-        }
-
-        result.pop_back(); // trim last space
+        for (const auto move : pv)
+            result.append(std::format("{} ", printMove(move)));
 
         return result;
     }
