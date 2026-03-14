@@ -27,6 +27,8 @@ namespace util::files {
 
 using std::string;
 
+inline constexpr auto streamExceptions = std::ios_base::badbit | std::ios_base::failbit;
+
 auto load(
     const path& file)
     -> std::expected<string, string>
@@ -40,8 +42,7 @@ auto load(
     }
 
     try {
-        input.exceptions(
-            std::ios_base::badbit | std::ios_base::failbit);
+        input.exceptions(streamExceptions);
 
         using Iterator = std::istreambuf_iterator<char>;
 
@@ -66,8 +67,7 @@ auto overwrite(
     }
 
     try {
-        output.exceptions(
-            std::ios_base::badbit | std::ios_base::failbit);
+        output.exceptions(streamExceptions);
 
         output << text;
 
