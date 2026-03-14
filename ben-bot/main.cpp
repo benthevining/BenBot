@@ -23,6 +23,7 @@
 #include <libbenbot/engine/Engine.hpp>
 #include <libchess/uci/Printing.hpp>
 #include <libutil/Console.hpp>
+#include <libutil/Environment.hpp>
 #include <span>
 #include <string>
 #include <string_view>
@@ -110,8 +111,13 @@ try {
 
     ben_bot::Engine engine;
 
-    if (const auto* var = std::getenv("BENBOT_CONFIG"))
-        engine.read_config_file(std::filesystem::path { var });
+    util::get_environment_variable("BENBOT_CONFIG")
+        .transform([&engine](const string_view value) {
+            if (not value.empty())
+                engine.read_config_file(std::filesystem::path { value });
+
+            return std::monostate { };
+        });
 
     if (not uciCommand.empty())
         engine.handle_command(uciCommand);
