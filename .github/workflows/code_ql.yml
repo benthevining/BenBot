@@ -64,7 +64,6 @@ jobs:
     name: Analyze C++
     timeout-minutes: 20
     env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       LANGUAGE: c-cpp
       CMAKE_BUILD_PARALLEL_LEVEL: 8
       PRESET: gcc

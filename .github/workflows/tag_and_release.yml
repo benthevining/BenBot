@@ -116,7 +116,6 @@ jobs:
       name: codesigning
       url: https://github.com/benthevining/BenBot/releases/tag/${{ needs.bump_version.outputs.tag_name }}
     env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       CMAKE_OSX_ARCHITECTURES: arm64;x86_64
       CMAKE_BUILD_PARALLEL_LEVEL: 8
       # NB. Windows runners may error out if we make these absolute paths prefixed with

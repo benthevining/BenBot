@@ -44,7 +44,6 @@ jobs:
     name: Run SPRT test
     timeout-minutes: 300 # 5 hours
     env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       CMAKE_PRESET: gcc
       CMAKE_BUILD_PARALLEL_LEVEL: 8
       BUILD_DIR: ${{ github.workspace }}/Builds/gcc

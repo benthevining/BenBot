@@ -74,7 +74,6 @@ jobs:
       contents: read
     timeout-minutes: 180 # 3 hours
     env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       CMAKE_BUILD_PARALLEL_LEVEL: 8
       CTEST_PARALLEL_LEVEL: '' # empty value to make ctest detect the number of cores
       CTEST_NO_TESTS_ACTION: error
