@@ -31,7 +31,7 @@ namespace {
         char*  value { nullptr };
         size_t len { 0uz };
 
-        const auto err = _dupenv_s(&value, &len, name);
+        [[maybe_unused]] const auto err = _dupenv_s(&value, &len, name);
 
         if (value != nullptr and len > 0uz)
             return string { value, len };
