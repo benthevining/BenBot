@@ -13,6 +13,7 @@
  */
 
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <cassert>
 #include <expected>
@@ -25,9 +26,11 @@
 #include <libchess/uci/Printing.hpp>
 #include <libutil/Strings.hpp>
 #include <print>
+#include <ranges>
 #include <string>
 #include <string_view>
 #include <utility>
+#include <vector>
 
 namespace chess::uci {
 
@@ -47,6 +50,29 @@ using util::strings::trim;
 
 // defined out-of-line to address -Wweak-vtables
 EngineBase::~EngineBase() = default;
+
+namespace {
+    // returns name of closest known command
+    [[nodiscard]] auto find_nearest_command(
+        const string_view input, const EngineBase::CommandList standardCommands, const EngineBase::CommandList customCommands)
+        -> string_view
+    {
+        // map commands to pair of: command name, Levenshtein distance from input
+        const auto mapped
+            = std::views::join(std::array { standardCommands, customCommands })
+            | std::views::transform([input](const EngineCommand& command) {
+                  return std::make_pair(
+                      command.name,
+                      util::strings::levenshtein_distance(input, command.name));
+              })
+            | std::ranges::to<std::vector>();
+
+        const auto closest = std::ranges::min(
+            mapped, std::ranges::less { }, [](const auto& item) { return item.second; });
+
+        return closest.first;
+    }
+} // namespace
 
 void EngineBase::handle_command(const string_view command)
 {
@@ -72,7 +98,12 @@ void EngineBase::handle_command(const string_view command)
         return;
     }
 
-    info_string(std::format("Unknown UCI command: '{}'", firstWord));
+    info_string(std::format(
+        "Unknown UCI command: '{}'", firstWord));
+
+    info_string(std::format(
+        "The closest known command is: {}",
+        find_nearest_command(firstWord, standardUCICommands, customCommands)));
 }
 
 void EngineBase::respond_to_uci()
@@ -154,6 +185,29 @@ void EngineBase::handle_setpos(const string_view arguments)
               });
 }
 
+namespace {
+    // returns name of closest known option
+    [[nodiscard]] auto find_nearest_option(
+        const string_view input, const EngineBase::OptionList standardOptions, const EngineBase::OptionList customOptions)
+        -> string_view
+    {
+        // map options to pair of: option name, Levenshtein distance from input
+        const auto mapped
+            = std::views::join(std::array { standardOptions, customOptions })
+            | std::views::transform([input](const Option* option) {
+                  return std::make_pair(
+                      option->get_name(),
+                      util::strings::levenshtein_distance(input, option->get_name()));
+              })
+            | std::ranges::to<std::vector>();
+
+        const auto closest = std::ranges::min(
+            mapped, std::ranges::less { }, [](const auto& item) { return item.second; });
+
+        return closest.first;
+    }
+} // namespace
+
 void EngineBase::handle_setoption(const string_view arguments)
 {
     auto [firstWord, rest] = split_at_first_space(arguments);
@@ -205,7 +259,12 @@ void EngineBase::handle_setoption(const string_view arguments)
     if (update_option(get_custom_uci_options()))
         return;
 
-    info_string(std::format("Attempted to set unknown option '{}'", name));
+    info_string(std::format(
+        "Attempted to set unknown option '{}'", name));
+
+    info_string(std::format(
+        "The closest known option is: {}",
+        find_nearest_option(name, standardUCIOptions, get_custom_uci_options())));
 }
 
 void EngineBase::loop()
