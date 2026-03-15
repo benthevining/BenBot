@@ -13,6 +13,7 @@
  */
 
 #include <algorithm>
+#include <atomic>
 #include <expected>
 #include <format>
 #include <iostream>
@@ -31,6 +32,7 @@ namespace chess::uci {
 
 using printing::info_string;
 using std::cout;
+using std::memory_order_relaxed;
 using std::println;
 using std::string_view;
 using util::strings::split_at_first_space;
@@ -68,7 +70,6 @@ void EngineBase::handle_command(const string_view command)
     }
 
     info_string(std::format("Unknown UCI command: '{}'", firstWord));
-    info_string("Type help for a list of supported commands");
 }
 
 void EngineBase::respond_to_uci()
@@ -99,7 +100,7 @@ void EngineBase::respond_to_isready()
 
 void EngineBase::respond_to_newgame()
 {
-    const bool wasInitialized = std::exchange(initialized, true);
+    const bool wasInitialized = initialized.exchange(true, memory_order_relaxed);
 
     new_game(not wasInitialized);
 }
@@ -107,7 +108,7 @@ void EngineBase::respond_to_newgame()
 void EngineBase::handle_quit()
 {
     abort_search();
-    shouldExit = true; // exit the event loop
+    shouldExit.store(true, std::memory_order::release);
     wait();
 }
 
@@ -121,13 +122,10 @@ void EngineBase::handle_setpos(const string_view arguments)
     // we print an error message via `info string` and keep the old position.
     // See this Stockfish PR discussion: https://github.com/official-stockfish/Stockfish/pull/4563
 
-    // NB. enabling this check seems to cost about 8 ELO
-    static constexpr bool SanitizeIncomingPositions = false;
-
     [[maybe_unused]] const auto obj
         = parse_position_options(arguments)
               .and_then([this](const Position& pos) -> std::expected<void, std::string> {
-                  if constexpr (SanitizeIncomingPositions) {
+                  if (sanitizeIncomingPositions.load(memory_order_relaxed)) {
                       if (const auto errorStr = pos.is_illegal()) {
                           [[unlikely]];
                           return std::unexpected {
@@ -200,7 +198,7 @@ void EngineBase::loop()
         std::getline(std::cin, inputBuf);
 
         handle_command(inputBuf);
-    } while (not shouldExit);
+    } while (not shouldExit.load(std::memory_order::acquire));
 }
 
 } // namespace chess::uci

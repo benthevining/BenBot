@@ -211,7 +211,7 @@ void Engine::run_bench(const string_view arguments) const
 
         do_bench(
             resources::get_bench_epd_text(),
-            defaultDepth, debugMode.load());
+            defaultDepth, is_debug_mode());
 
         return;
     }
@@ -223,7 +223,7 @@ void Engine::run_bench(const string_view arguments) const
               .transform([this, defaultDepth, absPathStr = epdPath.string()](const string_view fileContent) {
                   info_string(std::format("Running bench for {}...", absPathStr));
 
-                  do_bench(fileContent, defaultDepth, debugMode.load());
+                  do_bench(fileContent, defaultDepth, is_debug_mode());
               })
               .transform_error(info_string);
 }

@@ -20,6 +20,7 @@
 #pragma once
 
 #include <array>
+#include <atomic>
 #include <functional>
 #include <libchess/uci/CommandParsing.hpp>
 #include <span>
@@ -74,6 +75,8 @@ struct EngineCommand final {
     }
 };
 
+using std::memory_order_relaxed;
+
 /** A base class for UCI @cite Meyer-Kahlen_2006 chess engines.
 
     This class provides handling of UCI command parsing, so that
@@ -92,10 +95,10 @@ struct EngineBase {
 
     virtual ~EngineBase();
 
-    EngineBase(const EngineBase&)            = default;
-    EngineBase(EngineBase&&)                 = default;
-    EngineBase& operator=(const EngineBase&) = default;
-    EngineBase& operator=(EngineBase&&)      = default;
+    EngineBase(const EngineBase&)            = delete;
+    EngineBase(EngineBase&&)                 = delete;
+    EngineBase& operator=(const EngineBase&) = delete;
+    EngineBase& operator=(EngineBase&&)      = delete;
 
     /** This must return the name of the engine.
         The returned string may optionally contain the engine's current version,
@@ -148,9 +151,6 @@ struct EngineBase {
      */
     virtual void go([[maybe_unused]] const GoCommandOptions& opts) = 0;
 
-    /** Called when the "debug" command is received. */
-    virtual void set_debug([[maybe_unused]] bool shouldDebug) { }
-
     /** Handles a UCI command.
         Typically you will not call this directly, you'll just invoke ``loop()``, but this
         method can be used to manually invoke UCI commands if needed.
@@ -187,6 +187,30 @@ struct EngineBase {
         return { };
     }
 
+    /** Returns true if the engine's debugging mode is active. */
+    [[nodiscard]] auto is_debug_mode() const noexcept -> bool
+    {
+        return debugMode.load(memory_order_relaxed);
+    }
+
+    /** Sets the engine's debugging mode. */
+    void set_debug_mode(const bool shouldDebug) noexcept
+    {
+        debugMode.store(shouldDebug, memory_order_relaxed);
+    }
+
+    /** Tells the base class whether to sanitize incoming positions when processing
+        the ``position`` command.
+        When sanitizing is on, after evaluating each ``position`` command, the engine
+        performs some basic checks to determine if the position is illegal, and if so,
+        prints a diagnostic message and reverts the internal board to the previous
+        position.
+     */
+    void set_sanitize_positions(const bool shouldSanitize) noexcept
+    {
+        sanitizeIncomingPositions.store(shouldSanitize, memory_order_relaxed);
+    }
+
 private:
     void respond_to_uci();
     void respond_to_isready();
@@ -195,9 +219,14 @@ private:
     void handle_setpos(string_view arguments);
     void handle_setoption(string_view arguments);
 
-    bool shouldExit { false }; // used as flag for exiting the loop() function
+    static_assert(
+        std::atomic_bool::is_always_lock_free,
+        "Platform doesn't support lock-free atomic operations");
 
-    bool initialized { false };
+    std::atomic_bool shouldExit { false }; // used as flag for exiting the loop() function
+    std::atomic_bool initialized { false };
+    std::atomic_bool debugMode { false };
+    std::atomic_bool sanitizeIncomingPositions { false };
 
     Position position;
 
@@ -249,7 +278,7 @@ private:
             .argsHelp    = "[name <name>] [value <value>]" },
         EngineCommand {
             .name   = "debug",
-            .action = [this](const string_view args) { set_debug(args == "on"); },
+            .action = [this](const string_view args) noexcept { set_debug_mode(args == "on"); },
             .description = "Enable/disable engine debug mode",
             .argsHelp    = "[on|off]" },
         EngineCommand {

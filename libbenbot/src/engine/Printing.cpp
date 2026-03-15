@@ -132,7 +132,7 @@ void Engine::print_options() const
     print_colored_table(table);
 
     println("");
-    println("Debug mode: {}", debugMode.load());
+    println("Debug mode: {}", is_debug_mode());
 
     std::cout.flush();
 }

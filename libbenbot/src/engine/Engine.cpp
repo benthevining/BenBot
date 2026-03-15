@@ -89,9 +89,7 @@ void Engine::set_pretty_printing(const bool shouldPrettyPrint)
             [this](const Move move) { return pretty_print_move(move); }));
     } else {
         searcher.context.set_callbacks(search::Callbacks::make_uci_printer(
-            [this]() noexcept {
-                return debugMode.load(memory_order_relaxed);
-            }));
+            [this]() noexcept { return is_debug_mode(); }));
     }
 }
 
@@ -163,7 +161,7 @@ void Engine::write_config_file(const string_view arg) const
     json data;
 
     data[TAG_OPTIONS] = optionsData;
-    data[TAG_DEBUG]   = debugMode.load(memory_order_relaxed);
+    data[TAG_DEBUG]   = is_debug_mode();
 
     const auto filePath = absolute(path { arg });
 
@@ -196,9 +194,8 @@ void Engine::read_config_file(const path& file)
               .transform([this, &filePath](const string_view fileContent) {
                   const auto data = json::parse(fileContent);
 
-                  debugMode.store(
-                      data.at(TAG_DEBUG).get<bool>(),
-                      memory_order_relaxed);
+                  set_debug_mode(
+                      data.at(TAG_DEBUG).get<bool>());
 
                   const auto& optionsData = data.at(TAG_OPTIONS);
 

@@ -80,11 +80,6 @@ private:
 
     auto is_searching() const noexcept -> bool override { return searcher.context.in_progress(); }
 
-    void set_debug(const bool shouldDebug) override
-    {
-        debugMode.store(shouldDebug, std::memory_order::relaxed);
-    }
-
     [[nodiscard]] auto get_options() -> std::span<uci::Option*> override { return options; }
 
     [[nodiscard]] auto get_custom_uci_commands() const noexcept -> CommandList override
@@ -116,8 +111,6 @@ private:
     void read_config_file(string_view arg);
 
     [[nodiscard]] static auto create_move_format_option() -> uci::ComboOption;
-
-    std::atomic_bool debugMode { false };
 
     search::Thread searcher;
 
@@ -179,8 +172,15 @@ private:
 
     uci::ComboOption moveFormat { create_move_format_option() };
 
-    std::array<uci::Option*, 8uz> options {
-        &ttSize, &clearTT, &ponder, &threads, &moveOverhead, &logFile, &prettyPrintMode, &moveFormat
+    uci::BoolOption sanitizePositions {
+        "Sanitize Positions",
+        false,
+        "When on, the engine checks if the position is legal before setting it.",
+        [this](const bool sanitize) { set_sanitize_positions(sanitize); }
+    };
+
+    std::array<uci::Option*, 9uz> options {
+        &ttSize, &clearTT, &ponder, &threads, &moveOverhead, &logFile, &prettyPrintMode, &moveFormat, &sanitizePositions
     };
 
     std::array<EngineCommand, 10uz> customCommands {
