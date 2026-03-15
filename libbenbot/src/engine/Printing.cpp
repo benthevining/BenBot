@@ -94,7 +94,7 @@ void Engine::print_help(const string_view args) const
     print_command_table(customCommands);
 }
 
-void Engine::print_options() const
+void Engine::print_options()
 {
     println("");
     println("The following UCI options are supported:");
@@ -108,26 +108,31 @@ void Engine::print_options() const
         .append_column("Default")
         .append_column("Current");
 
-    for (const auto* option : options) {
-        table.new_row()
-            .append_column(option->get_name())
-            .append_column(option->get_type())
-            .append_column(option->get_help());
+    auto add_options = [&table](const OptionList opts) {
+        for (const auto* option : opts) {
+            table.new_row()
+                .append_column(option->get_name())
+                .append_column(option->get_type())
+                .append_column(option->get_help());
 
-        if (option->has_value()) {
-            std::visit(
-                [&table](auto defaultValue) {
-                    table.append_column(std::format("{}", defaultValue));
-                },
-                option->get_default_value_variant());
+            if (option->has_value()) {
+                std::visit(
+                    [&table](auto defaultValue) {
+                        table.append_column(std::format("{}", defaultValue));
+                    },
+                    option->get_default_value_variant());
 
-            std::visit(
-                [&table](auto value) {
-                    table.append_column(std::format("{}", value));
-                },
-                option->get_value_variant());
+                std::visit(
+                    [&table](auto value) {
+                        table.append_column(std::format("{}", value));
+                    },
+                    option->get_value_variant());
+            }
         }
-    }
+    };
+
+    add_options(get_standard_uci_options());
+    add_options(options);
 
     print_colored_table(table);
 

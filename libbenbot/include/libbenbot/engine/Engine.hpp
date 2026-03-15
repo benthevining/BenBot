@@ -98,7 +98,7 @@ private:
 
     void print_logo_and_version() const;
     void print_help(string_view args) const;
-    void print_options() const;
+    void print_options();
     void print_current_position(string_view arguments) const;
 
     void set_pretty_printing(bool shouldPrettyPrint);
