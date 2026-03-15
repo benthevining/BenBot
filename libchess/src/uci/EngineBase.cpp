@@ -68,7 +68,7 @@ void EngineBase::handle_command(const string_view command)
     }
 
     info_string(std::format("Unknown UCI command: '{}'", firstWord));
-    // info_string("Type help for a list of supported commands");
+    info_string("Type help for a list of supported commands");
 }
 
 void EngineBase::respond_to_uci()
@@ -95,6 +95,20 @@ void EngineBase::respond_to_isready()
 
     println(cout, "readyok");
     cout.flush();
+}
+
+void EngineBase::respond_to_newgame()
+{
+    const bool wasInitialized = std::exchange(initialized, true);
+
+    new_game(not wasInitialized);
+}
+
+void EngineBase::handle_quit()
+{
+    abort_search();
+    shouldExit = true; // exit the event loop
+    wait();
 }
 
 void EngineBase::handle_setpos(const string_view arguments)

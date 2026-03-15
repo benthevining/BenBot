@@ -190,7 +190,8 @@ struct EngineBase {
 private:
     void respond_to_uci();
     void respond_to_isready();
-
+    void respond_to_newgame();
+    void handle_quit();
     void handle_setpos(string_view arguments);
     void handle_setoption(string_view arguments);
 
@@ -213,19 +214,12 @@ private:
             .argsHelp    = { } },
         EngineCommand {
             .name   = "ucinewgame",
-            .action = EngineCommand::void_cb([this] {
-                new_game(not initialized);
-                initialized = true;
-            }),
+            .action = EngineCommand::void_cb([this] { respond_to_newgame(); }),
             .description = "Initialize a new game",
             .argsHelp    = { } },
         EngineCommand {
             .name   = "quit",
-            .action = EngineCommand::void_cb([this] {
-                abort_search();
-                shouldExit = true; // exit the event loop
-                wait();
-            }),
+            .action = EngineCommand::void_cb([this] { handle_quit(); }),
             .description = "Exit the engine as quickly as possible",
             .argsHelp    = { } },
         EngineCommand {
