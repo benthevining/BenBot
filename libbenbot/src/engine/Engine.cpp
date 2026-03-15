@@ -110,20 +110,6 @@ void Engine::go(const uci::GoCommandOptions& opts)
     searcher.start();
 }
 
-// this function implements non-standard UCI commands that we support
-void Engine::handle_custom_command(
-    const string_view command, const string_view opts)
-{
-    if (const auto it = std::ranges::find(customCommands, command, &CustomCommand::name);
-        it != customCommands.end()) {
-        it->action(opts);
-        return;
-    }
-
-    info_string(std::format("Unknown UCI command: '{}'", command));
-    info_string("Type help for a list of supported commands");
-}
-
 void Engine::start_file_logger(const string_view arg)
 {
     if (arg.empty()) {

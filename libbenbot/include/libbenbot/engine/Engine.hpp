@@ -23,7 +23,6 @@
 #include <atomic>
 #include <filesystem>
 #include <functional>
-#include <libbenbot/engine/CustomCommand.hpp>
 #include <libbenbot/search/Thread.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/uci/EngineBase.hpp>
@@ -38,11 +37,12 @@ struct GoCommandOptions;
 
 namespace ben_bot {
 
+namespace uci = chess::uci;
+
 using chess::game::Position;
 using chess::moves::Move;
 using std::string_view;
-
-namespace uci = chess::uci;
+using uci::EngineCommand;
 
 /** The ``ben-bot`` UCI engine class.
     @ingroup libbenbot
@@ -87,7 +87,10 @@ private:
 
     [[nodiscard]] auto get_options() -> std::span<uci::Option*> override { return options; }
 
-    void handle_custom_command(string_view command, string_view opts) override;
+    [[nodiscard]] auto get_custom_uci_commands() const noexcept -> CommandList override
+    {
+        return customCommands;
+    }
 
     void run_perft(string_view arguments) const;
 
@@ -180,72 +183,58 @@ private:
         &ttSize, &clearTT, &ponder, &threads, &moveOverhead, &logFile, &prettyPrintMode, &moveFormat
     };
 
-    /* ----- Custom commands ----- */
-
-    // clang-format off
-    std::array<CustomCommand, 10uz> customCommands {
-        CustomCommand {
-            .name = "showpos",
-            .action = [this](const string_view args){ print_current_position(args); },
+    std::array<EngineCommand, 10uz> customCommands {
+        EngineCommand {
+            .name   = "showpos",
+            .action = [this](const string_view args) { print_current_position(args); },
             .description = "Prints the current position",
-            .argsHelp = "[utf8]"
-        },
-        CustomCommand {
-            .name = "makenull",
-            .action = CustomCommand::void_cb([this]{ make_null_move(); }),
+            .argsHelp    = "[utf8]" },
+        EngineCommand {
+            .name   = "makenull",
+            .action = EngineCommand::void_cb([this] { make_null_move(); }),
             .description = "Play a null move on the internal board",
-            .argsHelp = {}
-        },
-        CustomCommand {
-            .name = "flip",
-            .action = CustomCommand::void_cb([this]{ color_flip(); }),
+            .argsHelp    = { } },
+        EngineCommand {
+            .name   = "flip",
+            .action = EngineCommand::void_cb([this] { color_flip(); }),
             .description = "Color-flip the current position",
-            .argsHelp = {}
-        },
-        CustomCommand {
-            .name = "options",
-            .action = CustomCommand::void_cb([this]{ print_options(); }),
+            .argsHelp    = { } },
+        EngineCommand {
+            .name   = "options",
+            .action = EngineCommand::void_cb([this] { print_options(); }),
             .description = "Dump current UCI option values",
-            .argsHelp = {}
-        },
-        CustomCommand {
-            .name = "perft",
+            .argsHelp    = { } },
+        EngineCommand {
+            .name   = "perft",
             .action = [this](const string_view args) { run_perft(args); },
             .description = "Computes perft of the current position to the given depth",
-            .argsHelp = "<N> [json]"
-        },
-        CustomCommand {
-            .name = "bench",
-            .action = [this](const string_view args){ run_bench(args); },
+            .argsHelp    = "<N> [json]" },
+        EngineCommand {
+            .name   = "bench",
+            .action = [this](const string_view args) { run_bench(args); },
             .description = "Runs a search and reports total nodes and NPS",
-            .argsHelp = "[<depth>] [<epdPath>]"
-        },
-        CustomCommand {
-            .name = "compiler",
-            .action = CustomCommand::void_cb([]{ print_compiler_info(); }),
+            .argsHelp    = "[<depth>] [<epdPath>]" },
+        EngineCommand {
+            .name   = "compiler",
+            .action = EngineCommand::void_cb([] { print_compiler_info(); }),
             .description = "Print compiler info",
-            .argsHelp = {}
-        },
-        CustomCommand {
-            .name = "writeconfig",
+            .argsHelp    = { } },
+        EngineCommand {
+            .name   = "writeconfig",
             .action = [this](const string_view args) { write_config_file(args); },
             .description = "Writes the engine's current state to a configuration file at the given path",
-            .argsHelp = "<path>"
-        },
-        CustomCommand {
-            .name = "readconfig",
+            .argsHelp    = "<path>" },
+        EngineCommand {
+            .name   = "readconfig",
             .action = [this](const string_view args) { read_config_file(args); },
             .description = "Loads engine state from a configuration file at the given path",
-            .argsHelp = "<path>"
-        },
-        CustomCommand {
-            .name = "help",
-            .action = [this] (const string_view args){ print_help(args); },
+            .argsHelp    = "<path>" },
+        EngineCommand {
+            .name   = "help",
+            .action = [this](const string_view args) { print_help(args); },
             .description = "Display this text",
-            .argsHelp = "[--no-logo]"
-        }
+            .argsHelp    = "[--no-logo]" }
     };
-    // clang-format on
 };
 
 } // namespace ben_bot

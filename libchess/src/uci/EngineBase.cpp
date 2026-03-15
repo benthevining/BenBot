@@ -43,83 +43,32 @@ using util::strings::trim;
 // defined out-of-line to address -Wweak-vtables
 EngineBase::~EngineBase() = default;
 
-void EngineBase::handle_command(string_view command)
+void EngineBase::handle_command(const string_view command)
 {
-    command = trim(command);
-
-    if (command.empty())
-        return;
-
-    if (command == "uci") {
-        respond_to_uci();
-        return;
-    }
-
-    if (command == "isready") {
-        // reply immediately if search is in progress
-        // if not searching, wait on any background tasks before replying
-        if (not is_searching())
-            wait();
-
-        println(cout, "readyok");
-        cout.flush();
-        return;
-    }
-
-    if (command == "ucinewgame") { // isready will be queried after this
-        new_game(not initialized);
-        initialized = true;
-        return;
-    }
-
-    if (command == "quit") {
-        abort_search();
-        wait();
-        shouldExit = true; // exit the event loop
-        return;
-    }
-
-    if (command == "stop") {
-        abort_search();
-        return;
-    }
-
-    if (command == "ponderhit") {
-        ponder_hit();
-        return;
-    }
-
     auto [firstWord, rest] = split_at_first_space(command);
 
     firstWord = trim(firstWord);
     rest      = trim(rest);
 
-    if (firstWord == "position") {
-        handle_setpos(rest);
+    if (firstWord.empty())
+        return;
+
+    if (const auto it = std::ranges::find(standardUCICommands, firstWord, &EngineCommand::name);
+        it != standardUCICommands.end()) {
+        it->action(rest);
         return;
     }
 
-    if (firstWord == "go") {
-        go(parse_go_options(rest, position));
+    const auto customCommands = get_custom_uci_commands();
+
+    if (const auto it = std::ranges::find(customCommands, firstWord, &EngineCommand::name);
+        it != customCommands.end()) {
+        it->action(rest);
         return;
     }
 
-    if (firstWord == "setoption") {
-        handle_setoption(rest);
-        return;
-    }
-
-    if (firstWord == "debug") {
-        set_debug(rest == "on");
-        return;
-    }
-
-    if (firstWord == "register") {
-        handle_registration(parse_register_options(rest));
-        return;
-    }
-
-    handle_custom_command(firstWord, rest);
+    info_string(std::format("Unknown UCI command: '{}'", firstWord));
+    // info_string("Type help for a list of supported commands");
 }
 
 void EngineBase::respond_to_uci()
@@ -134,6 +83,17 @@ void EngineBase::respond_to_uci()
 
     println(cout, "uciok");
 
+    cout.flush();
+}
+
+void EngineBase::respond_to_isready()
+{
+    // reply immediately if search is in progress
+    // if not searching, wait on any background tasks before replying
+    if (not is_searching())
+        wait();
+
+    println(cout, "readyok");
     cout.flush();
 }
 
