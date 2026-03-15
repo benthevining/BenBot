@@ -56,13 +56,22 @@ void best_move(
     Move                bestMove,
     std::optional<Move> ponderMove);
 
+/** Informs the GUI that the engine is currently searching the given move.
+
+    @note For the first move, ``moveNum`` should be 1, not 0!
+
+    @ingroup uci
+ */
+void currmove_info(
+    Move currentMove, size_t moveNum);
+
 /** This POD struct encapsulates the various information that can be printed
     about a search.
 
     @ingroup uci
     @see search_info()
 
-    @todo ``multipv``, ``currmove``, ``currmovenumber``, ``refutation``, ``currline``
+    @todo ``refutation``, ``currline``
  */
 struct SearchInfo final {
     /** Represents the engine's evaluation of the line it is currently searching. */

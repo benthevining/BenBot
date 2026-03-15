@@ -69,6 +69,16 @@ void best_move(
     cout.flush();
 }
 
+void currmove_info(
+    const Move currentMove, const size_t moveNum)
+{
+    println(cout,
+        "info currmove {} currmovenumber {}",
+        to_uci(currentMove), moveNum);
+
+    cout.flush();
+}
+
 auto SearchInfo::Score::MateIn::moves() const noexcept -> int
 {
     return [ply = plies]() mutable {
