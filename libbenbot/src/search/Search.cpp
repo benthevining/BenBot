@@ -362,7 +362,8 @@ namespace {
         const Position&     position,
         TranspositionTable& transTable,
         Interrupter&        interrupter,
-        KillerMoves&        killerMoves)
+        KillerMoves&        killerMoves,
+        const Callbacks&    callbacks)
         -> RootSearchResult
     {
         const Timer timer;
@@ -377,8 +378,11 @@ namespace {
         MoveList pv;
 
         bool foundPV = false;
+        auto moveIdx = 0uz;
 
         for (const auto move : options.movesToSearch) {
+            callbacks.root_move(move, moveIdx++);
+
             PvList childPV;
 
             auto create_context = [depth, &transTable, &interrupter, &stats, &childPV, &killerMoves](const Bounds boundsToUse, const Position& pos) {
@@ -485,7 +489,8 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         if (interrupter.should_abort(0uz))
             break;
 
-        const auto res = root_search(depth, options, position, transTable, interrupter, killerMoves);
+        const auto res = root_search(
+            depth, options, position, transTable, interrupter, killerMoves, callbacks);
 
         if (interrupter.was_aborted())
             break;

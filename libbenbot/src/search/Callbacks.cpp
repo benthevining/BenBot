@@ -37,19 +37,27 @@
 namespace ben_bot::search {
 
 auto Callbacks::make_uci_printer(
-    std::function<bool()>&& isDebugMode)
+    std::function<bool()> isDebugMode)
     -> Callbacks
 {
-    auto printInfo = [isDebug = std::move(isDebugMode)](const Result& res) {
-        search_info(res.to_libchess(isDebug()));
+    namespace uci_printing = chess::uci::printing;
+
+    auto printInfo = [isDebugMode](const Result& res) {
+        search_info(res.to_libchess(isDebugMode()));
     };
 
     return {
         .onSearchStart    = nullptr,
         .onSearchComplete = [printInfo](const Result& res) {
             printInfo(res);
-            chess::uci::printing::best_move(res.best_move(), res.ponder_move()); },
-        .onIteration      = printInfo
+            uci_printing::best_move(res.best_move(), res.ponder_move()); },
+        .onIteration      = printInfo,
+        .onRootMove       = [isDebugMode](const Move move, const size_t idx) {
+            if (isDebugMode()) {
+                uci_printing::currmove_info(
+                    move,
+                    idx + 1uz); // convert 0-based -> 1-based index
+            } }
     };
 }
 
@@ -314,7 +322,8 @@ auto Callbacks::make_pretty_printer(
             print_table_header();
         },
         .onSearchComplete = printIteration,
-        .onIteration      = printIteration
+        .onIteration      = printIteration,
+        .onRootMove       = nullptr
     };
 }
 

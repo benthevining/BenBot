@@ -20,16 +20,15 @@
 #pragma once
 
 #include <functional>
+#include <libchess/moves/Move.hpp>
 #include <string>
-
-namespace chess::moves {
-struct Move;
-}
 
 namespace ben_bot::search {
 
 struct Options;
 struct Result;
+
+using chess::moves::Move;
 
 /** This struct encapsulates a set of functions that will be called to
     process search progress and results. Search results are always
@@ -52,6 +51,12 @@ struct Callbacks final {
         the iterative deepening loop.
      */
     Callback onIteration;
+
+    /** Function object that will be invoked with each root move being searched.
+        The second argument is the index of the current move in the list of moves
+        being searched.
+     */
+    std::function<void(Move, size_t)> onRootMove;
 
     /** Can be safely called without checking if ``onSearchStart`` is null. */
     void search_start(const Options& options) const
@@ -78,6 +83,14 @@ struct Callbacks final {
         }
     }
 
+    /** Can be safely called without checking if ``onRootMove`` is null. */
+    void root_move(const Move move, const size_t idx) const
+    {
+        if (onRootMove != nullptr) {
+            onRootMove(move, idx);
+        }
+    }
+
     /** Creates a set of callbacks that print UCI-formatted information and bestmove
         output to standard output.
 
@@ -85,7 +98,7 @@ struct Callbacks final {
         should be included in the information output.
      */
     [[nodiscard]] static auto make_uci_printer(
-        std::function<bool()>&& isDebugMode)
+        std::function<bool()> isDebugMode)
         -> Callbacks;
 
     /** Creates a set of callbacks that print search information in a human-readable
@@ -97,7 +110,7 @@ struct Callbacks final {
         @note The output produced by these callbacks does not conform to the UCI protocol!
      */
     [[nodiscard]] static auto make_pretty_printer(
-        std::function<std::string(chess::moves::Move)>&& printMove)
+        std::function<std::string(Move)>&& printMove)
         -> Callbacks;
 };
 
