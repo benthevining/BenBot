@@ -86,14 +86,33 @@ void refutation_info(
     std::string refLineString;
 
     for (const auto lineMove : refutation)
-        refLineString.append(std::format("{} ", to_uci(lineMove)));
-
-    if (not refLineString.empty())
-        refLineString.pop_back(); // remove final space
+        refLineString.append(std::format(" {}", to_uci(lineMove)));
 
     println(cout,
         "info refutation {}{}",
         to_uci(move), refLineString);
+
+    cout.flush();
+}
+
+void currline_info(
+    const MoveSpan              line,
+    const std::optional<size_t> cpuNum)
+{
+    const auto cpuNumStr = cpuNum
+                               .transform([](const size_t num) {
+                                   return std::format(" {}", num);
+                               })
+                               .value_or(string { });
+
+    std::string lineStr;
+
+    for (const auto move : line)
+        lineStr.append(std::format(" {}", to_uci(move)));
+
+    println(cout,
+        "info currline{}{}",
+        cpuNumStr, lineStr);
 
     cout.flush();
 }

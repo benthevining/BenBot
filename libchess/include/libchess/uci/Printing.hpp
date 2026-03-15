@@ -75,13 +75,20 @@ void refutation_info(
     Move                  move,
     std::span<const Move> refutation = { });
 
+/** Prints information about the current line being searched.
+    ``cpuNum`` may be omitted if the engine is using just one CPU.
+    In the multithreaded case, ideally all threads should send this
+    information together. ``cpuNum`` should be a 1-based index.
+ */
+void currline_info(
+    std::span<const Move> line,
+    std::optional<size_t> cpuNum = std::nullopt);
+
 /** This POD struct encapsulates the various information that can be printed
     about a search.
 
     @ingroup uci
     @see search_info()
-
-    @todo ``currline``
  */
 struct SearchInfo final {
     /** Represents the engine's evaluation of the line it is currently searching. */
