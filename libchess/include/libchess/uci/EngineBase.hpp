@@ -21,8 +21,10 @@
 
 #include <array>
 #include <atomic>
+#include <cassert>
 #include <functional>
 #include <libchess/uci/CommandParsing.hpp>
+#include <libchess/uci/Options.hpp>
 #include <span>
 #include <string>
 #include <string_view>
@@ -36,8 +38,6 @@ namespace chess::uci {
 
 using game::Position;
 using std::string_view;
-
-struct Option;
 
 /** A UCI command that the engine can respond to.
     @ingroup uci
@@ -75,8 +75,6 @@ struct EngineCommand final {
     }
 };
 
-using std::memory_order_relaxed;
-
 /** A base class for UCI @cite Meyer-Kahlen_2006 chess engines.
 
     This class provides handling of UCI command parsing, so that
@@ -108,9 +106,6 @@ struct EngineBase {
 
     /** This must return the name of the engine's author. */
     [[nodiscard]] virtual auto get_author() const -> string_view = 0;
-
-    /** This must return the list of all options the engine supports. */
-    [[nodiscard]] virtual auto get_options() -> std::span<Option*> { return { }; }
 
     /** This function will be called when the "isready" command is received,
         and may block while waiting for background tasks to complete. This
@@ -187,16 +182,31 @@ struct EngineBase {
         return { };
     }
 
+    /** Typedef for a view of a list of engine options. */
+    using OptionList = std::span<Option*>;
+
+    /** Subclasses should overload this to return their custom UCI options. */
+    [[nodiscard]] virtual auto get_custom_uci_options() noexcept -> OptionList
+    {
+        return { };
+    }
+
+    /** Returns the engine's list of supported standard UCI commands. */
+    [[nodiscard]] auto get_standard_uci_options() noexcept -> OptionList
+    {
+        return standardUCIOptions;
+    }
+
     /** Returns true if the engine's debugging mode is active. */
     [[nodiscard]] auto is_debug_mode() const noexcept -> bool
     {
-        return debugMode.load(memory_order_relaxed);
+        return debugMode.load(std::memory_order_relaxed);
     }
 
     /** Sets the engine's debugging mode. */
     void set_debug_mode(const bool shouldDebug) noexcept
     {
-        debugMode.store(shouldDebug, memory_order_relaxed);
+        debugMode.store(shouldDebug, std::memory_order_relaxed);
     }
 
     /** Tells the base class whether to sanitize incoming positions when processing
@@ -208,8 +218,43 @@ struct EngineBase {
      */
     void set_sanitize_positions(const bool shouldSanitize) noexcept
     {
-        sanitizeIncomingPositions.store(shouldSanitize, memory_order_relaxed);
+        sanitizeIncomingPositions.store(shouldSanitize, std::memory_order_release);
     }
+
+    /** Subclasses should implement this to resize their transposition table. */
+    virtual void resize_transposition_table([[maybe_unused]] const size_t sizeMB) { }
+
+    /** Subclasses can implement this to be informed when the ponder parameter changes. */
+    virtual void set_ponder([[maybe_unused]] const bool shouldPonder) { }
+
+    //// @name Standard UCI options
+    /// @{
+
+    /** Standard UCI option for hash size. */
+    IntOption opt_Hash {
+        "Hash",
+        1, 2048, 16,
+        "Sets the transposition table size (in MB)",
+        [this](const int sizeMB) {
+            assert(sizeMB >= 0);
+            resize_transposition_table(static_cast<size_t>(sizeMB));
+        }
+    };
+
+    /** Standard UCI option for pondering.
+        The engine doesn't start pondering on its own without explicitly being told to
+        via another ``go`` command; this option is needed to inform the GUI that the engine
+        supports pondering, and also gives the engine the opportunity to adjust its time
+        management algorithm when pondering is enabled.
+     */
+    BoolOption opt_Ponder {
+        "Ponder",
+        false,
+        "Controls whether pondering is allowed.",
+        [this](const bool shouldPonder) { set_ponder(shouldPonder); }
+    };
+
+    /// @}
 
 private:
     void respond_to_uci();
@@ -288,6 +333,10 @@ private:
             },
             .description = "Handle license registration",
             .argsHelp    = { } }
+    };
+
+    std::array<Option*, 2uz> standardUCIOptions {
+        &opt_Hash, &opt_Ponder
     };
 };
 

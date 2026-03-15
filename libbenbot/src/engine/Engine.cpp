@@ -13,7 +13,6 @@
  */
 
 #include <algorithm>
-#include <atomic>
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <filesystem>
@@ -39,7 +38,6 @@
 namespace ben_bot {
 
 using std::filesystem::path;
-using std::memory_order_relaxed;
 using std::size_t;
 using uci::printing::info_string;
 
@@ -103,7 +101,7 @@ void Engine::go(const uci::GoCommandOptions& opts)
     searcher.context.set_options(newOpts);
 
     searcher.context.set_pondering(
-        opts.ponderMode and ponder.get_value());
+        opts.ponderMode and opt_Ponder.get_value());
 
     searcher.start();
 }

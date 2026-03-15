@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <cassert>
 #include <expected>
 #include <format>
 #include <iostream>
@@ -32,7 +33,9 @@ namespace chess::uci {
 
 using printing::info_string;
 using std::cout;
+using std::memory_order_acquire;
 using std::memory_order_relaxed;
+using std::memory_order_release;
 using std::println;
 using std::string_view;
 using util::strings::split_at_first_space;
@@ -79,7 +82,7 @@ void EngineBase::respond_to_uci()
     println(cout, "id name {}", get_name());
     println(cout, "id author {}", get_author());
 
-    for (const auto* option : get_options())
+    for (const auto* option : get_custom_uci_options())
         println(cout, "{}", option->get_declaration_string());
 
     println(cout, "uciok");
@@ -95,6 +98,7 @@ void EngineBase::respond_to_isready()
         wait();
 
     println(cout, "readyok");
+
     cout.flush();
 }
 
@@ -108,7 +112,9 @@ void EngineBase::respond_to_newgame()
 void EngineBase::handle_quit()
 {
     abort_search();
-    shouldExit.store(true, std::memory_order::release);
+
+    shouldExit.store(true, memory_order_release);
+
     wait();
 }
 
@@ -125,7 +131,7 @@ void EngineBase::handle_setpos(const string_view arguments)
     [[maybe_unused]] const auto obj
         = parse_position_options(arguments)
               .and_then([this](const Position& pos) -> std::expected<void, std::string> {
-                  if (sanitizeIncomingPositions.load(memory_order_relaxed)) {
+                  if (sanitizeIncomingPositions.load(memory_order_acquire)) {
                       if (const auto errorStr = pos.is_illegal()) {
                           [[unlikely]];
                           return std::unexpected {
@@ -173,21 +179,33 @@ void EngineBase::handle_setoption(const string_view arguments)
 
     wait();
 
-    const auto options = get_options();
+    auto update_option = [name, isNPos, rest, valueTokenIdx](const OptionList options) {
+        if (const auto it = std::ranges::find_if(
+                options,
+                [name](const Option* opt) { return opt->get_name() == name; });
+            it != options.end()) {
+            auto* option = *it;
 
-    if (const auto it = std::ranges::find_if(
-            options,
-            [name](const Option* opt) { return opt->get_name() == name; });
-        it != options.end()) {
-        auto* option = *it;
+            assert(option != nullptr);
 
-        if (isNPos)
-            option->handle_setvalue({ });
-        else
-            option->handle_setvalue(trim(rest.substr(valueTokenIdx)));
-    } else {
-        info_string(std::format("Attempted to set unknown option '{}'", name));
-    }
+            if (isNPos)
+                option->handle_setvalue({ });
+            else
+                option->handle_setvalue(trim(rest.substr(valueTokenIdx)));
+
+            return true;
+        }
+
+        return false;
+    };
+
+    if (update_option(standardUCIOptions))
+        return;
+
+    if (update_option(get_custom_uci_options()))
+        return;
+
+    info_string(std::format("Attempted to set unknown option '{}'", name));
 }
 
 void EngineBase::loop()
@@ -198,7 +216,7 @@ void EngineBase::loop()
         std::getline(std::cin, inputBuf);
 
         handle_command(inputBuf);
-    } while (not shouldExit.load(std::memory_order::acquire));
+    } while (not shouldExit.load(memory_order_acquire));
 }
 
 } // namespace chess::uci

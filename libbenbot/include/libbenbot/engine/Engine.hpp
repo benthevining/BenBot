@@ -20,7 +20,6 @@
 #pragma once
 
 #include <array>
-#include <atomic>
 #include <filesystem>
 #include <functional>
 #include <libbenbot/search/Thread.hpp>
@@ -80,7 +79,10 @@ private:
 
     auto is_searching() const noexcept -> bool override { return searcher.context.in_progress(); }
 
-    [[nodiscard]] auto get_options() -> std::span<uci::Option*> override { return options; }
+    [[nodiscard]] auto get_custom_uci_options() noexcept -> OptionList override
+    {
+        return options;
+    }
 
     [[nodiscard]] auto get_custom_uci_commands() const noexcept -> CommandList override
     {
@@ -112,39 +114,27 @@ private:
 
     [[nodiscard]] static auto create_move_format_option() -> uci::ComboOption;
 
+    void resize_transposition_table(const size_t sizeMB) override
+    {
+        searcher.context.resize_transposition_table(sizeMB);
+    }
+
+    void set_ponder(const bool shouldPonder) override
+    {
+        // the ponder flag is only ever turned on via the go options,
+        // but it can be turned off by disabling this UCI option
+        if (not shouldPonder)
+            searcher.context.set_pondering(false);
+    }
+
     search::Thread searcher;
 
     /* ----- UCI options ----- */
-
-    uci::IntOption ttSize {
-        "Hash",
-        1, 2048, 16,
-        "Sets the maximum transposition table size (in MB).",
-        [this](const int sizeMB) {
-            searcher.context.resize_transposition_table(static_cast<size_t>(sizeMB));
-        }
-    };
 
     uci::Action clearTT {
         "Clear Hash",
         [this] { searcher.context.clear_transposition_table(); },
         "Press to clear the transposition table."
-    };
-
-    // The engine doesn't start pondering on its own without explicitly being told to
-    // via another go command; this option is needed to inform the GUI that the engine
-    // supports pondering, and also gives the engine the opportunity to adjust its time
-    // management algorithm when pondering is enabled.
-    uci::BoolOption ponder {
-        "Ponder",
-        false,
-        "Controls whether pondering is allowed.",
-        [this](const bool shouldPonder) {
-            // the ponder flag is only ever turned on via the go options,
-            // but it can be turned off by disabling this UCI option
-            if (not shouldPonder)
-                searcher.context.set_pondering(false);
-        }
     };
 
     uci::IntOption threads {
@@ -179,8 +169,8 @@ private:
         [this](const bool sanitize) { set_sanitize_positions(sanitize); }
     };
 
-    std::array<uci::Option*, 9uz> options {
-        &ttSize, &clearTT, &ponder, &threads, &moveOverhead, &logFile, &prettyPrintMode, &moveFormat, &sanitizePositions
+    std::array<uci::Option*, 7uz> options {
+        &clearTT, &threads, &moveOverhead, &logFile, &prettyPrintMode, &moveFormat, &sanitizePositions
     };
 
     std::array<EngineCommand, 10uz> customCommands {
