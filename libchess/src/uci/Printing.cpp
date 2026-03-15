@@ -43,6 +43,7 @@ using std::string;
 using std::string_view;
 
 using MaybeMove = std::optional<Move>;
+using MoveSpan  = std::span<const Move>;
 
 auto info_string(const string_view info) -> std::monostate
 {
@@ -75,6 +76,24 @@ void currmove_info(
     println(cout,
         "info currmove {} currmovenumber {}",
         to_uci(currentMove), moveNum);
+
+    cout.flush();
+}
+
+void refutation_info(
+    const Move move, const MoveSpan refutation)
+{
+    std::string refLineString;
+
+    for (const auto lineMove : refutation)
+        refLineString.append(std::format("{} ", to_uci(lineMove)));
+
+    if (not refLineString.empty())
+        refLineString.pop_back(); // remove final space
+
+    println(cout,
+        "info refutation {}{}",
+        to_uci(move), refLineString);
 
     cout.flush();
 }
@@ -128,7 +147,7 @@ namespace {
     // if not empty, begins with a space:
     // * ""
     // * " pv <move...>"
-    [[nodiscard]] auto pv_string(const std::span<const Move> pv) -> string
+    [[nodiscard]] auto pv_string(const MoveSpan pv) -> string
     {
         if (pv.empty()) {
             // this is possible if we're checkmated

@@ -24,6 +24,7 @@
 #include <libchess/moves/Move.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 #include <variant>
@@ -65,13 +66,22 @@ void best_move(
 void currmove_info(
     Move currentMove, size_t moveNum);
 
+/** Prints information that the ``move`` is refuted by the line ``refutation``.
+    If no refutation is found for ``move``, ``refutation`` can be empty.
+
+    @ingroup uci
+ */
+void refutation_info(
+    Move                  move,
+    std::span<const Move> refutation = { });
+
 /** This POD struct encapsulates the various information that can be printed
     about a search.
 
     @ingroup uci
     @see search_info()
 
-    @todo ``refutation``, ``currline``
+    @todo ``currline``
  */
 struct SearchInfo final {
     /** Represents the engine's evaluation of the line it is currently searching. */
