@@ -111,7 +111,8 @@ namespace {
             search::Callbacks {
                 .onSearchStart    = nullptr,
                 .onSearchComplete = [this](const SearchResult& res) { print_info(res); result = res; },
-                .onIteration      = [this](const SearchResult& res) { print_info(res); }
+                .onIteration      = [this](const SearchResult& res) { print_info(res); },
+                .onRootMove       = nullptr
             }
         };
         // clang-format on

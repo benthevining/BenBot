@@ -18,7 +18,7 @@ include (FeatureSummary)
 
 add_feature_info (
     coverage [[CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang" AND NOT WIN32]]
-    "Enabled coverage reporting flags for debug configurations"
+    "Coverage reporting flags for debug configurations"
 )
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang" AND NOT WIN32)
