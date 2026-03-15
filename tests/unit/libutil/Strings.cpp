@@ -219,3 +219,20 @@ TEST_CASE("Strings - words_view()", TAGS)
         REQUIRE(words.back() == "456");
     }
 }
+
+TEST_CASE("Strings - Levenshtein distance", TAGS)
+{
+    using util::strings::levenshtein_distance;
+
+    REQUIRE(
+        levenshtein_distance("kitten", "sitting") == 3uz);
+
+    REQUIRE(
+        levenshtein_distance("corporate", "cooperation") == 5uz);
+
+    REQUIRE(
+        levenshtein_distance("123", { }) == 0uz);
+
+    REQUIRE(
+        levenshtein_distance({ }, { }) == 0uz);
+}

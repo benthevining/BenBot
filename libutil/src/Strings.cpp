@@ -23,6 +23,7 @@
 #include <ranges>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace {
 
@@ -148,6 +149,33 @@ auto split_at_first_space_or_newline(const string_view input) -> StringViewPair
         input.substr(0uz, firstDelimIdx),
         input.substr(firstDelimIdx + 1uz)
     };
+}
+
+auto levenshtein_distance(
+    const string_view first, const string_view second) -> size_t
+{
+    const auto size_a = first.size();
+    const auto size_b = second.size();
+
+    auto distances = std::views::iota(0uz, size_b + 1uz)
+                   | std::ranges::to<std::vector>();
+
+    for (auto i = 0uz; i < size_a; ++i) {
+        auto prevDist = 0uz;
+
+        for (auto j = 0uz; j < size_b; ++j) {
+            const auto next = distances.at(j + 1uz);
+
+            const auto dist = std::exchange(prevDist, next)
+                            + (first.at(i) == second.at(j) ? 0uz : 1uz);
+
+            distances.at(j + 1uz) = std::min({ dist,
+                distances.at(j) + 1uz,
+                next + 1uz });
+        }
+    }
+
+    return distances.at(size_b);
 }
 
 } // namespace util::strings
