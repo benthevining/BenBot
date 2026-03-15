@@ -23,6 +23,7 @@
 #include <libbenbot/search/Result.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/MoveFormats.hpp>
+#include <libchess/uci/EngineBase.hpp>
 #include <libchess/uci/Printing.hpp>
 #include <libutil/Strings.hpp>
 #include <libutil/TextTable.hpp>
@@ -46,6 +47,26 @@ auto Engine::get_name() const -> std::string
     return std::format("BenBot {}", resources::get_version_string());
 }
 
+namespace {
+    void print_command_table(const uci::EngineBase::CommandList commands)
+    {
+        TextTable table;
+
+        table.append_column("Command")
+            .append_column("Notes");
+
+        for (const auto& command : commands) {
+            table.new_row()
+                .append_column(std::format("{} {}", command.name, command.argsHelp))
+                .append_column(command.description);
+        }
+
+        print_colored_table(table);
+
+        std::cout.flush();
+    }
+} // namespace
+
 void Engine::print_help(const string_view args) const
 {
     const bool noLogo = [args] {
@@ -61,25 +82,16 @@ void Engine::print_help(const string_view args) const
         println("");
     }
 
-    println(
-        "All standard UCI commands are supported, as well as the following non-standard commands:");
-
+    println("The following standard UCI commands are supported:");
     println("");
 
-    TextTable table;
+    print_command_table(get_standard_uci_commands());
+    println("");
 
-    table.append_column("Command")
-        .append_column("Notes");
+    println("The following non-standard UCI commands are supported:");
+    println("");
 
-    for (const auto& command : customCommands) {
-        table.new_row()
-            .append_column(std::format("{} {}", command.name, command.argsHelp))
-            .append_column(command.description);
-    }
-
-    print_colored_table(table);
-
-    std::cout.flush();
+    print_command_table(customCommands);
 }
 
 void Engine::print_options() const

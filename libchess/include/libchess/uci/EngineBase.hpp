@@ -247,7 +247,7 @@ private:
             .name   = "go",
             .action = [this](const string_view args) { go(parse_go_options(args, position)); },
             .description = "Start a search",
-            .argsHelp    = "Refer to UCI spec for full options" },
+            .argsHelp    = { } },
         EngineCommand {
             .name   = "setoption",
             .action = [this](const string_view args) { handle_setoption(args); },
@@ -264,7 +264,7 @@ private:
                 handle_registration(parse_register_options(args));
             },
             .description = "Handle license registration",
-            .argsHelp    = "Refer to UCI spec" }
+            .argsHelp    = { } }
     };
 };
 
