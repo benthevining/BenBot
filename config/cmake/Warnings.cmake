@@ -44,7 +44,6 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         -Wconversion
         -Werror=format-security
         -Wextra
-        -Wformat
         -Wformat=2
         -Woverloaded-virtual
         -Wimplicit-fallthrough
@@ -76,12 +75,14 @@ endif ()
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options (
         --extra-warnings
-        -fcolor-diagnostics
         -Wbool-conversion
         -Wconditional-uninitialized
         -Wconstant-conversion
+        -Wdouble-promotion
         -Wextra-semi
         -Wint-conversion
+        -Wnull-dereference
+        -Wold-style-cast
         -Wnullable-to-nonnull-conversion
         -Wshadow-all
         -Wshift-sign-overflow
@@ -90,22 +91,23 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         -Weverything
     )
 
-    if (WIN32)
-        add_compile_options (-Wno-reserved-macro-identifier)
-    endif ()
-
     if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 21)
         add_compile_options (-Wno-nrvo)
     endif ()
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     add_compile_options (
         -Waggressive-loop-optimizations
+        -Wduplicated-branches
+        -Wduplicated-cond
+        -Wmisleading-indentation
+        -Wlogical-op
         -Wpointer-arith
         -Wredundant-decls
         -Wwrite-strings
         -Wdelete-non-virtual-dtor
         -Wsuggest-override
         -Wtrampolines
+        -Wuseless-cast
         -Wbidi-chars=any
         #
         -Wno-attributes
