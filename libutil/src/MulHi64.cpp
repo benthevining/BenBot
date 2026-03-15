@@ -25,7 +25,7 @@ namespace {
     };
 
     auto get_hi_32_bits = [](const uint64_t value) noexcept {
-        return static_cast<uint64_t>(value >> UINT64_C(32));
+        return value >> UINT64_C(32);
     };
 
     const auto a_lo = get_lo_32_bits(first);
