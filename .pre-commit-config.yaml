@@ -102,7 +102,7 @@ repos:
   hooks:
   - id: clang-format
     exclude_types: [json]
-    additional_dependencies: [clang-format>=22.1.0]
+    additional_dependencies: [clang-format>=22.1.1]
 - repo: https://github.com/pocc/pre-commit-hooks
   rev: v1.3.5
   hooks:
