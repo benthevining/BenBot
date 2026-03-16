@@ -138,13 +138,7 @@ class MiniTestFramework:
             t0 = time.time()
 
             with redirect_stdout(buffer):
-                if hasattr(test_instance, "beforeEach"):
-                    test_instance.beforeEach()
-
                 getattr(test_instance, method)()
-
-                if hasattr(test_instance, "afterEach"):
-                    test_instance.afterEach()
 
             duration = time.time() - t0
 
@@ -215,16 +209,10 @@ class MiniTestFramework:
 
 
 class BenBot:
-    def __init__(
-        self,
-        path: str,
-        args: List[str] = [],
-        cli: bool = False,
-    ):
+    def __init__(self, path: str, args: List[str] = []):
         self.path = path
         self.process = None
         self.args = args
-        self.cli = cli
         self.output = []
 
         self.start()
@@ -239,22 +227,6 @@ class BenBot:
             raise RuntimeError("BenBot process has terminated")
 
     def start(self):
-        if self.cli:
-            self.process = subprocess.run(
-                [self.path] + self.args + ["--no-loop"],
-                capture_output=True,
-                text=True,
-            )
-
-            if self.process.returncode != 0:
-                print(self.process.stdout)
-                print(self.process.stderr)
-                print(f"Process failed with return code {self.process.returncode}")
-
-            self.process = None
-
-            return
-
         self.process = subprocess.Popen(
             [self.path] + self.args,
             stdin=subprocess.PIPE,
