@@ -45,6 +45,9 @@ using chess::pieces::Color;
 // ability to click & drag pieces on board to different squares
 // ability to click & drag pieces on board off of board (or to a trash can icon?)
 
+// TODO:
+// when user has selected EP square, then changes side to move, need to deselect EP square!
+
 namespace {
     void render_chessboard(Position& position)
     {
@@ -132,7 +135,7 @@ namespace {
             ImGui::SetTooltip("Set the castling rights of each side");
     }
 
-    [[nodiscard, gnu::const]] auto get_possible_ep_squares(const Position& position)
+    [[nodiscard, gnu::const]] auto get_possible_ep_squares(const Position& position) noexcept
     {
         using beman::inplace_vector::inplace_vector;
 
@@ -161,15 +164,15 @@ namespace {
                                 | std::ranges::to<inplace_vector<Square, 2uz>>();
                        })
                      | std::views::join
-                     | std::ranges::to<inplace_vector<Square, 8uz>>();
+                     | std::ranges::to<inplace_vector<Square, 16uz>>();
 
         // TODO: bug here
         // filter duplicates
         std::ranges::sort(squares);
 
-        auto unique_end = std::ranges::unique(squares).end();
-
-        squares.erase(unique_end, squares.end());
+        squares.erase(
+            std::ranges::unique(squares).end(),
+            squares.end());
 
         return squares;
     }
@@ -208,27 +211,46 @@ namespace {
 
             ImGui::EndCombo();
         }
+
+        ImGui::SetItemTooltip("Set the en passant target square");
     }
 
-    // TODO: make sure text field is wide enough by default
     void render_fen_string(Position& position)
     {
+        static constexpr auto ErrorPopupID { "FEN parse error" };
+
+        static std::string errorMessage;
+
         auto inputBuf = chess::notation::to_fen(position);
 
-        if (ImGui::InputText("FEN", &inputBuf, ImGuiInputTextFlags_AutoSelectAll)) {
+        if (ImGui::InputText("FEN", &inputBuf,
+                ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
             [[maybe_unused]] const auto result
                 = chess::notation::from_fen(inputBuf)
                       .transform([&position](const Position& newPos) {
                           position = newPos;
+                          errorMessage.clear();
                           return std::monostate { };
                       })
-                      .transform_error([](const std::string_view errorMessage) {
-                          // TODO: display error popup
+                      .transform_error([](const std::string_view error) {
+                          errorMessage = error;
+                          ImGui::OpenPopup(ErrorPopupID, ImGuiPopupFlags_NoReopen);
                           return std::monostate { };
                       });
         }
 
         ImGui::SetItemTooltip("Enter a FEN string");
+
+        if (ImGui::BeginPopupModal(ErrorPopupID, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::Text("%s", errorMessage.c_str());
+
+            if (ImGui::Button("OK", { 120.f, 0.f })) {
+                ImGui::CloseCurrentPopup();
+                errorMessage.clear();
+            }
+
+            ImGui::EndPopup();
+        }
     }
 } // namespace
 
