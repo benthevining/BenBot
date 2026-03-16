@@ -28,17 +28,12 @@ set (imgui_backends_dir "${imgui_backends_dir}" PARENT_SCOPE)
 # create our own target for imgui
 add_library (imgui STATIC)
 
-set (config_file "${CMAKE_CURRENT_LIST_DIR}/imconfig.h")
-
 target_sources (
     imgui
     PRIVATE "${imgui_SOURCE_DIR}/imgui.cpp" "${imgui_SOURCE_DIR}/imgui_draw.cpp"
             "${imgui_SOURCE_DIR}/imgui_tables.cpp" "${imgui_SOURCE_DIR}/imgui_widgets.cpp"
-            "${imgui_misc_cpp_dir}/imgui_stdlib.cpp" "${config_file}"
+            "${imgui_misc_cpp_dir}/imgui_stdlib.cpp"
 )
-
-# this definition needs to be seen by the imgui library source files
-target_compile_definitions (imgui PUBLIC "IMGUI_USER_CONFIG=<${config_file}>")
 
 target_include_directories (
     imgui PUBLIC "${imgui_SOURCE_DIR}" "${imgui_misc_cpp_dir}" "${imgui_backends_dir}"

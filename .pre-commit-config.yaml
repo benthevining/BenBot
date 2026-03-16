@@ -79,7 +79,6 @@ repos:
     name: Insert license header in C++ source files
     args: [--license-filepath=libbenbot/resources/res/license_header.txt, --comment-style=/*| *| */, --detect-license-in-X-top-lines=16]
     types_or: [c, c++]
-    exclude: imconfig.h
   - id: insert-license
     name: Insert license header in CMake files
     args: [--license-filepath=libbenbot/resources/res/license_header.txt, --comment-style=#, --detect-license-in-X-top-lines=16]
