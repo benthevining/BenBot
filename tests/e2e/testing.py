@@ -11,7 +11,6 @@
 # ======================================================================================
 
 import subprocess
-from subprocess import CompletedProcess
 from typing import List
 import os
 import collections
@@ -237,7 +236,7 @@ class BenBot:
     def _check_process_alive(self):
         if not self.process or self.process.poll() is not None:
             print("\n".join(self.output))
-            raise RuntimeError("Stockfish process has terminated")
+            raise RuntimeError("BenBot process has terminated")
 
     def start(self):
         if self.cli:
@@ -307,7 +306,7 @@ class BenBot:
             raise ValueError("Callback function is required")
 
         for line in self.readline():
-            if callback(line) == True:
+            if callback(line):
                 return
 
     @timeout_decorator(MAX_TIMEOUT)

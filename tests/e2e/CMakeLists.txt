@@ -23,4 +23,10 @@ add_test (NAME ben_bot.one_shot_clis
                   "$<TARGET_FILE:ben_bot>"
 )
 
-set_tests_properties (ben_bot.one_shot_clis PROPERTIES REQUIRED_FILES "$<TARGET_FILE:ben_bot>")
+add_test (NAME ben_bot.e2e COMMAND Python::Interpreter "${CMAKE_CURRENT_LIST_DIR}/e2e.py"
+                                   "$<TARGET_FILE:ben_bot>"
+)
+
+set_tests_properties (
+    ben_bot.one_shot_clis ben_bot.e2e PROPERTIES REQUIRED_FILES "$<TARGET_FILE:ben_bot>"
+)
