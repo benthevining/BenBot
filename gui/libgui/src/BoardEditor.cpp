@@ -43,7 +43,6 @@ using chess::pieces::Color;
 using chess::moves::get_potentially_legal_en_passant_target_squares;
 
 // TODOLIST :
-// bug with removing duplicate EP squares
 // render piece sprites in squares
 // allow dropping dragged text into FEN input? BeginDragDropTarget(), AcceptDragDropPayload()
 // sprite "trays" to click & drag pieces on to board

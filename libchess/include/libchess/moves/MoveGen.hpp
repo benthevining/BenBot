@@ -817,15 +817,15 @@ namespace detail {
         const auto posibleTaken   = theirPieces.pawns & epRankMask;
 
         return possibleTakers.subboards()
-             | std::views::transform([posibleTaken](const Bitboard startSquare) noexcept {
+             | stdv::transform([posibleTaken](const Bitboard startSquare) noexcept {
                    const auto attacks   = patterns::pawn_attacks<Side>(startSquare);
                    const auto takenMask = patterns::pawn_pushes<Side>(posibleTaken);
 
                    return (attacks & takenMask).squares()
                         | std::ranges::to<inplace_vector<Square, 2uz>>();
                })
-             | std::views::join
-             | std::ranges::to<inplace_vector<Square, 16uz>>();
+             | stdv::join
+             | std::ranges::to<inplace_vector<Square, 8uz>>();
     }
 } // namespace detail
 
@@ -836,13 +836,13 @@ inline auto get_potentially_legal_en_passant_target_squares(
                      ? detail::potentially_legal_ep_squares<Color::White>(position)
                      : detail::potentially_legal_ep_squares<Color::Black>(position);
 
-    // TODO: bug here
-    // filter duplicates
+    // sort & filter duplicates
+
     std::ranges::sort(squares);
 
-    squares.erase(
-        std::ranges::unique(squares).end(),
-        squares.end());
+    const auto toErase = std::ranges::unique(squares);
+
+    squares.erase(toErase.begin(), toErase.end());
 
     return squares;
 }
