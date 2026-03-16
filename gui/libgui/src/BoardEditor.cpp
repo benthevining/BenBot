@@ -40,10 +40,18 @@ using chess::board::Rank;
 using chess::board::Square;
 using chess::pieces::Color;
 
+// TODOLIST :
+// use ImGui::TextUnformatted() when passing output of std::format
+// ApplicationState struct, top-level render_app() function. also initialize_app() function, move as much out of main.cpp as possible
+// get rid of custom imconfig.h?
+// get rid of static vars in functions, pass structs around
+// bug with removing duplicate EP squares
 // render piece sprites in squares
+// allow dropping dragged text into FEN input? BeginDragDropTarget(), AcceptDragDropPayload()
 // sprite "trays" to click & drag pieces on to board
-// ability to click & drag pieces on board to different squares
+// ability to click & drag pieces on board to different squares. don't allow dropping piece on occupied square.
 // ability to click & drag pieces on board off of board (or to a trash can icon?)
+// windows build
 
 namespace {
     void render_chessboard(Position& position)
@@ -80,6 +88,10 @@ namespace {
         }
     }
 
+    // This is different than legal move generation, which looks at the opponent's last move
+    // to determine what EP captures are possible. Instead, this function looks only at the
+    // positions of the pawns on the board to tell you which pawns could *potentially* legally
+    // capture en passant, if the opponent had just moved the appropriate pawn.
     [[nodiscard, gnu::const]] auto get_possible_ep_squares(const Position& position) noexcept
     {
         using beman::inplace_vector::inplace_vector;
@@ -122,6 +134,19 @@ namespace {
         return squares;
     }
 
+    // When the user manually changes the side to move, we may need to reset the EP square
+    // if it was set, because the en passant ranks are different for each side. This function
+    // resets the EP square if it was set to one that is now illegal.
+    void check_ep_square(Position& position)
+    {
+        position.enPassantTargetSquare.transform([&position](const Square prevEP) {
+            if (not std::ranges::contains(get_possible_ep_squares(position), prevEP))
+                position.enPassantTargetSquare.reset();
+
+            return std::monostate { };
+        });
+    }
+
     void render_side_to_move(Position& position)
     {
         bool whiteToMove { position.sideToMove == Color::White };
@@ -129,14 +154,7 @@ namespace {
         if (ImGui::Checkbox("White to move", &whiteToMove)) {
             position.sideToMove = whiteToMove ? Color::White : Color::Black;
 
-            // when user manually changes side to move, we need to re-check EP
-            // squares and reset the positon's EP square if it's not a legal one
-            position.enPassantTargetSquare.transform([&position](const Square prevEP) {
-                if (not std::ranges::contains(get_possible_ep_squares(position), prevEP))
-                    position.enPassantTargetSquare.reset();
-
-                return std::monostate { };
-            });
+            check_ep_square(position);
         }
 
         ImGui::SetItemTooltip("Set the side to move");
@@ -149,27 +167,41 @@ namespace {
         ImGui::Text("Castling Rights");
 
         if (ImGui::BeginTable("CastlingRights", 3, ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders)) {
-            ImGui::TableNextRow();
+            static constexpr auto White = "White";
+            static constexpr auto Black = "Black";
 
-            ImGui::TableNextColumn();
-            ImGui::Text("White");
-
-            ImGui::TableNextColumn();
-            ImGui::Checkbox("O-O##1", &position.whiteCastlingRights.kingside);
-
-            ImGui::TableNextColumn();
-            ImGui::Checkbox("O-O-O##1", &position.whiteCastlingRights.queenside);
+            static constexpr auto Kingside  = "O-O";
+            static constexpr auto Queenside = "O-O-O";
 
             ImGui::TableNextRow();
 
             ImGui::TableNextColumn();
-            ImGui::Text("Black");
+            ImGui::Text(White);
 
             ImGui::TableNextColumn();
-            ImGui::Checkbox("O-O##2", &position.blackCastlingRights.kingside);
+            ImGui::Checkbox(
+                std::format("{}##{}", Kingside, White).c_str(),
+                &position.whiteCastlingRights.kingside);
 
             ImGui::TableNextColumn();
-            ImGui::Checkbox("O-O-O##2", &position.blackCastlingRights.queenside);
+            ImGui::Checkbox(
+                std::format("{}##{}", Queenside, White).c_str(),
+                &position.whiteCastlingRights.queenside);
+
+            ImGui::TableNextRow();
+
+            ImGui::TableNextColumn();
+            ImGui::Text(Black);
+
+            ImGui::TableNextColumn();
+            ImGui::Checkbox(
+                std::format("{}##{}", Kingside, Black).c_str(),
+                &position.blackCastlingRights.kingside);
+
+            ImGui::TableNextColumn();
+            ImGui::Checkbox(
+                std::format("{}##{}", Queenside, Black).c_str(),
+                &position.blackCastlingRights.queenside);
 
             ImGui::EndTable();
         }
@@ -182,9 +214,11 @@ namespace {
 
     void render_ep_square(Position& position)
     {
+        static constexpr auto NoneLabel = "None";
+
         const auto currEP = position.enPassantTargetSquare
                                 .transform([](const Square square) { return std::format("{}", square); })
-                                .value_or(std::string { "None" });
+                                .value_or(std::string { NoneLabel });
 
         static std::optional<Square> selectedSquare;
 
@@ -204,7 +238,7 @@ namespace {
             // "none" option
             const bool isSelected = not selectedSquare.has_value();
 
-            if (ImGui::Selectable("None", isSelected)) {
+            if (ImGui::Selectable(NoneLabel, isSelected)) {
                 selectedSquare.reset();
                 position.enPassantTargetSquare.reset();
             }
