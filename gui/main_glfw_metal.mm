@@ -104,8 +104,6 @@ int main(
     MTLRenderPassDescriptor* renderPassDescriptor = [MTLRenderPassDescriptor new];
 
     // Our state
-    float clear_color[4] = { 0.45f, 0.55f, 0.60f, 1.f };
-
     Position boardEditorPosition;
 
     // Main loop
@@ -125,7 +123,7 @@ int main(
             const id<CAMetalDrawable> drawable = [layer nextDrawable];
 
             const id<MTLCommandBuffer> commandBuffer             = [commandQueue commandBuffer];
-            renderPassDescriptor.colorAttachments[0].clearColor  = MTLClearColorMake(clear_color[0] * clear_color[3], clear_color[1] * clear_color[3], clear_color[2] * clear_color[3], clear_color[3]);
+            renderPassDescriptor.colorAttachments[0].clearColor  = MTLClearColorMake(0.45f, 0.55f, 0.6f, 1.f);
             renderPassDescriptor.colorAttachments[0].texture     = drawable.texture;
             renderPassDescriptor.colorAttachments[0].loadAction  = MTLLoadActionClear;
             renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
@@ -136,6 +134,8 @@ int main(
             ImGui_ImplMetal_NewFrame(renderPassDescriptor);
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
+
+            ImGui::DockSpaceOverViewport();
 
             // Call app drawing code
             ben_bot::gui::board_editor(boardEditorPosition);
