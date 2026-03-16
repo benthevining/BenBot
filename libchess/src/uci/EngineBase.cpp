@@ -113,6 +113,9 @@ void EngineBase::respond_to_uci()
     println(cout, "id name {}", get_name());
     println(cout, "id author {}", get_author());
 
+    for (const auto* option : standardUCIOptions)
+        println(cout, "{}", option->get_declaration_string());
+
     for (const auto* option : get_custom_uci_options())
         println(cout, "{}", option->get_declaration_string());
 
