@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <beman/inplace_vector/inplace_vector.hpp>
+#include <cassert>
 #include <format>
 #include <imgui.h>
 #include <imgui_stdlib.h>
@@ -253,9 +254,38 @@ namespace {
                 ImGui::SetItemDefaultFocus();
 
             ImGui::EndCombo();
+        } else {
+            selectedSquare = position.enPassantTargetSquare;
         }
 
         ImGui::SetItemTooltip("Set the en passant target square");
+    }
+
+    // reset, flip, clear buttons
+    void render_utility_buttons(Position& position)
+    {
+        ImGui::BeginGroup();
+
+        if (ImGui::Button("Reset"))
+            position = Position { };
+
+        ImGui::SetItemTooltip("Reset the board to the starting position");
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Flip"))
+            position = flipped(position);
+
+        ImGui::SetItemTooltip("Flip the board vertically");
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Clear"))
+            position = Position::empty();
+
+        ImGui::SetItemTooltip("Remove all pieces from the board");
+
+        ImGui::EndGroup();
     }
 
     void render_fen_string(
@@ -275,6 +305,7 @@ namespace {
                           return std::monostate { };
                       })
                       .transform_error([&errorMessage](const std::string_view error) {
+                          assert(not error.empty());
                           errorMessage = error;
                           ImGui::OpenPopup(ErrorPopupID, ImGuiPopupFlags_NoReopen);
                           return std::monostate { };
@@ -307,23 +338,7 @@ void board_editor(BoardEditorState& state)
 
         render_ep_square(state.position, state.selectedEPSquare);
 
-        ImGui::BeginGroup();
-
-        if (ImGui::Button("Reset"))
-            state.position = Position { };
-        ImGui::SetItemTooltip("Reset the board to the starting position");
-
-        ImGui::SameLine();
-        if (ImGui::Button("Flip"))
-            state.position = flipped(state.position);
-        ImGui::SetItemTooltip("Flip the board vertically");
-
-        ImGui::SameLine();
-        if (ImGui::Button("Clear"))
-            state.position = Position::empty();
-        ImGui::SetItemTooltip("Remove all pieces from the board");
-
-        ImGui::EndGroup();
+        render_utility_buttons(state.position);
 
         render_fen_string(state.position, state.fenParseError);
     }
