@@ -42,7 +42,6 @@ using chess::pieces::Color;
 
 // TODOLIST :
 // use ImGui::TextUnformatted() when passing output of std::format
-// initialize_app() function, move as much out of main.cpp as possible
 // get rid of static vars in functions, pass structs around
 // bug with removing duplicate EP squares
 // render piece sprites in squares

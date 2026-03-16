@@ -24,6 +24,10 @@ struct AppState final {
     Position boardEditorState;
 };
 
-void render_app(AppState& state);
+void initialize(float mainScaleFactor);
+
+void render(AppState& state);
+
+void shutdown();
 
 } // namespace ben_bot::gui
