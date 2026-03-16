@@ -263,6 +263,7 @@ private:
     void handle_quit();
     void handle_setpos(string_view arguments);
     void handle_setoption(string_view arguments);
+    void handle_go(string_view arguments);
 
     static_assert(
         std::atomic_bool::is_always_lock_free,
@@ -313,7 +314,7 @@ private:
             .argsHelp    = "[startpos|fen <fen>] [moves <move...>]" },
         EngineCommand {
             .name   = "go",
-            .action = [this](const string_view args) { go(parse_go_options(args, position)); },
+            .action = [this](const string_view args) { handle_go(args); },
             .description = "Start a search",
             .argsHelp    = { } },
         EngineCommand {
