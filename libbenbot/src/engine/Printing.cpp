@@ -151,14 +151,15 @@ void Engine::print_current_position(const string_view arguments) const
 
     println("");
 
-    print_labeled_info("FEN: ", chess::notation::to_fen(pos));
+    print_labeled_info("FEN:  ", chess::notation::to_fen(pos));
+    print_labeled_info("XFEN: ", chess::notation::to_fen(pos, false));
 
     print_labeled_info("Zobrist key: ", std::format("{}", pos.hash));
-
     print_labeled_info("Static eval: ", std::format("{}", eval::evaluate(pos)));
 
     searcher.context.probe_transposition_table(pos)
         .transform([this](const TTData& data) {
+            println("");
             print_labeled_info(
                 "TT hit: ",
                 std::format(
