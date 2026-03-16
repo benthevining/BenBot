@@ -42,7 +42,6 @@ using chess::board::Square;
 using chess::pieces::Color;
 
 // TODOLIST :
-// get rid of static vars in functions, pass structs around
 // bug with removing duplicate EP squares
 // render piece sprites in squares
 // allow dropping dragged text into FEN input? BeginDragDropTarget(), AcceptDragDropPayload()
@@ -220,15 +219,14 @@ namespace {
     }
 
     // TODO: make combobox not as wide
-    void render_ep_square(Position& position)
+    void render_ep_square(
+        Position& position, std::optional<Square>& selectedSquare)
     {
         static constexpr auto NoneLabel = "None";
 
         const auto currEP = position.enPassantTargetSquare
                                 .transform([](const Square square) { return std::format("{}", square); })
                                 .value_or(std::string { NoneLabel });
-
-        static std::optional<Square> selectedSquare;
 
         if (ImGui::BeginCombo("EPSquare", currEP.c_str(), ImGuiComboFlags_PopupAlignLeft)) {
             for (const auto square : get_possible_ep_squares(position)) {
@@ -260,11 +258,10 @@ namespace {
         ImGui::SetItemTooltip("Set the en passant target square");
     }
 
-    void render_fen_string(Position& position)
+    void render_fen_string(
+        Position& position, std::string& errorMessage)
     {
         static constexpr auto ErrorPopupID { "FEN parse error" };
-
-        static std::string errorMessage;
 
         auto inputBuf = chess::notation::to_fen(position);
 
@@ -272,12 +269,12 @@ namespace {
                 ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
             [[maybe_unused]] const auto result
                 = chess::notation::from_fen(inputBuf)
-                      .transform([&position](const Position& newPos) {
+                      .transform([&position, &errorMessage](const Position& newPos) {
                           position = newPos;
                           errorMessage.clear();
                           return std::monostate { };
                       })
-                      .transform_error([](const std::string_view error) {
+                      .transform_error([&errorMessage](const std::string_view error) {
                           errorMessage = error;
                           ImGui::OpenPopup(ErrorPopupID, ImGuiPopupFlags_NoReopen);
                           return std::monostate { };
@@ -299,36 +296,36 @@ namespace {
     }
 } // namespace
 
-void board_editor(Position& position)
+void board_editor(BoardEditorState& state)
 {
     if (ImGui::Begin("Board editor")) {
-        render_chessboard(position);
+        render_chessboard(state.position);
 
-        render_side_to_move(position);
+        render_side_to_move(state.position);
 
-        render_castling_rights(position);
+        render_castling_rights(state.position);
 
-        render_ep_square(position);
+        render_ep_square(state.position, state.selectedEPSquare);
 
         ImGui::BeginGroup();
 
         if (ImGui::Button("Reset"))
-            position = Position { };
+            state.position = Position { };
         ImGui::SetItemTooltip("Reset the board to the starting position");
 
         ImGui::SameLine();
         if (ImGui::Button("Flip"))
-            position = flipped(position);
+            state.position = flipped(state.position);
         ImGui::SetItemTooltip("Flip the board vertically");
 
         ImGui::SameLine();
         if (ImGui::Button("Clear"))
-            position = Position::empty();
+            state.position = Position::empty();
         ImGui::SetItemTooltip("Remove all pieces from the board");
 
         ImGui::EndGroup();
 
-        render_fen_string(position);
+        render_fen_string(state.position, state.fenParseError);
     }
 
     ImGui::End();

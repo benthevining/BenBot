@@ -64,7 +64,7 @@ void render(AppState& state)
 
     ImGui::DockSpaceOverViewport();
 
-    board_editor(state.boardEditorState);
+    board_editor(state.boardEditor);
 
     ImGui::Render();
 }

@@ -14,14 +14,12 @@
 
 #pragma once
 
-#include <libchess/game/Position.hpp>
+#include <libgui/BoardEditor.hpp>
 
 namespace ben_bot::gui {
 
-using chess::game::Position;
-
 struct AppState final {
-    Position boardEditorState;
+    BoardEditorState boardEditor;
 };
 
 void initialize(float mainScaleFactor);
