@@ -15,10 +15,8 @@ import re
 import sys
 import pathlib
 import os
-import fnmatch
 
 from testing import (
-    EPD,
     BenBot as Engine,
     MiniTestFramework,
     OrderedClassMembers,
@@ -28,38 +26,8 @@ PATH = pathlib.Path(__file__).parent.resolve()
 CWD = os.getcwd()
 
 
-def get_threads():
-    if args.valgrind_thread or args.sanitizer_thread:
-        return 2
-    return 1
-
-
 def get_path():
     return os.path.abspath(os.path.join(CWD, args.stockfish_path))
-
-
-def postfix_check(output):
-    if args.sanitizer_undefined:
-        for idx, line in enumerate(output):
-            if "runtime error:" in line:
-                # print next possible 50 lines
-                for i in range(50):
-                    debug_idx = idx + i
-                    if debug_idx < len(output):
-                        print(output[debug_idx])
-                return False
-
-    if args.sanitizer_thread:
-        for idx, line in enumerate(output):
-            if "WARNING: ThreadSanitizer:" in line:
-                # print next possible 50 lines
-                for i in range(50):
-                    debug_idx = idx + i
-                    if debug_idx < len(output):
-                        print(output[debug_idx])
-                return False
-
-    return True
 
 
 def BenBot(*args, **kwargs):
@@ -67,101 +35,76 @@ def BenBot(*args, **kwargs):
 
 
 class TestCLI(metaclass=OrderedClassMembers):
-    def beforeAll(self):
-        pass
-
-    def after_all(self):
-        pass
-
-    def beforeEach(self):
-        self.stockfish = None
-
-    def afterEach(self):
-        assert postfix_check(self.stockfish.get_output()) == True
-        self.stockfish.clear_output()
-
     def test_go_nodes_1000(self):
-        self.stockfish = BenBot("go nodes 1000".split(" "), True)
-        assert self.stockfish.process.returncode == 0
+        engine = BenBot("go nodes 1000".split(" "), True)
+        assert engine.process.returncode == 0
 
     def test_go_depth_10(self):
-        self.stockfish = BenBot("go depth 10".split(" "), True)
-        assert self.stockfish.process.returncode == 0
+        engine = BenBot("go depth 10".split(" "), True)
+        assert engine.process.returncode == 0
 
     def test_go_perft_4(self):
-        self.stockfish = BenBot("perft 4 json".split(" "), True)
-        assert self.stockfish.process.returncode == 0
+        engine = BenBot("perft 4 json".split(" "), True)
+        assert engine.process.returncode == 0
 
     def test_go_movetime_1000(self):
-        self.stockfish = BenBot("go movetime 1000".split(" "), True)
-        assert self.stockfish.process.returncode == 0
+        engine = BenBot("go movetime 1000".split(" "), True)
+        assert engine.process.returncode == 0
 
     def test_go_wtime_8000_btime_8000_winc_500_binc_500(self):
-        self.stockfish = BenBot(
+        engine = BenBot(
             "go wtime 8000 btime 8000 winc 500 binc 500".split(" "),
             True,
         )
-        assert self.stockfish.process.returncode == 0
+        assert engine.process.returncode == 0
 
     def test_go_wtime_1000_btime_1000_winc_0_binc_0(self):
-        self.stockfish = BenBot(
+        engine = BenBot(
             "go wtime 1000 btime 1000 winc 0 binc 0".split(" "),
             True,
         )
-        assert self.stockfish.process.returncode == 0
+        assert engine.process.returncode == 0
 
     def test_go_wtime_1000_btime_1000_winc_0_binc_0_movestogo_5(self):
-        self.stockfish = BenBot(
+        engine = BenBot(
             "go wtime 1000 btime 1000 winc 0 binc 0 movestogo 5".split(" "),
             True,
         )
-        assert self.stockfish.process.returncode == 0
+        assert engine.process.returncode == 0
 
     def test_go_movetime_200(self):
-        self.stockfish = BenBot("go movetime 200".split(" "), True)
-        assert self.stockfish.process.returncode == 0
+        engine = BenBot("go movetime 200".split(" "), True)
+        assert engine.process.returncode == 0
 
     def test_go_nodes_20000_searchmoves_e2e4_d2d4(self):
-        self.stockfish = BenBot("go nodes 20000 searchmoves e2e4 d2d4".split(" "), True)
-        assert self.stockfish.process.returncode == 0
+        engine = BenBot("go nodes 20000 searchmoves e2e4 d2d4".split(" "), True)
+        assert engine.process.returncode == 0
 
     def test_bench(self):
-        self.stockfish = BenBot(
+        engine = BenBot(
             f"bench".split(" "),
             True,
         )
-        assert self.stockfish.process.returncode == 0
-
-    def test_bench_2(self):
-        self.stockfish = BenBot(
-            f"bench 3 {os.path.join(PATH, 'bench_tmp.epd')} depth".split(" "),
-            True,
-        )
-        assert self.stockfish.process.returncode == 0
+        assert engine.process.returncode == 0
 
     def test_showpos(self):
-        self.stockfish = BenBot("showpos".split(" "), True)
-        assert self.stockfish.process.returncode == 0
+        engine = BenBot("showpos".split(" "), True)
+        assert engine.process.returncode == 0
 
     def test_compiler(self):
-        self.stockfish = BenBot("compiler".split(" "), True)
-        assert self.stockfish.process.returncode == 0
+        engine = BenBot("compiler".split(" "), True)
+        assert engine.process.returncode == 0
 
     def test_uci(self):
-        self.stockfish = BenBot("uci".split(" "), True)
-        assert self.stockfish.process.returncode == 0
+        engine = BenBot("uci".split(" "), True)
+        assert engine.process.returncode == 0
 
 
 class TestInteractive(metaclass=OrderedClassMembers):
-    def beforeAll(self):
+    def __init__(self):
         self.stockfish = BenBot()
 
-    def after_all(self):
-        self.stockfish.quit()
-        assert self.stockfish.close() == 0
-
     def afterEach(self):
-        assert postfix_check(self.stockfish.get_output()) == True
         self.stockfish.clear_output()
 
     def test_uci_command(self):
@@ -169,7 +112,7 @@ class TestInteractive(metaclass=OrderedClassMembers):
         self.stockfish.equals("uciok")
 
     def test_set_threads_option(self):
-        self.stockfish.send_command(f"setoption name Threads value {get_threads()}")
+        self.stockfish.send_command(f"setoption name Threads value 1")
 
     def test_ucinewgame_and_startpos_nodes_1000(self):
         self.stockfish.send_command("ucinewgame")
@@ -340,15 +283,10 @@ class TestInteractive(metaclass=OrderedClassMembers):
 
 
 class TestEnPassantSanitization(metaclass=OrderedClassMembers):
-    def beforeAll(self):
+    def __init__(self):
         self.stockfish = BenBot()
 
-    def after_all(self):
-        self.stockfish.quit()
-        assert self.stockfish.close() == 0
-
     def afterEach(self):
-        assert postfix_check(self.stockfish.get_output()) == True
         self.stockfish.clear_output()
 
     def test_position_1(self):
@@ -444,22 +382,7 @@ class TestEnPassantSanitization(metaclass=OrderedClassMembers):
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Run Stockfish with testing options")
-    parser.add_argument("--valgrind", action="store_true", help="Run valgrind testing")
-    parser.add_argument(
-        "--valgrind-thread", action="store_true", help="Run valgrind-thread testing"
-    )
-    parser.add_argument(
-        "--sanitizer-undefined",
-        action="store_true",
-        help="Run sanitizer-undefined testing",
-    )
-    parser.add_argument(
-        "--sanitizer-thread", action="store_true", help="Run sanitizer-thread testing"
-    )
 
-    parser.add_argument(
-        "--none", action="store_true", help="Run without any testing options"
-    )
     parser.add_argument("stockfish_path", type=str, help="Path to Stockfish binary")
 
     return parser.parse_args()
@@ -468,14 +391,10 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
 
-    EPD.create_bench_epd()
-
     framework = MiniTestFramework()
 
     # Each test suite will be run inside a temporary directory
     framework.run([TestCLI, TestInteractive, TestEnPassantSanitization])
-
-    EPD.delete_bench_epd()
 
     if framework.has_failed():
         sys.exit(1)

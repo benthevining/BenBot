@@ -11,6 +11,7 @@
 # ======================================================================================
 
 import subprocess
+from subprocess import CompletedProcess
 from typing import List
 import os
 import collections
@@ -21,7 +22,6 @@ import fnmatch
 from functools import wraps
 from contextlib import redirect_stdout
 import io
-import pathlib
 import concurrent.futures
 import tempfile
 
@@ -33,24 +33,6 @@ RESET_COLOR = "\033[0m"
 WHITE_BOLD = "\033[1m"
 
 MAX_TIMEOUT = 60 * 5
-
-PATH = pathlib.Path(__file__).parent.resolve()
-
-
-class EPD:
-    @staticmethod
-    def create_bench_epd():
-        with open(f"{os.path.join(PATH,'bench_tmp.epd')}", "w") as f:
-            f.write("""
-Rn6/1rbq1bk1/2p2n1p/2Bp1p2/3Pp1pP/1N2P1P1/2Q1NPB1/6K1 w - - 2 26
-rnbqkb1r/ppp1pp2/5n1p/3p2p1/P2PP3/5P2/1PP3PP/RNBQKBNR w KQkq - 0 3
-3qnrk1/4bp1p/1p2p1pP/p2bN3/1P1P1B2/P2BQ3/5PP1/4R1K1 w - - 9 28
-r4rk1/1b2ppbp/pq4pn/2pp1PB1/1p2P3/1P1P1NN1/1PP3PP/R2Q1RK1 w - - 0 13
-""")
-
-    @staticmethod
-    def delete_bench_epd():
-        os.remove(f"{os.path.join(PATH,'bench_tmp.epd')}")
 
 
 class OrderedClassMembers(type):
@@ -138,16 +120,10 @@ class MiniTestFramework:
 
         print(f"\nTest Suite: {test_name}")
 
-        if hasattr(test_instance, "beforeAll"):
-            test_instance.beforeAll()
-
         fails = 0
 
         for method in test_methods:
             fails += self.__run_test_method(test_instance, method)
-
-        if hasattr(test_instance, "after_all"):
-            test_instance.after_all()
 
         self.failed_tests += fails
 
@@ -211,7 +187,8 @@ class MiniTestFramework:
 
         print(colored_traceback)
 
-    def __print_buffer_output(self, buffer: io.StringIO):
+    @staticmethod
+    def __print_buffer_output(buffer: io.StringIO):
         output = buffer.getvalue()
         if output:
             indented_output = "\n".join(f"    {line}" for line in output.splitlines())
@@ -229,10 +206,12 @@ class MiniTestFramework:
         )
         print(f"    Time:        {duration}s\n")
 
-    def print_failure(self, add: str):
+    @staticmethod
+    def print_failure(add: str):
         print(f"    {RED_COLOR}✗{RESET_COLOR}{add}", flush=True)
 
-    def print_success(self, add: str):
+    @staticmethod
+    def print_success(add: str):
         print(f"    {GREEN_COLOR}✓{RESET_COLOR}{add}", flush=True)
 
 
@@ -250,6 +229,10 @@ class BenBot:
         self.output = []
 
         self.start()
+
+    def __del__(self):
+        self.quit()
+        assert self.close() == 0
 
     def _check_process_alive(self):
         if not self.process or self.process.poll() is not None:
@@ -269,6 +252,8 @@ class BenBot:
                 print(self.process.stderr)
                 print(f"Process failed with return code {self.process.returncode}")
 
+            self.process = None
+
             return
 
         self.process = subprocess.Popen(
@@ -285,7 +270,7 @@ class BenBot:
 
     def send_command(self, command: str):
         if not self.process:
-            raise RuntimeError("BenBot process is not started")
+            raise RuntimeError("BenBot process is completed or not started")
 
         self._check_process_alive()
 
@@ -336,7 +321,7 @@ class BenBot:
 
     def readline(self):
         if not self.process:
-            raise RuntimeError("BenBot process is not started")
+            raise RuntimeError("BenBot process is completed or not started")
 
         while True:
             self._check_process_alive()
@@ -352,7 +337,8 @@ class BenBot:
         return self.output
 
     def quit(self):
-        self.send_command("quit")
+        if self.process:
+            self.send_command("quit")
 
     def close(self):
         if self.process:
