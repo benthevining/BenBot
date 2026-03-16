@@ -45,9 +45,6 @@ using chess::pieces::Color;
 // ability to click & drag pieces on board to different squares
 // ability to click & drag pieces on board off of board (or to a trash can icon?)
 
-// TODO:
-// when user has selected EP square, then changes side to move, need to deselect EP square!
-
 namespace {
     void render_chessboard(Position& position)
     {
@@ -81,58 +78,6 @@ namespace {
 
             ImGui::EndTable();
         }
-    }
-
-    void render_side_to_move(Position& position)
-    {
-        bool whiteToMove { position.sideToMove == Color::White };
-
-        if (ImGui::Checkbox("White to move", &whiteToMove)) {
-            if (whiteToMove)
-                position.sideToMove = Color::White;
-            else
-                position.sideToMove = Color::Black;
-        }
-
-        ImGui::SetItemTooltip("Set the side to move");
-    }
-
-    void render_castling_rights(Position& position)
-    {
-        ImGui::BeginGroup();
-
-        ImGui::Text("Castling Rights");
-
-        if (ImGui::BeginTable("CastlingRights", 3, ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders)) {
-            ImGui::TableNextRow();
-
-            ImGui::TableNextColumn();
-            ImGui::Text("White");
-
-            ImGui::TableNextColumn();
-            ImGui::Checkbox("O-O##1", &position.whiteCastlingRights.kingside);
-
-            ImGui::TableNextColumn();
-            ImGui::Checkbox("O-O-O##1", &position.whiteCastlingRights.queenside);
-
-            ImGui::TableNextRow();
-
-            ImGui::TableNextColumn();
-            ImGui::Text("Black");
-
-            ImGui::TableNextColumn();
-            ImGui::Checkbox("O-O##2", &position.blackCastlingRights.kingside);
-
-            ImGui::TableNextColumn();
-            ImGui::Checkbox("O-O-O##2", &position.blackCastlingRights.queenside);
-
-            ImGui::EndTable();
-        }
-
-        ImGui::EndGroup();
-
-        if (ImGui::IsItemHovered())
-            ImGui::SetTooltip("Set the castling rights of each side");
     }
 
     [[nodiscard, gnu::const]] auto get_possible_ep_squares(const Position& position) noexcept
@@ -175,6 +120,64 @@ namespace {
             squares.end());
 
         return squares;
+    }
+
+    void render_side_to_move(Position& position)
+    {
+        bool whiteToMove { position.sideToMove == Color::White };
+
+        if (ImGui::Checkbox("White to move", &whiteToMove)) {
+            position.sideToMove = whiteToMove ? Color::White : Color::Black;
+
+            // when user manually changes side to move, we need to re-check EP
+            // squares and reset the positon's EP square if it's not a legal one
+            position.enPassantTargetSquare.transform([&position](const Square prevEP) {
+                if (not std::ranges::contains(get_possible_ep_squares(position), prevEP))
+                    position.enPassantTargetSquare.reset();
+
+                return std::monostate { };
+            });
+        }
+
+        ImGui::SetItemTooltip("Set the side to move");
+    }
+
+    void render_castling_rights(Position& position)
+    {
+        ImGui::BeginGroup();
+
+        ImGui::Text("Castling Rights");
+
+        if (ImGui::BeginTable("CastlingRights", 3, ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders)) {
+            ImGui::TableNextRow();
+
+            ImGui::TableNextColumn();
+            ImGui::Text("White");
+
+            ImGui::TableNextColumn();
+            ImGui::Checkbox("O-O##1", &position.whiteCastlingRights.kingside);
+
+            ImGui::TableNextColumn();
+            ImGui::Checkbox("O-O-O##1", &position.whiteCastlingRights.queenside);
+
+            ImGui::TableNextRow();
+
+            ImGui::TableNextColumn();
+            ImGui::Text("Black");
+
+            ImGui::TableNextColumn();
+            ImGui::Checkbox("O-O##2", &position.blackCastlingRights.kingside);
+
+            ImGui::TableNextColumn();
+            ImGui::Checkbox("O-O-O##2", &position.blackCastlingRights.queenside);
+
+            ImGui::EndTable();
+        }
+
+        ImGui::EndGroup();
+
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Set the castling rights of each side");
     }
 
     void render_ep_square(Position& position)
