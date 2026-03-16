@@ -17,6 +17,7 @@
 #include <format>
 #include <imgui.h>
 #include <imgui_stdlib.h>
+#include <iterator>
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Masks.hpp>
@@ -41,7 +42,6 @@ using chess::board::Square;
 using chess::pieces::Color;
 
 // TODOLIST :
-// use ImGui::TextUnformatted() when passing output of std::format
 // get rid of static vars in functions, pass structs around
 // bug with removing duplicate EP squares
 // render piece sprites in squares
@@ -52,6 +52,15 @@ using chess::pieces::Color;
 // windows build
 
 namespace {
+    void UnformattedText(const std::string_view text)
+    {
+        ImGui::TextUnformatted(
+            text.data(),
+            std::next(
+                text.data(),
+                static_cast<std::ptrdiff_t>(text.length())));
+    }
+
     void render_chessboard(Position& position)
     {
         static constexpr auto colorWhite = IM_COL32(255, 255, 255, 255);
@@ -78,7 +87,7 @@ namespace {
                         ImGuiTableBgTarget_CellBg,
                         square.is_light() ? colorWhite : colorBlack);
 
-                    ImGui::Text("%s", std::format("{}", square).c_str());
+                    UnformattedText(std::format("{}", square));
                 }
             }
 
@@ -278,7 +287,7 @@ namespace {
         ImGui::SetItemTooltip("Enter a FEN string");
 
         if (ImGui::BeginPopupModal(ErrorPopupID, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::Text("%s", errorMessage.c_str());
+            UnformattedText(errorMessage);
 
             if (ImGui::Button("OK", { 120.f, 0.f })) {
                 ImGui::CloseCurrentPopup();
