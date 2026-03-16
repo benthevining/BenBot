@@ -24,11 +24,8 @@
 #import <QuartzCore/QuartzCore.h>
 #include <cstdio>
 #include <cstdlib>
-#include <libchess/game/Position.hpp>
-#include <libgui/BoardEditor.hpp>
+#include <libgui/AppUI.hpp>
 #include <print>
-
-using chess::game::Position;
 
 int main(
     [[maybe_unused]] const int    argc,
@@ -103,8 +100,7 @@ int main(
 
     MTLRenderPassDescriptor* renderPassDescriptor = [MTLRenderPassDescriptor new];
 
-    // Our state
-    Position boardEditorPosition;
+    ben_bot::gui::AppState state;
 
     // Main loop
     while (not glfwWindowShouldClose(window)) {
@@ -138,7 +134,7 @@ int main(
             ImGui::DockSpaceOverViewport();
 
             // Call app drawing code
-            ben_bot::gui::board_editor(boardEditorPosition);
+            ben_bot::gui::render_app(state);
 
             // Rendering
             ImGui::Render();

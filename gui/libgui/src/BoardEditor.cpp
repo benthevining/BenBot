@@ -42,7 +42,7 @@ using chess::pieces::Color;
 
 // TODOLIST :
 // use ImGui::TextUnformatted() when passing output of std::format
-// ApplicationState struct, top-level render_app() function. also initialize_app() function, move as much out of main.cpp as possible
+// initialize_app() function, move as much out of main.cpp as possible
 // get rid of static vars in functions, pass structs around
 // bug with removing duplicate EP squares
 // render piece sprites in squares
@@ -211,6 +211,7 @@ namespace {
             ImGui::SetTooltip("Set the castling rights of each side");
     }
 
+    // TODO: make combobox not as wide
     void render_ep_square(Position& position)
     {
         static constexpr auto NoneLabel = "None";
