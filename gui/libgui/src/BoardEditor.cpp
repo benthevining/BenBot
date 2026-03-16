@@ -19,13 +19,11 @@
 #include <imgui.h>
 #include <imgui_stdlib.h>
 #include <iterator>
-#include <libchess/board/Bitboard.hpp>
 #include <libchess/board/File.hpp>
-#include <libchess/board/Masks.hpp>
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
-#include <libchess/moves/Patterns.hpp>
+#include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libgui/BoardEditor.hpp>
@@ -41,6 +39,8 @@ using chess::board::File;
 using chess::board::Rank;
 using chess::board::Square;
 using chess::pieces::Color;
+
+using chess::moves::get_potentially_legal_en_passant_target_squares;
 
 // TODOLIST :
 // bug with removing duplicate EP squares
@@ -95,59 +95,13 @@ namespace {
         }
     }
 
-    // This is different than legal move generation, which looks at the opponent's last move
-    // to determine what EP captures are possible. Instead, this function looks only at the
-    // positions of the pawns on the board to tell you which pawns could *potentially* legally
-    // capture en passant, if the opponent had just moved the appropriate pawn.
-    [[nodiscard, gnu::const]] auto get_possible_ep_squares(const Position& position) noexcept
-    {
-        using beman::inplace_vector::inplace_vector;
-
-        const auto epRankMask = position.is_white_to_move()
-                                  ? chess::board::masks::ranks::FIVE
-                                  : chess::board::masks::ranks::FOUR;
-
-        const auto possibleTakers = position.our_pieces().pawns & epRankMask;
-        const auto posibleTaken   = position.their_pieces().pawns & epRankMask;
-
-        auto squares = possibleTakers.subboards()
-                     | std::views::transform([posibleTaken, isWhite = position.is_white_to_move()](
-                                                 const chess::board::Bitboard startSquare) {
-                           using chess::moves::patterns::pawn_attacks;
-                           using chess::moves::patterns::pawn_pushes;
-
-                           const auto attacks = isWhite
-                                                  ? pawn_attacks<Color::White>(startSquare)
-                                                  : pawn_attacks<Color::Black>(startSquare);
-
-                           const auto takenMask = isWhite
-                                                    ? pawn_pushes<Color::White>(posibleTaken)
-                                                    : pawn_pushes<Color::Black>(posibleTaken);
-
-                           return (attacks & takenMask).squares()
-                                | std::ranges::to<inplace_vector<Square, 2uz>>();
-                       })
-                     | std::views::join
-                     | std::ranges::to<inplace_vector<Square, 16uz>>();
-
-        // TODO: bug here
-        // filter duplicates
-        std::ranges::sort(squares);
-
-        squares.erase(
-            std::ranges::unique(squares).end(),
-            squares.end());
-
-        return squares;
-    }
-
     // When the user manually changes the side to move, we may need to reset the EP square
     // if it was set, because the en passant ranks are different for each side. This function
     // resets the EP square if it was set to one that is now illegal.
     void check_ep_square(Position& position)
     {
         position.enPassantTargetSquare.transform([&position](const Square prevEP) {
-            if (not std::ranges::contains(get_possible_ep_squares(position), prevEP))
+            if (not std::ranges::contains(get_potentially_legal_en_passant_target_squares(position), prevEP))
                 position.enPassantTargetSquare.reset();
 
             return std::monostate { };
@@ -230,7 +184,7 @@ namespace {
                                 .value_or(std::string { NoneLabel });
 
         if (ImGui::BeginCombo("EPSquare", currEP.c_str(), ImGuiComboFlags_PopupAlignLeft)) {
-            for (const auto square : get_possible_ep_squares(position)) {
+            for (const auto square : get_potentially_legal_en_passant_target_squares(position)) {
                 const bool isSelected = selectedSquare.has_value() and square == *selectedSquare;
 
                 if (ImGui::Selectable(std::format("{}", square).c_str(), isSelected)) {

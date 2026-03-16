@@ -48,6 +48,15 @@ using PieceType = pieces::Type;
 /// @ingroup moves
 /// @{
 
+/** A convenience typedef for a fixed-size inplace_vector of moves.
+
+    @tparam N The maximum number of moves that can be stored in the list.
+
+    @see MoveList
+ */
+template <size_t N>
+using NMoveList = beman::inplace_vector::inplace_vector<Move, N>;
+
 /** The maximum number of moves that can be generated for a position.
     The actual maximum number of legal moves for any known position
     is 218, for the position
@@ -58,9 +67,9 @@ using PieceType = pieces::Type;
 inline constexpr auto MAX_MOVES = 256uz;
 
 /** A stack-allocated array of moves.
-    @see MAX_MOVES
+    @see MAX_MOVES, NMoveList
  */
-using MoveList = beman::inplace_vector::inplace_vector<Move, MAX_MOVES>;
+using MoveList = NMoveList<MAX_MOVES>;
 
 /** Generates a list of all legal moves for the side to move in the given position.
     The list of moves is not sorted in any particular manner.
@@ -106,6 +115,14 @@ template <bool CapturesOnly = false>
 
 /** Returns true if the side to move has any legal moves in the given position. */
 [[nodiscard]] auto any_legal_moves(const Position& position) -> bool;
+
+/** Creates a list of *potentially* legal en passant target squares.
+    The intended use case is for UIs such as board editors, where you need to present
+    the user a set of possible EP target square choices based on the position of the
+    pawns on the board.
+ */
+[[nodiscard, gnu::const]] auto get_potentially_legal_en_passant_target_squares(
+    const Position& position);
 
 /// @}
 
@@ -158,7 +175,7 @@ namespace detail {
             emptySquares);
 
         auto nonPromotingPushes = (allPushes & NOT_PROMOTION_MASK).squares()
-                                | stdv::transform([](const Square target) {
+                                | stdv::transform([](const Square target) noexcept {
                                       return Move {
                                           Square {
                                               .file = target.file,
@@ -170,9 +187,9 @@ namespace detail {
 
         auto promotingPushes = possiblePromotedTypes
                              | stdv::transform([pushes = (allPushes & PROMOTION_MASK).squares()](
-                                                   const PieceType promotedType) {
+                                                   const PieceType promotedType) noexcept {
                                    return pushes
-                                        | stdv::transform([promotedType](const Square target) {
+                                        | stdv::transform([promotedType](const Square target) noexcept {
                                               return Move {
                                                   Square {
                                                       .file = target.file,
@@ -205,7 +222,7 @@ namespace detail {
             allOccupied);
 
         return pushes.squares()
-             | stdv::transform([](const Square target) {
+             | stdv::transform([](const Square target) noexcept {
                    return Move {
                        Square {
                            .file = target.file,
@@ -225,7 +242,7 @@ namespace detail {
     {
         return stdv::zip(
                    startingBoard.squares(), targetBoard.squares())
-             | stdv::transform([promotedType](const auto& tuple) {
+             | stdv::transform([promotedType](const auto& tuple) noexcept {
                    const auto [starting, target] = tuple;
 
                    return Move { starting, target, PieceType::Pawn, promotedType };
@@ -291,10 +308,10 @@ namespace detail {
 
     template <Color Side>
     [[nodiscard, gnu::const]] constexpr auto get_en_passant(
-        const Position& position)
+        const Position& position) -> NMoveList<2uz>
     {
         // at most 2 captures are possible at a time
-        using EPMoves = beman::inplace_vector::inplace_vector<Move, 2uz>;
+        using EPMoves = NMoveList<2uz>;
 
         return position.enPassantTargetSquare
             .transform([&position](const Square targetSquare) {
@@ -304,7 +321,7 @@ namespace detail {
                                         | shifts::pawn_inv_capture_west<Side>(targetSquareBoard);
 
                 return (position.pieces_for<Side>().pawns & startSquares).squares()
-                     | stdv::transform([targetSquare](const Square square) {
+                     | stdv::transform([targetSquare](const Square square) noexcept {
                            return Move {
                                square, targetSquare, PieceType::Pawn
                            };
@@ -350,7 +367,7 @@ namespace detail {
         return ourPieces.knights.subboards()
              | stdv::transform([ourOccupied      = ourPieces.occupied,
                                    theirOccupied = position.pieces_for<pieces::other_side<Side>()>().occupied](
-                                   const Bitboard knightPos) {
+                                   const Bitboard knightPos) noexcept {
                    auto knightMoves = pseudo_legal::knight(knightPos, ourOccupied);
 
                    if constexpr (CapturesOnly) {
@@ -358,7 +375,7 @@ namespace detail {
                    }
 
                    return knightMoves.squares()
-                        | stdv::transform([knightPos](const Square targetSquare) {
+                        | stdv::transform([knightPos](const Square targetSquare) noexcept {
                               return Move {
                                   Square::from_index(knightPos.first()),
                                   targetSquare, PieceType::Knight
@@ -382,7 +399,7 @@ namespace detail {
              | stdv::transform([occupiedSquares,
                                    ourOccupied   = ourPieces.occupied,
                                    theirOccupied = position.pieces_for<pieces::other_side<Side>()>().occupied](
-                                   const Square bishopPos) {
+                                   const Square bishopPos) noexcept {
                    auto bishopMoves = magics::bishop(bishopPos, occupiedSquares, ourOccupied);
 
                    if constexpr (CapturesOnly) {
@@ -390,7 +407,7 @@ namespace detail {
                    }
 
                    return bishopMoves.squares()
-                        | stdv::transform([bishopPos](const Square targetSquare) {
+                        | stdv::transform([bishopPos](const Square targetSquare) noexcept {
                               return Move {
                                   bishopPos, targetSquare, PieceType::Bishop
                               };
@@ -413,7 +430,7 @@ namespace detail {
              | stdv::transform([occupiedSquares,
                                    ourOccupied   = ourPieces.occupied,
                                    theirOccupied = position.pieces_for<pieces::other_side<Side>()>().occupied](
-                                   const Square rookPos) {
+                                   const Square rookPos) noexcept {
                    auto rookMoves = magics::rook(rookPos, occupiedSquares, ourOccupied);
 
                    if constexpr (CapturesOnly) {
@@ -421,7 +438,7 @@ namespace detail {
                    }
 
                    return rookMoves.squares()
-                        | stdv::transform([rookPos](const Square targetSquare) {
+                        | stdv::transform([rookPos](const Square targetSquare) noexcept {
                               return Move {
                                   rookPos, targetSquare, PieceType::Rook
                               };
@@ -444,7 +461,7 @@ namespace detail {
              | stdv::transform([occupiedSquares,
                                    ourOccupied   = ourPieces.occupied,
                                    theirOccupied = position.pieces_for<pieces::other_side<Side>()>().occupied](
-                                   const Square queenPos) {
+                                   const Square queenPos) noexcept {
                    auto queenMoves = magics::queen(queenPos, occupiedSquares, ourOccupied);
 
                    if constexpr (CapturesOnly) {
@@ -452,7 +469,7 @@ namespace detail {
                    }
 
                    return queenMoves.squares()
-                        | stdv::transform([queenPos](const Square targetSquare) {
+                        | stdv::transform([queenPos](const Square targetSquare) noexcept {
                               return Move {
                                   queenPos, targetSquare, PieceType::Queen
                               };
@@ -478,7 +495,7 @@ namespace detail {
 
         return kingMoves.squares()
              | stdv::transform([kingSquare = ourPieces.get_king_location()](
-                                   const Square targetSquare) {
+                                   const Square targetSquare) noexcept {
                    return Move {
                        kingSquare, targetSquare, PieceType::King
                    };
@@ -586,15 +603,13 @@ namespace detail {
 
     template <Color Side>
     [[nodiscard, gnu::const]] constexpr auto get_castling(
-        const Position& position, const Bitboard allOccupied)
+        const Position& position, const Bitboard allOccupied) -> NMoveList<2uz>
     {
-        using Moves = beman::inplace_vector::inplace_vector<Move, 2uz>;
-
         // castling out of check is not allowed
         if (position.is_check())
-            return Moves { };
+            return { };
 
-        beman::inplace_vector::inplace_vector<Move, 2uz> moves;
+        NMoveList<2uz> moves;
 
         auto add_move = [&moves](const Move move) {
             moves.emplace_back(move);
@@ -780,6 +795,56 @@ inline auto any_legal_moves(const Position& position) -> bool
         return detail::any_legal_moves_internal<Color::White>(position);
 
     return detail::any_legal_moves_internal<Color::Black>(position);
+}
+
+namespace detail {
+    template <Color Side>
+    [[nodiscard, gnu::const]] auto potentially_legal_ep_squares(
+        const Position& position) noexcept
+    {
+        using beman::inplace_vector::inplace_vector;
+
+        static constexpr auto OppositeColor = pieces::other_side<Side>();
+
+        static constexpr auto epRankMask = Side == Color::White
+                                             ? board::masks::ranks::FIVE
+                                             : board::masks::ranks::FOUR;
+
+        const auto& ourPieces   = position.pieces_for<Side>();
+        const auto& theirPieces = position.pieces_for<OppositeColor>();
+
+        const auto possibleTakers = ourPieces.pawns & epRankMask;
+        const auto posibleTaken   = theirPieces.pawns & epRankMask;
+
+        return possibleTakers.subboards()
+             | std::views::transform([posibleTaken](const Bitboard startSquare) noexcept {
+                   const auto attacks   = patterns::pawn_attacks<Side>(startSquare);
+                   const auto takenMask = patterns::pawn_pushes<Side>(posibleTaken);
+
+                   return (attacks & takenMask).squares()
+                        | std::ranges::to<inplace_vector<Square, 2uz>>();
+               })
+             | std::views::join
+             | std::ranges::to<inplace_vector<Square, 16uz>>();
+    }
+} // namespace detail
+
+inline auto get_potentially_legal_en_passant_target_squares(
+    const Position& position)
+{
+    auto squares = position.is_white_to_move()
+                     ? detail::potentially_legal_ep_squares<Color::White>(position)
+                     : detail::potentially_legal_ep_squares<Color::Black>(position);
+
+    // TODO: bug here
+    // filter duplicates
+    std::ranges::sort(squares);
+
+    squares.erase(
+        std::ranges::unique(squares).end(),
+        squares.end());
+
+    return squares;
 }
 
 } // namespace chess::moves
