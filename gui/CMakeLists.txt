@@ -10,51 +10,44 @@
 #
 # ======================================================================================
 
-cmake_minimum_required (VERSION 4.0.0 FATAL_ERROR)
+add_subdirectory (libgui)
 
-project (
-    BenBot
-    VERSION 1.7.5
-    LANGUAGES CXX C
-    DESCRIPTION "A chess engine"
-    HOMEPAGE_URL "https://github.com/benthevining/BenBot"
-)
+#
 
-option (BENBOT_DOCS "Build the documentation (requires Doxygen)" "${PROJECT_IS_TOP_LEVEL}")
+add_executable (benbot_gui)
 
-option (BENBOT_TESTS "Build the tests" "${PROJECT_IS_TOP_LEVEL}")
+target_compile_features (benbot_gui PRIVATE cxx_std_23)
 
-# includes used throughout the various directories
-include (CPackComponent)
-include (FeatureSummary)
-include (FetchContent)
+target_link_libraries (benbot_gui PRIVATE ben_bot::libgui)
 
-cpack_add_component_group (
-    ben_bot_all DISPLAY_NAME "BenBot" DESCRIPTION "All components of BenBot" EXPANDED BOLD_TITLE
-)
+if (APPLE)
+    enable_language (OBJCXX OBJC)
 
-add_subdirectory (libutil)
-add_subdirectory (libchess)
-add_subdirectory (libbenbot)
-add_subdirectory (ben-bot)
+    set (GLFW_BUILD_DOCS OFF)
+    set (GLFW_INSTALL OFF)
 
-add_subdirectory (gui EXCLUDE_FROM_ALL)
+    FetchContent_Declare (
+        glfw
+        SYSTEM
+        GIT_REPOSITORY "https://github.com/glfw/glfw.git"
+        GIT_TAG 3.4
+        GIT_SHALLOW ON
+        FIND_PACKAGE_ARGS 3.4
+    )
 
-if (BENBOT_TESTS)
-    enable_testing ()
+    FetchContent_MakeAvailable (glfw)
 
-    add_subdirectory (tests)
+    target_link_libraries (imgui PUBLIC glfw)
 
-    if (PROJECT_IS_TOP_LEVEL)
-        include (CTest)
-    endif ()
-endif ()
+    target_sources (
+        benbot_gui PRIVATE main_glfw_metal.mm "${imgui_backends_dir}/imgui_impl_glfw.cpp"
+                           "${imgui_backends_dir}/imgui_impl_metal.mm"
+    )
 
-if (BENBOT_DOCS)
-    add_subdirectory (docs)
-endif ()
-
-if (PROJECT_IS_TOP_LEVEL)
-    include (CPack)
-    feature_summary (WHAT ALL DEFAULT_DESCRIPTION)
+    target_link_libraries (
+        benbot_gui PRIVATE "-framework Metal" "-framework MetalKit" "-framework Cocoa"
+                           "-framework IOKit" "-framework CoreVideo" "-framework QuartzCore"
+    )
+else ()
+    message (WARNING "imgui backend not yet configured for this platform!")
 endif ()

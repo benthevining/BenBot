@@ -15,6 +15,17 @@
     {
       "name": "termcolor",
       "version>=": "2.1.0"
+    },
+    {
+      "features": [
+        "docking-experimental"
+      ],
+      "name": "imgui",
+      "version>=": "1.91.9"
+    },
+    {
+      "name": "glfw3",
+      "version>=": "3.4#1"
     }
   ],
   "name": "BenBot",
