@@ -27,6 +27,7 @@
 #include <libchess/notation/FEN.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libgui/BoardEditor.hpp>
+#include <limits>
 #include <magic_enum/magic_enum.hpp>
 #include <optional>
 #include <ranges>
@@ -122,16 +123,26 @@ namespace {
 
     void render_castling_rights(Position& position)
     {
+        static constexpr auto TableFlags       = ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit;
+        static constexpr auto TableColumnFlags = ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize;
+
+        static constexpr auto White = "White";
+        static constexpr auto Black = "Black";
+
+        static constexpr auto Kingside  = "O-O";
+        static constexpr auto Queenside = "O-O-O";
+
         ImGui::BeginGroup();
 
         ImGui::Text("Castling Rights");
 
-        if (ImGui::BeginTable("CastlingRights", 3, ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders)) {
-            static constexpr auto White = "White";
-            static constexpr auto Black = "Black";
+        if (ImGui::BeginTable("CastlingRights", 3, TableFlags,
+                { ImGui::CalcTextSize(Queenside).x * 5.f, 0.f })) {
+            ImGui::TableSetupColumn("ColorLabels", TableColumnFlags,
+                ImGui::CalcTextSize(White).x + 5.f);
 
-            static constexpr auto Kingside  = "O-O";
-            static constexpr auto Queenside = "O-O-O";
+            ImGui::TableSetupColumn(Kingside, TableColumnFlags);
+            ImGui::TableSetupColumn(Queenside, TableColumnFlags);
 
             ImGui::TableNextRow();
 
@@ -172,17 +183,18 @@ namespace {
             ImGui::SetTooltip("Set the castling rights of each side");
     }
 
-    // TODO: make combobox not as wide
     void render_ep_square(
         Position& position, std::optional<Square>& selectedSquare)
     {
+        static constexpr auto ComboFlags = ImGuiComboFlags_PopupAlignLeft | ImGuiComboFlags_WidthFitPreview;
+
         static constexpr auto NoneLabel = "None";
 
         const auto currEP = position.enPassantTargetSquare
                                 .transform([](const Square square) { return std::format("{}", square); })
                                 .value_or(std::string { NoneLabel });
 
-        if (ImGui::BeginCombo("EPSquare", currEP.c_str(), ImGuiComboFlags_PopupAlignLeft)) {
+        if (ImGui::BeginCombo("EPSquare", currEP.c_str(), ComboFlags)) {
             for (const auto square : get_potentially_legal_en_passant_target_squares(position)) {
                 const bool isSelected = selectedSquare.has_value() and square == *selectedSquare;
 
@@ -244,12 +256,17 @@ namespace {
     void render_fen_string(
         Position& position, std::string& errorMessage)
     {
+        static constexpr auto InputTextFlags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue;
+
+        static constexpr auto PopupFlags = ImGuiWindowFlags_AlwaysAutoResize;
+
         static constexpr auto ErrorPopupID { "FEN parse error" };
 
         auto inputBuf = chess::notation::to_fen(position);
 
-        if (ImGui::InputText("FEN", &inputBuf,
-                ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+        ImGui::SetNextItemWidth(ImGui::CalcTextSize(inputBuf.c_str()).x + 10.f);
+
+        if (ImGui::InputText("FEN", &inputBuf, InputTextFlags)) {
             [[maybe_unused]] const auto result
                 = chess::notation::from_fen(inputBuf)
                       .transform([&position, &errorMessage](const Position& newPos) {
@@ -267,7 +284,7 @@ namespace {
 
         ImGui::SetItemTooltip("Enter a FEN string");
 
-        if (ImGui::BeginPopupModal(ErrorPopupID, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        if (ImGui::BeginPopupModal(ErrorPopupID, nullptr, PopupFlags)) {
             UnformattedText(errorMessage);
 
             if (ImGui::Button("OK", { 120.f, 0.f })) {
@@ -282,6 +299,12 @@ namespace {
 
 void board_editor(BoardEditorState& state)
 {
+    static constexpr auto MAX_SIZE = std::numeric_limits<float>::max();
+
+    ImGui::SetNextWindowSizeConstraints(
+        { 475.f, 595.f },
+        { MAX_SIZE, MAX_SIZE });
+
     if (ImGui::Begin("Board editor")) {
         render_chessboard(state.position);
 
