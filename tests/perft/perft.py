@@ -80,32 +80,41 @@ class Engine:
             text=True,
         )
 
-        self.engine.stdin.write("uci\n")
+        self.send_command("uci")
 
         # skip greeting & info/options output
         for line in self.engine.stdout:
             if line.strip() == "uciok":
                 break
 
-        self.engine.stdin.write("ucinewgame\n")
-        self.engine.stdin.write("isready\n")
+        self.send_command("ucinewgame")
+        self.send_command("isready")
 
-        self.engine.stdout.readline()  # "readyok" response
+        self.readline()  # "readyok" response
 
-        self.engine.stdin.write(f"position fen {pos_fen}\n")
+        self.send_command(f"position fen {pos_fen}")
+
+    def send_command(self, command):
+        self.engine.stdin.write(f"{command}\n")
+        self.engine.stdin.flush()
+
+    def readline(self):
+        return self.engine.stdout.readline()
 
     def run_perft(self, depth: int) -> dict[str, int]:
-        self.engine.stdin.write(f"perft {depth} json\n")
+        self.send_command(f"perft {depth} json")
 
-        # info line
-        self.engine.stdout.readline()
+        self.readline()  # info line
 
-        return json.loads(self.engine.stdout.readline())
+        return json.loads(self.readline())
 
     def __del__(self):
-        self.engine.communicate("quit\n", timeout=15)
-        self.engine.kill()
-        self.engine.communicate()
+        self.send_command("quit")
+
+        if self.engine:
+            self.engine.stdin.close()
+            self.engine.stdout.close()
+            self.engine.wait()
 
 
 #
