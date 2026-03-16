@@ -12,58 +12,67 @@
  * ======================================================================================
  */
 
+#define GLFW_INCLUDE_NONE
+#define GLFW_EXPOSE_NATIVE_COCOA
+
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_metal.h"
-#include <stdio.h>
-
-#define GLFW_INCLUDE_NONE
-#define GLFW_EXPOSE_NATIVE_COCOA
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
-
 #import <Metal/Metal.h>
 #import <QuartzCore/QuartzCore.h>
+#include <cstdio>
+#include <cstdlib>
+#include <libchess/game/Position.hpp>
+#include <libgui/BoardEditor.hpp>
+#include <print>
 
-static void glfw_error_callback(int error, const char* description)
-{
-    fprintf(stderr, "Glfw Error %d: %s\n", error, description);
-}
+using chess::game::Position;
 
-int main(int, char**)
+int main(
+    [[maybe_unused]] const int    argc,
+    [[maybe_unused]] const char** argv)
 {
-    glfwSetErrorCallback(glfw_error_callback);
-    if (! glfwInit())
-        return 1;
+    glfwSetErrorCallback([](const int error, const char* description) {
+        std::println(stderr, "GLFW error code {}: {}", error, description);
+    });
+
+    if (not glfwInit())
+        return EXIT_FAILURE;
 
     // Create window with graphics context
-    float main_scale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor()); // Valid on GLFW 3.3+ only
+    const auto main_scale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor());
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    GLFWwindow* window = glfwCreateWindow((int)(1280 * main_scale), (int)(800 * main_scale), "Dear ImGui GLFW+Metal example", nullptr, nullptr);
+
+    auto* window = glfwCreateWindow(
+        static_cast<int>(1280 * main_scale),
+        static_cast<int>(800 * main_scale),
+        "BenBot GUI", nullptr, nullptr);
+
     if (window == nullptr)
-        return 1;
+        return EXIT_FAILURE;
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-    (void)io;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
 
-    // Setup Dear ImGui style
+    auto& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
     ImGui::StyleColorsDark();
-    // ImGui::StyleColorsLight();
 
-    // Setup scaling
-    ImGuiStyle& style = ImGui::GetStyle();
-    style.ScaleAllSizes(main_scale); // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
-    style.FontScaleDpi = main_scale; // Set initial font scale. (in docking branch: using io.ConfigDpiScaleFonts=true automatically overrides this for every window depending on the current monitor)
+    { // Setup scaling
+        auto& style = ImGui::GetStyle();
+        style.ScaleAllSizes(main_scale); // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
+        style.FontScaleDpi = main_scale; // Set initial font scale. (in docking branch: using io.ConfigDpiScaleFonts=true automatically overrides this for every window depending on the current monitor)
+    }
 
-    id<MTLDevice>       device       = MTLCreateSystemDefaultDevice();
-    id<MTLCommandQueue> commandQueue = [device newCommandQueue];
+    const id<MTLDevice>       device       = MTLCreateSystemDefaultDevice();
+    const id<MTLCommandQueue> commandQueue = [device newCommandQueue];
 
-    // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplMetal_Init(device);
 
@@ -95,11 +104,12 @@ int main(int, char**)
     MTLRenderPassDescriptor* renderPassDescriptor = [MTLRenderPassDescriptor new];
 
     // Our state
-    bool  show_another_window = false;
-    float clear_color[4]      = { 0.45f, 0.55f, 0.60f, 1.00f };
+    float clear_color[4] = { 0.45f, 0.55f, 0.60f, 1.f };
+
+    Position boardEditorPosition;
 
     // Main loop
-    while (! glfwWindowShouldClose(window)) {
+    while (not glfwWindowShouldClose(window)) {
         @autoreleasepool {
             // Poll and handle events (inputs, window resize, etc.)
             // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
@@ -108,54 +118,27 @@ int main(int, char**)
             // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
             glfwPollEvents();
 
-            int width, height;
+            int width { 0 };
+            int height { 0 };
             glfwGetFramebufferSize(window, &width, &height);
-            layer.drawableSize           = CGSizeMake(width, height);
-            id<CAMetalDrawable> drawable = [layer nextDrawable];
+            layer.drawableSize                 = CGSizeMake(width, height);
+            const id<CAMetalDrawable> drawable = [layer nextDrawable];
 
-            id<MTLCommandBuffer> commandBuffer                   = [commandQueue commandBuffer];
+            const id<MTLCommandBuffer> commandBuffer             = [commandQueue commandBuffer];
             renderPassDescriptor.colorAttachments[0].clearColor  = MTLClearColorMake(clear_color[0] * clear_color[3], clear_color[1] * clear_color[3], clear_color[2] * clear_color[3], clear_color[3]);
             renderPassDescriptor.colorAttachments[0].texture     = drawable.texture;
             renderPassDescriptor.colorAttachments[0].loadAction  = MTLLoadActionClear;
             renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
-            id<MTLRenderCommandEncoder> renderEncoder            = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
-            [renderEncoder pushDebugGroup:@"ImGui demo"];
+            const id<MTLRenderCommandEncoder> renderEncoder      = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
+            [renderEncoder pushDebugGroup:@"BenBot GUI"];
 
             // Start the Dear ImGui frame
             ImGui_ImplMetal_NewFrame(renderPassDescriptor);
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
-            // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
-            {
-                static float f       = 0.0f;
-                static int   counter = 0;
-
-                ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
-
-                ImGui::Text("This is some useful text."); // Display some text (you can use a format strings too)
-                ImGui::Checkbox("Another Window", &show_another_window);
-
-                ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-                ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
-                if (ImGui::Button("Button")) // Buttons return true when clicked (most widgets return true when edited/activated)
-                    counter++;
-                ImGui::SameLine();
-                ImGui::Text("counter = %d", counter);
-
-                ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-                ImGui::End();
-            }
-
-            // 3. Show another simple window.
-            if (show_another_window) {
-                ImGui::Begin("Another Window", &show_another_window); // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-                ImGui::Text("Hello from another window!");
-                if (ImGui::Button("Close Me"))
-                    show_another_window = false;
-                ImGui::End();
-            }
+            // Call app drawing code
+            ben_bot::gui::board_editor(boardEditorPosition);
 
             // Rendering
             ImGui::Render();
@@ -177,5 +160,5 @@ int main(int, char**)
     glfwDestroyWindow(window);
     glfwTerminate();
 
-    return 0;
+    return EXIT_SUCCESS;
 }

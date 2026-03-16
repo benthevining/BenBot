@@ -12,8 +12,6 @@
 
 add_subdirectory (libgui)
 
-#
-
 add_executable (benbot_gui)
 
 target_compile_features (benbot_gui PRIVATE cxx_std_23)
@@ -21,6 +19,7 @@ target_compile_features (benbot_gui PRIVATE cxx_std_23)
 target_link_libraries (benbot_gui PRIVATE ben_bot::libgui)
 
 if (APPLE)
+    # MacOS: glfw + Metal backend
     enable_language (OBJCXX OBJC)
 
     set (GLFW_BUILD_DOCS OFF)
