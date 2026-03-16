@@ -12,16 +12,18 @@
  * ======================================================================================
  */
 
+#include <algorithm>
 #include <beman/inplace_vector/inplace_vector.hpp>
 #include <format>
 #include <imgui.h>
 #include <imgui_stdlib.h>
+#include <libchess/board/Bitboard.hpp>
 #include <libchess/board/File.hpp>
+#include <libchess/board/Masks.hpp>
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
-#include <libchess/moves/Move.hpp>
-#include <libchess/moves/MoveGen.hpp>
+#include <libchess/moves/Patterns.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libgui/BoardEditor.hpp>
@@ -74,7 +76,7 @@ namespace {
                 }
             }
 
-            ImGui::EndTable(); // Must be called to finish the table
+            ImGui::EndTable();
         }
     }
 
@@ -130,58 +132,85 @@ namespace {
             ImGui::SetTooltip("Set the castling rights of each side");
     }
 
-    [[nodiscard]] auto get_possible_ep_squares(const Position& position)
-        -> beman::inplace_vector::inplace_vector<Square, 2uz>
+    [[nodiscard, gnu::const]] auto get_possible_ep_squares(const Position& position)
     {
-        using chess::moves::detail::get_en_passant;
+        using beman::inplace_vector::inplace_vector;
 
-        return (position.is_white_to_move()
-                       ? get_en_passant<Color::White>(position)
-                       : get_en_passant<Color::Black>(position))
-             | std::views::transform(&chess::moves::Move::to)
-             | std::ranges::to<beman::inplace_vector::inplace_vector<Square, 2uz>>();
+        const auto epRankMask = position.is_white_to_move()
+                                  ? chess::board::masks::ranks::FIVE
+                                  : chess::board::masks::ranks::FOUR;
+
+        const auto possibleTakers = position.our_pieces().pawns & epRankMask;
+        const auto posibleTaken   = position.their_pieces().pawns & epRankMask;
+
+        auto squares = possibleTakers.subboards()
+                     | std::views::transform([posibleTaken, isWhite = position.is_white_to_move()](
+                                                 const chess::board::Bitboard startSquare) {
+                           using chess::moves::patterns::pawn_attacks;
+                           using chess::moves::patterns::pawn_pushes;
+
+                           const auto attacks = isWhite
+                                                  ? pawn_attacks<Color::White>(startSquare)
+                                                  : pawn_attacks<Color::Black>(startSquare);
+
+                           const auto takenMask = isWhite
+                                                    ? pawn_pushes<Color::White>(posibleTaken)
+                                                    : pawn_pushes<Color::Black>(posibleTaken);
+
+                           return (attacks & takenMask).squares()
+                                | std::ranges::to<inplace_vector<Square, 2uz>>();
+                       })
+                     | std::views::join
+                     | std::ranges::to<inplace_vector<Square, 8uz>>();
+
+        // TODO: bug here
+        // filter duplicates
+        std::ranges::sort(squares);
+
+        auto unique_end = std::ranges::unique(squares).end();
+
+        squares.erase(unique_end, squares.end());
+
+        return squares;
     }
 
     void render_ep_square(Position& position)
     {
         const auto currEP = position.enPassantTargetSquare
                                 .transform([](const Square square) { return std::format("{}", square); })
-                                .value_or(std::string { });
+                                .value_or(std::string { "None" });
 
         static std::optional<Square> selectedSquare;
 
         if (ImGui::BeginCombo("EPSquare", currEP.c_str(), ImGuiComboFlags_PopupAlignLeft)) {
-            const auto epSquares = get_possible_ep_squares(position);
+            for (const auto square : get_possible_ep_squares(position)) {
+                const bool isSelected = selectedSquare.has_value() and square == *selectedSquare;
 
-            if (not epSquares.empty()) {
-                for (const auto square : epSquares) {
-                    const bool isSelected = selectedSquare.has_value() and square == *selectedSquare;
-
-                    if (ImGui::Selectable(std::format("{}", square).c_str(), isSelected)) {
-                        selectedSquare                 = square;
-                        position.enPassantTargetSquare = selectedSquare;
-                    }
-
-                    if (isSelected)
-                        ImGui::SetItemDefaultFocus();
-                }
-
-                // "none" option
-                const bool isSelected = not selectedSquare.has_value();
-
-                if (ImGui::Selectable("None", isSelected)) {
-                    selectedSquare.reset();
-                    position.enPassantTargetSquare.reset();
+                if (ImGui::Selectable(std::format("{}", square).c_str(), isSelected)) {
+                    selectedSquare                 = square;
+                    position.enPassantTargetSquare = selectedSquare;
                 }
 
                 if (isSelected)
                     ImGui::SetItemDefaultFocus();
             }
 
+            // "none" option
+            const bool isSelected = not selectedSquare.has_value();
+
+            if (ImGui::Selectable("None", isSelected)) {
+                selectedSquare.reset();
+                position.enPassantTargetSquare.reset();
+            }
+
+            if (isSelected)
+                ImGui::SetItemDefaultFocus();
+
             ImGui::EndCombo();
         }
     }
 
+    // TODO: make sure text field is wide enough by default
     void render_fen_string(Position& position)
     {
         auto inputBuf = chess::notation::to_fen(position);
