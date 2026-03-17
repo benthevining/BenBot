@@ -43,14 +43,6 @@ using chess::pieces::Color;
 
 using chess::moves::get_potentially_legal_en_passant_target_squares;
 
-// TODOLIST :
-// render piece sprites in squares
-// allow dropping dragged text into FEN input? BeginDragDropTarget(), AcceptDragDropPayload()
-// sprite "trays" to click & drag pieces on to board
-// ability to click & drag pieces on board to different squares. don't allow dropping piece on occupied square.
-// ability to click & drag pieces on board off of board (or to a trash can icon?)
-// windows build
-
 namespace {
     void UnformattedText(const std::string_view text)
     {

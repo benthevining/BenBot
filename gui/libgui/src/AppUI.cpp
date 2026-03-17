@@ -35,8 +35,8 @@ void initialize(const float mainScaleFactor)
 
     { // Setup scaling
         auto& style = ImGui::GetStyle();
-        style.ScaleAllSizes(mainScaleFactor); // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
-        style.FontScaleDpi = mainScaleFactor; // Set initial font scale. (in docking branch: using io.ConfigDpiScaleFonts=true automatically overrides this for every window depending on the current monitor)
+        style.ScaleAllSizes(mainScaleFactor);
+        style.FontScaleDpi = mainScaleFactor;
     }
 
     // Load Fonts

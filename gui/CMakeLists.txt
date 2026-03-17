@@ -16,9 +16,11 @@ add_executable (benbot_gui)
 
 target_compile_features (benbot_gui PRIVATE cxx_std_23)
 
-target_link_libraries (benbot_gui PRIVATE ben_bot::libgui)
+target_link_libraries (benbot_gui PRIVATE ben_bot::libgui imgui::imgui)
 
-if (APPLE) # MacOS: glfw + Metal backend
+if (APPLE)
+    message (VERBOSE "Using Metal + GLFW backend for ImGUI app")
+
     enable_language (OBJCXX OBJC)
 
     set (GLFW_BUILD_DOCS OFF)
