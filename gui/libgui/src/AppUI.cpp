@@ -12,9 +12,11 @@
  * ======================================================================================
  */
 
+#include <filesystem>
 #include <imgui.h>
 #include <libgui/AppUI.hpp>
 #include <libgui/BoardEditor.hpp>
+#include <libgui/Resources.hpp>
 
 namespace ben_bot::gui {
 
@@ -31,12 +33,26 @@ void initialize(const float mainScaleFactor)
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     }
 
+    if (not std::filesystem::exists("imgui.ini")) {
+        const auto defaultData = resources::get_default_imgui_ini_data();
+        ImGui::LoadIniSettingsFromMemory(defaultData.data(), defaultData.size());
+    }
+
     ImGui::StyleColorsDark();
 
     { // Setup scaling
         auto& style = ImGui::GetStyle();
         style.ScaleAllSizes(mainScaleFactor);
         style.FontScaleDpi = mainScaleFactor;
+
+        style.WindowMenuButtonPosition = ImGuiDir_None;
+        style.GrabRounding             = 4.0f;
+        style.WindowRounding           = 4.0f;
+        style.FrameRounding            = 4.0f;
+        style.WindowBorderSize         = 0.0f;
+        style.PopupBorderSize          = 0.0f;
+        style.ChildBorderSize          = 0.0f;
+        style.WindowMinSize            = { 200.0f, 200.0f };
     }
 
     // Load Fonts

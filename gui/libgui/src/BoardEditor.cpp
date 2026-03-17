@@ -13,8 +13,10 @@
  */
 
 #include <algorithm>
+#include <array>
 #include <beman/inplace_vector/inplace_vector.hpp>
 #include <cassert>
+#include <cstring>
 #include <format>
 #include <imgui.h>
 #include <imgui_stdlib.h>
@@ -249,8 +251,7 @@ namespace {
         Position& position, std::string& errorMessage)
     {
         static constexpr auto InputTextFlags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue;
-
-        static constexpr auto PopupFlags = ImGuiWindowFlags_AlwaysAutoResize;
+        static constexpr auto PopupFlags     = ImGuiWindowFlags_AlwaysAutoResize;
 
         static constexpr auto ErrorPopupID { "FEN parse error" };
 

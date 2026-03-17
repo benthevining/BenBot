@@ -24,6 +24,8 @@ using PieceType = chess::pieces::Type;
 using chess::pieces::Color;
 using std::string_view;
 
+[[nodiscard, gnu::const]] auto get_default_imgui_ini_data() -> string_view;
+
 [[nodiscard, gnu::const]] auto get_piece_sprite(
     PieceType type, Color color) -> string_view;
 
