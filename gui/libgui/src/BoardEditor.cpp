@@ -16,7 +16,6 @@
 #include <array>
 #include <beman/inplace_vector/inplace_vector.hpp>
 #include <cassert>
-#include <cstring>
 #include <format>
 #include <imgui.h>
 #include <imgui_stdlib.h>
@@ -89,19 +88,6 @@ namespace {
         }
     }
 
-    // When the user manually changes the side to move, we may need to reset the EP square
-    // if it was set, because the en passant ranks are different for each side. This function
-    // resets the EP square if it was set to one that is now illegal.
-    void check_ep_square(Position& position)
-    {
-        position.enPassantTargetSquare.transform([&position](const Square prevEP) {
-            if (not std::ranges::contains(get_potentially_legal_en_passant_target_squares(position), prevEP))
-                position.enPassantTargetSquare.reset();
-
-            return std::monostate { };
-        });
-    }
-
     void render_side_to_move(Position& position)
     {
         bool whiteToMove { position.sideToMove == Color::White };
@@ -109,7 +95,10 @@ namespace {
         if (ImGui::Checkbox("White to move", &whiteToMove)) {
             position.sideToMove = whiteToMove ? Color::White : Color::Black;
 
-            check_ep_square(position);
+            // When the user manually changes the side to move, we may need to reset the EP square
+            // if it was set, because the en passant ranks are different for each side. This function
+            // resets the EP square if it was set to one that is now illegal.
+            position.sanitize_ep_square();
         }
 
         ImGui::SetItemTooltip("Set the side to move");
@@ -299,7 +288,7 @@ void board_editor(BoardEditorState& state)
         { MAX_SIZE, MAX_SIZE });
 
     if (ImGui::Begin("Board editor")) {
-        render_chessboard(state.position);
+        // render_chessboard(state.position);
 
         render_side_to_move(state.position);
 

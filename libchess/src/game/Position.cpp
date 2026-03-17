@@ -278,6 +278,21 @@ auto Position::get_result() const -> std::optional<Result>
     return Result::WhiteWon;
 }
 
+using moves::get_potentially_legal_en_passant_target_squares;
+
+void Position::sanitize_ep_square()
+{
+    enPassantTargetSquare = enPassantTargetSquare
+                                .and_then([this](const Square square) -> std::optional<Square> {
+                                    if (not std::ranges::contains(
+                                            get_potentially_legal_en_passant_target_squares(*this),
+                                            square))
+                                        return std::nullopt;
+
+                                    return enPassantTargetSquare;
+                                });
+}
+
 auto Position::is_illegal() const -> std::optional<std::string>
 {
     // for reference, see the rules defined at https://github.com/lechmazur/ChessCounter#rules
@@ -367,7 +382,7 @@ auto Position::is_illegal() const -> std::optional<std::string>
     const bool hasIllegalEPSquare = enPassantTargetSquare
                                         .transform([this](const Square square) {
                                             return not std::ranges::contains(
-                                                moves::get_potentially_legal_en_passant_target_squares(*this),
+                                                get_potentially_legal_en_passant_target_squares(*this),
                                                 square);
                                         })
                                         .value_or(false);
