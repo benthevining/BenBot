@@ -13,6 +13,7 @@
  */
 
 #include "game/Zobrist.hpp"
+#include <algorithm>
 #include <array>
 #include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
 #include <format>
@@ -362,6 +363,17 @@ auto Position::is_illegal() const -> std::optional<std::string>
             magic_enum::enum_name(otherColor),
             magic_enum::enum_name(sideToMove));
     }
+
+    const bool hasIllegalEPSquare = enPassantTargetSquare
+                                        .transform([this](const Square square) {
+                                            return not std::ranges::contains(
+                                                moves::get_potentially_legal_en_passant_target_squares(*this),
+                                                square);
+                                        })
+                                        .value_or(false);
+
+    if (hasIllegalEPSquare)
+        return std::format("Invalid EP square {}", *enPassantTargetSquare);
 
     return std::nullopt;
 }
