@@ -12,50 +12,28 @@
  * ======================================================================================
  */
 
-#ifndef GLFW_INCLUDE_NONE
-#    define GLFW_INCLUDE_NONE
-#endif
-
-#ifndef GLFW_EXPOSE_NATIVE_COCOA
-#    define GLFW_EXPOSE_NATIVE_COCOA
-#endif
-
-#include "imgui.h"
+#include "GLFW_Wrapper.hpp"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_metal.h"
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 #import <Metal/Metal.h>
 #import <QuartzCore/QuartzCore.h>
-#include <cstdio>
 #include <cstdlib>
 #include <libgui/AppUI.hpp>
-#include <print>
+
+namespace glfw_wrapper = ben_bot::gui::glfw;
 
 int main(
     [[maybe_unused]] const int    argc,
     [[maybe_unused]] const char** argv)
 {
-    glfwSetErrorCallback([](const int error, const char* description) {
-        std::println(stderr, "GLFW error code {}: {}", error, description);
-    });
-
-    if (not glfwInit())
-        return EXIT_FAILURE;
-
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
-    const auto main_scale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor());
-
-    auto* window = glfwCreateWindow(
-        static_cast<int>(1280 * main_scale),
-        static_cast<int>(800 * main_scale),
-        "BenBot GUI", nullptr, nullptr);
+    auto* window = glfw_wrapper::create_window();
 
     if (window == nullptr)
         return EXIT_FAILURE;
 
-    ben_bot::gui::initialize(main_scale);
+    glfw_wrapper::initialize();
 
     const id<MTLDevice>       device       = MTLCreateSystemDefaultDevice();
     const id<MTLCommandQueue> commandQueue = [device newCommandQueue];
@@ -83,9 +61,8 @@ int main(
             // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
             glfwPollEvents();
 
-            int width { 0 };
-            int height { 0 };
-            glfwGetFramebufferSize(window, &width, &height);
+            const auto [width, height] = glfw_wrapper::get_framebuffer_size(window);
+
             layer.drawableSize                 = CGSizeMake(width, height);
             const id<CAMetalDrawable> drawable = [layer nextDrawable];
 
@@ -113,12 +90,8 @@ int main(
     }
 
     ImGui_ImplMetal_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
 
-    ben_bot::gui::shutdown();
-
-    glfwDestroyWindow(window);
-    glfwTerminate();
+    glfw_wrapper::shutdown(window);
 
     return EXIT_SUCCESS;
 }

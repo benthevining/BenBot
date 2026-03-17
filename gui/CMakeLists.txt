@@ -40,6 +40,8 @@ target_link_libraries (imgui PUBLIC glfw)
 
 target_sources (benbot_gui PRIVATE "${imgui_backends_dir}/imgui_impl_glfw.cpp")
 
+target_include_directories (benbot_gui PRIVATE "${CMAKE_CURRENT_LIST_DIR}/platform")
+
 if (APPLE)
     message (VERBOSE "Using GLFW + Metal backend for ImGUI app")
 

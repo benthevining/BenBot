@@ -19,14 +19,7 @@
 //   the backend itself (imgui_impl_vulkan.cpp), but should PROBABLY NOT be used by your own engine/app code.
 // Read comments in imgui_impl_vulkan.h.
 
-#ifndef GLFW_INCLUDE_NONE
-#    define GLFW_INCLUDE_NONE
-#endif
-
-#ifndef GLFW_EXPOSE_NATIVE_COCOA
-#    define GLFW_EXPOSE_NATIVE_COCOA
-#endif
-
+#include "GLFW_Wrapper.hpp"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_vulkan.h"
@@ -355,25 +348,13 @@ void FramePresent(ImGui_ImplVulkanH_Window* wd)
 }
 } // namespace
 
+namespace glfw_wrapper = ben_bot::gui::glfw;
+
 int main(
     [[maybe_unused]] const int    argc,
     [[maybe_unused]] const char** argv)
 {
-    glfwSetErrorCallback([](const int error, const char* description) {
-        std::println(stderr, "GLFW error code {}: {}", error, description);
-    });
-
-    if (not glfwInit())
-        return EXIT_FAILURE;
-
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
-    const auto main_scale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor());
-
-    auto* window = glfwCreateWindow(
-        static_cast<int>(1280 * main_scale),
-        static_cast<int>(800 * main_scale),
-        "BenBot GUI", nullptr, nullptr);
+    auto* window = glfw_wrapper::create_window();
 
     if (window == nullptr)
         return EXIT_FAILURE;
@@ -396,12 +377,11 @@ int main(
     check_vk_result(err);
 
     // Create Framebuffers
-    int w, h;
-    glfwGetFramebufferSize(window, &w, &h);
+    const auto [w, h]            = glfw_wrapper::get_framebuffer_size(window);
     ImGui_ImplVulkanH_Window* wd = &g_MainWindowData;
     SetupVulkanWindow(wd, surface, w, h);
 
-    ben_bot::gui::initialize(main_scale);
+    glfw_wrapper::initialize();
 
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForVulkan(window, true);
@@ -436,9 +416,7 @@ int main(
         glfwPollEvents();
 
         // Resize swap chain?
-        int fb_width { 0 };
-        int fb_height { 0 };
-        glfwGetFramebufferSize(window, &fb_width, &fb_height);
+        const auto [fb_width, fb_height] = glfw_wrapper::get_framebuffer_size(window);
 
         if (fb_width > 0 and fb_height > 0
             and (g_SwapChainRebuild or g_MainWindowData.Width != fb_width or g_MainWindowData.Height != fb_height)) {
@@ -474,15 +452,11 @@ int main(
     err = vkDeviceWaitIdle(g_Device);
     check_vk_result(err);
     ImGui_ImplVulkan_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-
-    ben_bot::gui::shutdown();
 
     CleanupVulkanWindow(&g_MainWindowData);
     CleanupVulkan();
 
-    glfwDestroyWindow(window);
-    glfwTerminate();
+    glfw_wrapper::shutdown(window);
 
     return EXIT_SUCCESS;
 }

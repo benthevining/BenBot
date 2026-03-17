@@ -26,6 +26,11 @@
     {
       "name": "glfw3",
       "version>=": "3.4#1"
+    },
+    {
+      "name": "vulkan",
+      "platform": "!(osx|ios)",
+      "version>=": "2023-12-17"
     }
   ],
   "name": "BenBot",
