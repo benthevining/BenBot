@@ -16,6 +16,7 @@
 #include <array>
 #include <beman/inplace_vector/inplace_vector.hpp>
 #include <cassert>
+#include <cstdint>
 #include <format>
 #include <imgui.h>
 #include <imgui_stdlib.h>
@@ -28,7 +29,6 @@
 #include <libchess/notation/FEN.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libgui/BoardEditor.hpp>
-#include <limits>
 #include <magic_enum/magic_enum.hpp>
 #include <optional>
 #include <ranges>
@@ -236,6 +236,43 @@ namespace {
         ImGui::EndGroup();
     }
 
+    void render_move_counters(Position& position)
+    {
+        ImGui::BeginGroup();
+
+        static constexpr auto HalfMovesLabel = "Half moves";
+
+        ImGui::SetNextItemWidth(ImGui::CalcTextSize(HalfMovesLabel).x * 1.25f);
+
+        auto halfMoveCounter = static_cast<int>(position.halfmoveClock);
+
+        if (ImGui::InputInt(HalfMovesLabel, &halfMoveCounter, 1, 10, ImGuiInputTextFlags_CharsDecimal)) {
+            position.halfmoveClock = static_cast<std::uint_least8_t>(
+                std::clamp(halfMoveCounter, 0, 100));
+        }
+
+        ImGui::SetItemTooltip(
+            "This counter enforces the 50-move rule; this is the number of plies since the last capture or pawn move.");
+
+        ImGui::SameLine();
+
+        static constexpr auto FullMovesLabel = "Full moves";
+
+        ImGui::SetNextItemWidth(ImGui::CalcTextSize(FullMovesLabel).x * 1.25f);
+
+        auto fullMoveCounter = static_cast<int>(position.fullMoveCounter);
+
+        if (ImGui::InputInt(FullMovesLabel, &fullMoveCounter, 1, 10, ImGuiInputTextFlags_CharsDecimal)) {
+            position.fullMoveCounter = static_cast<std::uint_least64_t>(
+                std::max(fullMoveCounter, 1));
+        }
+
+        ImGui::SetItemTooltip(
+            "The number of full turns in the game so far. This counter is incremented after each Black move.");
+
+        ImGui::EndGroup();
+    }
+
     void render_fen_string(
         Position& position, std::string& errorMessage)
     {
@@ -281,12 +318,6 @@ namespace {
 
 void board_editor(BoardEditorState& state)
 {
-    static constexpr auto MAX_SIZE = std::numeric_limits<float>::max();
-
-    ImGui::SetNextWindowSizeConstraints(
-        { 475.f, 595.f },
-        { MAX_SIZE, MAX_SIZE });
-
     if (ImGui::Begin("Board editor")) {
         // render_chessboard(state.position);
 
@@ -294,9 +325,11 @@ void board_editor(BoardEditorState& state)
 
         render_castling_rights(state.position);
 
+        render_utility_buttons(state.position);
+
         render_ep_square(state.position, state.selectedEPSquare);
 
-        render_utility_buttons(state.position);
+        render_move_counters(state.position);
 
         render_fen_string(state.position, state.fenParseError);
     }
