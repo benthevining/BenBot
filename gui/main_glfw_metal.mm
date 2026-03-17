@@ -43,8 +43,9 @@ int main(
     if (not glfwInit())
         return EXIT_FAILURE;
 
-    const auto main_scale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor());
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
+    const auto main_scale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor());
 
     auto* window = glfwCreateWindow(
         static_cast<int>(1280 * main_scale),
@@ -99,7 +100,7 @@ int main(
             ImGui_ImplMetal_NewFrame(renderPassDescriptor);
             ImGui_ImplGlfw_NewFrame();
 
-            ben_bot::gui::render(state);
+            render(state);
 
             ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), commandBuffer, renderEncoder);
 
