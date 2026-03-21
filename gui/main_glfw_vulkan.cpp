@@ -397,7 +397,9 @@ int main(
     ImGui_ImplVulkanH_Window* wd = &g_MainWindowData;
     SetupVulkanWindow(wd, surface, w, h);
 
-    glfw_wrapper::initialize();
+    ben_bot::gui::AppState state;
+
+    glfw_wrapper::initialize(state);
 
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForVulkan(window, true);
@@ -418,8 +420,6 @@ int main(
     init_info.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
     init_info.CheckVkResultFn              = check_vk_result;
     ImGui_ImplVulkan_Init(&init_info);
-
-    ben_bot::gui::AppState state;
 
     ImVec4 clear_color { 0.45f, 0.55f, 0.60f, 1.00f };
 
@@ -472,7 +472,7 @@ int main(
     CleanupVulkanWindow(&g_MainWindowData);
     CleanupVulkan();
 
-    glfw_wrapper::shutdown(window);
+    glfw_wrapper::shutdown(window, state);
 
     return EXIT_SUCCESS;
 }

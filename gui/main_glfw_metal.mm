@@ -33,7 +33,9 @@ int main(
     if (window == nullptr)
         return EXIT_FAILURE;
 
-    glfw_wrapper::initialize();
+    ben_bot::gui::AppState state;
+
+    glfw_wrapper::initialize(state);
 
     const id<MTLDevice>       device       = MTLCreateSystemDefaultDevice();
     const id<MTLCommandQueue> commandQueue = [device newCommandQueue];
@@ -49,8 +51,6 @@ int main(
     nswin.contentView.wantsLayer = YES;
 
     MTLRenderPassDescriptor* renderPassDescriptor = [MTLRenderPassDescriptor new];
-
-    ben_bot::gui::AppState state;
 
     while (not glfwWindowShouldClose(window)) {
         @autoreleasepool {
@@ -91,7 +91,7 @@ int main(
 
     ImGui_ImplMetal_Shutdown();
 
-    glfw_wrapper::shutdown(window);
+    glfw_wrapper::shutdown(window, state);
 
     return EXIT_SUCCESS;
 }

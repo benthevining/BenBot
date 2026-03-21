@@ -49,7 +49,10 @@ add_library (libgui STATIC)
 
 target_compile_features (libgui PUBLIC cxx_std_23)
 
-target_link_libraries (libgui PUBLIC ben_bot::libchess PRIVATE imgui::imgui ben_bot::gui_resources)
+target_link_libraries (
+    libgui PUBLIC ben_bot::libchess PRIVATE imgui::imgui ben_bot::gui_resources
+                                            nlohmann_json::nlohmann_json
+)
 
 set_target_properties (
     libgui PROPERTIES CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN ON

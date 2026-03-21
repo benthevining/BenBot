@@ -17,10 +17,29 @@
 #include <libgui/AppUI.hpp>
 #include <libgui/BoardEditor.hpp>
 #include <libgui/Resources.hpp>
+#include <libutil/Files.hpp>
+#include <nlohmann/json.hpp>
+#include <string>
+#include <string_view>
 
 namespace ben_bot::gui {
 
-void initialize(const float mainScaleFactor)
+namespace {
+    using std::filesystem::path;
+    using std::string_view;
+
+    [[nodiscard]] auto imgui_ini_path() -> path
+    {
+        return "imgui.ini";
+    }
+
+    [[nodiscard]] auto app_state_file_path() -> path
+    {
+        return "benbot_state.json";
+    }
+} // namespace
+
+void initialize(const float mainScaleFactor, AppState& state)
 {
     IMGUI_CHECKVERSION();
 
@@ -33,9 +52,19 @@ void initialize(const float mainScaleFactor)
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     }
 
-    if (not std::filesystem::exists("imgui.ini")) {
+    if (not exists(imgui_ini_path())) {
         const auto defaultData = resources::get_default_imgui_ini_data();
         ImGui::LoadIniSettingsFromMemory(defaultData.data(), defaultData.size());
+    }
+
+    if (const auto filePath = app_state_file_path();
+        exists(filePath)) {
+        [[maybe_unused]] const auto result
+            = util::files::load(filePath)
+                  .transform([&state](const string_view fileContent) {
+                      state = AppState::from_string(fileContent);
+                      return std::monostate { };
+                  });
     }
 
     ImGui::StyleColorsDark();
@@ -80,14 +109,44 @@ void render(AppState& state)
 
     ImGui::DockSpaceOverViewport();
 
-    board_editor(state.boardEditor);
+    render_board_editor(state.boardEditor);
 
     ImGui::Render();
 }
 
-void shutdown()
+void shutdown(const AppState& state)
 {
     ImGui::DestroyContext();
+
+    [[maybe_unused]] const auto result
+        = util::files::overwrite(
+            app_state_file_path(),
+            state.to_string());
+}
+
+using nlohmann::json;
+
+inline constexpr string_view TAG_BOARD_EDITOR { "board_editor" };
+
+std::string AppState::to_string() const
+{
+    json data;
+
+    data[TAG_BOARD_EDITOR] = boardEditor.to_string();
+
+    return data.dump();
+}
+
+AppState AppState::from_string(const string_view str)
+{
+    const auto parsed = json::parse(str);
+
+    AppState state;
+
+    state.boardEditor = BoardEditorState::from_string(
+        parsed.at(TAG_BOARD_EDITOR).get<string_view>());
+
+    return state;
 }
 
 } // namespace ben_bot::gui

@@ -22,9 +22,9 @@
 #    define GLFW_EXPOSE_NATIVE_COCOA
 #endif
 
-#include "imgui_impl_glfw.h"
 #include <GLFW/glfw3.h>
 #include <cstdio>
+#include <imgui_impl_glfw.h>
 #include <libgui/AppUI.hpp>
 #include <print>
 #include <utility>
@@ -52,10 +52,11 @@ using Window = GLFWwindow;
         "BenBot GUI", nullptr, nullptr);
 }
 
-inline void initialize()
+inline void initialize(AppState& state)
 {
     gui::initialize(
-        ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor()));
+        ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor()),
+        state);
 }
 
 [[nodiscard]] inline auto get_framebuffer_size(Window* window)
@@ -69,11 +70,11 @@ inline void initialize()
     return std::make_pair(width, height);
 }
 
-inline void shutdown(Window* window)
+inline void shutdown(Window* window, const AppState& state)
 {
     ImGui_ImplGlfw_Shutdown();
 
-    gui::shutdown();
+    gui::shutdown(state);
 
     glfwDestroyWindow(window);
     glfwTerminate();

@@ -30,6 +30,7 @@
 #include <libchess/pieces/Colors.hpp>
 #include <libgui/BoardEditor.hpp>
 #include <magic_enum/magic_enum.hpp>
+#include <nlohmann/json.hpp>
 #include <optional>
 #include <ranges>
 #include <string>
@@ -41,11 +42,12 @@ using chess::board::File;
 using chess::board::Rank;
 using chess::board::Square;
 using chess::pieces::Color;
+using std::string_view;
 
 using chess::moves::get_potentially_legal_en_passant_target_squares;
 
 namespace {
-    void UnformattedText(const std::string_view text)
+    void UnformattedText(const string_view text)
     {
         ImGui::TextUnformatted(
             text.data(),
@@ -273,6 +275,9 @@ namespace {
         ImGui::EndGroup();
     }
 
+    using chess::notation::from_fen;
+    using chess::notation::to_fen;
+
     void render_fen_string(
         Position& position, std::string& errorMessage)
     {
@@ -281,19 +286,19 @@ namespace {
 
         static constexpr auto ErrorPopupID { "FEN parse error" };
 
-        auto inputBuf = chess::notation::to_fen(position);
+        auto inputBuf = to_fen(position);
 
         ImGui::SetNextItemWidth(ImGui::CalcTextSize(inputBuf.c_str()).x + 10.f);
 
         if (ImGui::InputText("FEN", &inputBuf, InputTextFlags)) {
             [[maybe_unused]] const auto result
-                = chess::notation::from_fen(inputBuf)
+                = from_fen(inputBuf)
                       .transform([&position, &errorMessage](const Position& newPos) {
                           position = newPos;
                           errorMessage.clear();
                           return std::monostate { };
                       })
-                      .transform_error([&errorMessage](const std::string_view error) {
+                      .transform_error([&errorMessage](const string_view error) {
                           assert(not error.empty());
                           errorMessage = error;
                           ImGui::OpenPopup(ErrorPopupID, ImGuiPopupFlags_NoReopen);
@@ -316,7 +321,7 @@ namespace {
     }
 } // namespace
 
-void board_editor(BoardEditorState& state)
+void render_board_editor(BoardEditorState& state)
 {
     if (ImGui::Begin("Board editor")) {
         // render_chessboard(state.position);
@@ -335,6 +340,35 @@ void board_editor(BoardEditorState& state)
     }
 
     ImGui::End();
+}
+
+using nlohmann::json;
+
+inline constexpr string_view TAG_CURRENTBOARD { "board_fen" };
+
+std::string BoardEditorState::to_string() const
+{
+    json data;
+
+    data[TAG_CURRENTBOARD] = to_fen(position);
+
+    return data.dump();
+}
+
+BoardEditorState BoardEditorState::from_string(string_view str)
+{
+    const auto parsed = json::parse(str);
+
+    BoardEditorState state;
+
+    [[maybe_unused]] const auto result
+        = from_fen(parsed.at(TAG_CURRENTBOARD).get<string_view>())
+              .transform([&state](const Position& newPos) {
+                  state.position = newPos;
+                  return std::monostate { };
+              });
+
+    return state;
 }
 
 } // namespace ben_bot::gui
