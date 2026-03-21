@@ -16,15 +16,15 @@ endif ()
 
 add_subdirectory (libgui)
 
-set (icns_file "${CMAKE_CURRENT_LIST_DIR}/icon.icns")
-
-add_executable (benbot_gui MACOSX_BUNDLE WIN32 "${icns_file}")
+add_executable (benbot_gui MACOSX_BUNDLE WIN32)
 
 target_compile_features (benbot_gui PRIVATE cxx_std_23)
 
 target_link_libraries (benbot_gui PRIVATE ben_bot::libgui imgui::imgui)
 
 target_include_directories (benbot_gui PRIVATE "${CMAKE_CURRENT_LIST_DIR}/platform")
+
+target_sources (benbot_gui PRIVATE icons/icon.icns icons/icon.ico icons/icon.rc)
 
 set_target_properties (
     benbot_gui
@@ -40,7 +40,7 @@ set_target_properties (
         "Written in 2026 by Ben Vining and released under the terms of the GNU Public License"
 )
 
-set_source_files_properties ("${icns_file}" PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+set_source_files_properties (icons/icon.icns PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
 
 set (GLFW_BUILD_DOCS OFF)
 set (GLFW_INSTALL OFF)
