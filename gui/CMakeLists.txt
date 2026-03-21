@@ -54,16 +54,23 @@ FetchContent_Declare (
     FIND_PACKAGE_ARGS 3.4
 )
 
-# all currently supported backends use GLFW
+function (benbot_use_glfw)
+    FetchContent_MakeAvailable (glfw)
 
-FetchContent_MakeAvailable (glfw)
+    add_library (
+        benbotgui_glfw_wrapper STATIC "${imgui_backends_dir}/imgui_impl_glfw.cpp"
+                                      platform/GLFW_Wrapper.cpp
+    )
 
-target_link_libraries (imgui PUBLIC glfw)
+    target_link_libraries (benbotgui_glfw_wrapper PUBLIC glfw ben_bot::libgui PRIVATE imgui::imgui)
 
-target_sources (benbot_gui PRIVATE "${imgui_backends_dir}/imgui_impl_glfw.cpp")
+    target_link_libraries (benbot_gui PRIVATE benbotgui_glfw_wrapper)
+endfunction ()
 
 if (APPLE)
     message (VERBOSE "Using GLFW + Metal backend for ImGUI app")
+
+    benbot_use_glfw ()
 
     target_sources (
         benbot_gui PRIVATE main_glfw_metal.mm "${imgui_backends_dir}/imgui_impl_metal.mm"
@@ -78,6 +85,8 @@ else ()
 
     if (Vulkan_FOUND)
         message (VERBOSE "Using GLFW + Vulkan backend for ImGUI app")
+
+        benbot_use_glfw ()
 
         target_sources (
             benbot_gui PRIVATE main_glfw_vulkan.cpp "${imgui_backends_dir}/imgui_impl_vulkan.cpp"

@@ -17,8 +17,14 @@
 #include <libgui/BoardEditor.hpp>
 #include <string>
 #include <string_view>
+#include <utility>
 
 namespace ben_bot::gui {
+
+inline constexpr auto AppName { "BenBot GUI" };
+
+[[nodiscard]] auto get_scaled_default_dimensions(float scaleFactor)
+    -> std::pair<int, int>;
 
 struct AppState final {
     BoardEditorState boardEditor;

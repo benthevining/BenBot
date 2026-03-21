@@ -12,6 +12,7 @@
  * ======================================================================================
  */
 
+#include <cmath>
 #include <filesystem>
 #include <imgui.h>
 #include <libgui/AppUI.hpp>
@@ -21,8 +22,20 @@
 #include <nlohmann/json.hpp>
 #include <string>
 #include <string_view>
+#include <utility>
 
 namespace ben_bot::gui {
+
+auto get_scaled_default_dimensions(const float scaleFactor)
+    -> std::pair<int, int>
+{
+    static constexpr auto DefaultWidth  = 1280.f;
+    static constexpr auto DefaultHeight = 800.f;
+
+    return std::make_pair(
+        static_cast<int>(std::round(DefaultWidth * scaleFactor)),
+        static_cast<int>(std::round(DefaultHeight * scaleFactor)));
+}
 
 namespace {
     using std::filesystem::path;

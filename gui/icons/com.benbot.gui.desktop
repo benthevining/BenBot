@@ -1,0 +1,7 @@
+Type=Application
+Version=1.5
+Name=BenBot GUI
+GenericName=Chess GUI
+Comment=Play and analyze chess games
+Terminal=false
+# Icon=<absPath>
