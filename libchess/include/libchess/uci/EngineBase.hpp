@@ -275,6 +275,7 @@ private:
 
     Position position;
 
+protected:
     std::array<EngineCommand, 11uz> standardUCICommands {
         EngineCommand {
             .name   = "uci",

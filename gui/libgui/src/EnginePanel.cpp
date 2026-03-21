@@ -122,4 +122,14 @@ void render_engine_panel(EnginePanelState& state)
     ImGui::End();
 }
 
+auto EnginePanelState::to_string() const -> string
+{
+    return engine.state_to_string();
+}
+
+void EnginePanelState::update_from_string(std::string_view str)
+{
+    engine.restore_state_from_string(str);
+}
+
 } // namespace ben_bot::gui

@@ -135,6 +135,36 @@ using nlohmann::json;
 inline constexpr string_view TAG_OPTIONS { "uci_options" };
 inline constexpr string_view TAG_DEBUG { "debug" };
 
+auto Engine::state_to_string() const -> std::string
+{
+    json optionsData;
+
+    auto save_option = [&optionsData](const uci::Option& opt) {
+        if (not opt.has_value())
+            return;
+
+        std::visit(
+            util::Visitor {
+                [&optionsData, name = opt.get_name()](const auto value) {
+                    optionsData[name] = value;
+                } },
+            opt.get_value_variant());
+    };
+
+    for (const auto* opt : options)
+        save_option(*opt);
+
+    for (const auto* opt : standardUCIOptions)
+        save_option(*opt);
+
+    json data;
+
+    data[TAG_OPTIONS] = optionsData;
+    data[TAG_DEBUG]   = is_debug_mode();
+
+    return data.dump();
+}
+
 void Engine::write_config_file(const string_view arg) const
 {
     if (arg.empty()) {
@@ -142,30 +172,11 @@ void Engine::write_config_file(const string_view arg) const
         return;
     }
 
-    json optionsData;
-
-    for (const auto* opt : options) {
-        if (not opt->has_value())
-            continue;
-
-        std::visit(
-            util::Visitor {
-                [&optionsData, name = opt->get_name()](const auto value) {
-                    optionsData[name] = value;
-                } },
-            opt->get_value_variant());
-    }
-
-    json data;
-
-    data[TAG_OPTIONS] = optionsData;
-    data[TAG_DEBUG]   = is_debug_mode();
-
     const auto filePath = absolute(path { arg });
 
     [[maybe_unused]] const auto result
         = util::files::overwrite(
-            filePath, data.dump(2))
+            filePath, state_to_string())
               .transform([&filePath] {
                   info_string(std::format(
                       "Wrote configuration file to: {}", filePath.string()));
@@ -183,6 +194,47 @@ void Engine::read_config_file(const string_view arg)
     read_config_file(path { arg });
 }
 
+void Engine::restore_state_from_string(const string_view state)
+{
+    const auto data = json::parse(state);
+
+    set_debug_mode(
+        data.at(TAG_DEBUG).get<bool>());
+
+    const auto& optionsData = data.at(TAG_OPTIONS);
+
+    auto load_option = [&optionsData](uci::Option& opt) {
+        if (not opt.has_value())
+            return;
+
+        const auto& optValue = optionsData.at(opt.get_name());
+
+        if (auto* boolOpt = dynamic_cast<uci::BoolOption*>(&opt)) {
+            boolOpt->set_value(optValue.get<bool>());
+            return;
+        }
+
+        if (auto* intOpt = dynamic_cast<uci::IntOption*>(&opt)) {
+            intOpt->set_value(optValue.get<int>());
+            return;
+        }
+
+        if (auto* comboOpt = dynamic_cast<uci::ComboOption*>(&opt)) {
+            comboOpt->set_value(optValue.get<std::string_view>());
+            return;
+        }
+
+        if (auto* stringOpt = dynamic_cast<uci::StringOption*>(&opt))
+            stringOpt->set_value(optValue.get<std::string_view>());
+    };
+
+    for (auto* opt : options)
+        load_option(*opt);
+
+    for (auto* opt : standardUCIOptions)
+        load_option(*opt);
+}
+
 void Engine::read_config_file(const path& file)
 {
     const auto filePath = absolute(file);
@@ -190,40 +242,7 @@ void Engine::read_config_file(const path& file)
     [[maybe_unused]] const auto result
         = util::files::load(filePath)
               .transform([this, &filePath](const string_view fileContent) {
-                  const auto data = json::parse(fileContent);
-
-                  set_debug_mode(
-                      data.at(TAG_DEBUG).get<bool>());
-
-                  const auto& optionsData = data.at(TAG_OPTIONS);
-
-                  for (auto* opt : options) {
-                      if (not opt->has_value())
-                          continue;
-
-                      const auto& optValue = optionsData.at(opt->get_name());
-
-                      namespace uci = chess::uci;
-
-                      if (auto* boolOpt = dynamic_cast<uci::BoolOption*>(opt)) {
-                          boolOpt->set_value(optValue.get<bool>());
-                          continue;
-                      }
-
-                      if (auto* intOpt = dynamic_cast<uci::IntOption*>(opt)) {
-                          intOpt->set_value(optValue.get<int>());
-                          continue;
-                      }
-
-                      if (auto* comboOpt = dynamic_cast<uci::ComboOption*>(opt)) {
-                          comboOpt->set_value(optValue.get<string_view>());
-                          continue;
-                      }
-
-                      if (auto* stringOpt = dynamic_cast<uci::StringOption*>(opt)) {
-                          stringOpt->set_value(optValue.get<string_view>());
-                      }
-                  }
+                  restore_state_from_string(fileContent);
 
                   info_string(std::format(
                       "Read configuration from file: {}", filePath.string()));

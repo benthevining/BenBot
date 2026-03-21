@@ -16,14 +16,18 @@
 
 #include <libbenbot/engine/Engine.hpp>
 #include <string>
+#include <string_view>
 
 namespace ben_bot::gui {
 
-// TODO: to/from string
 struct EnginePanelState final {
     Engine engine;
 
     std::optional<std::string> selectedComboChoice;
+
+    [[nodiscard]] auto to_string() const -> std::string;
+
+    void update_from_string(std::string_view str);
 };
 
 void render_engine_panel(EnginePanelState& state);

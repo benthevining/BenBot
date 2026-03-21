@@ -262,12 +262,14 @@ void shutdown(const AppState& state)
 using nlohmann::json;
 
 inline constexpr string_view TAG_BOARD_EDITOR { "board_editor" };
+inline constexpr string_view TAG_ENGINE { "engine" };
 
 auto AppState::to_string() const -> std::string
 {
     json data;
 
     data[TAG_BOARD_EDITOR] = boardEditor.to_string();
+    data[TAG_ENGINE]       = enginePanel.to_string();
 
     return data.dump();
 }
@@ -278,6 +280,9 @@ void AppState::update_from_string(const string_view str)
 
     boardEditor = BoardEditorState::from_string(
         parsed.at(TAG_BOARD_EDITOR).get<string_view>());
+
+    enginePanel.update_from_string(
+        parsed.at(TAG_ENGINE).get<string_view>());
 }
 
 } // namespace ben_bot::gui

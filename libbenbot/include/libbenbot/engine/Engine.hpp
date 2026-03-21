@@ -61,6 +61,12 @@ public:
     /** Loads the engine's state from a configuration file at the given path. */
     void read_config_file(const std::filesystem::path& file);
 
+    /** Saves the engine's state to a string. */
+    [[nodiscard]] auto state_to_string() const -> std::string;
+
+    /** Restores the engine's state from a stringified version. */
+    void restore_state_from_string(string_view state);
+
 private:
     [[nodiscard]] auto get_name() const -> std::string override;
     [[nodiscard]] auto get_author() const -> string_view override { return "Ben Vining"; }
