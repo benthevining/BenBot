@@ -47,6 +47,8 @@ using std::string_view;
 using chess::moves::get_potentially_legal_en_passant_target_squares;
 
 namespace {
+    inline constexpr auto CollapsibleFlags = ImGuiTreeNodeFlags_CollapsingHeader | ImGuiTreeNodeFlags_Framed;
+
     void UnformattedText(const string_view text)
     {
         ImGui::TextUnformatted(
@@ -108,78 +110,70 @@ namespace {
 
     void render_castling_rights(Position& position)
     {
-        static constexpr auto TableFlags       = ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit;
-        static constexpr auto TableColumnFlags = ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize;
-
         static constexpr auto White = "White";
         static constexpr auto Black = "Black";
 
         static constexpr auto Kingside  = "O-O";
         static constexpr auto Queenside = "O-O-O";
 
-        ImGui::BeginGroup();
+        if (ImGui::CollapsingHeader("Castling Rights", CollapsibleFlags)) {
+            ImGui::BeginGroup();
 
-        ImGui::Text("Castling Rights");
+            if (ImGui::BeginTable("CastlingRights", 3, ImGuiTableFlags_Borders)) {
+                ImGui::TableSetupColumn("ColorLabels");
+                ImGui::TableSetupColumn(Kingside);
+                ImGui::TableSetupColumn(Queenside);
 
-        if (ImGui::BeginTable("CastlingRights", 3, TableFlags,
-                { ImGui::CalcTextSize(Queenside).x * 5.f, 0.f })) {
-            ImGui::TableSetupColumn("ColorLabels", TableColumnFlags,
-                ImGui::CalcTextSize(White).x + 5.f);
+                ImGui::TableNextRow();
 
-            ImGui::TableSetupColumn(Kingside, TableColumnFlags);
-            ImGui::TableSetupColumn(Queenside, TableColumnFlags);
+                ImGui::TableNextColumn();
+                ImGui::Text(White);
 
-            ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Checkbox(
+                    std::format("{}##{}", Kingside, White).c_str(),
+                    &position.whiteCastlingRights.kingside);
 
-            ImGui::TableNextColumn();
-            ImGui::Text(White);
+                ImGui::TableNextColumn();
+                ImGui::Checkbox(
+                    std::format("{}##{}", Queenside, White).c_str(),
+                    &position.whiteCastlingRights.queenside);
 
-            ImGui::TableNextColumn();
-            ImGui::Checkbox(
-                std::format("{}##{}", Kingside, White).c_str(),
-                &position.whiteCastlingRights.kingside);
+                ImGui::TableNextRow();
 
-            ImGui::TableNextColumn();
-            ImGui::Checkbox(
-                std::format("{}##{}", Queenside, White).c_str(),
-                &position.whiteCastlingRights.queenside);
+                ImGui::TableNextColumn();
+                ImGui::Text(Black);
 
-            ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Checkbox(
+                    std::format("{}##{}", Kingside, Black).c_str(),
+                    &position.blackCastlingRights.kingside);
 
-            ImGui::TableNextColumn();
-            ImGui::Text(Black);
+                ImGui::TableNextColumn();
+                ImGui::Checkbox(
+                    std::format("{}##{}", Queenside, Black).c_str(),
+                    &position.blackCastlingRights.queenside);
 
-            ImGui::TableNextColumn();
-            ImGui::Checkbox(
-                std::format("{}##{}", Kingside, Black).c_str(),
-                &position.blackCastlingRights.kingside);
+                ImGui::EndTable();
+            }
 
-            ImGui::TableNextColumn();
-            ImGui::Checkbox(
-                std::format("{}##{}", Queenside, Black).c_str(),
-                &position.blackCastlingRights.queenside);
+            ImGui::EndGroup();
 
-            ImGui::EndTable();
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip("Set the castling rights of each side");
         }
-
-        ImGui::EndGroup();
-
-        if (ImGui::IsItemHovered())
-            ImGui::SetTooltip("Set the castling rights of each side");
     }
 
     void render_ep_square(
         Position& position, std::optional<Square>& selectedSquare)
     {
-        static constexpr auto ComboFlags = ImGuiComboFlags_PopupAlignLeft | ImGuiComboFlags_WidthFitPreview;
-
         static constexpr auto NoneLabel = "None";
 
         const auto currEP = position.enPassantTargetSquare
                                 .transform([](const Square square) { return std::format("{}", square); })
                                 .value_or(std::string { NoneLabel });
 
-        if (ImGui::BeginCombo("EPSquare", currEP.c_str(), ComboFlags)) {
+        if (ImGui::BeginCombo("EPSquare", currEP.c_str())) {
             for (const auto square : get_potentially_legal_en_passant_target_squares(position)) {
                 const bool isSelected = selectedSquare.has_value() and square == *selectedSquare;
 
@@ -240,11 +234,14 @@ namespace {
 
     void render_move_counters(Position& position)
     {
+        static constexpr auto HalfMovesLabel = "Half moves";
+        static constexpr auto FullMovesLabel = "Full moves";
+
         ImGui::BeginGroup();
 
-        static constexpr auto HalfMovesLabel = "Half moves";
+        const auto IntEntryWidth = ImGui::CalcTextSize(HalfMovesLabel).x * 1.25f;
 
-        ImGui::SetNextItemWidth(ImGui::CalcTextSize(HalfMovesLabel).x * 1.25f);
+        ImGui::SetNextItemWidth(IntEntryWidth);
 
         auto halfMoveCounter = static_cast<int>(position.halfmoveClock);
 
@@ -258,9 +255,7 @@ namespace {
 
         ImGui::SameLine();
 
-        static constexpr auto FullMovesLabel = "Full moves";
-
-        ImGui::SetNextItemWidth(ImGui::CalcTextSize(FullMovesLabel).x * 1.25f);
+        ImGui::SetNextItemWidth(IntEntryWidth);
 
         auto fullMoveCounter = static_cast<int>(position.fullMoveCounter);
 
@@ -326,17 +321,23 @@ void render_board_editor(BoardEditorState& state)
     if (ImGui::Begin("Board editor")) {
         // render_chessboard(state.position);
 
+        render_utility_buttons(state.position);
+
         render_side_to_move(state.position);
 
         render_castling_rights(state.position);
-
-        render_utility_buttons(state.position);
 
         render_ep_square(state.position, state.selectedEPSquare);
 
         render_move_counters(state.position);
 
         render_fen_string(state.position, state.fenParseError);
+
+        if (ImGui::CollapsingHeader("EPD", CollapsibleFlags)) {
+            // TODO:
+            // text entry for individual standard operations
+            // display (+copy) full EPD string (no entry?)
+        }
     }
 
     ImGui::End();
