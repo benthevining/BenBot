@@ -17,6 +17,7 @@
 #include <libbenbot/engine/Engine.hpp>
 #include <libchess/uci/Options.hpp>
 #include <libgui/EnginePanel.hpp>
+#include <libutil/Variant.hpp>
 #include <optional>
 #include <string>
 
@@ -95,6 +96,31 @@ namespace {
         ImGui::SetItemTooltip("%s", help.c_str());
     }
 
+    void reset_all_options(uci::EngineBase& engine)
+    {
+        auto reset_option = [](uci::Option& opt) {
+            if (not opt.has_value())
+                return;
+
+            std::visit(util::Visitor {
+                           [&opt](const bool value) { dynamic_cast<uci::BoolOption&>(opt).set_value(value); },
+                           [&opt](const int value) { dynamic_cast<uci::IntOption&>(opt).set_value(value); },
+                           [&opt](const std::string_view value) {
+                               if (auto* comboOpt = dynamic_cast<uci::ComboOption*>(&opt))
+                                   comboOpt->set_value(value);
+                               else
+                                   dynamic_cast<uci::StringOption&>(opt).set_value(value);
+                           } },
+                opt.get_default_value_variant());
+        };
+
+        for (auto* opt : engine.get_standard_uci_options())
+            reset_option(*opt);
+
+        for (auto* opt : engine.get_custom_uci_options())
+            reset_option(*opt);
+    }
+
     void render_uci_options(uci::EngineBase& engine, std::optional<string>& selectedComboChoice)
     {
         static constexpr auto CollapsibleFlags = ImGuiTreeNodeFlags_CollapsingHeader | ImGuiTreeNodeFlags_Framed;
@@ -109,6 +135,13 @@ namespace {
 
             for (auto* opt : engine.get_custom_uci_options())
                 render_uci_option(*opt, selectedComboChoice);
+
+            ImGui::Separator();
+
+            if (ImGui::Button("Reset all"))
+                reset_all_options(engine);
+
+            ImGui::SetItemTooltip("Reset all options to their default values");
         }
     }
 } // namespace
