@@ -19,15 +19,19 @@
 //   the backend itself (imgui_impl_vulkan.cpp), but should PROBABLY NOT be used by your own engine/app code.
 // Read comments in imgui_impl_vulkan.h.
 
-#include "GLFW_Wrapper.hpp"
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_vulkan.h"
+#include "GLFW_Wrapper.hpp" // NOLINT(build/include_subdir)
 #include <GLFW/glfw3.h>
+#include <algorithm>
+#include <cassert>
 #include <cstdio>
 #include <cstdlib>
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_vulkan.h>
 #include <libgui/AppUI.hpp>
+#include <limits>
 #include <print>
+#include <span>
 
 // Volk headers
 #ifdef IMGUI_IMPL_VULKAN_USE_VOLK
@@ -45,7 +49,7 @@ static VkAllocationCallbacks* g_Allocator      = nullptr;
 static VkInstance             g_Instance       = VK_NULL_HANDLE;
 static VkPhysicalDevice       g_PhysicalDevice = VK_NULL_HANDLE;
 static VkDevice               g_Device         = VK_NULL_HANDLE;
-static uint32_t               g_QueueFamily    = (uint32_t)-1;
+static uint32_t               g_QueueFamily    = std::numeric_limits<uint32_t>::max();
 static VkQueue                g_Queue          = VK_NULL_HANDLE;
 static VkPipelineCache        g_PipelineCache  = VK_NULL_HANDLE;
 static VkDescriptorPool       g_DescriptorPool = VK_NULL_HANDLE;
@@ -60,44 +64,54 @@ void check_vk_result(VkResult err)
 {
     if (err == VK_SUCCESS)
         return;
-    fprintf(stderr, "[vulkan] Error: VkResult = %d\n", err);
+
+    std::println(stderr, "[vulkan] Error: VkResult = {}", err);
+
     if (err < 0)
-        abort();
+        std::abort();
 }
 
 #ifdef APP_USE_VULKAN_DEBUG_REPORT
-VKAPI_ATTR VkBool32 VKAPI_CALL debug_report(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType, uint64_t object, size_t location, int32_t messageCode, const char* pLayerPrefix, const char* pMessage, void* pUserData)
+VKAPI_ATTR VkBool32 VKAPI_CALL debug_report(
+    [[maybe_unused]] VkDebugReportFlagsEXT flags,
+    VkDebugReportObjectTypeEXT             objectType,
+    [[maybe_unused]] uint64_t              object,
+    [[maybe_unused]] size_t                location,
+    [[maybe_unused]] int32_t               messageCode,
+    [[maybe_unused]] const char*           pLayerPrefix,
+    const char*                            pMessage,
+    [[maybe_unused]] void*                 pUserData)
 {
-    (void)flags;
-    (void)object;
-    (void)location;
-    (void)messageCode;
-    (void)pUserData;
-    (void)pLayerPrefix; // Unused arguments
-    fprintf(stderr, "[vulkan] Debug report from ObjectType: %i\nMessage: %s\n\n", objectType, pMessage);
+    std::println(stderr,
+        "[vulkan] Debug report from ObjectType: {} - Message: {}",
+        objectType, pMessage);
+
     return VK_FALSE;
 }
 #endif // APP_USE_VULKAN_DEBUG_REPORT
 
-bool IsExtensionAvailable(const ImVector<VkExtensionProperties>& properties, const char* extension)
+[[nodiscard]] bool IsExtensionAvailable(
+    const std::span<const VkExtensionProperties> properties,
+    const char*                                  extension)
 {
-    for (const VkExtensionProperties& p : properties)
-        if (strcmp(p.extensionName, extension) == 0)
-            return true;
-    return false;
+    return std::ranges::any_of(properties,
+        [extension](const VkExtensionProperties& prop) {
+            return std::strcmp(prop.extensionName, extension) == 0;
+        });
 }
 
 void SetupVulkan(ImVector<const char*> instance_extensions)
 {
     VkResult err;
+
 #ifdef IMGUI_IMPL_VULKAN_USE_VOLK
     volkInitialize();
 #endif
 
     // Create Vulkan Instance
     {
-        VkInstanceCreateInfo create_info = { };
-        create_info.sType                = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+        VkInstanceCreateInfo create_info { };
+        create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 
         // Enumerate available extensions
         uint32_t                        properties_count;
@@ -110,12 +124,6 @@ void SetupVulkan(ImVector<const char*> instance_extensions)
         // Enable required extensions
         if (IsExtensionAvailable(properties, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
             instance_extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
-#ifdef VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME
-        if (IsExtensionAvailable(properties, VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME)) {
-            instance_extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
-            create_info.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
-        }
-#endif
 
         // Enabling validation layers
 #ifdef APP_USE_VULKAN_DEBUG_REPORT
@@ -126,10 +134,11 @@ void SetupVulkan(ImVector<const char*> instance_extensions)
 #endif
 
         // Create Vulkan Instance
-        create_info.enabledExtensionCount   = (uint32_t)instance_extensions.Size;
+        create_info.enabledExtensionCount   = static_cast<uint32_t>(instance_extensions.Size);
         create_info.ppEnabledExtensionNames = instance_extensions.Data;
         err                                 = vkCreateInstance(&create_info, g_Allocator, &g_Instance);
         check_vk_result(err);
+
 #ifdef IMGUI_IMPL_VULKAN_USE_VOLK
         volkLoadInstance(g_Instance);
 #endif
@@ -150,11 +159,11 @@ void SetupVulkan(ImVector<const char*> instance_extensions)
 
     // Select Physical Device (GPU)
     g_PhysicalDevice = ImGui_ImplVulkanH_SelectPhysicalDevice(g_Instance);
-    IM_ASSERT(g_PhysicalDevice != VK_NULL_HANDLE);
+    assert(g_PhysicalDevice != VK_NULL_HANDLE);
 
     // Select graphics queue family
     g_QueueFamily = ImGui_ImplVulkanH_SelectQueueFamilyIndex(g_PhysicalDevice);
-    IM_ASSERT(g_QueueFamily != (uint32_t)-1);
+    assert(g_QueueFamily != std::numeric_limits<uint32_t>::max());
 
     // Create Logical Device (with 1 queue)
     {
@@ -167,10 +176,6 @@ void SetupVulkan(ImVector<const char*> instance_extensions)
         vkEnumerateDeviceExtensionProperties(g_PhysicalDevice, nullptr, &properties_count, nullptr);
         properties.resize(properties_count);
         vkEnumerateDeviceExtensionProperties(g_PhysicalDevice, nullptr, &properties_count, properties.Data);
-#ifdef VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME
-        if (IsExtensionAvailable(properties, VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME))
-            device_extensions.push_back(VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME);
-#endif
 
         const float             queue_priority[] = { 1.0f };
         VkDeviceQueueCreateInfo queue_info[1]    = { };
@@ -182,7 +187,7 @@ void SetupVulkan(ImVector<const char*> instance_extensions)
         create_info.sType                        = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         create_info.queueCreateInfoCount         = sizeof(queue_info) / sizeof(queue_info[0]);
         create_info.pQueueCreateInfos            = queue_info;
-        create_info.enabledExtensionCount        = (uint32_t)device_extensions.Size;
+        create_info.enabledExtensionCount        = static_cast<uint32_t>(device_extensions.Size);
         create_info.ppEnabledExtensionNames      = device_extensions.Data;
         err                                      = vkCreateDevice(g_PhysicalDevice, &create_info, g_Allocator, &g_Device);
         check_vk_result(err);
@@ -199,9 +204,9 @@ void SetupVulkan(ImVector<const char*> instance_extensions)
         pool_info.sType                      = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         pool_info.flags                      = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
         pool_info.maxSets                    = 0;
-        for (VkDescriptorPoolSize& pool_size : pool_sizes)
+        for (const auto& pool_size : pool_sizes)
             pool_info.maxSets += pool_size.descriptorCount;
-        pool_info.poolSizeCount = (uint32_t)IM_COUNTOF(pool_sizes);
+        pool_info.poolSizeCount = static_cast<uint32_t>(IM_COUNTOF(pool_sizes));
         pool_info.pPoolSizes    = pool_sizes;
         err                     = vkCreateDescriptorPool(g_Device, &pool_info, g_Allocator, &g_DescriptorPool);
         check_vk_result(err);
@@ -216,15 +221,15 @@ void SetupVulkanWindow(ImGui_ImplVulkanH_Window* wd, VkSurfaceKHR surface, int w
     VkBool32 res;
     vkGetPhysicalDeviceSurfaceSupportKHR(g_PhysicalDevice, g_QueueFamily, surface, &res);
     if (res != VK_TRUE) {
-        fprintf(stderr, "Error no WSI support on physical device 0\n");
-        exit(-1);
+        std::println(stderr, "Error - no WSI support on physical device 0");
+        std::exit(-1);
     }
 
     // Select Surface Format
     const VkFormat        requestSurfaceImageFormat[] = { VK_FORMAT_B8G8R8A8_UNORM, VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_B8G8R8_UNORM, VK_FORMAT_R8G8B8_UNORM };
     const VkColorSpaceKHR requestSurfaceColorSpace    = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
     wd->Surface                                       = surface;
-    wd->SurfaceFormat                                 = ImGui_ImplVulkanH_SelectSurfaceFormat(g_PhysicalDevice, wd->Surface, requestSurfaceImageFormat, (size_t)IM_COUNTOF(requestSurfaceImageFormat), requestSurfaceColorSpace);
+    wd->SurfaceFormat                                 = ImGui_ImplVulkanH_SelectSurfaceFormat(g_PhysicalDevice, wd->Surface, requestSurfaceImageFormat, static_cast<size_t>(IM_COUNTOF(requestSurfaceImageFormat)), requestSurfaceColorSpace);
 
     // Select Present Mode
 #ifdef APP_USE_UNLIMITED_FRAME_RATE
@@ -232,11 +237,11 @@ void SetupVulkanWindow(ImGui_ImplVulkanH_Window* wd, VkSurfaceKHR surface, int w
 #else
     VkPresentModeKHR present_modes[] = { VK_PRESENT_MODE_FIFO_KHR };
 #endif
+
     wd->PresentMode = ImGui_ImplVulkanH_SelectPresentMode(g_PhysicalDevice, wd->Surface, &present_modes[0], IM_COUNTOF(present_modes));
-    // printf("[vulkan] Selected PresentMode = %d\n", wd->PresentMode);
 
     // Create SwapChain, RenderPass, Framebuffer, etc.
-    IM_ASSERT(g_MinImageCount >= 2);
+    assert(g_MinImageCount >= 2);
     ImGui_ImplVulkanH_CreateOrResizeWindow(g_Instance, g_PhysicalDevice, g_Device, wd, g_QueueFamily, g_Allocator, width, height, g_MinImageCount, 0);
 }
 
@@ -265,7 +270,8 @@ void FrameRender(ImGui_ImplVulkanH_Window* wd, ImDrawData* draw_data)
     VkSemaphore image_acquired_semaphore  = wd->FrameSemaphores[wd->SemaphoreIndex].ImageAcquiredSemaphore;
     VkSemaphore render_complete_semaphore = wd->FrameSemaphores[wd->SemaphoreIndex].RenderCompleteSemaphore;
     VkResult    err                       = vkAcquireNextImageKHR(g_Device, wd->Swapchain, UINT64_MAX, image_acquired_semaphore, VK_NULL_HANDLE, &wd->FrameIndex);
-    if (err == VK_ERROR_OUT_OF_DATE_KHR || err == VK_SUBOPTIMAL_KHR)
+
+    if (err == VK_ERROR_OUT_OF_DATE_KHR or err == VK_SUBOPTIMAL_KHR)
         g_SwapChainRebuild = true;
     if (err == VK_ERROR_OUT_OF_DATE_KHR)
         return;
@@ -329,6 +335,7 @@ void FramePresent(ImGui_ImplVulkanH_Window* wd)
 {
     if (g_SwapChainRebuild)
         return;
+
     VkSemaphore      render_complete_semaphore = wd->FrameSemaphores[wd->SemaphoreIndex].RenderCompleteSemaphore;
     VkPresentInfoKHR info                      = { };
     info.sType                                 = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -338,7 +345,8 @@ void FramePresent(ImGui_ImplVulkanH_Window* wd)
     info.pSwapchains                           = &wd->Swapchain;
     info.pImageIndices                         = &wd->FrameIndex;
     VkResult err                               = vkQueuePresentKHR(g_Queue, &info);
-    if (err == VK_ERROR_OUT_OF_DATE_KHR || err == VK_SUBOPTIMAL_KHR)
+
+    if (err == VK_ERROR_OUT_OF_DATE_KHR or err == VK_SUBOPTIMAL_KHR)
         g_SwapChainRebuild = true;
     if (err == VK_ERROR_OUT_OF_DATE_KHR)
         return;
@@ -350,9 +358,17 @@ void FramePresent(ImGui_ImplVulkanH_Window* wd)
 
 namespace glfw_wrapper = ben_bot::gui::glfw;
 
+#ifdef _WIN32
+int __clrcall WinMain(
+    [[maybe_unused]] const HINSTANCE hInstance,
+    [[maybe_unused]] const HINSTANCE hPrevInstance,
+    [[maybe_unused]] const LPSTR     lpCmdLine,
+    [[maybe_unused]] const int       nShowCmd)
+#else
 int main(
     [[maybe_unused]] const int    argc,
     [[maybe_unused]] const char** argv)
+#endif
 {
     auto* window = glfw_wrapper::create_window();
 
@@ -405,7 +421,7 @@ int main(
 
     ben_bot::gui::AppState state;
 
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    ImVec4 clear_color { 0.45f, 0.55f, 0.60f, 1.00f };
 
     while (not glfwWindowShouldClose(window)) {
         // Poll and handle events (inputs, window resize, etc.)
