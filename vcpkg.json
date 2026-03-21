@@ -18,7 +18,10 @@
     },
     {
       "features": [
-        "docking-experimental"
+        "docking-experimental",
+        "glfw-binding",
+        "metal-binding",
+        "vulkan-binding"
       ],
       "name": "imgui",
       "version>=": "1.91.9"
