@@ -15,6 +15,7 @@
 #pragma once
 
 #include <libbenbot/engine/Engine.hpp>
+#include <libbenbot/search/Options.hpp>
 #include <string>
 #include <string_view>
 
@@ -22,6 +23,8 @@ namespace ben_bot::gui {
 
 struct EnginePanelState final {
     Engine engine;
+
+    search::Options searchOptions; // TODO: to/from string
 
     std::optional<std::string> selectedComboChoice;
 

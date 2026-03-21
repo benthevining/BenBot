@@ -12,9 +12,11 @@
  * ======================================================================================
  */
 
+#include <chrono>
 #include <imgui.h>
 #include <imgui_stdlib.h>
 #include <libbenbot/engine/Engine.hpp>
+#include <libbenbot/search/Options.hpp>
 #include <libchess/uci/Options.hpp>
 #include <libgui/EnginePanel.hpp>
 #include <libutil/Variant.hpp>
@@ -25,7 +27,8 @@ namespace ben_bot::gui {
 
 using std::string;
 
-inline constexpr auto InputTextFlags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue;
+inline constexpr auto InputTextFlags   = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue;
+inline constexpr auto CollapsibleFlags = ImGuiTreeNodeFlags_CollapsingHeader | ImGuiTreeNodeFlags_Framed;
 
 namespace {
     void render_uci_option(uci::Option& opt, std::optional<string>& selectedComboChoice)
@@ -96,6 +99,7 @@ namespace {
         ImGui::SetItemTooltip("%s", help.c_str());
     }
 
+    // TODO: give option base class a reset() method
     void reset_all_options(uci::EngineBase& engine)
     {
         auto reset_option = [](uci::Option& opt) {
@@ -123,8 +127,6 @@ namespace {
 
     void render_uci_options(uci::EngineBase& engine, std::optional<string>& selectedComboChoice)
     {
-        static constexpr auto CollapsibleFlags = ImGuiTreeNodeFlags_CollapsingHeader | ImGuiTreeNodeFlags_Framed;
-
         if (ImGui::CollapsingHeader("UCI options", CollapsibleFlags)) {
             ImGui::SeparatorText("Standard options");
 
@@ -144,12 +146,51 @@ namespace {
             ImGui::SetItemTooltip("Reset all options to their default values");
         }
     }
+
+    void render_search_options(search::Options& options)
+    {
+        // TODO: handling of negative integer values
+        // TODO: send options to engine
+
+        if (ImGui::CollapsingHeader("Search options", CollapsibleFlags)) {
+            // TODO: make this an optional in the options struct
+            auto depth = static_cast<int>(options.depth);
+
+            if (ImGui::InputInt("Depth", &depth))
+                options.depth = static_cast<size_t>(depth);
+
+            ImGui::SetItemTooltip("Search depth, in plies");
+
+            auto numMs = static_cast<int>(options.searchTime.value_or(std::chrono::milliseconds { 0 }).count());
+
+            if (ImGui::InputInt("Time", &numMs))
+                options.searchTime = std::chrono::milliseconds { numMs };
+
+            ImGui::SetItemTooltip("Search time, in milliseconds");
+
+            auto maxNodes = static_cast<int>(options.maxNodes);
+
+            if (ImGui::InputInt("Nodes", &maxNodes))
+                options.maxNodes = static_cast<size_t>(maxNodes);
+
+            ImGui::SetItemTooltip("Maximum number of nodes to search");
+
+            ImGui::Checkbox("Infinite", &options.infinite);
+            ImGui::SetItemTooltip("Whether to search infinitely");
+
+            // TODO:
+            // movesToSearch
+            // mateIn
+        }
+    }
 } // namespace
 
 void render_engine_panel(EnginePanelState& state)
 {
     if (ImGui::Begin("Engine")) {
         render_uci_options(state.engine, state.selectedComboChoice);
+
+        render_search_options(state.searchOptions);
     }
 
     ImGui::End();
