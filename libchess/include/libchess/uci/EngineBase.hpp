@@ -234,7 +234,7 @@ struct EngineBase {
     IntOption opt_Hash {
         "Hash",
         1, 2048, 16,
-        "Sets the transposition table size (in MB)",
+        "Sets the transposition table size (in MB).",
         [this](const int sizeMB) {
             assert(sizeMB >= 0);
             resize_transposition_table(static_cast<size_t>(sizeMB));

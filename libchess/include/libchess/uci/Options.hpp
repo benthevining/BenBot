@@ -20,6 +20,7 @@
 #pragma once
 
 #include <functional>
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -227,6 +228,13 @@ struct ComboOption final : Option {
     [[nodiscard]] auto get_help() const noexcept -> string_view override { return help; }
 
     void handle_setvalue(string_view arguments) override;
+
+    /** Returns the possible value strings that the combo option may be assigned to. */
+    [[nodiscard]] auto get_possible_values() const noexcept
+        -> std::span<const string>
+    {
+        return possibleValues;
+    }
 
 private:
     string optionName;

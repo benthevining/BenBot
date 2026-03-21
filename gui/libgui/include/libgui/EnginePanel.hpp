@@ -14,34 +14,18 @@
 
 #pragma once
 
-#include <libgui/BoardEditor.hpp>
-#include <libgui/EnginePanel.hpp>
+#include <libbenbot/engine/Engine.hpp>
 #include <string>
-#include <string_view>
-#include <utility>
 
 namespace ben_bot::gui {
 
-inline constexpr auto AppName { "BenBot GUI" };
+// TODO: to/from string
+struct EnginePanelState final {
+    Engine engine;
 
-[[nodiscard]] auto get_scaled_default_dimensions(float scaleFactor)
-    -> std::pair<int, int>;
-
-struct AppState final {
-    BoardEditorState boardEditor;
-
-    EnginePanelState enginePanel;
-
-    [[nodiscard]] auto to_string() const -> std::string;
-
-    void update_from_string(std::string_view str);
+    std::optional<std::string> selectedComboChoice;
 };
 
-void initialize(
-    float mainScaleFactor, AppState& state);
-
-void render(AppState& state);
-
-void shutdown(const AppState& state);
+void render_engine_panel(EnginePanelState& state);
 
 } // namespace ben_bot::gui

@@ -17,6 +17,7 @@
 #include <imgui.h>
 #include <libgui/AppUI.hpp>
 #include <libgui/BoardEditor.hpp>
+#include <libgui/EnginePanel.hpp>
 #include <libgui/Resources.hpp>
 #include <libutil/Files.hpp>
 #include <nlohmann/json.hpp>
@@ -193,7 +194,7 @@ void initialize(const float mainScaleFactor, AppState& state)
         [[maybe_unused]] const auto result
             = util::files::load(filePath)
                   .transform([&state](const string_view fileContent) {
-                      state = AppState::from_string(fileContent);
+                      state.update_from_string(fileContent);
                       return std::monostate { };
                   });
     }
@@ -243,6 +244,8 @@ void render(AppState& state)
 
     render_board_editor(state.boardEditor);
 
+    render_engine_panel(state.enginePanel);
+
     ImGui::Render();
 }
 
@@ -269,16 +272,12 @@ auto AppState::to_string() const -> std::string
     return data.dump();
 }
 
-auto AppState::from_string(const string_view str) -> AppState
+void AppState::update_from_string(const string_view str)
 {
     const auto parsed = json::parse(str);
 
-    AppState state;
-
-    state.boardEditor = BoardEditorState::from_string(
+    boardEditor = BoardEditorState::from_string(
         parsed.at(TAG_BOARD_EDITOR).get<string_view>());
-
-    return state;
 }
 
 } // namespace ben_bot::gui

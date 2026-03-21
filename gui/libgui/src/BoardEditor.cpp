@@ -216,7 +216,7 @@ namespace {
 
         auto halfMoveCounter = static_cast<int>(position.position.halfmoveClock);
 
-        if (ImGui::InputInt(HalfMovesLabel, &halfMoveCounter, 1, 10, ImGuiInputTextFlags_CharsDecimal)) {
+        if (ImGui::InputInt(HalfMovesLabel, &halfMoveCounter)) {
             position.position.halfmoveClock = static_cast<std::uint_least8_t>(
                 std::clamp(halfMoveCounter, 0, 100));
             position.refresh_default_operations();
@@ -231,7 +231,7 @@ namespace {
 
         auto fullMoveCounter = static_cast<int>(position.position.fullMoveCounter);
 
-        if (ImGui::InputInt(FullMovesLabel, &fullMoveCounter, 1, 10, ImGuiInputTextFlags_CharsDecimal)) {
+        if (ImGui::InputInt(FullMovesLabel, &fullMoveCounter)) {
             position.position.fullMoveCounter = static_cast<std::uint_least64_t>(
                 std::max(fullMoveCounter, 1));
             position.refresh_default_operations();

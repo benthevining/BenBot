@@ -1,0 +1,125 @@
+/*
+ * ======================================================================================
+ *
+ * ░▒▓███████▓▒░░▒▓████████▓▒░▒▓███████▓▒░       ░▒▓███████▓▒░ ░▒▓██████▓▒░▒▓████████▓▒░
+ * ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+ * ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+ * ░▒▓███████▓▒░░▒▓██████▓▒░ ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+ * ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+ * ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+ * ░▒▓███████▓▒░░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░ ░▒▓██████▓▒░  ░▒▓█▓▒░
+ *
+ * ======================================================================================
+ */
+
+#include <imgui.h>
+#include <imgui_stdlib.h>
+#include <libbenbot/engine/Engine.hpp>
+#include <libchess/uci/Options.hpp>
+#include <libgui/EnginePanel.hpp>
+#include <optional>
+#include <string>
+
+namespace ben_bot::gui {
+
+using std::string;
+
+inline constexpr auto InputTextFlags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue;
+
+namespace {
+    void render_uci_option(uci::Option& opt, std::optional<string>& selectedComboChoice)
+    {
+        const string name { opt.get_name() };
+        const string help { opt.get_help() };
+
+        if (auto* option = dynamic_cast<uci::BoolOption*>(&opt)) {
+            auto value = option->get_value();
+
+            if (ImGui::Checkbox(name.c_str(), &value))
+                option->set_value(value);
+
+            ImGui::SetItemTooltip("%s", help.c_str());
+            return;
+        }
+
+        if (auto* option = dynamic_cast<uci::IntOption*>(&opt)) {
+            auto value = option->get_value();
+
+            if (ImGui::InputInt(name.c_str(), &value))
+                option->set_value(value);
+
+            ImGui::SetItemTooltip("%s", help.c_str());
+            return;
+        }
+
+        if (auto* option = dynamic_cast<uci::StringOption*>(&opt)) {
+            string value { option->get_value() };
+
+            if (ImGui::InputText(name.c_str(), &value, InputTextFlags))
+                option->set_value(value);
+
+            ImGui::SetItemTooltip("%s", help.c_str());
+            return;
+        }
+
+        if (auto* action = dynamic_cast<uci::Action*>(&opt)) {
+            if (ImGui::Button(name.c_str()))
+                action->handle_setvalue({ });
+
+            ImGui::SetItemTooltip("%s", help.c_str());
+            return;
+        }
+
+        auto& option = dynamic_cast<uci::ComboOption&>(opt);
+
+        const string value { option.get_value() };
+
+        if (ImGui::BeginCombo(name.c_str(), value.c_str())) {
+            for (const auto& choice : option.get_possible_values()) {
+                const bool isSelected = selectedComboChoice.has_value() and choice == *selectedComboChoice;
+
+                if (ImGui::Selectable(choice.c_str(), isSelected)) {
+                    option.set_value(choice);
+                    selectedComboChoice = choice;
+                }
+
+                if (isSelected)
+                    ImGui::SetItemDefaultFocus();
+            }
+
+            ImGui::EndCombo();
+        } else {
+            selectedComboChoice = value;
+        }
+
+        ImGui::SetItemTooltip("%s", help.c_str());
+    }
+
+    void render_uci_options(uci::EngineBase& engine, std::optional<string>& selectedComboChoice)
+    {
+        static constexpr auto CollapsibleFlags = ImGuiTreeNodeFlags_CollapsingHeader | ImGuiTreeNodeFlags_Framed;
+
+        if (ImGui::CollapsingHeader("UCI options", CollapsibleFlags)) {
+            ImGui::SeparatorText("Standard options");
+
+            for (auto* opt : engine.get_standard_uci_options())
+                render_uci_option(*opt, selectedComboChoice);
+
+            ImGui::SeparatorText("Custom options");
+
+            for (auto* opt : engine.get_custom_uci_options())
+                render_uci_option(*opt, selectedComboChoice);
+        }
+    }
+} // namespace
+
+void render_engine_panel(EnginePanelState& state)
+{
+    if (ImGui::Begin("Engine")) {
+        render_uci_options(state.engine, state.selectedComboChoice);
+    }
+
+    ImGui::End();
+}
+
+} // namespace ben_bot::gui
