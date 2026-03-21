@@ -253,8 +253,6 @@ namespace {
 
         auto inputBuf = to_fen(position);
 
-        ImGui::SetNextItemWidth(ImGui::CalcTextSize(inputBuf.c_str()).x + 10.f);
-
         if (ImGui::InputText("FEN", &inputBuf, InputTextFlags)) {
             [[maybe_unused]] const auto result
                 = from_fen(inputBuf)
@@ -293,8 +291,6 @@ namespace {
         static constexpr auto ErrorPopupID { "EPD parse error" };
 
         auto inputBuf = to_epd(position);
-
-        ImGui::SetNextItemWidth(ImGui::CalcTextSize(inputBuf.c_str()).x + 10.f);
 
         if (ImGui::InputText("EPD", &inputBuf, InputTextFlags)) {
             [[maybe_unused]] const auto result
