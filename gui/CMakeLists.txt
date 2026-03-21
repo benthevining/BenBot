@@ -16,7 +16,7 @@ endif ()
 
 add_subdirectory (libgui)
 
-add_executable (benbot_gui)
+add_executable (benbot_gui MACOSX_BUNDLE WIN32)
 
 target_compile_features (benbot_gui PRIVATE cxx_std_23)
 
