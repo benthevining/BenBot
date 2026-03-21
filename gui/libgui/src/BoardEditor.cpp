@@ -26,6 +26,7 @@
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
+#include <libchess/notation/EPD.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libgui/BoardEditor.hpp>
@@ -41,6 +42,7 @@ namespace ben_bot::gui {
 using chess::board::File;
 using chess::board::Rank;
 using chess::board::Square;
+using chess::game::Position;
 using chess::pieces::Color;
 using std::string_view;
 
@@ -270,12 +272,12 @@ namespace {
         ImGui::EndGroup();
     }
 
-    using chess::notation::from_fen;
-    using chess::notation::to_fen;
-
     void render_fen_string(
         Position& position, std::string& errorMessage)
     {
+        using chess::notation::from_fen;
+        using chess::notation::to_fen;
+
         static constexpr auto InputTextFlags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue;
         static constexpr auto PopupFlags     = ImGuiWindowFlags_AlwaysAutoResize;
 
@@ -315,6 +317,9 @@ namespace {
         }
     }
 
+    using chess::notation::from_epd;
+    using chess::notation::to_epd;
+
     void render_epd_editor()
     {
         if (ImGui::CollapsingHeader("EPD", CollapsibleFlags)) {
@@ -330,17 +335,17 @@ void render_board_editor(BoardEditorState& state)
     if (ImGui::Begin("Board editor")) {
         // render_chessboard(state.position);
 
-        render_utility_buttons(state.position);
+        render_utility_buttons(state.position.position);
 
-        render_side_to_move(state.position);
+        render_side_to_move(state.position.position);
 
-        render_castling_rights(state.position);
+        render_castling_rights(state.position.position);
 
-        render_ep_square(state.position, state.selectedEPSquare);
+        render_ep_square(state.position.position, state.selectedEPSquare);
 
-        render_move_counters(state.position);
+        render_move_counters(state.position.position);
 
-        render_fen_string(state.position, state.fenParseError);
+        render_fen_string(state.position.position, state.fenParseError);
 
         render_epd_editor();
     }
@@ -356,7 +361,7 @@ std::string BoardEditorState::to_string() const
 {
     json data;
 
-    data[TAG_CURRENTBOARD] = to_fen(position);
+    data[TAG_CURRENTBOARD] = to_epd(position);
 
     return data.dump();
 }
@@ -368,8 +373,8 @@ BoardEditorState BoardEditorState::from_string(string_view str)
     BoardEditorState state;
 
     [[maybe_unused]] const auto result
-        = from_fen(parsed.at(TAG_CURRENTBOARD).get<string_view>())
-              .transform([&state](const Position& newPos) {
+        = from_epd(parsed.at(TAG_CURRENTBOARD).get<string_view>())
+              .transform([&state](const EPDPosition& newPos) {
                   state.position = newPos;
                   return std::monostate { };
               });

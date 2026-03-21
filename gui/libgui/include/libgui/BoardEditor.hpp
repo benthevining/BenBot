@@ -15,17 +15,17 @@
 #pragma once
 
 #include <libchess/board/Square.hpp>
-#include <libchess/game/Position.hpp>
+#include <libchess/notation/EPD.hpp>
 #include <optional>
 #include <string>
 #include <string_view>
 
 namespace ben_bot::gui {
 
-using chess::game::Position;
+using chess::notation::EPDPosition;
 
 struct BoardEditorState final {
-    Position position;
+    EPDPosition position;
 
     // for EP square combobox
     std::optional<chess::board::Square> selectedEPSquare;
