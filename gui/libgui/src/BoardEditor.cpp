@@ -314,6 +314,15 @@ namespace {
             ImGui::EndPopup();
         }
     }
+
+    void render_epd_editor()
+    {
+        if (ImGui::CollapsingHeader("EPD", CollapsibleFlags)) {
+            // TODO:
+            // text entry for individual standard operations
+            // display (+copy) full EPD string (no entry?)
+        }
+    }
 } // namespace
 
 void render_board_editor(BoardEditorState& state)
@@ -333,11 +342,7 @@ void render_board_editor(BoardEditorState& state)
 
         render_fen_string(state.position, state.fenParseError);
 
-        if (ImGui::CollapsingHeader("EPD", CollapsibleFlags)) {
-            // TODO:
-            // text entry for individual standard operations
-            // display (+copy) full EPD string (no entry?)
-        }
+        render_epd_editor();
     }
 
     ImGui::End();

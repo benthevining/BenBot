@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # ======================================================================================
 #
 # ░▒▓███████▓▒░░▒▓████████▓▒░▒▓███████▓▒░       ░▒▓███████▓▒░ ░▒▓██████▓▒░▒▓████████▓▒░
@@ -9,53 +11,36 @@
 # ░▒▓███████▓▒░░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░ ░▒▓██████▓▒░  ░▒▓█▓▒░
 #
 # ======================================================================================
-# Configuration file for the Just command runner: https://github.com/casey/just
-# Using Just is optional; even if you don't have it installed, this file serves
-# as a convenient reference for this project's most frequently used commands.
 
-set windows-shell := ['cmd.exe', '/c']
+# This script generates a MacOS icns file from an SVG.
 
-[private]
-list:
-    @{{ just_executable() }} --list --justfile {{ justfile() }}
+svgfile="$1"
+iconOut="$2"
 
-# Runs pre-commit on all files
-[no-exit-message]
-pre-commit:
-    git add .
-    pre-commit run
+filename=$(basename -- "$svgfile")
+name="${filename%.*}"
 
-alias pc := pre-commit
+echo "Processing $name ..."
+set -e
 
-# Installs all development dependencies
-install:
-    python3 -m pip install -r config/requirements.txt
-    npm install
-    pre-commit install --install-hooks
+iconset="$(mktemp -d)/$name.iconset"
+mkdir -p "$iconset"
 
-# Updates pre-commit hooks to latest tags
-pc-update:
-    pre-commit autoupdate -j {{ num_cpus() }}
+# run inkscape from the command line to generate the iconset formatted for icns
+inkscape -o "$iconset/icon_16x16.png"      -w   16 -h   16 "$svgfile"
+inkscape -o "$iconset/icon_16x16@2x.png"   -w   32 -h   32 "$svgfile"
+inkscape -o "$iconset/icon_32x32.png"      -w   32 -h   32 "$svgfile"
+inkscape -o "$iconset/icon_32x32@2x.png"   -w   64 -h   64 "$svgfile"
+inkscape -o "$iconset/icon_128x128.png"    -w  128 -h  128 "$svgfile"
+inkscape -o "$iconset/icon_128x128@2x.png" -w  256 -h  256 "$svgfile"
+inkscape -o "$iconset/icon_256x256.png"    -w  256 -h  256 "$svgfile"
+inkscape -o "$iconset/icon_256x256@2x.png" -w  512 -h  512 "$svgfile"
+inkscape -o "$iconset/icon_512x512.png"    -w  512 -h  512 "$svgfile"
+inkscape -o "$iconset/icon_512x512@2x.png" -w 1024 -h 1024 "$svgfile"
 
-# Runs garbage collection for git & pre-commit
-gc:
-    git gc --aggressive --prune
-    pre-commit gc
+# run osx iconutil app to convert the iconset to icns format
+iconutil --convert icns --output "$iconOut" "$iconset"
 
-# Bumps version hard-coded in files & creates a new git tag
-bump part='major':
-    bump-my-version bump --verbose {{ part }}
+echo "Done."
 
-# Reports codebase size & stats
-cloc:
-    cloc --exclude-dir=Builds,.venv,logs,node_modules .
-
-# Runs relint to find all linter suppression tokens
-[no-exit-message]
-relint:
-    pre-commit run --hook-stage manual relint --all-files
-
-# Regenerates the MacOS icns file from the given svg
-[macos]
-gen_icon svgfile:
-    ./scripts/svg2icns.sh {{ svgfile }} {{ justfile_directory() }}/gui/icon.icns
+exit 0

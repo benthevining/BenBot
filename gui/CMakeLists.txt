@@ -16,11 +16,31 @@ endif ()
 
 add_subdirectory (libgui)
 
-add_executable (benbot_gui MACOSX_BUNDLE WIN32)
+set (icns_file "${CMAKE_CURRENT_LIST_DIR}/icon.icns")
+
+add_executable (benbot_gui MACOSX_BUNDLE WIN32 "${icns_file}")
 
 target_compile_features (benbot_gui PRIVATE cxx_std_23)
 
 target_link_libraries (benbot_gui PRIVATE ben_bot::libgui imgui::imgui)
+
+target_include_directories (benbot_gui PRIVATE "${CMAKE_CURRENT_LIST_DIR}/platform")
+
+set_target_properties (
+    benbot_gui
+    PROPERTIES
+        MACOSX_BUNDLE_BUNDLE_NAME "BenBot GUI"
+        MACOSX_BUNDLE_GUI_IDENTIFIER "com.benbot.gui"
+        MACOSX_BUNDLE_INFO_STRING "Chess GUI"
+        MACOSX_BUNDLE_ICON_FILE "icon.icns"
+        MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}"
+        MACOSX_BUNDLE_LONG_VERSION_STRING "${PROJECT_VERSION}"
+        MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION_MAJOR}"
+        MACOSX_BUNDLE_COPYRIGHT
+        "Written in 2026 by Ben Vining and released under the terms of the GNU Public License"
+)
+
+set_source_files_properties ("${icns_file}" PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
 
 set (GLFW_BUILD_DOCS OFF)
 set (GLFW_INSTALL OFF)
@@ -34,13 +54,13 @@ FetchContent_Declare (
     FIND_PACKAGE_ARGS 3.4
 )
 
+# all currently supported backends use GLFW
+
 FetchContent_MakeAvailable (glfw)
 
 target_link_libraries (imgui PUBLIC glfw)
 
 target_sources (benbot_gui PRIVATE "${imgui_backends_dir}/imgui_impl_glfw.cpp")
-
-target_include_directories (benbot_gui PRIVATE "${CMAKE_CURRENT_LIST_DIR}/platform")
 
 if (APPLE)
     message (VERBOSE "Using GLFW + Metal backend for ImGUI app")
