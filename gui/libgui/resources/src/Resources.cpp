@@ -47,4 +47,12 @@ auto get_piece_sprite(
     return string_view { file };
 }
 
+auto get_app_icon() -> string_view
+{
+    const auto file = cmrc::libgui_resources::get_filesystem()
+                          .open("res/icon.png");
+
+    return string_view { file };
+}
+
 } // namespace ben_bot::gui::resources

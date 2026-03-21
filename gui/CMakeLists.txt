@@ -54,17 +54,28 @@ FetchContent_Declare (
     FIND_PACKAGE_ARGS 3.4
 )
 
+FetchContent_Declare (stb SYSTEM GIT_REPOSITORY "https://github.com/nothings/stb.git")
+
 function (benbot_use_glfw)
-    FetchContent_MakeAvailable (glfw)
+    FetchContent_MakeAvailable (glfw stb)
 
     add_library (
         benbotgui_glfw_wrapper STATIC "${imgui_backends_dir}/imgui_impl_glfw.cpp"
                                       platform/GLFW_Wrapper.cpp
     )
 
-    target_link_libraries (benbotgui_glfw_wrapper PUBLIC glfw ben_bot::libgui PRIVATE imgui::imgui)
+    target_link_libraries (
+        benbotgui_glfw_wrapper PUBLIC glfw ben_bot::libgui PRIVATE imgui::imgui
+                                                                   ben_bot::gui_resources
+    )
+
+    target_include_directories (benbotgui_glfw_wrapper PRIVATE "${stb_SOURCE_DIR}")
 
     target_link_libraries (benbot_gui PRIVATE benbotgui_glfw_wrapper)
+
+    if (NOT APPLE)
+
+    endif ()
 endfunction ()
 
 if (APPLE)

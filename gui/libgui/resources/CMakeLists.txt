@@ -14,7 +14,7 @@ file (GLOB_RECURSE resources LIST_DIRECTORIES false CONFIGURE_DEPENDS
                                                     "${CMAKE_CURRENT_LIST_DIR}/res/*.svg"
 )
 
-cmrc_add_resource_library (libgui_resources ${resources} res/default.ini)
+cmrc_add_resource_library (libgui_resources ${resources} res/default.ini res/icon.png)
 
 target_compile_features (libgui_resources PRIVATE cxx_std_23 PUBLIC cxx_std_17)
 

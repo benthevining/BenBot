@@ -35,7 +35,7 @@ int main(
 
     ben_bot::gui::AppState state;
 
-    glfw_wrapper::initialize(state);
+    glfw_wrapper::initialize(window, state);
 
     const id<MTLDevice>       device       = MTLCreateSystemDefaultDevice();
     const id<MTLCommandQueue> commandQueue = [device newCommandQueue];

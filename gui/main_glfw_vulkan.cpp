@@ -399,7 +399,7 @@ int main(
 
     ben_bot::gui::AppState state;
 
-    glfw_wrapper::initialize(state);
+    glfw_wrapper::initialize(window, state);
 
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForVulkan(window, true);

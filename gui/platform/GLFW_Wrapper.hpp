@@ -35,7 +35,7 @@ using Window = GLFWwindow;
 
 [[nodiscard]] auto create_window() -> Window*;
 
-void initialize(AppState& state);
+void initialize(Window* window, AppState& state);
 
 void shutdown(Window* window, const AppState& state);
 

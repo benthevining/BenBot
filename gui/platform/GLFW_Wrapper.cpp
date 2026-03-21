@@ -12,12 +12,18 @@
  * ======================================================================================
  */
 
+#define STB_IMAGE_IMPLEMENTATION
+
 #include "GLFW_Wrapper.hpp" // NOLINT(build/include_subdir)
 #include <GLFW/glfw3.h>
+#include <array>
 #include <cstdio>
 #include <imgui_impl_glfw.h>
 #include <libgui/AppUI.hpp>
+#include <libgui/Resources.hpp>
 #include <print>
+#include <stb_image.h>
+#include <string>
 #include <utility>
 
 namespace ben_bot::gui::glfw {
@@ -46,9 +52,35 @@ auto create_window() -> Window*
         width, height, AppName, nullptr, nullptr);
 }
 
-void initialize(AppState& state)
+namespace {
+    [[maybe_unused]] void set_window_app_icon(Window* window)
+    {
+        // this is needed because stbi_load_from_memory() takes a mutable pointer to the data!
+        std::string iconData { resources::get_app_icon() };
+
+        std::array<GLFWimage, 1uz> images { };
+
+        images.front().pixels = stbi_load_from_memory(
+            reinterpret_cast<stbi_uc*>(iconData.data()),
+            static_cast<int>(iconData.length()),
+            &images.front().width,
+            &images.front().height,
+            nullptr, 4);
+
+        glfwSetWindowIcon(window, 1, images.data());
+
+        stbi_image_free(images.front().pixels);
+    }
+} // namespace
+
+void initialize([[maybe_unused]] Window* window, AppState& state)
 {
     gui::initialize(get_main_scale(), state);
+
+    // without this guard, GLFW complains that regular windows don't have icons on MacOS
+#ifndef __APPLE__
+    set_window_app_icon(window);
+#endif
 }
 
 void shutdown(Window* window, const AppState& state)
