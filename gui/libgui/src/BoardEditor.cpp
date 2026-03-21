@@ -50,6 +50,8 @@ using chess::moves::get_potentially_legal_en_passant_target_squares;
 
 namespace {
     inline constexpr auto CollapsibleFlags = ImGuiTreeNodeFlags_CollapsingHeader | ImGuiTreeNodeFlags_Framed;
+    inline constexpr auto InputTextFlags   = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue;
+    inline constexpr auto PopupFlags       = ImGuiWindowFlags_AlwaysAutoResize;
 
     void UnformattedText(const string_view text)
     {
@@ -234,7 +236,7 @@ namespace {
         ImGui::EndGroup();
     }
 
-    void render_move_counters(Position& position)
+    void render_move_counters(EPDPosition& position)
     {
         static constexpr auto HalfMovesLabel = "Half moves";
         static constexpr auto FullMovesLabel = "Full moves";
@@ -245,11 +247,12 @@ namespace {
 
         ImGui::SetNextItemWidth(IntEntryWidth);
 
-        auto halfMoveCounter = static_cast<int>(position.halfmoveClock);
+        auto halfMoveCounter = static_cast<int>(position.position.halfmoveClock);
 
         if (ImGui::InputInt(HalfMovesLabel, &halfMoveCounter, 1, 10, ImGuiInputTextFlags_CharsDecimal)) {
-            position.halfmoveClock = static_cast<std::uint_least8_t>(
+            position.position.halfmoveClock = static_cast<std::uint_least8_t>(
                 std::clamp(halfMoveCounter, 0, 100));
+            position.refresh_default_operations();
         }
 
         ImGui::SetItemTooltip(
@@ -259,11 +262,12 @@ namespace {
 
         ImGui::SetNextItemWidth(IntEntryWidth);
 
-        auto fullMoveCounter = static_cast<int>(position.fullMoveCounter);
+        auto fullMoveCounter = static_cast<int>(position.position.fullMoveCounter);
 
         if (ImGui::InputInt(FullMovesLabel, &fullMoveCounter, 1, 10, ImGuiInputTextFlags_CharsDecimal)) {
-            position.fullMoveCounter = static_cast<std::uint_least64_t>(
+            position.position.fullMoveCounter = static_cast<std::uint_least64_t>(
                 std::max(fullMoveCounter, 1));
+            position.refresh_default_operations();
         }
 
         ImGui::SetItemTooltip(
@@ -277,9 +281,6 @@ namespace {
     {
         using chess::notation::from_fen;
         using chess::notation::to_fen;
-
-        static constexpr auto InputTextFlags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue;
-        static constexpr auto PopupFlags     = ImGuiWindowFlags_AlwaysAutoResize;
 
         static constexpr auto ErrorPopupID { "FEN parse error" };
 
@@ -320,12 +321,44 @@ namespace {
     using chess::notation::from_epd;
     using chess::notation::to_epd;
 
-    void render_epd_editor()
+    void render_epd_editor(
+        EPDPosition& position, std::string& errorMessage)
     {
-        if (ImGui::CollapsingHeader("EPD", CollapsibleFlags)) {
-            // TODO:
-            // text entry for individual standard operations
-            // display (+copy) full EPD string (no entry?)
+        if (ImGui::CollapsingHeader("EPD editor", CollapsibleFlags)) {
+            static constexpr auto ErrorPopupID { "EPD parse error" };
+
+            auto inputBuf = to_epd(position);
+
+            ImGui::SetNextItemWidth(ImGui::CalcTextSize(inputBuf.c_str()).x + 10.f);
+
+            if (ImGui::InputText("EPD", &inputBuf, InputTextFlags)) {
+                [[maybe_unused]] const auto result
+                    = from_epd(inputBuf)
+                          .transform([&position, &errorMessage](const EPDPosition& newPos) {
+                              position = newPos;
+                              errorMessage.clear();
+                              return std::monostate { };
+                          })
+                          .transform_error([&errorMessage](const string_view error) {
+                              assert(not error.empty());
+                              errorMessage = error;
+                              ImGui::OpenPopup(ErrorPopupID, ImGuiPopupFlags_NoReopen);
+                              return std::monostate { };
+                          });
+            }
+
+            ImGui::SetItemTooltip("Enter an EPD string");
+
+            if (ImGui::BeginPopupModal(ErrorPopupID, nullptr, PopupFlags)) {
+                UnformattedText(errorMessage);
+
+                if (ImGui::Button("OK", { 120.f, 0.f })) {
+                    ImGui::CloseCurrentPopup();
+                    errorMessage.clear();
+                }
+
+                ImGui::EndPopup();
+            }
         }
     }
 } // namespace
@@ -343,11 +376,11 @@ void render_board_editor(BoardEditorState& state)
 
         render_ep_square(state.position.position, state.selectedEPSquare);
 
-        render_move_counters(state.position.position);
+        render_move_counters(state.position);
 
         render_fen_string(state.position.position, state.fenParseError);
 
-        render_epd_editor();
+        render_epd_editor(state.position, state.epdParseError);
     }
 
     ImGui::End();
