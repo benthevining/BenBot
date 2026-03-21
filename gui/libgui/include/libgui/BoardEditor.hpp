@@ -31,11 +31,12 @@ struct BoardEditorState final {
     std::optional<chess::board::Square> selectedEPSquare;
 
     // empty if no error has occurred
-    std::string fenParseError, epdParseError;
+    std::string fenParseError;
+    std::string epdParseError;
 
-    [[nodiscard]] std::string to_string() const;
+    [[nodiscard]] auto to_string() const -> std::string;
 
-    [[nodiscard]] static BoardEditorState from_string(std::string_view str);
+    [[nodiscard]] static auto from_string(std::string_view str) -> BoardEditorState;
 };
 
 void render_board_editor(BoardEditorState& state);

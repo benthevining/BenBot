@@ -30,7 +30,7 @@
 #include <libchess/notation/FEN.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libgui/BoardEditor.hpp>
-#include <magic_enum/magic_enum.hpp>
+#include <libutil/Strings.hpp>
 #include <nlohmann/json.hpp>
 #include <optional>
 #include <ranges>
@@ -44,6 +44,7 @@ using chess::board::Rank;
 using chess::board::Square;
 using chess::game::Position;
 using chess::pieces::Color;
+using std::string;
 using std::string_view;
 
 using chess::moves::get_potentially_legal_en_passant_target_squares;
@@ -60,40 +61,6 @@ namespace {
             std::next(
                 text.data(),
                 static_cast<std::ptrdiff_t>(text.length())));
-    }
-
-    void render_chessboard(Position& position)
-    {
-        static constexpr auto colorWhite = IM_COL32(255, 255, 255, 255);
-        static constexpr auto colorBlack = IM_COL32(0, 0, 0, 255);
-
-        static constexpr auto squareSize = 50.f;
-
-        if (ImGui::BeginTable("Board", 8, ImGuiTableFlags_SizingFixedSame)) {
-            for (const auto file : magic_enum::enum_values<File>()) {
-                ImGui::TableSetupColumn(
-                    std::format("{}", file).c_str(),
-                    ImGuiTableColumnFlags_WidthFixed, squareSize);
-            }
-
-            for (const auto rank : magic_enum::enum_values<Rank>() | std::views::reverse) {
-                ImGui::TableNextRow(ImGuiTableRowFlags_None, squareSize);
-
-                for (const auto file : magic_enum::enum_values<File>()) {
-                    ImGui::TableNextColumn();
-
-                    const Square square { .file = file, .rank = rank };
-
-                    ImGui::TableSetBgColor(
-                        ImGuiTableBgTarget_CellBg,
-                        square.is_light() ? colorWhite : colorBlack);
-
-                    UnformattedText(std::format("{}", square));
-                }
-            }
-
-            ImGui::EndTable();
-        }
     }
 
     void render_side_to_move(Position& position)
@@ -175,7 +142,7 @@ namespace {
 
         const auto currEP = position.enPassantTargetSquare
                                 .transform([](const Square square) { return std::format("{}", square); })
-                                .value_or(std::string { NoneLabel });
+                                .value_or(string { NoneLabel });
 
         if (ImGui::BeginCombo("EPSquare", currEP.c_str())) {
             for (const auto square : get_potentially_legal_en_passant_target_squares(position)) {
@@ -210,26 +177,26 @@ namespace {
     }
 
     // reset, flip, clear buttons
-    void render_utility_buttons(Position& position)
+    void render_utility_buttons(EPDPosition& position)
     {
         ImGui::BeginGroup();
 
         if (ImGui::Button("Reset"))
-            position = Position { };
+            position = EPDPosition { };
 
         ImGui::SetItemTooltip("Reset the board to the starting position");
 
         ImGui::SameLine();
 
         if (ImGui::Button("Flip"))
-            position = flipped(position);
+            position.position = flipped(position.position);
 
         ImGui::SetItemTooltip("Flip the board vertically");
 
         ImGui::SameLine();
 
         if (ImGui::Button("Clear"))
-            position = Position::empty();
+            position.position = Position::empty();
 
         ImGui::SetItemTooltip("Remove all pieces from the board");
 
@@ -277,7 +244,7 @@ namespace {
     }
 
     void render_fen_string(
-        Position& position, std::string& errorMessage)
+        Position& position, string& errorMessage)
     {
         using chess::notation::from_fen;
         using chess::notation::to_fen;
@@ -321,44 +288,116 @@ namespace {
     using chess::notation::from_epd;
     using chess::notation::to_epd;
 
-    void render_epd_editor(
-        EPDPosition& position, std::string& errorMessage)
+    void render_epd_string(EPDPosition& position, string& errorMessage)
     {
-        if (ImGui::CollapsingHeader("EPD editor", CollapsibleFlags)) {
-            static constexpr auto ErrorPopupID { "EPD parse error" };
+        static constexpr auto ErrorPopupID { "EPD parse error" };
 
-            auto inputBuf = to_epd(position);
+        auto inputBuf = to_epd(position);
 
-            ImGui::SetNextItemWidth(ImGui::CalcTextSize(inputBuf.c_str()).x + 10.f);
+        ImGui::SetNextItemWidth(ImGui::CalcTextSize(inputBuf.c_str()).x + 10.f);
 
-            if (ImGui::InputText("EPD", &inputBuf, InputTextFlags)) {
-                [[maybe_unused]] const auto result
-                    = from_epd(inputBuf)
-                          .transform([&position, &errorMessage](const EPDPosition& newPos) {
-                              position = newPos;
-                              errorMessage.clear();
-                              return std::monostate { };
-                          })
-                          .transform_error([&errorMessage](const string_view error) {
-                              assert(not error.empty());
-                              errorMessage = error;
-                              ImGui::OpenPopup(ErrorPopupID, ImGuiPopupFlags_NoReopen);
-                              return std::monostate { };
-                          });
+        if (ImGui::InputText("EPD", &inputBuf, InputTextFlags)) {
+            [[maybe_unused]] const auto result
+                = from_epd(inputBuf)
+                      .transform([&position, &errorMessage](const EPDPosition& newPos) {
+                          position = newPos;
+                          errorMessage.clear();
+                          return std::monostate { };
+                      })
+                      .transform_error([&errorMessage](const string_view error) {
+                          assert(not error.empty());
+                          errorMessage = error;
+                          ImGui::OpenPopup(ErrorPopupID, ImGuiPopupFlags_NoReopen);
+                          return std::monostate { };
+                      });
+        }
+
+        ImGui::SetItemTooltip("Enter an EPD string");
+
+        if (ImGui::BeginPopupModal(ErrorPopupID, nullptr, PopupFlags)) {
+            UnformattedText(errorMessage);
+
+            if (ImGui::Button("OK", { 120.f, 0.f })) {
+                ImGui::CloseCurrentPopup();
+                errorMessage.clear();
             }
 
-            ImGui::SetItemTooltip("Enter an EPD string");
+            ImGui::EndPopup();
+        }
+    }
 
-            if (ImGui::BeginPopupModal(ErrorPopupID, nullptr, PopupFlags)) {
-                UnformattedText(errorMessage);
+    void render_epd_operations(EPDPosition& position)
+    {
+        // see https://www.chessprogramming.org/Extended_Position_Description
 
-                if (ImGui::Button("OK", { 120.f, 0.f })) {
-                    ImGui::CloseCurrentPopup();
-                    errorMessage.clear();
+        // TODO: maybe a move type?
+        // TODO: Maybe an IntegerNonNegative type?
+        enum class Type {
+            Integer,
+            String
+        };
+
+        struct StandardOperation final {
+            string mnemonic;
+            Type   type;
+            string tooltip;
+        };
+
+        // TODO: c0 comment (primary, also c1 though c9), draw offer/accept, v0 variation name (primary, also v1 though v9)
+        static const std::array StandardOperations {
+            StandardOperation { .mnemonic = "acd", .type = Type::Integer, .tooltip = "Analysis count depth" },
+            StandardOperation { .mnemonic = "acn", .type = Type::Integer, .tooltip = "Analysis count nodes" }, // codespell:ignore acn
+            StandardOperation { .mnemonic = "acs", .type = Type::Integer, .tooltip = "Analysis count seconds" },
+            StandardOperation { .mnemonic = "am", .type = Type::String, .tooltip = "Avoid move(s)" },
+            StandardOperation { .mnemonic = "bm", .type = Type::String, .tooltip = "Best move(s)" },
+            StandardOperation { .mnemonic = "ce", .type = Type::Integer, .tooltip = "Centipawn evaluation" },
+            StandardOperation { .mnemonic = "dm", .type = Type::Integer, .tooltip = "Direct mate fullmove count" },
+            StandardOperation { .mnemonic = "eco", .type = Type::String, .tooltip = "Encyclopedia of Chess Openings opening code" },
+            StandardOperation { .mnemonic = "id", .type = Type::String, .tooltip = "Position identification" },
+            StandardOperation { .mnemonic = "nic", .type = Type::String, .tooltip = "New In Chess opening code" },
+            StandardOperation { .mnemonic = "pm", .type = Type::String, .tooltip = "Predicted move" },
+            StandardOperation { .mnemonic = "pv", .type = Type::String, .tooltip = "Predicted variation" },
+            StandardOperation { .mnemonic = "rc", .type = Type::Integer, .tooltip = "Repetition count" },
+            StandardOperation { .mnemonic = "sm", .type = Type::String, .tooltip = "Supplied move" }
+        };
+
+        for (const auto& opMetadata : StandardOperations) {
+            auto inputBuf = [&position, &opMetadata] {
+                const auto it = position.operations.find(opMetadata.mnemonic);
+
+                if (it != position.operations.end())
+                    return it->second;
+
+                return string { };
+            }();
+
+            switch (opMetadata.type) {
+                case Type::Integer: {
+                    auto value = util::strings::int_from_string<int>(inputBuf);
+
+                    if (ImGui::InputInt(opMetadata.mnemonic.c_str(), &value, 1, 10, ImGuiInputTextFlags_CharsDecimal)) {
+                        position.operations[opMetadata.mnemonic] = std::format("{}", value);
+                    }
+                    break;
                 }
 
-                ImGui::EndPopup();
+                default: [[fallthrough]];
+                case Type::String:
+                    if (ImGui::InputText(opMetadata.mnemonic.c_str(), &inputBuf, InputTextFlags)) {
+                        position.operations[opMetadata.mnemonic] = util::strings::trim(inputBuf);
+                    }
             }
+
+            ImGui::SetItemTooltip("%s", opMetadata.tooltip.c_str());
+        }
+    }
+
+    void render_epd_editor(
+        EPDPosition& position, string& errorMessage)
+    {
+        if (ImGui::CollapsingHeader("EPD editor", CollapsibleFlags)) {
+            render_epd_string(position, errorMessage);
+            render_epd_operations(position);
         }
     }
 } // namespace
@@ -366,9 +405,7 @@ namespace {
 void render_board_editor(BoardEditorState& state)
 {
     if (ImGui::Begin("Board editor")) {
-        // render_chessboard(state.position);
-
-        render_utility_buttons(state.position.position);
+        render_utility_buttons(state.position);
 
         render_side_to_move(state.position.position);
 
@@ -390,7 +427,7 @@ using nlohmann::json;
 
 inline constexpr string_view TAG_CURRENTBOARD { "board_fen" };
 
-std::string BoardEditorState::to_string() const
+auto BoardEditorState::to_string() const -> string
 {
     json data;
 
@@ -399,7 +436,7 @@ std::string BoardEditorState::to_string() const
     return data.dump();
 }
 
-BoardEditorState BoardEditorState::from_string(string_view str)
+auto BoardEditorState::from_string(string_view str) -> BoardEditorState
 {
     const auto parsed = json::parse(str);
 

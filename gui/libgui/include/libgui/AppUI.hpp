@@ -29,9 +29,9 @@ inline constexpr auto AppName { "BenBot GUI" };
 struct AppState final {
     BoardEditorState boardEditor;
 
-    [[nodiscard]] std::string to_string() const;
+    [[nodiscard]] auto to_string() const -> std::string;
 
-    [[nodiscard]] static AppState from_string(std::string_view str);
+    [[nodiscard]] static auto from_string(std::string_view str) -> AppState;
 };
 
 void initialize(

@@ -141,7 +141,7 @@ using nlohmann::json;
 
 inline constexpr string_view TAG_BOARD_EDITOR { "board_editor" };
 
-std::string AppState::to_string() const
+auto AppState::to_string() const -> std::string
 {
     json data;
 
@@ -150,7 +150,7 @@ std::string AppState::to_string() const
     return data.dump();
 }
 
-AppState AppState::from_string(const string_view str)
+auto AppState::from_string(const string_view str) -> AppState
 {
     const auto parsed = json::parse(str);
 
