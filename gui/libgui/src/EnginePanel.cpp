@@ -144,6 +144,13 @@ namespace {
                 reset_all_options(engine);
 
             ImGui::SetItemTooltip("Reset all options to their default values");
+
+            auto debug = engine.is_debug_mode();
+
+            if (ImGui::Checkbox("Debug mode", &debug))
+                engine.set_debug_mode(debug);
+
+            ImGui::SetItemTooltip("Enable engine debug mode");
         }
     }
 
