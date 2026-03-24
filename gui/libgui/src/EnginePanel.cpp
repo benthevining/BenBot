@@ -19,7 +19,6 @@
 #include <libbenbot/search/Options.hpp>
 #include <libchess/uci/Options.hpp>
 #include <libgui/EnginePanel.hpp>
-#include <libutil/Variant.hpp>
 #include <optional>
 #include <string>
 
@@ -27,11 +26,12 @@ namespace ben_bot::gui {
 
 using std::string;
 
-inline constexpr auto InputTextFlags   = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue;
-inline constexpr auto CollapsibleFlags = ImGuiTreeNodeFlags_CollapsingHeader | ImGuiTreeNodeFlags_Framed;
+inline constexpr auto InputTextFlags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue;
 
 namespace {
-    void render_uci_option(uci::Option& opt, std::optional<string>& selectedComboChoice)
+    void render_uci_option(
+        uci::Option&           opt,
+        std::optional<string>& selectedComboChoice)
     {
         const string name { opt.get_name() };
         const string help { opt.get_help() };
@@ -108,9 +108,11 @@ namespace {
             opt->reset_to_default_value();
     }
 
-    void render_uci_options(uci::EngineBase& engine, std::optional<string>& selectedComboChoice)
+    void render_uci_options(
+        uci::EngineBase&       engine,
+        std::optional<string>& selectedComboChoice)
     {
-        if (ImGui::CollapsingHeader("UCI options", CollapsibleFlags)) {
+        if (ImGui::CollapsingHeader("UCI options")) {
             ImGui::SeparatorText("Standard options");
 
             for (auto* opt : engine.get_standard_uci_options())
@@ -145,7 +147,7 @@ namespace {
 
         bool anyChanged { false };
 
-        if (ImGui::CollapsingHeader("Search options", CollapsibleFlags)) {
+        if (ImGui::CollapsingHeader("Search options")) {
             auto depth = static_cast<int>(options.depth);
 
             if (ImGui::InputInt("Depth", &depth)) {
@@ -200,7 +202,7 @@ auto EnginePanelState::to_string() const -> string
     return engine.state_to_string();
 }
 
-void EnginePanelState::update_from_string(std::string_view str)
+void EnginePanelState::update_from_string(const std::string_view str)
 {
     engine.restore_state_from_string(str);
 }

@@ -50,9 +50,8 @@ using std::string_view;
 using chess::moves::get_potentially_legal_en_passant_target_squares;
 
 namespace {
-    inline constexpr auto CollapsibleFlags = ImGuiTreeNodeFlags_CollapsingHeader | ImGuiTreeNodeFlags_Framed;
-    inline constexpr auto InputTextFlags   = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue;
-    inline constexpr auto PopupFlags       = ImGuiWindowFlags_AlwaysAutoResize;
+    inline constexpr auto InputTextFlags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue;
+    inline constexpr auto PopupFlags     = ImGuiWindowFlags_AlwaysAutoResize;
 
     void UnformattedText(const string_view text)
     {
@@ -87,7 +86,7 @@ namespace {
         static constexpr auto Kingside  = "O-O";
         static constexpr auto Queenside = "O-O-O";
 
-        if (ImGui::CollapsingHeader("Castling Rights", CollapsibleFlags)) {
+        if (ImGui::CollapsingHeader("Castling Rights")) {
             ImGui::BeginGroup();
 
             if (ImGui::BeginTable("CastlingRights", 3, ImGuiTableFlags_Borders)) {
@@ -391,7 +390,7 @@ namespace {
     void render_epd_editor(
         EPDPosition& position, string& errorMessage)
     {
-        if (ImGui::CollapsingHeader("EPD editor", CollapsibleFlags)) {
+        if (ImGui::CollapsingHeader("EPD editor")) {
             render_epd_string(position, errorMessage);
             render_epd_operations(position);
         }
@@ -432,7 +431,7 @@ auto BoardEditorState::to_string() const -> string
     return data.dump();
 }
 
-auto BoardEditorState::from_string(string_view str) -> BoardEditorState
+auto BoardEditorState::from_string(const string_view str) -> BoardEditorState
 {
     const auto parsed = json::parse(str);
 
