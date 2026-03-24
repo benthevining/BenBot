@@ -328,7 +328,7 @@ namespace {
 
         // TODO: maybe a move type?
         // TODO: Maybe an IntegerNonNegative type?
-        enum class Type {
+        enum class Type : std::uint_least8_t {
             Integer,
             String
         };

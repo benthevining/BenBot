@@ -99,30 +99,13 @@ namespace {
         ImGui::SetItemTooltip("%s", help.c_str());
     }
 
-    // TODO: give option base class a reset() method
     void reset_all_options(uci::EngineBase& engine)
     {
-        auto reset_option = [](uci::Option& opt) {
-            if (not opt.has_value())
-                return;
-
-            std::visit(util::Visitor {
-                           [&opt](const bool value) { dynamic_cast<uci::BoolOption&>(opt).set_value(value); },
-                           [&opt](const int value) { dynamic_cast<uci::IntOption&>(opt).set_value(value); },
-                           [&opt](const std::string_view value) {
-                               if (auto* comboOpt = dynamic_cast<uci::ComboOption*>(&opt))
-                                   comboOpt->set_value(value);
-                               else
-                                   dynamic_cast<uci::StringOption&>(opt).set_value(value);
-                           } },
-                opt.get_default_value_variant());
-        };
-
         for (auto* opt : engine.get_standard_uci_options())
-            reset_option(*opt);
+            opt->reset_to_default_value();
 
         for (auto* opt : engine.get_custom_uci_options())
-            reset_option(*opt);
+            opt->reset_to_default_value();
     }
 
     void render_uci_options(uci::EngineBase& engine, std::optional<string>& selectedComboChoice)
