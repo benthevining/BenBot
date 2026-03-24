@@ -154,41 +154,49 @@ namespace {
         }
     }
 
-    void render_search_options(search::Options& options)
+    // returns true if any options were changed
+    [[nodiscard]] auto render_search_options(search::Options& options) -> bool
     {
-        // TODO: handling of negative integer values
-        // TODO: send options to engine
+        // TODO: handling of negative integer values, optionals
+        // TODO: movesToSearch, mateIn
+
+        bool anyChanged { false };
 
         if (ImGui::CollapsingHeader("Search options", CollapsibleFlags)) {
-            // TODO: make this an optional in the options struct
             auto depth = static_cast<int>(options.depth);
 
-            if (ImGui::InputInt("Depth", &depth))
+            if (ImGui::InputInt("Depth", &depth)) {
                 options.depth = static_cast<size_t>(depth);
+                anyChanged    = true;
+            }
 
             ImGui::SetItemTooltip("Search depth, in plies");
 
             auto numMs = static_cast<int>(options.searchTime.value_or(std::chrono::milliseconds { 0 }).count());
 
-            if (ImGui::InputInt("Time", &numMs))
+            if (ImGui::InputInt("Time", &numMs)) {
                 options.searchTime = std::chrono::milliseconds { numMs };
+                anyChanged         = true;
+            }
 
             ImGui::SetItemTooltip("Search time, in milliseconds");
 
             auto maxNodes = static_cast<int>(options.maxNodes);
 
-            if (ImGui::InputInt("Nodes", &maxNodes))
+            if (ImGui::InputInt("Nodes", &maxNodes)) {
                 options.maxNodes = static_cast<size_t>(maxNodes);
+                anyChanged       = true;
+            }
 
             ImGui::SetItemTooltip("Maximum number of nodes to search");
 
-            ImGui::Checkbox("Infinite", &options.infinite);
-            ImGui::SetItemTooltip("Whether to search infinitely");
+            if (ImGui::Checkbox("Infinite", &options.infinite))
+                anyChanged = true;
 
-            // TODO:
-            // movesToSearch
-            // mateIn
+            ImGui::SetItemTooltip("Whether to search infinitely");
         }
+
+        return anyChanged;
     }
 } // namespace
 
@@ -197,7 +205,8 @@ void render_engine_panel(EnginePanelState& state)
     if (ImGui::Begin("Engine")) {
         render_uci_options(state.engine, state.selectedComboChoice);
 
-        render_search_options(state.searchOptions);
+        if (render_search_options(state.searchOptions))
+            state.engine.set_search_options(state.searchOptions);
     }
 
     ImGui::End();

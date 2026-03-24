@@ -36,6 +36,10 @@ struct GoCommandOptions;
 
 namespace ben_bot {
 
+namespace search {
+    struct Options;
+} // namespace search
+
 namespace uci = chess::uci;
 
 using chess::game::Position;
@@ -66,6 +70,9 @@ public:
 
     /** Restores the engine's state from a stringified version. */
     void restore_state_from_string(string_view state);
+
+    /** Sets the options to be used for the next search. */
+    void set_search_options(const search::Options& opts) { searcher.context.set_options(opts); }
 
 private:
     [[nodiscard]] auto get_name() const -> std::string override;
