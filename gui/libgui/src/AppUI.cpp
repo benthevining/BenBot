@@ -52,10 +52,6 @@ namespace {
         return "benbot_state.json";
     }
 
-    // TODO:
-    // - Move to separate styling.cpp file?
-    // - brighter color for button hover, maybe a purple?
-    // - docking area hints should be paler / more transparent
     void setup_imgui_style()
     {
         // Catppuccin Mocha Palette
@@ -117,7 +113,7 @@ namespace {
         colors[ImGuiCol_TabActive]             = surface1;
         colors[ImGuiCol_TabUnfocused]          = surface0;
         colors[ImGuiCol_TabUnfocusedActive]    = surface1;
-        colors[ImGuiCol_DockingPreview]        = sapphire;
+        colors[ImGuiCol_DockingPreview]        = lavender;
         colors[ImGuiCol_DockingEmptyBg]        = base;
         colors[ImGuiCol_PlotLines]             = blue;
         colors[ImGuiCol_PlotLinesHovered]      = peach;
