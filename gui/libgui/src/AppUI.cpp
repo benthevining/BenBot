@@ -167,10 +167,10 @@ void initialize(const float mainScaleFactor, AppState& state)
     ImGui::CreateContext();
 
     {
-        auto& io = ImGui::GetIO();
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
-        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+        auto& io_ = ImGui::GetIO();
+        io_.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+        io_.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+        io_.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     }
 
     if (not exists(imgui_ini_path())) {

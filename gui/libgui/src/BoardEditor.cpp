@@ -16,13 +16,11 @@
 #include <array>
 #include <beman/inplace_vector/inplace_vector.hpp>
 #include <cassert>
-#include <cstdint>
+#include <cstdint> // IWYU pragma: keep
 #include <format>
 #include <imgui.h>
 #include <imgui_stdlib.h>
 #include <iterator>
-#include <libchess/board/File.hpp>
-#include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
@@ -39,8 +37,6 @@
 
 namespace ben_bot::gui {
 
-using chess::board::File;
-using chess::board::Rank;
 using chess::board::Square;
 using chess::game::Position;
 using chess::pieces::Color;
