@@ -17,8 +17,12 @@
 #include <imgui_stdlib.h>
 #include <libbenbot/engine/Engine.hpp>
 #include <libbenbot/search/Options.hpp>
+#include <libchess/game/Position.hpp>
+#include <libchess/moves/Move.hpp>
+#include <libchess/notation/MoveFormats.hpp>
 #include <libchess/uci/Options.hpp>
 #include <libgui/EnginePanel.hpp>
+#include <libutil/Strings.hpp>
 #include <nlohmann/json.hpp>
 #include <optional>
 #include <string>
@@ -27,6 +31,7 @@
 namespace ben_bot::gui {
 
 using std::string;
+using std::string_view;
 
 inline constexpr auto InputTextFlags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue;
 
@@ -141,11 +146,36 @@ namespace {
         }
     }
 
+    using chess::game::Position;
+    using chess::notation::MoveFormat;
+
+    [[nodiscard]] auto format_moves(
+        const chess::moves::MoveList& moves,
+        const MoveFormat              moveFormat,
+        const Position&               position)
+        -> string
+    {
+        string text;
+
+        for (const auto move : moves) {
+            text.append(format_move(moveFormat, position, move));
+            text.append(1uz, ' ');
+        }
+
+        // remove trailing space
+        if (not text.empty())
+            text.pop_back();
+
+        return text;
+    }
+
     // returns true if any options were changed
-    [[nodiscard]] auto render_search_options(search::Options& options) -> bool
+    [[nodiscard]] auto render_search_options(
+        search::Options& options,
+        const MoveFormat moveFormat,
+        const Position&  position) -> bool
     {
         // TODO: handling of negative integer values, optionals
-        // TODO: movesToSearch
 
         bool anyChanged { false };
 
@@ -186,6 +216,26 @@ namespace {
 
             ImGui::SetItemTooltip("Search for mate in X plies");
 
+            auto inputBuf = format_moves(options.movesToSearch, moveFormat, position);
+
+            if (ImGui::InputText("Moves to search", &inputBuf, InputTextFlags)) {
+                options.movesToSearch.clear();
+
+                for (const auto word : util::strings::words_view(inputBuf)) {
+                    parse_move(moveFormat, position, word)
+                        .transform([&options](const Move move) {
+                            options.movesToSearch.emplace_back(move);
+                            return std::monostate { };
+                        })
+                        .transform_error([](const string_view message) {
+                            // TODO: show error popup
+                            return std::monostate { };
+                        });
+                }
+            }
+
+            ImGui::SetItemTooltip("Search only the given moves");
+
             if (ImGui::Checkbox("Infinite", &options.infinite))
                 anyChanged = true;
 
@@ -201,7 +251,7 @@ void render_engine_panel(EnginePanelState& state)
     if (ImGui::Begin("Engine")) {
         render_uci_options(state.engine, state.selectedComboChoice);
 
-        if (render_search_options(state.searchOptions))
+        if (render_search_options(state.searchOptions, state.engine.get_move_format(), state.engine.get_position()))
             state.engine.set_search_options(state.searchOptions);
     }
 
@@ -209,7 +259,6 @@ void render_engine_panel(EnginePanelState& state)
 }
 
 using nlohmann::json;
-using std::string_view;
 
 inline constexpr string_view TAG_ENGINE { "engine" };
 inline constexpr string_view TAG_OPTIONS { "search_options" };

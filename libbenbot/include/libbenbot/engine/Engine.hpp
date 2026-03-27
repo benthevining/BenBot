@@ -24,6 +24,7 @@
 #include <functional>
 #include <libbenbot/search/Thread.hpp>
 #include <libchess/game/Position.hpp>
+#include <libchess/notation/MoveFormats.hpp>
 #include <libchess/uci/EngineBase.hpp>
 #include <libchess/uci/Options.hpp>
 #include <span>
@@ -73,6 +74,9 @@ public:
 
     /** Sets the options to be used for the next search. */
     void set_search_options(const search::Options& opts) { searcher.context.set_options(opts); }
+
+    /** Returns the notation format being used for pretty printing. */
+    [[nodiscard]] auto get_move_format() const -> chess::notation::MoveFormat;
 
 private:
     [[nodiscard]] auto get_name() const -> std::string override;

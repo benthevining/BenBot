@@ -187,15 +187,18 @@ void Engine::print_compiler_info()
         resources::get_build_config()));
 }
 
+auto Engine::get_move_format() const -> chess::notation::MoveFormat
+{
+    return magic_enum::enum_cast<chess::notation::MoveFormat>(moveFormat.get_value())
+        .value();
+}
+
 auto Engine::pretty_print_move(const Move move) const -> std::string
 {
-    using chess::notation::MoveFormat;
-
-    return magic_enum::enum_cast<MoveFormat>(moveFormat.get_value())
-        .transform([this, move](const MoveFormat format) {
-            return format_move(format, searcher.context.get_position(), move);
-        })
-        .value_or(std::string { });
+    return format_move(
+        get_move_format(),
+        searcher.context.get_position(),
+        move);
 }
 
 } // namespace ben_bot
