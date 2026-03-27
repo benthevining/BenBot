@@ -72,10 +72,6 @@ function (benbot_use_glfw)
     target_include_directories (benbotgui_glfw_wrapper PRIVATE "${stb_SOURCE_DIR}")
 
     target_link_libraries (benbot_gui PRIVATE benbotgui_glfw_wrapper)
-
-    if (NOT APPLE)
-
-    endif ()
 endfunction ()
 
 if (APPLE)

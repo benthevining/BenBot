@@ -434,7 +434,8 @@ auto BoardEditorState::from_string(const string_view str) -> BoardEditorState
     BoardEditorState state;
 
     [[maybe_unused]] const auto result
-        = from_epd(parsed.at(TAG_CURRENTBOARD).get<string_view>())
+        = from_epd(
+            parsed.at(TAG_CURRENTBOARD).get<string_view>())
               .transform([&state](const EPDPosition& newPos) {
                   state.position = newPos;
                   return std::monostate { };

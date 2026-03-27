@@ -174,8 +174,6 @@ void EngineBase::handle_setpos(const string_view arguments)
                       }
                   }
 
-                  position = pos;
-
                   set_position(pos);
 
                   return { };

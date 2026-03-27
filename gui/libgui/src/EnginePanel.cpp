@@ -19,8 +19,10 @@
 #include <libbenbot/search/Options.hpp>
 #include <libchess/uci/Options.hpp>
 #include <libgui/EnginePanel.hpp>
+#include <nlohmann/json.hpp>
 #include <optional>
 #include <string>
+#include <string_view>
 
 namespace ben_bot::gui {
 
@@ -197,14 +199,32 @@ void render_engine_panel(EnginePanelState& state)
     ImGui::End();
 }
 
+using nlohmann::json;
+using std::string_view;
+
+inline constexpr string_view TAG_ENGINE { "engine" };
+inline constexpr string_view TAG_OPTIONS { "search_options" };
+
 auto EnginePanelState::to_string() const -> string
 {
-    return engine.state_to_string();
+    json data;
+
+    data[TAG_ENGINE]  = engine.state_to_string();
+    data[TAG_OPTIONS] = searchOptions.to_string();
+
+    return data.dump();
 }
 
-void EnginePanelState::update_from_string(const std::string_view str)
+void EnginePanelState::update_from_string(const string_view str)
 {
-    engine.restore_state_from_string(str);
+    const auto parsed = json::parse(str);
+
+    engine.restore_state_from_string(
+        parsed.at(TAG_ENGINE).get<string_view>());
+
+    searchOptions = search::Options::from_string(
+        parsed.at(TAG_OPTIONS).get<string_view>(),
+        engine.get_position());
 }
 
 } // namespace ben_bot::gui

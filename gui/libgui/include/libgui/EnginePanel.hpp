@@ -24,7 +24,7 @@ namespace ben_bot::gui {
 struct EnginePanelState final {
     Engine engine;
 
-    search::Options searchOptions; // TODO: to/from string
+    search::Options searchOptions;
 
     std::optional<std::string> selectedComboChoice;
 

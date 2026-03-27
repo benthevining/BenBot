@@ -23,16 +23,13 @@
 #include <atomic>
 #include <cassert>
 #include <functional>
+#include <libchess/game/Position.hpp>
 #include <libchess/uci/CommandParsing.hpp>
 #include <libchess/uci/Options.hpp>
 #include <span>
 #include <string>
 #include <string_view>
 #include <utility>
-
-namespace chess::game {
-struct Position;
-} // namespace chess::game
 
 namespace chess::uci {
 
@@ -137,8 +134,15 @@ struct EngineBase {
      */
     virtual void ponder_hit() { }
 
-    /** Called when a new position is received from the GUI. */
-    virtual void set_position([[maybe_unused]] const Position& pos) { }
+    /** Sets the engine's current position. */
+    void set_position(const Position& pos)
+    {
+        position = pos;
+        position_changed(pos);
+    }
+
+    /** Returns the engine's current position. */
+    [[nodiscard]] auto get_position() -> const Position& { return position; }
 
     /** Called when the "go" command is received. The engine should begin searching. After
         this function has been called, the engine should print to stdout a line of the form
@@ -276,6 +280,9 @@ private:
     Position position;
 
 protected:
+    /** Subclasses can implement this to be informed when the position has changed. */
+    virtual void position_changed([[maybe_unused]] const Position& pos) { }
+
     std::array<EngineCommand, 11uz> standardUCICommands {
         EngineCommand {
             .name   = "uci",
