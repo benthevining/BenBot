@@ -145,7 +145,7 @@ namespace {
     [[nodiscard]] auto render_search_options(search::Options& options) -> bool
     {
         // TODO: handling of negative integer values, optionals
-        // TODO: movesToSearch, mateIn
+        // TODO: movesToSearch
 
         bool anyChanged { false };
 
@@ -176,6 +176,15 @@ namespace {
             }
 
             ImGui::SetItemTooltip("Maximum number of nodes to search");
+
+            auto mateIn = static_cast<int>(options.mateIn.value_or(0uz));
+
+            if (ImGui::InputInt("Mate in", &mateIn)) {
+                options.mateIn = static_cast<size_t>(mateIn);
+                anyChanged     = true;
+            }
+
+            ImGui::SetItemTooltip("Search for mate in X plies");
 
             if (ImGui::Checkbox("Infinite", &options.infinite))
                 anyChanged = true;
