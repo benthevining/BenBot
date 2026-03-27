@@ -12,6 +12,7 @@
  * ======================================================================================
  */
 
+#include "ImUtil.hpp" // NOLINT(build/include_subdir)
 #include <algorithm>
 #include <array>
 #include <beman/inplace_vector/inplace_vector.hpp>
@@ -20,7 +21,6 @@
 #include <format>
 #include <imgui.h>
 #include <imgui_stdlib.h>
-#include <iterator>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
@@ -46,18 +46,6 @@ using std::string_view;
 using chess::moves::get_potentially_legal_en_passant_target_squares;
 
 namespace {
-    inline constexpr auto InputTextFlags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue;
-    inline constexpr auto PopupFlags     = ImGuiWindowFlags_AlwaysAutoResize;
-
-    void UnformattedText(const string_view text)
-    {
-        ImGui::TextUnformatted(
-            text.data(),
-            std::next(
-                text.data(),
-                static_cast<std::ptrdiff_t>(text.length())));
-    }
-
     void render_side_to_move(Position& position)
     {
         bool whiteToMove { position.sideToMove == Color::White };

@@ -63,8 +63,9 @@ file (GLOB_RECURSE libgui_headers LIST_DIRECTORIES false
       CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/include/libgui/*.hpp"
 )
 
-file (GLOB_RECURSE libgui_sources LIST_DIRECTORIES false CONFIGURE_DEPENDS
-                                                         "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp"
+file (GLOB_RECURSE libgui_sources LIST_DIRECTORIES false
+      CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp"
+      "${CMAKE_CURRENT_LIST_DIR}/src/ImUtil.hpp"
 )
 
 target_sources (
@@ -73,5 +74,7 @@ target_sources (
 )
 
 source_group (TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${libgui_headers} ${libgui_sources})
+
+target_include_directories (libgui PRIVATE "${CMAKE_CURRENT_LIST_DIR}/src")
 
 add_library (ben_bot::libgui ALIAS libgui)

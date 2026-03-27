@@ -12,6 +12,7 @@
  * ======================================================================================
  */
 
+#include "ImUtil.hpp" // NOLINT(build/include_subdir)
 #include <chrono>
 #include <imgui.h>
 #include <imgui_stdlib.h>
@@ -32,8 +33,6 @@ namespace ben_bot::gui {
 
 using std::string;
 using std::string_view;
-
-inline constexpr auto InputTextFlags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue;
 
 namespace {
     void render_uci_option(
@@ -227,11 +226,13 @@ namespace {
                             options.movesToSearch.emplace_back(move);
                             return std::monostate { };
                         })
-                        .transform_error([](const string_view message) {
+                        .transform_error([]([[maybe_unused]] const string_view message) {
                             // TODO: show error popup
                             return std::monostate { };
                         });
                 }
+
+                anyChanged = true;
             }
 
             ImGui::SetItemTooltip("Search only the given moves");
