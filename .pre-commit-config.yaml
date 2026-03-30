@@ -98,11 +98,11 @@ repos:
 
     # C++ formatting & linting
 - repo: https://github.com/pre-commit/mirrors-clang-format
-  rev: v22.1.1
+  rev: v22.1.2
   hooks:
   - id: clang-format
     exclude_types: [json]
-    additional_dependencies: [clang-format>=22.1.1]
+    additional_dependencies: [clang-format>=22.1.2]
 - repo: https://github.com/pocc/pre-commit-hooks
   rev: v1.3.5
   hooks:
@@ -124,7 +124,7 @@ repos:
     args: [--config-files, config/.cmake-format.json]
 
 - repo: https://github.com/python-jsonschema/check-jsonschema
-  rev: 0.37.0
+  rev: 0.37.1
   hooks:
   - id: check-github-workflows
   - id: check-jsonschema
