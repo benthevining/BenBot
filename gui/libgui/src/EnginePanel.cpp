@@ -168,6 +168,7 @@ namespace {
         return text;
     }
 
+    // TODO: reset button
     // returns true if any options were changed
     [[nodiscard]] auto render_search_options(
         search::Options& options,
@@ -252,8 +253,10 @@ void render_engine_panel(EnginePanelState& state)
     if (ImGui::Begin("Engine")) {
         render_uci_options(state.engine, state.selectedComboChoice);
 
-        if (render_search_options(state.searchOptions, state.engine.get_move_format(), state.engine.get_position()))
+        if (render_search_options(state.searchOptions, state.engine.get_move_format(), state.engine.get_position())) {
+            // TODO: probably shouldn't block here...
             state.engine.set_search_options(state.searchOptions);
+        }
     }
 
     ImGui::End();

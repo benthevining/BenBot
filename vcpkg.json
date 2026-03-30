@@ -34,6 +34,10 @@
       "name": "vulkan",
       "platform": "!(osx|ios)",
       "version>=": "2023-12-17"
+    },
+    {
+      "name": "stb",
+      "version>=": "2024-07-29"
     }
   ],
   "name": "BenBot",

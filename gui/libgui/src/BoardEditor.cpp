@@ -397,6 +397,8 @@ void render_board_editor(BoardEditorState& state)
         render_fen_string(state.position.position, state.fenParseError);
 
         render_epd_editor(state.position, state.epdParseError);
+
+        // TODO: send position to engine if changed
     }
 
     ImGui::End();
