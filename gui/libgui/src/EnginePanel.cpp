@@ -38,7 +38,8 @@ using std::string_view;
 namespace {
     void render_uci_option(
         uci::Option&           opt,
-        std::optional<string>& selectedComboChoice)
+        std::optional<string>& selectedComboChoice,
+        const bool             showTooltips)
     {
         const string name { opt.get_name() };
         const string help { opt.get_help() };
@@ -49,7 +50,8 @@ namespace {
             if (ImGui::Checkbox(name.c_str(), &value))
                 option->set_value(value);
 
-            ImGui::SetItemTooltip("%s", help.c_str());
+            if (showTooltips)
+                ImGui::SetItemTooltip("%s", help.c_str());
             return;
         }
 
@@ -59,7 +61,8 @@ namespace {
             if (ImGui::InputInt(name.c_str(), &value))
                 option->set_value(value);
 
-            ImGui::SetItemTooltip("%s", help.c_str());
+            if (showTooltips)
+                ImGui::SetItemTooltip("%s", help.c_str());
             return;
         }
 
@@ -69,7 +72,8 @@ namespace {
             if (ImGui::InputText(name.c_str(), &value, InputTextFlags))
                 option->set_value(value);
 
-            ImGui::SetItemTooltip("%s", help.c_str());
+            if (showTooltips)
+                ImGui::SetItemTooltip("%s", help.c_str());
             return;
         }
 
@@ -77,7 +81,8 @@ namespace {
             if (ImGui::Button(name.c_str()))
                 action->handle_setvalue({ });
 
-            ImGui::SetItemTooltip("%s", help.c_str());
+            if (showTooltips)
+                ImGui::SetItemTooltip("%s", help.c_str());
             return;
         }
 
@@ -103,7 +108,8 @@ namespace {
             selectedComboChoice = value;
         }
 
-        ImGui::SetItemTooltip("%s", help.c_str());
+        if (showTooltips)
+            ImGui::SetItemTooltip("%s", help.c_str());
     }
 
     void reset_all_options(uci::EngineBase& engine)
@@ -117,18 +123,19 @@ namespace {
 
     void render_uci_options(
         uci::EngineBase&       engine,
-        std::optional<string>& selectedComboChoice)
+        std::optional<string>& selectedComboChoice,
+        const bool             showTooltips)
     {
         if (ImGui::CollapsingHeader("UCI options")) {
             ImGui::SeparatorText("Standard options");
 
             for (auto* opt : engine.get_standard_uci_options())
-                render_uci_option(*opt, selectedComboChoice);
+                render_uci_option(*opt, selectedComboChoice, showTooltips);
 
             ImGui::SeparatorText("Custom options");
 
             for (auto* opt : engine.get_custom_uci_options())
-                render_uci_option(*opt, selectedComboChoice);
+                render_uci_option(*opt, selectedComboChoice, showTooltips);
 
             ImGui::Separator();
 
@@ -174,7 +181,8 @@ namespace {
         search::Options& options,
         const MoveFormat moveFormat,
         const Position&  position,
-        string&          errorMessage)
+        string&          errorMessage,
+        const bool       showTooltips)
         -> bool
     {
         static constexpr auto ErrorPopupID { "Move parse error" };
@@ -204,7 +212,8 @@ namespace {
             anyChanged = true;
         }
 
-        ImGui::SetItemTooltip("Search only the given moves");
+        if (showTooltips)
+            ImGui::SetItemTooltip("Search only the given moves");
 
         if (ImGui::BeginPopupModal(ErrorPopupID, nullptr, PopupFlags)) {
             UnformattedText(errorMessage);
@@ -225,7 +234,8 @@ namespace {
         search::Options& options,
         const MoveFormat moveFormat,
         const Position&  position,
-        string&          moveParseError)
+        string&          moveParseError,
+        const bool       showTooltips)
         -> bool
     {
         // TODO: handling of negative integer values, optionals
@@ -240,7 +250,8 @@ namespace {
                 anyChanged    = true;
             }
 
-            ImGui::SetItemTooltip("Search depth, in plies");
+            if (showTooltips)
+                ImGui::SetItemTooltip("Search depth, in plies");
 
             auto numMs = static_cast<int>(options.searchTime.value_or(std::chrono::milliseconds { 0 }).count());
 
@@ -249,7 +260,8 @@ namespace {
                 anyChanged         = true;
             }
 
-            ImGui::SetItemTooltip("Search time, in milliseconds");
+            if (showTooltips)
+                ImGui::SetItemTooltip("Search time, in milliseconds");
 
             auto maxNodes = static_cast<int>(options.maxNodes);
 
@@ -258,7 +270,8 @@ namespace {
                 anyChanged       = true;
             }
 
-            ImGui::SetItemTooltip("Maximum number of nodes to search");
+            if (showTooltips)
+                ImGui::SetItemTooltip("Maximum number of nodes to search");
 
             auto mateIn = static_cast<int>(options.mateIn.value_or(0uz));
 
@@ -267,37 +280,41 @@ namespace {
                 anyChanged     = true;
             }
 
-            ImGui::SetItemTooltip("Search for mate in X plies");
+            if (showTooltips)
+                ImGui::SetItemTooltip("Search for mate in X plies");
 
-            anyChanged = render_moves_to_search(options, moveFormat, position, moveParseError)
+            anyChanged = render_moves_to_search(options, moveFormat, position, moveParseError, showTooltips)
                       || anyChanged;
 
             if (ImGui::Checkbox("Infinite", &options.infinite))
                 anyChanged = true;
 
-            ImGui::SetItemTooltip("Whether to search infinitely");
+            if (showTooltips)
+                ImGui::SetItemTooltip("Whether to search infinitely");
 
             if (ImGui::Button("Reset")) {
                 options    = search::Options { };
                 anyChanged = true;
             }
 
-            ImGui::SetItemTooltip("Reset search options to defaults");
+            if (showTooltips)
+                ImGui::SetItemTooltip("Reset search options to defaults");
         }
 
         return anyChanged;
     }
 } // namespace
 
-void render_engine_panel(EnginePanelState& state)
+void render_engine_panel(
+    EnginePanelState& state, const bool showTooltips)
 {
     if (ImGui::Begin("Engine")) {
-        render_uci_options(state.engine, state.selectedComboChoice);
+        render_uci_options(state.engine, state.selectedComboChoice, showTooltips);
 
         ImGui::Separator();
 
         if (render_search_options(
-                state.searchOptions, state.engine.get_move_format(), state.engine.get_position(), state.moveParseError)) {
+                state.searchOptions, state.engine.get_move_format(), state.engine.get_position(), state.moveParseError, showTooltips)) {
             // TODO: probably shouldn't block here...
             state.engine.set_search_options(state.searchOptions);
         }

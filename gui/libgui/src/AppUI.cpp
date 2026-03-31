@@ -14,6 +14,7 @@
 
 #include "ImUtil.hpp" // NOLINT(build/include_subdir)
 #include <cmath>
+#include <cstdio>
 #include <filesystem>
 #include <imgui.h>
 #include <libgui/AppUI.hpp>
@@ -22,6 +23,7 @@
 #include <libgui/Resources.hpp>
 #include <libutil/Files.hpp>
 #include <nlohmann/json.hpp>
+#include <print>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -52,6 +54,18 @@ namespace {
     {
         return "benbot_state.json";
     }
+
+    void render_app_settings(bool& showTooltips)
+    {
+        if (ImGui::Begin("App settings")) {
+            ImGui::Checkbox("Show tooltips", &showTooltips);
+
+            if (showTooltips)
+                ImGui::SetItemTooltip("Display widget tooltips");
+        }
+
+        ImGui::End();
+    }
 } // namespace
 
 void initialize(
@@ -75,12 +89,17 @@ void initialize(
 
     if (const auto filePath = app_state_file_path();
         exists(filePath)) {
-        [[maybe_unused]] const auto result
-            = util::files::load(filePath)
-                  .transform([&state](const string_view fileContent) {
-                      state.update_from_string(fileContent);
-                      return std::monostate { };
-                  });
+        try {
+            [[maybe_unused]] const auto result
+                = util::files::load(filePath)
+                      .transform([&state](const string_view fileContent) {
+                          state.update_from_string(fileContent);
+                          return std::monostate { };
+                      });
+        } catch (const nlohmann::detail::out_of_range& error) {
+            std::println(
+                stderr, "Error loading state: {}", error.what());
+        }
     }
 
     { // Setup scaling
@@ -99,8 +118,9 @@ void render(AppState& state)
 
     ImGui::DockSpaceOverViewport();
 
-    render_board_editor(state.boardEditor);
-    render_engine_panel(state.enginePanel);
+    render_app_settings(state.showTooltips);
+    render_board_editor(state.boardEditor, state.showTooltips);
+    render_engine_panel(state.enginePanel, state.showTooltips);
 
     ImGui::Render();
 }
@@ -119,6 +139,7 @@ using nlohmann::json;
 
 inline constexpr string_view TAG_BOARD_EDITOR { "board_editor" };
 inline constexpr string_view TAG_ENGINE { "engine" };
+inline constexpr string_view TAG_TOOLTIPS { "show_tooltips" };
 
 auto AppState::to_string() const -> std::string
 {
@@ -126,6 +147,7 @@ auto AppState::to_string() const -> std::string
 
     data[TAG_BOARD_EDITOR] = boardEditor.to_string();
     data[TAG_ENGINE]       = enginePanel.to_string();
+    data[TAG_TOOLTIPS]     = showTooltips;
 
     return data.dump();
 }
@@ -139,6 +161,8 @@ void AppState::update_from_string(const string_view str)
 
     enginePanel.update_from_string(
         parsed.at(TAG_ENGINE).get<string_view>());
+
+    showTooltips = parsed.at(TAG_TOOLTIPS).get<bool>();
 }
 
 } // namespace ben_bot::gui

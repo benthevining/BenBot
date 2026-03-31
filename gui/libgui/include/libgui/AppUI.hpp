@@ -32,6 +32,8 @@ struct AppState final {
 
     EnginePanelState enginePanel;
 
+    bool showTooltips { true };
+
     [[nodiscard]] auto to_string() const -> std::string;
 
     void update_from_string(std::string_view str);

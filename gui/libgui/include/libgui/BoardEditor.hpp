@@ -39,6 +39,7 @@ struct BoardEditorState final {
     [[nodiscard]] static auto from_string(std::string_view str) -> BoardEditorState;
 };
 
-void render_board_editor(BoardEditorState& state);
+void render_board_editor(
+    BoardEditorState& state, bool showTooltips);
 
 } // namespace ben_bot::gui

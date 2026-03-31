@@ -46,7 +46,39 @@ using std::string_view;
 using chess::moves::get_potentially_legal_en_passant_target_squares;
 
 namespace {
-    void render_side_to_move(Position& position)
+    // reset, flip, clear buttons
+    void render_utility_buttons(
+        EPDPosition& position, const bool showTooltips)
+    {
+        ImGui::BeginGroup();
+
+        if (ImGui::Button("Reset"))
+            position = EPDPosition { };
+
+        if (showTooltips)
+            ImGui::SetItemTooltip("Reset the board to the starting position");
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Flip"))
+            position.position = flipped(position.position);
+
+        if (showTooltips)
+            ImGui::SetItemTooltip("Flip the board vertically");
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Clear"))
+            position.position = Position::empty();
+
+        if (showTooltips)
+            ImGui::SetItemTooltip("Remove all pieces from the board");
+
+        ImGui::EndGroup();
+    }
+
+    void render_side_to_move(
+        Position& position, const bool showTooltips)
     {
         bool whiteToMove { position.sideToMove == Color::White };
 
@@ -59,10 +91,12 @@ namespace {
             position.sanitize_ep_square();
         }
 
-        ImGui::SetItemTooltip("Set the side to move");
+        if (showTooltips)
+            ImGui::SetItemTooltip("Set the side to move");
     }
 
-    void render_castling_rights(Position& position)
+    void render_castling_rights(
+        Position& position, const bool showTooltips)
     {
         static constexpr auto White = "White";
         static constexpr auto Black = "Black";
@@ -113,13 +147,13 @@ namespace {
 
             ImGui::EndGroup();
 
-            if (ImGui::IsItemHovered())
+            if (showTooltips and ImGui::IsItemHovered())
                 ImGui::SetTooltip("Set the castling rights of each side");
         }
     }
 
     void render_ep_square(
-        Position& position, std::optional<Square>& selectedSquare)
+        Position& position, std::optional<Square>& selectedSquare, const bool showTooltips)
     {
         static constexpr auto NoneLabel = "None";
 
@@ -156,37 +190,12 @@ namespace {
             selectedSquare = position.enPassantTargetSquare;
         }
 
-        ImGui::SetItemTooltip("Set the en passant target square");
+        if (showTooltips)
+            ImGui::SetItemTooltip("Set the en passant target square");
     }
 
-    // reset, flip, clear buttons
-    void render_utility_buttons(EPDPosition& position)
-    {
-        ImGui::BeginGroup();
-
-        if (ImGui::Button("Reset"))
-            position = EPDPosition { };
-
-        ImGui::SetItemTooltip("Reset the board to the starting position");
-
-        ImGui::SameLine();
-
-        if (ImGui::Button("Flip"))
-            position.position = flipped(position.position);
-
-        ImGui::SetItemTooltip("Flip the board vertically");
-
-        ImGui::SameLine();
-
-        if (ImGui::Button("Clear"))
-            position.position = Position::empty();
-
-        ImGui::SetItemTooltip("Remove all pieces from the board");
-
-        ImGui::EndGroup();
-    }
-
-    void render_move_counters(EPDPosition& position)
+    void render_move_counters(
+        EPDPosition& position, const bool showTooltips)
     {
         static constexpr auto HalfMovesLabel = "Half moves";
         static constexpr auto FullMovesLabel = "Full moves";
@@ -205,8 +214,9 @@ namespace {
             position.refresh_default_operations();
         }
 
-        ImGui::SetItemTooltip(
-            "This counter enforces the 50-move rule; this is the number of plies since the last capture or pawn move.");
+        if (showTooltips)
+            ImGui::SetItemTooltip(
+                "This counter enforces the 50-move rule; this is the number of plies since the last capture or pawn move.");
 
         ImGui::SameLine();
 
@@ -220,14 +230,15 @@ namespace {
             position.refresh_default_operations();
         }
 
-        ImGui::SetItemTooltip(
-            "The number of full turns in the game so far. This counter is incremented after each Black move.");
+        if (showTooltips)
+            ImGui::SetItemTooltip(
+                "The number of full turns in the game so far. This counter is incremented after each Black move.");
 
         ImGui::EndGroup();
     }
 
     void render_fen_string(
-        Position& position, string& errorMessage)
+        Position& position, string& errorMessage, const bool showTooltips)
     {
         using chess::notation::from_fen;
         using chess::notation::to_fen;
@@ -252,7 +263,8 @@ namespace {
                       });
         }
 
-        ImGui::SetItemTooltip("Enter a FEN string");
+        if (showTooltips)
+            ImGui::SetItemTooltip("Enter a FEN string");
 
         if (ImGui::BeginPopupModal(ErrorPopupID, nullptr, PopupFlags)) {
             UnformattedText(errorMessage);
@@ -269,7 +281,8 @@ namespace {
     using chess::notation::from_epd;
     using chess::notation::to_epd;
 
-    void render_epd_string(EPDPosition& position, string& errorMessage)
+    void render_epd_string(
+        EPDPosition& position, string& errorMessage, const bool showTooltips)
     {
         static constexpr auto ErrorPopupID { "EPD parse error" };
 
@@ -291,7 +304,8 @@ namespace {
                       });
         }
 
-        ImGui::SetItemTooltip("Enter an EPD string");
+        if (showTooltips)
+            ImGui::SetItemTooltip("Enter an EPD string");
 
         if (ImGui::BeginPopupModal(ErrorPopupID, nullptr, PopupFlags)) {
             UnformattedText(errorMessage);
@@ -305,7 +319,8 @@ namespace {
         }
     }
 
-    void render_epd_operations(EPDPosition& position)
+    void render_epd_operations(
+        EPDPosition& position, const bool showTooltips)
     {
         // see https://www.chessprogramming.org/Extended_Position_Description
 
@@ -367,36 +382,38 @@ namespace {
                     }
             }
 
-            ImGui::SetItemTooltip("%s", opMetadata.tooltip.c_str());
+            if (showTooltips)
+                ImGui::SetItemTooltip("%s", opMetadata.tooltip.c_str());
         }
     }
 
     void render_epd_editor(
-        EPDPosition& position, string& errorMessage)
+        EPDPosition& position, string& errorMessage, const bool showTooltips)
     {
         if (ImGui::CollapsingHeader("EPD editor")) {
-            render_epd_string(position, errorMessage);
-            render_epd_operations(position);
+            render_epd_string(position, errorMessage, showTooltips);
+            render_epd_operations(position, showTooltips);
         }
     }
 } // namespace
 
-void render_board_editor(BoardEditorState& state)
+void render_board_editor(
+    BoardEditorState& state, const bool showTooltips)
 {
     if (ImGui::Begin("Board editor")) {
-        render_utility_buttons(state.position);
+        render_utility_buttons(state.position, showTooltips);
 
-        render_side_to_move(state.position.position);
+        render_side_to_move(state.position.position, showTooltips);
 
-        render_castling_rights(state.position.position);
+        render_castling_rights(state.position.position, showTooltips);
 
-        render_ep_square(state.position.position, state.selectedEPSquare);
+        render_ep_square(state.position.position, state.selectedEPSquare, showTooltips);
 
-        render_move_counters(state.position);
+        render_move_counters(state.position, showTooltips);
 
-        render_fen_string(state.position.position, state.fenParseError);
+        render_fen_string(state.position.position, state.fenParseError, showTooltips);
 
-        render_epd_editor(state.position, state.epdParseError);
+        render_epd_editor(state.position, state.epdParseError, showTooltips);
 
         // TODO: send position to engine if changed
     }

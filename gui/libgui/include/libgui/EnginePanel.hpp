@@ -35,6 +35,7 @@ struct EnginePanelState final {
     void update_from_string(std::string_view str);
 };
 
-void render_engine_panel(EnginePanelState& state);
+void render_engine_panel(
+    EnginePanelState& state, bool showTooltips);
 
 } // namespace ben_bot::gui
