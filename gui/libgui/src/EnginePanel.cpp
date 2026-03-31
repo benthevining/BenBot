@@ -168,7 +168,6 @@ namespace {
         return text;
     }
 
-    // TODO: reset button
     // returns true if any options were changed
     [[nodiscard]] auto render_search_options(
         search::Options& options,
@@ -243,6 +242,13 @@ namespace {
                 anyChanged = true;
 
             ImGui::SetItemTooltip("Whether to search infinitely");
+
+            if (ImGui::Button("Reset")) {
+                options    = search::Options { };
+                anyChanged = true;
+            }
+
+            ImGui::SetItemTooltip("Reset search options to defaults");
         }
 
         return anyChanged;
@@ -253,6 +259,8 @@ void render_engine_panel(EnginePanelState& state)
 {
     if (ImGui::Begin("Engine")) {
         render_uci_options(state.engine, state.selectedComboChoice);
+
+        ImGui::Separator();
 
         if (render_search_options(state.searchOptions, state.engine.get_move_format(), state.engine.get_position())) {
             // TODO: probably shouldn't block here...
