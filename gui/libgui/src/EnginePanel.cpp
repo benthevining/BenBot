@@ -13,6 +13,7 @@
  */
 
 #include "ImUtil.hpp" // NOLINT(build/include_subdir)
+#include <cassert>
 #include <chrono>
 #include <imgui.h>
 #include <imgui_stdlib.h>
@@ -168,11 +169,64 @@ namespace {
         return text;
     }
 
+    // returns true if input text changed
+    [[nodiscard]] auto render_moves_to_search(
+        search::Options& options,
+        const MoveFormat moveFormat,
+        const Position&  position,
+        string&          errorMessage)
+        -> bool
+    {
+        static constexpr auto ErrorPopupID { "Move parse error" };
+
+        bool anyChanged { false };
+
+        auto inputBuf = format_moves(options.movesToSearch, moveFormat, position);
+
+        if (ImGui::InputText("Moves to search", &inputBuf, InputTextFlags)) {
+            options.movesToSearch.clear();
+
+            for (const auto word : util::strings::words_view(inputBuf)) {
+                [[maybe_unused]] const auto result
+                    = parse_move(moveFormat, position, word)
+                          .transform([&options](const Move move) {
+                              options.movesToSearch.emplace_back(move);
+                              return std::monostate { };
+                          })
+                          .transform_error([&errorMessage]([[maybe_unused]] const string_view message) {
+                              assert(not message.empty());
+                              errorMessage = message;
+                              ImGui::OpenPopup(ErrorPopupID, ImGuiPopupFlags_NoReopen);
+                              return std::monostate { };
+                          });
+            }
+
+            anyChanged = true;
+        }
+
+        ImGui::SetItemTooltip("Search only the given moves");
+
+        if (ImGui::BeginPopupModal(ErrorPopupID, nullptr, PopupFlags)) {
+            UnformattedText(errorMessage);
+
+            if (ImGui::Button("OK", { 120.f, 0.f })) {
+                ImGui::CloseCurrentPopup();
+                errorMessage.clear();
+            }
+
+            ImGui::EndPopup();
+        }
+
+        return anyChanged;
+    }
+
     // returns true if any options were changed
     [[nodiscard]] auto render_search_options(
         search::Options& options,
         const MoveFormat moveFormat,
-        const Position&  position) -> bool
+        const Position&  position,
+        string&          moveParseError)
+        -> bool
     {
         // TODO: handling of negative integer values, optionals
 
@@ -215,28 +269,8 @@ namespace {
 
             ImGui::SetItemTooltip("Search for mate in X plies");
 
-            auto inputBuf = format_moves(options.movesToSearch, moveFormat, position);
-
-            if (ImGui::InputText("Moves to search", &inputBuf, InputTextFlags)) {
-                options.movesToSearch.clear();
-
-                for (const auto word : util::strings::words_view(inputBuf)) {
-                    [[maybe_unused]] const auto result
-                        = parse_move(moveFormat, position, word)
-                              .transform([&options](const Move move) {
-                                  options.movesToSearch.emplace_back(move);
-                                  return std::monostate { };
-                              })
-                              .transform_error([]([[maybe_unused]] const string_view message) {
-                                  // TODO: show error popup
-                                  return std::monostate { };
-                              });
-                }
-
-                anyChanged = true;
-            }
-
-            ImGui::SetItemTooltip("Search only the given moves");
+            anyChanged = render_moves_to_search(options, moveFormat, position, moveParseError)
+                      || anyChanged;
 
             if (ImGui::Checkbox("Infinite", &options.infinite))
                 anyChanged = true;
@@ -262,7 +296,8 @@ void render_engine_panel(EnginePanelState& state)
 
         ImGui::Separator();
 
-        if (render_search_options(state.searchOptions, state.engine.get_move_format(), state.engine.get_position())) {
+        if (render_search_options(
+                state.searchOptions, state.engine.get_move_format(), state.engine.get_position(), state.moveParseError)) {
             // TODO: probably shouldn't block here...
             state.engine.set_search_options(state.searchOptions);
         }

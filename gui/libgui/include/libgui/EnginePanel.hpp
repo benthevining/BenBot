@@ -28,6 +28,8 @@ struct EnginePanelState final {
 
     std::optional<std::string> selectedComboChoice;
 
+    std::string moveParseError; // empty if no error has occurred
+
     [[nodiscard]] auto to_string() const -> std::string;
 
     void update_from_string(std::string_view str);
