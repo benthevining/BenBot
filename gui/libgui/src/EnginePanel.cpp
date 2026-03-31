@@ -127,6 +127,8 @@ namespace {
         const bool             showTooltips)
     {
         if (ImGui::CollapsingHeader("UCI options")) {
+            const ScopedGroup group;
+
             ImGui::SeparatorText("Standard options");
 
             for (auto* opt : engine.get_standard_uci_options())
@@ -243,6 +245,8 @@ namespace {
         bool anyChanged { false };
 
         if (ImGui::CollapsingHeader("Search options")) {
+            const ScopedGroup group;
+
             auto depth = static_cast<int>(options.depth);
 
             if (ImGui::InputInt("Depth", &depth)) {

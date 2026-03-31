@@ -35,4 +35,16 @@ inline void UnformattedText(const std::string_view text)
 
 void setup_imgui_style();
 
+struct [[nodiscard]] ScopedGroup final {
+    ScopedGroup()
+    {
+        ImGui::BeginGroup();
+    }
+
+    ~ScopedGroup()
+    {
+        ImGui::EndGroup();
+    }
+};
+
 } // namespace ben_bot::gui

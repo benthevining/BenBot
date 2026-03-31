@@ -50,7 +50,7 @@ namespace {
     void render_utility_buttons(
         EPDPosition& position, const bool showTooltips)
     {
-        ImGui::BeginGroup();
+        const ScopedGroup group;
 
         if (ImGui::Button("Reset"))
             position = EPDPosition { };
@@ -73,8 +73,6 @@ namespace {
 
         if (showTooltips)
             ImGui::SetItemTooltip("Remove all pieces from the board");
-
-        ImGui::EndGroup();
     }
 
     void render_side_to_move(
@@ -105,7 +103,7 @@ namespace {
         static constexpr auto Queenside = "O-O-O";
 
         if (ImGui::CollapsingHeader("Castling Rights")) {
-            ImGui::BeginGroup();
+            const ScopedGroup group;
 
             if (ImGui::BeginTable("CastlingRights", 3, ImGuiTableFlags_Borders)) {
                 ImGui::TableSetupColumn("ColorLabels");
@@ -144,8 +142,6 @@ namespace {
 
                 ImGui::EndTable();
             }
-
-            ImGui::EndGroup();
 
             if (showTooltips and ImGui::IsItemHovered())
                 ImGui::SetTooltip("Set the castling rights of each side");
@@ -200,7 +196,7 @@ namespace {
         static constexpr auto HalfMovesLabel = "Half moves";
         static constexpr auto FullMovesLabel = "Full moves";
 
-        ImGui::BeginGroup();
+        const ScopedGroup group;
 
         const auto IntEntryWidth = ImGui::CalcTextSize(HalfMovesLabel).x * 1.25f;
 
@@ -233,8 +229,6 @@ namespace {
         if (showTooltips)
             ImGui::SetItemTooltip(
                 "The number of full turns in the game so far. This counter is incremented after each Black move.");
-
-        ImGui::EndGroup();
     }
 
     void render_fen_string(
@@ -354,6 +348,8 @@ namespace {
             StandardOperation { .mnemonic = "rc", .type = Type::Integer, .tooltip = "Repetition count" },
             StandardOperation { .mnemonic = "sm", .type = Type::String, .tooltip = "Supplied move" }
         };
+
+        const ScopedGroup group;
 
         for (const auto& opMetadata : StandardOperations) {
             auto inputBuf = [&position, &opMetadata] {
