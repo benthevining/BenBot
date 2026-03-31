@@ -33,4 +33,6 @@ inline void UnformattedText(const std::string_view text)
             static_cast<std::ptrdiff_t>(text.length())));
 }
 
+void setup_imgui_style();
+
 } // namespace ben_bot::gui

@@ -222,15 +222,16 @@ namespace {
                 options.movesToSearch.clear();
 
                 for (const auto word : util::strings::words_view(inputBuf)) {
-                    parse_move(moveFormat, position, word)
-                        .transform([&options](const Move move) {
-                            options.movesToSearch.emplace_back(move);
-                            return std::monostate { };
-                        })
-                        .transform_error([]([[maybe_unused]] const string_view message) {
-                            // TODO: show error popup
-                            return std::monostate { };
-                        });
+                    [[maybe_unused]] const auto result
+                        = parse_move(moveFormat, position, word)
+                              .transform([&options](const Move move) {
+                                  options.movesToSearch.emplace_back(move);
+                                  return std::monostate { };
+                              })
+                              .transform_error([]([[maybe_unused]] const string_view message) {
+                                  // TODO: show error popup
+                                  return std::monostate { };
+                              });
                 }
 
                 anyChanged = true;
