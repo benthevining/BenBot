@@ -14,16 +14,15 @@
 
 #include "ImUtil.hpp" // NOLINT(build/include_subdir)
 #include <cmath>
-#include <cstdio>
 #include <filesystem>
 #include <imgui.h>
 #include <libgui/AppUI.hpp>
 #include <libgui/BoardEditor.hpp>
 #include <libgui/EnginePanel.hpp>
 #include <libgui/Resources.hpp>
+#include <libutil/Console.hpp>
 #include <libutil/Files.hpp>
 #include <nlohmann/json.hpp>
-#include <print>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -95,7 +94,8 @@ void initialize(
                       .transform([&state](const string_view fileContent) {
                           state.update_from_string(fileContent);
                           return std::monostate { };
-                      });
+                      })
+                      .transform_error(util::print_error);
         } catch (const nlohmann::detail::out_of_range& error) {
             std::println(
                 stderr, "Error loading state: {}", error.what());

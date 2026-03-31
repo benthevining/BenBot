@@ -28,6 +28,7 @@
 #include <libchess/notation/FEN.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libgui/BoardEditor.hpp>
+#include <libutil/Console.hpp>
 #include <libutil/Strings.hpp>
 #include <nlohmann/json.hpp>
 #include <optional>
@@ -442,7 +443,8 @@ auto BoardEditorState::from_string(const string_view str) -> BoardEditorState
               .transform([&state](const EPDPosition& newPos) {
                   state.position = newPos;
                   return std::monostate { };
-              });
+              })
+              .transform_error(util::print_error);
 
     return state;
 }
