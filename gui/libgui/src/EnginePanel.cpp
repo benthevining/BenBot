@@ -13,6 +13,8 @@
  */
 
 #include "ImUtil.hpp" // NOLINT(build/include_subdir)
+#include <algorithm>
+#include <array>
 #include <cassert>
 #include <chrono>
 #include <imgui.h>
@@ -27,6 +29,7 @@
 #include <libutil/Strings.hpp>
 #include <nlohmann/json.hpp>
 #include <optional>
+#include <ranges>
 #include <string>
 #include <string_view>
 
@@ -114,11 +117,11 @@ namespace {
 
     void reset_all_options(uci::EngineBase& engine)
     {
-        for (auto* opt : engine.get_standard_uci_options())
-            opt->reset_to_default_value();
-
-        for (auto* opt : engine.get_custom_uci_options())
-            opt->reset_to_default_value();
+        std::ranges::for_each(
+            std::views::join(std::array {
+                engine.get_standard_uci_options(),
+                engine.get_custom_uci_options() }),
+            &uci::Option::reset_to_default_value);
     }
 
     void render_uci_options(

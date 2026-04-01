@@ -13,6 +13,7 @@
  */
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <filesystem>
@@ -201,38 +202,32 @@ void Engine::restore_state_from_string(const string_view state)
     set_debug_mode(
         data.at(TAG_DEBUG).get<bool>());
 
-    const auto& optionsData = data.at(TAG_OPTIONS);
+    std::ranges::for_each(
+        std::views::join(std::array { get_custom_uci_options(), get_standard_uci_options() }),
+        [optionsData = data.at(TAG_OPTIONS)](uci::Option* opt) {
+            if (not opt->has_value())
+                return;
 
-    auto load_option = [&optionsData](uci::Option& opt) {
-        if (not opt.has_value())
-            return;
+            const auto& optValue = optionsData.at(opt->get_name());
 
-        const auto& optValue = optionsData.at(opt.get_name());
+            if (auto* boolOpt = dynamic_cast<uci::BoolOption*>(opt)) {
+                boolOpt->set_value(optValue.get<bool>());
+                return;
+            }
 
-        if (auto* boolOpt = dynamic_cast<uci::BoolOption*>(&opt)) {
-            boolOpt->set_value(optValue.get<bool>());
-            return;
-        }
+            if (auto* intOpt = dynamic_cast<uci::IntOption*>(opt)) {
+                intOpt->set_value(optValue.get<int>());
+                return;
+            }
 
-        if (auto* intOpt = dynamic_cast<uci::IntOption*>(&opt)) {
-            intOpt->set_value(optValue.get<int>());
-            return;
-        }
+            if (auto* comboOpt = dynamic_cast<uci::ComboOption*>(opt)) {
+                comboOpt->set_value(optValue.get<std::string_view>());
+                return;
+            }
 
-        if (auto* comboOpt = dynamic_cast<uci::ComboOption*>(&opt)) {
-            comboOpt->set_value(optValue.get<std::string_view>());
-            return;
-        }
-
-        if (auto* stringOpt = dynamic_cast<uci::StringOption*>(&opt))
-            stringOpt->set_value(optValue.get<std::string_view>());
-    };
-
-    for (auto* opt : options)
-        load_option(*opt);
-
-    for (auto* opt : standardUCIOptions)
-        load_option(*opt);
+            if (auto* stringOpt = dynamic_cast<uci::StringOption*>(opt))
+                stringOpt->set_value(optValue.get<std::string_view>());
+        });
 }
 
 void Engine::read_config_file(const path& file)
