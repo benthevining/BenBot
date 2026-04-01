@@ -124,24 +124,25 @@ jobs:
       DEPLOY_DIR: deploy
 
     steps:
-    - name: Install Linux dependencies
+    - name: Install libc++
       if: runner.os == 'Linux' && matrix.preset == 'clang'
       run: |
         sudo apt-get update
         sudo apt-get install -y libc++-dev libc++abi-dev
 
-    - name: Ensure Clang version
+    - name: Install Clang21
       if: runner.os == 'Linux' && matrix.preset == 'clang'
-      uses: egor-tensin/setup-clang@471a6f8ef1d449dba8e1a51780e7f943572a3f99 # v2.1
+      uses: aminya/setup-cpp@1f17f92d6a52bfcb1a25348e2c526c2e5cbb1134 # v1.8.0
       with:
-        version: 21
+        llvm: 21
+        clang: 21
 
-    - name: Ensure CMake 4.0
-      uses: lukka/get-cmake@f176ccd3f28bda569c43aae4894f06b2435a3375 # v4.2.3
+    - name: Install CMake 4.0
+      uses: lukka/get-cmake@ea83089aa35e08e459464341fe24ad024ee2466f # v4.3.1
 
     - name: Import signing certificate to keychain
       if: runner.os == 'macOS'
-      uses: Apple-Actions/import-codesign-certs@b610f78488812c1e56b20e6df63ec42d833f2d14 # v6.0.0
+      uses: Apple-Actions/import-codesign-certs@fe74d46e82474f87e1ba79832ad28a4013d0e33a # v6.1.0
       with:
         p12-file-base64: ${{ secrets.CODESIGN_CERT_FILE_BASE64 }}
         p12-password: ${{ secrets.CODESIGN_CERT_PASSWORD }}
@@ -207,7 +208,7 @@ jobs:
 
     - name: Download artifacts
       id: download
-      uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
       with:
         path: artifacts
 
@@ -216,7 +217,7 @@ jobs:
       working-directory: .github/scripts
 
     - name: Create release
-      uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2
+      uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2
       with:
         tag_name: ${{ needs.bump_version.outputs.tag_name }}
         files: ${{ env.REZIPPED_ARTIFACTS }}/**

@@ -13,9 +13,18 @@ import argparse
 import json
 import subprocess
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Any
 
 #
+
+
+def find_correct_result(fileContent: Any, depth: int) -> dict[str, int]:
+    for obj in fileContent["depths"]:
+        if obj["depth"] == depth:
+            return obj["results"]
+
+    print(f"ERROR! Could not find correct result for depth {depth}")
+    exit(1)
 
 
 def check_result(expected: dict[str, int], actual: dict[str, int]) -> bool:
@@ -36,7 +45,7 @@ def check_result(expected: dict[str, int], actual: dict[str, int]) -> bool:
     return True
 
 
-def parse_args() -> Tuple[Path, Path]:
+def parse_args() -> Tuple[Path, Path, int]:
     parser = argparse.ArgumentParser(
         prog="RunPerft",
         description="Run BenBot perft tests",
@@ -49,10 +58,11 @@ def parse_args() -> Tuple[Path, Path]:
     parser.add_argument(
         "-e", "--engine", required=True, help="Path to engine executable"
     )
+    parser.add_argument("-d", "--depth", required=True, help="Perft depth")
 
     parsed = parser.parse_args()
 
-    return Path(parsed.test).resolve(), Path(parsed.engine).resolve()
+    return Path(parsed.test).resolve(), Path(parsed.engine).resolve(), int(parsed.depth)
 
 
 #
@@ -70,64 +80,68 @@ class Engine:
             text=True,
         )
 
-        self.engine.stdin.write("uci\n")
+        self.send_command("uci")
 
         # skip greeting & info/options output
         for line in self.engine.stdout:
             if line.strip() == "uciok":
                 break
 
-        self.engine.stdin.write("ucinewgame\n")
-        self.engine.stdin.write("isready\n")
+        self.send_command("ucinewgame")
+        self.send_command("isready")
 
-        self.engine.stdout.readline()  # "readyok" response
+        self.readline()  # "readyok" response
 
-        self.engine.stdin.write(f"position fen {pos_fen}\n")
+        self.send_command(f"position fen {pos_fen}")
+
+    def send_command(self, command):
+        self.engine.stdin.write(f"{command}\n")
+        self.engine.stdin.flush()
+
+    def readline(self):
+        return self.engine.stdout.readline()
 
     def run_perft(self, depth: int) -> dict[str, int]:
-        self.engine.stdin.write(f"perft {depth} json\n")
+        self.send_command(f"perft {depth} json")
 
-        # info line
-        self.engine.stdout.readline()
+        self.readline()  # info line
 
-        return json.loads(self.engine.stdout.readline())
+        return json.loads(self.readline())
 
-    def quit(self):
-        self.engine.communicate("quit\n", timeout=15)
-        self.engine.kill()
-        self.engine.communicate()
+    def __del__(self):
+        self.send_command("quit")
+
+        if self.engine:
+            self.engine.stdin.close()
+            self.engine.stdout.close()
+            self.engine.wait()
 
 
 #
 
-TESTCASE_FILE, ENGINE_PATH = parse_args()
+TESTCASE_FILE, ENGINE_PATH, DEPTH = parse_args()
 
 with open(TESTCASE_FILE) as file:
-    CORRECT_DATA = json.load(file)
+    FILE_DATA = json.load(file)
 
-startingFEN = CORRECT_DATA["position"]
+startingFEN = FILE_DATA["position"]
 
-print(f"Running tests for position {startingFEN}", flush=True)
+print(f"FEN: {startingFEN}", flush=True)
+
+correctResult = find_correct_result(FILE_DATA, DEPTH)
+
+print(f"Running perft depth {DEPTH}...", flush=True)
 
 engine = Engine(engine_path=ENGINE_PATH, pos_fen=startingFEN)
 
 num_failed = 0
 num_passed = 0
 
-for depthObj in CORRECT_DATA["depths"]:
-    depth = depthObj["depth"]
-    print(f"Running perft depth {depth}...", flush=True)
+result = engine.run_perft(DEPTH)
 
-    result = engine.run_perft(depth)
-
-    if check_result(depthObj["results"], result):
-        num_passed += 1
-    else:
-        num_failed += 1
-
-engine.quit()
-
-print(f"{num_passed} depths passed")
-print(f"{num_failed} depths failed")
-
-exit(num_failed)
+if check_result(correctResult, result):
+    print("Succeeded :-)")
+    exit(0)
+else:
+    print("Failed :-(")
+    exit(1)

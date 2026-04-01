@@ -67,11 +67,12 @@ private:
 auto Tie::sync() -> int
 {
     static constexpr auto SUCCESS = 0;
+    static constexpr auto FAILURE = -1;
 
     const bool logSuccess = logBuf.get().pubsync() == SUCCESS;
     const bool bufSuccess = buf.get().pubsync() == SUCCESS;
 
-    return logSuccess and bufSuccess ? SUCCESS : -1;
+    return logSuccess and bufSuccess ? SUCCESS : FAILURE;
 }
 
 auto Tie::overflow(const int_type character) -> int_type

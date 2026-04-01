@@ -13,6 +13,7 @@
  */
 
 #include <format>
+#include <iostream>
 #include <libbenbot/Resources.hpp>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/engine/ColorPrinting.hpp>
@@ -22,6 +23,7 @@
 #include <libbenbot/search/Result.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/MoveFormats.hpp>
+#include <libchess/uci/EngineBase.hpp>
 #include <libchess/uci/Printing.hpp>
 #include <libutil/Strings.hpp>
 #include <libutil/TextTable.hpp>
@@ -45,6 +47,26 @@ auto Engine::get_name() const -> std::string
     return std::format("BenBot {}", resources::get_version_string());
 }
 
+namespace {
+    void print_command_table(const uci::EngineBase::CommandList commands)
+    {
+        TextTable table;
+
+        table.append_column("Command")
+            .append_column("Notes");
+
+        for (const auto& command : commands) {
+            table.new_row()
+                .append_column(std::format("{} {}", command.name, command.argsHelp))
+                .append_column(command.description);
+        }
+
+        print_colored_table(table);
+
+        std::cout.flush();
+    }
+} // namespace
+
 void Engine::print_help(const string_view args) const
 {
     const bool noLogo = [args] {
@@ -60,34 +82,20 @@ void Engine::print_help(const string_view args) const
         println("");
     }
 
-    println(
-        "All standard UCI commands are supported, as well as the following non-standard commands:");
-
+    println("The following standard UCI commands are supported:");
     println("");
 
-    TextTable table;
+    print_command_table(get_standard_uci_commands());
+    println("");
 
-    table.append_column("Command")
-        .append_column("Notes");
+    println("The following non-standard UCI commands are supported:");
+    println("");
 
-    for (const auto& command : customCommands) {
-        table.new_row()
-            .append_column(std::format("{} {}", command.name, command.argsHelp))
-            .append_column(command.description);
-    }
-
-    print_colored_table(table);
+    print_command_table(customCommands);
 }
 
-void Engine::print_options(const string_view args) const
+void Engine::print_options()
 {
-    const bool noCurrent = [args] {
-        if (args.empty())
-            return false;
-
-        return trim(args) == "--no-current";
-    }();
-
     println("");
     println("The following UCI options are supported:");
     println("");
@@ -97,25 +105,23 @@ void Engine::print_options(const string_view args) const
     table.append_column("Option")
         .append_column("Type")
         .append_column("Notes")
-        .append_column("Default");
+        .append_column("Default")
+        .append_column("Current");
 
-    if (not noCurrent)
-        table.append_column("Current");
+    auto add_options = [&table](const OptionList opts) {
+        for (const auto* option : opts) {
+            table.new_row()
+                .append_column(option->get_name())
+                .append_column(option->get_type())
+                .append_column(option->get_help());
 
-    for (const auto* option : options) {
-        table.new_row()
-            .append_column(option->get_name())
-            .append_column(option->get_type())
-            .append_column(option->get_help());
+            if (option->has_value()) {
+                std::visit(
+                    [&table](auto defaultValue) {
+                        table.append_column(std::format("{}", defaultValue));
+                    },
+                    option->get_default_value_variant());
 
-        if (option->has_value()) {
-            std::visit(
-                [&table](auto defaultValue) {
-                    table.append_column(std::format("{}", defaultValue));
-                },
-                option->get_default_value_variant());
-
-            if (not noCurrent) {
                 std::visit(
                     [&table](auto value) {
                         table.append_column(std::format("{}", value));
@@ -123,14 +129,17 @@ void Engine::print_options(const string_view args) const
                     option->get_value_variant());
             }
         }
-    }
+    };
+
+    add_options(get_standard_uci_options());
+    add_options(options);
 
     print_colored_table(table);
 
     println("");
+    println("Debug mode: {}", is_debug_mode());
 
-    if (not noCurrent)
-        println("Debug mode: {}", debugMode.load());
+    std::cout.flush();
 }
 
 void Engine::print_current_position(const string_view arguments) const
@@ -161,6 +170,8 @@ void Engine::print_current_position(const string_view arguments) const
 
             return std::monostate { };
         });
+
+    std::cout.flush();
 }
 
 void Engine::print_compiler_info()

@@ -20,10 +20,8 @@
 #pragma once
 
 #include <array>
-#include <atomic>
 #include <filesystem>
 #include <functional>
-#include <libbenbot/engine/CustomCommand.hpp>
 #include <libbenbot/search/Thread.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/uci/EngineBase.hpp>
@@ -38,11 +36,12 @@ struct GoCommandOptions;
 
 namespace ben_bot {
 
+namespace uci = chess::uci;
+
 using chess::game::Position;
 using chess::moves::Move;
 using std::string_view;
-
-namespace uci = chess::uci;
+using uci::EngineCommand;
 
 /** The ``ben-bot`` UCI engine class.
     @ingroup libbenbot
@@ -80,14 +79,15 @@ private:
 
     auto is_searching() const noexcept -> bool override { return searcher.context.in_progress(); }
 
-    void set_debug(const bool shouldDebug) override
+    [[nodiscard]] auto get_custom_uci_options() noexcept -> OptionList override
     {
-        debugMode.store(shouldDebug, std::memory_order::relaxed);
+        return options;
     }
 
-    [[nodiscard]] auto get_options() -> std::span<uci::Option*> override { return options; }
-
-    void handle_custom_command(string_view command, string_view opts) override;
+    [[nodiscard]] auto get_custom_uci_commands() const noexcept -> CommandList override
+    {
+        return customCommands;
+    }
 
     void run_perft(string_view arguments) const;
 
@@ -98,7 +98,7 @@ private:
 
     void print_logo_and_version() const;
     void print_help(string_view args) const;
-    void print_options(string_view args) const;
+    void print_options();
     void print_current_position(string_view arguments) const;
 
     void set_pretty_printing(bool shouldPrettyPrint);
@@ -114,41 +114,27 @@ private:
 
     [[nodiscard]] static auto create_move_format_option() -> uci::ComboOption;
 
-    std::atomic_bool debugMode { false };
+    void resize_transposition_table(const size_t sizeMB) override
+    {
+        searcher.context.resize_transposition_table(sizeMB);
+    }
+
+    void set_ponder(const bool shouldPonder) override
+    {
+        // the ponder flag is only ever turned on via the go options,
+        // but it can be turned off by disabling this UCI option
+        if (not shouldPonder)
+            searcher.context.set_pondering(false);
+    }
 
     search::Thread searcher;
 
     /* ----- UCI options ----- */
 
-    uci::IntOption ttSize {
-        "Hash",
-        1, 2048, 16,
-        "Sets the maximum transposition table size (in MB).",
-        [this](const int sizeMB) {
-            searcher.context.resize_transposition_table(static_cast<size_t>(sizeMB));
-        }
-    };
-
     uci::Action clearTT {
         "Clear Hash",
         [this] { searcher.context.clear_transposition_table(); },
         "Press to clear the transposition table."
-    };
-
-    // The engine doesn't start pondering on its own without explicitly being told to
-    // via another go command; this option is needed to inform the GUI that the engine
-    // supports pondering, and also gives the engine the opportunity to adjust its time
-    // management algorithm when pondering is enabled.
-    uci::BoolOption ponder {
-        "Ponder",
-        false,
-        "Controls whether pondering is allowed.",
-        [this](const bool shouldPonder) {
-            // the ponder flag is only ever turned on via the go options,
-            // but it can be turned off by disabling this UCI option
-            if (not shouldPonder)
-                searcher.context.set_pondering(false);
-        }
     };
 
     uci::IntOption threads {
@@ -176,76 +162,69 @@ private:
 
     uci::ComboOption moveFormat { create_move_format_option() };
 
-    std::array<uci::Option*, 8uz> options {
-        &ttSize, &clearTT, &ponder, &threads, &moveOverhead, &logFile, &prettyPrintMode, &moveFormat
+    uci::BoolOption sanitizePositions {
+        "Sanitize Positions",
+        false,
+        "When on, the engine checks if the position is legal before setting it.",
+        [this](const bool sanitize) { set_sanitize_positions(sanitize); }
     };
 
-    /* ----- Custom commands ----- */
+    std::array<uci::Option*, 7uz> options {
+        &clearTT, &threads, &moveOverhead, &logFile, &prettyPrintMode, &moveFormat, &sanitizePositions
+    };
 
-    // clang-format off
-    std::array<CustomCommand, 10uz> customCommands {
-        CustomCommand {
-            .name = "showpos",
-            .action = [this](const string_view args){ print_current_position(args); },
+    std::array<EngineCommand, 10uz> customCommands {
+        EngineCommand {
+            .name   = "showpos",
+            .action = [this](const string_view args) { print_current_position(args); },
             .description = "Prints the current position",
-            .argsHelp = "[utf8]"
-        },
-        CustomCommand {
-            .name = "makenull",
-            .action = CustomCommand::void_cb([this]{ make_null_move(); }),
+            .argsHelp    = "[utf8]" },
+        EngineCommand {
+            .name   = "makenull",
+            .action = EngineCommand::void_cb([this] { make_null_move(); }),
             .description = "Play a null move on the internal board",
-            .argsHelp = {}
-        },
-        CustomCommand {
-            .name = "flip",
-            .action = CustomCommand::void_cb([this]{ color_flip(); }),
+            .argsHelp    = { } },
+        EngineCommand {
+            .name   = "flip",
+            .action = EngineCommand::void_cb([this] { color_flip(); }),
             .description = "Color-flip the current position",
-            .argsHelp = {}
-        },
-        CustomCommand {
-            .name = "options",
-            .action = [this](const string_view args){ print_options(args); },
+            .argsHelp    = { } },
+        EngineCommand {
+            .name   = "options",
+            .action = EngineCommand::void_cb([this] { print_options(); }),
             .description = "Dump current UCI option values",
-            .argsHelp = "[--no-current]"
-        },
-        CustomCommand {
-            .name = "perft",
+            .argsHelp    = { } },
+        EngineCommand {
+            .name   = "perft",
             .action = [this](const string_view args) { run_perft(args); },
             .description = "Computes perft of the current position to the given depth",
-            .argsHelp = "<N> [json]"
-        },
-        CustomCommand {
-            .name = "bench",
-            .action = [this](const string_view args){ run_bench(args); },
+            .argsHelp    = "<N> [json]" },
+        EngineCommand {
+            .name   = "bench",
+            .action = [this](const string_view args) { run_bench(args); },
             .description = "Runs a search and reports total nodes and NPS",
-            .argsHelp = "[<depth>] [<epdPath>]"
-        },
-        CustomCommand {
-            .name = "compiler",
-            .action = CustomCommand::void_cb([]{ print_compiler_info(); }),
+            .argsHelp    = "[<depth>] [<epdPath>]" },
+        EngineCommand {
+            .name   = "compiler",
+            .action = EngineCommand::void_cb([] { print_compiler_info(); }),
             .description = "Print compiler info",
-            .argsHelp = {}
-        },
-        CustomCommand {
-            .name = "writeconfig",
+            .argsHelp    = { } },
+        EngineCommand {
+            .name   = "writeconfig",
             .action = [this](const string_view args) { write_config_file(args); },
             .description = "Writes the engine's current state to a configuration file at the given path",
-            .argsHelp = "<path>"
-        },
-        CustomCommand {
-            .name = "readconfig",
+            .argsHelp    = "<path>" },
+        EngineCommand {
+            .name   = "readconfig",
             .action = [this](const string_view args) { read_config_file(args); },
             .description = "Loads engine state from a configuration file at the given path",
-            .argsHelp = "<path>"
-        },
-        CustomCommand {
-            .name = "help",
-            .action = [this] (const string_view args){ print_help(args); },
+            .argsHelp    = "<path>" },
+        EngineCommand {
+            .name   = "help",
+            .action = [this](const string_view args) { print_help(args); },
             .description = "Display this text",
-            .argsHelp = "[--no-logo]"
-        }
+            .argsHelp    = "[--no-logo]" }
     };
-    // clang-format on
 };
 
 } // namespace ben_bot

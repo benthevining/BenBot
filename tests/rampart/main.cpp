@@ -75,7 +75,8 @@ try {
     static constexpr auto MAX_ARGS = 2uz;
 
     if (std::cmp_greater(argc, MAX_ARGS)) {
-        std::println(std::cerr,
+        std::println(
+            std::cerr,
             "Expected at most {} arguments, received {}",
             MAX_ARGS, argc);
 
@@ -102,7 +103,7 @@ try {
     [[maybe_unused]] const auto result
         = run_rampart_test(args.front())
               .transform([](const json& data) {
-                  std::println("{}", data.dump(1));
+                  std::println("{}", data.dump());
               })
               .transform_error([](const std::string_view error) {
                   std::println(std::cerr, "Error: {}", error);

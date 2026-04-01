@@ -85,21 +85,22 @@ jobs:
       DEPLOY_DIR: deploy
 
     steps:
-    - name: Install Linux dependencies
+    - name: Install libc++
       if: runner.os == 'Linux' && matrix.preset == 'clang'
       run: |
         sudo apt-get update
         sudo apt-get install -y libc++-dev libc++abi-dev
 
-    # TODO: ensure install of runtime libraries for sanitizers, set LD_LIBRARY_PATH
-    - name: Ensure Clang version
+      # TODO: ensure install of runtime libraries for sanitizers, set LD_LIBRARY_PATH
+    - name: Install Clang21
       if: runner.os == 'Linux' && matrix.preset == 'clang'
-      uses: egor-tensin/setup-clang@471a6f8ef1d449dba8e1a51780e7f943572a3f99 # v2.1
+      uses: aminya/setup-cpp@1f17f92d6a52bfcb1a25348e2c526c2e5cbb1134 # v1.8.0
       with:
-        version: 21
+        llvm: 21
+        clang: 21
 
-    - name: Ensure CMake 4.0
-      uses: lukka/get-cmake@f176ccd3f28bda569c43aae4894f06b2435a3375 # v4.2.3
+    - name: Install CMake 4.0
+      uses: lukka/get-cmake@ea83089aa35e08e459464341fe24ad024ee2466f # v4.3.1
 
     - name: Checkout code
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -112,7 +113,7 @@ jobs:
       env:
         BUILD_NAME: ${{ github.head_ref || github.ref_name }}.${{ matrix.os }}.${{ matrix.preset }}.${{ matrix.config }}
         CMAKE_OSX_ARCHITECTURES: arm64;x86_64
-      run: cmake --preset ${{ matrix.preset }} -D BENBOT_DOCS=OFF -D BUILDNAME=${{ env.BUILD_NAME }}
+      run: cmake --preset ${{ matrix.preset }} -D BENBOT_DOCS=OFF -D BUILDNAME=${{ env.BUILD_NAME }} --log-level=VERBOSE
 
     - name: Build and test
       run: |
@@ -149,7 +150,7 @@ jobs:
 
     steps:
     - name: Download JUnit results
-      uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
       with:
         path: junit
         pattern: junit-*

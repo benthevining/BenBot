@@ -13,6 +13,7 @@
  */
 
 #include <concepts>
+#include <format>
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
@@ -50,35 +51,23 @@ namespace {
                              or std::same_as<std::invoke_result_t<Func, Square>, string_view>);
 
     // Func is a callable that takes an argument of type Square
-    // and must return the text to go inside that square, or
-    // a space if it's empty
+    // and must return the character to go inside that square,
+    // or a space if it's empty
     template <bool IncludeLabels, SquarePrinter Func>
     [[nodiscard]] auto generate_board_string(Func getSquareText) -> string
     {
-        static constexpr bool FuncReturnsChar = std::is_same_v<
-            std::invoke_result_t<Func, Square>,
-            char>;
-
         string result;
 
         for (const auto rank : std::views::reverse(magic_enum::enum_values<board::Rank>())) {
-            result.append(1uz, '|');
-
             for (const auto file : magic_enum::enum_values<board::File>()) {
-                const Square square { .file = file, .rank = rank };
-
-                if constexpr (FuncReturnsChar) {
-                    result.append(1uz, getSquareText(square));
-                } else {
-                    result.append(getSquareText(square));
-                }
-
-                result.append(1uz, '|');
+                result.append(std::format("|{}",
+                    getSquareText(Square { .file = file, .rank = rank })));
             }
 
+            result.append(1uz, '|');
+
             if constexpr (IncludeLabels) {
-                result.append(1uz, ' ');
-                result.append(1uz, rank_to_char(rank));
+                result.append(std::format(" {}", rank_to_char(rank)));
             }
 
             result.append(1uz, '\n');

@@ -13,7 +13,7 @@
  */
 
 /** @file
-    This file provides functions for parsing and writing PGN files.
+    This file provides functions for parsing and writing PGN @cite Edwards_1994 files.
     @ingroup notation
  */
 
@@ -35,12 +35,12 @@ namespace chess::notation {
 using game::Position;
 using std::string;
 
-/** PGN NAG glyphs are represented by their numeric codes.
+/** PGN @cite Edwards_1994 NAG glyphs are represented by their numeric codes.
     This enumeration lists many of the standard NAGs (but not all of them).
 
     @ingroup notation
  */
-enum NAG : std::uint_least8_t {  // NOLINT(cppcoreguidelines-use-enum-class)
+enum class NAG : std::uint_least8_t {
     Null                   = 0,  ///< A null annotation. Provided for usage as a placeholder value; should not appear in PGN files and has no typographic representation.
     Good                   = 1,  ///< A good move, typically displayed as ``!``.
     Brilliant              = 3,  ///< A brilliant move, typically displayed as ``!!``.
@@ -127,7 +127,7 @@ struct [[nodiscard]] GameRecord final {
     [[nodiscard]] auto get_final_position() const -> Position;
 };
 
-/** Parses the text of a PGN file into a GameRecord object.
+/** Parses the text of a PGN @cite Edwards_1994 file into a GameRecord object.
 
     If the input string cannot be parsed correctly, returns an explanatory error string.
 
@@ -151,7 +151,7 @@ struct [[nodiscard]] GameRecord final {
 [[nodiscard]] auto parse_all_pgns(std::string_view fileContent)
     -> std::vector<GameRecord>;
 
-/** Creates a PGN string from the given game record.
+/** Creates a PGN @cite Edwards_1994 string from the given game record.
 
     @param game The game record to serialize.
 

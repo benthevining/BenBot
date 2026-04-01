@@ -13,7 +13,6 @@
  */
 
 #include <algorithm>
-#include <atomic>
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <filesystem>
@@ -39,7 +38,6 @@
 namespace ben_bot {
 
 using std::filesystem::path;
-using std::memory_order_relaxed;
 using std::size_t;
 using uci::printing::info_string;
 
@@ -89,9 +87,7 @@ void Engine::set_pretty_printing(const bool shouldPrettyPrint)
             [this](const Move move) { return pretty_print_move(move); }));
     } else {
         searcher.context.set_callbacks(search::Callbacks::make_uci_printer(
-            [this]() noexcept {
-                return debugMode.load(memory_order_relaxed);
-            }));
+            [this]() noexcept { return is_debug_mode(); }));
     }
 }
 
@@ -105,23 +101,9 @@ void Engine::go(const uci::GoCommandOptions& opts)
     searcher.context.set_options(newOpts);
 
     searcher.context.set_pondering(
-        opts.ponderMode and ponder.get_value());
+        opts.ponderMode and opt_Ponder.get_value());
 
     searcher.start();
-}
-
-// this function implements non-standard UCI commands that we support
-void Engine::handle_custom_command(
-    const string_view command, const string_view opts)
-{
-    if (const auto it = std::ranges::find(customCommands, command, &CustomCommand::name);
-        it != customCommands.end()) {
-        it->action(opts);
-        return;
-    }
-
-    info_string(std::format("Unknown UCI command: '{}'", command));
-    info_string("Type help for a list of supported commands");
 }
 
 void Engine::start_file_logger(const string_view arg)
@@ -177,7 +159,7 @@ void Engine::write_config_file(const string_view arg) const
     json data;
 
     data[TAG_OPTIONS] = optionsData;
-    data[TAG_DEBUG]   = debugMode.load(memory_order_relaxed);
+    data[TAG_DEBUG]   = is_debug_mode();
 
     const auto filePath = absolute(path { arg });
 
@@ -210,9 +192,8 @@ void Engine::read_config_file(const path& file)
               .transform([this, &filePath](const string_view fileContent) {
                   const auto data = json::parse(fileContent);
 
-                  debugMode.store(
-                      data.at(TAG_DEBUG).get<bool>(),
-                      memory_order_relaxed);
+                  set_debug_mode(
+                      data.at(TAG_DEBUG).get<bool>());
 
                   const auto& optionsData = data.at(TAG_OPTIONS);
 

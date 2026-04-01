@@ -13,7 +13,7 @@
  */
 
 /** @file
-    This file provides some utility functions for printing UCI-style output.
+    This file provides some utility functions for printing UCI-style @cite Meyer-Kahlen_2006 output.
     @ingroup uci
  */
 
@@ -24,11 +24,12 @@
 #include <libchess/moves/Move.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 #include <variant>
 
-/** This namespace contains utility functions for printing UCI-style output.
+/** This namespace contains utility functions for printing UCI-style @cite Meyer-Kahlen_2006 output.
     @ingroup uci
  */
 namespace chess::uci::printing {
@@ -36,7 +37,7 @@ namespace chess::uci::printing {
 using moves::Move;
 using std::size_t;
 
-/** Prints a UCI-formatted information string to standard output.
+/** Prints a UCI-formatted @cite Meyer-Kahlen_2006 information string to standard output.
     This function should be used for any informational or debug output that
     an engine wants to print.
 
@@ -47,7 +48,7 @@ using std::size_t;
  */
 std::monostate info_string(std::string_view info);
 
-/** Prints a UCI-formatted best move string to standard output.
+/** Prints a UCI-formatted @cite Meyer-Kahlen_2006 best move string to standard output.
     Specifying a ponder move is optional.
 
     @ingroup uci
@@ -56,13 +57,38 @@ void best_move(
     Move                bestMove,
     std::optional<Move> ponderMove);
 
+/** Informs the GUI that the engine is currently searching the given move.
+
+    @note For the first move, ``moveNum`` should be 1, not 0!
+
+    @ingroup uci
+ */
+void currmove_info(
+    Move currentMove, size_t moveNum);
+
+/** Prints information that the ``move`` is refuted by the line ``refutation``.
+    If no refutation is found for ``move``, ``refutation`` can be empty.
+
+    @ingroup uci
+ */
+void refutation_info(
+    Move                  move,
+    std::span<const Move> refutation = { });
+
+/** Prints information about the current line being searched.
+    ``cpuNum`` may be omitted if the engine is using just one CPU.
+    In the multithreaded case, ideally all threads should send this
+    information together. ``cpuNum`` should be a 1-based index.
+ */
+void currline_info(
+    std::span<const Move> line,
+    std::optional<size_t> cpuNum = std::nullopt);
+
 /** This POD struct encapsulates the various information that can be printed
     about a search.
 
     @ingroup uci
     @see search_info()
-
-    @todo ``multipv``, ``currmove``, ``currmovenumber``, ``refutation``, ``currline``
  */
 struct SearchInfo final {
     /** Represents the engine's evaluation of the line it is currently searching. */
@@ -111,6 +137,11 @@ struct SearchInfo final {
     /** The total number of nodes searched. */
     size_t nodes { 0uz };
 
+    /** In MultiPV mode, this integer should be the number of the line that this info is for.
+        In non-MultiPV mode, this should be ``nullopt``.
+     */
+    std::optional<size_t> multiPV;
+
     /** The principal variation found. */
     moves::MoveList pv;
 
@@ -129,7 +160,7 @@ struct SearchInfo final {
     [[nodiscard]] auto get_nps() const noexcept -> size_t;
 };
 
-/** Prints a UCI-formatted search info string to standard output.
+/** Prints a UCI-formatted @cite Meyer-Kahlen_2006 search info string to standard output.
 
     @ingroup uci
     @relates SearchInfo

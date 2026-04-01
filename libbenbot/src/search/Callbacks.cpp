@@ -37,24 +37,33 @@
 namespace ben_bot::search {
 
 auto Callbacks::make_uci_printer(
-    std::function<bool()>&& isDebugMode)
+    std::function<bool()> isDebugMode)
     -> Callbacks
 {
-    auto printInfo = [isDebug = std::move(isDebugMode)](const Result& res) {
-        search_info(res.to_libchess(isDebug()));
+    namespace uci_printing = chess::uci::printing;
+
+    auto printInfo = [isDebugMode](const Result& res) {
+        search_info(res.to_libchess(isDebugMode()));
     };
 
     return {
         .onSearchStart    = nullptr,
         .onSearchComplete = [printInfo](const Result& res) {
             printInfo(res);
-            chess::uci::printing::best_move(res.best_move(), res.ponder_move()); },
-        .onIteration      = printInfo
+            uci_printing::best_move(res.best_move(), res.ponder_move()); },
+        .onIteration      = printInfo,
+        .onRootMove       = [isDebugMode](const Move move, const size_t idx) {
+            if (isDebugMode()) {
+                uci_printing::currmove_info(
+                    move,
+                    idx + 1uz); // convert 0-based -> 1-based index
+            } }
     };
 }
 
 namespace {
     using std::string;
+    using std::string_view;
 
     enum class Alignment : std::uint_least8_t {
         Left,
@@ -65,8 +74,8 @@ namespace {
     inline constexpr auto COLUMN_WIDTH = 10uz;
 
     template <Alignment Align>
-    [[nodiscard]] auto get_column_text(
-        const std::string_view text) -> string
+    void print_column_text(
+        const string_view text)
     {
         assert(text.size() < COLUMN_WIDTH);
 
@@ -81,18 +90,14 @@ namespace {
             }
         }();
 
-        return std::format(
+        std::cout << std::format(
             formatStr,
             text.substr(0uz, COLUMN_WIDTH),
             COLUMN_WIDTH);
     }
 
-    template <Alignment Align>
-    void print_column_text(
-        const std::string_view text)
-    {
-        std::cout << get_column_text<Align>(text);
-    }
+    inline constexpr string_view FRACTIONAL_DURATION_FMT { "{:.2%Q %q}" };
+    inline constexpr string_view INTEGER_DURATION_FMT { "{:%Q %q}" };
 
     template <util::ChronoDuration Duration>
     [[nodiscard]] auto get_duration_string(
@@ -104,7 +109,7 @@ namespace {
             using FractionalDuration = util::FractionalDuration<Duration>;
 
             return std::format(
-                "{:.2%Q %q}",
+                FRACTIONAL_DURATION_FMT,
                 duration_cast<FractionalDuration>(duration));
         }
 
@@ -118,7 +123,9 @@ namespace {
         return get_duration_string<std::chrono::hours>(duration)
             .or_else([duration] { return get_duration_string<std::chrono::minutes>(duration); })
             .or_else([duration] { return get_duration_string<std::chrono::seconds>(duration); })
-            .or_else([duration] { return std::make_optional(std::format("{:%Q %q}", duration)); })
+            .or_else([duration] {
+                return std::make_optional(std::format(INTEGER_DURATION_FMT, duration));
+            })
             .value();
     }
 
@@ -241,12 +248,8 @@ namespace {
 
         string result;
 
-        for (const auto move : pv) {
-            result.append(printMove(move));
-            result.append(1uz, ' ');
-        }
-
-        result.pop_back(); // trim last space
+        for (const auto move : pv)
+            result.append(std::format("{} ", printMove(move)));
 
         return result;
     }
@@ -319,7 +322,8 @@ auto Callbacks::make_pretty_printer(
             print_table_header();
         },
         .onSearchComplete = printIteration,
-        .onIteration      = printIteration
+        .onIteration      = printIteration,
+        .onRootMove       = nullptr
     };
 }
 

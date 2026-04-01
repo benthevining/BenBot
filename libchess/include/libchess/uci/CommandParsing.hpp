@@ -13,13 +13,13 @@
  */
 
 /** @defgroup uci UCI
-    Utilities for working with the Universal Chess Interface.
+    Utilities for working with the Universal Chess Interface. @cite Meyer-Kahlen_2006
 
     @ingroup libchess
  */
 
 /** @file
-    This file provides utilities for parsing command-line UCI commands.
+    This file provides utilities for parsing command-line UCI @cite Meyer-Kahlen_2006 commands.
     @ingroup uci
  */
 
@@ -37,7 +37,7 @@ namespace chess::game {
 struct Position;
 } // namespace chess::game
 
-/** This namespace contains utilities for working with UCI.
+/** This namespace contains utilities for working with UCI. @cite Meyer-Kahlen_2006
     @ingroup uci
  */
 namespace chess::uci {
@@ -48,7 +48,7 @@ using std::optional;
 using std::size_t;
 using std::string_view;
 
-/** Parses the options following a UCI "position" command into a Position object.
+/** Parses the options following a UCI @cite Meyer-Kahlen_2006 "position" command into a Position object.
     The ``options`` should not include the "position" token itself.
 
     If the input string cannot be parsed correctly, returns an explanatory error string.
@@ -58,7 +58,7 @@ using std::string_view;
 [[nodiscard]] auto parse_position_options(string_view options)
     -> std::expected<Position, std::string>;
 
-/** This struct encapsulates the options to a UCI "register" command.
+/** This struct encapsulates the options to a UCI @cite Meyer-Kahlen_2006 "register" command.
 
     @ingroup uci
     @see parse_register_options()
@@ -76,7 +76,7 @@ struct RegisterNowOptions final {
  */
 using RegisterOptions = optional<RegisterNowOptions>;
 
-/** Parses the options following a UCI "register" command.
+/** Parses the options following a UCI @cite Meyer-Kahlen_2006 "register" command.
     The ``options`` should not include the "register" token itself.
     If this returns ``nullopt``, then the user sent a ``register later`` command.
 
@@ -84,7 +84,7 @@ using RegisterOptions = optional<RegisterNowOptions>;
  */
 [[nodiscard]] auto parse_register_options(string_view options) -> RegisterOptions;
 
-/** This struct encapsulates the options given to a UCI "go" command.
+/** This struct encapsulates the options given to a UCI @cite Meyer-Kahlen_2006 "go" command.
 
     @ingroup uci
     @see parse_go_options()
@@ -129,7 +129,7 @@ struct [[nodiscard]] GoCommandOptions final {
     optional<size_t> mateIn;
 };
 
-/** Parses the options following a UCI "go" command.
+/** Parses the options following a UCI @cite Meyer-Kahlen_2006 "go" command.
     The ``options`` should not include the "go" token itself.
 
     @ingroup uci

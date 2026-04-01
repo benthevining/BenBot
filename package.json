@@ -9,7 +9,8 @@
   },
   "description": "UCI chess engine",
   "devDependencies": {
-    "conventional-changelog-cli": "^5.0.0"
+    "conventional-changelog-cli": "^5.0.0",
+    "pin-github-action": "^3.4.0"
   },
   "funding": {
     "type": "individual",

@@ -87,8 +87,6 @@ namespace {
         json["totalNodes"]  = result.nodes;
 
         std::println("{}", json.dump());
-
-        std::cout.flush();
     }
 } // namespace
 
@@ -114,6 +112,8 @@ void Engine::run_perft(
         pretty_print(result,
             [this](const Move move) { return pretty_print_move(move); });
     }
+
+    std::cout.flush();
 }
 
 } // namespace ben_bot

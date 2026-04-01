@@ -31,7 +31,7 @@ if (BENBOT_IPO)
     set_target_properties (ben_bot PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif ()
 
-add_feature_info (benbot_ipo BENBOT_IPO "Enable IPO/LTO")
+add_feature_info (benbot_ipo BENBOT_IPO "Interprocedural optimization for BenBot")
 
 #
 

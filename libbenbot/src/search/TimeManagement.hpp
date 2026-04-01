@@ -69,6 +69,8 @@ struct Interrupter final {
     Interrupter(Interrupter&&)            = delete;
     Interrupter& operator=(Interrupter&&) = delete;
 
+    ~Interrupter() = default;
+
     [[nodiscard]] auto get_search_duration() const noexcept -> milliseconds { return timer.get_duration(); }
 
     // returns time remaining until abort time, or nullopt if there's no time bound

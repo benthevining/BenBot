@@ -54,6 +54,8 @@ struct Context final {
     Context(Context&&)            = delete;
     Context& operator=(Context&&) = delete;
 
+    ~Context() = default;
+
     /** Performs a search.
         Results will be propagated via the ``callbacks`` that have been
         assigned.

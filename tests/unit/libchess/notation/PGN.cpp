@@ -22,6 +22,7 @@
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/PGN.hpp>
 #include <string_view>
+#include <utility>
 
 inline constexpr auto TAGS { "[notation][PGN]" };
 
@@ -146,6 +147,8 @@ TEST_CASE("PGN - line comments", TAGS)
     REQUIRE(to_pgn(game, false) == pgn);
 }
 
+using std::to_underlying;
+
 TEST_CASE("PGN - NAGs", TAGS)
 {
     static constexpr std::string_view pgn {
@@ -169,15 +172,15 @@ TEST_CASE("PGN - NAGs", TAGS)
 
         REQUIRE(firstMove.nags.size() == 2uz);
 
-        REQUIRE(firstMove.nags.front() == 1u);
-        REQUIRE(firstMove.nags.back() == 14u);
+        REQUIRE(to_underlying(firstMove.nags.front()) == 1u);
+        REQUIRE(to_underlying(firstMove.nags.back()) == 14u);
     }
     {
         const auto& secondMove = game.moves.back();
 
         REQUIRE(secondMove.nags.size() == 1uz);
 
-        REQUIRE(secondMove.nags.front() == 4u);
+        REQUIRE(to_underlying(secondMove.nags.front()) == 4u);
     }
 
     REQUIRE(to_pgn(game) == pgn);
@@ -206,7 +209,7 @@ TEST_CASE("PGN - NAG inside a comment", TAGS)
 
         REQUIRE(firstMove.nags.size() == 1uz);
 
-        REQUIRE(firstMove.nags.front() == 1u);
+        REQUIRE(to_underlying(firstMove.nags.front()) == 1u);
 
         REQUIRE(firstMove.comment == "$14");
     }
@@ -215,7 +218,7 @@ TEST_CASE("PGN - NAG inside a comment", TAGS)
 
         REQUIRE(secondMove.nags.size() == 1uz);
 
-        REQUIRE(secondMove.nags.front() == 4u);
+        REQUIRE(to_underlying(secondMove.nags.front()) == 4u);
     }
 
     REQUIRE(to_pgn(game) == pgn);

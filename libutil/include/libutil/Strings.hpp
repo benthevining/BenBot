@@ -130,6 +130,10 @@ void write_integer(
  */
 [[nodiscard]] auto words_view(string_view text);
 
+/** Computes the Levenshtein distance between the two strings. */
+[[nodiscard, gnu::const]] auto levenshtein_distance(
+    string_view first, string_view second) -> size_t;
+
 /// @}
 
 /*

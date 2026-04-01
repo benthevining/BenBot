@@ -26,8 +26,14 @@ set (CTEST_CUSTOM_MAXIMUM_NUMBER_OF_WARNINGS 100)
 # this matches forward- or back-slashes
 set (slash "[/\\]")
 
-list (APPEND CTEST_CUSTOM_COVERAGE_EXCLUDE @CMAKE_PREFIX_PATH@ "@FETCHCONTENT_BASE_DIR@"
-      "${slash}_deps${slash}"
+list (
+    APPEND
+    CTEST_CUSTOM_COVERAGE_EXCLUDE
+    @CMAKE_PREFIX_PATH@
+    "@FETCHCONTENT_BASE_DIR@"
+    "${slash}_deps${slash}"
+    "tests${slash}"
+    "_cmrc"
 )
 
 list (
@@ -42,7 +48,4 @@ list (
     "libutil${slash}src${slash}memory${slash}PageAlignedAlloc_Windows.hpp"
     # MSVC warnings about the Visitor class's move operators being implicitly deleted
     "util::Visitor<"
-    # warnings about std::getenv() being deprecated/thread-unsafe
-    "main.cpp.+getenv"
-    "note: 'getenv' has been explicitly marked deprecated here"
 )

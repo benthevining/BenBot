@@ -13,16 +13,22 @@
  */
 
 /** @file
-    This file defines the UCI engine base class.
+    This file defines the UCI @cite Meyer-Kahlen_2006 engine base class.
     @ingroup uci
  */
 
 #pragma once
 
+#include <array>
+#include <atomic>
+#include <cassert>
+#include <functional>
 #include <libchess/uci/CommandParsing.hpp>
+#include <libchess/uci/Options.hpp>
 #include <span>
 #include <string>
 #include <string_view>
+#include <utility>
 
 namespace chess::game {
 struct Position;
@@ -33,9 +39,43 @@ namespace chess::uci {
 using game::Position;
 using std::string_view;
 
-struct Option;
+/** A UCI command that the engine can respond to.
+    @ingroup uci
+ */
+struct EngineCommand final {
+    /** Function type that is invoked when this command is executed. */
+    using Callback = std::function<void(string_view)>;
 
-/** A base class for UCI chess engines.
+    /** The name of the command.
+        This is the token the user should type in the CLI to execute the command.
+     */
+    string_view name;
+
+    /** Function object that will be called when the command is executed.
+        This callback will receive the rest of the command line as its argument.
+     */
+    Callback action;
+
+    /** Brief description of this command. This will be shown in the engine's help output. */
+    string_view description;
+
+    /** A brief string to provide some documentation for the command's arguments.
+        This will be shown in the engine's help output.
+        For example, if the command expects a single filepath argument, this help string
+        might be ``<path>``.
+     */
+    string_view argsHelp;
+
+    /** Wraps a callback taking no arguments into a ``Callback`` for a command. */
+    [[nodiscard]] static auto void_cb(std::function<void()>&& func) -> Callback
+    {
+        return [callback = std::move(func)]([[maybe_unused]] const string_view args) {
+            callback();
+        };
+    }
+};
+
+/** A base class for UCI @cite Meyer-Kahlen_2006 chess engines.
 
     This class provides handling of UCI command parsing, so that
     the engine implementation can focus purely on implementing
@@ -53,10 +93,10 @@ struct EngineBase {
 
     virtual ~EngineBase();
 
-    EngineBase(const EngineBase&)            = default;
-    EngineBase(EngineBase&&)                 = default;
-    EngineBase& operator=(const EngineBase&) = default;
-    EngineBase& operator=(EngineBase&&)      = default;
+    EngineBase(const EngineBase&)            = delete;
+    EngineBase(EngineBase&&)                 = delete;
+    EngineBase& operator=(const EngineBase&) = delete;
+    EngineBase& operator=(EngineBase&&)      = delete;
 
     /** This must return the name of the engine.
         The returned string may optionally contain the engine's current version,
@@ -66,9 +106,6 @@ struct EngineBase {
 
     /** This must return the name of the engine's author. */
     [[nodiscard]] virtual auto get_author() const -> string_view = 0;
-
-    /** This must return the list of all options the engine supports. */
-    [[nodiscard]] virtual auto get_options() -> std::span<Option*> { return { }; }
 
     /** This function will be called when the "isready" command is received,
         and may block while waiting for background tasks to complete. This
@@ -109,9 +146,6 @@ struct EngineBase {
      */
     virtual void go([[maybe_unused]] const GoCommandOptions& opts) = 0;
 
-    /** Called when the "debug" command is received. */
-    virtual void set_debug([[maybe_unused]] bool shouldDebug) { }
-
     /** Handles a UCI command.
         Typically you will not call this directly, you'll just invoke ``loop()``, but this
         method can be used to manually invoke UCI commands if needed.
@@ -119,14 +153,6 @@ struct EngineBase {
         @see loop()
      */
     void handle_command(string_view command);
-
-    /** Any command input string not recognized as a standard UCI command will invoke this function.
-        Engines can implement custom commands by overriding this function. The "command" argument
-        will be the first word of the input command line.
-     */
-    virtual void handle_custom_command(
-        [[maybe_unused]] string_view command,
-        [[maybe_unused]] string_view options) { }
 
     /** Runs the engine's event loop.
         This function blocks while reading from stdin. The calling thread becomes the
@@ -141,17 +167,177 @@ struct EngineBase {
      */
     virtual void handle_registration([[maybe_unused]] const RegisterOptions& opts) { }
 
+    /** Typedef for a view of a list of engine commands. */
+    using CommandList = std::span<const EngineCommand>;
+
+    /** Returns the engine's list of supported standard UCI commands. */
+    [[nodiscard]] auto get_standard_uci_commands() const noexcept -> CommandList
+    {
+        return standardUCICommands;
+    }
+
+    /** Subclasses should overload this to return their custom UCI commands. */
+    [[nodiscard]] virtual auto get_custom_uci_commands() const noexcept -> CommandList
+    {
+        return { };
+    }
+
+    /** Typedef for a view of a list of engine options. */
+    using OptionList = std::span<Option*>;
+
+    /** Subclasses should overload this to return their custom UCI options. */
+    [[nodiscard]] virtual auto get_custom_uci_options() noexcept -> OptionList
+    {
+        return { };
+    }
+
+    /** Returns the engine's list of supported standard UCI commands. */
+    [[nodiscard]] auto get_standard_uci_options() noexcept -> OptionList
+    {
+        return standardUCIOptions;
+    }
+
+    /** Returns true if the engine's debugging mode is active. */
+    [[nodiscard]] auto is_debug_mode() const noexcept -> bool
+    {
+        return debugMode.load(std::memory_order_relaxed);
+    }
+
+    /** Sets the engine's debugging mode. */
+    void set_debug_mode(const bool shouldDebug) noexcept
+    {
+        debugMode.store(shouldDebug, std::memory_order_relaxed);
+    }
+
+    /** Tells the base class whether to sanitize incoming positions when processing
+        the ``position`` command.
+        When sanitizing is on, after evaluating each ``position`` command, the engine
+        performs some basic checks to determine if the position is illegal, and if so,
+        prints a diagnostic message and reverts the internal board to the previous
+        position.
+     */
+    void set_sanitize_positions(const bool shouldSanitize) noexcept
+    {
+        sanitizeIncomingPositions.store(shouldSanitize, std::memory_order_release);
+    }
+
+    /** Subclasses should implement this to resize their transposition table. */
+    virtual void resize_transposition_table([[maybe_unused]] const size_t sizeMB) { }
+
+    /** Subclasses can implement this to be informed when the ponder parameter changes. */
+    virtual void set_ponder([[maybe_unused]] const bool shouldPonder) { }
+
+    //// @name Standard UCI options
+    /// @{
+
+    /** Standard UCI option for hash size. */
+    IntOption opt_Hash {
+        "Hash",
+        1, 2048, 16,
+        "Sets the transposition table size (in MB)",
+        [this](const int sizeMB) {
+            assert(sizeMB >= 0);
+            resize_transposition_table(static_cast<size_t>(sizeMB));
+        }
+    };
+
+    /** Standard UCI option for pondering.
+        The engine doesn't start pondering on its own without explicitly being told to
+        via another ``go`` command; this option is needed to inform the GUI that the engine
+        supports pondering, and also gives the engine the opportunity to adjust its time
+        management algorithm when pondering is enabled.
+     */
+    BoolOption opt_Ponder {
+        "Ponder",
+        false,
+        "Controls whether pondering is allowed.",
+        [this](const bool shouldPonder) { set_ponder(shouldPonder); }
+    };
+
+    /// @}
+
 private:
     void respond_to_uci();
-
+    void respond_to_isready();
+    void respond_to_newgame();
+    void handle_quit();
     void handle_setpos(string_view arguments);
     void handle_setoption(string_view arguments);
 
-    bool shouldExit { false }; // used as flag for exiting the loop() function
+    static_assert(
+        std::atomic_bool::is_always_lock_free,
+        "Platform doesn't support lock-free atomic operations");
 
-    bool initialized { false };
+    std::atomic_bool shouldExit { false }; // used as flag for exiting the loop() function
+    std::atomic_bool initialized { false };
+    std::atomic_bool debugMode { false };
+    std::atomic_bool sanitizeIncomingPositions { false };
 
     Position position;
+
+    std::array<EngineCommand, 11uz> standardUCICommands {
+        EngineCommand {
+            .name   = "uci",
+            .action = EngineCommand::void_cb([this] { respond_to_uci(); }),
+            .description = "Initialize UCI communication",
+            .argsHelp    = { } },
+        EngineCommand {
+            .name   = "isready",
+            .action = EngineCommand::void_cb([this] { respond_to_isready(); }),
+            .description = "Wait for engine to complete background tasks",
+            .argsHelp    = { } },
+        EngineCommand {
+            .name   = "ucinewgame",
+            .action = EngineCommand::void_cb([this] { respond_to_newgame(); }),
+            .description = "Initialize a new game",
+            .argsHelp    = { } },
+        EngineCommand {
+            .name   = "quit",
+            .action = EngineCommand::void_cb([this] { handle_quit(); }),
+            .description = "Exit the engine as quickly as possible",
+            .argsHelp    = { } },
+        EngineCommand {
+            .name   = "stop",
+            .action = EngineCommand::void_cb([this] { abort_search(); }),
+            .description = "Abort the current search, if any",
+            .argsHelp    = { } },
+        EngineCommand {
+            .name   = "ponderhit",
+            .action = EngineCommand::void_cb([this] { ponder_hit(); }),
+            .description = "Indicate that the user played the ponder move",
+            .argsHelp    = { } },
+        EngineCommand {
+            .name   = "position",
+            .action = [this](const string_view args) { handle_setpos(args); },
+            .description = "Set the position on the engine's internal board",
+            .argsHelp    = "[startpos|fen <fen>] [moves <move...>]" },
+        EngineCommand {
+            .name   = "go",
+            .action = [this](const string_view args) { go(parse_go_options(args, position)); },
+            .description = "Start a search",
+            .argsHelp    = { } },
+        EngineCommand {
+            .name   = "setoption",
+            .action = [this](const string_view args) { handle_setoption(args); },
+            .description = "Set UCI option values",
+            .argsHelp    = "[name <name>] [value <value>]" },
+        EngineCommand {
+            .name   = "debug",
+            .action = [this](const string_view args) noexcept { set_debug_mode(args == "on"); },
+            .description = "Enable/disable engine debug mode",
+            .argsHelp    = "[on|off]" },
+        EngineCommand {
+            .name   = "register",
+            .action = [this](const string_view args) {
+                handle_registration(parse_register_options(args));
+            },
+            .description = "Handle license registration",
+            .argsHelp    = { } }
+    };
+
+    std::array<Option*, 2uz> standardUCIOptions {
+        &opt_Hash, &opt_Ponder
+    };
 };
 
 } // namespace chess::uci

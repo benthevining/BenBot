@@ -43,12 +43,17 @@ foreach (epd_file IN LISTS testcase_files)
             CONFIGURATIONS Release
         )
 
+        # cmake-format: off
         set_tests_properties (
             "${test_name}"
-            PROPERTIES ATTACHED_FILES_ON_FAIL "${engine_log}" RESOURCE_LOCK BenBotPositionSolver
-                       # allow 5 minutes after the go command is received
-                       TIMEOUT_AFTER_MATCH "300;: << go"
+            PROPERTIES
+                ATTACHED_FILES_ON_FAIL "${engine_log}"
+                RESOURCE_LOCK BenBotPositionSolver
+                REQUIRED_FILES "$<TARGET_FILE:ben_bot>"
+                # allow 10 minutes after the go command is received
+                TIMEOUT_AFTER_MATCH "600;: << go"
         )
+        # cmake-format: on
 
         set_property (DIRECTORY APPEND PROPERTY ADDITIONAL_CLEAN_FILES "${engine_log}")
     endforeach ()

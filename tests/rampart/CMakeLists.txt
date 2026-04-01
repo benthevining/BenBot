@@ -51,5 +51,5 @@ foreach (data_file IN LISTS testcase_files)
                       "--test=${data_file}" "--exec=$<TARGET_FILE:rampart>"
     )
 
-    set_tests_properties ("${test_name}" PROPERTIES REQUIRED_FILES "${data_file}")
+    set_tests_properties ("${test_name}" PROPERTIES REQUIRED_FILES "$<TARGET_FILE:rampart>")
 endforeach ()

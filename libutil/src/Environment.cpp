@@ -12,57 +12,49 @@
  * ======================================================================================
  */
 
-/** @file
-    This file defines the custom command struct used by the engine to implement
-    non-standard UCI commands.
-
-    @ingroup libbenbot
- */
-
-#pragma once
-
-#include <functional>
+#include <cstdlib> // IWYU pragma: keep - for std::getenv()
+#include <libutil/Environment.hpp>
+#include <optional>
+#include <string>
 #include <string_view>
-#include <utility>
 
-namespace ben_bot {
+namespace util {
 
+using std::optional;
+using std::string;
 using std::string_view;
 
-/** A custom UCI command that the engine can respond to.
-    @ingroup libbenbot
- */
-struct CustomCommand final {
-    /** Function type that is invoked when this command is executed. */
-    using Callback = std::function<void(string_view)>;
-
-    /** The name of the command.
-        This is the token the user should type in the CLI to execute the command.
-     */
-    string_view name;
-
-    /** Function object that will be called when the command is executed.
-        This callback will receive the rest of the command line as its argument.
-     */
-    Callback action;
-
-    /** Brief description of this command. This will be shown in the engine's help output. */
-    string_view description;
-
-    /** A brief string to provide some documentation for the command's arguments.
-        This will be shown in the engine's help output.
-        For example, if the command expects a single filepath argument, this help string
-        might be ``<path>``.
-     */
-    string_view argsHelp;
-
-    /** Wraps a callback taking no arguments into a ``Callback`` for a command. */
-    [[nodiscard]] static auto void_cb(std::function<void()>&& func) -> Callback
+namespace {
+#ifdef _MSC_VER
+    [[nodiscard]] auto get_env_var_internal(const char* name) -> optional<string>
     {
-        return [callback = std::move(func)]([[maybe_unused]] const string_view args) {
-            callback();
-        };
-    }
-};
+        char*  value { nullptr };
+        size_t len { 0uz };
 
-} // namespace ben_bot
+        [[maybe_unused]] const auto err = _dupenv_s(&value, &len, name);
+
+        if (value != nullptr and len > 0uz)
+            return string { value, len };
+
+        return std::nullopt;
+    }
+#else
+    [[nodiscard]] auto get_env_var_internal(const char* name) -> optional<string>
+    {
+        if (const auto* value = std::getenv(name))
+            return { value };
+
+        return std::nullopt;
+    }
+#endif
+} // namespace
+
+auto get_environment_variable(const string_view name) -> optional<string>
+{
+    // This is needed because string_view::data() may not be null-terminated
+    const string nameStr { name };
+
+    return get_env_var_internal(nameStr.c_str());
+}
+
+} // namespace util

@@ -69,7 +69,7 @@ struct Options final {
      */
     chess::moves::MoveList movesToSearch;
 
-    /** If true, the search should not exit until a ``xtop`` or ``exit``
+    /** If true, the search should not exit until a ``stop`` or ``exit``
         command is received.
      */
     bool infinite { false };

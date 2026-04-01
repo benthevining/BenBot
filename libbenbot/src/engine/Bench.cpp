@@ -88,6 +88,8 @@ namespace {
         BenchSearcherThread(BenchSearcherThread&&)            = delete;
         BenchSearcherThread& operator=(BenchSearcherThread&&) = delete;
 
+        ~BenchSearcherThread() = default;
+
         [[nodiscard]] auto finished() const noexcept -> bool { return not thread.context.in_progress(); }
 
         [[nodiscard]] auto get_result() const noexcept -> SearchResult
@@ -109,7 +111,8 @@ namespace {
             search::Callbacks {
                 .onSearchStart    = nullptr,
                 .onSearchComplete = [this](const SearchResult& res) { print_info(res); result = res; },
-                .onIteration      = [this](const SearchResult& res) { print_info(res); }
+                .onIteration      = [this](const SearchResult& res) { print_info(res); },
+                .onRootMove       = nullptr
             }
         };
         // clang-format on
@@ -209,7 +212,7 @@ void Engine::run_bench(const string_view arguments) const
 
         do_bench(
             resources::get_bench_epd_text(),
-            defaultDepth, debugMode.load());
+            defaultDepth, is_debug_mode());
 
         return;
     }
@@ -221,7 +224,7 @@ void Engine::run_bench(const string_view arguments) const
               .transform([this, defaultDepth, absPathStr = epdPath.string()](const string_view fileContent) {
                   info_string(std::format("Running bench for {}...", absPathStr));
 
-                  do_bench(fileContent, defaultDepth, debugMode.load());
+                  do_bench(fileContent, defaultDepth, is_debug_mode());
               })
               .transform_error(info_string);
 }
