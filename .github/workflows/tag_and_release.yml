@@ -138,11 +138,11 @@ jobs:
         clang: 21
 
     - name: Install CMake 4.0
-      uses: lukka/get-cmake@f176ccd3f28bda569c43aae4894f06b2435a3375 # v4.2.3
+      uses: lukka/get-cmake@ea83089aa35e08e459464341fe24ad024ee2466f # v4.3.1
 
     - name: Import signing certificate to keychain
       if: runner.os == 'macOS'
-      uses: Apple-Actions/import-codesign-certs@b610f78488812c1e56b20e6df63ec42d833f2d14 # v6.0.0
+      uses: Apple-Actions/import-codesign-certs@fe74d46e82474f87e1ba79832ad28a4013d0e33a # v6.1.0
       with:
         p12-file-base64: ${{ secrets.CODESIGN_CERT_FILE_BASE64 }}
         p12-password: ${{ secrets.CODESIGN_CERT_PASSWORD }}
@@ -217,7 +217,7 @@ jobs:
       working-directory: .github/scripts
 
     - name: Create release
-      uses: softprops/action-gh-release@26e8ad27a09a225049a7075d7ec1caa2df6ff332 # v2
+      uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2
       with:
         tag_name: ${{ needs.bump_version.outputs.tag_name }}
         files: ${{ env.REZIPPED_ARTIFACTS }}/**

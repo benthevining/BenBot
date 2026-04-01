@@ -63,7 +63,7 @@ jobs:
       uses: ssciwr/doxygen-install@329d88f5a303066a5bd006db7516b1925b86350e # v2.0.1
 
     - name: Install CMake 4.0
-      uses: lukka/get-cmake@f176ccd3f28bda569c43aae4894f06b2435a3375 # v4.2.3
+      uses: lukka/get-cmake@ea83089aa35e08e459464341fe24ad024ee2466f # v4.3.1
 
     - name: Checkout code
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -94,7 +94,7 @@ jobs:
     # Create status check to report warnings
     - name: Report check state
       if: always()
-      uses: LouisBrunner/checks-action@6b626ffbad7cc56fd58627f774b9067e6118af23 # v2
+      uses: LouisBrunner/checks-action@dfcbcf801bff1ea7f1414824fc28f2cd697b35da # v3.0.0
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         name: Docs warnings
@@ -127,6 +127,6 @@ jobs:
     steps:
     - name: Deploy to GitHub Pages
       id: deployment
-      uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
+      uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0
       with:
         artifact_name: BenBot-docs
