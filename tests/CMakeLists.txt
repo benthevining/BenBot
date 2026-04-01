@@ -38,6 +38,7 @@ endfunction ()
 
 configure_file (CTestCustom.cmake "${BenBot_BINARY_DIR}/CTestCustom.cmake" @ONLY)
 
+add_subdirectory (e2e)
 add_subdirectory (fastchess)
 add_subdirectory (perft)
 add_subdirectory (position-solver)

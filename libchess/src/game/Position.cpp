@@ -363,6 +363,8 @@ auto Position::is_illegal() const -> std::optional<std::string>
             magic_enum::enum_name(sideToMove));
     }
 
+    // TODO: our king cannot be in check by more than 2 pieces
+
     return std::nullopt;
 }
 
