@@ -84,6 +84,8 @@ namespace {
         if (ImGui::Checkbox("White to move", &whiteToMove)) {
             position.sideToMove = whiteToMove ? Color::White : Color::Black;
 
+            position.refresh_zobrist();
+
             // When the user manually changes the side to move, we may need to reset the EP square
             // if it was set, because the en passant ranks are different for each side. This function
             // resets the EP square if it was set to one that is now illegal.
@@ -142,6 +144,8 @@ namespace {
                     &position.blackCastlingRights.queenside);
 
                 ImGui::EndTable();
+
+                position.refresh_zobrist();
             }
 
             if (showTooltips and ImGui::IsItemHovered())
@@ -165,6 +169,7 @@ namespace {
                 if (ImGui::Selectable(std::format("{}", square).c_str(), isSelected)) {
                     selectedSquare                 = square;
                     position.enPassantTargetSquare = selectedSquare;
+                    position.refresh_zobrist();
                 }
 
                 if (isSelected)
@@ -177,6 +182,7 @@ namespace {
             if (ImGui::Selectable(NoneLabel, isSelected)) {
                 selectedSquare.reset();
                 position.enPassantTargetSquare.reset();
+                position.refresh_zobrist();
             }
 
             if (isSelected)

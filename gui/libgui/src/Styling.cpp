@@ -129,8 +129,6 @@ void setup_imgui_style()
     style.PopupBorderSize  = 1.f;
     style.FrameBorderSize  = 0.f;
     style.TabBorderSize    = 0.f;
-
-    // TODO: load custom fonts
 }
 
 } // namespace ben_bot::gui
