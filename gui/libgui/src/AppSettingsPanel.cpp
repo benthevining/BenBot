@@ -34,29 +34,32 @@ namespace {
     template <typename Func>
     concept FileCallback = std::regular_invocable<Func, const path&>;
 
-    // TODO: default path
     template <bool IsLoading>
     void show_file_dialog(FileCallback auto callback)
     {
-        static constexpr std::array StateFileChooserFilters {
-            nfdu8filteritem_t { "JSON", "json" }
-        };
-
         NFD::UniquePath outPath;
 
-        nfdresult_t result;
+        const auto result = [&outPath]() noexcept {
+            static constexpr std::array filters {
+                nfdu8filteritem_t { "JSON", "json" }
+            };
 
-        if constexpr (IsLoading) {
-            result = OpenDialog(outPath, StateFileChooserFilters.data(), StateFileChooserFilters.size());
-        } else {
-            result = SaveDialog(outPath, StateFileChooserFilters.data(), StateFileChooserFilters.size());
-        }
+            if constexpr (IsLoading) {
+                return OpenDialog(
+                    outPath,
+                    filters.data(), filters.size());
+            } else {
+                return SaveDialog(
+                    outPath,
+                    filters.data(), filters.size(),
+                    nullptr, "AppState.json");
+            }
+        }();
 
         switch (result) {
-            case NFD_OKAY: {
+            case NFD_OKAY:
                 callback(path { outPath.get() });
                 break;
-            }
 
             case NFD_CANCEL:
                 std::println("Info: user canceled file selection dialog");
