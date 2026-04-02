@@ -19,6 +19,8 @@
 
 namespace ben_bot::gui {
 
+struct AppState;
+
 struct AppSettings final {
     bool showTooltips { true };
 
@@ -27,6 +29,6 @@ struct AppSettings final {
     [[nodiscard]] static auto from_string(std::string_view str) -> AppSettings;
 };
 
-void render_app_settings_panel(AppSettings& state);
+void render_app_settings_panel(AppState& state);
 
 } // namespace ben_bot::gui

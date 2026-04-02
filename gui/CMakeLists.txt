@@ -52,7 +52,13 @@ FetchContent_Declare (
     FIND_PACKAGE_ARGS 3.4
 )
 
-FetchContent_Declare (stb SYSTEM GIT_REPOSITORY "https://github.com/nothings/stb.git")
+FetchContent_Declare (
+    stb
+    SYSTEM
+    GIT_REPOSITORY "https://github.com/nothings/stb.git"
+    GIT_TAG origin/master
+    FIND_PACKAGE_ARGS
+)
 
 function (benbot_use_glfw)
     FetchContent_MakeAvailable (glfw stb)

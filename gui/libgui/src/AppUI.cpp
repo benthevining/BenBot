@@ -23,6 +23,7 @@
 #include <libgui/Resources.hpp>
 #include <libutil/Console.hpp>
 #include <libutil/Files.hpp>
+#include <nfd.hpp>
 #include <nlohmann/json.hpp>
 #include <string>
 #include <string_view>
@@ -99,6 +100,8 @@ void initialize(
     }
 
     setup_imgui_style();
+
+    NFD::Init();
 }
 
 void render(AppState& state)
@@ -107,7 +110,7 @@ void render(AppState& state)
 
     ImGui::DockSpaceOverViewport();
 
-    render_app_settings_panel(state.appSettings);
+    render_app_settings_panel(state);
     render_board_editor(state.boardEditor, state.appSettings.showTooltips);
     render_engine_panel(state.enginePanel, state.appSettings.showTooltips);
 
@@ -117,6 +120,8 @@ void render(AppState& state)
 void shutdown(const AppState& state)
 {
     ImGui::DestroyContext();
+
+    NFD::Quit();
 
     [[maybe_unused]] const auto result
         = util::files::overwrite(

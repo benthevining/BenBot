@@ -16,10 +16,19 @@ FetchContent_Declare (
     GIT_REPOSITORY "https://github.com/ocornut/imgui.git"
     GIT_TAG v1.92.6-docking
     GIT_SHALLOW ON
-    OVERRIDE_FIND_PACKAGE
+    FIND_PACKAGE_ARGS 1.92.6
 )
 
-FetchContent_MakeAvailable (imgui)
+FetchContent_Declare (
+    nativefiledialog-extended
+    SYSTEM
+    GIT_REPOSITORY "https://github.com/btzy/nativefiledialog-extended.git"
+    GIT_TAG v1.3.0
+    GIT_SHALLOW ON
+    FIND_PACKAGE_ARGS 1.3.0
+)
+
+FetchContent_MakeAvailable (imgui nativefiledialog-extended)
 
 set (imgui_misc_cpp_dir "${imgui_SOURCE_DIR}/misc/cpp")
 set (imgui_backends_dir "${imgui_SOURCE_DIR}/backends")
@@ -50,7 +59,7 @@ add_library (libgui STATIC)
 target_compile_features (libgui PUBLIC cxx_std_23)
 
 target_link_libraries (
-    libgui PUBLIC ben_bot::libbenbot PRIVATE imgui::imgui ben_bot::gui_resources
+    libgui PUBLIC ben_bot::libbenbot PRIVATE imgui::imgui nfd::nfd ben_bot::gui_resources
                                              nlohmann_json::nlohmann_json
 )
 
