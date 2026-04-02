@@ -16,6 +16,7 @@
 #include <cmath>
 #include <filesystem>
 #include <imgui.h>
+#include <libgui/AppSettingsPanel.hpp>
 #include <libgui/AppUI.hpp>
 #include <libgui/BoardEditor.hpp>
 #include <libgui/EnginePanel.hpp>
@@ -52,18 +53,6 @@ namespace {
     [[nodiscard]] auto app_state_file_path() -> path
     {
         return "benbot_state.json";
-    }
-
-    void render_app_settings(bool& showTooltips)
-    {
-        if (ImGui::Begin("App settings")) {
-            ImGui::Checkbox("Show tooltips", &showTooltips);
-
-            if (showTooltips)
-                ImGui::SetItemTooltip("Display widget tooltips");
-        }
-
-        ImGui::End();
     }
 } // namespace
 
@@ -118,9 +107,9 @@ void render(AppState& state)
 
     ImGui::DockSpaceOverViewport();
 
-    render_app_settings(state.showTooltips);
-    render_board_editor(state.boardEditor, state.showTooltips);
-    render_engine_panel(state.enginePanel, state.showTooltips);
+    render_app_settings_panel(state.appSettings);
+    render_board_editor(state.boardEditor, state.appSettings.showTooltips);
+    render_engine_panel(state.enginePanel, state.appSettings.showTooltips);
 
     ImGui::Render();
 }
@@ -139,7 +128,7 @@ using nlohmann::json;
 
 inline constexpr string_view TAG_BOARD_EDITOR { "board_editor" };
 inline constexpr string_view TAG_ENGINE { "engine" };
-inline constexpr string_view TAG_TOOLTIPS { "show_tooltips" };
+inline constexpr string_view TAG_SETTINGS { "app_settings" };
 
 auto AppState::to_string() const -> std::string
 {
@@ -147,7 +136,7 @@ auto AppState::to_string() const -> std::string
 
     data[TAG_BOARD_EDITOR] = boardEditor.to_string();
     data[TAG_ENGINE]       = enginePanel.to_string();
-    data[TAG_TOOLTIPS]     = showTooltips;
+    data[TAG_SETTINGS]     = appSettings.to_string();
 
     return data.dump();
 }
@@ -162,7 +151,8 @@ void AppState::update_from_string(const string_view str)
     enginePanel.update_from_string(
         parsed.at(TAG_ENGINE).get<string_view>());
 
-    showTooltips = parsed.at(TAG_TOOLTIPS).get<bool>();
+    appSettings = AppSettings::from_string(
+        parsed.at(TAG_SETTINGS).get<string_view>());
 }
 
 } // namespace ben_bot::gui

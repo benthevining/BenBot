@@ -291,7 +291,7 @@ namespace {
                 ImGui::SetItemTooltip("Search for mate in X plies");
 
             anyChanged = render_moves_to_search(options, moveFormat, position, moveParseError, showTooltips)
-                      || anyChanged;
+                      or anyChanged;
 
             if (ImGui::Checkbox("Infinite", &options.infinite))
                 anyChanged = true;

@@ -12,39 +12,47 @@
  * ======================================================================================
  */
 
-#pragma once
-
+#include <imgui.h>
 #include <libgui/AppSettingsPanel.hpp>
-#include <libgui/BoardEditor.hpp>
-#include <libgui/EnginePanel.hpp>
+#include <nlohmann/json.hpp>
 #include <string>
 #include <string_view>
-#include <utility>
 
 namespace ben_bot::gui {
 
-inline constexpr auto AppName { "BenBot GUI" };
+void render_app_settings_panel(AppSettings& state)
+{
+    if (ImGui::Begin("App settings")) {
+        ImGui::Checkbox("Show tooltips", &state.showTooltips);
 
-[[nodiscard]] auto get_scaled_default_dimensions(float scaleFactor)
-    -> std::pair<int, int>;
+        if (state.showTooltips)
+            ImGui::SetItemTooltip("Display widget tooltips");
+    }
 
-struct AppState final {
-    BoardEditorState boardEditor;
+    ImGui::End();
+}
 
-    EnginePanelState enginePanel;
+using nlohmann::json;
+using std::string_view;
 
-    AppSettings appSettings;
+inline constexpr string_view TAG_TOOLTIPS { "show_tooltips" };
 
-    [[nodiscard]] auto to_string() const -> std::string;
+auto AppSettings::to_string() const -> std::string
+{
+    json data;
 
-    void update_from_string(std::string_view str);
-};
+    data[TAG_TOOLTIPS] = showTooltips;
 
-void initialize(
-    float mainScaleFactor, AppState& state);
+    return data.dump();
+}
 
-void render(AppState& state);
+auto AppSettings::from_string(const string_view str) -> AppSettings
+{
+    const auto parsed = json::parse(str);
 
-void shutdown(const AppState& state);
+    return AppSettings {
+        .showTooltips = parsed.at(TAG_TOOLTIPS).get<bool>()
+    };
+}
 
 } // namespace ben_bot::gui
