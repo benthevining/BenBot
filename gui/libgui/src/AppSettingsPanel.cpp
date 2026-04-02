@@ -33,18 +33,17 @@ static constexpr std::array StateFileChooserFilters {
 };
 
 namespace {
+    // TODO: default path
     void show_state_load_dialog(AppState& state)
     {
-        nfdopendialogu8args_t args { };
-        args.filterList  = StateFileChooserFilters.data();
-        args.filterCount = StateFileChooserFilters.size();
+        NFD::UniquePath outPath;
 
-        nfdu8char_t* outPath { nullptr };
+        const auto res = OpenDialog(
+            outPath, StateFileChooserFilters.data(), StateFileChooserFilters.size());
 
-        switch (NFD_OpenDialogU8_With(&outPath, &args)) {
+        switch (res) {
             case NFD_OKAY: {
-                state.load_from(std::filesystem::path { outPath });
-                NFD_FreePathU8(outPath);
+                state.load_from(std::filesystem::path { outPath.get() });
                 break;
             }
 
@@ -61,18 +60,17 @@ namespace {
         }
     }
 
+    // TODO: default path
     void show_state_save_dialog(const AppState& state)
     {
-        nfdsavedialogu8args_t args { };
-        args.filterList  = StateFileChooserFilters.data();
-        args.filterCount = StateFileChooserFilters.size();
+        NFD::UniquePath outPath;
 
-        nfdu8char_t* outPath { nullptr };
+        const auto res = SaveDialog(
+            outPath, StateFileChooserFilters.data(), StateFileChooserFilters.size());
 
-        switch (NFD_SaveDialogU8_With(&outPath, &args)) {
+        switch (res) {
             case NFD_OKAY: {
-                state.write_to(std::filesystem::path { outPath });
-                NFD_FreePathU8(outPath);
+                state.write_to(std::filesystem::path { outPath.get() });
                 break;
             }
 
