@@ -22,8 +22,6 @@ target_compile_features (benbot_gui PRIVATE cxx_std_23)
 
 target_link_libraries (benbot_gui PRIVATE ben_bot::libgui imgui::imgui)
 
-target_include_directories (benbot_gui PRIVATE "${CMAKE_CURRENT_LIST_DIR}/platform")
-
 target_sources (benbot_gui PRIVATE icons/icon.icns icons/icon.ico icons/icon.rc)
 
 set_target_properties (
@@ -69,7 +67,10 @@ function (benbot_use_glfw)
                                                                    ben_bot::gui_resources
     )
 
-    target_include_directories (benbotgui_glfw_wrapper PRIVATE "${stb_SOURCE_DIR}")
+    target_include_directories (
+        benbotgui_glfw_wrapper PUBLIC "${CMAKE_CURRENT_LIST_DIR}/platform"
+        PRIVATE "${stb_SOURCE_DIR}"
+    )
 
     target_link_libraries (benbot_gui PRIVATE benbotgui_glfw_wrapper)
 endfunction ()
