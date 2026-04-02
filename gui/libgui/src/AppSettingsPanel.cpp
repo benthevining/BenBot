@@ -13,6 +13,7 @@
  */
 
 #include <array>
+#include <concepts>
 #include <cstdio>
 #include <filesystem>
 #include <imgui.h>
@@ -26,24 +27,34 @@
 
 namespace ben_bot::gui {
 
+using std::filesystem::path;
 using std::string_view;
 
-static constexpr std::array StateFileChooserFilters {
-    nfdu8filteritem_t { "JSON", "json" }
-};
-
 namespace {
+    template <typename Func>
+    concept FileCallback = std::regular_invocable<Func, const path&>;
+
     // TODO: default path
-    void show_state_load_dialog(AppState& state)
+    template <bool IsLoading>
+    void show_file_dialog(FileCallback auto callback)
     {
+        static constexpr std::array StateFileChooserFilters {
+            nfdu8filteritem_t { "JSON", "json" }
+        };
+
         NFD::UniquePath outPath;
 
-        const auto res = OpenDialog(
-            outPath, StateFileChooserFilters.data(), StateFileChooserFilters.size());
+        nfdresult_t result;
 
-        switch (res) {
+        if constexpr (IsLoading) {
+            result = OpenDialog(outPath, StateFileChooserFilters.data(), StateFileChooserFilters.size());
+        } else {
+            result = SaveDialog(outPath, StateFileChooserFilters.data(), StateFileChooserFilters.size());
+        }
+
+        switch (result) {
             case NFD_OKAY: {
-                state.load_from(std::filesystem::path { outPath.get() });
+                callback(path { outPath.get() });
                 break;
             }
 
@@ -60,31 +71,16 @@ namespace {
         }
     }
 
-    // TODO: default path
+    void show_state_load_dialog(AppState& state)
+    {
+        show_file_dialog<true>(
+            [&state](const path& file) { state.load_from(file); });
+    }
+
     void show_state_save_dialog(const AppState& state)
     {
-        NFD::UniquePath outPath;
-
-        const auto res = SaveDialog(
-            outPath, StateFileChooserFilters.data(), StateFileChooserFilters.size());
-
-        switch (res) {
-            case NFD_OKAY: {
-                state.write_to(std::filesystem::path { outPath.get() });
-                break;
-            }
-
-            case NFD_CANCEL:
-                std::println("Info: user canceled file selection dialog");
-                break;
-
-            case NFD_ERROR:
-                std::println(
-                    stderr, "Info: error with file selection dialog");
-                break;
-
-            default: break;
-        }
+        show_file_dialog<false>(
+            [&state](const path& file) { state.write_to(file); });
     }
 } // namespace
 
