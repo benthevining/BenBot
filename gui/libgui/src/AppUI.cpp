@@ -76,21 +76,7 @@ void initialize(
         ImGui::LoadIniSettingsFromMemory(defaultData.data(), defaultData.size());
     }
 
-    if (const auto filePath = app_state_file_path();
-        exists(filePath)) {
-        try {
-            [[maybe_unused]] const auto result
-                = util::files::load(filePath)
-                      .transform([&state](const string_view fileContent) {
-                          state.update_from_string(fileContent);
-                          return std::monostate { };
-                      })
-                      .transform_error(util::print_error);
-        } catch (const nlohmann::detail::out_of_range& error) {
-            std::println(
-                stderr, "Error loading state: {}", error.what());
-        }
-    }
+    state.load_from(app_state_file_path());
 
     { // Setup scaling
         auto& style = ImGui::GetStyle();
@@ -123,10 +109,7 @@ void shutdown(const AppState& state)
 
     NFD::Quit();
 
-    [[maybe_unused]] const auto result
-        = util::files::overwrite(
-            app_state_file_path(),
-            state.to_string());
+    state.write_to(app_state_file_path());
 }
 
 using nlohmann::json;
@@ -158,6 +141,36 @@ void AppState::update_from_string(const string_view str)
 
     appSettings = AppSettings::from_string(
         parsed.at(TAG_SETTINGS).get<string_view>());
+}
+
+void AppState::load_from(const path& filePath)
+{
+    if (not exists(filePath)) {
+        std::println(
+            stderr, "Attempted loading state from nonexistent file: '{}'", filePath.string());
+        return;
+    }
+
+    try {
+        [[maybe_unused]] const auto result
+            = util::files::load(filePath)
+                  .transform([this](const string_view fileContent) {
+                      update_from_string(fileContent);
+                      return std::monostate { };
+                  })
+                  .transform_error(util::print_error);
+    } catch (const nlohmann::detail::out_of_range& error) {
+        std::println(
+            stderr, "Error loading state: {}", error.what());
+    }
+}
+
+void AppState::write_to(const path& filePath) const
+{
+    [[maybe_unused]] const auto result
+        = util::files::overwrite(
+            filePath, to_string())
+              .transform_error(util::print_error);
 }
 
 } // namespace ben_bot::gui

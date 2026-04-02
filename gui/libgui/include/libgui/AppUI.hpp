@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <filesystem>
 #include <libgui/AppSettingsPanel.hpp>
 #include <libgui/BoardEditor.hpp>
 #include <libgui/EnginePanel.hpp>
@@ -38,6 +39,10 @@ struct AppState final {
     [[nodiscard]] auto to_string() const -> std::string;
 
     void update_from_string(std::string_view str);
+
+    void load_from(const std::filesystem::path& filePath);
+
+    void write_to(const std::filesystem::path& filePath) const;
 };
 
 void initialize(

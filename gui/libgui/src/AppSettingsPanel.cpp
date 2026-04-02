@@ -13,16 +13,16 @@
  */
 
 #include <array>
+#include <cstdio>
 #include <filesystem>
 #include <imgui.h>
 #include <libgui/AppSettingsPanel.hpp>
 #include <libgui/AppUI.hpp>
-#include <libutil/Files.hpp>
 #include <nfd.hpp>
 #include <nlohmann/json.hpp>
+#include <print>
 #include <string>
 #include <string_view>
-#include <variant>
 
 namespace ben_bot::gui {
 
@@ -43,28 +43,21 @@ namespace {
 
         switch (NFD_OpenDialogU8_With(&outPath, &args)) {
             case NFD_OKAY: {
-                [[maybe_unused]] const auto result
-                    = util::files::load(std::filesystem::path { outPath })
-                          .transform([&state](const string_view content) {
-                              state.update_from_string(content);
-                              return std::monostate { };
-                          })
-                          .transform_error([](const string_view message) {
-                              // TODO: display error message
-                              return std::monostate { };
-                          });
-
+                state.load_from(std::filesystem::path { outPath });
                 NFD_FreePathU8(outPath);
                 break;
             }
 
-            default: [[fallthrough]];
             case NFD_CANCEL:
+                std::println("Info: user canceled file selection dialog");
                 break;
 
             case NFD_ERROR:
-                // TODO: print error
+                std::println(
+                    stderr, "Info: error with file selection dialog");
                 break;
+
+            default: break;
         }
     }
 
@@ -78,26 +71,21 @@ namespace {
 
         switch (NFD_SaveDialogU8_With(&outPath, &args)) {
             case NFD_OKAY: {
-                [[maybe_unused]] const auto result
-                    = util::files::overwrite(
-                        std::filesystem::path { outPath },
-                        state.to_string())
-                          .transform_error([](const string_view message) {
-                              // TODO: display error message
-                              return std::monostate { };
-                          });
-
+                state.write_to(std::filesystem::path { outPath });
                 NFD_FreePathU8(outPath);
                 break;
             }
 
-            default: [[fallthrough]];
             case NFD_CANCEL:
+                std::println("Info: user canceled file selection dialog");
                 break;
 
             case NFD_ERROR:
-                // TODO: print error
+                std::println(
+                    stderr, "Info: error with file selection dialog");
                 break;
+
+            default: break;
         }
     }
 } // namespace
