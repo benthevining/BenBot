@@ -20,8 +20,6 @@ project (
     HOMEPAGE_URL "https://github.com/benthevining/BenBot"
 )
 
-option (BENBOT_DOCS "Build the documentation (requires Doxygen)" "${PROJECT_IS_TOP_LEVEL}")
-
 option (BENBOT_TESTS "Build the tests" "${PROJECT_IS_TOP_LEVEL}")
 
 # includes used throughout the various directories
@@ -50,9 +48,7 @@ if (BENBOT_TESTS)
     endif ()
 endif ()
 
-if (BENBOT_DOCS)
-    add_subdirectory (docs)
-endif ()
+add_subdirectory (docs EXCLUDE_FROM_ALL)
 
 if (PROJECT_IS_TOP_LEVEL)
     include (CPack)
