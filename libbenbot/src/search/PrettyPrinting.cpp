@@ -69,12 +69,12 @@ auto evaluation(
 {
     return std::visit(
         util::Visitor {
-            [](const Score::Centipawns& centipawns) {
+            [](const Score::Centipawns centipawns) {
                 return std::format(
                     "{:+}",
                     centipawns.value);
             },
-            [](const Score::MateIn& mate) {
+            [](const Score::MateIn mate) {
                 return std::format(
                     "#{}",
                     std::abs(mate.moves()));

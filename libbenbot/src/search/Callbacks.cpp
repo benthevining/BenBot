@@ -139,40 +139,17 @@ namespace {
     void print_score(
         const Score& score)
     {
-        enum class ScoreType : std::uint_least8_t {
-            Winning,
-            Losing,
-            Equal
-        };
+        switch (score.get_type()) {
+            using enum Score::Type;
 
-        const auto type = std::visit(
-            util::Visitor {
-                [](const Score::Centipawns& value) noexcept {
-                    if (value.value == 0)
-                        return ScoreType::Equal;
-
-                    if (value.value > 0)
-                        return ScoreType::Winning;
-
-                    return ScoreType::Losing;
-                },
-                [](const Score::MateIn& mate) {
-                    if (mate.plies > 0)
-                        return ScoreType::Winning;
-
-                    return ScoreType::Losing;
-                } },
-            score.value);
-
-        switch (type) {
-            case ScoreType::Winning:
+            case Winning:
                 std::cout << termcolor::green;
                 break;
-            case ScoreType::Losing:
+            case Losing:
                 std::cout << termcolor::red;
                 break;
             default: [[fallthrough]];
-            case ScoreType::Equal:
+            case Equal:
                 std::cout << termcolor::grey;
                 break;
         }

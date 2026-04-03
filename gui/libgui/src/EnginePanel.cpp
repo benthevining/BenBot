@@ -376,13 +376,40 @@ namespace {
                 if (showTooltips)
                     ImGui::SetItemTooltip("Total search duration so far");
 
-                ImGui::TableNextColumn();
-                UnformattedText(
-                    pretty_print::evaluation(
-                        result.score.to_libchess()));
+                {
+                    static constexpr auto GreenText = IM_COL32(0, 255, 0, 255);
+                    static constexpr auto RedText   = IM_COL32(255, 0, 0, 255);
+                    static constexpr auto GrayText  = IM_COL32(62, 62, 64, 255);
 
-                if (showTooltips)
-                    ImGui::SetItemTooltip("Evaluation based on the best continuation");
+                    ImGui::TableNextColumn();
+
+                    const auto score = result.score.to_libchess();
+
+                    switch (score.get_type()) {
+                        using enum pretty_print::Score::Type;
+
+                        case Winning:
+                            ImGui::PushStyleColor(ImGuiCol_Text, GreenText);
+                            break;
+
+                        case Losing:
+                            ImGui::PushStyleColor(ImGuiCol_Text, RedText);
+                            break;
+
+                        default: [[fallthrough]];
+                        case Equal:
+                            ImGui::PushStyleColor(ImGuiCol_Text, GrayText);
+                            break;
+                    }
+
+                    UnformattedText(
+                        pretty_print::evaluation(score));
+
+                    ImGui::PopStyleColor();
+
+                    if (showTooltips)
+                        ImGui::SetItemTooltip("Evaluation based on the best continuation");
+                }
             }
 
             ImGui::EndTable();
