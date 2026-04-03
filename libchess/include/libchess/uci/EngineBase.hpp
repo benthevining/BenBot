@@ -260,25 +260,6 @@ struct EngineBase {
 
     /// @}
 
-private:
-    void respond_to_uci();
-    void respond_to_isready();
-    void respond_to_newgame();
-    void handle_quit();
-    void handle_setpos(string_view arguments);
-    void handle_setoption(string_view arguments);
-
-    static_assert(
-        std::atomic_bool::is_always_lock_free,
-        "Platform doesn't support lock-free atomic operations");
-
-    std::atomic_bool shouldExit { false }; // used as flag for exiting the loop() function
-    std::atomic_bool initialized { false };
-    std::atomic_bool debugMode { false };
-    std::atomic_bool sanitizeIncomingPositions { false };
-
-    Position position;
-
 protected:
     /** Subclasses can implement this to be informed when the position has changed. */
     virtual void position_changed([[maybe_unused]] const Position& pos) { }
@@ -346,6 +327,25 @@ protected:
     std::array<Option*, 2uz> standardUCIOptions {
         &opt_Hash, &opt_Ponder
     };
+
+private:
+    void respond_to_uci();
+    void respond_to_isready();
+    void respond_to_newgame();
+    void handle_quit();
+    void handle_setpos(string_view arguments);
+    void handle_setoption(string_view arguments);
+
+    static_assert(
+        std::atomic_bool::is_always_lock_free,
+        "Platform doesn't support lock-free atomic operations");
+
+    Position position;
+
+    std::atomic_bool shouldExit { false }; // used as flag for exiting the loop() function
+    std::atomic_bool initialized { false };
+    std::atomic_bool debugMode { false };
+    std::atomic_bool sanitizeIncomingPositions { false };
 };
 
 } // namespace chess::uci

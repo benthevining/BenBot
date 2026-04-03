@@ -24,6 +24,7 @@
 #include <libbenbot/search/Callbacks.hpp>
 #include <libbenbot/search/Context.hpp>
 #include <libchess/game/Position.hpp>
+#include <libutil/Memory.hpp>
 #include <thread>
 
 namespace chess::uci {
@@ -66,7 +67,9 @@ struct Thread final {
      */
     void start()
     {
-        context.wait(); // shouldn't have been searching, but better safe than sorry
+        // shouldn't have been searching, but better safe than sorry
+        context.abort();
+        context.wait();
 
         startSearch.store(true, std::memory_order::release);
     }
@@ -76,8 +79,9 @@ private:
 
     std::thread searcherThread { [this] { thread_func(); } };
 
-    std::atomic_bool threadShouldExit { false };
-    std::atomic_bool startSearch { false };
+    // align to cache lines to prevent false sharing of these flags
+    alignas(util::memory::CacheLineSize) std::atomic_bool threadShouldExit { false };
+    alignas(util::memory::CacheLineSize) std::atomic_bool startSearch { false };
 };
 
 } // namespace ben_bot::search

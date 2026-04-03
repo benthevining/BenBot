@@ -32,7 +32,6 @@
 #include <libutil/Math.hpp>
 #include <libutil/Memory.hpp>
 #include <memory>
-#include <new>
 #include <numeric>
 #include <optional>
 #include <ranges>
@@ -100,15 +99,10 @@ struct TranspositionTable::Entry final {
     }
 };
 
-#if defined(__cpp_lib_hardware_interference_size) and (__cpp_lib_hardware_interference_size >= 201703L)
-inline constexpr auto CACHE_LINE_SIZE = std::hardware_constructive_interference_size;
-#else
-#    warning std::hardware_constructive_interference_size not available, using default value
-inline constexpr auto CACHE_LINE_SIZE = 32uz;
-#endif
+using util::memory::CacheLineSize;
 
-struct alignas(CACHE_LINE_SIZE) TranspositionTable::Cluster final {
-    static constexpr auto NumRecords = CACHE_LINE_SIZE / sizeof(Entry);
+struct alignas(CacheLineSize) TranspositionTable::Cluster final {
+    static constexpr auto NumRecords = CacheLineSize / sizeof(Entry);
 
     std::array<Entry, NumRecords> records { };
 };
@@ -125,7 +119,7 @@ TranspositionTable::TranspositionTable(TranspositionTable&& other) noexcept
         "TranspositionTable::Cluster size should be a power of 2!");
 
     static_assert(
-        sizeof(Cluster) <= CACHE_LINE_SIZE,
+        sizeof(Cluster) <= CacheLineSize,
         "TranspositionTable::Cluster should fit in a CPU cache line!");
 }
 
