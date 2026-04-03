@@ -381,12 +381,12 @@ namespace {
             return;
 
         if (ImGui::BeginTable("Search results", 7, ImGuiTableFlags_Borders)) {
-            ImGui::TableSetupColumn("Depth");
-            ImGui::TableSetupColumn("Time");
-            ImGui::TableSetupColumn("Nodes");
-            ImGui::TableSetupColumn("NPS");
-            ImGui::TableSetupColumn("Hashfull");
-            ImGui::TableSetupColumn("Evaluation");
+            ImGui::TableSetupColumn("Depth", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("Time", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("Nodes", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("NPS", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("Hashfull", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("Evaluation", ImGuiTableColumnFlags_WidthFixed);
             ImGui::TableSetupColumn("PV");
 
             ImGui::TableHeadersRow();
