@@ -12,11 +12,14 @@
  * ======================================================================================
  */
 
+#include "ImUtil.hpp" // NOLINT(build/include_subdir)
 #include <array>
 #include <concepts>
 #include <cstdio>
 #include <filesystem>
+#include <format>
 #include <imgui.h>
+#include <libbenbot/Resources.hpp>
 #include <libgui/AppSettingsPanel.hpp>
 #include <libgui/AppUI.hpp>
 #include <nfd.hpp>
@@ -85,6 +88,18 @@ namespace {
         show_file_dialog<false>(
             [&state](const path& file) { state.write_to(file); });
     }
+
+    void render_compiler_info()
+    {
+        UnformattedText(
+            std::format("Compiler: {}", resources::get_compiler_name()));
+
+        UnformattedText(
+            std::format("Compiler version: {}", resources::get_compiler_version()));
+
+        UnformattedText(
+            std::format("Build configuration: {}", resources::get_build_config()));
+    }
 } // namespace
 
 void render_app_settings_panel(AppState& state)
@@ -103,11 +118,17 @@ void render_app_settings_panel(AppState& state)
         if (showTooltips)
             ImGui::SetItemTooltip("Load app state from a file");
 
+        ImGui::SameLine();
+
         if (ImGui::Button("Save state"))
             show_state_save_dialog(state);
 
         if (showTooltips)
             ImGui::SetItemTooltip("Save app state to a file");
+
+        ImGui::Separator();
+
+        render_compiler_info();
     }
 
     ImGui::End();

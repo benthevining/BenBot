@@ -59,8 +59,8 @@ add_library (libgui STATIC)
 target_compile_features (libgui PUBLIC cxx_std_23)
 
 target_link_libraries (
-    libgui PUBLIC ben_bot::libbenbot PRIVATE imgui::imgui nfd::nfd ben_bot::gui_resources
-                                             nlohmann_json::nlohmann_json
+    libgui PUBLIC ben_bot::libbenbot PRIVATE imgui::imgui nfd::nfd nlohmann_json::nlohmann_json
+                                             ben_bot::resources ben_bot::gui_resources
 )
 
 set_target_properties (
