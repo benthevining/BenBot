@@ -129,33 +129,34 @@ namespace {
         std::optional<string>& selectedComboChoice,
         const bool             showTooltips)
     {
-        if (ImGui::CollapsingHeader("UCI options")) {
-            const ScopedGroup group;
+        if (not ImGui::CollapsingHeader("UCI options"))
+            return;
 
-            ImGui::SeparatorText("Standard options");
+        const ScopedGroup group;
 
-            for (auto* opt : engine.get_standard_uci_options())
-                render_uci_option(*opt, selectedComboChoice, showTooltips);
+        ImGui::SeparatorText("Standard options");
 
-            ImGui::SeparatorText("Custom options");
+        for (auto* opt : engine.get_standard_uci_options())
+            render_uci_option(*opt, selectedComboChoice, showTooltips);
 
-            for (auto* opt : engine.get_custom_uci_options())
-                render_uci_option(*opt, selectedComboChoice, showTooltips);
+        ImGui::SeparatorText("Custom options");
 
-            ImGui::Separator();
+        for (auto* opt : engine.get_custom_uci_options())
+            render_uci_option(*opt, selectedComboChoice, showTooltips);
 
-            if (ImGui::Button("Reset all"))
-                reset_all_options(engine);
+        ImGui::Separator();
 
-            ImGui::SetItemTooltip("Reset all options to their default values");
+        if (ImGui::Button("Reset all"))
+            reset_all_options(engine);
 
-            auto debug = engine.is_debug_mode();
+        ImGui::SetItemTooltip("Reset all options to their default values");
 
-            if (ImGui::Checkbox("Debug mode", &debug))
-                engine.set_debug_mode(debug);
+        auto debug = engine.is_debug_mode();
 
-            ImGui::SetItemTooltip("Enable engine debug mode");
-        }
+        if (ImGui::Checkbox("Debug mode", &debug))
+            engine.set_debug_mode(debug);
+
+        ImGui::SetItemTooltip("Enable engine debug mode");
     }
 
     using chess::game::Position;
@@ -264,55 +265,56 @@ namespace {
     {
         // TODO: handling of negative integer values, optionals
 
-        if (ImGui::CollapsingHeader("Search options")) {
-            const ScopedGroup group;
+        if (not ImGui::CollapsingHeader("Search options"))
+            return;
 
-            const auto& position   = engine.get_position();
-            const auto  moveFormat = engine.get_move_format();
+        const ScopedGroup group;
 
-            auto depth = static_cast<int>(options.depth);
+        const auto& position   = engine.get_position();
+        const auto  moveFormat = engine.get_move_format();
 
-            if (ImGui::InputInt("Depth", &depth))
-                options.depth = static_cast<size_t>(depth);
+        auto depth = static_cast<int>(options.depth);
 
-            if (showTooltips)
-                ImGui::SetItemTooltip("Search depth, in plies");
+        if (ImGui::InputInt("Depth", &depth))
+            options.depth = static_cast<size_t>(depth);
 
-            auto numMs = static_cast<int>(options.searchTime.value_or(std::chrono::milliseconds { 0 }).count());
+        if (showTooltips)
+            ImGui::SetItemTooltip("Search depth, in plies");
 
-            if (ImGui::InputInt("Time", &numMs))
-                options.searchTime = std::chrono::milliseconds { numMs };
+        auto numMs = static_cast<int>(options.searchTime.value_or(std::chrono::milliseconds { 0 }).count());
 
-            if (showTooltips)
-                ImGui::SetItemTooltip("Search time, in milliseconds");
+        if (ImGui::InputInt("Time", &numMs))
+            options.searchTime = std::chrono::milliseconds { numMs };
 
-            auto maxNodes = static_cast<int>(options.maxNodes);
+        if (showTooltips)
+            ImGui::SetItemTooltip("Search time, in milliseconds");
 
-            if (ImGui::InputInt("Nodes", &maxNodes))
-                options.maxNodes = static_cast<size_t>(maxNodes);
+        auto maxNodes = static_cast<int>(options.maxNodes);
 
-            if (showTooltips)
-                ImGui::SetItemTooltip("Maximum number of nodes to search");
+        if (ImGui::InputInt("Nodes", &maxNodes))
+            options.maxNodes = static_cast<size_t>(maxNodes);
 
-            auto mateIn = static_cast<int>(options.mateIn.value_or(0uz));
+        if (showTooltips)
+            ImGui::SetItemTooltip("Maximum number of nodes to search");
 
-            if (ImGui::InputInt("Mate in", &mateIn))
-                options.mateIn = static_cast<size_t>(mateIn);
+        auto mateIn = static_cast<int>(options.mateIn.value_or(0uz));
 
-            if (showTooltips)
-                ImGui::SetItemTooltip("Search for mate in X plies");
+        if (ImGui::InputInt("Mate in", &mateIn))
+            options.mateIn = static_cast<size_t>(mateIn);
 
-            render_moves_to_search(options, moveFormat, position, moveParseError, showTooltips);
+        if (showTooltips)
+            ImGui::SetItemTooltip("Search for mate in X plies");
 
-            ImGui::Checkbox("Infinite", &options.infinite);
+        render_moves_to_search(options, moveFormat, position, moveParseError, showTooltips);
 
-            if (showTooltips)
-                ImGui::SetItemTooltip("Whether to search infinitely");
+        ImGui::Checkbox("Infinite", &options.infinite);
 
-            ImGui::Separator();
+        if (showTooltips)
+            ImGui::SetItemTooltip("Whether to search infinitely");
 
-            render_utility_buttons(options, engine, showTooltips);
-        }
+        ImGui::Separator();
+
+        render_utility_buttons(options, engine, showTooltips);
     }
 } // namespace
 

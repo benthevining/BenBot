@@ -106,52 +106,53 @@ namespace {
         static constexpr auto Kingside  = "O-O";
         static constexpr auto Queenside = "O-O-O";
 
-        if (ImGui::CollapsingHeader("Castling Rights")) {
-            const ScopedGroup group;
+        if (not ImGui::CollapsingHeader("Castling Rights"))
+            return;
 
-            if (ImGui::BeginTable("CastlingRights", 3, ImGuiTableFlags_Borders)) {
-                ImGui::TableSetupColumn("ColorLabels");
-                ImGui::TableSetupColumn(Kingside);
-                ImGui::TableSetupColumn(Queenside);
+        const ScopedGroup group;
 
-                ImGui::TableNextRow();
+        if (ImGui::BeginTable("CastlingRights", 3, ImGuiTableFlags_Borders)) {
+            ImGui::TableSetupColumn("ColorLabels");
+            ImGui::TableSetupColumn(Kingside);
+            ImGui::TableSetupColumn(Queenside);
 
-                ImGui::TableNextColumn();
-                ImGui::Text(White);
+            ImGui::TableNextRow();
 
-                ImGui::TableNextColumn();
-                ImGui::Checkbox(
-                    std::format("{}##{}", Kingside, White).c_str(),
-                    &position.whiteCastlingRights.kingside);
+            ImGui::TableNextColumn();
+            ImGui::Text(White);
 
-                ImGui::TableNextColumn();
-                ImGui::Checkbox(
-                    std::format("{}##{}", Queenside, White).c_str(),
-                    &position.whiteCastlingRights.queenside);
+            ImGui::TableNextColumn();
+            ImGui::Checkbox(
+                std::format("{}##{}", Kingside, White).c_str(),
+                &position.whiteCastlingRights.kingside);
 
-                ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+            ImGui::Checkbox(
+                std::format("{}##{}", Queenside, White).c_str(),
+                &position.whiteCastlingRights.queenside);
 
-                ImGui::TableNextColumn();
-                ImGui::Text(Black);
+            ImGui::TableNextRow();
 
-                ImGui::TableNextColumn();
-                ImGui::Checkbox(
-                    std::format("{}##{}", Kingside, Black).c_str(),
-                    &position.blackCastlingRights.kingside);
+            ImGui::TableNextColumn();
+            ImGui::Text(Black);
 
-                ImGui::TableNextColumn();
-                ImGui::Checkbox(
-                    std::format("{}##{}", Queenside, Black).c_str(),
-                    &position.blackCastlingRights.queenside);
+            ImGui::TableNextColumn();
+            ImGui::Checkbox(
+                std::format("{}##{}", Kingside, Black).c_str(),
+                &position.blackCastlingRights.kingside);
 
-                ImGui::EndTable();
+            ImGui::TableNextColumn();
+            ImGui::Checkbox(
+                std::format("{}##{}", Queenside, Black).c_str(),
+                &position.blackCastlingRights.queenside);
 
-                position.refresh_zobrist();
-            }
+            ImGui::EndTable();
 
-            if (showTooltips and ImGui::IsItemHovered())
-                ImGui::SetTooltip("Set the castling rights of each side");
+            position.refresh_zobrist();
         }
+
+        if (showTooltips and ImGui::IsItemHovered())
+            ImGui::SetTooltip("Set the castling rights of each side");
     }
 
     void render_ep_square(
