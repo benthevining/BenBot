@@ -90,7 +90,7 @@ void Engine::init_search_callbacks()
         create_search_callbacks());
 }
 
-auto Engine::create_search_callbacks() const -> search::Callbacks
+auto Engine::create_search_callbacks() -> search::Callbacks
 {
     if (prettyPrintMode.get_value()) {
         return search::Callbacks::make_pretty_printer(

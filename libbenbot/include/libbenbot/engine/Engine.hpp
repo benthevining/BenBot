@@ -93,7 +93,7 @@ protected:
         UCI printer depending on the value of the pretty printing parameter, but
         other engine use cases can override this to return other sets of callbacks.
      */
-    [[nodiscard]] virtual auto create_search_callbacks() const -> search::Callbacks;
+    [[nodiscard]] virtual auto create_search_callbacks() -> search::Callbacks;
 
 private:
     [[nodiscard]] auto get_name() const -> std::string override;

@@ -14,16 +14,15 @@
 
 #include <cassert>
 #include <chrono>
-#include <cmath>   // IWYU pragma: keep - for std::abs()
 #include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
 #include <format>
 #include <functional>
 #include <iostream>
 #include <libbenbot/search/Callbacks.hpp>
+#include <libbenbot/search/PrettyPrinting.hpp>
 #include <libbenbot/search/Result.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/uci/Printing.hpp>
-#include <libutil/Chrono.hpp>
 #include <libutil/Variant.hpp>
 #include <optional>
 #include <ratio>
@@ -96,39 +95,6 @@ namespace {
             COLUMN_WIDTH);
     }
 
-    inline constexpr string_view FRACTIONAL_DURATION_FMT { "{:.2%Q %q}" };
-    inline constexpr string_view INTEGER_DURATION_FMT { "{:%Q %q}" };
-
-    template <util::ChronoDuration Duration>
-    [[nodiscard]] auto get_duration_string(
-        const milliseconds duration) -> std::optional<string>
-    {
-        static constexpr auto msPerUnit = duration_cast<milliseconds>(Duration { 1uz });
-
-        if (duration >= msPerUnit) {
-            using FractionalDuration = util::FractionalDuration<Duration>;
-
-            return std::format(
-                FRACTIONAL_DURATION_FMT,
-                duration_cast<FractionalDuration>(duration));
-        }
-
-        return std::nullopt;
-    }
-
-    [[nodiscard]] auto format_duration(
-        const milliseconds duration) -> string
-    {
-        // NB. it should be quite rare that a search will run for 1 day or more...
-        return get_duration_string<std::chrono::hours>(duration)
-            .or_else([duration] { return get_duration_string<std::chrono::minutes>(duration); })
-            .or_else([duration] { return get_duration_string<std::chrono::seconds>(duration); })
-            .or_else([duration] {
-                return std::make_optional(std::format(INTEGER_DURATION_FMT, duration));
-            })
-            .value();
-    }
-
     template <typename Ratio, char Suffix, size_t Precision>
     [[nodiscard]] auto get_nodes_string(
         const size_t nodes) -> std::optional<string>
@@ -151,7 +117,7 @@ namespace {
         return get_nodes_string<std::mega, 'M', Precision>(nodes)
             .or_else([nodes] { return get_nodes_string<std::kilo, 'k', Precision>(nodes); })
             .or_else([nodes] { return std::make_optional(std::format("{}", nodes)); })
-            .value();
+            .value_or(std::string { });
     }
 
     [[nodiscard]] auto format_nps(const size_t nps) -> string
@@ -169,24 +135,6 @@ namespace {
     }
 
     using Score = chess::uci::printing::SearchInfo::Score;
-
-    [[nodiscard]] auto format_score(
-        const Score& score) -> string
-    {
-        return std::visit(
-            util::Visitor {
-                [](const Score::Centipawns& centipawns) {
-                    return std::format(
-                        "{:+}",
-                        centipawns.value);
-                },
-                [](const Score::MateIn& mate) {
-                    return std::format(
-                        "#{}",
-                        std::abs(mate.moves()));
-                } },
-            score.value);
-    }
 
     void print_score(
         const Score& score)
@@ -230,7 +178,7 @@ namespace {
         }
 
         print_column_text<Alignment::Center>(
-            format_score(score));
+            pretty_print::evaluation(score));
 
         std::cout << termcolor::reset;
     }
@@ -283,7 +231,7 @@ namespace {
 
         // time
         print_column_text<Alignment::Right>(
-            format_duration(res.duration));
+            pretty_print::duration(res.duration));
 
         // nodes
         print_column_text<Alignment::Right>(

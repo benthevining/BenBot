@@ -14,28 +14,27 @@
 
 #pragma once
 
-#include <libbenbot/search/Options.hpp>
-#include <libgui/EngineWrapper.hpp>
+#include <chrono>
+#include <libchess/uci/Printing.hpp>
 #include <string>
-#include <string_view>
 
-namespace ben_bot::gui {
+/** This namespace contains utility functions for pretty printing search results.
+    @ingroup libbenbot
+ */
+namespace ben_bot::pretty_print {
 
-struct EnginePanelState final {
-    EngineWrapper engine;
+/** Pretty prints a duration in the form "10 ms", "1.3 s", "2.5 m", etc.
+    @ingroup libbenbot
+ */
+[[nodiscard]] auto duration(
+    std::chrono::milliseconds duration) -> std::string;
 
-    search::Options searchOptions;
+using Score = chess::uci::printing::SearchInfo::Score;
 
-    std::optional<std::string> selectedComboChoice;
+/** Pretty prints an evaluation in the form "+1.2", "-3.6", "#3", etc.
+    @ingroup libbenbot
+ */
+[[nodiscard]] auto evaluation(
+    Score score) -> std::string;
 
-    std::string moveParseError; // empty if no error has occurred
-
-    [[nodiscard]] auto to_string() const -> std::string;
-
-    void update_from_string(std::string_view str);
-};
-
-void render_engine_panel(
-    EnginePanelState& state, bool showTooltips);
-
-} // namespace ben_bot::gui
+} // namespace ben_bot::pretty_print

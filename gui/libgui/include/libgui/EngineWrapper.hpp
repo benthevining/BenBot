@@ -14,28 +14,33 @@
 
 #pragma once
 
+#include <libbenbot/engine/Engine.hpp>
+#include <libbenbot/search/Callbacks.hpp>
 #include <libbenbot/search/Options.hpp>
-#include <libgui/EngineWrapper.hpp>
-#include <string>
-#include <string_view>
+#include <libbenbot/search/Result.hpp>
+#include <span>
+#include <vector>
 
 namespace ben_bot::gui {
 
-struct EnginePanelState final {
-    EngineWrapper engine;
+struct EngineWrapper final : Engine {
+    [[nodiscard]] auto get_results() const -> std::span<const search::Result>
+    {
+        return output;
+    }
 
-    search::Options searchOptions;
+private:
+    std::vector<search::Result> output;
 
-    std::optional<std::string> selectedComboChoice;
-
-    std::string moveParseError; // empty if no error has occurred
-
-    [[nodiscard]] auto to_string() const -> std::string;
-
-    void update_from_string(std::string_view str);
+    [[nodiscard]] auto create_search_callbacks() -> search::Callbacks override
+    {
+        return {
+            .onSearchStart = [this]([[maybe_unused]] const search::Options& opts) { output.clear(); },
+            .onSearchComplete = [this](const search::Result& result) { output.emplace_back(result); },
+            .onIteration = [this](const search::Result& result) { output.emplace_back(result); },
+            .onRootMove = nullptr
+        };
+    }
 };
-
-void render_engine_panel(
-    EnginePanelState& state, bool showTooltips);
 
 } // namespace ben_bot::gui

@@ -17,10 +17,13 @@
 #include <array>
 #include <cassert>
 #include <chrono>
+#include <format>
 #include <imgui.h>
 #include <imgui_stdlib.h>
 #include <libbenbot/engine/Engine.hpp>
 #include <libbenbot/search/Options.hpp>
+#include <libbenbot/search/PrettyPrinting.hpp>
+#include <libbenbot/search/Result.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/notation/MoveFormats.hpp>
@@ -30,6 +33,7 @@
 #include <nlohmann/json.hpp>
 #include <optional>
 #include <ranges>
+#include <span>
 #include <string>
 #include <string_view>
 
@@ -340,6 +344,50 @@ namespace {
         if (showTooltips)
             ImGui::SetItemTooltip("Start searching");
     }
+
+    void render_search_output(
+        const std::span<const search::Result> results,
+        const bool                            showTooltips)
+    {
+        if (not ImGui::CollapsingHeader("Search output"))
+            return;
+
+        if (ImGui::BeginTable("Search results", 3, ImGuiTableFlags_Borders)) {
+            ImGui::TableSetupColumn("Depth");
+            ImGui::TableSetupColumn("Duration");
+            ImGui::TableSetupColumn("Evaluation");
+
+            ImGui::TableHeadersRow();
+
+            for (const auto& result : results) {
+                ImGui::TableNextRow();
+
+                ImGui::TableNextColumn();
+                UnformattedText(
+                    std::format("{} / {}", result.depth, result.qDepth));
+
+                if (showTooltips)
+                    ImGui::SetItemTooltip("Search depth / quiescence search depth, in plies");
+
+                ImGui::TableNextColumn();
+                UnformattedText(
+                    pretty_print::duration(result.duration));
+
+                if (showTooltips)
+                    ImGui::SetItemTooltip("Total search duration so far");
+
+                ImGui::TableNextColumn();
+                UnformattedText(
+                    pretty_print::evaluation(
+                        result.score.to_libchess()));
+
+                if (showTooltips)
+                    ImGui::SetItemTooltip("Evaluation based on the best continuation");
+            }
+
+            ImGui::EndTable();
+        }
+    }
 } // namespace
 
 void render_engine_panel(
@@ -358,7 +406,10 @@ void render_engine_panel(
         render_start_stop_button(
             state.engine, state.searchOptions, showTooltips);
 
-        // TODO: render current position as chessboard
+        render_search_output(
+            state.engine.get_results(), showTooltips);
+
+        // TODO: render current position as chessboard?
     }
 
     ImGui::End();
