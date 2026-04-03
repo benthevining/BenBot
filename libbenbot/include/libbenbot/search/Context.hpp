@@ -84,10 +84,11 @@ struct Context final {
     }
 
     /** Resizes the transposition table.
-        If a search is in progress, this method blocks until it returns.
+        If a search is in progress, this method aborts it and blocks until it returns.
      */
-    void resize_transposition_table(size_t sizeMB)
+    void resize_transposition_table(const size_t sizeMB)
     {
+        abort();
         wait();
         transTable.resize(sizeMB);
     }

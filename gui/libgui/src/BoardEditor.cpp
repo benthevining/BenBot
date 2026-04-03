@@ -405,8 +405,11 @@ namespace {
     {
         const ScopedGroup group;
 
-        if (ImGui::Button("Send to engine"))
+        if (ImGui::Button("Send to engine")) {
+            engine.abort_search();
+            engine.wait();
             engine.set_position(position);
+        }
 
         if (showTooltips)
             ImGui::SetItemTooltip("Send position to engine (interrupts search if active)");
