@@ -62,19 +62,27 @@ namespace {
 
         ImGui::SameLine();
 
+        if (ImGui::Button("Clear"))
+            position.position = Position::empty();
+
+        if (showTooltips)
+            ImGui::SetItemTooltip("Remove all pieces from the board");
+
+        ImGui::SameLine();
+
         if (ImGui::Button("Flip"))
-            position.position = flipped(position.position);
+            position.position.flip();
 
         if (showTooltips)
             ImGui::SetItemTooltip("Flip the board vertically");
 
         ImGui::SameLine();
 
-        if (ImGui::Button("Clear"))
-            position.position = Position::empty();
+        if (ImGui::Button("Make null"))
+            position.position.make_null_move();
 
         if (showTooltips)
-            ImGui::SetItemTooltip("Remove all pieces from the board");
+            ImGui::SetItemTooltip("Make a null move on the board");
     }
 
     void render_side_to_move(
