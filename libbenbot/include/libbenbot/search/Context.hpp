@@ -162,12 +162,6 @@ struct Context final {
     [[nodiscard]] auto get_position() const noexcept -> const Position& { return position; }
 
 private:
-    std::atomic_bool exitFlag { false };
-
-    std::atomic_bool activeFlag { false };
-
-    std::atomic_bool pondering { false };
-
     Position position;
 
     Options options;
@@ -177,6 +171,12 @@ private:
     TranspositionTable transTable;
 
     KillerMoves killerMoves;
+
+    std::atomic_bool exitFlag { false };
+
+    std::atomic_bool activeFlag { false };
+
+    std::atomic_bool pondering { false };
 };
 
 } // namespace ben_bot::search

@@ -475,6 +475,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
     if (options.movesToSearch.empty()) {
         chess::moves::generate(position, std::back_inserter(options.movesToSearch));
 
+        // we shouldn't have been given a checkmated position to search
         assert(not options.movesToSearch.empty());
     }
 
@@ -485,7 +486,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
     // iterative deepening
     auto depth { 1uz };
 
-    while (depth <= options.depth) {
+    while (options.infinite or pondering.load(memory_order::acquire) or depth <= options.depth) {
         if (interrupter.should_abort(0uz))
             break;
 
@@ -501,6 +502,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
 
         interrupter.iteration_completed();
 
+        // check if we should abort the search
         if (not(options.infinite or pondering.load(memory_order::acquire))) {
             // check "mate in X" search bound
             if (options.mateIn.has_value() and result.bestScore.is_mate()) {
@@ -531,7 +533,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         // in the infinite case, we do allow this repetition because we want to print the
         // final output before we're going to spin, then the stop command will print the
         // final info again and the bestmove
-        if (depth < options.depth or options.infinite) {
+        if (depth < options.depth or options.infinite or pondering.load(memory_order::acquire)) {
             callbacks.iteration_complete(
                 result.to_cb_result(depth, transTable.hashfull()));
         }
@@ -545,12 +547,12 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
     // when in ponder mode, we don't want to exit the search
     // until we've received either a stop or ponderhit command
     if (pondering.load(memory_order::acquire)) {
-        util::progressive_backoff([this] {
+        util::progressive_backoff([this]() noexcept {
             return exitFlag.load(memory_order::acquire)
                 or not pondering.load(memory_order::acquire);
         });
     } else if (options.infinite) {
-        util::progressive_backoff([this] {
+        util::progressive_backoff([this]() noexcept {
             return exitFlag.load(memory_order::acquire);
         });
     }
@@ -561,7 +563,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
 
 void Context::wait() const
 {
-    util::progressive_backoff([this] {
+    util::progressive_backoff([this]() noexcept {
         return not activeFlag.load(memory_order::relaxed);
     });
 }
