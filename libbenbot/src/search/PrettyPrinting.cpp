@@ -19,6 +19,7 @@
 #include <libutil/Chrono.hpp>
 #include <libutil/Variant.hpp>
 #include <optional>
+#include <ratio>
 #include <string>
 #include <string_view>
 #include <variant>
@@ -80,6 +81,55 @@ auto evaluation(
                     std::abs(mate.moves()));
             } },
         score.value);
+}
+
+namespace {
+    template <typename Ratio, char Suffix, size_t Precision>
+    [[nodiscard]] auto get_nodes_string(
+        const size_t nodes) -> std::optional<string>
+    {
+        if (nodes >= Ratio::num) {
+            const auto display = static_cast<float>(nodes) / static_cast<float>(Ratio::num);
+
+            return std::format(
+                "{:.{}f}{}",
+                display, Precision, Suffix);
+        }
+
+        return std::nullopt;
+    }
+
+    template <size_t Precision>
+    [[nodiscard]] auto format_nodes(
+        const size_t nodes) -> string
+    {
+        return get_nodes_string<std::mega, 'M', Precision>(nodes)
+            .or_else([nodes] { return get_nodes_string<std::kilo, 'k', Precision>(nodes); })
+            .or_else([nodes] { return std::make_optional(std::format("{}", nodes)); })
+            .value_or(std::string { });
+    }
+} // namespace
+
+auto nodes(
+    const size_t num) -> string
+{
+    return format_nodes<2uz>(num);
+}
+
+auto nps(
+    const size_t nodesPerSec) -> string
+{
+    return std::format(
+        "{}/s",
+        format_nodes<1uz>(nodesPerSec)); // use this function for its transformation of the value to a k/M representation
+}
+
+auto hashfull(
+    const size_t permille) -> string
+{
+    return std::format(
+        "{}%",
+        permille / 10uz);
 }
 
 } // namespace ben_bot::pretty_print

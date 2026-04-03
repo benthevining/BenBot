@@ -345,43 +345,103 @@ namespace {
             ImGui::SetItemTooltip("Start searching");
     }
 
+    [[nodiscard]] auto format_pv(
+        const std::span<const Move> pv,
+        Position                    position,
+        const MoveFormat            format) -> string
+    {
+        if (pv.empty()) {
+            // this is possible if we're checkmated
+            return { };
+        }
+
+        string result;
+
+        for (const auto move : pv) {
+            result.append(
+                format_move(format, position, move));
+
+            result.append(1uz, ' ');
+
+            position.make_move(move);
+        }
+
+        result.pop_back(); // remove trailing space
+
+        return result;
+    }
+
     void render_search_output(
         const std::span<const search::Result> results,
+        const Position&                       rootPosition,
+        const MoveFormat                      moveFormat,
         const bool                            showTooltips)
     {
         if (not ImGui::CollapsingHeader("Search output"))
             return;
 
-        if (ImGui::BeginTable("Search results", 3, ImGuiTableFlags_Borders)) {
+        if (ImGui::BeginTable("Search results", 7, ImGuiTableFlags_Borders)) {
             ImGui::TableSetupColumn("Depth");
-            ImGui::TableSetupColumn("Duration");
+            ImGui::TableSetupColumn("Time");
+            ImGui::TableSetupColumn("Nodes");
+            ImGui::TableSetupColumn("NPS");
+            ImGui::TableSetupColumn("Hashfull");
             ImGui::TableSetupColumn("Evaluation");
+            ImGui::TableSetupColumn("PV");
 
             ImGui::TableHeadersRow();
 
             for (const auto& result : results) {
                 ImGui::TableNextRow();
 
-                ImGui::TableNextColumn();
-                UnformattedText(
-                    std::format("{} / {}", result.depth, result.qDepth));
-
-                if (showTooltips)
-                    ImGui::SetItemTooltip("Search depth / quiescence search depth, in plies");
-
-                ImGui::TableNextColumn();
-                UnformattedText(
-                    pretty_print::duration(result.duration));
-
-                if (showTooltips)
-                    ImGui::SetItemTooltip("Total search duration so far");
-
                 {
+                    ImGui::TableNextColumn();
+                    UnformattedText(
+                        std::format("{} / {}", result.depth, result.qDepth));
+
+                    if (showTooltips)
+                        ImGui::SetItemTooltip("Search depth / quiescence search depth, in plies");
+                }
+                {
+                    ImGui::TableNextColumn();
+                    UnformattedText(
+                        pretty_print::duration(result.duration));
+
+                    if (showTooltips)
+                        ImGui::SetItemTooltip("Total search duration");
+                }
+                {
+                    ImGui::TableNextColumn();
+                    UnformattedText(
+                        pretty_print::nodes(result.nodesSearched));
+
+                    if (showTooltips)
+                        ImGui::SetItemTooltip("Total number of nodes searched");
+                }
+                {
+                    ImGui::TableNextColumn();
+                    UnformattedText(
+                        pretty_print::nps(
+                            result.to_libchess(false).get_nps()));
+
+                    if (showTooltips)
+                        ImGui::SetItemTooltip("Nodes searched per second");
+                }
+                {
+                    ImGui::TableNextColumn();
+                    UnformattedText(
+                        pretty_print::hashfull(result.hashfull));
+
+                    if (showTooltips)
+                        ImGui::SetItemTooltip(
+                            "Percentage of the transposition table that has been filled during the current search");
+                }
+                {
+                    ImGui::TableNextColumn();
+
                     static constexpr auto GreenText = IM_COL32(0, 255, 0, 255);
                     static constexpr auto RedText   = IM_COL32(255, 0, 0, 255);
                     static constexpr auto GrayText  = IM_COL32(62, 62, 64, 255);
-
-                    ImGui::TableNextColumn();
 
                     const auto score = result.score.to_libchess();
 
@@ -410,6 +470,15 @@ namespace {
                     if (showTooltips)
                         ImGui::SetItemTooltip("Evaluation based on the best continuation");
                 }
+                {
+                    ImGui::TableNextColumn();
+
+                    UnformattedText(
+                        format_pv(result.pv, rootPosition, moveFormat));
+
+                    if (showTooltips)
+                        ImGui::SetItemTooltip("The best continuation found");
+                }
             }
 
             ImGui::EndTable();
@@ -421,7 +490,8 @@ void render_engine_panel(
     EnginePanelState& state, const bool showTooltips)
 {
     if (ImGui::Begin("Engine")) {
-        render_uci_options(state.engine, state.selectedComboChoice, showTooltips);
+        render_uci_options(
+            state.engine, state.selectedComboChoice, showTooltips);
 
         ImGui::Separator();
 
@@ -434,7 +504,10 @@ void render_engine_panel(
             state.engine, state.searchOptions, showTooltips);
 
         render_search_output(
-            state.engine.get_results(), showTooltips);
+            state.engine.get_results(),
+            state.engine.get_position(),
+            state.engine.get_move_format(),
+            showTooltips);
 
         // TODO: render current position as chessboard?
     }

@@ -37,4 +37,22 @@ using Score = chess::uci::printing::SearchInfo::Score;
 [[nodiscard]] auto evaluation(
     Score score) -> std::string;
 
+/** Pretty prints a number of nodes in the form "1k", "1m", etc.
+    @ingroup libbenbot
+ */
+[[nodiscard]] auto nodes(
+    size_t num) -> std::string;
+
+/** Pretty prints nodes-per-second in the form "1k/s", "1m/s", etc.
+    @ingroup libbenbot
+ */
+[[nodiscard]] auto nps(
+    size_t nodesPerSec) -> std::string;
+
+/** Pretty prints the hashfull permille value as a percentage string.
+    @ingroup libbenbot
+ */
+[[nodiscard]] auto hashfull(
+    size_t permille) -> std::string;
+
 } // namespace ben_bot::pretty_print

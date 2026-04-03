@@ -116,35 +116,38 @@ namespace {
             ImGui::TableSetupColumn(Kingside);
             ImGui::TableSetupColumn(Queenside);
 
-            ImGui::TableNextRow();
+            {
+                ImGui::TableNextRow();
 
-            ImGui::TableNextColumn();
-            ImGui::Text(White);
+                ImGui::TableNextColumn();
+                ImGui::Text(White);
 
-            ImGui::TableNextColumn();
-            ImGui::Checkbox(
-                std::format("{}##{}", Kingside, White).c_str(),
-                &position.whiteCastlingRights.kingside);
+                ImGui::TableNextColumn();
+                ImGui::Checkbox(
+                    std::format("{}##{}", Kingside, White).c_str(),
+                    &position.whiteCastlingRights.kingside);
 
-            ImGui::TableNextColumn();
-            ImGui::Checkbox(
-                std::format("{}##{}", Queenside, White).c_str(),
-                &position.whiteCastlingRights.queenside);
+                ImGui::TableNextColumn();
+                ImGui::Checkbox(
+                    std::format("{}##{}", Queenside, White).c_str(),
+                    &position.whiteCastlingRights.queenside);
+            }
+            {
+                ImGui::TableNextRow();
 
-            ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Text(Black);
 
-            ImGui::TableNextColumn();
-            ImGui::Text(Black);
+                ImGui::TableNextColumn();
+                ImGui::Checkbox(
+                    std::format("{}##{}", Kingside, Black).c_str(),
+                    &position.blackCastlingRights.kingside);
 
-            ImGui::TableNextColumn();
-            ImGui::Checkbox(
-                std::format("{}##{}", Kingside, Black).c_str(),
-                &position.blackCastlingRights.kingside);
-
-            ImGui::TableNextColumn();
-            ImGui::Checkbox(
-                std::format("{}##{}", Queenside, Black).c_str(),
-                &position.blackCastlingRights.queenside);
+                ImGui::TableNextColumn();
+                ImGui::Checkbox(
+                    std::format("{}##{}", Queenside, Black).c_str(),
+                    &position.blackCastlingRights.queenside);
+            }
 
             ImGui::EndTable();
 
@@ -431,23 +434,31 @@ void render_board_editor(
     chess::uci::EngineBase& engine)
 {
     if (ImGui::Begin("Board editor")) {
-        render_utility_buttons(state.position, showTooltips);
+        render_utility_buttons(
+            state.position, showTooltips);
 
-        render_side_to_move(state.position.position, showTooltips);
+        render_side_to_move(
+            state.position.position, showTooltips);
 
-        render_castling_rights(state.position.position, showTooltips);
+        render_castling_rights(
+            state.position.position, showTooltips);
 
-        render_ep_square(state.position.position, state.selectedEPSquare, showTooltips);
+        render_ep_square(
+            state.position.position, state.selectedEPSquare, showTooltips);
 
-        render_move_counters(state.position, showTooltips);
+        render_move_counters(
+            state.position, showTooltips);
 
-        render_fen_string(state.position.position, state.fenParseError, showTooltips);
+        render_fen_string(
+            state.position.position, state.fenParseError, showTooltips);
 
-        render_epd_editor(state.position, state.epdParseError, showTooltips);
+        render_epd_editor(
+            state.position, state.epdParseError, showTooltips);
 
         ImGui::Separator();
 
-        render_engine_interop_buttons(state.position.position, engine, showTooltips);
+        render_engine_interop_buttons(
+            state.position.position, engine, showTooltips);
 
         // TODO: render chessboard
     }

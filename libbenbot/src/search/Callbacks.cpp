@@ -23,15 +23,12 @@
 #include <libbenbot/search/Result.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/uci/Printing.hpp>
-#include <libutil/Variant.hpp>
 #include <optional>
-#include <ratio>
 #include <span>
 #include <string>
 #include <string_view>
 #include <termcolor/termcolor.hpp>
 #include <utility>
-#include <variant>
 
 namespace ben_bot::search {
 
@@ -93,45 +90,6 @@ namespace {
             formatStr,
             text.substr(0uz, COLUMN_WIDTH),
             COLUMN_WIDTH);
-    }
-
-    template <typename Ratio, char Suffix, size_t Precision>
-    [[nodiscard]] auto get_nodes_string(
-        const size_t nodes) -> std::optional<string>
-    {
-        if (nodes >= Ratio::num) {
-            const auto display = static_cast<float>(nodes) / static_cast<float>(Ratio::num);
-
-            return std::format(
-                "{:.{}f}{}",
-                display, Precision, Suffix);
-        }
-
-        return std::nullopt;
-    }
-
-    template <size_t Precision = 2uz>
-    [[nodiscard]] auto format_nodes(
-        const size_t nodes) -> string
-    {
-        return get_nodes_string<std::mega, 'M', Precision>(nodes)
-            .or_else([nodes] { return get_nodes_string<std::kilo, 'k', Precision>(nodes); })
-            .or_else([nodes] { return std::make_optional(std::format("{}", nodes)); })
-            .value_or(std::string { });
-    }
-
-    [[nodiscard]] auto format_nps(const size_t nps) -> string
-    {
-        return std::format(
-            "{}/s",
-            format_nodes<1uz>(nps)); // use this function for its transformation of the value to a k/M representation
-    }
-
-    [[nodiscard]] auto format_hashfull(const size_t permille) -> string
-    {
-        return std::format(
-            "{}%",
-            permille / 10uz);
     }
 
     using Score = chess::uci::printing::SearchInfo::Score;
@@ -212,17 +170,17 @@ namespace {
 
         // nodes
         print_column_text<Alignment::Right>(
-            format_nodes(res.nodesSearched));
+            pretty_print::nodes(res.nodesSearched));
 
         const auto libchess = res.to_libchess(false);
 
         // nodes per second
         print_column_text<Alignment::Right>(
-            format_nps(libchess.get_nps()));
+            pretty_print::nps(libchess.get_nps()));
 
         // hashfull
         print_column_text<Alignment::Center>(
-            format_hashfull(res.hashfull));
+            pretty_print::hashfull(res.hashfull));
 
         // score
         print_score(libchess.score);
