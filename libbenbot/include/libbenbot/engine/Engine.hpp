@@ -51,7 +51,7 @@ using uci::EngineCommand;
 /** The ``ben-bot`` UCI engine class.
     @ingroup libbenbot
  */
-class [[nodiscard]] Engine final : public uci::EngineBase {
+class [[nodiscard]] Engine : public uci::EngineBase {
 public:
     Engine() = default;
 
@@ -86,6 +86,14 @@ public:
 
     /** Starts a search with the specified options. */
     void go(const search::Options& opts);
+
+protected:
+    /** This function is used to initialize the search context's result callbacks.
+        The default implementation returns either a console pretty printer or a
+        UCI printer depending on the value of the pretty printing parameter, but
+        other engine use cases can override this to return other sets of callbacks.
+     */
+    [[nodiscard]] virtual auto create_search_callbacks() const -> search::Callbacks;
 
 private:
     [[nodiscard]] auto get_name() const -> std::string override;
@@ -129,7 +137,7 @@ private:
     void print_options();
     void print_current_position(string_view arguments) const;
 
-    void set_pretty_printing(bool shouldPrettyPrint);
+    void init_search_callbacks();
 
     [[nodiscard]] auto pretty_print_move(Move move) const -> std::string;
 
@@ -185,7 +193,7 @@ private:
         "Pretty Print",
         false,
         "When on, search output is pretty-printed instead of printed in UCI format.",
-        [this](const bool usePretty) { set_pretty_printing(usePretty); }
+        [this]([[maybe_unused]] const bool usePretty) { init_search_callbacks(); }
     };
 
     uci::ComboOption moveFormat { create_move_format_option() };

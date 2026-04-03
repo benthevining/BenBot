@@ -75,21 +75,30 @@ void Engine::new_game(const bool firstCall)
         // we use delayed initialization for the callbacks instead of
         // initializing them in the constructor to avoid referencing
         // the `this` pointer in the constructor
-        set_pretty_printing(prettyPrintMode.get_value());
+        init_search_callbacks();
     } else {
         searcher.context.clear_transposition_table();
     }
 }
 
-void Engine::set_pretty_printing(const bool shouldPrettyPrint)
+void Engine::init_search_callbacks()
 {
-    if (shouldPrettyPrint) {
-        searcher.context.set_callbacks(search::Callbacks::make_pretty_printer(
-            [this](const Move move) { return pretty_print_move(move); }));
-    } else {
-        searcher.context.set_callbacks(search::Callbacks::make_uci_printer(
-            [this]() noexcept { return is_debug_mode(); }));
+    abort_search();
+    wait();
+
+    searcher.context.set_callbacks(
+        create_search_callbacks());
+}
+
+auto Engine::create_search_callbacks() const -> search::Callbacks
+{
+    if (prettyPrintMode.get_value()) {
+        return search::Callbacks::make_pretty_printer(
+            [this](const Move move) { return pretty_print_move(move); });
     }
+
+    return search::Callbacks::make_uci_printer(
+        [this]() noexcept { return is_debug_mode(); });
 }
 
 void Engine::go_internal(search::Options opts)
