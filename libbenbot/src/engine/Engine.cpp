@@ -92,19 +92,32 @@ void Engine::set_pretty_printing(const bool shouldPrettyPrint)
     }
 }
 
+void Engine::go_internal(search::Options opts)
+{
+    opts.moveOverhead = std::chrono::milliseconds { moveOverhead.get_value() };
+
+    searcher.context.set_options(opts);
+
+    searcher.start();
+}
+
+void Engine::go(const search::Options& opts)
+{
+    searcher.context.set_pondering(
+        opt_Ponder.get_value());
+
+    go_internal(opts);
+}
+
 void Engine::go(const uci::GoCommandOptions& opts)
 {
-    auto newOpts = search::Options::from_libchess(
-        opts, searcher.context.get_position().is_white_to_move());
-
-    newOpts.moveOverhead = std::chrono::milliseconds { moveOverhead.get_value() };
-
-    searcher.context.set_options(newOpts);
-
     searcher.context.set_pondering(
         opts.ponderMode and opt_Ponder.get_value());
 
-    searcher.start();
+    go_internal(
+        search::Options::from_libchess(
+            opts,
+            searcher.context.get_position().is_white_to_move()));
 }
 
 void Engine::start_file_logger(const string_view arg)

@@ -316,6 +316,30 @@ namespace {
 
         render_utility_buttons(options, engine, showTooltips);
     }
+
+    void render_start_stop_button(
+        Engine&                engine,
+        const search::Options& options,
+        const bool             showTooltips)
+    {
+        auto& engineBase = static_cast<uci::EngineBase&>(engine);
+
+        if (engineBase.is_searching()) {
+            if (ImGui::Button("Stop"))
+                engineBase.abort_search();
+
+            if (showTooltips)
+                ImGui::SetItemTooltip("Abort search");
+
+            return;
+        }
+
+        if (ImGui::Button("Start"))
+            engine.go(options);
+
+        if (showTooltips)
+            ImGui::SetItemTooltip("Start searching");
+    }
 } // namespace
 
 void render_engine_panel(
@@ -328,6 +352,11 @@ void render_engine_panel(
 
         render_search_options(
             state.searchOptions, state.moveParseError, state.engine, showTooltips);
+
+        ImGui::Separator();
+
+        render_start_stop_button(
+            state.engine, state.searchOptions, showTooltips);
 
         // TODO: render current position as chessboard
     }

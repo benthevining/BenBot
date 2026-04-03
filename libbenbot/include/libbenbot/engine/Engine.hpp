@@ -84,6 +84,9 @@ public:
     /** Returns the notation format being used for pretty printing. */
     [[nodiscard]] auto get_move_format() const -> chess::notation::MoveFormat;
 
+    /** Starts a search with the specified options. */
+    void go(const search::Options& opts);
+
 private:
     [[nodiscard]] auto get_name() const -> std::string override;
     [[nodiscard]] auto get_author() const -> string_view override { return "Ben Vining"; }
@@ -93,6 +96,8 @@ private:
     void position_changed(const Position& pos) override { searcher.context.set_position(pos); }
 
     void go(const uci::GoCommandOptions& opts) override;
+
+    void go_internal(search::Options opts);
 
     void abort_search() override { searcher.context.abort(); }
 
