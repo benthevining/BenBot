@@ -167,6 +167,9 @@ struct Context final {
     /** Returns the current position. */
     [[nodiscard]] auto get_position() const noexcept -> const Position& { return position; }
 
+    /** Returns the current search parameters. */
+    [[nodiscard]] auto get_options() const noexcept -> const Options& { return options; }
+
 private:
     Position position;
 

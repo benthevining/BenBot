@@ -75,6 +75,12 @@ public:
     /** Sets the options to be used for the next search. */
     void set_search_options(const search::Options& opts) { searcher.context.set_options(opts); }
 
+    /** Returns the engine's current search parameters, set by the last go command. */
+    [[nodiscard]] auto get_search_options() const noexcept -> const search::Options&
+    {
+        return searcher.context.get_options();
+    }
+
     /** Returns the notation format being used for pretty printing. */
     [[nodiscard]] auto get_move_format() const -> chess::notation::MoveFormat;
 

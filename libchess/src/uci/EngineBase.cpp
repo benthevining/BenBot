@@ -232,7 +232,7 @@ void EngineBase::handle_setoption(const string_view arguments)
 
     name = trim(name);
 
-    wait();
+    // wait();
 
     auto update_option = [name, isNPos, rest, valueTokenIdx](const OptionList options) {
         if (const auto it = std::ranges::find_if(

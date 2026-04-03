@@ -447,6 +447,8 @@ void render_board_editor(
         ImGui::Separator();
 
         render_engine_interop_buttons(state.position.position, engine, showTooltips);
+
+        // TODO: render chessboard
     }
 
     ImGui::End();

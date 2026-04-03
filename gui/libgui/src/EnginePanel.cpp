@@ -181,18 +181,14 @@ namespace {
         return text;
     }
 
-    // returns true if input text changed
-    [[nodiscard]] auto render_moves_to_search(
+    void render_moves_to_search(
         search::Options& options,
         const MoveFormat moveFormat,
         const Position&  position,
         string&          errorMessage,
         const bool       showTooltips)
-        -> bool
     {
         static constexpr auto ErrorPopupID { "Move parse error" };
-
-        bool anyChanged { false };
 
         auto inputBuf = format_moves(options.movesToSearch, moveFormat, position);
 
@@ -213,8 +209,6 @@ namespace {
                               return std::monostate { };
                           });
             }
-
-            anyChanged = true;
         }
 
         if (showTooltips)
@@ -230,85 +224,95 @@ namespace {
 
             ImGui::EndPopup();
         }
-
-        return anyChanged;
     }
 
-    // returns true if any options were changed
-    [[nodiscard]] auto render_search_options(
+    void render_utility_buttons(
         search::Options& options,
-        const MoveFormat moveFormat,
-        const Position&  position,
-        string&          moveParseError,
+        Engine&          engine,
         const bool       showTooltips)
-        -> bool
+    {
+        const ScopedGroup group;
+
+        if (ImGui::Button("Reset"))
+            options = search::Options { };
+
+        if (showTooltips)
+            ImGui::SetItemTooltip("Reset search options to defaults");
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Send to engine"))
+            engine.set_search_options(options);
+
+        if (showTooltips)
+            ImGui::SetItemTooltip("Send search options to engine (interrupts search if active)");
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Refresh from engine"))
+            options = engine.get_search_options();
+
+        if (showTooltips)
+            ImGui::SetItemTooltip("Reset to engine's current search options");
+    }
+
+    void render_search_options(
+        search::Options& options,
+        string&          moveParseError,
+        Engine&          engine,
+        const bool       showTooltips)
     {
         // TODO: handling of negative integer values, optionals
-
-        bool anyChanged { false };
 
         if (ImGui::CollapsingHeader("Search options")) {
             const ScopedGroup group;
 
+            const auto& position   = engine.get_position();
+            const auto  moveFormat = engine.get_move_format();
+
             auto depth = static_cast<int>(options.depth);
 
-            if (ImGui::InputInt("Depth", &depth)) {
+            if (ImGui::InputInt("Depth", &depth))
                 options.depth = static_cast<size_t>(depth);
-                anyChanged    = true;
-            }
 
             if (showTooltips)
                 ImGui::SetItemTooltip("Search depth, in plies");
 
             auto numMs = static_cast<int>(options.searchTime.value_or(std::chrono::milliseconds { 0 }).count());
 
-            if (ImGui::InputInt("Time", &numMs)) {
+            if (ImGui::InputInt("Time", &numMs))
                 options.searchTime = std::chrono::milliseconds { numMs };
-                anyChanged         = true;
-            }
 
             if (showTooltips)
                 ImGui::SetItemTooltip("Search time, in milliseconds");
 
             auto maxNodes = static_cast<int>(options.maxNodes);
 
-            if (ImGui::InputInt("Nodes", &maxNodes)) {
+            if (ImGui::InputInt("Nodes", &maxNodes))
                 options.maxNodes = static_cast<size_t>(maxNodes);
-                anyChanged       = true;
-            }
 
             if (showTooltips)
                 ImGui::SetItemTooltip("Maximum number of nodes to search");
 
             auto mateIn = static_cast<int>(options.mateIn.value_or(0uz));
 
-            if (ImGui::InputInt("Mate in", &mateIn)) {
+            if (ImGui::InputInt("Mate in", &mateIn))
                 options.mateIn = static_cast<size_t>(mateIn);
-                anyChanged     = true;
-            }
 
             if (showTooltips)
                 ImGui::SetItemTooltip("Search for mate in X plies");
 
-            anyChanged = render_moves_to_search(options, moveFormat, position, moveParseError, showTooltips)
-                      or anyChanged;
+            render_moves_to_search(options, moveFormat, position, moveParseError, showTooltips);
 
-            if (ImGui::Checkbox("Infinite", &options.infinite))
-                anyChanged = true;
+            ImGui::Checkbox("Infinite", &options.infinite);
 
             if (showTooltips)
                 ImGui::SetItemTooltip("Whether to search infinitely");
 
-            if (ImGui::Button("Reset")) {
-                options    = search::Options { };
-                anyChanged = true;
-            }
+            ImGui::Separator();
 
-            if (showTooltips)
-                ImGui::SetItemTooltip("Reset search options to defaults");
+            render_utility_buttons(options, engine, showTooltips);
         }
-
-        return anyChanged;
     }
 } // namespace
 
@@ -320,11 +324,10 @@ void render_engine_panel(
 
         ImGui::Separator();
 
-        if (render_search_options(
-                state.searchOptions, state.engine.get_move_format(), state.engine.get_position(), state.moveParseError, showTooltips)) {
-            // TODO: probably shouldn't block here...
-            state.engine.set_search_options(state.searchOptions);
-        }
+        render_search_options(
+            state.searchOptions, state.moveParseError, state.engine, showTooltips);
+
+        // TODO: render current position as chessboard
     }
 
     ImGui::End();
