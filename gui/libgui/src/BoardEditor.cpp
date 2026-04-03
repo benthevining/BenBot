@@ -27,6 +27,7 @@
 #include <libchess/notation/EPD.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/pieces/Colors.hpp>
+#include <libchess/uci/EngineBase.hpp>
 #include <libgui/BoardEditor.hpp>
 #include <libutil/Console.hpp>
 #include <libutil/Strings.hpp>
@@ -398,10 +399,32 @@ namespace {
             render_epd_operations(position, showTooltips);
         }
     }
+
+    void render_engine_interop_buttons(
+        Position& position, chess::uci::EngineBase& engine, const bool showTooltips)
+    {
+        const ScopedGroup group;
+
+        if (ImGui::Button("Send to engine"))
+            engine.set_position(position);
+
+        if (showTooltips)
+            ImGui::SetItemTooltip("Send position to engine (interrupts search if active)");
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Refresh from engine"))
+            position = engine.get_position();
+
+        if (showTooltips)
+            ImGui::SetItemTooltip("Reset to engine's current position");
+    }
 } // namespace
 
 void render_board_editor(
-    BoardEditorState& state, const bool showTooltips)
+    BoardEditorState&       state,
+    const bool              showTooltips,
+    chess::uci::EngineBase& engine)
 {
     if (ImGui::Begin("Board editor")) {
         render_utility_buttons(state.position, showTooltips);
@@ -418,7 +441,9 @@ void render_board_editor(
 
         render_epd_editor(state.position, state.epdParseError, showTooltips);
 
-        // TODO: send position to engine if changed
+        ImGui::Separator();
+
+        render_engine_interop_buttons(state.position.position, engine, showTooltips);
     }
 
     ImGui::End();

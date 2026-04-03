@@ -142,7 +142,7 @@ struct EngineBase {
     }
 
     /** Returns the engine's current position. */
-    [[nodiscard]] auto get_position() -> const Position& { return position; }
+    [[nodiscard]] auto get_position() const -> const Position& { return position; }
 
     /** Called when the "go" command is received. The engine should begin searching. After
         this function has been called, the engine should print to stdout a line of the form

@@ -20,6 +20,10 @@
 #include <string>
 #include <string_view>
 
+namespace chess::uci {
+struct EngineBase;
+} // namespace chess::uci
+
 namespace ben_bot::gui {
 
 using chess::notation::EPDPosition;
@@ -40,6 +44,8 @@ struct BoardEditorState final {
 };
 
 void render_board_editor(
-    BoardEditorState& state, bool showTooltips);
+    BoardEditorState&       state,
+    bool                    showTooltips,
+    chess::uci::EngineBase& engine);
 
 } // namespace ben_bot::gui
