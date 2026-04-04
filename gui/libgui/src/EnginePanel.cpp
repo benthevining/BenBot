@@ -380,12 +380,16 @@ namespace {
         if (not ImGui::CollapsingHeader("Search output"))
             return;
 
-        if (ImGui::BeginTable("Search results", 7, ImGuiTableFlags_Borders)) {
+        if (ImGui::BeginTable("Search results", 11, ImGuiTableFlags_Borders)) {
             ImGui::TableSetupColumn("Depth", ImGuiTableColumnFlags_WidthFixed);
             ImGui::TableSetupColumn("Time", ImGuiTableColumnFlags_WidthFixed);
             ImGui::TableSetupColumn("Nodes", ImGuiTableColumnFlags_WidthFixed);
             ImGui::TableSetupColumn("NPS", ImGuiTableColumnFlags_WidthFixed);
             ImGui::TableSetupColumn("Hashfull", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("TT hits", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("Beta cutoffs", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("MDP cutoffs", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("Static evals", ImGuiTableColumnFlags_WidthFixed);
             ImGui::TableSetupColumn("Evaluation", ImGuiTableColumnFlags_WidthFixed);
             ImGui::TableSetupColumn("PV");
 
@@ -435,6 +439,42 @@ namespace {
                     if (showTooltips)
                         ImGui::SetItemTooltip(
                             "Percentage of the transposition table that has been filled during the current search");
+                }
+                {
+                    ImGui::TableNextColumn();
+                    UnformattedText(
+                        pretty_print::search_stat(
+                            result.transpositionTableHits, result.nodesSearched));
+
+                    if (showTooltips)
+                        ImGui::SetItemTooltip("Number of transposition table hits");
+                }
+                {
+                    ImGui::TableNextColumn();
+                    UnformattedText(
+                        pretty_print::search_stat(
+                            result.betaCutoffs, result.nodesSearched));
+
+                    if (showTooltips)
+                        ImGui::SetItemTooltip("Number of nodes that were pruned due to beta cutoffs");
+                }
+                {
+                    ImGui::TableNextColumn();
+                    UnformattedText(
+                        pretty_print::search_stat(
+                            result.mdpCutoffs, result.nodesSearched));
+
+                    if (showTooltips)
+                        ImGui::SetItemTooltip("Number of nodes that were pruned due to mate distance pruning");
+                }
+                {
+                    ImGui::TableNextColumn();
+                    UnformattedText(
+                        pretty_print::search_stat(
+                            result.staticEvals, result.nodesSearched));
+
+                    if (showTooltips)
+                        ImGui::SetItemTooltip("Number of static analyses performed");
                 }
                 {
                     ImGui::TableNextColumn();
