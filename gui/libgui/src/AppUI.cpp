@@ -104,8 +104,12 @@ void render(AppState& state)
     ImGui::DockSpaceOverViewport();
 
     render_app_settings_panel(state);
-    render_board_editor(state.boardEditor, state.appSettings.showTooltips, state.enginePanel.engine);
-    render_engine_panel(state.enginePanel, state.appSettings.showTooltips);
+
+    render_board_editor(
+        state.boardEditor, state.appSettings.showTooltips, state.enginePanel.engine);
+
+    render_engine_panel(
+        state.enginePanel, state.appSettings.showTooltips);
 
     ImGui::Render();
 }
