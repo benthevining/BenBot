@@ -24,12 +24,25 @@ namespace ben_bot::gui::resources {
 
 using std::string_view;
 
+namespace {
+    [[nodiscard]] auto get_named_resource(
+        const string_view name) -> string_view
+    {
+        return string_view {
+            cmrc::libgui_resources::get_filesystem()
+                .open(std::format("res/{}", name))
+        };
+    }
+} // namespace
+
 auto get_default_imgui_ini_data() -> string_view
 {
-    const auto file = cmrc::libgui_resources::get_filesystem()
-                          .open("res/default.ini");
+    return get_named_resource("default.ini");
+}
 
-    return string_view { file };
+auto get_app_icon() -> string_view
+{
+    return get_named_resource("icon.png");
 }
 
 auto get_piece_sprite(
@@ -37,22 +50,9 @@ auto get_piece_sprite(
 {
     using magic_enum::enum_name;
 
-    const auto relPath = std::format(
-        "res/pieces/{}-{}.svg",
-        enum_name(type), enum_name(color));
-
-    const auto file = cmrc::libgui_resources::get_filesystem()
-                          .open(relPath);
-
-    return string_view { file };
-}
-
-auto get_app_icon() -> string_view
-{
-    const auto file = cmrc::libgui_resources::get_filesystem()
-                          .open("res/icon.png");
-
-    return string_view { file };
+    return get_named_resource(
+        std::format("pieces/{}-{}.svg",
+            enum_name(type), enum_name(color)));
 }
 
 } // namespace ben_bot::gui::resources

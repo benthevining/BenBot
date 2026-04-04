@@ -88,18 +88,6 @@ namespace {
         show_file_dialog<false>(
             [&state](const path& file) { state.write_to(file); });
     }
-
-    void render_compiler_info()
-    {
-        UnformattedText(
-            std::format("Compiler: {}", resources::get_compiler_name()));
-
-        UnformattedText(
-            std::format("Compiler version: {}", resources::get_compiler_version()));
-
-        UnformattedText(
-            std::format("Build configuration: {}", resources::get_build_config()));
-    }
 } // namespace
 
 void render_app_settings_panel(AppState& state)
@@ -128,7 +116,17 @@ void render_app_settings_panel(AppState& state)
 
         ImGui::Separator();
 
-        render_compiler_info();
+        UnformattedText(
+            std::format("BenBot version: {}", resources::get_version_string()));
+
+        UnformattedText(
+            std::format("Compiler: {}", resources::get_compiler_name()));
+
+        UnformattedText(
+            std::format("Compiler version: {}", resources::get_compiler_version()));
+
+        UnformattedText(
+            std::format("Build configuration: {}", resources::get_build_config()));
     }
 
     ImGui::End();

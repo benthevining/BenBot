@@ -26,14 +26,13 @@ namespace ben_bot::resources {
 using std::string_view;
 
 namespace {
-    [[nodiscard]] auto get_named_resource(const string_view name) -> string_view
+    [[nodiscard]] auto get_named_resource(
+        const string_view name) -> string_view
     {
-        const auto relPath = std::format("res/{}", name);
-
-        const auto file = cmrc::ben_bot_resources::get_filesystem()
-                              .open(relPath);
-
-        return string_view { file };
+        return string_view {
+            cmrc::ben_bot_resources::get_filesystem()
+                .open(std::format("res/{}", name))
+        };
     }
 } // namespace
 
