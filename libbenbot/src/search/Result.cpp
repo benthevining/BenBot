@@ -14,6 +14,7 @@
 
 #include <format>
 #include <libbenbot/search/Result.hpp>
+#include <libchess/notation/EPD.hpp>
 #include <libchess/uci/Printing.hpp>
 #include <string>
 
@@ -61,6 +62,11 @@ auto Result::to_libchess(const bool includeDebugInfo) const -> LibchessResult
         .tbHits           = 0uz,
         .extraInformation = get_extra_stats_string(*this, includeDebugInfo)
     };
+}
+
+void Result::fill_standard_epd_operations(
+    chess::notation::EPDPosition& operations) const
+{
 }
 
 } // namespace ben_bot::search

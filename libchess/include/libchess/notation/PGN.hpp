@@ -105,8 +105,6 @@ struct [[nodiscard]] GameRecord final {
 
             For example, for a move annotated ``!``, this would be 1,
             for a ``?`` this would be 2, etc.
-
-            See the ``nags`` namespace for some useful NAG constants.
          */
         std::vector<NAG> nags;
 

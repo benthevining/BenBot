@@ -34,9 +34,6 @@ using util::strings::trim;
 
 namespace {
 
-    inline constexpr string_view FULL_MOVE_OP_TAG { "fmvn" };
-    inline constexpr string_view HALF_MOVE_OP_TAG { "hmvc" };
-
     void parse_operations(
         EPDPosition& pos, const string_view text)
     {
@@ -61,9 +58,9 @@ namespace {
 
             pos.operations[std::string { key }] = value;
 
-            if (key == FULL_MOVE_OP_TAG)
+            if (key == epd_ops::FullmoveNumber)
                 pos.position.fullMoveCounter = int_from_string(value, pos.position.fullMoveCounter);
-            else if (key == HALF_MOVE_OP_TAG)
+            else if (key == epd_ops::HalfmoveClock)
                 pos.position.halfmoveClock = int_from_string(value, pos.position.halfmoveClock);
         }
     }
@@ -131,11 +128,11 @@ namespace {
             output.append(std::format(" {} \"{}\";", key, value));
 
         if constexpr (AutofillDefaultOps) {
-            if (not pos.operations.contains(string { FULL_MOVE_OP_TAG }))
-                output.append(std::format(" {} {};", FULL_MOVE_OP_TAG, pos.position.fullMoveCounter));
+            if (not pos.operations.contains(string { epd_ops::FullmoveNumber }))
+                output.append(std::format(" {} {};", epd_ops::FullmoveNumber, pos.position.fullMoveCounter));
 
-            if (not pos.operations.contains(string { HALF_MOVE_OP_TAG }))
-                output.append(std::format(" {} {};", HALF_MOVE_OP_TAG, pos.position.halfmoveClock));
+            if (not pos.operations.contains(string { epd_ops::HalfmoveClock }))
+                output.append(std::format(" {} {};", epd_ops::HalfmoveClock, pos.position.halfmoveClock));
         }
     }
 
@@ -172,8 +169,9 @@ auto to_epd(const EPDPosition& pos) -> string
 
 void EPDPosition::refresh_default_operations()
 {
-    operations[string { FULL_MOVE_OP_TAG }] = std::format("{}", position.fullMoveCounter);
-    operations[string { HALF_MOVE_OP_TAG }] = std::format("{}", position.halfmoveClock);
+    operations[string { epd_ops::FullmoveNumber }]  = std::format("{}", position.fullMoveCounter);
+    operations[string { epd_ops::HalfmoveClock }]   = std::format("{}", position.halfmoveClock);
+    operations[string { epd_ops::RepetitionCount }] = std::format("{}", position.get_repetition_count());
 }
 
 } // namespace chess::notation

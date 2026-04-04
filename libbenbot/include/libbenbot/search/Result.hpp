@@ -26,6 +26,10 @@
 #include <libchess/moves/MoveGen.hpp>
 #include <optional>
 
+namespace chess::notation {
+struct EPDPosition;
+} // namespace chess::notation
+
 namespace chess::uci::printing {
 struct SearchInfo;
 } // namespace chess::uci::printing
@@ -104,6 +108,14 @@ struct [[nodiscard]] Result final {
 
     /** Converts this object to the libchess type used for printing UCI-formatted output. */
     [[nodiscard]] auto to_libchess(bool includeDebugInfo) const -> LibchessResult;
+
+    /** Fills the EPD position's operations with the search results and statistics
+        from this result. All standard EPD operations that contain search-related
+        statistics and information that correspond to fields of this structure are
+        filled in or updated.
+     */
+    void fill_standard_epd_operations(
+        chess::notation::EPDPosition& operations) const;
 };
 
 } // namespace ben_bot::search

@@ -338,6 +338,8 @@ namespace {
     {
         // see https://www.chessprogramming.org/Extended_Position_Description
 
+        namespace ops = chess::notation::epd_ops;
+
         // TODO: maybe a move type?
         // TODO: Maybe an IntegerNonNegative type?
         enum class Type : std::uint_least8_t {
@@ -351,22 +353,22 @@ namespace {
             string tooltip;
         };
 
-        // TODO: c0 comment (primary, also c1 though c9), draw offer/accept, v0 variation name (primary, also v1 though v9)
+        // TODO: comment(s), draw offer/accept, resignation, v0 variation name (primary, also v1 though v9)
         static const std::array StandardOperations {
-            StandardOperation { .mnemonic = "acd", .type = Type::Integer, .tooltip = "Analysis count depth" },
-            StandardOperation { .mnemonic = "acn", .type = Type::Integer, .tooltip = "Analysis count nodes" }, // codespell:ignore acn
-            StandardOperation { .mnemonic = "acs", .type = Type::Integer, .tooltip = "Analysis count seconds" },
-            StandardOperation { .mnemonic = "am", .type = Type::String, .tooltip = "Avoid move(s)" },
-            StandardOperation { .mnemonic = "bm", .type = Type::String, .tooltip = "Best move(s)" },
-            StandardOperation { .mnemonic = "ce", .type = Type::Integer, .tooltip = "Centipawn evaluation" },
-            StandardOperation { .mnemonic = "dm", .type = Type::Integer, .tooltip = "Direct mate fullmove count" },
-            StandardOperation { .mnemonic = "eco", .type = Type::String, .tooltip = "Encyclopedia of Chess Openings opening code" },
-            StandardOperation { .mnemonic = "id", .type = Type::String, .tooltip = "Position identification" },
-            StandardOperation { .mnemonic = "nic", .type = Type::String, .tooltip = "New In Chess opening code" },
-            StandardOperation { .mnemonic = "pm", .type = Type::String, .tooltip = "Predicted move" },
-            StandardOperation { .mnemonic = "pv", .type = Type::String, .tooltip = "Predicted variation" },
-            StandardOperation { .mnemonic = "rc", .type = Type::Integer, .tooltip = "Repetition count" },
-            StandardOperation { .mnemonic = "sm", .type = Type::String, .tooltip = "Supplied move" }
+            StandardOperation { .mnemonic = string { ops::AnalysisCountDepth }, .type = Type::Integer, .tooltip = "Analysis count depth" },
+            StandardOperation { .mnemonic = string { ops::AnalysisCountNodes }, .type = Type::Integer, .tooltip = "Analysis count nodes" },
+            StandardOperation { .mnemonic = string { ops::AnalysisCountSeconds }, .type = Type::Integer, .tooltip = "Analysis count seconds" },
+            StandardOperation { .mnemonic = string { ops::AvoidMove }, .type = Type::String, .tooltip = "Avoid move(s)" },
+            StandardOperation { .mnemonic = string { ops::BestMove }, .type = Type::String, .tooltip = "Best move(s)" },
+            StandardOperation { .mnemonic = string { ops::CentipawnEvaluation }, .type = Type::Integer, .tooltip = "Centipawn evaluation" },
+            StandardOperation { .mnemonic = string { ops::DirectMate }, .type = Type::Integer, .tooltip = "Direct mate fullmove count" },
+            StandardOperation { .mnemonic = string { ops::EcoCode }, .type = Type::String, .tooltip = "Encyclopedia of Chess Openings opening code" },
+            StandardOperation { .mnemonic = string { ops::PositionID }, .type = Type::String, .tooltip = "Position identification" },
+            StandardOperation { .mnemonic = string { ops::NicCode }, .type = Type::String, .tooltip = "New In Chess opening code" },
+            StandardOperation { .mnemonic = string { ops::PredictedMove }, .type = Type::String, .tooltip = "Predicted move" },
+            StandardOperation { .mnemonic = string { ops::PredictedVariation }, .type = Type::String, .tooltip = "Predicted variation" },
+            StandardOperation { .mnemonic = string { ops::RepetitionCount }, .type = Type::Integer, .tooltip = "Repetition count" },
+            StandardOperation { .mnemonic = string { ops::SuppliedMove }, .type = Type::String, .tooltip = "Supplied move" }
         };
 
         const ScopedGroup group;
