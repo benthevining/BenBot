@@ -37,7 +37,12 @@ namespace {
 
 auto get_default_imgui_ini_data() -> string_view
 {
-    return get_named_resource("default.ini");
+    return get_named_resource("default_layout.ini");
+}
+
+auto get_default_app_state() -> string_view
+{
+    return get_named_resource("default_state.json");
 }
 
 auto get_app_icon() -> string_view

@@ -22,6 +22,7 @@
 #include <libbenbot/Resources.hpp>
 #include <libgui/AppSettingsPanel.hpp>
 #include <libgui/AppUI.hpp>
+#include <libgui/Resources.hpp>
 #include <nfd.hpp>
 #include <nlohmann/json.hpp>
 #include <print>
@@ -88,6 +89,23 @@ namespace {
         show_file_dialog<false>(
             [&state](const path& file) { state.write_to(file); });
     }
+
+    void show_build_info()
+    {
+        namespace res = ben_bot::resources;
+
+        UnformattedText(
+            std::format("BenBot version: {}", res::get_version_string()));
+
+        UnformattedText(
+            std::format("Compiler: {}", res::get_compiler_name()));
+
+        UnformattedText(
+            std::format("Compiler version: {}", res::get_compiler_version()));
+
+        UnformattedText(
+            std::format("Build configuration: {}", res::get_build_config()));
+    }
 } // namespace
 
 void render_app_settings_panel(AppState& state)
@@ -114,19 +132,17 @@ void render_app_settings_panel(AppState& state)
         if (showTooltips)
             ImGui::SetItemTooltip("Save app state to a file");
 
+        ImGui::SameLine();
+
+        if (ImGui::Button("Reset state"))
+            state.update_from_string(resources::get_default_app_state());
+
+        if (showTooltips)
+            ImGui::SetItemTooltip("Reset app state to default");
+
         ImGui::Separator();
 
-        UnformattedText(
-            std::format("BenBot version: {}", resources::get_version_string()));
-
-        UnformattedText(
-            std::format("Compiler: {}", resources::get_compiler_name()));
-
-        UnformattedText(
-            std::format("Compiler version: {}", resources::get_compiler_version()));
-
-        UnformattedText(
-            std::format("Build configuration: {}", resources::get_build_config()));
+        show_build_info();
     }
 
     ImGui::End();

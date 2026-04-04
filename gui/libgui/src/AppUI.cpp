@@ -76,7 +76,12 @@ void initialize(
         ImGui::LoadIniSettingsFromMemory(defaultData.data(), defaultData.size());
     }
 
-    state.load_from(app_state_file_path());
+    if (const auto stateFile = app_state_file_path();
+        exists(stateFile)) {
+        state.load_from(stateFile);
+    } else {
+        state.update_from_string(resources::get_default_app_state());
+    }
 
     { // Setup scaling
         auto& style = ImGui::GetStyle();

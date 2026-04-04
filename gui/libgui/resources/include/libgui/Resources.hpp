@@ -26,6 +26,8 @@ using std::string_view;
 
 [[nodiscard, gnu::const]] auto get_default_imgui_ini_data() -> string_view;
 
+[[nodiscard, gnu::const]] auto get_default_app_state() -> string_view;
+
 [[nodiscard, gnu::const]] auto get_piece_sprite(
     PieceType type, Color color) -> string_view;
 
