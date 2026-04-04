@@ -27,8 +27,8 @@
 #include <libchess/notation/EPD.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/pieces/Colors.hpp>
-#include <libchess/uci/EngineBase.hpp>
 #include <libgui/BoardEditor.hpp>
+#include <libgui/EngineWrapper.hpp>
 #include <libutil/Console.hpp>
 #include <libutil/Strings.hpp>
 #include <nlohmann/json.hpp>
@@ -409,20 +409,25 @@ namespace {
         EPDPosition& position, string& errorMessage, const bool showTooltips)
     {
         if (ImGui::CollapsingHeader("EPD editor")) {
-            render_epd_string(position, errorMessage, showTooltips);
-            render_epd_operations(position, showTooltips);
+            render_epd_string(
+                position, errorMessage, showTooltips);
+
+            render_epd_operations(
+                position, showTooltips);
         }
     }
 
     void render_engine_interop_buttons(
-        Position& position, chess::uci::EngineBase& engine, const bool showTooltips)
+        EPDPosition& position, EngineWrapper& engine, const bool showTooltips)
     {
         const ScopedGroup group;
 
+        auto& engineBase = static_cast<uci::EngineBase&>(engine);
+
         if (ImGui::Button("Send to engine")) {
-            engine.abort_search();
-            engine.wait();
-            engine.set_position(position);
+            engineBase.abort_search();
+            engineBase.wait();
+            engine.set_position(position.position);
         }
 
         if (showTooltips)
@@ -430,8 +435,13 @@ namespace {
 
         ImGui::SameLine();
 
-        if (ImGui::Button("Refresh from engine"))
-            position = engine.get_position();
+        if (ImGui::Button("Refresh from engine")) {
+            position.position = engine.get_position();
+            position.refresh_default_operations();
+
+            if (const auto results = engine.get_results(); not results.empty())
+                results.back().fill_standard_epd_operations(position);
+        }
 
         if (showTooltips)
             ImGui::SetItemTooltip("Reset to engine's current position");
@@ -439,9 +449,9 @@ namespace {
 } // namespace
 
 void render_board_editor(
-    BoardEditorState&       state,
-    const bool              showTooltips,
-    chess::uci::EngineBase& engine)
+    BoardEditorState& state,
+    const bool        showTooltips,
+    EngineWrapper&    engine)
 {
     if (ImGui::Begin("Board editor")) {
         render_utility_buttons(
@@ -471,7 +481,7 @@ void render_board_editor(
         ImGui::Separator();
 
         render_engine_interop_buttons(
-            state.position.position, engine, showTooltips);
+            state.position, engine, showTooltips);
 
         // TODO: render chessboard
     }
