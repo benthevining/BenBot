@@ -13,7 +13,6 @@
  */
 
 #include <cassert>
-#include <chrono>
 #include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
 #include <format>
 #include <functional>
@@ -61,35 +60,17 @@ namespace {
     using std::string;
     using std::string_view;
 
-    enum class Alignment : std::uint_least8_t {
-        Left,
-        Right,
-        Center
-    };
-
-    inline constexpr auto COLUMN_WIDTH = 10uz;
-
-    template <Alignment Align>
     void print_column_text(
         const string_view text)
     {
-        assert(text.size() < COLUMN_WIDTH);
+        static constexpr auto ColumnWidth = 13uz;
 
-        static constexpr auto formatStr = [] {
-            if constexpr (Align == Alignment::Left) {
-                return "{:<{}}";
-            } else if constexpr (Align == Alignment::Center) {
-                return "{:^{}}";
-            } else {
-                static_assert(Align == Alignment::Right);
-                return "{:>{}}";
-            }
-        }();
+        assert(text.size() < ColumnWidth);
 
         std::cout << std::format(
-            formatStr,
-            text.substr(0uz, COLUMN_WIDTH),
-            COLUMN_WIDTH);
+            "{:^{}}",
+            text.substr(0uz, ColumnWidth),
+            ColumnWidth);
     }
 
     using Score = chess::uci::printing::SearchInfo::Score;
@@ -112,7 +93,7 @@ namespace {
                 break;
         }
 
-        print_column_text<Alignment::Center>(
+        print_column_text(
             pretty_print::evaluation(score));
 
         std::cout << termcolor::reset;
@@ -141,25 +122,16 @@ namespace {
     {
         std::cout << termcolor::bold;
 
-        print_column_text<Alignment::Center>("Depth");
-
-        print_column_text<Alignment::Right>("Time");
-
-        print_column_text<Alignment::Right>("Nodes");
-
-        print_column_text<Alignment::Center>("NPS");
-
-        print_column_text<Alignment::Center>("Hashfull");
-
-        print_column_text<Alignment::Center>("TT hits");
-
-        print_column_text<Alignment::Center>("Beta cutoffs");
-
-        print_column_text<Alignment::Center>("MDP cutoffs");
-
-        print_column_text<Alignment::Center>("Static evals");
-
-        print_column_text<Alignment::Center>("Score");
+        print_column_text("Depth");
+        print_column_text("Time");
+        print_column_text("Nodes");
+        print_column_text("NPS");
+        print_column_text("Hashfull");
+        print_column_text("TT hits");
+        print_column_text("Beta cutoffs");
+        print_column_text("MDP cutoffs");
+        print_column_text("Static evals");
+        print_column_text("Score");
 
         std::cout << "PV\n"
                   << termcolor::reset;
@@ -169,44 +141,44 @@ namespace {
         const Result& res, const MovePrinter& printMove)
     {
         // depth
-        print_column_text<Alignment::Center>(
+        print_column_text(
             std::format("{}/{}", res.depth, res.qDepth));
 
         // time
-        print_column_text<Alignment::Right>(
+        print_column_text(
             pretty_print::duration(res.duration));
 
         // nodes
-        print_column_text<Alignment::Right>(
+        print_column_text(
             pretty_print::nodes(res.nodesSearched));
 
         const auto libchess = res.to_libchess(false);
 
         // nodes per second
-        print_column_text<Alignment::Right>(
+        print_column_text(
             pretty_print::nps(libchess.get_nps()));
 
         // hashfull
-        print_column_text<Alignment::Center>(
+        print_column_text(
             pretty_print::hashfull(res.hashfull));
 
         // TT hits
-        print_column_text<Alignment::Center>(
+        print_column_text(
             pretty_print::search_stat(
                 res.transpositionTableHits, res.nodesSearched));
 
         // beta cutoffs
-        print_column_text<Alignment::Center>(
+        print_column_text(
             pretty_print::search_stat(
                 res.betaCutoffs, res.nodesSearched));
 
         // MDP cutoffs
-        print_column_text<Alignment::Center>(
+        print_column_text(
             pretty_print::search_stat(
                 res.mdpCutoffs, res.nodesSearched));
 
         // static evals
-        print_column_text<Alignment::Center>(
+        print_column_text(
             pretty_print::search_stat(
                 res.staticEvals, res.nodesSearched));
 

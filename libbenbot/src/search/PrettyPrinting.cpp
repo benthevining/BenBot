@@ -62,7 +62,7 @@ auto duration(
         .or_else([duration] {
             return std::make_optional(std::format(INTEGER_DURATION_FMT, duration));
         })
-        .value_or(std::string { });
+        .value();
 }
 
 auto evaluation(
@@ -86,10 +86,10 @@ auto evaluation(
 namespace {
     template <typename Ratio, char Suffix, size_t Precision>
     [[nodiscard]] auto get_quantity_string(
-        const size_t nodes) -> std::optional<string>
+        const size_t value) -> std::optional<string>
     {
-        if (nodes >= Ratio::num) {
-            const auto display = static_cast<float>(nodes) / static_cast<float>(Ratio::num);
+        if (value >= Ratio::num) {
+            const auto display = static_cast<float>(value) / static_cast<float>(Ratio::num);
 
             return std::format(
                 "{:.{}f}{}",
@@ -108,7 +108,7 @@ namespace {
             .or_else([value] { return get_quantity_string<std::mega, 'M', Precision>(value); })
             .or_else([value] { return get_quantity_string<std::kilo, 'k', Precision>(value); })
             .or_else([value] { return std::make_optional(std::format("{}", value)); })
-            .value_or(std::string { });
+            .value();
     }
 } // namespace
 
@@ -140,7 +140,7 @@ namespace {
     {
         return static_cast<size_t>(
             std::round(
-                static_cast<double>(stat) / static_cast<double>(totalNodes)));
+                (static_cast<double>(stat) / static_cast<double>(totalNodes)) * 100.));
     }
 } // namespace
 
