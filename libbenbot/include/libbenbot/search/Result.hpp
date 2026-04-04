@@ -92,10 +92,10 @@ struct [[nodiscard]] Result final {
     size_t hashfull { 0uz };
 
     /** Returns the best move found by this search. */
-    [[nodiscard]] Move best_move() const { return pv.front(); }
+    [[nodiscard]] auto best_move() const -> Move { return pv.front(); }
 
     /** Returns the ponder move found by this search, if one exists. */
-    [[nodiscard]] std::optional<Move> ponder_move() const
+    [[nodiscard]] auto ponder_move() const -> std::optional<Move>
     {
         if (pv.size() < 2uz)
             return std::nullopt;
@@ -115,7 +115,7 @@ struct [[nodiscard]] Result final {
         filled in or updated.
      */
     void fill_standard_epd_operations(
-        chess::notation::EPDPosition& operations) const;
+        chess::notation::EPDPosition& position) const;
 };
 
 } // namespace ben_bot::search
