@@ -55,4 +55,12 @@ using Score = chess::uci::printing::SearchInfo::Score;
 [[nodiscard]] auto hashfull(
     size_t permille) -> std::string;
 
+/** Pretty prints a search statistic (TT hits, beta cutoffs, etc) as
+    a string of the form "1k", "1m", followed by a percentage of the
+    totalNodes.
+    @ingroup libbenbot
+ */
+[[nodiscard]] auto search_stat(
+    size_t stat, size_t totalNodes) -> std::string;
+
 } // namespace ben_bot::pretty_print

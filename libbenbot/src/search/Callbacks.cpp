@@ -151,6 +151,14 @@ namespace {
 
         print_column_text<Alignment::Center>("Hashfull");
 
+        print_column_text<Alignment::Center>("TT hits");
+
+        print_column_text<Alignment::Center>("Beta cutoffs");
+
+        print_column_text<Alignment::Center>("MDP cutoffs");
+
+        print_column_text<Alignment::Center>("Static evals");
+
         print_column_text<Alignment::Center>("Score");
 
         std::cout << "PV\n"
@@ -181,6 +189,26 @@ namespace {
         // hashfull
         print_column_text<Alignment::Center>(
             pretty_print::hashfull(res.hashfull));
+
+        // TT hits
+        print_column_text<Alignment::Center>(
+            pretty_print::search_stat(
+                res.transpositionTableHits, res.nodesSearched));
+
+        // beta cutoffs
+        print_column_text<Alignment::Center>(
+            pretty_print::search_stat(
+                res.betaCutoffs, res.nodesSearched));
+
+        // MDP cutoffs
+        print_column_text<Alignment::Center>(
+            pretty_print::search_stat(
+                res.mdpCutoffs, res.nodesSearched));
+
+        // static evals
+        print_column_text<Alignment::Center>(
+            pretty_print::search_stat(
+                res.staticEvals, res.nodesSearched));
 
         // score
         print_score(libchess.score);

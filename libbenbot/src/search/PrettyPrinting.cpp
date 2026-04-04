@@ -85,7 +85,7 @@ auto evaluation(
 
 namespace {
     template <typename Ratio, char Suffix, size_t Precision>
-    [[nodiscard]] auto get_nodes_string(
+    [[nodiscard]] auto get_quantity_string(
         const size_t nodes) -> std::optional<string>
     {
         if (nodes >= Ratio::num) {
@@ -99,13 +99,15 @@ namespace {
         return std::nullopt;
     }
 
+    // formats a value in the forms "100", "1k", "1M" depending on its magnitude
     template <size_t Precision>
-    [[nodiscard]] auto format_nodes(
-        const size_t nodes) -> string
+    [[nodiscard]] auto format_quantity(
+        const size_t value) -> string
     {
-        return get_nodes_string<std::mega, 'M', Precision>(nodes)
-            .or_else([nodes] { return get_nodes_string<std::kilo, 'k', Precision>(nodes); })
-            .or_else([nodes] { return std::make_optional(std::format("{}", nodes)); })
+        return get_quantity_string<std::giga, 'B', Precision>(value)
+            .or_else([value] { return get_quantity_string<std::mega, 'M', Precision>(value); })
+            .or_else([value] { return get_quantity_string<std::kilo, 'k', Precision>(value); })
+            .or_else([value] { return std::make_optional(std::format("{}", value)); })
             .value_or(std::string { });
     }
 } // namespace
@@ -113,7 +115,7 @@ namespace {
 auto nodes(
     const size_t num) -> string
 {
-    return format_nodes<2uz>(num);
+    return format_quantity<2uz>(num);
 }
 
 auto nps(
@@ -121,7 +123,7 @@ auto nps(
 {
     return std::format(
         "{}/s",
-        format_nodes<1uz>(nodesPerSec)); // use this function for its transformation of the value to a k/M representation
+        format_quantity<1uz>(nodesPerSec));
 }
 
 auto hashfull(
@@ -130,6 +132,25 @@ auto hashfull(
     return std::format(
         "{}%",
         permille / 10uz);
+}
+
+namespace {
+    [[nodiscard, gnu::const]] auto to_percentage(
+        const size_t stat, const size_t totalNodes) noexcept -> size_t
+    {
+        return static_cast<size_t>(
+            std::round(
+                static_cast<double>(stat) / static_cast<double>(totalNodes)));
+    }
+} // namespace
+
+auto search_stat(
+    const size_t stat, const size_t totalNodes) -> string
+{
+    return std::format(
+        "{} ({}%)",
+        format_quantity<1uz>(stat),
+        to_percentage(stat, totalNodes));
 }
 
 } // namespace ben_bot::pretty_print
