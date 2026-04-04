@@ -45,6 +45,7 @@ namespace uci = chess::uci;
 
 using chess::game::Position;
 using chess::moves::Move;
+using chess::notation::MoveFormat;
 using std::string_view;
 using uci::EngineCommand;
 
@@ -82,7 +83,7 @@ public:
     }
 
     /** Returns the notation format being used for pretty printing. */
-    [[nodiscard]] auto get_move_format() const -> chess::notation::MoveFormat;
+    [[nodiscard]] auto get_move_format() const -> MoveFormat { return moveFormat.get_enum_value(); }
 
     /** Starts a search with the specified options. */
     void go(const search::Options& opts);
@@ -148,8 +149,6 @@ private:
     void write_config_file(string_view arg) const;
     void read_config_file(string_view arg);
 
-    [[nodiscard]] static auto create_move_format_option() -> uci::ComboOption;
-
     void resize_transposition_table(const size_t sizeMB) override
     {
         searcher.context.resize_transposition_table(sizeMB);
@@ -196,7 +195,11 @@ private:
         [this]([[maybe_unused]] const bool usePretty) { init_search_callbacks(); }
     };
 
-    uci::ComboOption moveFormat { create_move_format_option() };
+    uci::EnumOption<MoveFormat> moveFormat {
+        "Move Format",
+        MoveFormat::Algebraic,
+        "Notation format used to display moves in pretty printing mode."
+    };
 
     uci::BoolOption sanitizePositions {
         "Sanitize Positions",

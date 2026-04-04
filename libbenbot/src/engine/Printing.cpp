@@ -187,12 +187,6 @@ void Engine::print_compiler_info()
         resources::get_build_config()));
 }
 
-auto Engine::get_move_format() const -> chess::notation::MoveFormat
-{
-    return magic_enum::enum_cast<chess::notation::MoveFormat>(moveFormat.get_value())
-        .value();
-}
-
 auto Engine::pretty_print_move(const Move move) const -> std::string
 {
     return format_move(
