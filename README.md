@@ -47,7 +47,6 @@ Our automated CI & releases include the following builds:
 
 ### CMake options
 
-* `BENBOT_DOCS`: controls whether docs are built (defaults to off unless this is the top-level project)
 * `BENBOT_TESTS`: controls whether tests are built (defaults to off unless this is the top-level project)
 
 ## Thanks

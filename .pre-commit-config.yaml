@@ -82,7 +82,7 @@ repos:
   - id: insert-license
     name: Insert license header in CMake files
     args: [--license-filepath=libbenbot/resources/res/license_header.txt, --comment-style=#, --detect-license-in-X-top-lines=16]
-    types_or: [cmake, yaml, toml, ini, python, dockerfile]
+    types_or: [cmake, yaml, toml, ini, python, dockerfile, shell]
   - id: insert-license
     name: Insert license header in CMake and shell files
     args: [--license-filepath=libbenbot/resources/res/license_header.txt, --comment-style=#, --detect-license-in-X-top-lines=16]
@@ -109,6 +109,7 @@ repos:
   - id: cppcheck
     args: [--cppcheck-build-dir=Builds/cppcheck, --inline-suppr, --std=c++23, --check-level=exhaustive, --enable=all, --suppress=unusedFunction, --suppress=unusedStructMember, --suppress=unmatchedSuppression, --suppress=class_X_Y, --suppress=missingIncludeSystem, --suppress=missingInclude]
     additional_dependencies: [cppcheck>=1.5.1]
+    exclude: .mm
   - id: cpplint
     args: [--verbose=0]
     additional_dependencies: [cpplint>=2.0.2]
@@ -149,6 +150,12 @@ repos:
   - id: hadolint
     args: [--ignore, DL3003, --ignore, DL3008, --ignore, DL3045]
     exclude: .dockerignore
+
+# Bash scripts
+- repo: https://github.com/shellcheck-py/shellcheck-py
+  rev: v0.11.0.1
+  hooks:
+  - id: shellcheck
 
     # format justfile
 - repo: local

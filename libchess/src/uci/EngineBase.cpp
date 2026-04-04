@@ -67,10 +67,10 @@ namespace {
               })
             | std::ranges::to<std::vector>();
 
-        const auto closest = std::ranges::min(
+        const auto [name, distance] = std::ranges::min(
             mapped, std::ranges::less { }, [](const auto& item) { return item.second; });
 
-        return closest.first;
+        return name;
     }
 } // namespace
 
@@ -113,11 +113,11 @@ void EngineBase::respond_to_uci()
     println(cout, "id name {}", get_name());
     println(cout, "id author {}", get_author());
 
-    for (const auto* option : standardUCIOptions)
-        println(cout, "{}", option->get_declaration_string());
-
-    for (const auto* option : get_custom_uci_options())
-        println(cout, "{}", option->get_declaration_string());
+    std::ranges::for_each(
+        std::views::join(std::array { get_standard_uci_options(), get_custom_uci_options() }),
+        [](const Option* option) {
+            println(cout, "{}", option->get_declaration_string());
+        });
 
     println(cout, "uciok");
 
@@ -174,8 +174,6 @@ void EngineBase::handle_setpos(const string_view arguments)
                       }
                   }
 
-                  position = pos;
-
                   set_position(pos);
 
                   return { };
@@ -204,10 +202,10 @@ namespace {
               })
             | std::ranges::to<std::vector>();
 
-        const auto closest = std::ranges::min(
+        const auto [name, distance] = std::ranges::min(
             mapped, std::ranges::less { }, [](const auto& item) { return item.second; });
 
-        return closest.first;
+        return name;
     }
 } // namespace
 
@@ -234,7 +232,7 @@ void EngineBase::handle_setoption(const string_view arguments)
 
     name = trim(name);
 
-    wait();
+    // wait();
 
     auto update_option = [name, isNPos, rest, valueTokenIdx](const OptionList options) {
         if (const auto it = std::ranges::find_if(

@@ -54,3 +54,8 @@ cloc:
 [no-exit-message]
 relint:
     pre-commit run --hook-stage manual relint --all-files
+
+# Regenerates the MacOS icns file from the given svg
+[macos]
+gen_icon svgfile:
+    ./scripts/svg2icns.sh {{ svgfile }} {{ justfile_directory() }}/gui/icons/icon.icns

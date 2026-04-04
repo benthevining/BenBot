@@ -127,6 +127,28 @@ auto SearchInfo::Score::MateIn::moves() const noexcept -> int
     }();
 }
 
+auto SearchInfo::Score::get_type() const noexcept -> Type
+{
+    return std::visit(
+        util::Visitor {
+            [](const Centipawns value) noexcept {
+                if (value.value == 0)
+                    return Type::Equal;
+
+                if (value.value > 0)
+                    return Type::Winning;
+
+                return Type::Losing;
+            },
+            [](const MateIn mate) {
+                if (mate.plies > 0)
+                    return Type::Winning;
+
+                return Type::Losing;
+            } },
+        value);
+}
+
 auto SearchInfo::get_nps() const noexcept -> size_t
 {
     using FractionalSeconds = util::FractionalDuration<std::chrono::seconds, double>;

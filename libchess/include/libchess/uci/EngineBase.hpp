@@ -23,16 +23,13 @@
 #include <atomic>
 #include <cassert>
 #include <functional>
+#include <libchess/game/Position.hpp>
 #include <libchess/uci/CommandParsing.hpp>
 #include <libchess/uci/Options.hpp>
 #include <span>
 #include <string>
 #include <string_view>
 #include <utility>
-
-namespace chess::game {
-struct Position;
-} // namespace chess::game
 
 namespace chess::uci {
 
@@ -137,8 +134,15 @@ struct EngineBase {
      */
     virtual void ponder_hit() { }
 
-    /** Called when a new position is received from the GUI. */
-    virtual void set_position([[maybe_unused]] const Position& pos) { }
+    /** Sets the engine's current position. */
+    void set_position(const Position& pos)
+    {
+        position = pos;
+        position_changed(pos);
+    }
+
+    /** Returns the engine's current position. */
+    [[nodiscard]] auto get_position() const -> const Position& { return position; }
 
     /** Called when the "go" command is received. The engine should begin searching. After
         this function has been called, the engine should print to stdout a line of the form
@@ -234,7 +238,7 @@ struct EngineBase {
     IntOption opt_Hash {
         "Hash",
         1, 2048, 16,
-        "Sets the transposition table size (in MB)",
+        "Sets the transposition table size (in MB).",
         [this](const int sizeMB) {
             assert(sizeMB >= 0);
             resize_transposition_table(static_cast<size_t>(sizeMB));
@@ -256,24 +260,9 @@ struct EngineBase {
 
     /// @}
 
-private:
-    void respond_to_uci();
-    void respond_to_isready();
-    void respond_to_newgame();
-    void handle_quit();
-    void handle_setpos(string_view arguments);
-    void handle_setoption(string_view arguments);
-
-    static_assert(
-        std::atomic_bool::is_always_lock_free,
-        "Platform doesn't support lock-free atomic operations");
-
-    std::atomic_bool shouldExit { false }; // used as flag for exiting the loop() function
-    std::atomic_bool initialized { false };
-    std::atomic_bool debugMode { false };
-    std::atomic_bool sanitizeIncomingPositions { false };
-
-    Position position;
+protected:
+    /** Subclasses can implement this to be informed when the position has changed. */
+    virtual void position_changed([[maybe_unused]] const Position& pos) { }
 
     std::array<EngineCommand, 11uz> standardUCICommands {
         EngineCommand {
@@ -338,6 +327,25 @@ private:
     std::array<Option*, 2uz> standardUCIOptions {
         &opt_Hash, &opt_Ponder
     };
+
+private:
+    void respond_to_uci();
+    void respond_to_isready();
+    void respond_to_newgame();
+    void handle_quit();
+    void handle_setpos(string_view arguments);
+    void handle_setoption(string_view arguments);
+
+    static_assert(
+        std::atomic_bool::is_always_lock_free,
+        "Platform doesn't support lock-free atomic operations");
+
+    Position position;
+
+    std::atomic_bool shouldExit { false }; // used as flag for exiting the loop() function
+    std::atomic_bool initialized { false };
+    std::atomic_bool debugMode { false };
+    std::atomic_bool sanitizeIncomingPositions { false };
 };
 
 } // namespace chess::uci

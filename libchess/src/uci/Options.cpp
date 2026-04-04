@@ -200,7 +200,7 @@ StringOption::StringOption(
     string     helpString,
     Callback&& changeCallback)
     : optionName { std::move(name) }
-    , value { std::move(defaultValue) }
+    , optionDefault { std::move(defaultValue) }
     , help { std::move(helpString) }
     , onChange { std::move(changeCallback) }
 {

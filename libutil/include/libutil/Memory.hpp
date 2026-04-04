@@ -25,7 +25,9 @@
 
 #pragma once
 
-#include <cstddef> // IWYU pragma: keep - for size_t
+#include <algorithm> // IWYU pragma: keep
+#include <cstddef>   // IWYU pragma: keep - for size_t
+#include <new>       // IWYU pragma: keep
 
 /** This namespace provides some memory management utility functions.
     @ingroup memory
@@ -60,5 +62,20 @@ auto page_aligned_alloc(size_t size) -> void*;
     @ingroup memory
  */
 void prefetch(const void* mem);
+
+#if defined(DOXYGEN)                                                                                         \
+    or (defined(__cpp_lib_hardware_interference_size) and (__cpp_lib_hardware_interference_size >= 201703L))
+/** The cache line size of the target platform.
+    If the standard library doesn't provide this feature, uses a sensible default.
+
+    @ingroup memory
+ */
+inline constexpr auto CacheLineSize = std::max(
+    std::hardware_constructive_interference_size,
+    std::hardware_destructive_interference_size);
+#else
+#    warning std::hardware_constructive_interference_size not available, using default value
+inline constexpr auto CacheLineSize = 32uz;
+#endif
 
 } // namespace util::memory

@@ -170,4 +170,10 @@ auto to_epd(const EPDPosition& pos) -> string
     return epd;
 }
 
+void EPDPosition::refresh_default_operations()
+{
+    operations[string { FULL_MOVE_OP_TAG }] = std::format("{}", position.fullMoveCounter);
+    operations[string { HALF_MOVE_OP_TAG }] = std::format("{}", position.halfmoveClock);
+}
+
 } // namespace chess::notation

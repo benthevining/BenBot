@@ -21,12 +21,14 @@
 #pragma once
 
 #include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
-#include <libchess/game/Position.hpp>
+#include <expected>
 #include <libchess/moves/Move.hpp>
-#include <libchess/notation/Algebraic.hpp>
-#include <libchess/notation/ICCF.hpp>
-#include <libchess/notation/UCI.hpp>
 #include <string>
+#include <string_view>
+
+namespace chess::game {
+struct Position;
+} // namespace chess::game
 
 namespace chess::notation {
 
@@ -45,24 +47,21 @@ enum class MoveFormat : std::uint_least8_t {
 
 /** Prints a move using the given notation format.
     @ingroup notation
-    @see MoveFormat
+    @see MoveFormat, parse_move()
  */
-[[nodiscard]] inline auto format_move(
-    const MoveFormat format,
+[[nodiscard]] auto format_move(
+    MoveFormat      format,
+    const Position& position,
+    Move            move) -> std::string;
+
+/** Parses a move from a string using the given notation format.
+    @ingroup notation
+    @see MoveFormat, format_move()
+ */
+[[nodiscard]] auto parse_move(
+    MoveFormat       format,
     const Position&  position,
-    const Move       move) -> std::string
-{
-    switch (format) {
-        case MoveFormat::Algebraic:
-            return to_alg(position, move);
-
-        case MoveFormat::ICCF:
-            return to_iccf(move);
-
-        default: [[fallthrough]];
-        case MoveFormat::UCI:
-            return to_uci(move);
-    }
-}
+    std::string_view string)
+    -> std::expected<Move, std::string>;
 
 } // namespace chess::notation

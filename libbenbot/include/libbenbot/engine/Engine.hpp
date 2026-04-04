@@ -24,6 +24,7 @@
 #include <functional>
 #include <libbenbot/search/Thread.hpp>
 #include <libchess/game/Position.hpp>
+#include <libchess/notation/MoveFormats.hpp>
 #include <libchess/uci/EngineBase.hpp>
 #include <libchess/uci/Options.hpp>
 #include <span>
@@ -36,6 +37,10 @@ struct GoCommandOptions;
 
 namespace ben_bot {
 
+namespace search {
+    struct Options;
+} // namespace search
+
 namespace uci = chess::uci;
 
 using chess::game::Position;
@@ -46,7 +51,7 @@ using uci::EngineCommand;
 /** The ``ben-bot`` UCI engine class.
     @ingroup libbenbot
  */
-class [[nodiscard]] Engine final : public uci::EngineBase {
+class [[nodiscard]] Engine : public uci::EngineBase {
 public:
     Engine() = default;
 
@@ -61,15 +66,46 @@ public:
     /** Loads the engine's state from a configuration file at the given path. */
     void read_config_file(const std::filesystem::path& file);
 
+    /** Saves the engine's state to a string. */
+    [[nodiscard]] auto state_to_string() const -> std::string;
+
+    /** Restores the engine's state from a stringified version. */
+    void restore_state_from_string(string_view state);
+
+    /** Sets the options to be used for the next search. */
+    void set_search_options(const search::Options& opts) { searcher.context.set_options(opts); }
+
+    /** Returns the engine's current search parameters, set by the last go command. */
+    [[nodiscard]] auto get_search_options() const noexcept -> const search::Options&
+    {
+        return searcher.context.get_options();
+    }
+
+    /** Returns the notation format being used for pretty printing. */
+    [[nodiscard]] auto get_move_format() const -> chess::notation::MoveFormat;
+
+    /** Starts a search with the specified options. */
+    void go(const search::Options& opts);
+
+protected:
+    /** This function is used to initialize the search context's result callbacks.
+        The default implementation returns either a console pretty printer or a
+        UCI printer depending on the value of the pretty printing parameter, but
+        other engine use cases can override this to return other sets of callbacks.
+     */
+    [[nodiscard]] virtual auto create_search_callbacks() -> search::Callbacks;
+
 private:
     [[nodiscard]] auto get_name() const -> std::string override;
     [[nodiscard]] auto get_author() const -> string_view override { return "Ben Vining"; }
 
     void new_game(bool firstCall) override;
 
-    void set_position(const Position& pos) override { searcher.context.set_position(pos); }
+    void position_changed(const Position& pos) override { searcher.context.set_position(pos); }
 
     void go(const uci::GoCommandOptions& opts) override;
+
+    void go_internal(search::Options opts);
 
     void abort_search() override { searcher.context.abort(); }
 
@@ -101,7 +137,7 @@ private:
     void print_options();
     void print_current_position(string_view arguments) const;
 
-    void set_pretty_printing(bool shouldPrettyPrint);
+    void init_search_callbacks();
 
     [[nodiscard]] auto pretty_print_move(Move move) const -> std::string;
 
@@ -157,7 +193,7 @@ private:
         "Pretty Print",
         false,
         "When on, search output is pretty-printed instead of printed in UCI format.",
-        [this](const bool usePretty) { set_pretty_printing(usePretty); }
+        [this]([[maybe_unused]] const bool usePretty) { init_search_callbacks(); }
     };
 
     uci::ComboOption moveFormat { create_move_format_option() };

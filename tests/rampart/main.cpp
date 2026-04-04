@@ -27,6 +27,7 @@
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/Algebraic.hpp>
 #include <libchess/notation/FEN.hpp>
+#include <libutil/Console.hpp>
 #include <nlohmann/json.hpp>
 #include <print>
 #include <span>
@@ -105,10 +106,7 @@ try {
               .transform([](const json& data) {
                   std::println("{}", data.dump());
               })
-              .transform_error([](const std::string_view error) {
-                  std::println(std::cerr, "Error: {}", error);
-                  return std::monostate { };
-              });
+              .transform_error(util::print_error);
 
     return EXIT_SUCCESS;
 } catch (const std::exception& exception) {

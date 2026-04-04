@@ -39,7 +39,7 @@ void Thread::thread_func()
         // we want to use progressive backoff to wait on the startSearch flag,
         // but we also need to exit the PB loop if the threadShouldExit flag
         // gets set
-        util::progressive_backoff([this] {
+        util::progressive_backoff([this]() noexcept {
             return threadShouldExit.load(memory_order::acquire)
                 or startSearch.exchange(false, memory_order::acq_rel);
         });
