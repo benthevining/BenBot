@@ -543,6 +543,14 @@ void render_engine_panel(
         render_start_stop_button(
             state.engine, state.searchOptions, showTooltips);
 
+        ImGui::SameLine();
+
+        if (ImGui::Button("New game"))
+            state.engine.handle_command("ucinewgame");
+
+        if (showTooltips)
+            ImGui::SetItemTooltip("Send a ucinewgame command to the engine");
+
         render_search_output(
             state.engine.get_results(),
             state.engine.get_position(),

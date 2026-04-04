@@ -83,6 +83,8 @@ void initialize(
         state.update_from_string(resources::get_default_app_state());
     }
 
+    state.enginePanel.engine.handle_command("ucinewgame");
+
     { // Setup scaling
         auto& style = ImGui::GetStyle();
         style.ScaleAllSizes(mainScaleFactor);
