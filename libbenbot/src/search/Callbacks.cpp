@@ -13,26 +13,21 @@
  */
 
 #include <cassert>
-#include <chrono>
-#include <cmath>   // IWYU pragma: keep - for std::abs()
 #include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
 #include <format>
 #include <functional>
 #include <iostream>
 #include <libbenbot/search/Callbacks.hpp>
+#include <libbenbot/search/PrettyPrinting.hpp>
 #include <libbenbot/search/Result.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/uci/Printing.hpp>
-#include <libutil/Chrono.hpp>
-#include <libutil/Variant.hpp>
 #include <optional>
-#include <ratio>
 #include <span>
 #include <string>
 #include <string_view>
 #include <termcolor/termcolor.hpp>
 #include <utility>
-#include <variant>
 
 namespace ben_bot::search {
 
@@ -65,172 +60,41 @@ namespace {
     using std::string;
     using std::string_view;
 
-    enum class Alignment : std::uint_least8_t {
-        Left,
-        Right,
-        Center
-    };
-
-    inline constexpr auto COLUMN_WIDTH = 10uz;
-
-    template <Alignment Align>
     void print_column_text(
         const string_view text)
     {
-        assert(text.size() < COLUMN_WIDTH);
+        static constexpr auto ColumnWidth = 13uz;
 
-        static constexpr auto formatStr = [] {
-            if constexpr (Align == Alignment::Left) {
-                return "{:<{}}";
-            } else if constexpr (Align == Alignment::Center) {
-                return "{:^{}}";
-            } else {
-                static_assert(Align == Alignment::Right);
-                return "{:>{}}";
-            }
-        }();
+        assert(text.size() < ColumnWidth);
 
         std::cout << std::format(
-            formatStr,
-            text.substr(0uz, COLUMN_WIDTH),
-            COLUMN_WIDTH);
-    }
-
-    inline constexpr string_view FRACTIONAL_DURATION_FMT { "{:.2%Q %q}" };
-    inline constexpr string_view INTEGER_DURATION_FMT { "{:%Q %q}" };
-
-    template <util::ChronoDuration Duration>
-    [[nodiscard]] auto get_duration_string(
-        const milliseconds duration) -> std::optional<string>
-    {
-        static constexpr auto msPerUnit = duration_cast<milliseconds>(Duration { 1uz });
-
-        if (duration >= msPerUnit) {
-            using FractionalDuration = util::FractionalDuration<Duration>;
-
-            return std::format(
-                FRACTIONAL_DURATION_FMT,
-                duration_cast<FractionalDuration>(duration));
-        }
-
-        return std::nullopt;
-    }
-
-    [[nodiscard]] auto format_duration(
-        const milliseconds duration) -> string
-    {
-        // NB. it should be quite rare that a search will run for 1 day or more...
-        return get_duration_string<std::chrono::hours>(duration)
-            .or_else([duration] { return get_duration_string<std::chrono::minutes>(duration); })
-            .or_else([duration] { return get_duration_string<std::chrono::seconds>(duration); })
-            .or_else([duration] {
-                return std::make_optional(std::format(INTEGER_DURATION_FMT, duration));
-            })
-            .value();
-    }
-
-    template <typename Ratio, char Suffix, size_t Precision>
-    [[nodiscard]] auto get_nodes_string(
-        const size_t nodes) -> std::optional<string>
-    {
-        if (nodes >= Ratio::num) {
-            const auto display = static_cast<float>(nodes) / static_cast<float>(Ratio::num);
-
-            return std::format(
-                "{:.{}f}{}",
-                display, Precision, Suffix);
-        }
-
-        return std::nullopt;
-    }
-
-    template <size_t Precision = 2uz>
-    [[nodiscard]] auto format_nodes(
-        const size_t nodes) -> string
-    {
-        return get_nodes_string<std::mega, 'M', Precision>(nodes)
-            .or_else([nodes] { return get_nodes_string<std::kilo, 'k', Precision>(nodes); })
-            .or_else([nodes] { return std::make_optional(std::format("{}", nodes)); })
-            .value();
-    }
-
-    [[nodiscard]] auto format_nps(const size_t nps) -> string
-    {
-        return std::format(
-            "{}/s",
-            format_nodes<1uz>(nps)); // use this function for its transformation of the value to a k/M representation
-    }
-
-    [[nodiscard]] auto format_hashfull(const size_t permille) -> string
-    {
-        return std::format(
-            "{}%",
-            permille / 10uz);
+            "{:^{}}",
+            text.substr(0uz, ColumnWidth),
+            ColumnWidth);
     }
 
     using Score = chess::uci::printing::SearchInfo::Score;
 
-    [[nodiscard]] auto format_score(
-        const Score& score) -> string
-    {
-        return std::visit(
-            util::Visitor {
-                [](const Score::Centipawns& centipawns) {
-                    return std::format(
-                        "{:+}",
-                        centipawns.value);
-                },
-                [](const Score::MateIn& mate) {
-                    return std::format(
-                        "#{}",
-                        std::abs(mate.moves()));
-                } },
-            score.value);
-    }
-
     void print_score(
         const Score& score)
     {
-        enum class ScoreType : std::uint_least8_t {
-            Winning,
-            Losing,
-            Equal
-        };
+        switch (score.get_type()) {
+            using enum Score::Type;
 
-        const auto type = std::visit(
-            util::Visitor {
-                [](const Score::Centipawns& value) noexcept {
-                    if (value.value == 0)
-                        return ScoreType::Equal;
-
-                    if (value.value > 0)
-                        return ScoreType::Winning;
-
-                    return ScoreType::Losing;
-                },
-                [](const Score::MateIn& mate) {
-                    if (mate.plies > 0)
-                        return ScoreType::Winning;
-
-                    return ScoreType::Losing;
-                } },
-            score.value);
-
-        switch (type) {
-            case ScoreType::Winning:
+            case Winning:
                 std::cout << termcolor::green;
                 break;
-            case ScoreType::Losing:
+            case Losing:
                 std::cout << termcolor::red;
                 break;
             default: [[fallthrough]];
-            case ScoreType::Equal:
+            case Equal:
                 std::cout << termcolor::grey;
                 break;
         }
 
-        print_column_text<Alignment::Center>(
-            format_score(score));
+        print_column_text(
+            pretty_print::evaluation(score));
 
         std::cout << termcolor::reset;
     }
@@ -258,17 +122,16 @@ namespace {
     {
         std::cout << termcolor::bold;
 
-        print_column_text<Alignment::Center>("Depth");
-
-        print_column_text<Alignment::Right>("Time");
-
-        print_column_text<Alignment::Right>("Nodes");
-
-        print_column_text<Alignment::Center>("NPS");
-
-        print_column_text<Alignment::Center>("Hashfull");
-
-        print_column_text<Alignment::Center>("Score");
+        print_column_text("Depth");
+        print_column_text("Time");
+        print_column_text("Nodes");
+        print_column_text("NPS");
+        print_column_text("Hashfull");
+        print_column_text("TT hits");
+        print_column_text("Beta cutoffs");
+        print_column_text("MDP cutoffs");
+        print_column_text("Static evals");
+        print_column_text("Score");
 
         std::cout << "PV\n"
                   << termcolor::reset;
@@ -278,26 +141,46 @@ namespace {
         const Result& res, const MovePrinter& printMove)
     {
         // depth
-        print_column_text<Alignment::Center>(
+        print_column_text(
             std::format("{}/{}", res.depth, res.qDepth));
 
         // time
-        print_column_text<Alignment::Right>(
-            format_duration(res.duration));
+        print_column_text(
+            pretty_print::duration(res.duration));
 
         // nodes
-        print_column_text<Alignment::Right>(
-            format_nodes(res.nodesSearched));
+        print_column_text(
+            pretty_print::nodes(res.nodesSearched));
 
         const auto libchess = res.to_libchess(false);
 
         // nodes per second
-        print_column_text<Alignment::Right>(
-            format_nps(libchess.get_nps()));
+        print_column_text(
+            pretty_print::nps(libchess.get_nps()));
 
         // hashfull
-        print_column_text<Alignment::Center>(
-            format_hashfull(res.hashfull));
+        print_column_text(
+            pretty_print::hashfull(res.hashfull));
+
+        // TT hits
+        print_column_text(
+            pretty_print::search_stat(
+                res.transpositionTableHits, res.nodesSearched));
+
+        // beta cutoffs
+        print_column_text(
+            pretty_print::search_stat(
+                res.betaCutoffs, res.nodesSearched));
+
+        // MDP cutoffs
+        print_column_text(
+            pretty_print::search_stat(
+                res.mdpCutoffs, res.nodesSearched));
+
+        // static evals
+        print_column_text(
+            pretty_print::search_stat(
+                res.staticEvals, res.nodesSearched));
 
         // score
         print_score(libchess.score);

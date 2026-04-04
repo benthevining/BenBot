@@ -20,6 +20,7 @@
 #pragma once
 
 #include <functional>
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -77,6 +78,9 @@ struct Option {
      */
     [[nodiscard]] virtual auto get_default_value_variant() const -> Variant = 0;
 
+    /** Resets the option's value to the default. */
+    virtual void reset_to_default_value() = 0;
+
     /** Will be called with everything in the "setoption" command after the option name.
         This is typically not called directly by user code.
      */
@@ -111,6 +115,8 @@ struct BoolOption final : Option {
     [[nodiscard]] auto get_default_value() const noexcept -> bool { return optionDefault; }
 
     [[nodiscard]] auto get_default_value_variant() const -> Variant override { return optionDefault; }
+
+    void reset_to_default_value() override { value = optionDefault; }
 
     [[nodiscard]] auto get_name() const noexcept -> string_view override { return optionName; }
 
@@ -165,6 +171,8 @@ struct IntOption final : Option {
 
     [[nodiscard]] auto get_default_value_variant() const -> Variant override { return optionDefault; }
 
+    void reset_to_default_value() override { value = optionDefault; }
+
     [[nodiscard]] auto get_name() const noexcept -> string_view override { return optionName; }
 
     [[nodiscard]] auto get_declaration_string() const -> string override;
@@ -218,6 +226,8 @@ struct ComboOption final : Option {
 
     [[nodiscard]] auto get_default_value_variant() const -> Variant override { return get_default_value(); }
 
+    void reset_to_default_value() override { value = optionDefault; }
+
     [[nodiscard]] auto get_name() const noexcept -> string_view override { return optionName; }
 
     [[nodiscard]] auto get_declaration_string() const -> string override;
@@ -227,6 +237,13 @@ struct ComboOption final : Option {
     [[nodiscard]] auto get_help() const noexcept -> string_view override { return help; }
 
     void handle_setvalue(string_view arguments) override;
+
+    /** Returns the possible value strings that the combo option may be assigned to. */
+    [[nodiscard]] auto get_possible_values() const noexcept
+        -> std::span<const string>
+    {
+        return possibleValues;
+    }
 
 private:
     string optionName;
@@ -270,7 +287,9 @@ struct StringOption final : Option {
 
     [[nodiscard]] auto get_value_variant() const -> Variant override { return get_value(); }
 
-    [[nodiscard]] auto get_default_value_variant() const -> Variant override { return string_view { }; }
+    [[nodiscard]] auto get_default_value_variant() const -> Variant override { return optionDefault; }
+
+    void reset_to_default_value() override { value = optionDefault; }
 
     [[nodiscard]] auto get_name() const noexcept -> string_view override { return optionName; }
 
@@ -285,7 +304,9 @@ struct StringOption final : Option {
 private:
     string optionName;
 
-    string value;
+    string optionDefault;
+
+    string value { optionDefault };
 
     string help;
 
@@ -308,6 +329,9 @@ struct Action final : Option {
 
     [[nodiscard]] auto get_value_variant() const -> Variant override { throw_value_error(); }
     [[nodiscard]] auto get_default_value_variant() const -> Variant override { throw_value_error(); }
+
+    /** Does nothing. */
+    void reset_to_default_value() override { }
 
     [[nodiscard]] auto get_name() const noexcept -> string_view override { return optionName; }
 

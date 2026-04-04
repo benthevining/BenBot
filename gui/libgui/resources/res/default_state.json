@@ -1,0 +1,5 @@
+{
+  "app_settings": "{\"show_tooltips\":true}",
+  "board_editor": "{\"board_fen\":\"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -  fmvn 1; hmvc 0;\"}",
+  "engine": "{\"engine\":\"{\\\"debug\\\":false,\\\"uci_options\\\":{\\\"Debug Log File\\\":\\\"\\\",\\\"Hash\\\":16,\\\"Move Format\\\":\\\"Algebraic\\\",\\\"Move Overhead\\\":10,\\\"Ponder\\\":false,\\\"Pretty Print\\\":false,\\\"Sanitize Positions\\\":false,\\\"Threads\\\":1}}\",\"search_options\":\"{\\\"depth\\\":18446744073709551615,\\\"infinite\\\":false,\\\"mate_in\\\":{\\\"has_value\\\":false},\\\"max_nodes\\\":18446744073709551615,\\\"move_overhead\\\":0,\\\"moves_to_search\\\":[],\\\"search_time\\\":{\\\"has_value\\\":false}}\"}"
+}

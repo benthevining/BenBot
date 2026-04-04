@@ -343,6 +343,11 @@ struct [[nodiscard]] Position final {
      */
     [[nodiscard]] auto is_illegal() const -> std::optional<std::string>;
 
+    /** If the en passant target square is set to a square that is not a potentially legal
+        en passant target, this function resets the EP square to ``nullopt``.
+     */
+    void sanitize_ep_square();
+
     /** Returns an empty position with none of the piece bitboards initialized.
         This is useful for tasks like parsing a FEN string, for example.
         After you've set up the position, don't forget to call ``whitePieces.refresh_occupied()``,

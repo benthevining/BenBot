@@ -48,6 +48,11 @@ struct [[nodiscard]] EPDPosition final {
         and an identical set of operations.
      */
     [[nodiscard]] auto operator==(const EPDPosition& other) const noexcept -> bool = default;
+
+    /** Refreshes the default move counter operations so that they are in sync
+        with the numeric counters in the position field.
+     */
+    void refresh_default_operations();
 };
 
 /** Parses an EPD string.

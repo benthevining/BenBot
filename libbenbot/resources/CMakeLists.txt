@@ -24,13 +24,9 @@ set (resource_files # cmake-format: sortable
                     res/bench.epd res/license_header.txt
 )
 
-cmrc_add_resource_library (ben_bot_resources_internal ${resource_files})
-
-add_library (ben_bot_resources STATIC)
+cmrc_add_resource_library (ben_bot_resources ${resource_files})
 
 target_compile_features (ben_bot_resources PRIVATE cxx_std_23 PUBLIC cxx_std_17)
-
-target_link_libraries (ben_bot_resources PRIVATE ben_bot_resources_internal)
 
 set_target_properties (
     ben_bot_resources PROPERTIES CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN ON
@@ -57,7 +53,7 @@ set (source_file "src/Resources.cpp")
 
 target_sources (
     ben_bot_resources PUBLIC FILE_SET HEADERS BASE_DIRS include FILES "${header_file}"
-    PRIVATE ${source_file} "${generated_header}"
+    PRIVATE "${source_file}" "${generated_header}"
 )
 
 source_group (
