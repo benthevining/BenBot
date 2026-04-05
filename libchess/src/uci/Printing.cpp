@@ -171,8 +171,8 @@ namespace {
     {
         auto string = std::visit(
             util::Visitor {
-                [](const Score::Centipawns& centipawns) { return std::format("cp {}", centipawns.value); },
-                [](const Score::MateIn& mate) { return std::format("mate {}", mate.moves()); } },
+                [](const Score::Centipawns centipawns) { return std::format("cp {}", centipawns.value); },
+                [](const Score::MateIn mate) { return std::format("mate {}", mate.moves()); } },
             score.value);
 
         assert(not(score.lowerBound and score.upperBound));

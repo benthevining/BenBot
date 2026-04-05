@@ -117,7 +117,11 @@ namespace {
     template <typename T>
     [[nodiscard]] auto opt_from_json(const json& data) -> std::optional<T>
     {
-        if (not data.at(TAG_OPT_HAS_VALUE).get<bool>())
+        if (data.contains(TAG_OPT_HAS_VALUE))
+            if (not data.at(TAG_OPT_HAS_VALUE).get<bool>())
+                return std::nullopt;
+
+        if (not data.contains(TAG_OPT_VALUE))
             return std::nullopt;
 
         return data.at(TAG_OPT_VALUE).get<T>();
@@ -130,7 +134,7 @@ namespace {
         std::ranges::transform(
             moves,
             std::back_inserter(data),
-            [](const Move move) { return chess::notation::to_uci(move); });
+            chess::notation::to_uci);
 
         return data;
     }

@@ -171,8 +171,9 @@ namespace {
     }
 
     // parses the move, adds it to the output, and makes the move on the position
-    void parse_move(
+    [[nodiscard]] auto parse_move(
         Position& position, string_view moveText, Moves& output)
+        -> std::expected<std::monostate, string>
     {
         // move numbers may start with 3. or 3...
         if (const auto lastDotIdx = moveText.rfind('.');
@@ -180,11 +181,14 @@ namespace {
             moveText = moveText.substr(lastDotIdx + 1uz);
         }
 
-        const auto move = from_alg(position, moveText).value();
+        return from_alg(position, moveText)
+            .transform([&position, &output](const Move move) {
+                position.make_move(move);
 
-        position.make_move(move);
+                output.emplace_back(move);
 
-        output.emplace_back(move);
+                return std::monostate { };
+            });
     }
 
     [[nodiscard]] auto parse_variation(
@@ -269,7 +273,10 @@ namespace {
 
                     lastPos = position;
 
-                    parse_move(position, firstMove, output);
+                    const auto result = parse_move(position, firstMove, output);
+
+                    if (not result.has_value())
+                        return std::unexpected { result.error() };
 
                     pgnText = rest;
                 }

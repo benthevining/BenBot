@@ -30,6 +30,13 @@ using chess::notation::from_pgn;
 using chess::notation::parse_all_pgns;
 using chess::notation::to_pgn;
 
+TEST_CASE("PGN - don't crash with empty input", TAGS)
+{
+    const auto result = from_pgn({ });
+
+    REQUIRE(result.has_value());
+}
+
 TEST_CASE("PGN - block comments", TAGS)
 {
     static constexpr std::string_view pgn {
