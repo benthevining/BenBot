@@ -65,7 +65,8 @@ struct [[nodiscard]] EPDPosition final {
     @relates EPDPosition
     @see parse_all_epds()
  */
-[[nodiscard]] auto from_epd(string_view epdString)
+[[nodiscard]] auto from_epd(
+    string_view epdString)
     -> std::expected<EPDPosition, string>;
 
 /** Parses all EPDs in a string containing one EPD per line.
@@ -74,7 +75,8 @@ struct [[nodiscard]] EPDPosition final {
     @relates EPDPosition
     @see from_epd()
  */
-[[nodiscard]] auto parse_all_epds(string_view fileContent)
+[[nodiscard]] auto parse_all_epds(
+    string_view fileContent)
     -> std::vector<EPDPosition>;
 
 /** Writes a position to an EPD string.
@@ -82,7 +84,8 @@ struct [[nodiscard]] EPDPosition final {
     @ingroup notation
     @relates EPDPosition
  */
-[[nodiscard]] auto to_epd(const EPDPosition& pos) -> string;
+[[nodiscard]] auto to_epd(
+    const EPDPosition& pos) -> string;
 
 /** This namespace contains some constants representing names of standard EPD operations.
     See https://www.chessprogramming.org/Extended_Position_Description.

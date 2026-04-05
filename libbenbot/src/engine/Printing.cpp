@@ -192,7 +192,8 @@ auto Engine::pretty_print_move(const Move move) const -> std::string
     return format_move(
         get_move_format(),
         searcher.context.get_position(),
-        move);
+        move,
+        algFormatUTF8PieceType.get_value());
 }
 
 } // namespace ben_bot

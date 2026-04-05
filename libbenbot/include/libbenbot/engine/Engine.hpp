@@ -201,6 +201,12 @@ private:
         "Notation format used to display moves in pretty printing mode."
     };
 
+    uci::BoolOption algFormatUTF8PieceType {
+        "Algebraic Format UTF8",
+        false,
+        "When on and printing algebraic move format, uses UTF8 glyphs for piece types."
+    };
+
     uci::BoolOption sanitizePositions {
         "Sanitize Positions",
         false,
@@ -208,8 +214,8 @@ private:
         [this](const bool sanitize) { set_sanitize_positions(sanitize); }
     };
 
-    std::array<uci::Option*, 7uz> options {
-        &clearTT, &threads, &moveOverhead, &logFile, &prettyPrintMode, &moveFormat, &sanitizePositions
+    std::array<uci::Option*, 8uz> options {
+        &clearTT, &threads, &moveOverhead, &logFile, &prettyPrintMode, &moveFormat, &algFormatUTF8PieceType, &sanitizePositions
     };
 
     std::array<EngineCommand, 10uz> customCommands {

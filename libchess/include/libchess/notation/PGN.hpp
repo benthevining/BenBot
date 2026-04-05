@@ -140,7 +140,8 @@ struct [[nodiscard]] GameRecord final {
     @relates GameRecord
     @see parse_all_pgns()
  */
-[[nodiscard]] auto from_pgn(std::string_view pgnText)
+[[nodiscard]] auto from_pgn(
+    std::string_view pgnText)
     -> std::expected<GameRecord, std::string_view>;
 
 /** Parses a text file that may contain 0 or more PGNs into a list of
@@ -153,7 +154,8 @@ struct [[nodiscard]] GameRecord final {
     @relates GameRecord
     @see from_pgn()
  */
-[[nodiscard]] auto parse_all_pgns(std::string_view fileContent)
+[[nodiscard]] auto parse_all_pgns(
+    std::string_view fileContent)
     -> std::vector<GameRecord>;
 
 /** Creates a PGN @cite Edwards_1994 string from the given game record.
@@ -167,6 +169,8 @@ struct [[nodiscard]] GameRecord final {
     @ingroup notation
     @relates GameRecord
  */
-[[nodiscard]] auto to_pgn(const GameRecord& game, bool useBlockComments = true) -> string;
+[[nodiscard]] auto to_pgn(
+    const GameRecord& game, bool useBlockComments = true)
+    -> string;
 
 } // namespace chess::notation

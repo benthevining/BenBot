@@ -572,7 +572,8 @@ namespace {
 
 } // namespace
 
-auto to_pgn(const GameRecord& game, const bool useBlockComments) -> string
+auto to_pgn(
+    const GameRecord& game, const bool useBlockComments) -> string
 {
     string result;
 
