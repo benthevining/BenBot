@@ -149,7 +149,7 @@ auto AppState::to_string() const -> std::string
 }
 
 void AppState::update_from_string(const string_view str)
-{
+try {
     const auto parsed = json::parse(str);
 
     boardEditor = BoardEditorState::from_string(
@@ -163,6 +163,9 @@ void AppState::update_from_string(const string_view str)
 
     gameViewer = GameViewerState::from_string(
         parsed.at(TAG_GAME_VIEWER).get<string_view>());
+} catch (const nlohmann::detail::out_of_range& error) {
+    std::println(
+        stderr, "Error loading state: {}", error.what());
 }
 
 void AppState::load_from(const path& filePath)
@@ -173,18 +176,13 @@ void AppState::load_from(const path& filePath)
         return;
     }
 
-    try {
-        [[maybe_unused]] const auto result
-            = util::files::load(filePath)
-                  .transform([this](const string_view fileContent) {
-                      update_from_string(fileContent);
-                      return std::monostate { };
-                  })
-                  .transform_error(util::print_error);
-    } catch (const nlohmann::detail::out_of_range& error) {
-        std::println(
-            stderr, "Error loading state: {}", error.what());
-    }
+    [[maybe_unused]] const auto result
+        = util::files::load(filePath)
+              .transform([this](const string_view fileContent) {
+                  update_from_string(fileContent);
+                  return std::monostate { };
+              })
+              .transform_error(util::print_error);
 }
 
 void AppState::write_to(const path& filePath) const

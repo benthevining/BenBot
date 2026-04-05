@@ -12,6 +12,7 @@
  * ======================================================================================
  */
 
+#include "ImUtil.hpp" // NOLINT(build/include_subdir)
 #include <array>
 #include <concepts>
 #include <filesystem>
@@ -102,14 +103,14 @@ namespace {
                           .transform_error(util::print_error);
             });
     }
-} // namespace
 
-void render_game_viewer(
-    GameViewerState& state, const bool showTooltips)
-{
-    if (ImGui::Begin("Game")) {
+    void render_load_save_buttons(
+        GameRecord& game, const bool showTooltips)
+    {
+        const ScopedGroup group;
+
         if (ImGui::Button("Load"))
-            show_pgn_load_dialog(state.game);
+            show_pgn_load_dialog(game);
 
         if (showTooltips)
             ImGui::SetItemTooltip("Load a game from a PGN file");
@@ -117,10 +118,38 @@ void render_game_viewer(
         ImGui::SameLine();
 
         if (ImGui::Button("Save"))
-            show_pgn_save_dialog(state.game);
+            show_pgn_save_dialog(game);
 
         if (showTooltips)
             ImGui::SetItemTooltip("Save game to a PGN file");
+    }
+
+    void render_move_list(
+        const GameRecord& game, const bool showTooltips)
+    {
+        // TODO
+    }
+
+    void render_focused_move(
+        const GameRecord::Move& move, const bool showTooltips)
+    {
+        // TODO: comment, NAGs, variations
+    }
+} // namespace
+
+void render_game_viewer(
+    GameViewerState& state, const bool showTooltips)
+{
+    if (ImGui::Begin("Game")) {
+        render_load_save_buttons(
+            state.game, showTooltips);
+
+        render_move_list(
+            state.game, showTooltips);
+
+        // TODO: how to keep track of focused move?
+
+        // TODO: forward/back buttons
     }
 
     ImGui::End();
