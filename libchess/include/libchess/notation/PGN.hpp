@@ -60,9 +60,16 @@ enum class NAG : std::uint_least8_t {
     BlackDecisiveAdvantage = 19, ///< Indicates that black has a decisive advantage in this position.
     BlackCrushingAdvantage = 21, ///< Indicates that black has a crushing advantage in this position (white should resign).
     WhiteZugzwang          = 22, ///< Indicates that white is in Zugzwang in this position.
+    BlackZugzwang          = 23, ///< Indicates that black is in Zugzwang in this position.
     WhiteInitiative        = 36, ///< Indicates that white has the initiative in this position.
     BlackInitiative        = 37  ///< Indicates that black has the initiative in this position.
 };
+
+/** Converts a NAG to its typographic representation, encoded in UTF8.
+    @see NAG
+    @ingroup notation
+ */
+[[nodiscard]] auto format_nag(NAG nag) -> std::string_view;
 
 /** A record of a complete game, including some metadata.
     This structure is returned by the ``from_pgn()`` method.

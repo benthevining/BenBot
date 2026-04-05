@@ -590,4 +590,31 @@ auto to_pgn(const GameRecord& game, const bool useBlockComments) -> string
     return result;
 }
 
+auto format_nag(const NAG nag) -> string_view
+{
+    switch (nag) {
+        using enum NAG;
+
+        case Good                  : return "!";
+        case Brilliant             : return "!!";
+        case Inaccuracy            : return "?";
+        case Blunder               : return "??";
+        case Interesting           : return "!?";
+        case Dubious               : return "?!";
+        case Forced                : return "\xE2\x96\xA1";
+        case Drawish               : return "=";
+        case Unclear               : return "\xE2\x88\x9E";
+        case WhiteSlightAdvantage  : return "\xE2\xA9\xB2";
+        case WhiteModerateAdvantage: return "\xC2\xB1";
+        case WhiteDecisiveAdvantage: return "+-";
+        case BlackSlightAdvantage  : return "\xE2\xA9\xB1";
+        case BlackModerateAdvantage: return "\xE2\x88\x93";
+        case BlackDecisiveAdvantage: return "-+";
+        case WhiteZugzwang         : [[fallthrough]];
+        case BlackZugzwang         : return "\xE2\xA8\x80";
+
+        default: return { };
+    }
+}
+
 } // namespace chess::notation
