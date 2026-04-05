@@ -82,11 +82,18 @@ public:
         return searcher.context.get_options();
     }
 
-    /** Returns the notation format being used for pretty printing. */
-    [[nodiscard]] auto get_move_format() const -> MoveFormat { return moveFormat.get_enum_value(); }
-
     /** Starts a search with the specified options. */
     void go(const search::Options& opts);
+
+    /** Returns the move format being used to pretty-print moves. */
+    [[nodiscard]] auto get_pretty_print_move_format() const -> MoveFormat
+    {
+        return moveFormat.get_enum_value();
+    }
+
+    /** Pretty-prints a move using the engine's current settings. */
+    [[nodiscard]] auto pretty_print_move(
+        Move move, const Position& position) const -> std::string;
 
 protected:
     /** This function is used to initialize the search context's result callbacks.
@@ -139,9 +146,6 @@ private:
     void print_current_position(string_view arguments) const;
 
     void init_search_callbacks();
-
-    [[nodiscard]] auto pretty_print_move(
-        Move move, const Position& position) const -> std::string;
 
     static void print_compiler_info();
 

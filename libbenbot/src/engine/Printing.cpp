@@ -192,7 +192,7 @@ auto Engine::pretty_print_move(
     const Move move, const Position& position) const -> std::string
 {
     return format_move(
-        get_move_format(),
+        get_pretty_print_move_format(),
         position, move,
         algFormatUTF8PieceType.get_value());
 }
