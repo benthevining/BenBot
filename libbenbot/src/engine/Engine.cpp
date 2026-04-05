@@ -64,7 +64,7 @@ auto Engine::create_search_callbacks() -> search::Callbacks
 {
     if (prettyPrintMode.get_value()) {
         return search::Callbacks::make_pretty_printer(
-            [this](const Move move) { return pretty_print_move(move); });
+            [this](const Move move, const Position& pos) { return pretty_print_move(move, pos); });
     }
 
     return search::Callbacks::make_uci_printer(

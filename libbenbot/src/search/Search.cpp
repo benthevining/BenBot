@@ -334,6 +334,7 @@ namespace {
     };
 
     struct [[nodiscard]] RootSearchResult final {
+        Position     rootPosition;
         MoveList     pv;
         Score        bestScore;
         Stats        stats;
@@ -342,7 +343,9 @@ namespace {
         [[nodiscard]] auto to_cb_result(
             const size_t depth, const size_t hashfull) const noexcept -> Result
         {
-            return { .duration          = duration,
+            return {
+                .position               = rootPosition,
+                .duration               = duration,
                 .depth                  = depth,
                 .qDepth                 = stats.qDepth,
                 .score                  = bestScore,
@@ -352,7 +355,8 @@ namespace {
                 .betaCutoffs            = stats.betaCutoffs,
                 .staticEvals            = stats.staticEvals,
                 .mdpCutoffs             = stats.mdpCutoffs,
-                .hashfull               = hashfull };
+                .hashfull               = hashfull
+            };
         }
     };
 
@@ -429,10 +433,11 @@ namespace {
         }
 
         return {
-            .pv        = pv,
-            .bestScore = bounds.alpha,
-            .stats     = stats,
-            .duration  = timer.get_duration()
+            .rootPosition = position,
+            .pv           = pv,
+            .bestScore    = bounds.alpha,
+            .stats        = stats,
+            .duration     = timer.get_duration()
         };
     }
 

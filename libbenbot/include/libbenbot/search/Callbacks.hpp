@@ -19,9 +19,15 @@
 
 #pragma once
 
+#include "libchess/game/Position.hpp"
+
 #include <functional>
 #include <libchess/moves/Move.hpp>
 #include <string>
+
+namespace chess::game {
+struct Position;
+} // namespace chess::game
 
 namespace ben_bot::search {
 
@@ -110,7 +116,7 @@ struct Callbacks final {
         @note The output produced by these callbacks does not conform to the UCI protocol!
      */
     [[nodiscard]] static auto make_pretty_printer(
-        std::function<std::string(Move)>&& printMove)
+        std::function<std::string(Move, const chess::game::Position&)>&& printMove)
         -> Callbacks;
 };
 

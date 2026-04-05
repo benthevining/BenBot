@@ -22,6 +22,7 @@
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t;
 #include <libbenbot/eval/Score.hpp>
+#include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <optional>
@@ -36,6 +37,7 @@ struct SearchInfo;
 
 namespace ben_bot::search {
 
+using chess::game::Position;
 using chess::moves::Move;
 using chess::moves::MoveList;
 using std::chrono::milliseconds;
@@ -46,6 +48,9 @@ using std::size_t;
     on each iterative deepening iteration).
  */
 struct [[nodiscard]] Result final {
+    /** The root position that was searched. */
+    Position position;
+
     /** The total amount of time spent searching to produce this result.
         For depths greater than 1, this value is the duration of the entire
         search, including lower depths of the iterative deepening loop.

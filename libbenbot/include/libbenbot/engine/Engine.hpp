@@ -140,7 +140,8 @@ private:
 
     void init_search_callbacks();
 
-    [[nodiscard]] auto pretty_print_move(Move move) const -> std::string;
+    [[nodiscard]] auto pretty_print_move(
+        Move move, const Position& position) const -> std::string;
 
     static void print_compiler_info();
 
