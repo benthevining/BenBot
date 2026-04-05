@@ -20,6 +20,7 @@
 #include <libgui/AppUI.hpp>
 #include <libgui/BoardEditor.hpp>
 #include <libgui/EnginePanel.hpp>
+#include <libgui/GameViewer.hpp>
 #include <libgui/Resources.hpp>
 #include <libutil/Console.hpp>
 #include <libutil/Files.hpp>
@@ -105,11 +106,16 @@ void render(AppState& state)
 
     render_app_settings_panel(state);
 
+    const bool showTooltips = state.appSettings.showTooltips;
+
     render_board_editor(
-        state.boardEditor, state.appSettings.showTooltips, state.enginePanel.engine);
+        state.boardEditor, showTooltips, state.enginePanel.engine);
 
     render_engine_panel(
-        state.enginePanel, state.appSettings.showTooltips);
+        state.enginePanel, showTooltips);
+
+    render_game_viewer(
+        state.gameViewer, showTooltips);
 
     ImGui::Render();
 }
@@ -127,6 +133,7 @@ using nlohmann::json;
 
 inline constexpr string_view TAG_BOARD_EDITOR { "board_editor" };
 inline constexpr string_view TAG_ENGINE { "engine" };
+inline constexpr string_view TAG_GAME_VIEWER { "game_viewer" };
 inline constexpr string_view TAG_SETTINGS { "app_settings" };
 
 auto AppState::to_string() const -> std::string
@@ -136,6 +143,7 @@ auto AppState::to_string() const -> std::string
     data[TAG_BOARD_EDITOR] = boardEditor.to_string();
     data[TAG_ENGINE]       = enginePanel.to_string();
     data[TAG_SETTINGS]     = appSettings.to_string();
+    data[TAG_GAME_VIEWER]  = gameViewer.to_string();
 
     return data.dump();
 }
@@ -152,6 +160,9 @@ void AppState::update_from_string(const string_view str)
 
     appSettings = AppSettings::from_string(
         parsed.at(TAG_SETTINGS).get<string_view>());
+
+    gameViewer = GameViewerState::from_string(
+        parsed.at(TAG_GAME_VIEWER).get<string_view>());
 }
 
 void AppState::load_from(const path& filePath)

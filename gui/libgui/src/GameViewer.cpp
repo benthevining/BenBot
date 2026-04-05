@@ -12,47 +12,56 @@
  * ======================================================================================
  */
 
-#pragma once
-
-#include <filesystem>
-#include <libgui/AppSettingsPanel.hpp>
-#include <libgui/BoardEditor.hpp>
-#include <libgui/EnginePanel.hpp>
+#include <imgui.h>
+#include <libchess/notation/PGN.hpp>
 #include <libgui/GameViewer.hpp>
+#include <libutil/Console.hpp>
+#include <nlohmann/json.hpp>
 #include <string>
 #include <string_view>
-#include <utility>
 
 namespace ben_bot::gui {
 
-inline constexpr auto AppName { "BenBot GUI" };
+using std::string_view;
 
-[[nodiscard]] auto get_scaled_default_dimensions(float scaleFactor)
-    -> std::pair<int, int>;
+void render_game_viewer(
+    GameViewerState& state, const bool showTooltips)
+{
+    if (ImGui::Begin("Game")) {
+    }
 
-struct AppState final {
-    AppSettings appSettings;
+    ImGui::End();
+}
 
-    BoardEditorState boardEditor;
+using nlohmann::json;
 
-    EnginePanelState enginePanel;
+inline constexpr string_view TAG_PGN { "pgn" };
 
-    GameViewerState gameViewer;
+auto GameViewerState::to_string() const -> std::string
+{
+    json data;
 
-    [[nodiscard]] auto to_string() const -> std::string;
+    data[TAG_PGN] = to_pgn(game);
 
-    void update_from_string(std::string_view str);
+    return data.dump();
+}
 
-    void load_from(const std::filesystem::path& filePath);
+auto GameViewerState::from_string(const string_view str) -> GameViewerState
+{
+    const auto parsed = json::parse(str);
 
-    void write_to(const std::filesystem::path& filePath) const;
-};
+    GameViewerState state;
 
-void initialize(
-    float mainScaleFactor, AppState& state);
+    [[maybe_unused]] const auto result
+        = chess::notation::from_pgn(
+            parsed.at(TAG_PGN).get<string_view>())
+              .transform([&state](const chess::notation::GameRecord& loaded) {
+                  state.game = loaded;
+                  return std::monostate { };
+              })
+              .transform_error(util::print_error);
 
-void render(AppState& state);
-
-void shutdown(const AppState& state);
+    return state;
+}
 
 } // namespace ben_bot::gui
