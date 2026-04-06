@@ -306,7 +306,7 @@ namespace {
                     .and_then([pgnText, closeParenIdx]([[maybe_unused]] const string_view alwaysEmpty) -> ResultStrOrErrorStr {
                         return pgnText.substr(closeParenIdx + 1uz);
                     })
-                    .transform_error([](const string_view error) { return string { error }; });
+                    .transform_error(util::strings::to_owning_string);
             });
     }
 
