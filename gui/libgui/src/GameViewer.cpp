@@ -21,6 +21,7 @@
 #include <libgui/GameViewer.hpp>
 #include <libutil/Console.hpp>
 #include <libutil/Files.hpp>
+#include <libutil/Strings.hpp>
 #include <nfd.hpp>
 #include <nlohmann/json.hpp>
 #include <string>
@@ -84,7 +85,7 @@ namespace {
                     = util::files::load(file)
                           .and_then([](const string_view text) {
                               return chess::notation::from_pgn(text)
-                                  .transform_error([](const string_view error) { return std::string { error }; });
+                                  .transform_error(util::strings::to_owning_string);
                           })
                           .transform([&game](const GameRecord& loaded) {
                               game = loaded;
