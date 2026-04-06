@@ -115,7 +115,7 @@ void render(AppState& state)
         state.enginePanel, showTooltips);
 
     render_game_viewer(
-        state.gameViewer, showTooltips);
+        state.gameViewer, state.enginePanel.engine, showTooltips);
 
     ImGui::Render();
 }

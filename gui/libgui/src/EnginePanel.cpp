@@ -364,7 +364,6 @@ namespace {
         string result;
 
         for (const auto move : pv) {
-            // TODO: call engine.pretty_print_move() once we're using a font that supports UTF8 piece glyphs
             result.append(
                 format_move(format, position, move));
 

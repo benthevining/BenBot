@@ -18,6 +18,10 @@
 #include <string>
 #include <string_view>
 
+namespace ben_bot {
+class Engine;
+} // namespace ben_bot
+
 namespace ben_bot::gui {
 
 struct GameViewerState final {
@@ -29,6 +33,6 @@ struct GameViewerState final {
 };
 
 void render_game_viewer(
-    GameViewerState& state, bool showTooltips);
+    GameViewerState& state, const Engine& engine, bool showTooltips);
 
 } // namespace ben_bot::gui

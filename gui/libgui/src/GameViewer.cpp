@@ -14,9 +14,12 @@
 
 #include "ImUtil.hpp" // NOLINT(build/include_subdir)
 #include <array>
+#include <cassert>
 #include <concepts>
 #include <filesystem>
 #include <imgui.h>
+#include <libbenbot/engine/Engine.hpp>
+#include <libchess/notation/MoveFormats.hpp>
 #include <libchess/notation/PGN.hpp>
 #include <libgui/GameViewer.hpp>
 #include <libutil/Console.hpp>
@@ -125,13 +128,65 @@ namespace {
             ImGui::SetItemTooltip("Save game to a PGN file");
     }
 
+    // TODO: highlight focused move
+    // TODO: buttons for moves
     void render_move_list(
-        const GameRecord& game, const bool showTooltips)
+        const GameRecord& game, const Engine& engine)
     {
-        // TODO
+        if (ImGui::BeginTable("Move list", 3, ImGuiTableFlags_Borders)) {
+            ImGui::TableSetupColumn("Move number");
+            ImGui::TableSetupColumn("White");
+            ImGui::TableSetupColumn("Black");
+
+            ImGui::TableHeadersRow();
+
+            const auto moveFormat = engine.get_pretty_print_move_format();
+
+            auto position = game.startingPosition;
+            auto moveIdx  = 0uz;
+
+            while (moveIdx < game.moves.size()) {
+                ImGui::TableNextRow();
+
+                ImGui::TableNextColumn();
+
+                UnformattedText(
+                    std::format("{}.", position.fullMoveCounter));
+
+                ImGui::TableNextColumn();
+
+                // White move
+                // handle case where game started with Black to move
+                if (position.is_black_to_move()) {
+                    assert(moveIdx == 0uz);
+                } else {
+                    const auto move = game.moves.at(moveIdx++);
+
+                    UnformattedText(
+                        format_move(moveFormat, position, move.move));
+
+                    position.make_move(move.move);
+
+                    if (moveIdx >= game.moves.size())
+                        break;
+                }
+
+                // Black move
+                ImGui::TableNextColumn();
+
+                const auto move = game.moves.at(moveIdx++);
+
+                UnformattedText(
+                    format_move(moveFormat, position, move.move));
+
+                position.make_move(move.move);
+            }
+
+            ImGui::EndTable();
+        }
     }
 
-    void render_focused_move(
+    void render_focused_move_info(
         const GameRecord::Move& move, const bool showTooltips)
     {
         // TODO: comment, NAGs, variations
@@ -139,14 +194,16 @@ namespace {
 } // namespace
 
 void render_game_viewer(
-    GameViewerState& state, const bool showTooltips)
+    GameViewerState& state, const Engine& engine, const bool showTooltips)
 {
     if (ImGui::Begin("Game")) {
         render_load_save_buttons(
             state.game, showTooltips);
 
+        // TODO: metadata (tags) editor
+
         render_move_list(
-            state.game, showTooltips);
+            state.game, engine);
 
         // TODO: how to keep track of focused move?
 
