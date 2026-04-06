@@ -24,7 +24,7 @@
         "vulkan-binding"
       ],
       "name": "imgui",
-      "version>=": "1.91.9"
+      "version>=": "1.92.6"
     },
     {
       "name": "glfw3",
