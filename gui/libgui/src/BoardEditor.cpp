@@ -436,16 +436,58 @@ namespace {
     void render_custom_epd_operations(
         EPDPosition& position, const bool showTooltips)
     {
-        // TODO: add button
-        // TODO: for existing custom ops, remove or rename
-
         const ScopedGroup group;
 
         ImGui::SeparatorText("Custom operations");
 
-        for (auto& [name, value] : position.operations) {
-            if (not is_standard_epd_mneumonic(name))
-                ImGui::InputText(name.c_str(), &value, InputTextFlags);
+        if (ImGui::Button("Add"))
+            position.operations.emplace();
+
+        if (showTooltips)
+            ImGui::SetItemTooltip("Add a custom EPD operation");
+
+        if (ImGui::BeginTable("Custom operations", 3, ImGuiTableFlags_Borders)) {
+            ImGui::TableSetupColumn("Name");
+            ImGui::TableSetupColumn("Value");
+            ImGui::TableSetupColumn("Delete", ImGuiTableColumnFlags_WidthFixed);
+
+            for (auto& [name, value] : position.operations) {
+                if (is_standard_epd_mneumonic(name))
+                    continue;
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+
+                auto nameInput = name;
+
+                if (ImGui::InputText("Name", &nameInput, InputTextFlags)) {
+                    const auto prevValue = value;
+
+                    position.operations.erase(name);
+
+                    // TODO: warn if overwriting existing operation
+                    position.operations[nameInput] = prevValue;
+
+                    // inserting into the container might have invalidated iterators,
+                    // need to stop iteration & redraw the whole table
+                    ImGui::TableNextColumn();
+                    ImGui::TableNextColumn();
+                    break;
+                }
+
+                ImGui::TableNextColumn();
+
+                ImGui::InputText("Value", &value, InputTextFlags);
+
+                ImGui::TableNextColumn();
+
+                if (ImGui::Button("Delete")) {
+                    position.operations.erase(name);
+                    break;
+                }
+            }
+
+            ImGui::EndTable();
         }
     }
 

@@ -165,7 +165,6 @@ namespace {
 
             while (moveIdx < game.moves.size()) {
                 ImGui::TableNextRow();
-
                 ImGui::TableNextColumn();
 
                 UnformattedText(
