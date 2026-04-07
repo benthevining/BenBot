@@ -18,6 +18,7 @@
 #include <concepts>
 #include <filesystem>
 #include <imgui.h>
+#include <imgui_stdlib.h>
 #include <libbenbot/engine/Engine.hpp>
 #include <libchess/notation/MoveFormats.hpp>
 #include <libchess/notation/PGN.hpp>
@@ -128,6 +129,23 @@ namespace {
             ImGui::SetItemTooltip("Save game to a PGN file");
     }
 
+    void render_metadata_tags(
+        GameRecord& game)
+    {
+        if (not ImGui::CollapsingHeader("Metadata"))
+            return;
+
+        const ScopedGroup group;
+
+        // TODO: add/delete tags
+        // TODO: special handling for 7-tag roster, Position/Setup keys
+
+        for (auto& [key, value] : game.metadata) {
+            ImGui::InputText(
+                key.c_str(), &value, InputTextFlags);
+        }
+    }
+
     // TODO: highlight focused move
     // TODO: buttons for moves
     void render_move_list(
@@ -200,7 +218,8 @@ void render_game_viewer(
         render_load_save_buttons(
             state.game, showTooltips);
 
-        // TODO: metadata (tags) editor
+        render_metadata_tags(
+            state.game);
 
         render_move_list(
             state.game, engine);

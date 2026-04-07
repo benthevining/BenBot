@@ -340,6 +340,7 @@ namespace {
 
         namespace ops = chess::notation::epd_ops;
 
+        // TODO: custom operations (add, delete, edit name/value)
         // TODO: maybe a move type?
         // TODO: Maybe an IntegerNonNegative type?
         enum class Type : std::uint_least8_t {
