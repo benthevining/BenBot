@@ -34,6 +34,7 @@
 #include <nlohmann/json.hpp>
 #include <optional>
 #include <ranges>
+#include <span>
 #include <string>
 #include <string_view>
 
@@ -333,48 +334,74 @@ namespace {
         }
     }
 
-    void render_epd_operations(
-        EPDPosition& position, const bool showTooltips)
+    enum class EPDOperationType : std::uint_least8_t {
+        Integer,
+        String
+    };
+
+    struct StandardEPDOperation final {
+        string           mnemonic;
+        EPDOperationType type;
+        string           tooltip;
+    };
+
+    [[nodiscard]] auto get_standard_epd_ops()
+        -> std::span<const StandardEPDOperation>
     {
         // see https://www.chessprogramming.org/Extended_Position_Description
 
-        namespace ops = chess::notation::epd_ops;
-
-        // TODO: custom operations (add, delete, edit name/value)
+        // TODO: comment(s), draw offer/accept, resignation, v0 variation name (primary, also v1 though v9)
         // TODO: maybe a move type?
         // TODO: Maybe an IntegerNonNegative type?
-        enum class Type : std::uint_least8_t {
-            Integer,
-            String
+
+        namespace ops = chess::notation::epd_ops;
+
+        using Type = EPDOperationType;
+
+        static const std::array operations {
+            StandardEPDOperation { .mnemonic = string { ops::AnalysisCountDepth }, .type = Type::Integer, .tooltip = "Analysis count depth" },
+            StandardEPDOperation { .mnemonic = string { ops::AnalysisCountNodes }, .type = Type::Integer, .tooltip = "Analysis count nodes" },
+            StandardEPDOperation { .mnemonic = string { ops::AnalysisCountSeconds }, .type = Type::Integer, .tooltip = "Analysis count seconds" },
+            StandardEPDOperation { .mnemonic = string { ops::AvoidMove }, .type = Type::String, .tooltip = "Avoid move(s)" },
+            StandardEPDOperation { .mnemonic = string { ops::BestMove }, .type = Type::String, .tooltip = "Best move(s)" },
+            StandardEPDOperation { .mnemonic = string { ops::CentipawnEvaluation }, .type = Type::Integer, .tooltip = "Centipawn evaluation" },
+            StandardEPDOperation { .mnemonic = string { ops::DirectMate }, .type = Type::Integer, .tooltip = "Direct mate fullmove count" },
+            StandardEPDOperation { .mnemonic = string { ops::EcoCode }, .type = Type::String, .tooltip = "Encyclopedia of Chess Openings opening code" },
+            StandardEPDOperation { .mnemonic = string { ops::PositionID }, .type = Type::String, .tooltip = "Position identification" },
+            StandardEPDOperation { .mnemonic = string { ops::NicCode }, .type = Type::String, .tooltip = "New In Chess opening code" },
+            StandardEPDOperation { .mnemonic = string { ops::PredictedMove }, .type = Type::String, .tooltip = "Predicted move" },
+            StandardEPDOperation { .mnemonic = string { ops::PredictedVariation }, .type = Type::String, .tooltip = "Predicted variation" },
+            StandardEPDOperation { .mnemonic = string { ops::RepetitionCount }, .type = Type::Integer, .tooltip = "Repetition count" },
+            StandardEPDOperation { .mnemonic = string { ops::SuppliedMove }, .type = Type::String, .tooltip = "Supplied move" }
         };
 
-        struct StandardOperation final {
-            string mnemonic;
-            Type   type;
-            string tooltip;
-        };
+        return operations;
+    }
 
-        // TODO: comment(s), draw offer/accept, resignation, v0 variation name (primary, also v1 though v9)
-        static const std::array StandardOperations {
-            StandardOperation { .mnemonic = string { ops::AnalysisCountDepth }, .type = Type::Integer, .tooltip = "Analysis count depth" },
-            StandardOperation { .mnemonic = string { ops::AnalysisCountNodes }, .type = Type::Integer, .tooltip = "Analysis count nodes" },
-            StandardOperation { .mnemonic = string { ops::AnalysisCountSeconds }, .type = Type::Integer, .tooltip = "Analysis count seconds" },
-            StandardOperation { .mnemonic = string { ops::AvoidMove }, .type = Type::String, .tooltip = "Avoid move(s)" },
-            StandardOperation { .mnemonic = string { ops::BestMove }, .type = Type::String, .tooltip = "Best move(s)" },
-            StandardOperation { .mnemonic = string { ops::CentipawnEvaluation }, .type = Type::Integer, .tooltip = "Centipawn evaluation" },
-            StandardOperation { .mnemonic = string { ops::DirectMate }, .type = Type::Integer, .tooltip = "Direct mate fullmove count" },
-            StandardOperation { .mnemonic = string { ops::EcoCode }, .type = Type::String, .tooltip = "Encyclopedia of Chess Openings opening code" },
-            StandardOperation { .mnemonic = string { ops::PositionID }, .type = Type::String, .tooltip = "Position identification" },
-            StandardOperation { .mnemonic = string { ops::NicCode }, .type = Type::String, .tooltip = "New In Chess opening code" },
-            StandardOperation { .mnemonic = string { ops::PredictedMove }, .type = Type::String, .tooltip = "Predicted move" },
-            StandardOperation { .mnemonic = string { ops::PredictedVariation }, .type = Type::String, .tooltip = "Predicted variation" },
-            StandardOperation { .mnemonic = string { ops::RepetitionCount }, .type = Type::Integer, .tooltip = "Repetition count" },
-            StandardOperation { .mnemonic = string { ops::SuppliedMove }, .type = Type::String, .tooltip = "Supplied move" }
-        };
+    [[nodiscard]] auto is_standard_epd_mneumonic(
+        const string_view name) -> bool
+    {
+        namespace ops = chess::notation::epd_ops;
 
+        // these two aren't included in the list of standard ops we render,
+        // but we also don't want to treat them as custom operations
+        if (name == ops::FullmoveNumber or name == ops::HalfmoveClock)
+            return true;
+
+        return std::ranges::contains(
+            get_standard_epd_ops(),
+            name,
+            &StandardEPDOperation::mnemonic);
+    }
+
+    void render_standard_epd_operations(
+        EPDPosition& position, const bool showTooltips)
+    {
         const ScopedGroup group;
 
-        for (const auto& opMetadata : StandardOperations) {
+        ImGui::SeparatorText("Standard operations");
+
+        for (const auto& opMetadata : get_standard_epd_ops()) {
             auto inputBuf = [&position, &opMetadata] {
                 const auto it = position.operations.find(opMetadata.mnemonic);
 
@@ -385,7 +412,7 @@ namespace {
             }();
 
             switch (opMetadata.type) {
-                case Type::Integer: {
+                case EPDOperationType::Integer: {
                     auto value = util::strings::int_from_string<int>(inputBuf);
 
                     if (ImGui::InputInt(opMetadata.mnemonic.c_str(), &value, 1, 10, ImGuiInputTextFlags_CharsDecimal)) {
@@ -395,7 +422,7 @@ namespace {
                 }
 
                 default: [[fallthrough]];
-                case Type::String:
+                case EPDOperationType::String:
                     if (ImGui::InputText(opMetadata.mnemonic.c_str(), &inputBuf, InputTextFlags)) {
                         position.operations[opMetadata.mnemonic] = util::strings::trim(inputBuf);
                     }
@@ -406,6 +433,22 @@ namespace {
         }
     }
 
+    void render_custom_epd_operations(
+        EPDPosition& position, const bool showTooltips)
+    {
+        // TODO: add button
+        // TODO: for existing custom ops, remove or rename
+
+        const ScopedGroup group;
+
+        ImGui::SeparatorText("Custom operations");
+
+        for (auto& [name, value] : position.operations) {
+            if (not is_standard_epd_mneumonic(name))
+                ImGui::InputText(name.c_str(), &value, InputTextFlags);
+        }
+    }
+
     void render_epd_editor(
         EPDPosition& position, string& errorMessage, const bool showTooltips)
     {
@@ -413,7 +456,10 @@ namespace {
             render_epd_string(
                 position, errorMessage, showTooltips);
 
-            render_epd_operations(
+            render_standard_epd_operations(
+                position, showTooltips);
+
+            render_custom_epd_operations(
                 position, showTooltips);
         }
     }

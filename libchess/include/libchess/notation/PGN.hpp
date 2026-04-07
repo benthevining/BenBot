@@ -74,6 +74,9 @@ enum class NAG : std::uint_least8_t {
 /** A record of a complete game, including some metadata.
     This structure is returned by the ``from_pgn()`` method.
 
+    @todo Pointer class for keeping track of a specific move within a specific variation
+    @todo get_all_moves_for(Pointer) function
+
     @ingroup notation
  */
 struct [[nodiscard]] GameRecord final {

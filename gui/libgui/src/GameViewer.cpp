@@ -224,8 +224,6 @@ void render_game_viewer(
         render_move_list(
             state.game, engine);
 
-        // TODO: how to keep track of focused move?
-
         // TODO: forward/back buttons
     }
 
@@ -235,6 +233,7 @@ void render_game_viewer(
 using nlohmann::json;
 
 inline constexpr string_view TAG_PGN { "pgn" };
+inline constexpr string_view TAG_FOCUSED_MOVE { "focused_move" };
 
 auto GameViewerState::to_string() const -> std::string
 {
