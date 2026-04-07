@@ -138,18 +138,6 @@ namespace {
 
         const ScopedGroup group;
 
-        ImGui::SeparatorText("Standard options");
-
-        for (auto* opt : engine.get_standard_uci_options())
-            render_uci_option(*opt, selectedComboChoice, showTooltips);
-
-        ImGui::SeparatorText("Custom options");
-
-        for (auto* opt : engine.get_custom_uci_options())
-            render_uci_option(*opt, selectedComboChoice, showTooltips);
-
-        ImGui::Separator();
-
         if (ImGui::Button("Reset all"))
             reset_all_options(engine);
 
@@ -161,6 +149,16 @@ namespace {
             engine.set_debug_mode(debug);
 
         ImGui::SetItemTooltip("Enable engine debug mode");
+
+        ImGui::SeparatorText("Standard options");
+
+        for (auto* opt : engine.get_standard_uci_options())
+            render_uci_option(*opt, selectedComboChoice, showTooltips);
+
+        ImGui::SeparatorText("Custom options");
+
+        for (auto* opt : engine.get_custom_uci_options())
+            render_uci_option(*opt, selectedComboChoice, showTooltips);
     }
 
     using chess::game::Position;
@@ -242,7 +240,7 @@ namespace {
         }
     }
 
-    void render_utility_buttons(
+    void render_search_engine_interop_buttons(
         search::Options& options,
         Engine&          engine,
         const bool       showTooltips)
@@ -282,6 +280,8 @@ namespace {
 
         if (not ImGui::CollapsingHeader("Search options"))
             return;
+
+        render_search_engine_interop_buttons(options, engine, showTooltips);
 
         const ScopedGroup group;
 
@@ -324,10 +324,6 @@ namespace {
 
         if (showTooltips)
             ImGui::SetItemTooltip("Whether to search infinitely");
-
-        ImGui::Separator();
-
-        render_utility_buttons(options, engine, showTooltips);
     }
 
     void render_start_stop_button(

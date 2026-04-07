@@ -546,6 +546,9 @@ void render_board_editor(
         render_utility_buttons(
             state.position, showTooltips);
 
+        render_engine_interop_buttons(
+            state.position, engine, showTooltips);
+
         render_side_to_move(
             state.position.position, showTooltips);
 
@@ -566,11 +569,6 @@ void render_board_editor(
 
         render_epd_editor(
             state.position, state.epdParseError, showTooltips);
-
-        ImGui::Separator();
-
-        render_engine_interop_buttons(
-            state.position, engine, showTooltips);
 
         // TODO: render chessboard
     }

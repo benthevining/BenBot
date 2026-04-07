@@ -129,6 +129,17 @@ namespace {
             ImGui::SetItemTooltip("Save game to a PGN file");
     }
 
+    void render_raw_pgn_text(
+        const GameRecord& game)
+    {
+        if (not ImGui::CollapsingHeader("PGN text"))
+            return;
+
+        ImGui::TextWrapped(
+            "%s",
+            to_pgn(game).c_str());
+    }
+
     void render_metadata_tags(
         GameRecord& game)
     {
@@ -217,8 +228,15 @@ void render_game_viewer(
         render_load_save_buttons(
             state.game, showTooltips);
 
+        render_raw_pgn_text(
+            state.game);
+
+        ImGui::Separator();
+
         render_metadata_tags(
             state.game);
+
+        ImGui::Separator();
 
         render_move_list(
             state.game, engine);
