@@ -14,57 +14,23 @@ import json
 import subprocess
 from pathlib import Path
 from typing import Optional
-from typing import Tuple
-
-#
 
 
-def get_move_from_obj(listObj: list[dict], move: str) -> Optional[dict]:
-    for obj in listObj:
+def get_move_from_obj(list_obj: list[dict], move: str) -> Optional[dict]:
+    for obj in list_obj:
         if obj["move"] == move:
             return obj
 
     return None
 
 
-def parse_args() -> Tuple[Path, Path]:
-    parser = argparse.ArgumentParser(
-        prog="RunRampart",
-        description="Run rampart movegen tests",
-        epilog="This script is intended to be invoked by CTest",
-    )
+def run_rampart_test(test_case_data: dict, rampart_program: Path) -> bool:
+    start_fen = test_case_data["start"]["fen"]
 
-    parser.add_argument(
-        "-t", "--test", required=True, help="Path to testcase data file"
-    )
-    parser.add_argument(
-        "-e", "--exec", required=True, help="Path to rampart executable"
-    )
-
-    parsed = parser.parse_args()
-
-    return Path(parsed.test).resolve(), Path(parsed.exec).resolve()
-
-
-#
-
-TESTCASE_FILE, RAMPART_PROGRAM = parse_args()
-
-test_cases_passed = 0
-test_cases_failed = 0
-
-print(f"Running tests from {TESTCASE_FILE}...", flush=True)
-
-with open(TESTCASE_FILE) as file:
-    testcase_data = json.load(file)
-
-for test_case in testcase_data["testCases"]:
-    startFEN = test_case["start"]["fen"]
-
-    print(f"Running tests on position {startFEN}", flush=True)
+    print(f"Running tests on position {start_fen}", flush=True)
 
     result = subprocess.run(
-        [RAMPART_PROGRAM, startFEN],
+        [rampart_program, start_fen],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -79,13 +45,13 @@ for test_case in testcase_data["testCases"]:
 
     output = str(result.stdout)
 
-    jsonText = output[output.find("{") : output.rfind("}") + 1]
+    json_text = output[output.find("{") : output.rfind("}") + 1]
 
-    print(f"Found JSON output:\n{jsonText}")
+    print(f"Found JSON output:\n{json_text}")
 
-    result_data = json.loads(jsonText)
+    result_data = json.loads(json_text)
 
-    correct_moves = test_case["expected"]
+    correct_moves = test_case_data["expected"]
     generated_moves = result_data["generated"]
 
     any_errors = False
@@ -106,16 +72,16 @@ for test_case in testcase_data["testCases"]:
         # match the XFEN, so our test executable produces both and we only
         # fail if neither matches.
         # See this issue: https://github.com/schnitzi/rampart/issues/4
-        correctFEN = correct_move["fen"]
+        correct_fen = correct_move["fen"]
 
-        generatedFEN = generated_move["fen"]
-        generatedXFEN = generated_move["xfen"]
+        generated_fen = generated_move["fen"]
+        generated_xfen = generated_move["xfen"]
 
-        if generatedFEN != correctFEN and generatedXFEN != correctFEN:
+        if correct_fen != generated_fen and correct_fen != generated_xfen:
             print(f"ERROR: move {move} resulted in incorrect FEN!", flush=True)
-            print(f"Expected FEN: {correctFEN}", flush=True)
-            print(f"Got FEN: {generatedFEN}", flush=True)
-            print(f"Got XFEN: {generatedXFEN}", flush=True)
+            print(f"Expected FEN: {correct_fen}", flush=True)
+            print(f"Got FEN: {generated_fen}", flush=True)
+            print(f"Got XFEN: {generated_xfen}", flush=True)
             any_errors = True
 
     # check for moves in generated_moves not in correct_moves
@@ -131,12 +97,57 @@ for test_case in testcase_data["testCases"]:
             )
             any_errors = True
 
-        if any_errors:
-            test_cases_failed += 1
-        else:
+    return not any_errors
+
+
+def run_rampart_tests(test_file: Path, rampart_program: Path) -> None:
+    test_cases_passed = 0
+    test_cases_failed = 0
+
+    print(f"Running tests from {test_file}...", flush=True)
+
+    with open(test_file) as file:
+        testcase_data = json.load(file)
+
+    for test_case in testcase_data["testCases"]:
+        if run_rampart_test(test_case_data=test_case, rampart_program=rampart_program):
             test_cases_passed += 1
+        else:
+            test_cases_failed += 1
 
-print(f"{test_cases_passed} test cases passed")
-print(f"{test_cases_failed} test cases failed")
+    print(f"{test_cases_passed} test cases passed")
+    print(f"{test_cases_failed} test cases failed")
 
-exit(test_cases_failed)
+    exit(test_cases_failed)
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        prog="RunRampart",
+        description="Run rampart movegen tests",
+        epilog="This script is intended to be invoked by CTest",
+    )
+
+    parser.add_argument(
+        "--test",
+        required=True,
+        type=lambda p: Path(p).resolve(),
+        help="Path to testcase data file",
+    )
+
+    parser.add_argument(
+        "--exec",
+        required=True,
+        type=lambda p: Path(p).resolve(),
+        help="Path to rampart executable",
+    )
+
+    return parser.parse_args()
+
+
+#
+
+if __name__ == "__main__":
+    args = parse_args()
+
+    run_rampart_tests(test_file=args.test, rampart_program=args.exec)
