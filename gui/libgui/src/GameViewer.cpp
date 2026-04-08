@@ -83,6 +83,7 @@ namespace {
 
     void show_pgn_load_dialog(GameRecord& game)
     {
+        // TODO: show popup for PGN parse error
         show_file_dialog<true>(
             [&game](const path& file) {
                 [[maybe_unused]] const auto result
@@ -132,12 +133,11 @@ namespace {
     void render_raw_pgn_text(
         const GameRecord& game)
     {
-        if (not ImGui::CollapsingHeader("PGN text"))
-            return;
-
-        ImGui::TextWrapped(
-            "%s",
-            to_pgn(game).c_str());
+        if (ImGui::CollapsingHeader("PGN text")) {
+            ImGui::TextWrapped(
+                "%s",
+                to_pgn(game).c_str());
+        }
     }
 
     void render_metadata_tags(
@@ -159,6 +159,7 @@ namespace {
 
     // TODO: highlight focused move
     // TODO: buttons for moves
+    // TODO: variations
     void render_move_list(
         const GameRecord& game, const Engine& engine)
     {
@@ -217,7 +218,7 @@ namespace {
     void render_focused_move_info(
         const GameRecord::Move& move, const bool showTooltips)
     {
-        // TODO: comment, NAGs, variations
+        // TODO: comment, NAGs
     }
 } // namespace
 
