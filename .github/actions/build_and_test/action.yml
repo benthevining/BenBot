@@ -11,7 +11,6 @@
 # ======================================================================================
 
 name: build_and_test
-author: benvining
 description: Run build & tests via CDash client
 
 inputs:

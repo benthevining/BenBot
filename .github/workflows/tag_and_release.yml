@@ -237,40 +237,18 @@ jobs:
     environment:
       name: lichess-bot-image
       url: ${{ steps.print_url.outputs.url }}
-    env:
-      LOCAL_TAG: benbot:${{ needs.bump_version.outputs.tag_name }}
-      REMOTE_TAG: benvining/benbot-lichess:${{ needs.bump_version.outputs.tag_name }}
-      LICHESS_CONFIG_DIR: ${{ github.workspace }}/config/lichess
 
     steps:
-    - name: Login to Docker
-      uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4
-      with:
-        username: benvining
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-
     - name: Checkout code
-      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd   # v6
       with:
         ref: ${{ needs.bump_version.outputs.tag_name }}
 
-    - name: Configure config file
-      run: python3 SetupLichessConfig.py ${{ env.LICHESS_CONFIG_DIR }}/config.yml ${{ secrets.LICHESS_TOKEN }}
-      working-directory: .github/scripts
-
-    - name: Run Docker build
-      run: docker build --file ${{ env.LICHESS_CONFIG_DIR }}/Dockerfile --tag ${{ env.LOCAL_TAG }} .
-
-    - name: Tag image
-      run: docker tag ${{ env.LOCAL_TAG }} ${{ env.REMOTE_TAG }}
-
-    - name: Push to Docker hub
-      run: docker push ${{ env.REMOTE_TAG }}
-
-    - name: Print Docker tag URL
-      id: print_url
-      run: python3 PrintDockerTagURL.py ${{ needs.bump_version.outputs.tag_name }} >> $GITHUB_OUTPUT
-      working-directory: .github/scripts
+    - uses: ./.github/actions/build_docker
+      with:
+        dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+        lichess_token: ${{ secrets.LICHESS_TOKEN }}
+        tag_name: ${{ needs.bump_version.outputs.tag_name }}
 
   # stops the old Docker container, pulls the newly built image at the latest tag from Dockerhub,
   # and starts new container from this image

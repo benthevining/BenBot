@@ -1,0 +1,63 @@
+# ======================================================================================
+#
+# ░▒▓███████▓▒░░▒▓████████▓▒░▒▓███████▓▒░       ░▒▓███████▓▒░ ░▒▓██████▓▒░▒▓████████▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓███████▓▒░░▒▓██████▓▒░ ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓███████▓▒░░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░ ░▒▓██████▓▒░  ░▒▓█▓▒░
+#
+# ======================================================================================
+
+name: build_docker
+description: Build lichess bot Docker image
+
+inputs:
+  dockerhub_token:
+    description: Token for logging in to Dockerhub
+    required: true
+  lichess_token:
+    description: Token the engine script will use to access the bot's Lichess account
+    required: true
+  tag_name:
+    description: Name of the git tag for this version
+    required: true
+
+outputs:
+  docker_tag_url:
+    description: URL of the published tag on Dockerhub
+    value: ${{ steps.print_url.outputs.url }}
+
+runs:
+  using: "composite"
+  steps:
+  - name: Login to Docker
+    uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121   # v4
+    with:
+      username: benvining
+      password: ${{ inputs.dockerhub_token }}
+
+  - name: Configure config file
+    shell: bash
+    run: python3 SetupLichessConfig.py ${{ github.workspace }}/config/lichess/config.yml ${{ inputs.lichess_token }}
+    working-directory: ${{ github.action_path }}
+
+  - name: Run Docker build
+    shell: bash
+    run: docker build --file config/lichess/Dockerfile --tag benbot:${{ inputs.tag_name }} .
+    working-directory: ${{ github.workspace }}
+
+  - name: Tag image
+    shell: bash
+    run: docker tag benbot:${{ inputs.tag_name }} benvining/benbot-lichess:${{ inputs.tag_name }}
+
+  - name: Push to Docker hub
+    shell: bash
+    run: docker push benvining/benbot-lichess:${{ inputs.tag_name }}
+
+  - name: Print Docker tag URL
+    id: print_url
+    shell: bash
+    run: python3 PrintDockerTagURL.py ${{ inputs.tag_name }} >> $GITHUB_OUTPUT
+    working-directory: ${{ github.action_path }}
