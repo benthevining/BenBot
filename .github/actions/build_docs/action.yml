@@ -13,12 +13,6 @@
 name: build_docs
 description: Build Doxygen documentation
 
-inputs:
-  cmake_preset:
-    description: CMake preset to use
-    required: false
-    default: gcc
-
 runs:
   using: "composite"
   steps:
@@ -31,20 +25,10 @@ runs:
   - name: Install latest Doxygen
     uses: ssciwr/doxygen-install@329d88f5a303066a5bd006db7516b1925b86350e   # v2.0.1
 
-  - name: Install CMake 4.0
-    uses: lukka/get-cmake@ea83089aa35e08e459464341fe24ad024ee2466f   # v4.3.1
-
-  - name: Configure CMake
-    shell: bash
-    run: |
-      cmake --preset ${{ inputs.cmake_preset }} -D BENBOT_TESTS=OFF -D CMAKE_REQUIRE_FIND_PACKAGE_Doxygen=TRUE
-
-  - name: Build docs
-    shell: bash
-    env:
-      CMAKE_BUILD_PARALLEL_LEVEL: 8
-    run: cmake --build . --target ben_bot_docs
-    working-directory: ${{ github.workspace }}/Builds/${{ inputs.cmake_preset }}
+  - uses: ./.github/actions/run_build
+    with:
+      extra_config_args: -D BENBOT_TESTS=OFF -D CMAKE_REQUIRE_FIND_PACKAGE_Doxygen=TRUE
+      build_target: ben_bot_docs
 
     # Parse Doxygen warnings to create JSON data for check status
   - name: Produce summary for check
@@ -70,14 +54,6 @@ runs:
       conclusion: ${{ job.status }}   # expands to failure if any step has failed, success otherwise
       output: ${{ steps.parse_doxygen_warnings.outputs.summary }}
       annotations: ${{ steps.parse_doxygen_warnings.outputs.annotations }}
-
-  - name: Run CMake install
-    shell: bash
-    env:
-      BUILD_DIR: ${{ github.workspace }}/Builds/${{ inputs.cmake_preset }}
-      DEPLOY_DIR: ${{ github.workspace }}/deploy
-    run: |
-      cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.DEPLOY_DIR }} --component ben_bot_docs
 
   - name: Upload artifact
     uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b   # v4

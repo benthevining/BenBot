@@ -10,33 +10,37 @@
 #
 # ======================================================================================
 
-name: build_and_test
-description: Run build & tests via CDash client
+name: run_build
+description: Configure & build
 
 inputs:
   cmake_preset:
     description: CMake preset to use
-    required: true
+    required: false
+    default: clang
+  extra_config_args:
+    description: Extra arguments to CMake configure
+    required: false
   build_config:
     description: Build configuration
-    required: true
-  dashboard_type:
-    description: CDash dashboard type to run
+    required: false
+    default: Release
+  build_target:
+    description: Target to build
     required: true
 
 runs:
   using: "composite"
   steps:
   - name: Install libc++
-    if: runner.os == 'Linux' && inputs.cmake_preset == 'clang'
+    if: runner.os == 'Linux' && inputs.preset == 'clang'
     shell: bash
     run: |
       sudo apt-get update
       sudo apt-get install -y libc++-dev libc++abi-dev
 
-    # TODO: ensure install of runtime libraries for sanitizers, set LD_LIBRARY_PATH
   - name: Install Clang21
-    if: runner.os == 'Linux' && inputs.cmake_preset == 'clang'
+    if: runner.os == 'Linux' && matrix.preset == 'clang'
     uses: aminya/setup-cpp@1f17f92d6a52bfcb1a25348e2c526c2e5cbb1134   # v1.8.0
     with:
       llvm: 21
@@ -45,48 +49,23 @@ runs:
   - name: Install CMake 4.0
     uses: lukka/get-cmake@ea83089aa35e08e459464341fe24ad024ee2466f   # v4.3.1
 
-  - name: Install Python dependencies
-    shell: bash
-    run: cmake -P InstallPythonDeps.cmake
-    working-directory: ${{ github.action_path }}
-
   - name: Configure CMake
     shell: bash
     env:
-      BUILD_NAME: ${{ github.head_ref || github.ref_name }}.${{ runner.os }}.${{ inputs.cmake_preset }}.${{ inputs.build_config }}
       CMAKE_OSX_ARCHITECTURES: arm64;x86_64
     run: |
-      cmake --preset ${{ inputs.cmake_preset }} -D BUILDNAME=${{ env.BUILD_NAME }} --log-level=VERBOSE
+      cmake --preset ${{ inputs.cmake_preset }} ${{ inputs.extra_config_args }}
 
-  - name: Build and test
+  - name: Build
     shell: bash
     env:
       CMAKE_BUILD_PARALLEL_LEVEL: 8
-      CTEST_PARALLEL_LEVEL: '' # empty value to make ctest detect the number of cores
-      CTEST_NO_TESTS_ACTION: error
-      CTEST_OUTPUT_ON_FAILURE: 1
-      JUNIT_FILENAME: junit-${{ runner.os }}-${{ inputs.cmake_preset }}-${{ inputs.build_config }}.xml
     run: |
-      ctest -D ${{ inputs.dashboard_type }} -C ${{ inputs.build_config }} --schedule-random --output-junit ${{ env.JUNIT_FILENAME }} --timeout 300
-    working-directory: ${{ github.workspace }}/Builds/${{ inputs.cmake_preset }}
-    continue-on-error: true
-
-  - name: Upload test results
-    uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f   # v7
-    with:
-      name: junit-${{ runner.os }}-${{ inputs.cmake_preset }}-${{ inputs.build_config }}.xml
-      path: ${{ github.workspace }}/Builds/${{ inputs.cmake_preset }}/junit-${{ runner.os }}-${{ inputs.cmake_preset }}-${{ inputs.build_config }}.xml
+      cmake --build . --config ${{ inputs.build_config }} --target ${{ inputs.build_target }}
+    working-directory: Builds/${{ inputs.cmake_preset }}
 
   - name: Run cmake install
+    if: inputs.build_config == 'Release'
     shell: bash
-    if: inputs.build_config == 'Release'
     run: |
-      cmake --install Builds/${{ inputs.cmake_preset }} --prefix deploy --component ben_bot --config Release
-
-  - name: Upload artifact
-    uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f   # v7
-    if: inputs.build_config == 'Release'
-    with:
-      name: BenBot-${{ runner.os }}-${{ inputs.cmake_preset }}
-      path: deploy   # using the full path here errors on Windows due to mixed forward/backslash usage in the path
-      if-no-files-found: error
+      cmake --install Builds/${{ inputs.cmake_preset }} --prefix deploy --component ${{ inputs.build_target }} --config Release
