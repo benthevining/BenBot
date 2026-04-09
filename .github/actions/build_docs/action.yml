@@ -66,7 +66,7 @@ runs:
     if: always()
     uses: LouisBrunner/checks-action@937cbbcde3259005b50746dc91cde29098aac2ff   # v3.1.0
     with:
-      token: ${{ secrets.GITHUB_TOKEN }}
+      token: ${{ github.token }}
       name: Docs warnings
       conclusion: ${{ job.status }}   # expands to failure if any step has failed, success otherwise
       output: ${{ steps.parse_doxygen_warnings.outputs.summary }}
