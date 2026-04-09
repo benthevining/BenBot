@@ -48,9 +48,12 @@ jobs:
       contents: read
       checks: write
     steps:
-    - uses: ./.github/actions/build_docs
+    - name: Checkout code
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd   # v6
       with:
         ref: ${{ inputs.ref || github.ref }}
+
+    - uses: ./.github/actions/build_docs
 
   deploy:
     if: ${{ github.ref == 'refs/heads/main' }}
