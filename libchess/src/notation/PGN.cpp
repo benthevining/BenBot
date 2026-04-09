@@ -52,7 +52,7 @@ namespace {
     using std::string_view;
     using Metadata            = std::unordered_map<std::string, std::string>;
     using GameResult          = std::optional<game::Result>;
-    using ResultStrOrErrorStr = std::expected<string_view, string_view>;
+    using ResultStrOrErrorStr = std::expected<string_view, string>;
 
     using util::strings::int_from_string;
     using util::strings::split_at_first_space_or_newline;
@@ -192,7 +192,7 @@ namespace {
     [[nodiscard]] auto parse_variation(
         string_view pgnText, const Position& position, size_t plyFromRoot,
         GameRecord::Variation& output)
-        -> std::expected<string_view, string>;
+        -> ResultStrOrErrorStr;
 
     // parses a move list, including nested comments, NAGs, and variations
     // if IsVariation is true, always returns an empty string_view
@@ -201,7 +201,7 @@ namespace {
     [[nodiscard]] auto parse_moves_internal(
         string_view            pgnText,
         Position               position, // intentionally by copy!
-        const size_t           plyFromRoot,
+        size_t                 plyFromRoot,
         GameRecord::Variation& output)
         -> ResultStrOrErrorStr
     {
@@ -242,7 +242,11 @@ namespace {
 
                 case '(': {
                     // variation
-                    auto rest = parse_variation(pgnText, lastPos, plyFromRoot, output);
+
+                    assert(plyFromRoot > 0uz);
+
+                    auto rest = parse_variation(
+                        pgnText, lastPos, plyFromRoot - 1uz, output);
 
                     if (not rest.has_value())
                         return std::unexpected { std::move(rest).error() };
@@ -278,6 +282,7 @@ namespace {
                     if (not result.has_value())
                         return std::unexpected { std::move(result).error() };
 
+                    ++plyFromRoot;
                     pgnText = rest;
                 }
             }
@@ -291,7 +296,7 @@ namespace {
         const Position&        position,
         const size_t           plyFromRoot,
         GameRecord::Variation& output)
-        -> std::expected<string_view, string>
+        -> ResultStrOrErrorStr
     {
         assert(pgnText.front() == '(');
 
@@ -303,12 +308,12 @@ namespace {
                 auto& variation = output.moves.back().variations.emplace_back();
 
                 variation.startingPosition = position;
-                variation.plyFromRoot      = plyFromRoot + output.moves.size() - 1uz;
+                variation.plyFromRoot      = plyFromRoot;
 
                 return parse_moves_internal<true>(
                     pgnText.substr(1uz, closeParenIdx - 1uz),
-                    position, variation.plyFromRoot, variation)
-                    .and_then([pgnText, closeParenIdx]([[maybe_unused]] const string_view alwaysEmpty) -> ResultStrOrErrorStr {
+                    position, plyFromRoot, variation)
+                    .transform([pgnText, closeParenIdx]([[maybe_unused]] const string_view alwaysEmpty) {
                         return pgnText.substr(closeParenIdx + 1uz);
                     })
                     .transform_error(util::strings::to_owning_string);
@@ -350,7 +355,7 @@ namespace {
 
 } // namespace
 
-using GameOrError = std::expected<GameRecord, string_view>;
+using GameOrError = std::expected<GameRecord, string>;
 
 auto from_pgn(const string_view pgnText) -> GameOrError
 {

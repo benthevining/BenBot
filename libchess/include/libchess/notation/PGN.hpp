@@ -158,7 +158,7 @@ struct [[nodiscard]] GameRecord final {
  */
 [[nodiscard]] auto from_pgn(
     std::string_view pgnText)
-    -> std::expected<GameRecord, std::string_view>;
+    -> std::expected<GameRecord, std::string>;
 
 /** Parses a text file that may contain 0 or more PGNs into a list of
     GameRecord objects. PGNs in the ``fileContent`` should be separated
