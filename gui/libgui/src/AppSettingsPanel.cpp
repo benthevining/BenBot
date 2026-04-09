@@ -172,6 +172,11 @@ namespace {
                 = util::files::overwrite(
                     srcTreeResourcesPath / "default_state.json",
                     state.to_string())
+                      .transform([] {
+                          remove(
+                              get_default_app_state_path());
+                          return std::monostate { };
+                      })
                       .transform_error(util::print_error);
         }
 
