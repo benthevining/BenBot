@@ -164,7 +164,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd   # v6
       with:
-        ref: ${{ needs.bump_version.outputs.docker_tag_url }}
+        ref: ${{ needs.bump_version.outputs.tag_name }}
 
     - uses: ./.github/actions/build_docker
       id: build_docker

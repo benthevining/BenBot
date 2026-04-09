@@ -42,85 +42,13 @@ jobs:
     runs-on: ubuntu-latest
     name: Run SPRT test
     timeout-minutes: 300 # 5 hours
-    env:
-      SPRT_OUTPUT_LOG: ${{ github.workspace }}/logs/sprt/output.log
-      TMP_ROOT: ${{ github.workspace }}/tmp-main
 
     steps:
     - name: Checkout code
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-    - name: Download fastchess
-      id: download_fastchess
-      uses: ./.github/actions/download_github_release
+    - name: Run SPRT
+      uses: ./.github/actions/run_sprt
       with:
-        repository: Disservin/fastchess
-        file_filter: '*-linux-x86-64*'
-        artifact_xtn: tar
-        path_to_exec: fastchess
-
-    # --- if not building against main, download latest release ---
-
-    - name: Download latest BenBot release
-      id: download_latest_release
-      if: ${{ !inputs.use_main }}
-      uses: ./.github/actions/download_github_release
-      with:
-        repository: benthevining/BenBot
-        file_filter: BenBot-ubuntu-latest-clang.zip
-        artifact_xtn: zip
-        path_to_exec: bin/ben_bot
-
-    # --- if building against main, checkout & build main ---
-
-    - name: Checkout main
-      if: inputs.use_main
-      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-      with:
-        ref: main
-        path: ${{ env.TMP_ROOT }}
-
-    - name: Build main
-      if: inputs.use_main
-      id: build_main
-      uses: ./.github/actions/run_build
-      with:
-        root_dir: ${{ env.TMP_ROOT }}
-
-    # --- Build SPRT ---
-
-    - name: Build
-      uses: ./.github/actions/run_build
-      id: run_build
-      with:
-        extra_config_args: -D "FASTCHESS_PROGRAM=${{ steps.download_fastchess.outputs.executable }}"
-
-    - name: Inject baseline binary
-      if: ${{ !inputs.use_main }}
-      run: |
-        cmake -D BASELINE_BINARY=${{ steps.download_latest_release.outputs.executable }} -P InjectSPRTBaseline-Release.cmake
-      working-directory: ${{ steps.run_build.outputs.build_dir }}
-
-    - name: Inject baseline binary
-      if: inputs.use_main
-      run: |
-        cmake -D BASELINE_BINARY=${{ steps.build_main.outputs.deploy_dir }}/bin/ben_bot -P InjectSPRTBaseline-Release.cmake
-      working-directory: ${{ steps.run_build.outputs.build_dir }}
-
-    - name: Run SPRT test
-      # NB. tee needs the output directory to exist before it's invoked
-      run: |
-        cmake -E make_directory $(dirname ${{ env.SPRT_OUTPUT_LOG }})
-        cmake --build . --target ${{ inputs.sprt_target }} --config Release | tee ${{ env.SPRT_OUTPUT_LOG }}
-      working-directory: ${{ steps.run_build.outputs.build_dir }}
-
-    - name: Upload logs
-      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
-      with:
-        name: sprt-logs
-        path: logs/sprt
-        if-no-files-found: error
-
-    - name: Report results
-      run: python3 ReportSPRTResults.py ${{ env.SPRT_OUTPUT_LOG }} >> $GITHUB_STEP_SUMMARY
-      working-directory: .github/scripts
+        use_main: ${{ inputs.use_main }}
+        target_name: ${{ inputs.sprt_target }}
