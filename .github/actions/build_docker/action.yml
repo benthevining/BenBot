@@ -40,24 +40,29 @@ runs:
 
   - name: Configure config file
     shell: bash
-    run: python3 SetupLichessConfig.py ${{ github.workspace }}/config/lichess/config.yml ${{ inputs.lichess_token }}
+    run: |
+      python3 SetupLichessConfig.py ${{ github.workspace }}/config/lichess/config.yml ${{ inputs.lichess_token }}
     working-directory: ${{ github.action_path }}
 
   - name: Run Docker build
     shell: bash
-    run: docker build --file config/lichess/Dockerfile --tag benbot:${{ inputs.tag_name }} .
+    run: |
+      docker build --file config/lichess/Dockerfile --tag benbot:${{ inputs.tag_name }} .
     working-directory: ${{ github.workspace }}
 
   - name: Tag image
     shell: bash
-    run: docker tag benbot:${{ inputs.tag_name }} benvining/benbot-lichess:${{ inputs.tag_name }}
+    run: |
+      docker tag benbot:${{ inputs.tag_name }} benvining/benbot-lichess:${{ inputs.tag_name }}
 
   - name: Push to Docker hub
     shell: bash
-    run: docker push benvining/benbot-lichess:${{ inputs.tag_name }}
+    run: |
+      docker push benvining/benbot-lichess:${{ inputs.tag_name }}
 
   - name: Print Docker tag URL
     id: print_url
     shell: bash
-    run: python3 PrintDockerTagURL.py ${{ inputs.tag_name }} >> $GITHUB_OUTPUT
+    run: |
+      python3 PrintDockerTagURL.py ${{ inputs.tag_name }} >> $GITHUB_OUTPUT
     working-directory: ${{ github.action_path }}

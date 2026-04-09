@@ -55,7 +55,8 @@ runs:
     env:
       BUILD_NAME: ${{ github.head_ref || github.ref_name }}.${{ runner.os }}.${{ inputs.cmake_preset }}.${{ inputs.build_config }}
       CMAKE_OSX_ARCHITECTURES: arm64;x86_64
-    run: cmake --preset ${{ inputs.cmake_preset }} -D BUILDNAME=${{ env.BUILD_NAME }} --log-level=VERBOSE
+    run: |
+      cmake --preset ${{ inputs.cmake_preset }} -D BUILDNAME=${{ env.BUILD_NAME }} --log-level=VERBOSE
 
   - name: Build and test
     shell: bash
