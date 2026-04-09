@@ -104,6 +104,7 @@ jobs:
         ref: ${{ needs.bump_version.outputs.tag_name }}
 
     - uses: ./.github/actions/run_build
+      id: run_build
       with:
         cmake_preset: ${{ matrix.preset }}
         extra_config_args: -D "BENBOT_CODESIGN_ID=${{ secrets.BENBOT_CODESIGN_ID }}" -D BENBOT_TESTS=OFF
@@ -113,7 +114,7 @@ jobs:
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
       with:
         name: BenBot-${{ matrix.os }}-${{ matrix.preset }}
-        path: deploy
+        path: ${{ steps.run_build.outputs.deploy_dir }}
         if-no-files-found: error
 
   # build & deploy docs from new tag

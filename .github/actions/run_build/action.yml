@@ -29,6 +29,14 @@ inputs:
     description: Target to build
     required: true
 
+outputs:
+  build_dir:
+    description: Path to the build directory
+    value: ${{ github.workspace }}/Builds/${{ inputs.cmake_preset }}
+  deploy_dir:
+    description: If build configuration is Release, the built target will be installed into this directory
+    value: ${{ github.workspace }}/deploy
+
 runs:
   using: "composite"
   steps:

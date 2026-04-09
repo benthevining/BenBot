@@ -26,6 +26,7 @@ runs:
     uses: ssciwr/doxygen-install@329d88f5a303066a5bd006db7516b1925b86350e   # v2.0.1
 
   - uses: ./.github/actions/run_build
+    id: run_build
     with:
       extra_config_args: -D BENBOT_TESTS=OFF -D CMAKE_REQUIRE_FIND_PACKAGE_Doxygen=TRUE
       build_target: ben_bot_docs
@@ -59,4 +60,4 @@ runs:
     uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b   # v4
     with:
       name: BenBot-docs
-      path: ${{ github.workspace }}/deploy/share/doc/html
+      path: ${{ steps.run_build.outputs.deploy_dir }}/share/doc/html
