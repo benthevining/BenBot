@@ -36,7 +36,7 @@ add_subdirectory (libchess)
 add_subdirectory (libbenbot)
 add_subdirectory (ben-bot)
 
-add_subdirectory (gui EXCLUDE_FROM_ALL)
+# add_subdirectory (gui EXCLUDE_FROM_ALL)
 
 if (BENBOT_TESTS)
     enable_testing ()

@@ -18,7 +18,7 @@ inputs:
   cmake_preset:
     description: CMake preset to use
     required: false
-    default: clang
+    default: gcc
 
 runs:
   using: "composite"
