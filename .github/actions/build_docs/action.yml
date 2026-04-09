@@ -25,7 +25,8 @@ runs:
   - name: Install latest Doxygen
     uses: ssciwr/doxygen-install@329d88f5a303066a5bd006db7516b1925b86350e   # v2.0.1
 
-  - uses: ./.github/actions/run_build
+  - name: Build docs
+    uses: ./.github/actions/run_build
     id: run_build
     with:
       extra_config_args: -D BENBOT_TESTS=OFF -D CMAKE_REQUIRE_FIND_PACKAGE_Doxygen=TRUE

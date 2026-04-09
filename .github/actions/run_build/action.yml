@@ -27,15 +27,20 @@ inputs:
     default: Release
   build_target:
     description: Target to build
-    required: true
+    required: false
+    default: ben_bot
+  root_dir:
+    description: Root directory to work in
+    required: false
+    default: ${{ github.workspace }}
 
 outputs:
   build_dir:
     description: Path to the build directory
-    value: ${{ github.workspace }}/Builds/${{ inputs.cmake_preset }}
+    value: ${{ inputs.root_dir }}/Builds/${{ inputs.cmake_preset }}
   deploy_dir:
     description: If build configuration is Release, the built target will be installed into this directory
-    value: ${{ github.workspace }}/deploy
+    value: ${{ inputs.root_dir }}/deploy
 
 runs:
   using: "composite"
@@ -63,6 +68,7 @@ runs:
       CMAKE_OSX_ARCHITECTURES: arm64;x86_64
     run: |
       cmake --preset ${{ inputs.cmake_preset }} ${{ inputs.extra_config_args }}
+    working-directory: ${{ inputs.root_dir }}
 
   - name: Build
     shell: bash
@@ -70,10 +76,11 @@ runs:
       CMAKE_BUILD_PARALLEL_LEVEL: 8
     run: |
       cmake --build . --config ${{ inputs.build_config }} --target ${{ inputs.build_target }}
-    working-directory: Builds/${{ inputs.cmake_preset }}
+    working-directory: ${{ inputs.root_dir }}/Builds/${{ inputs.cmake_preset }}
 
   - name: Run cmake install
     if: inputs.build_config == 'Release'
     shell: bash
     run: |
       cmake --install Builds/${{ inputs.cmake_preset }} --prefix deploy --component ${{ inputs.build_target }} --config Release
+    working-directory: ${{ inputs.root_dir }}

@@ -53,7 +53,8 @@ jobs:
       with:
         ref: ${{ inputs.ref || github.ref }}
 
-    - uses: ./.github/actions/build_docs
+    - name: Build docs
+      uses: ./.github/actions/build_docs
 
   deploy:
     if: ${{ github.ref == 'refs/heads/main' }}

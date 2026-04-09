@@ -44,14 +44,8 @@ jobs:
     name: Run SPRT test
     timeout-minutes: 300 # 5 hours
     env:
-      CMAKE_PRESET: gcc
-      CMAKE_BUILD_PARALLEL_LEVEL: 8
       SPRT_OUTPUT_LOG: ${{ github.workspace }}/logs/sprt/output.log
-      # these directories are used for building & installing the latest
-      # main, in the case that we're using main as the SPRT baseline
       TMP_ROOT: ${{ github.workspace }}/tmp-main
-      TMP_BUILD_DIR: ${{ github.workspace }}/tmp-main/Builds/gcc
-      TMP_DEPLOY_DIR: ${{ github.workspace }}/tmp-main/deploy
 
     steps:
     - name: Checkout code
@@ -120,29 +114,19 @@ jobs:
         ref: main
         path: ${{ env.TMP_ROOT }}
 
-    - name: Configure main
-      if: inputs.use_main
-      run: cmake --preset ${{ env.CMAKE_PRESET }} -D BENBOT_DOCS=OFF
-      working-directory: ${{ env.TMP_ROOT }}
-
     - name: Build main
       if: inputs.use_main
-      run: cmake --build . --target ben_bot --config Release
-      working-directory: ${{ env.TMP_BUILD_DIR }}
-
-    - name: Install main
-      if: inputs.use_main
-      run: |
-        cmake --install ${{ env.TMP_BUILD_DIR }} --prefix ${{ env.TMP_DEPLOY_DIR }} --component ben_bot --config Release
+      id: build_main
+      uses: ./.github/actions/run_build
+      with:
+        root_dir: ${{ env.TMP_ROOT }}
 
       # --- configure SPRT build ---
 
     - uses: ./.github/actions/run_build
       id: run_build
       with:
-        cmake_preset: ${{ env.CMAKE_PRESET }}
         extra_config_args: -D "FASTCHESS_PROGRAM=${{ steps.fastchess_filename.outputs.fastchess }}"
-        build_target: ben_bot
 
     - name: Inject baseline binary
       if: ${{ !inputs.use_main }}
@@ -153,7 +137,7 @@ jobs:
     - name: Inject baseline binary
       if: inputs.use_main
       run: |
-        cmake -D BASELINE_BINARY=${{ env.TMP_DEPLOY_DIR }}/bin/ben_bot -P InjectSPRTBaseline-Release.cmake
+        cmake -D BASELINE_BINARY=${{ steps.build_main.outputs.deploy_dir }}/bin/ben_bot -P InjectSPRTBaseline-Release.cmake
       working-directory: ${{ steps.run_build.outputs.build_dir }}
 
     - name: Run SPRT test
