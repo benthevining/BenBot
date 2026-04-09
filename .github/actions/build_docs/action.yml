@@ -1,0 +1,95 @@
+# ======================================================================================
+#
+# ░▒▓███████▓▒░░▒▓████████▓▒░▒▓███████▓▒░       ░▒▓███████▓▒░ ░▒▓██████▓▒░▒▓████████▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓███████▓▒░░▒▓██████▓▒░ ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓███████▓▒░░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░ ░▒▓██████▓▒░  ░▒▓█▓▒░
+#
+# ======================================================================================
+
+name: build_docs
+author: benvining
+description: Build Doxygen documentation
+
+inputs:
+  ref:
+    description: Git tag to checkout
+    required: true
+  cmake_preset:
+    description: CMake preset to use
+    required: false
+    default: gcc
+
+runs:
+  using: "composite"
+  steps:
+  - name: Install dependencies
+    shell: bash
+    run: |
+      sudo apt-get update
+      sudo apt-get install -y graphviz perl texlive-binaries
+
+  - name: Install latest Doxygen
+    uses: ssciwr/doxygen-install@329d88f5a303066a5bd006db7516b1925b86350e   # v2.0.1
+
+  - name: Install CMake 4.0
+    uses: lukka/get-cmake@ea83089aa35e08e459464341fe24ad024ee2466f   # v4.3.1
+
+  - name: Checkout code
+    uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd   # v6
+    with:
+      ref: ${{ inputs.ref }}
+
+  - name: Configure CMake
+    shell: bash
+    run: |
+      cmake --preset ${{ inputs.cmake_preset }} -D BENBOT_TESTS=OFF -D CMAKE_REQUIRE_FIND_PACKAGE_Doxygen=TRUE
+
+  - name: Build docs
+    shell: bash
+    env:
+      CMAKE_BUILD_PARALLEL_LEVEL: 8
+    run: cmake --build . --target ben_bot_docs
+    working-directory: ${{ github.workspace }}/Builds/${{ inputs.cmake_preset }}
+
+    # Parse Doxygen warnings to create JSON data for check status
+  - name: Produce summary for check
+    if: always()
+    id: parse_doxygen_warnings
+    env:
+      SCRIPT: ${{ github.action_path }}/ReportDoxygenWarnings.py
+      DOXYGEN_LOG: ${{ github.workspace }}/logs/Doxygen.log
+    shell: bash
+    run: |
+      summary="$(python3 ${{ env.SCRIPT }}  --summary --doxygen-log=${{ env.DOXYGEN_LOG }})"
+      echo "summary=$summary" >> "$GITHUB_OUTPUT"
+      annotations="$(python3 ${{ env.SCRIPT }} --doxygen-log=${{ env.DOXYGEN_LOG }} --repo-root ${{ github.workspace }})"
+      echo "annotations=$annotations" >> "$GITHUB_OUTPUT"
+
+    # Create status check to report warnings
+  - name: Report check state
+    if: always()
+    uses: LouisBrunner/checks-action@937cbbcde3259005b50746dc91cde29098aac2ff   # v3.1.0
+    with:
+      token: ${{ secrets.GITHUB_TOKEN }}
+      name: Docs warnings
+      conclusion: ${{ job.status }}   # expands to failure if any step has failed, success otherwise
+      output: ${{ steps.parse_doxygen_warnings.outputs.summary }}
+      annotations: ${{ steps.parse_doxygen_warnings.outputs.annotations }}
+
+  - name: Run CMake install
+    shell: bash
+    env:
+      BUILD_DIR: ${{ github.workspace }}/Builds/${{ inputs.cmake_preset }}
+      DEPLOY_DIR: ${{ github.workspace }}/deploy
+    run: |
+      cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.DEPLOY_DIR }} --component ben_bot_docs
+
+  - name: Upload artifact
+    uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b   # v4
+    with:
+      name: BenBot-docs
+      path: ${{ github.workspace }}/deploy/share/doc/html
