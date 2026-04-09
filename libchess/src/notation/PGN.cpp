@@ -238,7 +238,7 @@ namespace {
     }
 
     auto MoveListParseContext::parse_move_list(
-        string_view            pgnText,
+        const string_view      pgnText,
         const Position&        position,
         GameRecord::Variation& output)
         -> ResultStrOrErrorStr
