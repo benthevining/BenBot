@@ -190,7 +190,7 @@ namespace {
     }
 
     [[nodiscard]] auto parse_variation(
-        string_view pgnText, const Position& position, size_t plyFromRoot,
+        string_view pgnText, const Position& position,
         GameRecord::Variation& output)
         -> ResultStrOrErrorStr;
 
@@ -201,7 +201,6 @@ namespace {
     [[nodiscard]] auto parse_moves_internal(
         string_view            pgnText,
         Position               position, // intentionally by copy!
-        size_t                 plyFromRoot,
         GameRecord::Variation& output)
         -> ResultStrOrErrorStr
     {
@@ -243,10 +242,7 @@ namespace {
                 case '(': {
                     // variation
 
-                    assert(plyFromRoot > 0uz);
-
-                    auto rest = parse_variation(
-                        pgnText, lastPos, plyFromRoot - 1uz, output);
+                    auto rest = parse_variation(pgnText, lastPos, output);
 
                     if (not rest.has_value())
                         return std::unexpected { std::move(rest).error() };
@@ -282,7 +278,6 @@ namespace {
                     if (not result.has_value())
                         return std::unexpected { std::move(result).error() };
 
-                    ++plyFromRoot;
                     pgnText = rest;
                 }
             }
@@ -294,7 +289,6 @@ namespace {
     [[nodiscard]] auto parse_variation(
         const string_view      pgnText,
         const Position&        position,
-        const size_t           plyFromRoot,
         GameRecord::Variation& output)
         -> ResultStrOrErrorStr
     {
@@ -304,15 +298,14 @@ namespace {
             return std::unexpected { "Cannot parse a variation with an empty move list!" };
 
         return util::strings::find_matching_close_paren(pgnText)
-            .and_then([pgnText, plyFromRoot, &position, &output](const size_t closeParenIdx) {
+            .and_then([pgnText, &position, &output](const size_t closeParenIdx) {
                 auto& variation = output.moves.back().variations.emplace_back();
 
                 variation.startingPosition = position;
-                variation.plyFromRoot      = plyFromRoot;
 
                 return parse_moves_internal<true>(
                     pgnText.substr(1uz, closeParenIdx - 1uz),
-                    position, plyFromRoot, variation)
+                    position, variation)
                     .transform([pgnText, closeParenIdx]([[maybe_unused]] const string_view alwaysEmpty) {
                         return pgnText.substr(closeParenIdx + 1uz);
                     })
@@ -328,7 +321,7 @@ namespace {
         GameRecord::Variation& output)
         -> ResultStrOrErrorStr
     {
-        return parse_moves_internal<false>(pgnText, position, 0uz, output);
+        return parse_moves_internal<false>(pgnText, position, output);
     }
 
     [[nodiscard]] auto parse_game_result(

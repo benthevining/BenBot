@@ -105,11 +105,6 @@ struct [[nodiscard]] GameRecord final {
 
         /** The starting position of this variation. */
         Position startingPosition;
-
-        /** The number of plies from the start of the game that the starting position of this
-            game is.
-         */
-        size_t plyFromRoot { 0uz };
     };
 
     /** Records a game move alongside an optional comment, NAG annotations, and possible variations. */

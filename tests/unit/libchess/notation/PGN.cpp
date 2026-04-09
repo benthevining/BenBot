@@ -291,8 +291,6 @@ TEST_CASE("PGN - variations", TAGS)
 
     const auto game = from_pgn(pgn).value();
 
-    REQUIRE(game.moves.plyFromRoot == 0uz);
-
     REQUIRE(game.moves.moves.size() == 6uz);
 
     const auto& variations = game.moves.moves.at(4uz).variations;
@@ -304,8 +302,6 @@ TEST_CASE("PGN - variations", TAGS)
     REQUIRE(variation.moves.size() == 2uz);
 
     REQUIRE(variation.startingPosition == from_fen("r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3").value());
-
-    REQUIRE(variation.plyFromRoot == 4uz);
 
     REQUIRE(to_pgn(game) == pgn);
 }
@@ -326,8 +322,6 @@ TEST_CASE("PGN - nested variations", TAGS)
 
     const auto game = from_pgn(pgn).value();
 
-    REQUIRE(game.moves.plyFromRoot == 0uz);
-
     REQUIRE(game.moves.moves.size() == 6uz);
 
     const auto& variations = game.moves.moves.at(4uz).variations;
@@ -335,8 +329,6 @@ TEST_CASE("PGN - nested variations", TAGS)
     REQUIRE(variations.size() == 1uz);
 
     const auto& variation = variations.front();
-
-    REQUIRE(variation.plyFromRoot == 4uz);
 
     REQUIRE(variation.startingPosition == from_fen("r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3").value());
 
@@ -347,8 +339,6 @@ TEST_CASE("PGN - nested variations", TAGS)
     REQUIRE(subvariations.size() == 1uz);
 
     const auto& subvariation = subvariations.front();
-
-    // REQUIRE(variation.plyFromRoot == 6uz);
 
     REQUIRE(subvariation.startingPosition == from_fen("r1bqkbnr/pppp1ppp/2n5/8/3pP3/5N2/PPP2PPP/RNBQKB1R w KQkq - 0 4").value());
 
