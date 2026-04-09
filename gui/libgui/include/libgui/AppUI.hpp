@@ -30,6 +30,11 @@ inline constexpr auto AppName { "BenBot GUI" };
 [[nodiscard]] auto get_scaled_default_dimensions(float scaleFactor)
     -> std::pair<int, int>;
 
+[[nodiscard]] auto get_default_imgui_ini_path() -> std::filesystem::path;
+[[nodiscard]] auto get_default_app_state_path() -> std::filesystem::path;
+
+void load_default_ui_layout();
+
 struct AppState final {
     AppSettings appSettings;
 

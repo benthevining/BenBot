@@ -86,4 +86,20 @@ source_group (TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${libgui_headers} ${libgui_
 
 target_include_directories (libgui PRIVATE "${CMAKE_CURRENT_LIST_DIR}/src")
 
+get_cmake_property (debug_configs DEBUG_CONFIGURATIONS)
+
+if (NOT debug_configs)
+    set (debug_configs Debug)
+endif ()
+
+list (JOIN debug_configs "," debug_configs)
+
+set (config_debug "$<CONFIG:${debug_configs}>")
+
+target_compile_definitions (
+    libgui
+    PRIVATE
+        "$<${config_debug}:BENBOT_RES_SRC_TREE_PATH=\"${CMAKE_CURRENT_LIST_DIR}/resources/res\">"
+)
+
 add_library (ben_bot::libgui ALIAS libgui)

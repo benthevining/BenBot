@@ -43,20 +43,26 @@ auto get_scaled_default_dimensions(const float scaleFactor)
         static_cast<int>(std::round(DefaultHeight * scaleFactor)));
 }
 
-namespace {
-    using std::filesystem::path;
-    using std::string_view;
+using std::filesystem::path;
+using std::string_view;
 
-    [[nodiscard]] auto imgui_ini_path() -> path
-    {
-        return "imgui.ini";
-    }
+auto get_default_imgui_ini_path() -> path
+{
+    return "imgui.ini";
+}
 
-    [[nodiscard]] auto app_state_file_path() -> path
-    {
-        return "benbot_state.json";
-    }
-} // namespace
+auto get_default_app_state_path() -> path
+{
+    return "benbot_state.json";
+}
+
+void load_default_ui_layout()
+{
+    const auto defaultData = resources::get_default_imgui_ini_data();
+
+    ImGui::LoadIniSettingsFromMemory(
+        defaultData.data(), defaultData.size());
+}
 
 void initialize(
     const float mainScaleFactor, AppState& state)
@@ -72,16 +78,15 @@ void initialize(
         io_.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     }
 
-    if (not exists(imgui_ini_path())) {
-        const auto defaultData = resources::get_default_imgui_ini_data();
-        ImGui::LoadIniSettingsFromMemory(defaultData.data(), defaultData.size());
-    }
+    if (not exists(get_default_imgui_ini_path()))
+        load_default_ui_layout();
 
-    if (const auto stateFile = app_state_file_path();
+    if (const auto stateFile = get_default_app_state_path();
         exists(stateFile)) {
         state.load_from(stateFile);
     } else {
-        state.update_from_string(resources::get_default_app_state());
+        state.update_from_string(
+            resources::get_default_app_state());
     }
 
     state.enginePanel.engine.handle_command("ucinewgame");
@@ -126,7 +131,8 @@ void shutdown(const AppState& state)
 
     NFD::Quit();
 
-    state.write_to(app_state_file_path());
+    state.write_to(
+        get_default_app_state_path());
 }
 
 using nlohmann::json;

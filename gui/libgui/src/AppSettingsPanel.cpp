@@ -23,6 +23,8 @@
 #include <libgui/AppSettingsPanel.hpp>
 #include <libgui/AppUI.hpp>
 #include <libgui/Resources.hpp>
+#include <libutil/Console.hpp>
+#include <libutil/Files.hpp>
 #include <nfd.hpp>
 #include <nlohmann/json.hpp>
 #include <print>
@@ -90,6 +92,42 @@ namespace {
             [&state](const path& file) { state.write_to(file); });
     }
 
+    void show_state_buttons(
+        AppState& state)
+    {
+        const ScopedGroup group;
+
+        const bool showTooltips = state.appSettings.showTooltips;
+
+        if (ImGui::Button("Load state"))
+            show_state_load_dialog(state);
+
+        if (showTooltips)
+            ImGui::SetItemTooltip("Load app state from a file");
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Save state"))
+            show_state_save_dialog(state);
+
+        if (showTooltips)
+            ImGui::SetItemTooltip("Save app state to a file");
+
+        if (ImGui::Button("Reset state"))
+            state.update_from_string(resources::get_default_app_state());
+
+        if (showTooltips)
+            ImGui::SetItemTooltip("Reset app state to default");
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Reset layout"))
+            load_default_ui_layout();
+
+        if (showTooltips)
+            ImGui::SetItemTooltip("Reset UI layout to default");
+    }
+
     void show_build_info()
     {
         namespace res = ben_bot::resources;
@@ -106,6 +144,40 @@ namespace {
         UnformattedText(
             std::format("Build configuration: {}", res::get_build_config()));
     }
+
+    [[maybe_unused]] void show_default_state_save_buttons(
+        const AppState& state, const path& srcTreeResourcesPath)
+    {
+        ImGui::SeparatorText("Save default state");
+
+        const ScopedGroup group;
+
+        const bool showTooltips = state.appSettings.showTooltips;
+
+        if (ImGui::Button("UI layout")) {
+            ImGui::SaveIniSettingsToDisk(
+                (srcTreeResourcesPath / "default_layout.ini").c_str());
+
+            remove(
+                get_default_imgui_ini_path());
+        }
+
+        if (showTooltips)
+            ImGui::SetItemTooltip("Save current UI layout as default in source tree");
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("App state")) {
+            [[maybe_unused]] const auto result
+                = util::files::overwrite(
+                    srcTreeResourcesPath / "default_state.json",
+                    state.to_string())
+                      .transform_error(util::print_error);
+        }
+
+        if (showTooltips)
+            ImGui::SetItemTooltip("Save current app state as default in source tree");
+    }
 } // namespace
 
 void render_app_settings_panel(AppState& state)
@@ -118,31 +190,17 @@ void render_app_settings_panel(AppState& state)
         if (showTooltips)
             ImGui::SetItemTooltip("Display widget tooltips");
 
-        if (ImGui::Button("Load state"))
-            show_state_load_dialog(state);
-
-        if (showTooltips)
-            ImGui::SetItemTooltip("Load app state from a file");
-
-        ImGui::SameLine();
-
-        if (ImGui::Button("Save state"))
-            show_state_save_dialog(state);
-
-        if (showTooltips)
-            ImGui::SetItemTooltip("Save app state to a file");
-
-        ImGui::SameLine();
-
-        if (ImGui::Button("Reset state"))
-            state.update_from_string(resources::get_default_app_state());
-
-        if (showTooltips)
-            ImGui::SetItemTooltip("Reset app state to default");
+        show_state_buttons(state);
 
         ImGui::Separator();
 
         show_build_info();
+
+#ifdef BENBOT_RES_SRC_TREE_PATH
+        show_default_state_save_buttons(
+            state,
+            path { BENBOT_RES_SRC_TREE_PATH });
+#endif
     }
 
     ImGui::End();
