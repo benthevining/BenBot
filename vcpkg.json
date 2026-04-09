@@ -43,6 +43,11 @@
       "name": "nativefiledialog-extended",
       "platform": "!(ios|android)",
       "version>=": "1.3.0"
+    },
+    {
+      "name": "gtk",
+      "platform": "linux",
+      "version>=": "4.22.0"
     }
   ],
   "name": "BenBot",
