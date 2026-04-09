@@ -92,50 +92,6 @@ namespace {
     using util::strings::split_at_first_space_or_newline;
     using util::strings::trim;
 
-    // writes tag key/value pairs into metadata and returns
-    // the rest of the PGN text that's left
-    [[nodiscard]] auto parse_metadata_tags(
-        string_view pgnText, Metadata& metadata)
-        -> ResultStrOrErrorStr
-    {
-        auto openingBracketIdx = pgnText.find('[');
-
-        while (openingBracketIdx != string_view::npos) {
-            const auto closingBracketIdx = pgnText.find(']', openingBracketIdx + 1uz);
-
-            if (closingBracketIdx == string_view::npos)
-                return std::unexpected { "Invalid PGN: expected ']' following '['" };
-
-            assert(std::cmp_greater(closingBracketIdx, openingBracketIdx));
-
-            // don't include the brackets
-            const auto tagText = pgnText.substr(
-                openingBracketIdx + 1uz,
-                closingBracketIdx - openingBracketIdx - 1uz);
-
-            // NB. we assume that tag keys cannot include spaces
-            auto [tagName, tagValue] = util::strings::split_at_first_space(tagText);
-
-            assert(not tagName.empty());
-            assert(not tagValue.empty());
-
-            // remove surrounding quotes from tag value
-            if (tagValue.front() == '"')
-                tagValue.remove_prefix(1uz);
-
-            if (tagValue.back() == '"')
-                tagValue.remove_suffix(1uz);
-
-            metadata[string { tagName }] = tagValue;
-
-            pgnText.remove_prefix(closingBracketIdx + 1uz);
-
-            openingBracketIdx = pgnText.find('[');
-        }
-
-        return pgnText;
-    }
-
     struct PGNParseContext final {
         string_view pgnText;
 
@@ -161,28 +117,15 @@ namespace {
         // writes the NAG glyph value to the last move in output
         void parse_nag();
 
+        [[nodiscard]] auto create_child_variation_context(
+            string_view pgn) const -> PGNParseContext;
+
         // if successful, returns the rest of the PGN string after the variation
         [[nodiscard]] auto parse_variation() const -> ResultStrOrErrorStr;
 
         // parses the move, adds it to the output, and makes the move on the position
         [[nodiscard]] auto parse_move(string_view moveText)
             -> std::expected<std::monostate, string>;
-
-        [[nodiscard]] auto create_child_variation_context(
-            const string_view pgn) const -> PGNParseContext
-        {
-            auto& variation = output.moves.back().variations.emplace_back();
-
-            variation.startingPosition = position;
-            variation.variationID      = variationID++;
-
-            return {
-                .pgnText     = pgn,
-                .position    = position,
-                .variationID = variationID,
-                .output      = variation
-            };
-        }
     };
 
     // parses a move list, including nested comments, NAGs, and variations
@@ -331,6 +274,22 @@ namespace {
         pgnText = rest;
     }
 
+    auto PGNParseContext::create_child_variation_context(
+        const string_view pgn) const -> PGNParseContext
+    {
+        auto& variation = output.moves.back().variations.emplace_back();
+
+        variation.startingPosition = position;
+        variation.variationID      = variationID++;
+
+        return {
+            .pgnText     = pgn,
+            .position    = position,
+            .variationID = variationID,
+            .output      = variation
+        };
+    }
+
     // writes the variation to the last move in output
     // and returns the rest of the pgnText after the variation
     auto PGNParseContext::parse_variation() const -> ResultStrOrErrorStr
@@ -385,6 +344,50 @@ namespace {
             .position                                 = position,
             .variationID                              = variationID,
             .output                                   = output });
+    }
+
+    // writes tag key/value pairs into metadata and returns
+    // the rest of the PGN text that's left
+    [[nodiscard]] auto parse_metadata_tags(
+        string_view pgnText, Metadata& metadata)
+        -> ResultStrOrErrorStr
+    {
+        auto openingBracketIdx = pgnText.find('[');
+
+        while (openingBracketIdx != string_view::npos) {
+            const auto closingBracketIdx = pgnText.find(']', openingBracketIdx + 1uz);
+
+            if (closingBracketIdx == string_view::npos)
+                return std::unexpected { "Invalid PGN: expected ']' following '['" };
+
+            assert(std::cmp_greater(closingBracketIdx, openingBracketIdx));
+
+            // don't include the brackets
+            const auto tagText = pgnText.substr(
+                openingBracketIdx + 1uz,
+                closingBracketIdx - openingBracketIdx - 1uz);
+
+            // NB. we assume that tag keys cannot include spaces
+            auto [tagName, tagValue] = util::strings::split_at_first_space(tagText);
+
+            assert(not tagName.empty());
+            assert(not tagValue.empty());
+
+            // remove surrounding quotes from tag value
+            if (tagValue.front() == '"')
+                tagValue.remove_prefix(1uz);
+
+            if (tagValue.back() == '"')
+                tagValue.remove_suffix(1uz);
+
+            metadata[string { tagName }] = tagValue;
+
+            pgnText.remove_prefix(closingBracketIdx + 1uz);
+
+            openingBracketIdx = pgnText.find('[');
+        }
+
+        return pgnText;
     }
 
     [[nodiscard]] auto parse_game_result(
