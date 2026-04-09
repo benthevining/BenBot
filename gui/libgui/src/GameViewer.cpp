@@ -172,10 +172,10 @@ namespace {
 
             const auto moveFormat = engine.get_pretty_print_move_format();
 
-            auto position = game.startingPosition;
+            auto position = game.get_starting_position();
             auto moveIdx  = 0uz;
 
-            while (moveIdx < game.moves.size()) {
+            while (moveIdx < game.moves.moves.size()) {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
@@ -189,21 +189,21 @@ namespace {
                 if (position.is_black_to_move()) {
                     assert(moveIdx == 0uz);
                 } else {
-                    const auto move = game.moves.at(moveIdx++);
+                    const auto move = game.moves.moves.at(moveIdx++);
 
                     UnformattedText(
                         format_move(moveFormat, position, move.move));
 
                     position.make_move(move.move);
 
-                    if (moveIdx >= game.moves.size())
+                    if (moveIdx >= game.moves.moves.size())
                         break;
                 }
 
                 // Black move
                 ImGui::TableNextColumn();
 
-                const auto move = game.moves.at(moveIdx++);
+                const auto move = game.moves.moves.at(moveIdx++);
 
                 UnformattedText(
                     format_move(moveFormat, position, move.move));

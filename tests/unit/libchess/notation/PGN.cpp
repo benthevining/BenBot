@@ -18,6 +18,7 @@
 // that use only the seven tag roster.
 
 #include <catch2/catch_test_macros.hpp>
+#include <libchess/game/Position.hpp>
 #include <libchess/game/Result.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/PGN.hpp>
@@ -26,6 +27,7 @@
 
 inline constexpr auto TAGS { "[notation][PGN]" };
 
+using chess::notation::from_fen;
 using chess::notation::from_pgn;
 using chess::notation::parse_all_pgns;
 using chess::notation::to_pgn;
@@ -67,6 +69,8 @@ TEST_CASE("PGN - block comments", TAGS)
     REQUIRE(*game.result == chess::game::Result::Draw);
 
     REQUIRE(game.moves.moves.at(4uz).comment == "This opening is called the Ruy Lopez.");
+
+    REQUIRE(game.moves.startingPosition == chess::game::Position { });
 
     REQUIRE(to_pgn(game) == pgn);
 }
@@ -268,7 +272,7 @@ TEST_CASE("PGN - custom starting position", TAGS)
 
     REQUIRE(game.moves.moves.size() == 2uz);
 
-    REQUIRE(game.startingPosition == chess::notation::from_fen("5r2/4k3/8/3R2n1/2K5/8/8/8 b - - 0 1").value());
+    REQUIRE(game.get_starting_position() == from_fen("5r2/4k3/8/3R2n1/2K5/8/8/8 b - - 0 1").value());
 }
 
 TEST_CASE("PGN - variations", TAGS)
@@ -324,13 +328,19 @@ TEST_CASE("PGN - nested variations", TAGS)
 
     const auto& variation = variations.front();
 
+    REQUIRE(variation.startingPosition == from_fen("r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3").value());
+
     REQUIRE(variation.moves.size() == 4uz);
 
     const auto& subvariations = variation.moves.at(2uz).variations;
 
     REQUIRE(subvariations.size() == 1uz);
 
-    REQUIRE(subvariations.front().moves.size() == 1uz);
+    const auto& subvariation = subvariations.front();
+
+    REQUIRE(subvariation.startingPosition == from_fen("r1bqkbnr/pppp1ppp/2n5/8/3pP3/5N2/PPP2PPP/RNBQKB1R w KQkq - 0 4").value());
+
+    REQUIRE(subvariation.moves.size() == 1uz);
 
     REQUIRE(to_pgn(game) == pgn);
 }

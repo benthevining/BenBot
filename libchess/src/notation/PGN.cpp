@@ -39,7 +39,7 @@ auto GameRecord::get_final_position() const -> Position
 {
     return std::accumulate(
         moves.moves.begin(), moves.moves.end(),
-        startingPosition,
+        get_starting_position(),
         [](const Position& pos, const Move& move) {
             return after_move(pos, move.move);
         });
@@ -297,10 +297,13 @@ namespace {
 
         return util::strings::find_matching_close_paren(pgnText)
             .and_then([pgnText, &position, &output](const size_t closeParenIdx) {
+                auto& variation = output.moves.back().variations.emplace_back();
+
+                variation.startingPosition = position;
+
                 return parse_moves_internal<true>(
                     pgnText.substr(1uz, closeParenIdx - 1uz),
-                    position,
-                    output.moves.back().variations.emplace_back())
+                    position, variation)
                     .and_then([pgnText, closeParenIdx]([[maybe_unused]] const string_view alwaysEmpty) -> ResultStrOrErrorStr {
                         return pgnText.substr(closeParenIdx + 1uz);
                     })
@@ -353,10 +356,10 @@ auto from_pgn(const string_view pgnText) -> GameOrError
         .and_then([&game](const string_view afterMeta) -> GameOrError {
             if (const auto posStr = game.metadata.find("FEN");
                 posStr != game.metadata.end()) {
-                game.startingPosition = from_fen(posStr->second).value_or(Position { });
+                game.moves.startingPosition = from_fen(posStr->second).value_or(Position { });
             }
 
-            return parse_move_list(afterMeta, game.startingPosition, game.moves)
+            return parse_move_list(afterMeta, game.get_starting_position(), game.moves)
                 .and_then([&game](const string_view resultText) -> GameOrError {
                     game.result = parse_game_result(resultText, game);
 
@@ -575,11 +578,11 @@ auto to_pgn(
 {
     string result;
 
-    write_metadata(game.metadata, game.startingPosition, result);
+    write_metadata(game.metadata, game.get_starting_position(), result);
 
     result.append(1uz, '\n');
 
-    write_move_list(game.startingPosition, game.moves, useBlockComments, result);
+    write_move_list(game.get_starting_position(), game.moves, useBlockComments, result);
 
     write_game_result(game.result, result);
 

@@ -21,12 +21,10 @@
 
 #include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
 #include <expected>
-#include <iterator>
 #include <libchess/game/Position.hpp>
 #include <libchess/game/Result.hpp>
 #include <libchess/moves/Move.hpp>
 #include <optional>
-#include <span>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -88,9 +86,6 @@ struct [[nodiscard]] GameRecord final {
      */
     std::unordered_map<string, string> metadata;
 
-    /** The starting position of this game. */
-    Position startingPosition;
-
     /** If the game ended in a conclusive result, this holds the
         appropriate Result enumeration. If the game is ongoing,
         this is ``nullopt``.
@@ -107,6 +102,9 @@ struct [[nodiscard]] GameRecord final {
     struct Variation final {
         /** The moves in this variation. */
         std::vector<Move> moves;
+
+        /** The starting position of this variation. */
+        Position startingPosition;
     };
 
     /** Records a game move alongside an optional comment, NAG annotations, and possible variations. */
@@ -137,6 +135,9 @@ struct [[nodiscard]] GameRecord final {
 
     /** This game's moves. */
     Variation moves;
+
+    /** Returns the starting position of this game. */
+    [[nodiscard]] auto get_starting_position() const -> Position { return moves.startingPosition; }
 
     /** Returns the final position of this game. */
     [[nodiscard]] auto get_final_position() const -> Position;
