@@ -105,6 +105,9 @@ struct [[nodiscard]] GameRecord final {
 
         /** The starting position of this variation. */
         Position startingPosition;
+
+        /** Each variation in a game is assigned a unique ID. */
+        size_t variationID { 0uz };
     };
 
     /** Records a game move alongside an optional comment, NAG annotations, and possible variations. */
@@ -141,6 +144,14 @@ struct [[nodiscard]] GameRecord final {
 
     /** Returns the final position of this game. */
     [[nodiscard]] auto get_final_position() const -> Position;
+
+    struct PositionPointer final {
+        size_t totalPlyFromRoot { 0uz };
+
+        std::vector<size_t> variationIDs;
+    };
+
+    [[nodiscard]] auto get_move_at_pos(const PositionPointer& pos) const -> const Move*;
 };
 
 /** Parses the text of a PGN @cite Edwards_1994 file into a GameRecord object.

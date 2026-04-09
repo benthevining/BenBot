@@ -45,6 +45,40 @@ auto GameRecord::get_final_position() const -> Position
         });
 }
 
+auto GameRecord::get_move_at_pos(const PositionPointer& pos) const -> const Move*
+{
+    if (moves.moves.empty())
+        return nullptr;
+
+    const Variation* variation { &moves };
+    const Move*      move { nullptr };
+
+    auto variationIdx { 0uz };
+    auto plyFromRoot { 0uz };
+
+    do {
+        // TODO: need to go back to parent variation here
+        if (variationIdx >= variation->moves.size())
+            return nullptr;
+
+        move = &variation->moves.at(variationIdx);
+
+        for (const auto& subvar : move->variations) {
+            if (std::ranges::contains(pos.variationIDs, subvar.variationID)) {
+                variationIdx = 0uz;
+                variation    = &subvar;
+                move         = &subvar.moves.front();
+
+                break;
+            }
+        }
+
+        ++plyFromRoot;
+    } while (plyFromRoot < pos.totalPlyFromRoot);
+
+    return move;
+}
+
 namespace {
 
     using std::size_t;
@@ -191,7 +225,7 @@ namespace {
 
     [[nodiscard]] auto parse_variation(
         string_view pgnText, const Position& position,
-        GameRecord::Variation& output)
+        size_t& variationID, GameRecord::Variation& output)
         -> ResultStrOrErrorStr;
 
     // parses a move list, including nested comments, NAGs, and variations
@@ -201,6 +235,7 @@ namespace {
     [[nodiscard]] auto parse_moves_internal(
         string_view            pgnText,
         Position               position, // intentionally by copy!
+        size_t&                variationID,
         GameRecord::Variation& output)
         -> ResultStrOrErrorStr
     {
@@ -242,7 +277,7 @@ namespace {
                 case '(': {
                     // variation
 
-                    auto rest = parse_variation(pgnText, lastPos, output);
+                    auto rest = parse_variation(pgnText, lastPos, variationID, output);
 
                     if (not rest.has_value())
                         return std::unexpected { std::move(rest).error() };
@@ -289,6 +324,7 @@ namespace {
     [[nodiscard]] auto parse_variation(
         const string_view      pgnText,
         const Position&        position,
+        size_t&                variationID,
         GameRecord::Variation& output)
         -> ResultStrOrErrorStr
     {
@@ -298,14 +334,15 @@ namespace {
             return std::unexpected { "Cannot parse a variation with an empty move list!" };
 
         return util::strings::find_matching_close_paren(pgnText)
-            .and_then([pgnText, &position, &output](const size_t closeParenIdx) {
+            .and_then([pgnText, &variationID, &position, &output](const size_t closeParenIdx) {
                 auto& variation = output.moves.back().variations.emplace_back();
 
                 variation.startingPosition = position;
+                variation.variationID      = variationID++;
 
                 return parse_moves_internal<true>(
                     pgnText.substr(1uz, closeParenIdx - 1uz),
-                    position, variation)
+                    position, variationID, variation)
                     .transform([pgnText, closeParenIdx]([[maybe_unused]] const string_view alwaysEmpty) {
                         return pgnText.substr(closeParenIdx + 1uz);
                     })
@@ -321,7 +358,8 @@ namespace {
         GameRecord::Variation& output)
         -> ResultStrOrErrorStr
     {
-        return parse_moves_internal<false>(pgnText, position, output);
+        size_t variationID { 0uz };
+        return parse_moves_internal<false>(pgnText, position, variationID, output);
     }
 
     [[nodiscard]] auto parse_game_result(
