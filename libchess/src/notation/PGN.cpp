@@ -15,7 +15,6 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
-#include <charconv>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
 #include <expected>
@@ -39,7 +38,7 @@ namespace chess::notation {
 auto GameRecord::get_final_position() const -> Position
 {
     return std::accumulate(
-        moves.begin(), moves.end(),
+        moves.moves.begin(), moves.moves.end(),
         startingPosition,
         [](const Position& pos, const Move& move) {
             return after_move(pos, move.move);
@@ -52,7 +51,6 @@ namespace {
     using std::string;
     using std::string_view;
     using Metadata            = std::unordered_map<std::string, std::string>;
-    using Moves               = std::vector<GameRecord::Move>;
     using GameResult          = std::optional<game::Result>;
     using ResultStrOrErrorStr = std::expected<string_view, string_view>;
 
@@ -107,7 +105,7 @@ namespace {
     // writes the content of the block comment to the last move in output
     // and returns the rest of the pgnText after the } that closes this comment
     [[nodiscard]] auto parse_block_comment(
-        const string_view pgnText, Moves& output)
+        const string_view pgnText, GameRecord::Variation& output)
         -> ResultStrOrErrorStr
     {
         assert(pgnText.front() == '{');
@@ -117,8 +115,8 @@ namespace {
         if (closeBracketIdx == string_view::npos)
             return std::unexpected { "Expected '}' following '{'" };
 
-        if (not output.empty())
-            output.back().comment = pgnText.substr(1uz, closeBracketIdx - 1uz);
+        if (not output.moves.empty())
+            output.moves.back().comment = pgnText.substr(1uz, closeBracketIdx - 1uz);
 
         return pgnText.substr(closeBracketIdx + 1uz);
     }
@@ -126,7 +124,7 @@ namespace {
     // writes the content of the line comment to the last move in output
     // and returns the rest of the pgnText after the newline that ends this comment
     [[nodiscard]] auto parse_line_comment(
-        const string_view pgnText, Moves& output)
+        const string_view pgnText, GameRecord::Variation& output)
         -> string_view
     {
         assert(pgnText.front() == ';');
@@ -135,14 +133,14 @@ namespace {
 
         if (newlineIdx == string_view::npos) {
             // assume that a ; comment was the last thing in the file
-            if (not output.empty())
-                output.back().comment = trim(pgnText.substr(1uz));
+            if (not output.moves.empty())
+                output.moves.back().comment = trim(pgnText.substr(1uz));
 
             return { };
         }
 
-        if (not output.empty())
-            output.back().comment = trim(pgnText.substr(1uz, newlineIdx - 1uz));
+        if (not output.moves.empty())
+            output.moves.back().comment = trim(pgnText.substr(1uz, newlineIdx - 1uz));
 
         return pgnText.substr(newlineIdx + 1uz);
     }
@@ -150,7 +148,7 @@ namespace {
     // writes the NAG glyph value to the last move in output
     // and returns the rest of the pgnText after the NAG glyph
     [[nodiscard]] auto parse_nag(
-        const string_view pgnText, Moves& output)
+        const string_view pgnText, GameRecord::Variation& output)
         -> string_view
     {
         // NB. we're not doing explicit checks for null NAGs here
@@ -161,10 +159,10 @@ namespace {
 
         const auto [nag, rest] = split_at_first_space_or_newline(pgnText.substr(1uz));
 
-        if (not output.empty()) {
+        if (not output.moves.empty()) {
             const auto value = int_from_string<std::uint_least8_t>(trim(nag));
 
-            output.back().nags.emplace_back(static_cast<NAG>(value));
+            output.moves.back().nags.emplace_back(static_cast<NAG>(value));
         }
 
         return rest;
@@ -172,7 +170,7 @@ namespace {
 
     // parses the move, adds it to the output, and makes the move on the position
     [[nodiscard]] auto parse_move(
-        Position& position, string_view moveText, Moves& output)
+        Position& position, string_view moveText, GameRecord::Variation& output)
         -> std::expected<std::monostate, string>
     {
         // move numbers may start with 3. or 3...
@@ -185,14 +183,14 @@ namespace {
             .transform([&position, &output](const Move move) {
                 position.make_move(move);
 
-                output.emplace_back(move);
+                output.moves.emplace_back(move);
 
                 return std::monostate { };
             });
     }
 
     [[nodiscard]] auto parse_variation(
-        string_view pgnText, const Position& position, Moves& output)
+        string_view pgnText, const Position& position, GameRecord::Variation& output)
         -> std::expected<string_view, string>;
 
     // parses a move list, including nested comments, NAGs, and variations
@@ -200,9 +198,9 @@ namespace {
     // if IsVariation is false (i.e. parsing root PGN), returns text of the game result
     template <bool IsVariation>
     [[nodiscard]] auto parse_moves_internal(
-        string_view pgnText,
-        Position    position, // intentionally by copy!
-        Moves&      output)
+        string_view            pgnText,
+        Position               position, // intentionally by copy!
+        GameRecord::Variation& output)
         -> ResultStrOrErrorStr
     {
         // With a PGN like: 1. e4 (e3), the move e3 was made from the starting position,
@@ -287,14 +285,14 @@ namespace {
     // writes the variation to the last move in output
     // and returns the rest of the pgnText after the variation
     [[nodiscard]] auto parse_variation(
-        const string_view pgnText,
-        const Position&   position,
-        Moves&            output)
+        const string_view      pgnText,
+        const Position&        position,
+        GameRecord::Variation& output)
         -> std::expected<string_view, string>
     {
         assert(pgnText.front() == '(');
 
-        if (output.empty())
+        if (output.moves.empty())
             return std::unexpected { "Cannot parse a variation with an empty move list!" };
 
         return util::strings::find_matching_close_paren(pgnText)
@@ -302,7 +300,7 @@ namespace {
                 return parse_moves_internal<true>(
                     pgnText.substr(1uz, closeParenIdx - 1uz),
                     position,
-                    output.back().variations.emplace_back())
+                    output.moves.back().variations.emplace_back())
                     .and_then([pgnText, closeParenIdx]([[maybe_unused]] const string_view alwaysEmpty) -> ResultStrOrErrorStr {
                         return pgnText.substr(closeParenIdx + 1uz);
                     })
@@ -313,9 +311,9 @@ namespace {
     // writes the parsed moves into output and returns the
     // game result string (the rest of the PGN after the last move)
     [[nodiscard]] auto parse_move_list(
-        const string_view pgnText,
-        const Position&   position,
-        Moves&            output)
+        const string_view      pgnText,
+        const Position&        position,
+        GameRecord::Variation& output)
         -> ResultStrOrErrorStr
     {
         return parse_moves_internal<false>(pgnText, position, output);
@@ -488,17 +486,17 @@ namespace {
     }
 
     void write_move_list(
-        Position     position,
-        const Moves& moves,
-        const bool   useBlockComments,
-        string&      output)
+        Position                     position,
+        const GameRecord::Variation& moves,
+        const bool                   useBlockComments,
+        string&                      output)
     {
         // true if we need to insert a move number before Black's next move
         // true for the first move of the game, the first move of a variation,
         // the first move following a variation, or the first move after a comment
         bool writeMoveNumber { true };
 
-        for (const auto& move : moves) {
+        for (const auto& move : moves.moves) {
             if (position.is_white_to_move()) {
                 output.append(std::format("{}.{} ",
                     position.fullMoveCounter, to_alg(position, move.move)));

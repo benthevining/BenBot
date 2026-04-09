@@ -408,16 +408,17 @@ namespace detail {
         using iterator_category = std::forward_iterator_tag;
         using iterator_concept  = std::forward_iterator_tag;
 
-        consteval BitboardIterator() = default;
+        consteval BitboardIterator() noexcept = default;
 
-        explicit constexpr BitboardIterator(const Bitboard& bitboard)
+        explicit constexpr BitboardIterator(const Bitboard& bitboard) noexcept
             : value { bitboard.to_int() }
         {
         }
 
         constexpr auto operator==(const BitboardIterator& other) const noexcept -> bool = default;
 
-        constexpr auto operator==([[maybe_unused]] std::default_sentinel_t sentinel) const noexcept -> bool
+        constexpr auto operator==(
+            [[maybe_unused]] std::default_sentinel_t sentinel) const noexcept -> bool
         {
             return std::cmp_equal(value, 0);
         }

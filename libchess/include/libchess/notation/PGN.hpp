@@ -21,10 +21,12 @@
 
 #include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
 #include <expected>
+#include <iterator>
 #include <libchess/game/Position.hpp>
 #include <libchess/game/Result.hpp>
 #include <libchess/moves/Move.hpp>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -99,7 +101,15 @@ struct [[nodiscard]] GameRecord final {
      */
     std::optional<game::Result> result;
 
-    /** Records a game move alongside an optional comment and possible variations. */
+    struct Move;
+
+    /** This struct represents a variation, or a line of moves. */
+    struct Variation final {
+        /** The moves in this variation. */
+        std::vector<Move> moves;
+    };
+
+    /** Records a game move alongside an optional comment, NAG annotations, and possible variations. */
     struct Move final {
         /** The move. */
         moves::Move move;
@@ -118,9 +128,6 @@ struct [[nodiscard]] GameRecord final {
          */
         std::vector<NAG> nags;
 
-        /** A variation is simply a nested list of moves. */
-        using Variation = std::vector<Move>;
-
         /** If this move has alternate possible continuations, they are
             stored here. The first move in each of these variations is
             the move that could've been played instead of ``move``.
@@ -129,7 +136,7 @@ struct [[nodiscard]] GameRecord final {
     };
 
     /** This game's moves. */
-    std::vector<Move> moves;
+    Variation moves;
 
     /** Returns the final position of this game. */
     [[nodiscard]] auto get_final_position() const -> Position;

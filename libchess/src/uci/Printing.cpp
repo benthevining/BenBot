@@ -131,11 +131,11 @@ auto SearchInfo::Score::get_type() const noexcept -> Type
 {
     return std::visit(
         util::Visitor {
-            [](const Centipawns value) noexcept {
-                if (value.value == 0)
+            [](const Centipawns centi) noexcept {
+                if (centi.value == 0)
                     return Type::Equal;
 
-                if (value.value > 0)
+                if (centi.value > 0)
                     return Type::Winning;
 
                 return Type::Losing;
