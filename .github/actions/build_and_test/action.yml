@@ -48,7 +48,8 @@ runs:
 
   - name: Install Python dependencies
     shell: bash
-    run: cmake -P ${{ github.action_path }}/InstallPythonDeps.cmake
+    run: cmake -P InstallPythonDeps.cmake
+    working-directory: ${{ github.action_path }}
 
   - name: Configure CMake
     shell: bash
