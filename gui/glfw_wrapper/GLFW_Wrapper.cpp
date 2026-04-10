@@ -33,7 +33,8 @@ namespace ben_bot::gui::glfw {
 namespace {
     [[nodiscard]] auto get_main_scale() -> float
     {
-        return ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor());
+        return ImGui_ImplGlfw_GetContentScaleForMonitor(
+            glfwGetPrimaryMonitor());
     }
 } // namespace
 
