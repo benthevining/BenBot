@@ -21,6 +21,7 @@ project (
 )
 
 option (BENBOT_TESTS "Build the tests" "${PROJECT_IS_TOP_LEVEL}")
+option (BENBOT_GUI "Build the imgui app" "${PROJECT_IS_TOP_LEVEL}")
 
 # includes used throughout the various directories
 include (CPackComponent)
@@ -36,7 +37,9 @@ add_subdirectory (libchess)
 add_subdirectory (libbenbot)
 add_subdirectory (ben-bot)
 
-add_subdirectory (gui EXCLUDE_FROM_ALL)
+if (BENBOT_GUI)
+    add_subdirectory (gui EXCLUDE_FROM_ALL)
+endif ()
 
 if (BENBOT_TESTS)
     enable_testing ()

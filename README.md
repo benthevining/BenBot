@@ -48,6 +48,7 @@ Our automated CI & releases include the following builds:
 ### CMake options
 
 * `BENBOT_TESTS`: controls whether tests are built (defaults to off unless this is the top-level project)
+* `BENBOT_GUI`: if on, builds the ImGUI app (defaults to off unless this is the top-level project)
 
 ## Thanks
 
