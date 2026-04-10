@@ -24,8 +24,6 @@ target_compile_features (benbot_gui PRIVATE cxx_std_23)
 
 target_link_libraries (benbot_gui PRIVATE ben_bot::libgui imgui::imgui)
 
-target_sources (benbot_gui PRIVATE icons/icon.ico icons/icon.rc)
-
 set_target_properties (
     benbot_gui
     PROPERTIES
@@ -40,6 +38,7 @@ set_target_properties (
 )
 
 include ("${CMAKE_CURRENT_LIST_DIR}/icons/MacOSIcon.cmake")
+include ("${CMAKE_CURRENT_LIST_DIR}/icons/WindowsIcon.cmake")
 
 set (GLFW_BUILD_DOCS OFF)
 set (GLFW_INSTALL OFF)
