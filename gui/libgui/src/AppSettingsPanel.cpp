@@ -12,9 +12,7 @@
  * ======================================================================================
  */
 
-#include "FileDialogs.hpp" // NOLINT(build/include_subdir)
-#include "ImUtil.hpp"      // NOLINT(build/include_subdir)
-#include <array>
+#include "ImUtil.hpp" // NOLINT(build/include_subdir)
 #include <filesystem>
 #include <format>
 #include <imgui.h>
@@ -35,27 +33,17 @@ using std::string;
 using std::string_view;
 
 namespace {
-    inline constexpr auto DefaultStateFilename { "AppState.json" };
-
-    inline constexpr std::array StateFileFilters {
-        file_dialog::Filter { "JSON", "json" }
-    };
-
     void show_state_load_dialog(
         AppState& state)
     {
-        file_dialog::show<true>(
-            DefaultStateFilename, StateFileFilters,
-            state.appSettings.defaultStateDirectory,
+        state.appSettings.stateLoadSave.show<true>(
             [&state](const path& file) { state.load_from(file); });
     }
 
     void show_state_save_dialog(
         AppState& state)
     {
-        file_dialog::show<false>(
-            DefaultStateFilename, StateFileFilters,
-            state.appSettings.defaultStateDirectory,
+        state.appSettings.stateLoadSave.show<false>(
             [&state](const path& file) { state.write_to(file); });
     }
 

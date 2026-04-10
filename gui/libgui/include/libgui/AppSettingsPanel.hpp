@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include <filesystem>
 #include <libgui/ErrorPopup.hpp>
+#include <libgui/FileDialogContext.hpp>
 #include <string>
 #include <string_view>
 
@@ -26,8 +26,10 @@ struct AppState;
 struct AppSettings final {
     bool showTooltips { true };
 
-    // TODO: serialize
-    std::filesystem::path defaultStateDirectory;
+    FileDialogContext stateLoadSave {
+        "AppState.json",
+        { { "JSON", "json" } }
+    };
 
     [[maybe_unused]] ErrorPopup defaultStateSaveError { "State save error" };
 

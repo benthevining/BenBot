@@ -12,9 +12,7 @@
  * ======================================================================================
  */
 
-#include "FileDialogs.hpp" // NOLINT(build/include_subdir)
-#include "ImUtil.hpp"      // NOLINT(build/include_subdir)
-#include <array>
+#include "ImUtil.hpp" // NOLINT(build/include_subdir)
 #include <cassert>
 #include <filesystem>
 #include <imgui.h>
@@ -23,11 +21,11 @@
 #include <libchess/notation/MoveFormats.hpp>
 #include <libchess/notation/PGN.hpp>
 #include <libgui/ErrorPopup.hpp>
+#include <libgui/FileDialogContext.hpp>
 #include <libgui/GameViewer.hpp>
 #include <libutil/Console.hpp>
 #include <libutil/Files.hpp>
 #include <libutil/Strings.hpp>
-#include <nfd.hpp>
 #include <nlohmann/json.hpp>
 #include <string>
 #include <string_view>
@@ -41,18 +39,11 @@ using std::string;
 using std::string_view;
 
 namespace {
-    inline constexpr auto DefaultGameFilename { "Game.pgn" };
-
-    inline constexpr std::array GameFileFilters {
-        file_dialog::Filter { "PGN", "pgn" }
-    };
-
     void show_pgn_load_dialog(
-        GameRecord& game, path& defaultPath)
+        GameRecord& game, FileDialogContext& context)
     {
         // TODO: show popup for PGN parse error
-        file_dialog::show<true>(
-            DefaultGameFilename, GameFileFilters, defaultPath,
+        context.show<true>(
             [&game](const path& file) {
                 [[maybe_unused]] const auto result
                     = util::files::load(file)
@@ -66,10 +57,9 @@ namespace {
     }
 
     void show_pgn_save_dialog(
-        const GameRecord& game, path& defaultPath)
+        const GameRecord& game, FileDialogContext& context)
     {
-        file_dialog::show<false>(
-            DefaultGameFilename, GameFileFilters, defaultPath,
+        context.show<false>(
             [&game](const path& file) {
                 [[maybe_unused]] const auto result
                     = util::files::overwrite(file, to_pgn(game))
@@ -78,12 +68,12 @@ namespace {
     }
 
     void render_load_save_buttons(
-        GameRecord& game, path& defaultPath, const bool showTooltips)
+        GameRecord& game, FileDialogContext& context, const bool showTooltips)
     {
         const ScopedGroup group;
 
         if (ImGui::Button("Load"))
-            show_pgn_load_dialog(game, defaultPath);
+            show_pgn_load_dialog(game, context);
 
         if (showTooltips)
             ImGui::SetItemTooltip("Load a game from a PGN file");
@@ -91,7 +81,7 @@ namespace {
         ImGui::SameLine();
 
         if (ImGui::Button("Save"))
-            show_pgn_save_dialog(game, defaultPath);
+            show_pgn_save_dialog(game, context);
 
         if (showTooltips)
             ImGui::SetItemTooltip("Save game to a PGN file");
@@ -212,7 +202,7 @@ void render_game_viewer(
 {
     if (ImGui::Begin("Game")) {
         render_load_save_buttons(
-            state.game, state.defaultGamePath, showTooltips);
+            state.game, state.pgnLoadSave, showTooltips);
 
         render_raw_pgn_text(
             state.game, state.pgnParseError);
