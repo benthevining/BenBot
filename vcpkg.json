@@ -5,51 +5,71 @@
       "version>=": "0.9.7"
     },
     {
-      "name": "catch2",
-      "version>=": "3.13.0"
-    },
-    {
       "name": "nlohmann-json",
       "version>=": "3.12.0"
     },
     {
       "name": "termcolor",
       "version>=": "2.1.0"
-    },
-    {
-      "features": [
-        "docking-experimental",
-        "glfw-binding",
-        "metal-binding",
-        "vulkan-binding"
-      ],
-      "name": "imgui",
-      "version>=": "1.92.6"
-    },
-    {
-      "name": "glfw3",
-      "version>=": "3.4#1"
-    },
-    {
-      "name": "vulkan",
-      "platform": "!(osx|ios)",
-      "version>=": "2023-12-17"
-    },
-    {
-      "name": "stb",
-      "version>=": "2024-07-29"
-    },
-    {
-      "name": "nativefiledialog-extended",
-      "platform": "!(ios|android)",
-      "version>=": "1.3.0"
-    },
-    {
-      "name": "gtk",
-      "platform": "linux",
-      "version>=": "3.22.19"
     }
   ],
+  "description": "Chess engine & GUI",
+  "documentation": "http://benthevining.github.io/BenBot/",
+  "features": {
+    "gui": {
+      "dependencies": [
+        {
+          "features": [
+            "docking-experimental",
+            "glfw-binding",
+            "metal-binding",
+            "vulkan-binding"
+          ],
+          "name": "imgui",
+          "version>=": "1.92.6"
+        },
+        {
+          "name": "glfw3",
+          "version>=": "3.4#1"
+        },
+        {
+          "name": "vulkan",
+          "platform": "!(osx|ios)",
+          "version>=": "2023-12-17"
+        },
+        {
+          "name": "stb",
+          "version>=": "2024-07-29"
+        },
+        {
+          "name": "nativefiledialog-extended",
+          "platform": "!(ios|android)",
+          "version>=": "1.3.0"
+        },
+        {
+          "name": "gtk",
+          "platform": "linux",
+          "version>=": "3.22.19"
+        }
+      ],
+      "description": "GUI app build"
+    },
+    "test": {
+      "dependencies": [
+        {
+          "name": "catch2",
+          "version>=": "3.13.0"
+        }
+      ],
+      "description": "Build tests"
+    }
+  },
+  "homepage": "https://github.com/benthevining/BenBot",
+  "license": "LGPL-2.1-only",
+  "maintainers": [
+    "Ben Vining"
+  ],
   "name": "BenBot",
+  "supports": "windows|linux|osx",
   "version": "1.7.5"
 }

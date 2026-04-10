@@ -80,7 +80,8 @@ namespace {
     }
 } // namespace
 
-void initialize([[maybe_unused]] Window* window, AppState& state)
+void initialize(
+    [[maybe_unused]] Window* window, AppState& state)
 {
     gui::initialize(get_main_scale(), state);
 
