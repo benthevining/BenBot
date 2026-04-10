@@ -60,23 +60,15 @@ if (WIN32)
     include ("${CMAKE_CURRENT_LIST_DIR}/icons/WindowsIcon.cmake")
 endif ()
 
-find_package (Vulkan OPTIONAL_COMPONENTS volk)
+message (VERBOSE "Using GLFW + Vulkan backend for ImGUI app")
 
-if (Vulkan_FOUND)
-    message (VERBOSE "Using GLFW + Vulkan backend for ImGUI app")
+find_package (Vulkan REQUIRED OPTIONAL_COMPONENTS volk)
 
-    target_sources (
-        benbot_gui PRIVATE vulkan_main.cpp "${IMGUI_BACKENDS_DIR}/imgui_impl_vulkan.cpp"
-    )
+target_sources (benbot_gui PRIVATE vulkan_main.cpp "${IMGUI_BACKENDS_DIR}/imgui_impl_vulkan.cpp")
 
-    target_link_libraries (benbot_gui PRIVATE Vulkan::Vulkan)
+target_link_libraries (benbot_gui PRIVATE Vulkan::Vulkan)
 
-    if (TARGET Vulkan::volk)
-        target_link_libraries (benbot_gui PRIVATE Vulkan::volk)
-        target_compile_definitions (benbot_gui PRIVATE IMGUI_IMPL_VULKAN_USE_VOLK=1)
-    endif ()
-
-    return ()
+if (TARGET Vulkan::volk)
+    target_link_libraries (benbot_gui PRIVATE Vulkan::volk)
+    target_compile_definitions (benbot_gui PRIVATE IMGUI_IMPL_VULKAN_USE_VOLK=1)
 endif ()
-
-message (FATAL_ERROR "imgui backend not yet configured for this platform!")
