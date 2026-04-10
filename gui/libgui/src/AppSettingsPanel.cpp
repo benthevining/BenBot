@@ -12,10 +12,9 @@
  * ======================================================================================
  */
 
-#include "ImUtil.hpp" // NOLINT(build/include_subdir)
+#include "FileDialogs.hpp" // NOLINT(build/include_subdir)
+#include "ImUtil.hpp"      // NOLINT(build/include_subdir)
 #include <array>
-#include <concepts>
-#include <cstdio>
 #include <filesystem>
 #include <format>
 #include <imgui.h>
@@ -24,9 +23,7 @@
 #include <libgui/AppUI.hpp>
 #include <libgui/Resources.hpp>
 #include <libutil/Files.hpp>
-#include <nfd.hpp>
 #include <nlohmann/json.hpp>
-#include <print>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -38,58 +35,25 @@ using std::string;
 using std::string_view;
 
 namespace {
-    template <typename Func>
-    concept FileCallback = std::regular_invocable<Func, const path&>;
+    inline constexpr auto DefaultStateFilename { "AppState.json" };
 
-    template <bool IsLoading>
-    void show_file_dialog(FileCallback auto callback)
+    inline constexpr std::array StateFileFilters {
+        file_dialog::Filter { "JSON", "json" }
+    };
+
+    void show_state_load_dialog(
+        AppState& state)
     {
-        NFD::UniquePath outPath;
-
-        const auto result = [&outPath]() noexcept {
-            static constexpr std::array filters {
-                nfdu8filteritem_t { "JSON", "json" }
-            };
-
-            if constexpr (IsLoading) {
-                return OpenDialog(
-                    outPath,
-                    filters.data(), filters.size());
-            } else {
-                return SaveDialog(
-                    outPath,
-                    filters.data(), filters.size(),
-                    nullptr, "AppState.json");
-            }
-        }();
-
-        switch (result) {
-            case NFD_OKAY:
-                callback(path { outPath.get() });
-                break;
-
-            case NFD_CANCEL:
-                std::println("Info: user canceled file selection dialog");
-                break;
-
-            case NFD_ERROR:
-                std::println(
-                    stderr, "Info: error with file selection dialog");
-                break;
-
-            default: break;
-        }
-    }
-
-    void show_state_load_dialog(AppState& state)
-    {
-        show_file_dialog<true>(
+        file_dialog::show<true>(
+            DefaultStateFilename, StateFileFilters,
             [&state](const path& file) { state.load_from(file); });
     }
 
-    void show_state_save_dialog(const AppState& state)
+    void show_state_save_dialog(
+        const AppState& state)
     {
-        show_file_dialog<false>(
+        file_dialog::show<false>(
+            DefaultStateFilename, StateFileFilters,
             [&state](const path& file) { state.write_to(file); });
     }
 

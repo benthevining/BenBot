@@ -12,10 +12,10 @@
  * ======================================================================================
  */
 
-#include "ImUtil.hpp" // NOLINT(build/include_subdir)
+#include "FileDialogs.hpp" // NOLINT(build/include_subdir)
+#include "ImUtil.hpp"      // NOLINT(build/include_subdir)
 #include <array>
 #include <cassert>
-#include <concepts>
 #include <filesystem>
 #include <imgui.h>
 #include <imgui_stdlib.h>
@@ -29,7 +29,6 @@
 #include <libutil/Strings.hpp>
 #include <nfd.hpp>
 #include <nlohmann/json.hpp>
-#include <print>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -42,53 +41,18 @@ using std::string;
 using std::string_view;
 
 namespace {
-    template <typename Func>
-    concept FileCallback = std::regular_invocable<Func, const path&>;
+    inline constexpr auto DefaultGameFilename { "Game.pgn" };
 
-    template <bool IsLoading>
-    void show_file_dialog(FileCallback auto callback)
-    {
-        NFD::UniquePath outPath;
+    inline constexpr std::array GameFileFilters {
+        file_dialog::Filter { "PGN", "pgn" }
+    };
 
-        const auto result = [&outPath]() noexcept {
-            static constexpr std::array filters {
-                nfdu8filteritem_t { "PGN", "pgn" }
-            };
-
-            if constexpr (IsLoading) {
-                return OpenDialog(
-                    outPath,
-                    filters.data(), filters.size());
-            } else {
-                return SaveDialog(
-                    outPath,
-                    filters.data(), filters.size(),
-                    nullptr, "game.pgn");
-            }
-        }();
-
-        switch (result) {
-            case NFD_OKAY:
-                callback(path { outPath.get() });
-                break;
-
-            case NFD_CANCEL:
-                std::println("Info: user canceled file selection dialog");
-                break;
-
-            case NFD_ERROR:
-                std::println(
-                    stderr, "Info: error with file selection dialog");
-                break;
-
-            default: break;
-        }
-    }
-
-    void show_pgn_load_dialog(GameRecord& game)
+    void show_pgn_load_dialog(
+        GameRecord& game)
     {
         // TODO: show popup for PGN parse error
-        show_file_dialog<true>(
+        file_dialog::show<true>(
+            DefaultGameFilename, GameFileFilters,
             [&game](const path& file) {
                 [[maybe_unused]] const auto result
                     = util::files::load(file)
@@ -104,9 +68,11 @@ namespace {
             });
     }
 
-    void show_pgn_save_dialog(const GameRecord& game)
+    void show_pgn_save_dialog(
+        const GameRecord& game)
     {
-        show_file_dialog<false>(
+        file_dialog::show<false>(
+            DefaultGameFilename, GameFileFilters,
             [&game](const path& file) {
                 [[maybe_unused]] const auto result
                     = util::files::overwrite(file, to_pgn(game))
