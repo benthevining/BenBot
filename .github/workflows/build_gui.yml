@@ -27,20 +27,14 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-2025-vs2026, macos-15]
-        config: [Debug, Release]
         preset: [clang]
         include:
         - os: windows-2025-vs2026
           preset: msvc
-          config: Debug
-        - os: windows-2025-vs2026
-          preset: msvc
-          config: Release
         - os: ubuntu-latest
           preset: gcc
-          config: Debug
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.os }}.${{ matrix.preset }}.${{ matrix.config }}
+    name: ${{ matrix.os }}.${{ matrix.preset }}
     permissions:
       contents: read
     timeout-minutes: 30
@@ -48,11 +42,30 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd     # v6
 
+    - name: Install Inkscape (MacOS)
+      if: runner.os == 'macOS'
+      run: brew install --cask inkscape
+
+    - name: Install Inkscape & ImageMagick (Windows)
+      if: runner.os == 'Windows'
+      run: choco install -y inkscape imagemagick
+
+    - name: Install Vulkan SDK (Windows)
+      if: runner.os == 'Windows'
+      uses: humbletim/install-vulkan-sdk@30ba978f977e81b72d091fc8888feb1fb26f9aff # v1.2
+      with:
+        cache: true
+
+    - name: Install gtk (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libgtk-4-dev
+
     - name: Build
       uses: ./.github/actions/run_build
       with:
         cmake_preset: ${{ matrix.preset }}
-        build_config: ${{ matrix.config }}
         build_target: benbot_gui
         build_gui: ON
 
