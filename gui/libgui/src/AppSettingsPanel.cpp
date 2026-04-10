@@ -23,17 +23,18 @@
 #include <libgui/AppSettingsPanel.hpp>
 #include <libgui/AppUI.hpp>
 #include <libgui/Resources.hpp>
-#include <libutil/Console.hpp>
 #include <libutil/Files.hpp>
 #include <nfd.hpp>
 #include <nlohmann/json.hpp>
 #include <print>
 #include <string>
 #include <string_view>
+#include <utility>
 
 namespace ben_bot::gui {
 
 using std::filesystem::path;
+using std::string;
 using std::string_view;
 
 namespace {
@@ -146,7 +147,7 @@ namespace {
     }
 
     [[maybe_unused]] void show_default_state_save_buttons(
-        const AppState& state, const path& srcTreeResourcesPath)
+        AppState& state, const path& srcTreeResourcesPath)
     {
         ImGui::SeparatorText("Save default state");
 
@@ -167,21 +168,29 @@ namespace {
 
         ImGui::SameLine();
 
+        auto& saveError = state.appSettings.defaultStateSaveError;
+
         if (ImGui::Button("App state")) {
             [[maybe_unused]] const auto result
                 = util::files::overwrite(
                     srcTreeResourcesPath / "default_state.json",
                     state.to_string())
-                      .transform([] {
+                      .transform([&saveError] {
                           remove(
                               get_default_app_state_path());
+                          saveError.set_success();
                           return std::monostate { };
                       })
-                      .transform_error(util::print_error);
+                      .transform_error([&saveError](string&& message) {
+                          saveError.set_error(std::move(message));
+                          return std::monostate { };
+                      });
         }
 
         if (showTooltips)
             ImGui::SetItemTooltip("Save current app state as default in source tree");
+
+        saveError.render();
     }
 } // namespace
 
@@ -215,7 +224,7 @@ using nlohmann::json;
 
 inline constexpr string_view TAG_TOOLTIPS { "show_tooltips" };
 
-auto AppSettings::to_string() const -> std::string
+auto AppSettings::to_string() const -> string
 {
     json data;
 

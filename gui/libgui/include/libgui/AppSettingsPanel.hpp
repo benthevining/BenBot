@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <libgui/ErrorPopup.hpp>
 #include <string>
 #include <string_view>
 
@@ -23,6 +24,8 @@ struct AppState;
 
 struct AppSettings final {
     bool showTooltips { true };
+
+    [[maybe_unused]] ErrorPopup defaultStateSaveError { "State save error" };
 
     [[nodiscard]] auto to_string() const -> std::string;
 
