@@ -31,11 +31,13 @@
 #include <print>
 #include <string>
 #include <string_view>
+#include <utility>
 
 namespace ben_bot::gui {
 
 using chess::notation::GameRecord;
 using std::filesystem::path;
+using std::string;
 using std::string_view;
 
 namespace {
@@ -93,8 +95,8 @@ namespace {
                               return chess::notation::from_pgn(text)
                                   .transform_error(util::strings::to_owning_string);
                           })
-                          .transform([&game](const GameRecord& loaded) {
-                              game = loaded;
+                          .transform([&game](GameRecord&& loaded) {
+                              game = std::move(loaded);
                               return std::monostate { };
                           })
                           .transform_error(util::print_error);
@@ -132,12 +134,39 @@ namespace {
     }
 
     void render_raw_pgn_text(
-        const GameRecord& game)
+        GameRecord& game, string& errorMessage)
     {
         if (ImGui::CollapsingHeader("PGN text")) {
-            ImGui::TextWrapped(
-                "%s",
-                to_pgn(game).c_str());
+            static constexpr auto ErrorPopupID = "PGN parse error";
+
+            auto inputBuf = to_pgn(game);
+
+            if (ImGui::InputTextMultiline("##PGN", &inputBuf)) {
+                [[maybe_unused]] const auto result
+                    = chess::notation::from_pgn(inputBuf)
+                          .transform([&game, &errorMessage](GameRecord&& parsed) {
+                              game = std::move(parsed);
+                              errorMessage.clear();
+                              return std::monostate { };
+                          })
+                          .transform_error([&errorMessage](string&& message) {
+                              assert(not message.empty());
+                              errorMessage = std::move(message);
+                              ImGui::OpenPopup(ErrorPopupID, ImGuiPopupFlags_NoReopen);
+                              return std::monostate { };
+                          });
+            }
+
+            if (ImGui::BeginPopupModal(ErrorPopupID, nullptr, PopupFlags)) {
+                UnformattedText(errorMessage);
+
+                if (ImGui::Button("OK", { 120.f, 0.f })) {
+                    ImGui::CloseCurrentPopup();
+                    errorMessage.clear();
+                }
+
+                ImGui::EndPopup();
+            }
         }
     }
 
@@ -164,6 +193,9 @@ namespace {
     void render_move_list(
         const GameRecord& game, const Engine& engine)
     {
+        if (not ImGui::CollapsingHeader("Move list"))
+            return;
+
         if (ImGui::BeginTable("Move list", 3, ImGuiTableFlags_Borders)) {
             ImGui::TableSetupColumn("Move number");
             ImGui::TableSetupColumn("White");
@@ -231,7 +263,7 @@ void render_game_viewer(
             state.game, showTooltips);
 
         render_raw_pgn_text(
-            state.game);
+            state.game, state.pgnParseError);
 
         ImGui::Separator();
 
@@ -254,7 +286,7 @@ using nlohmann::json;
 inline constexpr string_view TAG_PGN { "pgn" };
 inline constexpr string_view TAG_FOCUSED_MOVE { "focused_move" };
 
-auto GameViewerState::to_string() const -> std::string
+auto GameViewerState::to_string() const -> string
 {
     json data;
 
@@ -272,8 +304,8 @@ auto GameViewerState::from_string(const string_view str) -> GameViewerState
     [[maybe_unused]] const auto result
         = chess::notation::from_pgn(
             parsed.at(TAG_PGN).get<string_view>())
-              .transform([&state](const GameRecord& loaded) {
-                  state.game = loaded;
+              .transform([&state](GameRecord&& loaded) {
+                  state.game = std::move(loaded);
                   return std::monostate { };
               })
               .transform_error(util::print_error);

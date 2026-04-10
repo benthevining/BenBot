@@ -38,13 +38,7 @@ FetchContent_Declare (
 
 FetchContent_MakeAvailable (termcolor)
 
-if (termcolor_SOURCE_DIR)
-    set (termcolor_includes "${termcolor_SOURCE_DIR}/include")
-elseif (termcolor_DIR)
-    set (termcolor_includes "${termcolor_DIR}/include")
-else ()
-    message (FATAL_ERROR "termcolor include directory not found in expected variables")
-endif ()
+set (termcolor_includes "${termcolor_SOURCE_DIR}/include")
 
 add_library (termcolor INTERFACE)
 

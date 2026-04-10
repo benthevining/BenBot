@@ -27,6 +27,9 @@ namespace ben_bot::gui {
 struct GameViewerState final {
     chess::notation::GameRecord game;
 
+    // empty if no error has occurred
+    std::string pgnParseError;
+
     [[nodiscard]] auto to_string() const -> std::string;
 
     [[nodiscard]] static auto from_string(std::string_view str) -> GameViewerState;

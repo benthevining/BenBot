@@ -37,6 +37,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <utility>
 
 namespace ben_bot::gui {
 
@@ -270,9 +271,9 @@ namespace {
                           errorMessage.clear();
                           return std::monostate { };
                       })
-                      .transform_error([&errorMessage](const string_view error) {
+                      .transform_error([&errorMessage](string&& error) {
                           assert(not error.empty());
-                          errorMessage = error;
+                          errorMessage = std::move(error);
                           ImGui::OpenPopup(ErrorPopupID, ImGuiPopupFlags_NoReopen);
                           return std::monostate { };
                       });
@@ -306,14 +307,14 @@ namespace {
         if (ImGui::InputText("EPD", &inputBuf, InputTextFlags)) {
             [[maybe_unused]] const auto result
                 = from_epd(inputBuf)
-                      .transform([&position, &errorMessage](const EPDPosition& newPos) {
-                          position = newPos;
+                      .transform([&position, &errorMessage](EPDPosition&& newPos) {
+                          position = std::move(newPos);
                           errorMessage.clear();
                           return std::monostate { };
                       })
-                      .transform_error([&errorMessage](const string_view error) {
+                      .transform_error([&errorMessage](string&& error) {
                           assert(not error.empty());
-                          errorMessage = error;
+                          errorMessage = std::move(error);
                           ImGui::OpenPopup(ErrorPopupID, ImGuiPopupFlags_NoReopen);
                           return std::monostate { };
                       });
@@ -598,8 +599,8 @@ auto BoardEditorState::from_string(const string_view str) -> BoardEditorState
     [[maybe_unused]] const auto result
         = from_epd(
             parsed.at(TAG_CURRENTBOARD).get<string_view>())
-              .transform([&state](const EPDPosition& newPos) {
-                  state.position = newPos;
+              .transform([&state](EPDPosition&& newPos) {
+                  state.position = std::move(newPos);
                   return std::monostate { };
               })
               .transform_error(util::print_error);

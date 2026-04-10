@@ -36,6 +36,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <utility>
 
 namespace ben_bot::gui {
 
@@ -216,9 +217,9 @@ namespace {
                               options.movesToSearch.emplace_back(move);
                               return std::monostate { };
                           })
-                          .transform_error([&errorMessage]([[maybe_unused]] const string_view message) {
+                          .transform_error([&errorMessage](string&& message) {
                               assert(not message.empty());
-                              errorMessage = message;
+                              errorMessage = std::move(message);
                               ImGui::OpenPopup(ErrorPopupID, ImGuiPopupFlags_NoReopen);
                               return std::monostate { };
                           });
