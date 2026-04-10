@@ -22,7 +22,7 @@ target_compile_features (benbot_gui PRIVATE cxx_std_23)
 
 target_link_libraries (benbot_gui PRIVATE ben_bot::libgui imgui::imgui)
 
-target_sources (benbot_gui PRIVATE icons/icon.icns icons/icon.ico icons/icon.rc)
+target_sources (benbot_gui PRIVATE icons/icon.ico icons/icon.rc)
 
 set_target_properties (
     benbot_gui
@@ -30,7 +30,6 @@ set_target_properties (
         MACOSX_BUNDLE_BUNDLE_NAME "BenBot GUI"
         MACOSX_BUNDLE_GUI_IDENTIFIER "com.benbot.gui"
         MACOSX_BUNDLE_INFO_STRING "Chess GUI"
-        MACOSX_BUNDLE_ICON_FILE "icon.icns"
         MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}"
         MACOSX_BUNDLE_LONG_VERSION_STRING "${PROJECT_VERSION}"
         MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION_MAJOR}"
@@ -38,7 +37,7 @@ set_target_properties (
         "Written in 2026 by Ben Vining and released under the terms of the GNU Public License"
 )
 
-set_source_files_properties (icons/icon.icns PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+include ("${CMAKE_CURRENT_LIST_DIR}/MacOSIcon.cmake")
 
 set (GLFW_BUILD_DOCS OFF)
 set (GLFW_INSTALL OFF)
