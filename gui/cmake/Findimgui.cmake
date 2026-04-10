@@ -14,8 +14,17 @@
 This module sets up an imgui::imgui static library target and exports the IMGUI_BACKENDS_DIR variable.
 ]]
 
+set_package_properties (
+    imgui PROPERTIES
+    URL "https://github.com/ocornut/imgui"
+    DESCRIPTION "Cross-platform UI library"
+    TYPE REQUIRED
+    PURPOSE "UI declaration & layout"
+)
+
+set (imgui_FOUND TRUE)
+
 if (TARGET imgui::imgui)
-    set (imgui_FOUND TRUE)
     return ()
 endif ()
 
