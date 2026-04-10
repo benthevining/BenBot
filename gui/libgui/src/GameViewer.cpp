@@ -48,18 +48,15 @@ namespace {
     };
 
     void show_pgn_load_dialog(
-        GameRecord& game)
+        GameRecord& game, path& defaultPath)
     {
         // TODO: show popup for PGN parse error
         file_dialog::show<true>(
-            DefaultGameFilename, GameFileFilters,
+            DefaultGameFilename, GameFileFilters, defaultPath,
             [&game](const path& file) {
                 [[maybe_unused]] const auto result
                     = util::files::load(file)
-                          .and_then([](const string_view text) {
-                              return chess::notation::from_pgn(text)
-                                  .transform_error(util::strings::to_owning_string);
-                          })
+                          .and_then(chess::notation::from_pgn)
                           .transform([&game](GameRecord&& loaded) {
                               game = std::move(loaded);
                               return std::monostate { };
@@ -69,10 +66,10 @@ namespace {
     }
 
     void show_pgn_save_dialog(
-        const GameRecord& game)
+        const GameRecord& game, path& defaultPath)
     {
         file_dialog::show<false>(
-            DefaultGameFilename, GameFileFilters,
+            DefaultGameFilename, GameFileFilters, defaultPath,
             [&game](const path& file) {
                 [[maybe_unused]] const auto result
                     = util::files::overwrite(file, to_pgn(game))
@@ -81,12 +78,12 @@ namespace {
     }
 
     void render_load_save_buttons(
-        GameRecord& game, const bool showTooltips)
+        GameRecord& game, path& defaultPath, const bool showTooltips)
     {
         const ScopedGroup group;
 
         if (ImGui::Button("Load"))
-            show_pgn_load_dialog(game);
+            show_pgn_load_dialog(game, defaultPath);
 
         if (showTooltips)
             ImGui::SetItemTooltip("Load a game from a PGN file");
@@ -94,7 +91,7 @@ namespace {
         ImGui::SameLine();
 
         if (ImGui::Button("Save"))
-            show_pgn_save_dialog(game);
+            show_pgn_save_dialog(game, defaultPath);
 
         if (showTooltips)
             ImGui::SetItemTooltip("Save game to a PGN file");
@@ -215,7 +212,7 @@ void render_game_viewer(
 {
     if (ImGui::Begin("Game")) {
         render_load_save_buttons(
-            state.game, showTooltips);
+            state.game, state.defaultGamePath, showTooltips);
 
         render_raw_pgn_text(
             state.game, state.pgnParseError);

@@ -46,14 +46,16 @@ namespace {
     {
         file_dialog::show<true>(
             DefaultStateFilename, StateFileFilters,
+            state.appSettings.defaultStateDirectory,
             [&state](const path& file) { state.load_from(file); });
     }
 
     void show_state_save_dialog(
-        const AppState& state)
+        AppState& state)
     {
         file_dialog::show<false>(
             DefaultStateFilename, StateFileFilters,
+            state.appSettings.defaultStateDirectory,
             [&state](const path& file) { state.write_to(file); });
     }
 

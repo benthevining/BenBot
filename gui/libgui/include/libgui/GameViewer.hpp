@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <filesystem>
 #include <libchess/notation/PGN.hpp>
 #include <libgui/ErrorPopup.hpp>
 #include <string>
@@ -27,6 +28,9 @@ namespace ben_bot::gui {
 
 struct GameViewerState final {
     chess::notation::GameRecord game;
+
+    // TODO: serialize
+    std::filesystem::path defaultGamePath;
 
     ErrorPopup pgnParseError { "PGN parse error" };
 
