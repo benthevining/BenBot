@@ -17,11 +17,17 @@ if (NOT APPLE)
 endif ()
 
 find_program (
-    INKSCAPE_PROGRAM inkscape REQUIRED
+    INKSCAPE_PROGRAM inkscape
     DOC "inkscape executable, used for converting SVG to PNG for icns file generation"
 )
 
-set (svg_input "${CMAKE_CURRENT_LIST_DIR}/libgui/resources/res/pieces/Queen-White.svg")
+add_feature_info (
+    benbot_app_icon INKSCAPE_PROGRAM "Generating app icon (requires inkscape on MacOS)"
+)
+
+if (NOT INKSCAPE_PROGRAM)
+    return ()
+endif ()
 
 set (icon_set "${CMAKE_CURRENT_BINARY_DIR}/Queen-White.iconset")
 
@@ -34,7 +40,8 @@ foreach (size IN ITEMS 16 32 64 128 256 512)
 
     add_custom_command (
         OUTPUT "${png_out}"
-        COMMAND "${INKSCAPE_PROGRAM}" -o "${png_out}" -w "${size}" -h "${size}" "${svg_input}"
+        COMMAND "${INKSCAPE_PROGRAM}" -o "${png_out}" -w "${size}" -h "${size}"
+                "${BENBOT_APP_ICON_SVG}"
         DEPENDS "${svg_input}"
         COMMENT "Generating ${size}x${size} image for MacOS iconset"
         VERBATIM USES_TERMINAL
@@ -46,7 +53,8 @@ foreach (size IN ITEMS 16 32 64 128 256 512)
 
     add_custom_command (
         OUTPUT "${png2x_out}"
-        COMMAND "${INKSCAPE_PROGRAM}" -o "${png2x_out}" -w "${size2x}" -h "${size2x}" "${svg_input}"
+        COMMAND "${INKSCAPE_PROGRAM}" -o "${png2x_out}" -w "${size2x}" -h "${size2x}"
+                "${BENBOT_APP_ICON_SVG}"
         DEPENDS "${svg_input}"
         COMMENT "Generating ${size}x${size}@2x image for MacOS iconset"
         VERBATIM USES_TERMINAL
@@ -55,11 +63,18 @@ foreach (size IN ITEMS 16 32 64 128 256 512)
     list (APPEND png_images "${png_out}" "${png2x_out}")
 endforeach ()
 
+find_program (
+    ICONUTIL_PROGRAM iconutil
+    DOC "iconutil program used for converting iconset to .icns" REQUIRED # iconutil is a system tool
+                                                                         # that should never be
+                                                                         # missing on MacOS
+)
+
 set (icns_output "${CMAKE_CURRENT_BINARY_DIR}/icon.icns")
 
 add_custom_command (
     OUTPUT "${icns_output}"
-    COMMAND iconutil --convert icns --output "${icns_output}" "${icon_set}"
+    COMMAND "${ICONUTIL_PROGRAM}" --convert icns --output "${icns_output}" "${icon_set}"
     DEPENDS ${png_images}
     COMMENT "Generating MacOS icns from iconset"
     VERBATIM USES_TERMINAL

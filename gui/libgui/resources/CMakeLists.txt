@@ -10,6 +10,10 @@
 #
 # ======================================================================================
 
+set (BENBOT_APP_ICON_SVG "${CMAKE_CURRENT_LIST_DIR}/res/pieces/Queen-White.svg"
+     CACHE INTERNAL "Path to SVG file used for app icon"
+)
+
 file (GLOB_RECURSE resources LIST_DIRECTORIES false CONFIGURE_DEPENDS
                                                     "${CMAKE_CURRENT_LIST_DIR}/res/*.svg"
 )
