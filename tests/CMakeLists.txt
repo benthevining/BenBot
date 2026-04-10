@@ -12,6 +12,10 @@
 
 find_package (Python 3.9 COMPONENTS Interpreter)
 
+set_package_properties (
+    Python PROPERTIES URL "https://www.python.org/" DESCRIPTION "Scripting language interpreter"
+)
+
 function (check_python_modules_available outputVar)
     if (NOT TARGET Python::Interpreter)
         set ("${outputVar}" FALSE PARENT_SCOPE)

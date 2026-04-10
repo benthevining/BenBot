@@ -15,11 +15,7 @@ This module sets up an imgui::imgui static library target and exports the IMGUI_
 ]]
 
 set_package_properties (
-    imgui PROPERTIES
-    URL "https://github.com/ocornut/imgui"
-    DESCRIPTION "Cross-platform UI library"
-    TYPE REQUIRED
-    PURPOSE "UI declaration & layout"
+    imgui PROPERTIES URL "https://github.com/ocornut/imgui" DESCRIPTION "Cross-platform UI library"
 )
 
 set (imgui_FOUND TRUE)
@@ -27,8 +23,6 @@ set (imgui_FOUND TRUE)
 if (TARGET imgui::imgui)
     return ()
 endif ()
-
-include (FetchContent)
 
 FetchContent_Declare (
     imgui
@@ -48,7 +42,6 @@ set (IMGUI_BACKENDS_DIR "${imgui_backends_dir}"
      CACHE INTERNAL "Directory containing the backend source files"
 )
 
-# create our own target for imgui
 add_library (imgui STATIC)
 
 target_sources (

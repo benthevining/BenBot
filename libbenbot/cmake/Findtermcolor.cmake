@@ -10,52 +10,47 @@
 #
 # ======================================================================================
 
-add_subdirectory (resources)
+#[[
+This module creates a termcolor::termcolor interface library.
+]]
 
-list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+set_package_properties (
+    termcolor PROPERTIES URL "https://github.com/ikalnytskyi/termcolor"
+    DESCRIPTION "Cross-platform color terminal output"
+)
 
-find_package (termcolor 2.1.0 REQUIRED)
+set (termcolor_FOUND TRUE)
+
+if (TARGET termcolor::termcolor)
+    return ()
+endif ()
 
 FetchContent_Declare (
-    nlohmann_json
+    termcolor
     SYSTEM
-    GIT_REPOSITORY "https://github.com/nlohmann/json.git"
-    GIT_TAG v3.12.0
+    GIT_REPOSITORY "https://github.com/ikalnytskyi/termcolor.git"
+    GIT_TAG "v${termcolor_FIND_VERSION}"
     GIT_SHALLOW ON
-    FIND_PACKAGE_ARGS 3.12.0
+    SOURCE_SUBDIR foo # we need to disable adding termcolor as a subdirectory, because they list a
+    # too-old cmake version
+    OVERRIDE_FIND_PACKAGE
 )
 
-FetchContent_MakeAvailable (nlohmann_json)
+FetchContent_MakeAvailable (termcolor)
 
-add_library (libbenbot STATIC)
+if (termcolor_SOURCE_DIR)
+    set (termcolor_includes "${termcolor_SOURCE_DIR}/include")
+elseif (termcolor_DIR)
+    set (termcolor_includes "${termcolor_DIR}/include")
+else ()
+    message (FATAL_ERROR "termcolor include directory not found in expected variables")
+endif ()
 
-target_compile_features (libbenbot PUBLIC cxx_std_23)
-
-target_link_libraries (
-    libbenbot PUBLIC ben_bot::libchess PRIVATE ben_bot::resources nlohmann_json::nlohmann_json
-                                               termcolor::termcolor
-)
-
-set_target_properties (
-    libbenbot PROPERTIES CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN ON
-                         VERIFY_INTERFACE_HEADER_SETS ON
-)
-
-file (GLOB_RECURSE libbenbot_headers LIST_DIRECTORIES false
-      CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/include/libbenbot/*.hpp"
-)
-
-file (GLOB_RECURSE libbenbot_sources LIST_DIRECTORIES false
-      CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/src/*.[c,h]pp" # include private headers too
-)
+add_library (termcolor INTERFACE)
 
 target_sources (
-    libbenbot PUBLIC FILE_SET HEADERS BASE_DIRS include FILES ${libbenbot_headers}
-    PRIVATE ${libbenbot_sources}
+    termcolor INTERFACE FILE_SET HEADERS BASE_DIRS "${termcolor_includes}" FILES
+                        "${termcolor_includes}/termcolor/termcolor.hpp"
 )
 
-target_include_directories (libbenbot PRIVATE "${CMAKE_CURRENT_LIST_DIR}/src/")
-
-source_group (TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${libbenbot_headers} ${libbenbot_sources})
-
-add_library (ben_bot::libbenbot ALIAS libbenbot)
+add_library (termcolor::termcolor ALIAS termcolor)

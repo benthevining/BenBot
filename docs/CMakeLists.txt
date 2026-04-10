@@ -12,6 +12,10 @@
 
 find_package (Doxygen 1.16.1 OPTIONAL_COMPONENTS dot)
 
+set_package_properties (
+    Doxygen PROPERTIES URL "https://www.doxygen.nl/" DESCRIPTION "Code documentation generator"
+)
+
 add_feature_info (benbot_docs DOXYGEN_FOUND "Building BenBot docs with Doxygen")
 
 if (NOT DOXYGEN_FOUND)
