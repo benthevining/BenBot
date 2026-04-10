@@ -15,7 +15,6 @@
 #include "ImUtil.hpp" // NOLINT(build/include_subdir)
 #include <algorithm>
 #include <array>
-#include <cassert>
 #include <chrono>
 #include <format>
 #include <imgui.h>
@@ -29,6 +28,7 @@
 #include <libchess/notation/MoveFormats.hpp>
 #include <libchess/uci/Options.hpp>
 #include <libgui/EnginePanel.hpp>
+#include <libgui/ErrorPopup.hpp>
 #include <libutil/Strings.hpp>
 #include <nlohmann/json.hpp>
 #include <optional>
@@ -197,11 +197,9 @@ namespace {
     void render_moves_to_search(
         search::Options& options,
         const Engine&    engine,
-        string&          errorMessage,
+        ErrorPopup&      errorPopup,
         const bool       showTooltips)
     {
-        static constexpr auto ErrorPopupID { "Move parse error" };
-
         auto inputBuf = format_moves(options.movesToSearch, engine);
 
         if (ImGui::InputText("Moves to search", &inputBuf, InputTextFlags)) {
@@ -217,10 +215,8 @@ namespace {
                               options.movesToSearch.emplace_back(move);
                               return std::monostate { };
                           })
-                          .transform_error([&errorMessage](string&& message) {
-                              assert(not message.empty());
-                              errorMessage = std::move(message);
-                              ImGui::OpenPopup(ErrorPopupID, ImGuiPopupFlags_NoReopen);
+                          .transform_error([&errorPopup](string&& message) {
+                              errorPopup.set_error(std::move(message));
                               return std::monostate { };
                           });
             }
@@ -229,16 +225,7 @@ namespace {
         if (showTooltips)
             ImGui::SetItemTooltip("Search only the given moves");
 
-        if (ImGui::BeginPopupModal(ErrorPopupID, nullptr, PopupFlags)) {
-            UnformattedText(errorMessage);
-
-            if (ImGui::Button("OK", { 120.f, 0.f })) {
-                ImGui::CloseCurrentPopup();
-                errorMessage.clear();
-            }
-
-            ImGui::EndPopup();
-        }
+        errorPopup.render();
     }
 
     void render_search_engine_interop_buttons(
@@ -273,7 +260,7 @@ namespace {
 
     void render_search_options(
         search::Options& options,
-        string&          moveParseError,
+        ErrorPopup&      moveParseError,
         Engine&          engine,
         const bool       showTooltips)
     {

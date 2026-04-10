@@ -14,36 +14,26 @@
 
 #pragma once
 
-#include <libchess/board/Square.hpp>
-#include <libchess/notation/EPD.hpp>
-#include <libgui/ErrorPopup.hpp>
-#include <optional>
 #include <string>
-#include <string_view>
 
 namespace ben_bot::gui {
 
-struct EngineWrapper;
+struct ErrorPopup final {
+    explicit ErrorPopup(const char* label)
+        : PopupLabel { label }
+    {
+    }
 
-using chess::notation::EPDPosition;
+    const char* PopupLabel;
 
-struct BoardEditorState final {
-    EPDPosition position;
+    void set_success() { errorMessage.clear(); }
 
-    // for EP square combobox
-    std::optional<chess::board::Square> selectedEPSquare;
+    void set_error(std::string&& message);
 
-    ErrorPopup fenParseError { "FEN parse error" };
-    ErrorPopup epdParseError { "EPD parse error" };
+    void render();
 
-    [[nodiscard]] auto to_string() const -> std::string;
-
-    [[nodiscard]] static auto from_string(std::string_view str) -> BoardEditorState;
+private:
+    std::string errorMessage; // empty if no error occurred
 };
-
-void render_board_editor(
-    BoardEditorState& state,
-    bool              showTooltips,
-    EngineWrapper&    engine);
 
 } // namespace ben_bot::gui

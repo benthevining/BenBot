@@ -16,7 +16,6 @@
 #include <algorithm>
 #include <array>
 #include <beman/inplace_vector/inplace_vector.hpp>
-#include <cassert>
 #include <cstdint> // IWYU pragma: keep
 #include <format>
 #include <imgui.h>
@@ -29,6 +28,7 @@
 #include <libchess/pieces/Colors.hpp>
 #include <libgui/BoardEditor.hpp>
 #include <libgui/EngineWrapper.hpp>
+#include <libgui/ErrorPopup.hpp>
 #include <libutil/Console.hpp>
 #include <libutil/Strings.hpp>
 #include <nlohmann/json.hpp>
@@ -254,27 +254,23 @@ namespace {
     }
 
     void render_fen_string(
-        Position& position, string& errorMessage, const bool showTooltips)
+        Position& position, ErrorPopup& errorPopup, const bool showTooltips)
     {
         using chess::notation::from_fen;
         using chess::notation::to_fen;
-
-        static constexpr auto ErrorPopupID { "FEN parse error" };
 
         auto inputBuf = to_fen(position);
 
         if (ImGui::InputText("FEN", &inputBuf, InputTextFlags)) {
             [[maybe_unused]] const auto result
                 = from_fen(inputBuf)
-                      .transform([&position, &errorMessage](const Position& newPos) {
+                      .transform([&position, &errorPopup](const Position& newPos) {
                           position = newPos;
-                          errorMessage.clear();
+                          errorPopup.set_success();
                           return std::monostate { };
                       })
-                      .transform_error([&errorMessage](string&& error) {
-                          assert(not error.empty());
-                          errorMessage = std::move(error);
-                          ImGui::OpenPopup(ErrorPopupID, ImGuiPopupFlags_NoReopen);
+                      .transform_error([&errorPopup](string&& error) {
+                          errorPopup.set_error(std::move(error));
                           return std::monostate { };
                       });
         }
@@ -282,40 +278,27 @@ namespace {
         if (showTooltips)
             ImGui::SetItemTooltip("Enter a FEN string");
 
-        if (ImGui::BeginPopupModal(ErrorPopupID, nullptr, PopupFlags)) {
-            UnformattedText(errorMessage);
-
-            if (ImGui::Button("OK", { 120.f, 0.f })) {
-                ImGui::CloseCurrentPopup();
-                errorMessage.clear();
-            }
-
-            ImGui::EndPopup();
-        }
+        errorPopup.render();
     }
 
     using chess::notation::from_epd;
     using chess::notation::to_epd;
 
     void render_epd_string(
-        EPDPosition& position, string& errorMessage, const bool showTooltips)
+        EPDPosition& position, ErrorPopup& errorPopup, const bool showTooltips)
     {
-        static constexpr auto ErrorPopupID { "EPD parse error" };
-
         auto inputBuf = to_epd(position);
 
         if (ImGui::InputText("EPD", &inputBuf, InputTextFlags)) {
             [[maybe_unused]] const auto result
                 = from_epd(inputBuf)
-                      .transform([&position, &errorMessage](EPDPosition&& newPos) {
+                      .transform([&position, &errorPopup](EPDPosition&& newPos) {
                           position = std::move(newPos);
-                          errorMessage.clear();
+                          errorPopup.set_success();
                           return std::monostate { };
                       })
-                      .transform_error([&errorMessage](string&& error) {
-                          assert(not error.empty());
-                          errorMessage = std::move(error);
-                          ImGui::OpenPopup(ErrorPopupID, ImGuiPopupFlags_NoReopen);
+                      .transform_error([&errorPopup](string&& error) {
+                          errorPopup.set_error(std::move(error));
                           return std::monostate { };
                       });
         }
@@ -323,16 +306,7 @@ namespace {
         if (showTooltips)
             ImGui::SetItemTooltip("Enter an EPD string");
 
-        if (ImGui::BeginPopupModal(ErrorPopupID, nullptr, PopupFlags)) {
-            UnformattedText(errorMessage);
-
-            if (ImGui::Button("OK", { 120.f, 0.f })) {
-                ImGui::CloseCurrentPopup();
-                errorMessage.clear();
-            }
-
-            ImGui::EndPopup();
-        }
+        errorPopup.render();
     }
 
     enum class EPDOperationType : std::uint_least8_t {
@@ -493,11 +467,11 @@ namespace {
     }
 
     void render_epd_editor(
-        EPDPosition& position, string& errorMessage, const bool showTooltips)
+        EPDPosition& position, ErrorPopup& errorPopup, const bool showTooltips)
     {
         if (ImGui::CollapsingHeader("EPD editor")) {
             render_epd_string(
-                position, errorMessage, showTooltips);
+                position, errorPopup, showTooltips);
 
             render_standard_epd_operations(
                 position, showTooltips);

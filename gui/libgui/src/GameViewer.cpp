@@ -22,6 +22,7 @@
 #include <libbenbot/engine/Engine.hpp>
 #include <libchess/notation/MoveFormats.hpp>
 #include <libchess/notation/PGN.hpp>
+#include <libgui/ErrorPopup.hpp>
 #include <libgui/GameViewer.hpp>
 #include <libutil/Console.hpp>
 #include <libutil/Files.hpp>
@@ -134,40 +135,28 @@ namespace {
     }
 
     void render_raw_pgn_text(
-        GameRecord& game, string& errorMessage)
+        GameRecord& game, ErrorPopup& errorPopup)
     {
-        if (ImGui::CollapsingHeader("PGN text")) {
-            static constexpr auto ErrorPopupID = "PGN parse error";
+        if (not ImGui::CollapsingHeader("PGN text"))
+            return;
 
-            auto inputBuf = to_pgn(game);
+        auto inputBuf = to_pgn(game);
 
-            if (ImGui::InputTextMultiline("##PGN", &inputBuf)) {
-                [[maybe_unused]] const auto result
-                    = chess::notation::from_pgn(inputBuf)
-                          .transform([&game, &errorMessage](GameRecord&& parsed) {
-                              game = std::move(parsed);
-                              errorMessage.clear();
-                              return std::monostate { };
-                          })
-                          .transform_error([&errorMessage](string&& message) {
-                              assert(not message.empty());
-                              errorMessage = std::move(message);
-                              ImGui::OpenPopup(ErrorPopupID, ImGuiPopupFlags_NoReopen);
-                              return std::monostate { };
-                          });
-            }
-
-            if (ImGui::BeginPopupModal(ErrorPopupID, nullptr, PopupFlags)) {
-                UnformattedText(errorMessage);
-
-                if (ImGui::Button("OK", { 120.f, 0.f })) {
-                    ImGui::CloseCurrentPopup();
-                    errorMessage.clear();
-                }
-
-                ImGui::EndPopup();
-            }
+        if (ImGui::InputTextMultiline("##PGN", &inputBuf)) {
+            [[maybe_unused]] const auto result
+                = chess::notation::from_pgn(inputBuf)
+                      .transform([&game, &errorPopup](GameRecord&& parsed) {
+                          game = std::move(parsed);
+                          errorPopup.set_success();
+                          return std::monostate { };
+                      })
+                      .transform_error([&errorPopup](string&& message) {
+                          errorPopup.set_error(std::move(message));
+                          return std::monostate { };
+                      });
         }
+
+        errorPopup.render();
     }
 
     void render_metadata_tags(

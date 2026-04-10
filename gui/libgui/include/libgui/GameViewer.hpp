@@ -15,6 +15,7 @@
 #pragma once
 
 #include <libchess/notation/PGN.hpp>
+#include <libgui/ErrorPopup.hpp>
 #include <string>
 #include <string_view>
 
@@ -27,8 +28,7 @@ namespace ben_bot::gui {
 struct GameViewerState final {
     chess::notation::GameRecord game;
 
-    // empty if no error has occurred
-    std::string pgnParseError;
+    ErrorPopup pgnParseError { "PGN parse error" };
 
     [[nodiscard]] auto to_string() const -> std::string;
 

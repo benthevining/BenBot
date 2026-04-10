@@ -12,38 +12,34 @@
  * ======================================================================================
  */
 
-#pragma once
-
-#include <libchess/board/Square.hpp>
-#include <libchess/notation/EPD.hpp>
+#include "ImUtil.hpp" // NOLINT(build/include_subdir)
+#include <cassert>
+#include <imgui.h>
 #include <libgui/ErrorPopup.hpp>
-#include <optional>
 #include <string>
-#include <string_view>
+#include <utility>
 
 namespace ben_bot::gui {
 
-struct EngineWrapper;
+void ErrorPopup::set_error(std::string&& message)
+{
+    assert(not message.empty());
+    errorMessage = std::move(message);
+    ImGui::OpenPopup(PopupLabel, ImGuiPopupFlags_NoReopen);
+}
 
-using chess::notation::EPDPosition;
+void ErrorPopup::render()
+{
+    if (ImGui::BeginPopupModal(PopupLabel, nullptr, PopupFlags)) {
+        UnformattedText(errorMessage);
 
-struct BoardEditorState final {
-    EPDPosition position;
+        if (ImGui::Button("OK", { 120.f, 0.f })) {
+            ImGui::CloseCurrentPopup();
+            errorMessage.clear();
+        }
 
-    // for EP square combobox
-    std::optional<chess::board::Square> selectedEPSquare;
-
-    ErrorPopup fenParseError { "FEN parse error" };
-    ErrorPopup epdParseError { "EPD parse error" };
-
-    [[nodiscard]] auto to_string() const -> std::string;
-
-    [[nodiscard]] static auto from_string(std::string_view str) -> BoardEditorState;
-};
-
-void render_board_editor(
-    BoardEditorState& state,
-    bool              showTooltips,
-    EngineWrapper&    engine);
+        ImGui::EndPopup();
+    }
+}
 
 } // namespace ben_bot::gui

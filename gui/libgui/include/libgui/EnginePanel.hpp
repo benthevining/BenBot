@@ -16,6 +16,7 @@
 
 #include <libbenbot/search/Options.hpp>
 #include <libgui/EngineWrapper.hpp>
+#include <libgui/ErrorPopup.hpp>
 #include <string>
 #include <string_view>
 
@@ -28,7 +29,7 @@ struct EnginePanelState final {
 
     std::optional<std::string> selectedComboChoice;
 
-    std::string moveParseError; // empty if no error has occurred
+    ErrorPopup moveParseError { "Move parse error" };
 
     [[nodiscard]] auto to_string() const -> std::string;
 
