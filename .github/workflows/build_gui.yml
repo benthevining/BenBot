@@ -50,8 +50,8 @@ jobs:
       if: runner.os == 'Windows'
       run: choco install -y inkscape imagemagick
 
-    - name: Install Vulkan SDK (Windows)
-      if: runner.os == 'Windows'
+    - name: Install Vulkan SDK
+      if: runner.os != 'macOS'
       uses: humbletim/install-vulkan-sdk@30ba978f977e81b72d091fc8888feb1fb26f9aff # v1.2
       with:
         cache: true
@@ -60,7 +60,7 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update
-        sudo apt-get install -y libgtk-4-dev
+        sudo apt-get install -y libgtk-3-dev
 
     - name: Build
       uses: ./.github/actions/run_build
