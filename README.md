@@ -50,8 +50,8 @@ Our automated CI & releases include the following builds:
 
 * `BENBOT_GUI`: if on, builds the ImGUI app (defaults to off unless this is the top-level project)
 
-[!NOTE]
-The GUI application has additional dependencies & requirements, which may vary by target platform. See `gui/README.md` for details.
+> [!NOTE]
+> The GUI application has additional dependencies & requirements, which may vary by target platform. See `gui/README.md` for details.
 
 ## Thanks
 

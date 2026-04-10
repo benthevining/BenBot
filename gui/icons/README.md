@@ -15,8 +15,8 @@ To apply the application icon, we:
 * Specify the `.icns` file as a source file, and set its `MACOSX_PACKAGE_LOCATION` property to `Resources`
 * Set the `MACOSX_BUNDLE_ICON_FILE` target property, which is one of the inputs to the configuration of the plist template that CMake provides
 
-[!NOTE]
-The application supports being built without `inkscape` present on the host machine. In this case, the app will have a blank icon.
+> [!NOTE]
+> The application supports being built without `inkscape` present on the host machine. In this case, the app will have a blank icon.
 
 ## Windows
 
@@ -24,8 +24,8 @@ The application supports being built without `inkscape` present on the host mach
 
 To apply the application icon, we simply list it in a `.rc` file and add both the `.ico` and `.rc` files as source files.
 
-[!NOTE]
-The application supports being built without `ImageMagick` present on the host machine. In this case, the app will not have an icon.
+> [!NOTE]
+> The application supports being built without `ImageMagick` present on the host machine. In this case, the app will not have an icon.
 
 ## Linux
 

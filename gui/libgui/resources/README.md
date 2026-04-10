@@ -18,5 +18,5 @@ The main include is:
 * [cmrc](https://github.com/vector-of-bool/cmrc), used to embed resources as static data
 * [inkscape](https://inkscape.org/), for converting SVGs to PNGs (for app icon)
 
-[!NOTE]
-This library supports being built without `inkscape` present on the host machine. In this case, requesting the app icon resource returns a null `string_view`.
+> [!NOTE]
+> This library supports being built without `inkscape` present on the host machine. In this case, requesting the app icon resource returns a null `string_view`.
