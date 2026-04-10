@@ -37,7 +37,7 @@ runs:
 
   - name: Download latest BenBot release
     id: download_latest_release
-    if: ${{ !inputs.use_main }}
+    if: inputs.use_main == 'false'
     uses: ./.github/actions/download_github_release
     with:
       repository: benthevining/BenBot
@@ -48,14 +48,14 @@ runs:
     # --- if building against main, checkout & build main ---
 
   - name: Checkout main
-    if: inputs.use_main
+    if: inputs.use_main == 'true'
     uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd   # v6
     with:
       ref: main
       path: ${{ github.workspace }}/tmp-main
 
   - name: Build main
-    if: inputs.use_main
+    if: inputs.use_main == 'true'
     id: build_main
     uses: ./.github/actions/run_build
     with:
@@ -70,14 +70,14 @@ runs:
       extra_config_args: -D "FASTCHESS_PROGRAM=${{ steps.download_fastchess.outputs.executable }}"
 
   - name: Inject baseline binary
-    if: ${{ !inputs.use_main }}
+    if: inputs.use_main == 'false'
     shell: bash
     run: |
       cmake -D BASELINE_BINARY=${{ steps.download_latest_release.outputs.executable }} -P InjectSPRTBaseline-Release.cmake
     working-directory: ${{ steps.run_build.outputs.build_dir }}
 
   - name: Inject baseline binary
-    if: inputs.use_main
+    if: inputs.use_main == 'true'
     shell: bash
     run: |
       cmake -D BASELINE_BINARY=${{ steps.build_main.outputs.deploy_dir }}/bin/ben_bot -P InjectSPRTBaseline-Release.cmake

@@ -29,6 +29,10 @@ inputs:
     description: Target to build
     required: false
     default: ben_bot
+  build_gui:
+    description: Whether to allow CMake configure to enter the gui/ subdirectory
+    required: false
+    default: OFF
   root_dir:
     description: Root directory to work in
     required: false
@@ -67,7 +71,7 @@ runs:
     env:
       CMAKE_OSX_ARCHITECTURES: arm64;x86_64
     run: |
-      cmake --preset ${{ inputs.cmake_preset }} -D BENBOT_GUI=OFF ${{ inputs.extra_config_args }}
+      cmake --preset ${{ inputs.cmake_preset }} -D "BENBOT_GUI=${{ inputs.build_gui }}" ${{ inputs.extra_config_args }}
     working-directory: ${{ inputs.root_dir }}
 
   - name: Build
