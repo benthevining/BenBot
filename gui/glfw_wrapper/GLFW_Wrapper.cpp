@@ -12,7 +12,9 @@
  * ======================================================================================
  */
 
-#define STB_IMAGE_IMPLEMENTATION
+#ifndef STB_IMAGE_IMPLEMENTATION
+#    define STB_IMAGE_IMPLEMENTATION
+#endif
 
 #include "GLFW_Wrapper.hpp" // NOLINT(build/include_subdir)
 #include <GLFW/glfw3.h>

@@ -34,6 +34,12 @@
 #include <span>
 
 // Volk headers
+#ifndef IMGUI_IMPL_VULKAN_USE_VOLK
+#    if __has_include(<volk.h>)
+#        define IMGUI_IMPL_VULKAN_USE_VOLK 1
+#    endif
+#endif
+
 #ifdef IMGUI_IMPL_VULKAN_USE_VOLK
 #    define VOLK_IMPLEMENTATION
 #    include <volk.h>

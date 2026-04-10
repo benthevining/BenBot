@@ -40,51 +40,12 @@ set_target_properties (
 include ("${CMAKE_CURRENT_LIST_DIR}/icons/MacOSIcon.cmake")
 include ("${CMAKE_CURRENT_LIST_DIR}/icons/WindowsIcon.cmake")
 
-set (GLFW_BUILD_DOCS OFF)
-set (GLFW_INSTALL OFF)
+add_subdirectory (glfw_wrapper)
 
-FetchContent_Declare (
-    glfw
-    SYSTEM
-    GIT_REPOSITORY "https://github.com/glfw/glfw.git"
-    GIT_TAG 3.4
-    GIT_SHALLOW ON
-    FIND_PACKAGE_ARGS 3.4
-)
-
-FetchContent_Declare (
-    stb
-    SYSTEM
-    GIT_REPOSITORY "https://github.com/nothings/stb.git"
-    GIT_TAG origin/master
-    FIND_PACKAGE_ARGS
-)
-
-function (benbot_use_glfw)
-    FetchContent_MakeAvailable (glfw stb)
-
-    add_library (
-        benbotgui_glfw_wrapper STATIC "${imgui_backends_dir}/imgui_impl_glfw.cpp"
-                                      platform/GLFW_Wrapper.cpp
-    )
-
-    target_link_libraries (
-        benbotgui_glfw_wrapper PUBLIC glfw ben_bot::libgui PRIVATE imgui::imgui
-                                                                   ben_bot::gui_resources
-    )
-
-    target_include_directories (
-        benbotgui_glfw_wrapper PUBLIC "${CMAKE_CURRENT_LIST_DIR}/platform"
-        PRIVATE "${stb_SOURCE_DIR}"
-    )
-
-    target_link_libraries (benbot_gui PRIVATE benbotgui_glfw_wrapper)
-endfunction ()
+target_link_libraries (benbot_gui PRIVATE ben_bot::glfw_wrapper)
 
 if (APPLE)
     message (VERBOSE "Using GLFW + Metal backend for ImGUI app")
-
-    benbot_use_glfw ()
 
     target_sources (
         benbot_gui PRIVATE main_glfw_metal.mm "${imgui_backends_dir}/imgui_impl_metal.mm"
@@ -94,25 +55,27 @@ if (APPLE)
         benbot_gui PRIVATE "-framework Metal" "-framework MetalKit" "-framework Cocoa"
                            "-framework IOKit" "-framework CoreVideo" "-framework QuartzCore"
     )
-else ()
-    find_package (Vulkan OPTIONAL_COMPONENTS volk)
 
-    if (Vulkan_FOUND)
-        message (VERBOSE "Using GLFW + Vulkan backend for ImGUI app")
-
-        benbot_use_glfw ()
-
-        target_sources (
-            benbot_gui PRIVATE main_glfw_vulkan.cpp "${imgui_backends_dir}/imgui_impl_vulkan.cpp"
-        )
-
-        target_link_libraries (benbot_gui PRIVATE Vulkan::Vulkan)
-
-        if (TARGET Vulkan::volk)
-            target_link_libraries (benbot_gui PRIVATE Vulkan::volk)
-            target_compile_definitions (benbot_gui PRIVATE IMGUI_IMPL_VULKAN_USE_VOLK=1)
-        endif ()
-    else ()
-        message (WARNING "imgui backend not yet configured for this platform!")
-    endif ()
+    return ()
 endif ()
+
+find_package (Vulkan OPTIONAL_COMPONENTS volk)
+
+if (Vulkan_FOUND)
+    message (VERBOSE "Using GLFW + Vulkan backend for ImGUI app")
+
+    target_sources (
+        benbot_gui PRIVATE main_glfw_vulkan.cpp "${imgui_backends_dir}/imgui_impl_vulkan.cpp"
+    )
+
+    target_link_libraries (benbot_gui PRIVATE Vulkan::Vulkan)
+
+    if (TARGET Vulkan::volk)
+        target_link_libraries (benbot_gui PRIVATE Vulkan::volk)
+        target_compile_definitions (benbot_gui PRIVATE IMGUI_IMPL_VULKAN_USE_VOLK=1)
+    endif ()
+
+    return ()
+endif ()
+
+message (FATAL_ERROR "imgui backend not yet configured for this platform!")

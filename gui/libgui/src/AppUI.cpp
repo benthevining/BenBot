@@ -26,6 +26,7 @@
 #include <libutil/Files.hpp>
 #include <nfd.hpp>
 #include <nlohmann/json.hpp>
+#include <print>
 #include <string>
 #include <string_view>
 #include <utility>
