@@ -16,7 +16,7 @@ if (NOT APPLE)
     return ()
 endif ()
 
-include ("${CMAKE_CURRENT_LIST_DIR}/SVGtoPNG.cmake")
+include (SVGtoPNG)
 
 if (NOT INKSCAPE_PROGRAM)
     return ()

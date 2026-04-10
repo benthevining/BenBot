@@ -33,7 +33,7 @@ FetchContent_Declare (
 FetchContent_MakeAvailable (glfw stb)
 
 add_library (
-    benbotgui_glfw_wrapper STATIC "${imgui_backends_dir}/imgui_impl_glfw.cpp" GLFW_Wrapper.cpp
+    benbotgui_glfw_wrapper STATIC "${IMGUI_BACKENDS_DIR}/imgui_impl_glfw.cpp" GLFW_Wrapper.cpp
 )
 
 target_link_libraries (

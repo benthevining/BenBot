@@ -18,6 +18,8 @@ file (GLOB_RECURSE resources LIST_DIRECTORIES false CONFIGURE_DEPENDS
                                                     "${CMAKE_CURRENT_LIST_DIR}/res/*.svg"
 )
 
+include (SVGtoPNG)
+
 unset (icon_png)
 
 if (INKSCAPE_PROGRAM)

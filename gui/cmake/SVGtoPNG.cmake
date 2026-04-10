@@ -10,6 +10,11 @@
 #
 # ======================================================================================
 
+#[[
+This module provides the add_svg_to_png_command function, which uses inkscape.
+Before using add_svg_to_png_command() you should check ``if(INKSCAPE_PROGRAM)``.
+]]
+
 include_guard (GLOBAL)
 
 find_program (
