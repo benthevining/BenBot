@@ -27,11 +27,12 @@ namespace chess::notation {
 auto format_move(
     const MoveFormat format,
     const Position&  position,
-    const Move       move) -> std::string
+    const Move       move,
+    const bool       algPieceTypeAsUTF8) -> std::string
 {
     switch (format) {
         case MoveFormat::Algebraic:
-            return to_alg(position, move);
+            return to_alg(position, move, algPieceTypeAsUTF8);
 
         case MoveFormat::ICCF:
             return to_iccf(move);

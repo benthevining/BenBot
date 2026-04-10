@@ -1,0 +1,106 @@
+# ======================================================================================
+#
+# ░▒▓███████▓▒░░▒▓████████▓▒░▒▓███████▓▒░       ░▒▓███████▓▒░ ░▒▓██████▓▒░▒▓████████▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓███████▓▒░░▒▓██████▓▒░ ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓███████▓▒░░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░ ░▒▓██████▓▒░  ░▒▓█▓▒░
+#
+# ======================================================================================
+
+name: run_sprt
+description: Run SPRT test
+
+inputs:
+  use_main:
+    description: If true, runs SPRT against the latest main; if false, runs against the latest release
+    required: true
+  target_name:
+    description: Name of the CMake target to build to invoke the SPRT test
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+  - name: Download fastchess
+    id: download_fastchess
+    uses: ./.github/actions/download_github_release
+    with:
+      repository: Disservin/fastchess
+      file_filter: '*-linux-x86-64*'
+      artifact_xtn: tar
+      path_to_exec: fastchess
+
+    # --- if not building against main, download latest release ---
+
+  - name: Download latest BenBot release
+    id: download_latest_release
+    if: inputs.use_main == 'false'
+    uses: ./.github/actions/download_github_release
+    with:
+      repository: benthevining/BenBot
+      file_filter: BenBot-ubuntu-latest-clang.zip
+      artifact_xtn: zip
+      path_to_exec: bin/ben_bot
+
+    # --- if building against main, checkout & build main ---
+
+  - name: Checkout main
+    if: inputs.use_main == 'true'
+    uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd   # v6
+    with:
+      ref: main
+      path: ${{ github.workspace }}/tmp-main
+
+  - name: Build main
+    if: inputs.use_main == 'true'
+    id: build_main
+    uses: ./.github/actions/run_build
+    with:
+      root_dir: ${{ github.workspace }}/tmp-main
+
+    # --- Build SPRT ---
+
+  - name: Build
+    uses: ./.github/actions/run_build
+    id: run_build
+    with:
+      extra_config_args: -D "FASTCHESS_PROGRAM=${{ steps.download_fastchess.outputs.executable }}"
+
+  - name: Inject baseline binary
+    if: inputs.use_main == 'false'
+    shell: bash
+    run: |
+      cmake -D BASELINE_BINARY=${{ steps.download_latest_release.outputs.executable }} -P InjectSPRTBaseline-Release.cmake
+    working-directory: ${{ steps.run_build.outputs.build_dir }}
+
+  - name: Inject baseline binary
+    if: inputs.use_main == 'true'
+    shell: bash
+    run: |
+      cmake -D BASELINE_BINARY=${{ steps.build_main.outputs.deploy_dir }}/bin/ben_bot -P InjectSPRTBaseline-Release.cmake
+    working-directory: ${{ steps.run_build.outputs.build_dir }}
+
+  - name: Run SPRT test
+    shell: bash
+    env:
+      SPRT_OUTPUT_LOG: ${{ github.workspace }}/logs/sprt/output.log
+      # NB. tee needs the output directory to exist before it's invoked
+    run: |
+      cmake -E make_directory $(dirname ${{ env.SPRT_OUTPUT_LOG }})
+      cmake --build . --target ${{ inputs.target_name }} --config Release | tee ${{ env.SPRT_OUTPUT_LOG }}
+    working-directory: ${{ steps.run_build.outputs.build_dir }}
+
+  - name: Upload logs
+    uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f   # v7
+    with:
+      name: sprt-logs
+      path: logs/sprt
+      if-no-files-found: error
+
+  - name: Report results
+    shell: bash
+    run: python3 ReportSPRTResults.py ${{ env.SPRT_OUTPUT_LOG }} >> $GITHUB_STEP_SUMMARY
+    working-directory: ${{ github.action_path }}

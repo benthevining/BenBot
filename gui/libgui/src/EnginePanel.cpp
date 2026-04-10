@@ -138,18 +138,6 @@ namespace {
 
         const ScopedGroup group;
 
-        ImGui::SeparatorText("Standard options");
-
-        for (auto* opt : engine.get_standard_uci_options())
-            render_uci_option(*opt, selectedComboChoice, showTooltips);
-
-        ImGui::SeparatorText("Custom options");
-
-        for (auto* opt : engine.get_custom_uci_options())
-            render_uci_option(*opt, selectedComboChoice, showTooltips);
-
-        ImGui::Separator();
-
         if (ImGui::Button("Reset all"))
             reset_all_options(engine);
 
@@ -161,6 +149,16 @@ namespace {
             engine.set_debug_mode(debug);
 
         ImGui::SetItemTooltip("Enable engine debug mode");
+
+        ImGui::SeparatorText("Standard options");
+
+        for (auto* opt : engine.get_standard_uci_options())
+            render_uci_option(*opt, selectedComboChoice, showTooltips);
+
+        ImGui::SeparatorText("Custom options");
+
+        for (auto* opt : engine.get_custom_uci_options())
+            render_uci_option(*opt, selectedComboChoice, showTooltips);
     }
 
     using chess::game::Position;
@@ -168,14 +166,23 @@ namespace {
 
     [[nodiscard]] auto format_moves(
         const chess::moves::MoveList& moves,
-        const MoveFormat              moveFormat,
-        const Position&               position)
+        const Engine&                 engine)
         -> string
     {
+        const auto  format   = engine.get_pretty_print_move_format();
+        const auto& position = engine.get_position();
+
         string text;
 
         for (const auto move : moves) {
-            text.append(format_move(moveFormat, position, move));
+            // Use the format_move() function directly instead of the engine's
+            // pretty_print_move() function because the engine's function will
+            // print piece types as UTF8 if that option is enabled. We always
+            // want to bypass this behavior here so that we're always giving
+            // the input text a default value that can be parsed successfully.
+            text.append(format_move(
+                format, position, move));
+
             text.append(1uz, ' ');
         }
 
@@ -188,21 +195,23 @@ namespace {
 
     void render_moves_to_search(
         search::Options& options,
-        const MoveFormat moveFormat,
-        const Position&  position,
+        const Engine&    engine,
         string&          errorMessage,
         const bool       showTooltips)
     {
         static constexpr auto ErrorPopupID { "Move parse error" };
 
-        auto inputBuf = format_moves(options.movesToSearch, moveFormat, position);
+        auto inputBuf = format_moves(options.movesToSearch, engine);
 
         if (ImGui::InputText("Moves to search", &inputBuf, InputTextFlags)) {
             options.movesToSearch.clear();
 
+            const auto  format   = engine.get_pretty_print_move_format();
+            const auto& position = engine.get_position();
+
             for (const auto word : util::strings::words_view(inputBuf)) {
                 [[maybe_unused]] const auto result
-                    = parse_move(moveFormat, position, word)
+                    = parse_move(format, position, word)
                           .transform([&options](const Move move) {
                               options.movesToSearch.emplace_back(move);
                               return std::monostate { };
@@ -231,7 +240,7 @@ namespace {
         }
     }
 
-    void render_utility_buttons(
+    void render_search_engine_interop_buttons(
         search::Options& options,
         Engine&          engine,
         const bool       showTooltips)
@@ -272,10 +281,9 @@ namespace {
         if (not ImGui::CollapsingHeader("Search options"))
             return;
 
-        const ScopedGroup group;
+        render_search_engine_interop_buttons(options, engine, showTooltips);
 
-        const auto& position   = engine.get_position();
-        const auto  moveFormat = engine.get_move_format();
+        const ScopedGroup group;
 
         auto depth = static_cast<int>(options.depth);
 
@@ -309,16 +317,13 @@ namespace {
         if (showTooltips)
             ImGui::SetItemTooltip("Search for mate in X plies");
 
-        render_moves_to_search(options, moveFormat, position, moveParseError, showTooltips);
+        render_moves_to_search(
+            options, engine, moveParseError, showTooltips);
 
         ImGui::Checkbox("Infinite", &options.infinite);
 
         if (showTooltips)
             ImGui::SetItemTooltip("Whether to search infinitely");
-
-        ImGui::Separator();
-
-        render_utility_buttons(options, engine, showTooltips);
     }
 
     void render_start_stop_button(
@@ -347,13 +352,10 @@ namespace {
 
     [[nodiscard]] auto format_pv(
         const std::span<const Move> pv,
-        Position                    position,
-        const MoveFormat            format) -> string
+        const Engine&               engine) -> string
     {
-        if (pv.empty()) {
-            // this is possible if we're checkmated
-            return { };
-        }
+        const auto format   = engine.get_pretty_print_move_format();
+        auto       position = engine.get_position();
 
         string result;
 
@@ -366,16 +368,15 @@ namespace {
             position.make_move(move);
         }
 
-        result.pop_back(); // remove trailing space
+        if (not result.empty())
+            result.pop_back(); // remove trailing space
 
         return result;
     }
 
     void render_search_output(
-        const std::span<const search::Result> results,
-        const Position&                       rootPosition,
-        const MoveFormat                      moveFormat,
-        const bool                            showTooltips)
+        const EngineWrapper& engine,
+        const bool           showTooltips)
     {
         if (not ImGui::CollapsingHeader("Search output"))
             return;
@@ -395,7 +396,7 @@ namespace {
 
             ImGui::TableHeadersRow();
 
-            for (const auto& result : results) {
+            for (const auto& result : engine.get_results()) {
                 ImGui::TableNextRow();
 
                 {
@@ -514,7 +515,7 @@ namespace {
                     ImGui::TableNextColumn();
 
                     UnformattedText(
-                        format_pv(result.pv, rootPosition, moveFormat));
+                        format_pv(result.pv, engine));
 
                     if (showTooltips)
                         ImGui::SetItemTooltip("The best continuation found");
@@ -552,10 +553,7 @@ void render_engine_panel(
             ImGui::SetItemTooltip("Send a ucinewgame command to the engine");
 
         render_search_output(
-            state.engine.get_results(),
-            state.engine.get_position(),
-            state.engine.get_move_format(),
-            showTooltips);
+            state.engine, showTooltips);
 
         // TODO: render current position as chessboard?
     }

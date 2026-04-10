@@ -26,6 +26,7 @@
 #include <libchess/notation/Algebraic.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
+#include <libchess/pieces/UTF8.hpp>
 #include <libutil/Strings.hpp>
 #include <optional>
 #include <span>
@@ -105,9 +106,23 @@ namespace {
         return std::format("{}", rank);
     }
 
+    [[nodiscard]] auto format_piece_type(
+        const PieceType type, const bool isWhite, const bool utf8) -> string
+    {
+        if (utf8) {
+            if (isWhite)
+                return string { pieces::utf8::white::get(type) };
+
+            return string { pieces::utf8::black::get(type) };
+        }
+
+        return std::format("{}", type);
+    }
+
 } // namespace
 
-auto to_alg(const Position& position, const Move move) -> string
+auto to_alg(
+    const Position& position, const Move move, const bool printPieceTypeAsUTF8) -> string
 {
     assert(not move.is_null());
 
@@ -132,7 +147,7 @@ auto to_alg(const Position& position, const Move move) -> string
 
             return std::format("{}={}{}", move.to(), promotedType, checkStr);
         })
-        .or_else([move, checkStr, isCapture, &position]() -> std::optional<string> {
+        .or_else([move, checkStr, isCapture, printPieceTypeAsUTF8, &position]() -> std::optional<string> {
             if (move.piece() == PieceType::Pawn) {
                 if (isCapture)
                     return std::format("{}x{}{}", move.from().file, move.to(), checkStr);
@@ -144,7 +159,9 @@ auto to_alg(const Position& position, const Move move) -> string
 
             // with every field: Ngxf4+
             return std::format("{}{}{}{}{}",
-                move.piece(), get_disambig_string(position, move), captureStr, move.to(), checkStr);
+                format_piece_type(move.piece(), position.is_white_to_move(), printPieceTypeAsUTF8),
+                get_disambig_string(position, move),
+                captureStr, move.to(), checkStr);
         })
         .value();
 }
@@ -401,7 +418,8 @@ namespace {
 
 using MoveOrError = std::expected<Move, string>;
 
-auto from_alg(const Position& position, string_view text) -> MoveOrError
+auto from_alg(
+    const Position& position, string_view text) -> MoveOrError
 {
     text = util::strings::trim(text);
 

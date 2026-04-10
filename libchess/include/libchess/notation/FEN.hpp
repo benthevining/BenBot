@@ -64,7 +64,8 @@ using game::Position;
     @ingroup notation
     @see to_fen()
  */
-[[nodiscard]] auto from_fen(std::string_view fenString)
+[[nodiscard]] auto from_fen(
+    std::string_view fenString)
     -> std::expected<Position, std::string>;
 
 } // namespace chess::notation

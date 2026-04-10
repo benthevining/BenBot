@@ -103,14 +103,16 @@ void Engine::run_perft(
 
     std::cout.flush();
 
+    const auto& pos = searcher.context.get_position();
+
     const auto result = chess::moves::perft(
-        depth, searcher.context.get_position());
+        depth, pos);
 
     if (trim(jsonFlag) == "json") {
         print_json(result);
     } else {
         pretty_print(result,
-            [this](const Move move) { return pretty_print_move(move); });
+            [this, &pos](const Move move) { return pretty_print_move(move, pos); });
     }
 
     std::cout.flush();

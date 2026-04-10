@@ -48,7 +48,7 @@ jobs:
     timeout-minutes: 10
     environment:
       name: bump-project-version
-      url: https://github.com/benthevining/BenBot/releases/tag/v${{ steps.write_version.outputs.new_version }}
+      url: ${{ steps.bump_version.outputs.tag_url }}
     permissions:
       contents: write
 
@@ -58,41 +58,15 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Install Python dependencies
-      run: python3 -m pip install --break-system-packages --upgrade bump-my-version pre-commit
-
-    - name: Install NPM dependencies
-      run: npm install
-
-    - name: Install pre-commit hooks
-      run: pre-commit install --install-hooks
-
-    - name: Import GPG key
-      uses: crazy-max/ghaction-import-gpg@2dc316deee8e90f13e1a351ab510b4d5bc0c82cd # v7
+    - uses: ./.github/actions/bump_version
+      id: bump_version
       with:
-        gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-        passphrase: ${{ secrets.GPG_PASSPHRASE }}
-        git_config_global: true
-        git_user_signingkey: true
-        git_commit_gpgsign: true
-        git_tag_gpgsign: true
-
-    - name: Configure commit identity
-      run: |
-        git config user.name 'github-actions[bot]'
-        git config user.email 'github-actions[bot]@users.noreply.github.com'
-
-    - name: Write new version to output
-      id: write_version
-      run: |
-        new_version=$(bump-my-version show --increment ${{ inputs.version_part }} new_version)
-        echo "new_version=$new_version" >> "$GITHUB_OUTPUT"
-
-    - name: Bump version & create tag
-      run: bump-my-version bump --verbose ${{ inputs.version_part }}
+        version_part: ${{ inputs.version_part }}
+        gpg_key: ${{ secrets.GPG_PRIVATE_KEY }}
+        gpg_passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
     outputs:
-      tag_name: v${{ steps.write_version.outputs.new_version }}
+      tag_name: ${{ steps.bump_version.outputs.git_tag }}
 
   # builds & uploads just release binaries on all supported platforms
   build:
@@ -115,31 +89,8 @@ jobs:
     environment:
       name: codesigning
       url: https://github.com/benthevining/BenBot/releases/tag/${{ needs.bump_version.outputs.tag_name }}
-    env:
-      CMAKE_OSX_ARCHITECTURES: arm64;x86_64
-      CMAKE_BUILD_PARALLEL_LEVEL: 8
-      # NB. Windows runners may error out if we make these absolute paths prefixed with
-      # ${{ github.workspace }}, because that may contain Windows-style backslashes
-      BUILD_DIR: Builds/${{ matrix.preset }}
-      DEPLOY_DIR: deploy
 
     steps:
-    - name: Install libc++
-      if: runner.os == 'Linux' && matrix.preset == 'clang'
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libc++-dev libc++abi-dev
-
-    - name: Install Clang21
-      if: runner.os == 'Linux' && matrix.preset == 'clang'
-      uses: aminya/setup-cpp@1f17f92d6a52bfcb1a25348e2c526c2e5cbb1134 # v1.8.0
-      with:
-        llvm: 21
-        clang: 21
-
-    - name: Install CMake 4.0
-      uses: lukka/get-cmake@ea83089aa35e08e459464341fe24ad024ee2466f # v4.3.1
-
     - name: Import signing certificate to keychain
       if: runner.os == 'macOS'
       uses: Apple-Actions/import-codesign-certs@fe74d46e82474f87e1ba79832ad28a4013d0e33a # v6.1.0
@@ -152,23 +103,17 @@ jobs:
       with:
         ref: ${{ needs.bump_version.outputs.tag_name }}
 
-    - name: Configure CMake
-      run: |
-        cmake --preset ${{ matrix.preset }} -D "BENBOT_CODESIGN_ID=${{ secrets.BENBOT_CODESIGN_ID }}" -D BENBOT_DOCS=OFF -D BENBOT_TESTS=OFF
-
-    - name: Build
-      run: cmake --build . --config Release --target ben_bot
-      working-directory: ${{ env.BUILD_DIR }}
-
-    - name: Run cmake install
-      run: |
-        cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.DEPLOY_DIR }} --component ben_bot --config Release
+    - uses: ./.github/actions/run_build
+      id: run_build
+      with:
+        cmake_preset: ${{ matrix.preset }}
+        extra_config_args: -D "BENBOT_CODESIGN_ID=${{ secrets.BENBOT_CODESIGN_ID }}" -D BUILD_TESTING=OFF
 
     - name: Upload artifact
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
       with:
         name: BenBot-${{ matrix.os }}-${{ matrix.preset }}
-        path: ${{ env.DEPLOY_DIR }}
+        path: ${{ steps.run_build.outputs.deploy_dir }}
         if-no-files-found: error
 
   # build & deploy docs from new tag
@@ -192,9 +137,6 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: write
-    env:
-      RELEASE_NOTES_FILE: ${{ github.workspace }}/release-notes.md
-      REZIPPED_ARTIFACTS: ${{ github.workspace }}/rezipped
 
     steps:
     - name: Checkout code
@@ -202,29 +144,9 @@ jobs:
       with:
         ref: ${{ needs.bump_version.outputs.tag_name }}
 
-    - name: Write release notes
-      run: python3 WriteReleaseNotes.py ${{ github.workspace }}/CHANGELOG.md ${{ env.RELEASE_NOTES_FILE }}
-      working-directory: .github/scripts
-
-    - name: Download artifacts
-      id: download
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
-      with:
-        path: artifacts
-
-    - name: Re-zip artifacts
-      run: python3 ReZipArtifacts.py ${{ steps.download.outputs.download-path }} ${{ env.REZIPPED_ARTIFACTS }}
-      working-directory: .github/scripts
-
-    - name: Create release
-      uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2
+    - uses: ./.github/actions/create_release
       with:
         tag_name: ${{ needs.bump_version.outputs.tag_name }}
-        files: ${{ env.REZIPPED_ARTIFACTS }}/**
-        fail_on_unmatched_files: true
-        generate_release_notes: true # autogenerate the link to the version range diff
-        body_path: ${{ env.RELEASE_NOTES_FILE }} # body will the appended to autogenerated content
-        make_latest: true
 
   # builds the lichess-bot Docker image from the latest git tag & uploads it to Dockerhub
   build_docker:
@@ -236,41 +158,20 @@ jobs:
       contents: read
     environment:
       name: lichess-bot-image
-      url: ${{ steps.print_url.outputs.url }}
-    env:
-      LOCAL_TAG: benbot:${{ needs.bump_version.outputs.tag_name }}
-      REMOTE_TAG: benvining/benbot-lichess:${{ needs.bump_version.outputs.tag_name }}
-      LICHESS_CONFIG_DIR: ${{ github.workspace }}/config/lichess
+      url: ${{ steps.build_docker.outputs.url }}
 
     steps:
-    - name: Login to Docker
-      uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4
-      with:
-        username: benvining
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-
     - name: Checkout code
-      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd   # v6
       with:
         ref: ${{ needs.bump_version.outputs.tag_name }}
 
-    - name: Configure config file
-      run: python3 SetupLichessConfig.py ${{ env.LICHESS_CONFIG_DIR }}/config.yml ${{ secrets.LICHESS_TOKEN }}
-      working-directory: .github/scripts
-
-    - name: Run Docker build
-      run: docker build --file ${{ env.LICHESS_CONFIG_DIR }}/Dockerfile --tag ${{ env.LOCAL_TAG }} .
-
-    - name: Tag image
-      run: docker tag ${{ env.LOCAL_TAG }} ${{ env.REMOTE_TAG }}
-
-    - name: Push to Docker hub
-      run: docker push ${{ env.REMOTE_TAG }}
-
-    - name: Print Docker tag URL
-      id: print_url
-      run: python3 PrintDockerTagURL.py ${{ needs.bump_version.outputs.tag_name }} >> $GITHUB_OUTPUT
-      working-directory: .github/scripts
+    - uses: ./.github/actions/build_docker
+      id: build_docker
+      with:
+        dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+        lichess_token: ${{ secrets.LICHESS_TOKEN }}
+        tag_name: ${{ needs.bump_version.outputs.tag_name }}
 
   # stops the old Docker container, pulls the newly built image at the latest tag from Dockerhub,
   # and starts new container from this image

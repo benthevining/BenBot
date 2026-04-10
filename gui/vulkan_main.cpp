@@ -12,13 +12,6 @@
  * ======================================================================================
  */
 
-// Important note to the reader who wish to integrate imgui_impl_vulkan.cpp/.h in their own engine/app.
-// - Common ImGui_ImplVulkan_XXX functions and structures are used to interface with imgui_impl_vulkan.cpp/.h.
-//   You will use those if you want to use this rendering backend in your engine/app.
-// - Helper ImGui_ImplVulkanH_XXX functions and structures are only used by this example (main.cpp) and by
-//   the backend itself (imgui_impl_vulkan.cpp), but should PROBABLY NOT be used by your own engine/app code.
-// Read comments in imgui_impl_vulkan.h.
-
 #include "GLFW_Wrapper.hpp" // NOLINT(build/include_subdir)
 #include <GLFW/glfw3.h>
 #include <algorithm>
@@ -32,19 +25,35 @@
 #include <limits>
 #include <print>
 #include <span>
+#include <utility>
 
 // Volk headers
+
+#ifndef IMGUI_IMPL_VULKAN_USE_VOLK
+#    if __has_include(<volk.h>)
+#        define IMGUI_IMPL_VULKAN_USE_VOLK 1
+#    endif
+#endif
+
 #ifdef IMGUI_IMPL_VULKAN_USE_VOLK
-#    define VOLK_IMPLEMENTATION
+#    ifndef VOLK_IMPLEMENTATION
+#        define VOLK_IMPLEMENTATION
+#    endif
+
 #    include <volk.h>
 #endif
 
-#ifdef _DEBUG
-#    define APP_USE_VULKAN_DEBUG_REPORT
-static VkDebugReportCallbackEXT g_DebugReport = VK_NULL_HANDLE;
+// Settings
+
+#ifdef NDEBUG
+inline constexpr bool AppUseVulkanDebugReport = false;
+#else
+inline constexpr bool AppUseVulkanDebugReport = true;
 #endif
 
 // Data
+[[maybe_unused]] static VkDebugReportCallbackEXT g_DebugReport = VK_NULL_HANDLE;
+
 static VkAllocationCallbacks* g_Allocator      = nullptr;
 static VkInstance             g_Instance       = VK_NULL_HANDLE;
 static VkPhysicalDevice       g_PhysicalDevice = VK_NULL_HANDLE;
@@ -71,8 +80,7 @@ void check_vk_result(VkResult err)
         std::abort();
 }
 
-#ifdef APP_USE_VULKAN_DEBUG_REPORT
-VKAPI_ATTR VkBool32 VKAPI_CALL debug_report(
+[[maybe_unused]] VKAPI_ATTR VkBool32 VKAPI_CALL debug_report(
     [[maybe_unused]] VkDebugReportFlagsEXT flags,
     VkDebugReportObjectTypeEXT             objectType,
     [[maybe_unused]] uint64_t              object,
@@ -88,9 +96,8 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debug_report(
 
     return VK_FALSE;
 }
-#endif // APP_USE_VULKAN_DEBUG_REPORT
 
-[[nodiscard]] bool IsExtensionAvailable(
+[[nodiscard, gnu::const]] bool IsExtensionAvailable(
     const std::span<const VkExtensionProperties> properties,
     const char*                                  extension)
 {
@@ -100,7 +107,8 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debug_report(
         });
 }
 
-void SetupVulkan(ImVector<const char*> instance_extensions)
+void SetupVulkan(
+    ImVector<const char*> instance_extensions)
 {
     VkResult err;
 
@@ -126,12 +134,13 @@ void SetupVulkan(ImVector<const char*> instance_extensions)
             instance_extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
 
         // Enabling validation layers
-#ifdef APP_USE_VULKAN_DEBUG_REPORT
-        const char* layers[]            = { "VK_LAYER_KHRONOS_validation" };
-        create_info.enabledLayerCount   = 1;
-        create_info.ppEnabledLayerNames = layers;
-        instance_extensions.push_back("VK_EXT_debug_report");
-#endif
+        const char* layers[] = { "VK_LAYER_KHRONOS_validation" };
+
+        if constexpr (AppUseVulkanDebugReport) {
+            create_info.enabledLayerCount   = 1;
+            create_info.ppEnabledLayerNames = layers;
+            instance_extensions.push_back("VK_EXT_debug_report");
+        }
 
         // Create Vulkan Instance
         create_info.enabledExtensionCount   = static_cast<uint32_t>(instance_extensions.Size);
@@ -144,17 +153,17 @@ void SetupVulkan(ImVector<const char*> instance_extensions)
 #endif
 
         // Setup the debug report callback
-#ifdef APP_USE_VULKAN_DEBUG_REPORT
-        auto f_vkCreateDebugReportCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(g_Instance, "vkCreateDebugReportCallbackEXT");
-        IM_ASSERT(f_vkCreateDebugReportCallbackEXT != nullptr);
-        VkDebugReportCallbackCreateInfoEXT debug_report_ci = { };
-        debug_report_ci.sType                              = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
-        debug_report_ci.flags                              = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
-        debug_report_ci.pfnCallback                        = debug_report;
-        debug_report_ci.pUserData                          = nullptr;
-        err                                                = f_vkCreateDebugReportCallbackEXT(g_Instance, &debug_report_ci, g_Allocator, &g_DebugReport);
-        check_vk_result(err);
-#endif
+        if constexpr (AppUseVulkanDebugReport) {
+            auto f_vkCreateDebugReportCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(g_Instance, "vkCreateDebugReportCallbackEXT");
+            assert(f_vkCreateDebugReportCallbackEXT != nullptr);
+            VkDebugReportCallbackCreateInfoEXT debug_report_ci = { };
+            debug_report_ci.sType                              = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+            debug_report_ci.flags                              = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
+            debug_report_ci.pfnCallback                        = debug_report;
+            debug_report_ci.pUserData                          = nullptr;
+            err                                                = f_vkCreateDebugReportCallbackEXT(g_Instance, &debug_report_ci, g_Allocator, &g_DebugReport);
+            check_vk_result(err);
+        }
     }
 
     // Select Physical Device (GPU)
@@ -213,9 +222,8 @@ void SetupVulkan(ImVector<const char*> instance_extensions)
     }
 }
 
-// All the ImGui_ImplVulkanH_XXX structures/functions are optional helpers used by the demo.
-// Your real engine/app may not use them.
-void SetupVulkanWindow(ImGui_ImplVulkanH_Window* wd, VkSurfaceKHR surface, int width, int height)
+void SetupVulkanWindow(
+    ImGui_ImplVulkanH_Window* wd, VkSurfaceKHR surface, int width, int height)
 {
     // Check for WSI support
     VkBool32 res;
@@ -249,23 +257,25 @@ void CleanupVulkan()
 {
     vkDestroyDescriptorPool(g_Device, g_DescriptorPool, g_Allocator);
 
-#ifdef APP_USE_VULKAN_DEBUG_REPORT
-    // Remove the debug report callback
-    auto f_vkDestroyDebugReportCallbackEXT = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(g_Instance, "vkDestroyDebugReportCallbackEXT");
-    f_vkDestroyDebugReportCallbackEXT(g_Instance, g_DebugReport, g_Allocator);
-#endif // APP_USE_VULKAN_DEBUG_REPORT
+    if constexpr (AppUseVulkanDebugReport) {
+        // Remove the debug report callback
+        auto f_vkDestroyDebugReportCallbackEXT = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(g_Instance, "vkDestroyDebugReportCallbackEXT");
+        f_vkDestroyDebugReportCallbackEXT(g_Instance, g_DebugReport, g_Allocator);
+    }
 
     vkDestroyDevice(g_Device, g_Allocator);
     vkDestroyInstance(g_Instance, g_Allocator);
 }
 
-void CleanupVulkanWindow(ImGui_ImplVulkanH_Window* wd)
+void CleanupVulkanWindow(
+    ImGui_ImplVulkanH_Window* wd)
 {
     ImGui_ImplVulkanH_DestroyWindow(g_Instance, g_Device, wd, g_Allocator);
     vkDestroySurfaceKHR(g_Instance, wd->Surface, g_Allocator);
 }
 
-void FrameRender(ImGui_ImplVulkanH_Window* wd, ImDrawData* draw_data)
+void FrameRender(
+    ImGui_ImplVulkanH_Window* wd, ImDrawData* draw_data)
 {
     VkSemaphore image_acquired_semaphore  = wd->FrameSemaphores[wd->SemaphoreIndex].ImageAcquiredSemaphore;
     VkSemaphore render_complete_semaphore = wd->FrameSemaphores[wd->SemaphoreIndex].RenderCompleteSemaphore;
@@ -273,8 +283,10 @@ void FrameRender(ImGui_ImplVulkanH_Window* wd, ImDrawData* draw_data)
 
     if (err == VK_ERROR_OUT_OF_DATE_KHR or err == VK_SUBOPTIMAL_KHR)
         g_SwapChainRebuild = true;
+
     if (err == VK_ERROR_OUT_OF_DATE_KHR)
         return;
+
     if (err != VK_SUBOPTIMAL_KHR)
         check_vk_result(err);
 
@@ -331,7 +343,8 @@ void FrameRender(ImGui_ImplVulkanH_Window* wd, ImDrawData* draw_data)
     }
 }
 
-void FramePresent(ImGui_ImplVulkanH_Window* wd)
+void FramePresent(
+    ImGui_ImplVulkanH_Window* wd)
 {
     if (g_SwapChainRebuild)
         return;
@@ -348,10 +361,13 @@ void FramePresent(ImGui_ImplVulkanH_Window* wd)
 
     if (err == VK_ERROR_OUT_OF_DATE_KHR or err == VK_SUBOPTIMAL_KHR)
         g_SwapChainRebuild = true;
+
     if (err == VK_ERROR_OUT_OF_DATE_KHR)
         return;
+
     if (err != VK_SUBOPTIMAL_KHR)
         check_vk_result(err);
+
     wd->SemaphoreIndex = (wd->SemaphoreIndex + 1) % wd->SemaphoreCount; // Now we can use the next set of semaphores
 }
 } // namespace
@@ -380,12 +396,14 @@ int main(
         return EXIT_FAILURE;
     }
 
-    ImVector<const char*> extensions;
-    uint32_t              extensions_count = 0;
-    const char**          glfw_extensions  = glfwGetRequiredInstanceExtensions(&extensions_count);
-    for (uint32_t i = 0; i < extensions_count; i++)
-        extensions.push_back(glfw_extensions[i]);
-    SetupVulkan(extensions);
+    {
+        ImVector<const char*> extensions;
+        uint32_t              extensions_count = 0;
+        const char**          glfw_extensions  = glfwGetRequiredInstanceExtensions(&extensions_count);
+        for (uint32_t i = 0; i < extensions_count; i++)
+            extensions.push_back(glfw_extensions[i]);
+        SetupVulkan(std::move(extensions));
+    }
 
     // Create Window Surface
     VkSurfaceKHR surface;

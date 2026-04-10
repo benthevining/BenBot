@@ -158,7 +158,7 @@ void Engine::print_current_position(const string_view arguments) const
     print_labeled_info("Static eval: ", std::format("{}", eval::evaluate(pos)));
 
     searcher.context.probe_transposition_table(pos)
-        .transform([this](const TTData& data) {
+        .transform([this, &pos](const TTData& data) {
             print_labeled_info(
                 "TT hit: ",
                 std::format(
@@ -166,7 +166,8 @@ void Engine::print_current_position(const string_view arguments) const
                     data.searchedDepth, data.eval,
                     magic_enum::enum_name(data.evalType),
                     eval::Score::from_tt(data.eval, 0uz),
-                    pretty_print_move(data.bestMove.value_or(Move { }))));
+                    pretty_print_move(
+                        data.bestMove.value_or(Move { }), pos)));
 
             return std::monostate { };
         });
@@ -187,18 +188,13 @@ void Engine::print_compiler_info()
         resources::get_build_config()));
 }
 
-auto Engine::get_move_format() const -> chess::notation::MoveFormat
-{
-    return magic_enum::enum_cast<chess::notation::MoveFormat>(moveFormat.get_value())
-        .value();
-}
-
-auto Engine::pretty_print_move(const Move move) const -> std::string
+auto Engine::pretty_print_move(
+    const Move move, const Position& position) const -> std::string
 {
     return format_move(
-        get_move_format(),
-        searcher.context.get_position(),
-        move);
+        get_pretty_print_move_format(),
+        position, move,
+        algFormatUTF8PieceType.get_value());
 }
 
 } // namespace ben_bot

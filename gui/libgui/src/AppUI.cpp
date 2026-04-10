@@ -20,11 +20,13 @@
 #include <libgui/AppUI.hpp>
 #include <libgui/BoardEditor.hpp>
 #include <libgui/EnginePanel.hpp>
+#include <libgui/GameViewer.hpp>
 #include <libgui/Resources.hpp>
 #include <libutil/Console.hpp>
 #include <libutil/Files.hpp>
 #include <nfd.hpp>
 #include <nlohmann/json.hpp>
+#include <print>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -42,20 +44,26 @@ auto get_scaled_default_dimensions(const float scaleFactor)
         static_cast<int>(std::round(DefaultHeight * scaleFactor)));
 }
 
-namespace {
-    using std::filesystem::path;
-    using std::string_view;
+using std::filesystem::path;
+using std::string_view;
 
-    [[nodiscard]] auto imgui_ini_path() -> path
-    {
-        return "imgui.ini";
-    }
+auto get_default_imgui_ini_path() -> path
+{
+    return "imgui.ini";
+}
 
-    [[nodiscard]] auto app_state_file_path() -> path
-    {
-        return "benbot_state.json";
-    }
-} // namespace
+auto get_default_app_state_path() -> path
+{
+    return "benbot_state.json";
+}
+
+void load_default_ui_layout()
+{
+    const auto defaultData = resources::get_default_imgui_ini_data();
+
+    ImGui::LoadIniSettingsFromMemory(
+        defaultData.data(), defaultData.size());
+}
 
 void initialize(
     const float mainScaleFactor, AppState& state)
@@ -71,16 +79,15 @@ void initialize(
         io_.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     }
 
-    if (not exists(imgui_ini_path())) {
-        const auto defaultData = resources::get_default_imgui_ini_data();
-        ImGui::LoadIniSettingsFromMemory(defaultData.data(), defaultData.size());
-    }
+    if (not exists(get_default_imgui_ini_path()))
+        load_default_ui_layout();
 
-    if (const auto stateFile = app_state_file_path();
+    if (const auto stateFile = get_default_app_state_path();
         exists(stateFile)) {
         state.load_from(stateFile);
     } else {
-        state.update_from_string(resources::get_default_app_state());
+        state.update_from_string(
+            resources::get_default_app_state());
     }
 
     state.enginePanel.engine.handle_command("ucinewgame");
@@ -104,8 +111,17 @@ void render(AppState& state)
     ImGui::DockSpaceOverViewport();
 
     render_app_settings_panel(state);
-    render_board_editor(state.boardEditor, state.appSettings.showTooltips, state.enginePanel.engine);
-    render_engine_panel(state.enginePanel, state.appSettings.showTooltips);
+
+    const bool showTooltips = state.appSettings.showTooltips;
+
+    render_board_editor(
+        state.boardEditor, showTooltips, state.enginePanel.engine);
+
+    render_engine_panel(
+        state.enginePanel, showTooltips);
+
+    render_game_viewer(
+        state.gameViewer, state.enginePanel.engine, showTooltips);
 
     ImGui::Render();
 }
@@ -116,13 +132,15 @@ void shutdown(const AppState& state)
 
     NFD::Quit();
 
-    state.write_to(app_state_file_path());
+    state.write_to(
+        get_default_app_state_path());
 }
 
 using nlohmann::json;
 
 inline constexpr string_view TAG_BOARD_EDITOR { "board_editor" };
 inline constexpr string_view TAG_ENGINE { "engine" };
+inline constexpr string_view TAG_GAME_VIEWER { "game_viewer" };
 inline constexpr string_view TAG_SETTINGS { "app_settings" };
 
 auto AppState::to_string() const -> std::string
@@ -132,12 +150,13 @@ auto AppState::to_string() const -> std::string
     data[TAG_BOARD_EDITOR] = boardEditor.to_string();
     data[TAG_ENGINE]       = enginePanel.to_string();
     data[TAG_SETTINGS]     = appSettings.to_string();
+    data[TAG_GAME_VIEWER]  = gameViewer.to_string();
 
     return data.dump();
 }
 
 void AppState::update_from_string(const string_view str)
-{
+try {
     const auto parsed = json::parse(str);
 
     boardEditor = BoardEditorState::from_string(
@@ -148,6 +167,12 @@ void AppState::update_from_string(const string_view str)
 
     appSettings = AppSettings::from_string(
         parsed.at(TAG_SETTINGS).get<string_view>());
+
+    gameViewer = GameViewerState::from_string(
+        parsed.at(TAG_GAME_VIEWER).get<string_view>());
+} catch (const nlohmann::detail::out_of_range& error) {
+    std::println(
+        stderr, "Error loading state: {}", error.what());
 }
 
 void AppState::load_from(const path& filePath)
@@ -158,18 +183,13 @@ void AppState::load_from(const path& filePath)
         return;
     }
 
-    try {
-        [[maybe_unused]] const auto result
-            = util::files::load(filePath)
-                  .transform([this](const string_view fileContent) {
-                      update_from_string(fileContent);
-                      return std::monostate { };
-                  })
-                  .transform_error(util::print_error);
-    } catch (const nlohmann::detail::out_of_range& error) {
-        std::println(
-            stderr, "Error loading state: {}", error.what());
-    }
+    [[maybe_unused]] const auto result
+        = util::files::load(filePath)
+              .transform([this](const string_view fileContent) {
+                  update_from_string(fileContent);
+                  return std::monostate { };
+              })
+              .transform_error(util::print_error);
 }
 
 void AppState::write_to(const path& filePath) const

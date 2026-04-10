@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # ======================================================================================
 #
 # ░▒▓███████▓▒░░▒▓████████▓▒░▒▓███████▓▒░       ░▒▓███████▓▒░ ░▒▓██████▓▒░▒▓████████▓▒░
@@ -12,35 +10,38 @@
 #
 # ======================================================================================
 
-# This script generates a MacOS icns file from an SVG.
+set (GLFW_BUILD_DOCS OFF)
+set (GLFW_INSTALL OFF)
 
-svgfile="$1"
-iconOut="$2"
+FetchContent_Declare (
+    glfw
+    SYSTEM
+    GIT_REPOSITORY "https://github.com/glfw/glfw.git"
+    GIT_TAG 3.4
+    GIT_SHALLOW ON
+    FIND_PACKAGE_ARGS 3.4
+)
 
-filename=$(basename -- "$svgfile")
-name="${filename%.*}"
+FetchContent_Declare (
+    stb
+    SYSTEM
+    GIT_REPOSITORY "https://github.com/nothings/stb.git"
+    GIT_TAG origin/master
+    FIND_PACKAGE_ARGS
+)
 
-echo "Processing $name ..."
-set -e
+FetchContent_MakeAvailable (glfw stb)
 
-iconset="$(mktemp -d)/$name.iconset"
-mkdir -p "$iconset"
+add_library (
+    benbotgui_glfw_wrapper STATIC "${imgui_backends_dir}/imgui_impl_glfw.cpp" GLFW_Wrapper.cpp
+)
 
-# run inkscape from the command line to generate the iconset formatted for icns
-inkscape -o "$iconset/icon_16x16.png"      -w   16 -h   16 "$svgfile"
-inkscape -o "$iconset/icon_16x16@2x.png"   -w   32 -h   32 "$svgfile"
-inkscape -o "$iconset/icon_32x32.png"      -w   32 -h   32 "$svgfile"
-inkscape -o "$iconset/icon_32x32@2x.png"   -w   64 -h   64 "$svgfile"
-inkscape -o "$iconset/icon_128x128.png"    -w  128 -h  128 "$svgfile"
-inkscape -o "$iconset/icon_128x128@2x.png" -w  256 -h  256 "$svgfile"
-inkscape -o "$iconset/icon_256x256.png"    -w  256 -h  256 "$svgfile"
-inkscape -o "$iconset/icon_256x256@2x.png" -w  512 -h  512 "$svgfile"
-inkscape -o "$iconset/icon_512x512.png"    -w  512 -h  512 "$svgfile"
-inkscape -o "$iconset/icon_512x512@2x.png" -w 1024 -h 1024 "$svgfile"
+target_link_libraries (
+    benbotgui_glfw_wrapper PUBLIC glfw ben_bot::libgui PRIVATE imgui::imgui ben_bot::gui_resources
+)
 
-# run osx iconutil app to convert the iconset to icns format
-iconutil --convert icns --output "$iconOut" "$iconset"
+target_include_directories (
+    benbotgui_glfw_wrapper PUBLIC "${CMAKE_CURRENT_LIST_DIR}" PRIVATE "${stb_SOURCE_DIR}"
+)
 
-echo "Done."
-
-exit 0
+add_library (ben_bot::glfw_wrapper ALIAS benbotgui_glfw_wrapper)

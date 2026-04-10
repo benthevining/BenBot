@@ -20,10 +20,14 @@
 #pragma once
 
 #include <functional>
+#include <magic_enum/magic_enum.hpp>
+#include <ranges>
 #include <span>
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <type_traits>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -201,8 +205,9 @@ private:
 /** A multiple-choice option that can have one of several predefined string values.
 
     @ingroup uci
+    @see EnumOption
  */
-struct ComboOption final : Option {
+struct ComboOption : Option {
     using Value    = string_view;
     using Callback = std::function<void(string_view)>;
 
@@ -257,6 +262,25 @@ private:
     string help;
 
     Callback onChange { [](string_view) { } };
+};
+
+/** This simple concept matches any enumeration type. */
+template <typename T>
+concept Enum = std::is_enum_v<T>;
+
+/** A ComboOption with options for each value of an enum.
+
+    @ingroup uci
+    @see ComboOption
+ */
+template <Enum T>
+struct EnumOption final : ComboOption {
+    /** Creates an enum option. */
+    EnumOption(
+        string name, T defaultValue, string helpString);
+
+    /** Returns the option's current value as an enum. */
+    [[nodiscard]] auto get_enum_value() const -> T;
 };
 
 /** An option that can have any arbitrary string value.
@@ -357,5 +381,52 @@ private:
 
     string help;
 };
+
+/*
+                         ___                           ,--,
+      ,---,            ,--.'|_                ,--,   ,--.'|
+    ,---.'|            |  | :,'             ,--.'|   |  | :
+    |   | :            :  : ' :             |  |,    :  : '    .--.--.
+    |   | |   ,---.  .;__,'  /    ,--.--.   `--'_    |  ' |   /  /    '
+  ,--.__| |  /     \ |  |   |    /       \  ,' ,'|   '  | |  |  :  /`./
+ /   ,'   | /    /  |:__,'| :   .--.  .-. | '  | |   |  | :  |  :  ;_
+.   '  /  |.    ' / |  '  : |__  \__\/: . . |  | :   '  : |__ \  \    `.
+'   ; |:  |'   ;   /|  |  | '.'| ," .--.; | '  : |__ |  | '.'| `----.   \
+|   | '/  ''   |  / |  ;  :    ;/  /  ,.  | |  | '.'|;  :    ;/  /`--'  /__  ___  ___
+|   :    :||   :    |  |  ,   /;  :   .'   \;  :    ;|  ,   /'--'.     /  .\/  .\/  .\
+ \   \  /   \   \  /    ---`-' |  ,     .-./|  ,   /  ---`-'   `--'---'\  ; \  ; \  ; |
+  `----'     `----'             `--`---'     ---`-'                     `--" `--" `--"
+
+ */
+
+namespace detail {
+    template <Enum T>
+    [[nodiscard]] auto get_all_value_strings()
+        -> std::vector<string>
+    {
+        return magic_enum::enum_names<T>()
+             | std::views::transform([](const string_view str) { return string { str }; })
+             | std::ranges::to<std::vector>();
+    }
+} // namespace detail
+
+template <Enum T>
+EnumOption<T>::EnumOption(
+    string name, T defaultValue, string helpString)
+    : ComboOption {
+        std::move(name),
+        detail::get_all_value_strings<T>(),
+        std::string { magic_enum::enum_name(defaultValue) },
+        std::move(helpString)
+    }
+{
+}
+
+template <Enum T>
+auto EnumOption<T>::get_enum_value() const -> T
+{
+    return magic_enum::enum_cast<T>(get_value())
+        .value();
+}
 
 } // namespace chess::uci

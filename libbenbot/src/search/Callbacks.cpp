@@ -99,21 +99,21 @@ namespace {
         std::cout << termcolor::reset;
     }
 
-    using MovePrinter = std::function<std::string(Move)>;
+    using chess::game::Position;
+
+    using MovePrinter = std::function<std::string(Move, const Position&)>;
 
     [[nodiscard]] auto format_pv(
+        Position                    pos,
         const std::span<const Move> pv,
         const MovePrinter&          printMove) -> string
     {
-        if (pv.empty()) {
-            // this is possible if we're checkmated
-            return { };
-        }
-
         string result;
 
-        for (const auto move : pv)
-            result.append(std::format("{} ", printMove(move)));
+        for (const auto move : pv) {
+            result.append(std::format("{} ", printMove(move, pos)));
+            pos.make_move(move);
+        }
 
         return result;
     }
@@ -187,7 +187,8 @@ namespace {
 
         // PV
         // NB. passing PV to operator<< by value gives a warning on MSVC
-        const auto pv = format_pv(res.pv, printMove);
+        const auto pv = format_pv(
+            res.position, res.pv, printMove);
         std::cout << pv << '\n';
     }
 } // namespace

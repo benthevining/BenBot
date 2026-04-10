@@ -22,9 +22,14 @@
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t;
 #include <libbenbot/eval/Score.hpp>
+#include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <optional>
+
+namespace chess::notation {
+struct EPDPosition;
+} // namespace chess::notation
 
 namespace chess::uci::printing {
 struct SearchInfo;
@@ -32,6 +37,7 @@ struct SearchInfo;
 
 namespace ben_bot::search {
 
+using chess::game::Position;
 using chess::moves::Move;
 using chess::moves::MoveList;
 using std::chrono::milliseconds;
@@ -42,6 +48,9 @@ using std::size_t;
     on each iterative deepening iteration).
  */
 struct [[nodiscard]] Result final {
+    /** The root position that was searched. */
+    Position position;
+
     /** The total amount of time spent searching to produce this result.
         For depths greater than 1, this value is the duration of the entire
         search, including lower depths of the iterative deepening loop.
@@ -88,10 +97,10 @@ struct [[nodiscard]] Result final {
     size_t hashfull { 0uz };
 
     /** Returns the best move found by this search. */
-    [[nodiscard]] Move best_move() const { return pv.front(); }
+    [[nodiscard]] auto best_move() const -> Move { return pv.front(); }
 
     /** Returns the ponder move found by this search, if one exists. */
-    [[nodiscard]] std::optional<Move> ponder_move() const
+    [[nodiscard]] auto ponder_move() const -> std::optional<Move>
     {
         if (pv.size() < 2uz)
             return std::nullopt;
@@ -104,6 +113,14 @@ struct [[nodiscard]] Result final {
 
     /** Converts this object to the libchess type used for printing UCI-formatted output. */
     [[nodiscard]] auto to_libchess(bool includeDebugInfo) const -> LibchessResult;
+
+    /** Fills the EPD position's operations with the search results and statistics
+        from this result. All standard EPD operations that contain search-related
+        statistics and information that correspond to fields of this structure are
+        filled in or updated.
+     */
+    void fill_standard_epd_operations(
+        chess::notation::EPDPosition& position) const;
 };
 
 } // namespace ben_bot::search

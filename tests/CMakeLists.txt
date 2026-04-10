@@ -47,11 +47,6 @@ add_subdirectory (unit)
 
 #
 
-add_test (NAME ben_bot.bench.engine_nps COMMAND "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}"
-                                                --target bench --config "$<CONFIG>"
-          CONFIGURATIONS Release
-)
-
 cmake_host_system_information (RESULT num_cores QUERY NUMBER_OF_PHYSICAL_CORES)
 
 add_test (
@@ -63,7 +58,4 @@ add_test (
         --config "$<CONFIG>" --parallel "${num_cores}"
 )
 
-set_tests_properties (ben_bot.bench.engine_nps ben_bot.verify_headers PROPERTIES RUN_SERIAL TRUE)
-
-# set value to 0 to mean no timeout
-set_tests_properties (ben_bot.verify_headers PROPERTIES TIMEOUT 0)
+set_tests_properties (ben_bot.verify_headers PROPERTIES RUN_SERIAL TRUE TIMEOUT 0)

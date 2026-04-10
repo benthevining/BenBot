@@ -10,12 +10,32 @@
 #
 # ======================================================================================
 
+set (BENBOT_APP_ICON_SVG "${CMAKE_CURRENT_LIST_DIR}/res/pieces/Queen-White.svg"
+     CACHE INTERNAL "Path to SVG file used for app icon"
+)
+
 file (GLOB_RECURSE resources LIST_DIRECTORIES false CONFIGURE_DEPENDS
                                                     "${CMAKE_CURRENT_LIST_DIR}/res/*.svg"
 )
 
+unset (icon_png)
+
+if (INKSCAPE_PROGRAM)
+    set (icon_png "${CMAKE_CURRENT_LIST_DIR}/res/icon.png")
+
+    # cmake-format: off
+    add_svg_to_png_command (
+            INPUT  "${BENBOT_APP_ICON_SVG}"
+            OUTPUT "${icon_png}"
+            OUT_WIDTH  512
+            OUT_HEIGHT 512
+            COMMENT "Generating PNG app icon resource..."
+    )
+    # cmake-format: on
+endif ()
+
 cmrc_add_resource_library (
-    libgui_resources ${resources} res/default_layout.ini res/default_state.json res/icon.png
+    libgui_resources ${resources} res/default_layout.ini res/default_state.json ${icon_png}
 )
 
 target_compile_features (libgui_resources PRIVATE cxx_std_23 PUBLIC cxx_std_17)

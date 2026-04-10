@@ -15,7 +15,6 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
-#include <charconv>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
 #include <expected>
@@ -39,11 +38,45 @@ namespace chess::notation {
 auto GameRecord::get_final_position() const -> Position
 {
     return std::accumulate(
-        moves.begin(), moves.end(),
-        startingPosition,
+        moves.moves.begin(), moves.moves.end(),
+        get_starting_position(),
         [](const Position& pos, const Move& move) {
             return after_move(pos, move.move);
         });
+}
+
+auto GameRecord::get_move_at_pos(const PositionPointer& pos) const -> const Move*
+{
+    if (moves.moves.empty())
+        return nullptr;
+
+    const Variation* variation { &moves };
+    const Move*      move { nullptr };
+
+    auto variationIdx { 0uz };
+    auto plyFromRoot { 0uz };
+
+    do {
+        // TODO: need to go back to parent variation here
+        if (variationIdx >= variation->moves.size())
+            return nullptr;
+
+        move = &variation->moves.at(variationIdx);
+
+        for (const auto& subvar : move->variations) {
+            if (std::ranges::contains(pos.variationIDs, subvar.variationID)) {
+                variationIdx = 0uz;
+                variation    = &subvar;
+                move         = &subvar.moves.front();
+
+                break;
+            }
+        }
+
+        ++plyFromRoot;
+    } while (plyFromRoot < pos.totalPlyFromRoot);
+
+    return move;
 }
 
 namespace {
@@ -52,13 +85,279 @@ namespace {
     using std::string;
     using std::string_view;
     using Metadata            = std::unordered_map<std::string, std::string>;
-    using Moves               = std::vector<GameRecord::Move>;
     using GameResult          = std::optional<game::Result>;
-    using ResultStrOrErrorStr = std::expected<string_view, string_view>;
+    using ResultStrOrErrorStr = std::expected<string_view, string>;
 
     using util::strings::int_from_string;
     using util::strings::split_at_first_space_or_newline;
     using util::strings::trim;
+
+    struct MoveListParseContext final {
+        // writes the parsed moves into output and returns the
+        // game result string (the rest of the PGN after the last move)
+        [[nodiscard]] static auto parse_move_list(
+            string_view            pgnText,
+            const Position&        position,
+            GameRecord::Variation& output)
+            -> ResultStrOrErrorStr;
+
+    private:
+        // parses a move list, including nested comments, NAGs, and variations
+        // if IsVariation is true, always returns an empty string_view
+        // if IsVariation is false (i.e. parsing root PGN), returns text of the game result
+        template <bool IsVariation>
+        auto parse_moves_internal() -> ResultStrOrErrorStr;
+
+        // writes the content of the block comment to the last move in output
+        [[nodiscard]] auto parse_block_comment() -> std::expected<void, string>;
+
+        // writes the content of the line comment to the last move in output
+        void parse_line_comment();
+
+        // writes the NAG glyph value to the last move in output
+        void parse_nag();
+
+        [[nodiscard]] auto create_child_variation_context(
+            string_view pgn) const -> MoveListParseContext;
+
+        // if successful, returns the rest of the PGN string after the variation
+        [[nodiscard]] auto parse_variation() const -> ResultStrOrErrorStr;
+
+        // parses the move, adds it to the output, and makes the move on the position
+        [[nodiscard]] auto parse_move(string_view moveText)
+            -> std::expected<std::monostate, string>;
+
+        [[nodiscard]] auto with_position(const Position& pos) const -> MoveListParseContext
+        {
+            auto copy { *this };
+            copy.position = pos;
+            return copy;
+        }
+
+        MoveListParseContext(
+            const string_view pgn, const Position& pos, size_t& varID, GameRecord::Variation& variation)
+            : pgnText { pgn }
+            , position { pos }
+            , variationID { varID }
+            , output { variation }
+        {
+        }
+
+        string_view pgnText;
+
+        Position position;
+
+        size_t& variationID;
+
+        GameRecord::Variation& output;
+    };
+
+    // parses a move list, including nested comments, NAGs, and variations
+    // if IsVariation is true, always returns an empty string_view
+    // if IsVariation is false (i.e. parsing root PGN), returns text of the game result
+    template <bool IsVariation>
+    auto MoveListParseContext::parse_moves_internal()
+        -> ResultStrOrErrorStr
+    {
+        // With a PGN like: 1. e4 (e3), the move e3 was made from the starting position,
+        // not the position after e4. So because Position doesn't have an unmake_move()
+        // function, we instead keep a copy of the previous position before parsing each move
+        auto lastPos { position };
+
+        while (true) {
+            pgnText = trim(pgnText);
+
+            if (pgnText.empty())
+                return { };
+
+            switch (pgnText.front()) {
+                case '{': {
+                    // comment: { continues to }
+                    auto rest = parse_block_comment();
+
+                    if (not rest.has_value())
+                        return std::unexpected { std::move(rest).error() };
+
+                    continue;
+                }
+
+                case ';': {
+                    // comment: ; continues to end of line
+                    parse_line_comment();
+                    continue;
+                }
+
+                case '$': {
+                    // NAG
+                    parse_nag();
+                    continue;
+                }
+
+                case '(': {
+                    // variation
+                    auto rest = with_position(lastPos).parse_variation();
+
+                    if (not rest.has_value())
+                        return std::unexpected { std::move(rest).error() };
+
+                    pgnText = rest.value();
+                    continue;
+                }
+
+                default: {
+                    // either move as SAN or game result string
+
+                    const auto [firstMove, rest] = split_at_first_space_or_newline(pgnText);
+
+                    // tolerate notation such as: 1. e4 e5
+                    // in that case, firstMove will be "1." and rest begins with "e4"
+                    // this also catches cases such as "3. ... a5": we skip both the "3." and "..." tokens with this check
+                    if (firstMove.back() == '.') {
+                        pgnText = rest;
+                        continue;
+                    }
+
+                    if constexpr (not IsVariation) {
+                        if (firstMove.contains('-') and trim(rest).empty()) {
+                            // we're parsing the end of the move list, this token is the game result
+                            return firstMove;
+                        }
+                    }
+
+                    lastPos = position;
+
+                    auto result = parse_move(firstMove);
+
+                    if (not result.has_value())
+                        return std::unexpected { std::move(result).error() };
+
+                    pgnText = rest;
+                }
+            }
+        }
+    }
+
+    auto MoveListParseContext::parse_move_list(
+        const string_view      pgnText,
+        const Position&        position,
+        GameRecord::Variation& output)
+        -> ResultStrOrErrorStr
+    {
+        size_t variationID { 0uz };
+
+        MoveListParseContext context { pgnText, position, variationID, output };
+
+        return context.parse_moves_internal<false>();
+    }
+
+    auto MoveListParseContext::parse_block_comment() -> std::expected<void, string>
+    {
+        assert(pgnText.front() == '{');
+
+        const auto closeBracketIdx = pgnText.find('}');
+
+        if (closeBracketIdx == string_view::npos)
+            return std::unexpected { "Expected '}' following '{'" };
+
+        if (not output.moves.empty())
+            output.moves.back().comment = pgnText.substr(1uz, closeBracketIdx - 1uz);
+
+        pgnText = pgnText.substr(closeBracketIdx + 1uz);
+
+        return { };
+    }
+
+    void MoveListParseContext::parse_line_comment()
+    {
+        assert(pgnText.front() == ';');
+
+        const auto newlineIdx = pgnText.find('\n');
+
+        if (newlineIdx == string_view::npos) {
+            // assume that a ; comment was the last thing in the file
+            if (not output.moves.empty())
+                output.moves.back().comment = trim(pgnText.substr(1uz));
+
+            pgnText = { };
+            return;
+        }
+
+        if (not output.moves.empty())
+            output.moves.back().comment = trim(pgnText.substr(1uz, newlineIdx - 1uz));
+
+        pgnText = pgnText.substr(newlineIdx + 1uz);
+    }
+
+    void MoveListParseContext::parse_nag()
+    {
+        // NB. we're not doing explicit checks for null NAGs here
+        // they shouldn't appear in PGN files we parse, but I don't
+        // think it's necessary to refuse to parse them
+
+        assert(pgnText.front() == '$');
+
+        const auto [nag, rest] = split_at_first_space_or_newline(
+            pgnText.substr(1uz));
+
+        if (not output.moves.empty()) {
+            const auto value = int_from_string<std::uint_least8_t>(trim(nag));
+
+            output.moves.back().nags.emplace_back(static_cast<NAG>(value));
+        }
+
+        pgnText = rest;
+    }
+
+    auto MoveListParseContext::create_child_variation_context(
+        const string_view pgn) const -> MoveListParseContext
+    {
+        auto& variation = output.moves.back().variations.emplace_back();
+
+        variation.startingPosition = position;
+        variation.variationID      = variationID++;
+
+        return { pgn, position, variationID, variation };
+    }
+
+    // writes the variation to the last move in output
+    // and returns the rest of the pgnText after the variation
+    auto MoveListParseContext::parse_variation() const -> ResultStrOrErrorStr
+    {
+        assert(pgnText.front() == '(');
+
+        if (output.moves.empty())
+            return std::unexpected { "Cannot parse a variation with an empty move list!" };
+
+        return util::strings::find_matching_close_paren(pgnText)
+            .and_then([this](const size_t closeParenIdx) {
+                return create_child_variation_context(
+                    pgnText.substr(1uz, closeParenIdx - 1uz))
+                    .parse_moves_internal<true>()
+                    .transform([this, closeParenIdx]([[maybe_unused]] const string_view alwaysEmpty) {
+                        return pgnText.substr(closeParenIdx + 1uz);
+                    })
+                    .transform_error(util::strings::to_owning_string);
+            });
+    }
+
+    auto MoveListParseContext::parse_move(string_view moveText)
+        -> std::expected<std::monostate, string>
+    {
+        // move numbers may start with 3. or 3...
+        if (const auto lastDotIdx = moveText.rfind('.');
+            lastDotIdx != string_view::npos) {
+            moveText = moveText.substr(lastDotIdx + 1uz);
+        }
+
+        return from_alg(position, moveText)
+            .transform([this](const Move move) {
+                position.make_move(move);
+
+                output.moves.emplace_back(move);
+
+                return std::monostate { };
+            });
+    }
 
     // writes tag key/value pairs into metadata and returns
     // the rest of the PGN text that's left
@@ -104,216 +403,6 @@ namespace {
         return pgnText;
     }
 
-    // writes the content of the block comment to the last move in output
-    // and returns the rest of the pgnText after the } that closes this comment
-    [[nodiscard]] auto parse_block_comment(
-        const string_view pgnText, Moves& output)
-        -> ResultStrOrErrorStr
-    {
-        assert(pgnText.front() == '{');
-
-        const auto closeBracketIdx = pgnText.find('}');
-
-        if (closeBracketIdx == string_view::npos)
-            return std::unexpected { "Expected '}' following '{'" };
-
-        if (not output.empty())
-            output.back().comment = pgnText.substr(1uz, closeBracketIdx - 1uz);
-
-        return pgnText.substr(closeBracketIdx + 1uz);
-    }
-
-    // writes the content of the line comment to the last move in output
-    // and returns the rest of the pgnText after the newline that ends this comment
-    [[nodiscard]] auto parse_line_comment(
-        const string_view pgnText, Moves& output)
-        -> string_view
-    {
-        assert(pgnText.front() == ';');
-
-        const auto newlineIdx = pgnText.find('\n');
-
-        if (newlineIdx == string_view::npos) {
-            // assume that a ; comment was the last thing in the file
-            if (not output.empty())
-                output.back().comment = trim(pgnText.substr(1uz));
-
-            return { };
-        }
-
-        if (not output.empty())
-            output.back().comment = trim(pgnText.substr(1uz, newlineIdx - 1uz));
-
-        return pgnText.substr(newlineIdx + 1uz);
-    }
-
-    // writes the NAG glyph value to the last move in output
-    // and returns the rest of the pgnText after the NAG glyph
-    [[nodiscard]] auto parse_nag(
-        const string_view pgnText, Moves& output)
-        -> string_view
-    {
-        // NB. we're not doing explicit checks for null NAGs here
-        // they shouldn't appear in PGN files we parse, but I don't
-        // think it's necessary to refuse to parse them
-
-        assert(pgnText.front() == '$');
-
-        const auto [nag, rest] = split_at_first_space_or_newline(pgnText.substr(1uz));
-
-        if (not output.empty()) {
-            const auto value = int_from_string<std::uint_least8_t>(trim(nag));
-
-            output.back().nags.emplace_back(static_cast<NAG>(value));
-        }
-
-        return rest;
-    }
-
-    // parses the move, adds it to the output, and makes the move on the position
-    void parse_move(
-        Position& position, string_view moveText, Moves& output)
-    {
-        // move numbers may start with 3. or 3...
-        if (const auto lastDotIdx = moveText.rfind('.');
-            lastDotIdx != string_view::npos) {
-            moveText = moveText.substr(lastDotIdx + 1uz);
-        }
-
-        const auto move = from_alg(position, moveText).value();
-
-        position.make_move(move);
-
-        output.emplace_back(move);
-    }
-
-    [[nodiscard]] auto parse_variation(
-        string_view pgnText, const Position& position, Moves& output)
-        -> std::expected<string_view, string>;
-
-    // parses a move list, including nested comments, NAGs, and variations
-    // if IsVariation is true, always returns an empty string_view
-    // if IsVariation is false (i.e. parsing root PGN), returns text of the game result
-    template <bool IsVariation>
-    [[nodiscard]] auto parse_moves_internal(
-        string_view pgnText,
-        Position    position, // intentionally by copy!
-        Moves&      output)
-        -> ResultStrOrErrorStr
-    {
-        // With a PGN like: 1. e4 (e3), the move e3 was made from the starting position,
-        // not the position after e4. So because Position doesn't have an unmake_move()
-        // function, we instead keep a copy of the previous position before parsing each move
-        auto lastPos { position };
-
-        while (true) {
-            pgnText = trim(pgnText);
-
-            if (pgnText.empty())
-                return { };
-
-            switch (pgnText.front()) {
-                case '{': {
-                    // comment: { continues to }
-                    const auto rest = parse_block_comment(pgnText, output);
-
-                    if (not rest.has_value())
-                        return std::unexpected { rest.error() };
-
-                    pgnText = rest.value();
-                    continue;
-                }
-
-                case ';': {
-                    // comment: ; continues to end of line
-                    pgnText = parse_line_comment(pgnText, output);
-                    continue;
-                }
-
-                case '$': {
-                    // NAG
-                    pgnText = parse_nag(pgnText, output);
-                    continue;
-                }
-
-                case '(': {
-                    // variation
-                    const auto rest = parse_variation(pgnText, lastPos, output);
-
-                    if (not rest.has_value())
-                        return std::unexpected { rest.error() };
-
-                    pgnText = rest.value();
-                    continue;
-                }
-
-                default: {
-                    // either move as SAN or game result string
-
-                    const auto [firstMove, rest] = split_at_first_space_or_newline(pgnText);
-
-                    // tolerate notation such as: 1. e4 e5
-                    // in that case, firstMove will be "1." and rest begins with "e4"
-                    // this also catches cases such as "3. ... a5": we skip both the "3." and "..." tokens with this check
-                    if (firstMove.back() == '.') {
-                        pgnText = rest;
-                        continue;
-                    }
-
-                    if constexpr (not IsVariation) {
-                        if (firstMove.contains('-') and trim(rest).empty()) {
-                            // we're parsing the end of the move list, this token is the game result
-                            return firstMove;
-                        }
-                    }
-
-                    lastPos = position;
-
-                    parse_move(position, firstMove, output);
-
-                    pgnText = rest;
-                }
-            }
-        }
-    }
-
-    // writes the variation to the last move in output
-    // and returns the rest of the pgnText after the variation
-    [[nodiscard]] auto parse_variation(
-        const string_view pgnText,
-        const Position&   position,
-        Moves&            output)
-        -> std::expected<string_view, string>
-    {
-        assert(pgnText.front() == '(');
-
-        if (output.empty())
-            return std::unexpected { "Cannot parse a variation with an empty move list!" };
-
-        return util::strings::find_matching_close_paren(pgnText)
-            .and_then([pgnText, &position, &output](const size_t closeParenIdx) {
-                return parse_moves_internal<true>(
-                    pgnText.substr(1uz, closeParenIdx - 1uz),
-                    position,
-                    output.back().variations.emplace_back())
-                    .and_then([pgnText, closeParenIdx]([[maybe_unused]] const string_view alwaysEmpty) -> ResultStrOrErrorStr {
-                        return pgnText.substr(closeParenIdx + 1uz);
-                    })
-                    .transform_error([](const string_view error) { return string { error }; });
-            });
-    }
-
-    // writes the parsed moves into output and returns the
-    // game result string (the rest of the PGN after the last move)
-    [[nodiscard]] auto parse_move_list(
-        const string_view pgnText,
-        const Position&   position,
-        Moves&            output)
-        -> ResultStrOrErrorStr
-    {
-        return parse_moves_internal<false>(pgnText, position, output);
-    }
-
     [[nodiscard]] auto parse_game_result(
         const string_view text, const GameRecord& game)
         -> GameResult
@@ -338,7 +427,7 @@ namespace {
 
 } // namespace
 
-using GameOrError = std::expected<GameRecord, string_view>;
+using GameOrError = std::expected<GameRecord, string>;
 
 auto from_pgn(const string_view pgnText) -> GameOrError
 {
@@ -348,10 +437,11 @@ auto from_pgn(const string_view pgnText) -> GameOrError
         .and_then([&game](const string_view afterMeta) -> GameOrError {
             if (const auto posStr = game.metadata.find("FEN");
                 posStr != game.metadata.end()) {
-                game.startingPosition = from_fen(posStr->second).value_or(Position { });
+                game.moves.startingPosition = from_fen(posStr->second).value_or(Position { });
             }
 
-            return parse_move_list(afterMeta, game.startingPosition, game.moves)
+            return MoveListParseContext::parse_move_list(
+                afterMeta, game.get_starting_position(), game.moves)
                 .and_then([&game](const string_view resultText) -> GameOrError {
                     game.result = parse_game_result(resultText, game);
 
@@ -481,17 +571,17 @@ namespace {
     }
 
     void write_move_list(
-        Position     position,
-        const Moves& moves,
-        const bool   useBlockComments,
-        string&      output)
+        Position                     position,
+        const GameRecord::Variation& moves,
+        const bool                   useBlockComments,
+        string&                      output)
     {
         // true if we need to insert a move number before Black's next move
         // true for the first move of the game, the first move of a variation,
         // the first move following a variation, or the first move after a comment
         bool writeMoveNumber { true };
 
-        for (const auto& move : moves) {
+        for (const auto& move : moves.moves) {
             if (position.is_white_to_move()) {
                 output.append(std::format("{}.{} ",
                     position.fullMoveCounter, to_alg(position, move.move)));
@@ -565,15 +655,16 @@ namespace {
 
 } // namespace
 
-auto to_pgn(const GameRecord& game, const bool useBlockComments) -> string
+auto to_pgn(
+    const GameRecord& game, const bool useBlockComments) -> string
 {
     string result;
 
-    write_metadata(game.metadata, game.startingPosition, result);
+    write_metadata(game.metadata, game.get_starting_position(), result);
 
     result.append(1uz, '\n');
 
-    write_move_list(game.startingPosition, game.moves, useBlockComments, result);
+    write_move_list(game.get_starting_position(), game.moves, useBlockComments, result);
 
     write_game_result(game.result, result);
 
@@ -581,6 +672,33 @@ auto to_pgn(const GameRecord& game, const bool useBlockComments) -> string
         result.pop_back();
 
     return result;
+}
+
+auto format_nag(const NAG nag) -> string_view
+{
+    switch (nag) {
+        using enum NAG;
+
+        case Good                  : return "!";
+        case Brilliant             : return "!!";
+        case Inaccuracy            : return "?";
+        case Blunder               : return "??";
+        case Interesting           : return "!?";
+        case Dubious               : return "?!";
+        case Forced                : return "\xE2\x96\xA1";
+        case Drawish               : return "=";
+        case Unclear               : return "\xE2\x88\x9E";
+        case WhiteSlightAdvantage  : return "\xE2\xA9\xB2";
+        case WhiteModerateAdvantage: return "\xC2\xB1";
+        case WhiteDecisiveAdvantage: return "+-";
+        case BlackSlightAdvantage  : return "\xE2\xA9\xB1";
+        case BlackModerateAdvantage: return "\xE2\x88\x93";
+        case BlackDecisiveAdvantage: return "-+";
+        case WhiteZugzwang         : [[fallthrough]];
+        case BlackZugzwang         : return "\xE2\xA8\x80";
+
+        default: return { };
+    }
 }
 
 } // namespace chess::notation

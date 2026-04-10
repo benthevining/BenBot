@@ -31,6 +31,7 @@ using std::string_view;
 [[nodiscard, gnu::const]] auto get_piece_sprite(
     PieceType type, Color color) -> string_view;
 
+// may be empty if built without support for generating app icon PNG from SVG
 [[nodiscard, gnu::const]] auto get_app_icon() -> string_view;
 
 } // namespace ben_bot::gui::resources

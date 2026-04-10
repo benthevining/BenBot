@@ -45,6 +45,7 @@ namespace uci = chess::uci;
 
 using chess::game::Position;
 using chess::moves::Move;
+using chess::notation::MoveFormat;
 using std::string_view;
 using uci::EngineCommand;
 
@@ -81,11 +82,18 @@ public:
         return searcher.context.get_options();
     }
 
-    /** Returns the notation format being used for pretty printing. */
-    [[nodiscard]] auto get_move_format() const -> chess::notation::MoveFormat;
-
     /** Starts a search with the specified options. */
     void go(const search::Options& opts);
+
+    /** Returns the move format being used to pretty-print moves. */
+    [[nodiscard]] auto get_pretty_print_move_format() const -> MoveFormat
+    {
+        return moveFormat.get_enum_value();
+    }
+
+    /** Pretty-prints a move using the engine's current settings. */
+    [[nodiscard]] auto pretty_print_move(
+        Move move, const Position& position) const -> std::string;
 
 protected:
     /** This function is used to initialize the search context's result callbacks.
@@ -139,16 +147,12 @@ private:
 
     void init_search_callbacks();
 
-    [[nodiscard]] auto pretty_print_move(Move move) const -> std::string;
-
     static void print_compiler_info();
 
     static void start_file_logger(string_view arg);
 
     void write_config_file(string_view arg) const;
     void read_config_file(string_view arg);
-
-    [[nodiscard]] static auto create_move_format_option() -> uci::ComboOption;
 
     void resize_transposition_table(const size_t sizeMB) override
     {
@@ -196,7 +200,17 @@ private:
         [this]([[maybe_unused]] const bool usePretty) { init_search_callbacks(); }
     };
 
-    uci::ComboOption moveFormat { create_move_format_option() };
+    uci::EnumOption<MoveFormat> moveFormat {
+        "Move Format",
+        MoveFormat::Algebraic,
+        "Notation format used to display moves in pretty printing mode."
+    };
+
+    uci::BoolOption algFormatUTF8PieceType {
+        "Algebraic Format UTF8",
+        false,
+        "When on and printing algebraic move format, uses UTF8 glyphs for piece types."
+    };
 
     uci::BoolOption sanitizePositions {
         "Sanitize Positions",
@@ -205,8 +219,8 @@ private:
         [this](const bool sanitize) { set_sanitize_positions(sanitize); }
     };
 
-    std::array<uci::Option*, 7uz> options {
-        &clearTT, &threads, &moveOverhead, &logFile, &prettyPrintMode, &moveFormat, &sanitizePositions
+    std::array<uci::Option*, 8uz> options {
+        &clearTT, &threads, &moveOverhead, &logFile, &prettyPrintMode, &moveFormat, &algFormatUTF8PieceType, &sanitizePositions
     };
 
     std::array<EngineCommand, 10uz> customCommands {

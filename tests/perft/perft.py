@@ -13,59 +13,7 @@ import argparse
 import json
 import subprocess
 from pathlib import Path
-from typing import Tuple, Any
-
-#
-
-
-def find_correct_result(fileContent: Any, depth: int) -> dict[str, int]:
-    for obj in fileContent["depths"]:
-        if obj["depth"] == depth:
-            return obj["results"]
-
-    print(f"ERROR! Could not find correct result for depth {depth}")
-    exit(1)
-
-
-def check_result(expected: dict[str, int], actual: dict[str, int]) -> bool:
-    for key in (
-        "totalNodes",
-        "captures",
-        "castles",
-        "checkmates",
-        "checks",
-        "en_passants",
-        "promotions",
-        "stalemates",
-    ):
-        if actual[key] != expected[key]:
-            print(f"FAILED! Expected {expected[key]} {key}, got {actual[key]}")
-            return False
-
-    return True
-
-
-def parse_args() -> Tuple[Path, Path, int]:
-    parser = argparse.ArgumentParser(
-        prog="RunPerft",
-        description="Run BenBot perft tests",
-        epilog="This script is intended to be invoked by CTest",
-    )
-
-    parser.add_argument(
-        "-t", "--test", required=True, help="Path to testcase data file"
-    )
-    parser.add_argument(
-        "-e", "--engine", required=True, help="Path to engine executable"
-    )
-    parser.add_argument("-d", "--depth", required=True, help="Perft depth")
-
-    parsed = parser.parse_args()
-
-    return Path(parsed.test).resolve(), Path(parsed.engine).resolve(), int(parsed.depth)
-
-
-#
+from typing import Any
 
 
 class Engine:
@@ -94,11 +42,11 @@ class Engine:
 
         self.send_command(f"position fen {pos_fen}")
 
-    def send_command(self, command):
+    def send_command(self, command: str) -> None:
         self.engine.stdin.write(f"{command}\n")
         self.engine.stdin.flush()
 
-    def readline(self):
+    def readline(self) -> str:
         return self.engine.stdout.readline()
 
     def run_perft(self, depth: int) -> dict[str, int]:
@@ -117,31 +65,73 @@ class Engine:
             self.engine.wait()
 
 
+def find_correct_result(file_content: Any, depth: int) -> dict[str, int]:
+    for obj in file_content["depths"]:
+        if obj["depth"] == depth:
+            return obj["results"]
+
+    print(f"ERROR! Could not find correct result for depth {depth}")
+    exit(1)
+
+
+def check_result(expected: dict[str, int], actual: dict[str, int]) -> None:
+    for key in expected.keys():
+        if actual[key] != expected[key]:
+            print(f"FAILED! Expected {expected[key]} {key}, got {actual[key]}")
+            exit(1)
+
+
+def run_perft_test(data_file: Path, engine_path: Path, depth: int) -> None:
+    with open(data_file) as file:
+        file_data = json.load(file)
+
+    starting_fen = file_data["position"]
+
+    print(f"FEN: {starting_fen}", flush=True)
+
+    correct_result = find_correct_result(file_content=file_data, depth=depth)
+
+    print(f"Running perft depth {depth}...", flush=True)
+
+    engine = Engine(engine_path=engine_path, pos_fen=starting_fen)
+
+    result = engine.run_perft(depth)
+
+    check_result(expected=correct_result, actual=result)
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        prog="RunPerft",
+        description="Run BenBot perft tests",
+        epilog="This script is intended to be invoked by CTest",
+    )
+
+    parser.add_argument(
+        "--test",
+        required=True,
+        type=lambda p: Path(p).resolve(),
+        help="Path to testcase data file",
+    )
+
+    parser.add_argument(
+        "--engine",
+        required=True,
+        type=lambda p: Path(p).resolve(),
+        help="Path to engine executable",
+    )
+
+    parser.add_argument("--depth", required=True, type=int, help="Perft depth")
+
+    return parser.parse_args()
+
+
 #
 
-TESTCASE_FILE, ENGINE_PATH, DEPTH = parse_args()
+if __name__ == "__main__":
+    args = parse_args()
 
-with open(TESTCASE_FILE) as file:
-    FILE_DATA = json.load(file)
+    run_perft_test(data_file=args.test, engine_path=args.engine, depth=args.depth)
 
-startingFEN = FILE_DATA["position"]
-
-print(f"FEN: {startingFEN}", flush=True)
-
-correctResult = find_correct_result(FILE_DATA, DEPTH)
-
-print(f"Running perft depth {DEPTH}...", flush=True)
-
-engine = Engine(engine_path=ENGINE_PATH, pos_fen=startingFEN)
-
-num_failed = 0
-num_passed = 0
-
-result = engine.run_perft(DEPTH)
-
-if check_result(correctResult, result):
     print("Succeeded :-)")
     exit(0)
-else:
-    print("Failed :-(")
-    exit(1)

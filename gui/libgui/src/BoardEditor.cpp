@@ -27,13 +27,14 @@
 #include <libchess/notation/EPD.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/pieces/Colors.hpp>
-#include <libchess/uci/EngineBase.hpp>
 #include <libgui/BoardEditor.hpp>
+#include <libgui/EngineWrapper.hpp>
 #include <libutil/Console.hpp>
 #include <libutil/Strings.hpp>
 #include <nlohmann/json.hpp>
 #include <optional>
 #include <ranges>
+#include <span>
 #include <string>
 #include <string_view>
 
@@ -93,12 +94,12 @@ namespace {
         if (ImGui::Checkbox("White to move", &whiteToMove)) {
             position.sideToMove = whiteToMove ? Color::White : Color::Black;
 
-            position.refresh_zobrist();
-
             // When the user manually changes the side to move, we may need to reset the EP square
             // if it was set, because the en passant ranks are different for each side. This function
             // resets the EP square if it was set to one that is now illegal.
             position.sanitize_ep_square();
+
+            position.refresh_zobrist();
         }
 
         if (showTooltips)
@@ -333,45 +334,74 @@ namespace {
         }
     }
 
-    void render_epd_operations(
-        EPDPosition& position, const bool showTooltips)
+    enum class EPDOperationType : std::uint_least8_t {
+        Integer,
+        String
+    };
+
+    struct StandardEPDOperation final {
+        string           mnemonic;
+        EPDOperationType type;
+        string           tooltip;
+    };
+
+    [[nodiscard]] auto get_standard_epd_ops()
+        -> std::span<const StandardEPDOperation>
     {
         // see https://www.chessprogramming.org/Extended_Position_Description
 
+        // TODO: comment(s), draw offer/accept, resignation, v0 variation name (primary, also v1 though v9)
         // TODO: maybe a move type?
         // TODO: Maybe an IntegerNonNegative type?
-        enum class Type : std::uint_least8_t {
-            Integer,
-            String
+
+        namespace ops = chess::notation::epd_ops;
+
+        using Type = EPDOperationType;
+
+        static const std::array operations {
+            StandardEPDOperation { .mnemonic = string { ops::AnalysisCountDepth }, .type = Type::Integer, .tooltip = "Analysis count depth" },
+            StandardEPDOperation { .mnemonic = string { ops::AnalysisCountNodes }, .type = Type::Integer, .tooltip = "Analysis count nodes" },
+            StandardEPDOperation { .mnemonic = string { ops::AnalysisCountSeconds }, .type = Type::Integer, .tooltip = "Analysis count seconds" },
+            StandardEPDOperation { .mnemonic = string { ops::AvoidMove }, .type = Type::String, .tooltip = "Avoid move(s)" },
+            StandardEPDOperation { .mnemonic = string { ops::BestMove }, .type = Type::String, .tooltip = "Best move(s)" },
+            StandardEPDOperation { .mnemonic = string { ops::CentipawnEvaluation }, .type = Type::Integer, .tooltip = "Centipawn evaluation" },
+            StandardEPDOperation { .mnemonic = string { ops::DirectMate }, .type = Type::Integer, .tooltip = "Direct mate fullmove count" },
+            StandardEPDOperation { .mnemonic = string { ops::EcoCode }, .type = Type::String, .tooltip = "Encyclopedia of Chess Openings opening code" },
+            StandardEPDOperation { .mnemonic = string { ops::PositionID }, .type = Type::String, .tooltip = "Position identification" },
+            StandardEPDOperation { .mnemonic = string { ops::NicCode }, .type = Type::String, .tooltip = "New In Chess opening code" },
+            StandardEPDOperation { .mnemonic = string { ops::PredictedMove }, .type = Type::String, .tooltip = "Predicted move" },
+            StandardEPDOperation { .mnemonic = string { ops::PredictedVariation }, .type = Type::String, .tooltip = "Predicted variation" },
+            StandardEPDOperation { .mnemonic = string { ops::RepetitionCount }, .type = Type::Integer, .tooltip = "Repetition count" },
+            StandardEPDOperation { .mnemonic = string { ops::SuppliedMove }, .type = Type::String, .tooltip = "Supplied move" }
         };
 
-        struct StandardOperation final {
-            string mnemonic;
-            Type   type;
-            string tooltip;
-        };
+        return operations;
+    }
 
-        // TODO: c0 comment (primary, also c1 though c9), draw offer/accept, v0 variation name (primary, also v1 though v9)
-        static const std::array StandardOperations {
-            StandardOperation { .mnemonic = "acd", .type = Type::Integer, .tooltip = "Analysis count depth" },
-            StandardOperation { .mnemonic = "acn", .type = Type::Integer, .tooltip = "Analysis count nodes" }, // codespell:ignore acn
-            StandardOperation { .mnemonic = "acs", .type = Type::Integer, .tooltip = "Analysis count seconds" },
-            StandardOperation { .mnemonic = "am", .type = Type::String, .tooltip = "Avoid move(s)" },
-            StandardOperation { .mnemonic = "bm", .type = Type::String, .tooltip = "Best move(s)" },
-            StandardOperation { .mnemonic = "ce", .type = Type::Integer, .tooltip = "Centipawn evaluation" },
-            StandardOperation { .mnemonic = "dm", .type = Type::Integer, .tooltip = "Direct mate fullmove count" },
-            StandardOperation { .mnemonic = "eco", .type = Type::String, .tooltip = "Encyclopedia of Chess Openings opening code" },
-            StandardOperation { .mnemonic = "id", .type = Type::String, .tooltip = "Position identification" },
-            StandardOperation { .mnemonic = "nic", .type = Type::String, .tooltip = "New In Chess opening code" },
-            StandardOperation { .mnemonic = "pm", .type = Type::String, .tooltip = "Predicted move" },
-            StandardOperation { .mnemonic = "pv", .type = Type::String, .tooltip = "Predicted variation" },
-            StandardOperation { .mnemonic = "rc", .type = Type::Integer, .tooltip = "Repetition count" },
-            StandardOperation { .mnemonic = "sm", .type = Type::String, .tooltip = "Supplied move" }
-        };
+    [[nodiscard]] auto is_standard_epd_mneumonic(
+        const string_view name) -> bool
+    {
+        namespace ops = chess::notation::epd_ops;
 
+        // these two aren't included in the list of standard ops we render,
+        // but we also don't want to treat them as custom operations
+        if (name == ops::FullmoveNumber or name == ops::HalfmoveClock)
+            return true;
+
+        return std::ranges::contains(
+            get_standard_epd_ops(),
+            name,
+            &StandardEPDOperation::mnemonic);
+    }
+
+    void render_standard_epd_operations(
+        EPDPosition& position, const bool showTooltips)
+    {
         const ScopedGroup group;
 
-        for (const auto& opMetadata : StandardOperations) {
+        ImGui::SeparatorText("Standard operations");
+
+        for (const auto& opMetadata : get_standard_epd_ops()) {
             auto inputBuf = [&position, &opMetadata] {
                 const auto it = position.operations.find(opMetadata.mnemonic);
 
@@ -382,7 +412,7 @@ namespace {
             }();
 
             switch (opMetadata.type) {
-                case Type::Integer: {
+                case EPDOperationType::Integer: {
                     auto value = util::strings::int_from_string<int>(inputBuf);
 
                     if (ImGui::InputInt(opMetadata.mnemonic.c_str(), &value, 1, 10, ImGuiInputTextFlags_CharsDecimal)) {
@@ -392,7 +422,7 @@ namespace {
                 }
 
                 default: [[fallthrough]];
-                case Type::String:
+                case EPDOperationType::String:
                     if (ImGui::InputText(opMetadata.mnemonic.c_str(), &inputBuf, InputTextFlags)) {
                         position.operations[opMetadata.mnemonic] = util::strings::trim(inputBuf);
                     }
@@ -403,24 +433,90 @@ namespace {
         }
     }
 
+    void render_custom_epd_operations(
+        EPDPosition& position, const bool showTooltips)
+    {
+        const ScopedGroup group;
+
+        ImGui::SeparatorText("Custom operations");
+
+        if (ImGui::Button("Add"))
+            position.operations.emplace();
+
+        if (showTooltips)
+            ImGui::SetItemTooltip("Add a custom EPD operation");
+
+        if (ImGui::BeginTable("Custom operations", 3, ImGuiTableFlags_Borders)) {
+            ImGui::TableSetupColumn("Name");
+            ImGui::TableSetupColumn("Value");
+            ImGui::TableSetupColumn("Delete", ImGuiTableColumnFlags_WidthFixed);
+
+            for (auto& [name, value] : position.operations) {
+                if (is_standard_epd_mneumonic(name))
+                    continue;
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+
+                auto nameInput = name;
+
+                if (ImGui::InputText("Name", &nameInput, InputTextFlags)) {
+                    const auto prevValue = value;
+
+                    position.operations.erase(name);
+
+                    // TODO: warn if overwriting existing operation
+                    position.operations[nameInput] = prevValue;
+
+                    // inserting into the container might have invalidated iterators,
+                    // need to stop iteration & redraw the whole table
+                    ImGui::TableNextColumn();
+                    ImGui::TableNextColumn();
+                    break;
+                }
+
+                ImGui::TableNextColumn();
+
+                ImGui::InputText("Value", &value, InputTextFlags);
+
+                ImGui::TableNextColumn();
+
+                if (ImGui::Button("Delete")) {
+                    position.operations.erase(name);
+                    break;
+                }
+            }
+
+            ImGui::EndTable();
+        }
+    }
+
     void render_epd_editor(
         EPDPosition& position, string& errorMessage, const bool showTooltips)
     {
         if (ImGui::CollapsingHeader("EPD editor")) {
-            render_epd_string(position, errorMessage, showTooltips);
-            render_epd_operations(position, showTooltips);
+            render_epd_string(
+                position, errorMessage, showTooltips);
+
+            render_standard_epd_operations(
+                position, showTooltips);
+
+            render_custom_epd_operations(
+                position, showTooltips);
         }
     }
 
     void render_engine_interop_buttons(
-        Position& position, chess::uci::EngineBase& engine, const bool showTooltips)
+        EPDPosition& position, EngineWrapper& engine, const bool showTooltips)
     {
         const ScopedGroup group;
 
+        auto& engineBase = static_cast<uci::EngineBase&>(engine);
+
         if (ImGui::Button("Send to engine")) {
-            engine.abort_search();
-            engine.wait();
-            engine.set_position(position);
+            engineBase.abort_search();
+            engineBase.wait();
+            engine.set_position(position.position);
         }
 
         if (showTooltips)
@@ -428,8 +524,13 @@ namespace {
 
         ImGui::SameLine();
 
-        if (ImGui::Button("Refresh from engine"))
-            position = engine.get_position();
+        if (ImGui::Button("Refresh from engine")) {
+            position.position = engine.get_position();
+            position.refresh_default_operations();
+
+            if (const auto results = engine.get_results(); not results.empty())
+                results.back().fill_standard_epd_operations(position);
+        }
 
         if (showTooltips)
             ImGui::SetItemTooltip("Reset to engine's current position");
@@ -437,13 +538,16 @@ namespace {
 } // namespace
 
 void render_board_editor(
-    BoardEditorState&       state,
-    const bool              showTooltips,
-    chess::uci::EngineBase& engine)
+    BoardEditorState& state,
+    const bool        showTooltips,
+    EngineWrapper&    engine)
 {
     if (ImGui::Begin("Board editor")) {
         render_utility_buttons(
             state.position, showTooltips);
+
+        render_engine_interop_buttons(
+            state.position, engine, showTooltips);
 
         render_side_to_move(
             state.position.position, showTooltips);
@@ -460,13 +564,11 @@ void render_board_editor(
         render_fen_string(
             state.position.position, state.fenParseError, showTooltips);
 
+        UnformattedText(
+            std::format("Zobrist key: {}", state.position.position.hash));
+
         render_epd_editor(
             state.position, state.epdParseError, showTooltips);
-
-        ImGui::Separator();
-
-        render_engine_interop_buttons(
-            state.position.position, engine, showTooltips);
 
         // TODO: render chessboard
     }

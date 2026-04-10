@@ -1,0 +1,90 @@
+# ======================================================================================
+#
+# ░▒▓███████▓▒░░▒▓████████▓▒░▒▓███████▓▒░       ░▒▓███████▓▒░ ░▒▓██████▓▒░▒▓████████▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓███████▓▒░░▒▓██████▓▒░ ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓███████▓▒░░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░ ░▒▓██████▓▒░  ░▒▓█▓▒░
+#
+# ======================================================================================
+
+name: run_build
+description: Configure & build
+
+inputs:
+  cmake_preset:
+    description: CMake preset to use
+    required: false
+    default: gcc
+  extra_config_args:
+    description: Extra arguments to CMake configure
+    required: false
+  build_config:
+    description: Build configuration
+    required: false
+    default: Release
+  build_target:
+    description: Target to build
+    required: false
+    default: ben_bot
+  build_gui:
+    description: Whether to allow CMake configure to enter the gui/ subdirectory
+    required: false
+    default: OFF
+  root_dir:
+    description: Root directory to work in
+    required: false
+    default: ${{ github.workspace }}
+
+outputs:
+  build_dir:
+    description: Path to the build directory
+    value: ${{ inputs.root_dir }}/Builds/${{ inputs.cmake_preset }}
+  deploy_dir:
+    description: If build configuration is Release, the built target will be installed into this directory
+    value: ${{ inputs.root_dir }}/deploy
+
+runs:
+  using: "composite"
+  steps:
+  - name: Install libc++
+    if: runner.os == 'Linux' && inputs.preset == 'clang'
+    shell: bash
+    run: |
+      sudo apt-get update
+      sudo apt-get install -y libc++-dev libc++abi-dev
+
+  - name: Install Clang21
+    if: runner.os == 'Linux' && matrix.preset == 'clang'
+    uses: aminya/setup-cpp@1f17f92d6a52bfcb1a25348e2c526c2e5cbb1134   # v1.8.0
+    with:
+      llvm: 21
+      clang: 21
+
+  - name: Install CMake 4.0
+    uses: lukka/get-cmake@ea83089aa35e08e459464341fe24ad024ee2466f   # v4.3.1
+
+  - name: Configure CMake
+    shell: bash
+    env:
+      CMAKE_OSX_ARCHITECTURES: arm64;x86_64
+    run: |
+      cmake --preset ${{ inputs.cmake_preset }} -D "BENBOT_GUI=${{ inputs.build_gui }}" ${{ inputs.extra_config_args }}
+    working-directory: ${{ inputs.root_dir }}
+
+  - name: Build
+    shell: bash
+    env:
+      CMAKE_BUILD_PARALLEL_LEVEL: 8
+    run: |
+      cmake --build . --config ${{ inputs.build_config }} --target ${{ inputs.build_target }}
+    working-directory: ${{ inputs.root_dir }}/Builds/${{ inputs.cmake_preset }}
+
+  - name: Run cmake install
+    if: inputs.build_config == 'Release'
+    shell: bash
+    run: |
+      cmake --install Builds/${{ inputs.cmake_preset }} --prefix deploy --component ${{ inputs.build_target }} --config Release
+    working-directory: ${{ inputs.root_dir }}

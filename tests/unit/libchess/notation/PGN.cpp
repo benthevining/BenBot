@@ -18,6 +18,7 @@
 // that use only the seven tag roster.
 
 #include <catch2/catch_test_macros.hpp>
+#include <libchess/game/Position.hpp>
 #include <libchess/game/Result.hpp>
 #include <libchess/notation/FEN.hpp>
 #include <libchess/notation/PGN.hpp>
@@ -26,9 +27,17 @@
 
 inline constexpr auto TAGS { "[notation][PGN]" };
 
+using chess::notation::from_fen;
 using chess::notation::from_pgn;
 using chess::notation::parse_all_pgns;
 using chess::notation::to_pgn;
+
+TEST_CASE("PGN - don't crash with empty input", TAGS)
+{
+    const auto result = from_pgn({ });
+
+    REQUIRE(result.has_value());
+}
 
 TEST_CASE("PGN - block comments", TAGS)
 {
@@ -59,7 +68,9 @@ TEST_CASE("PGN - block comments", TAGS)
     REQUIRE(game.result.has_value());
     REQUIRE(*game.result == chess::game::Result::Draw);
 
-    REQUIRE(game.moves.at(4uz).comment == "This opening is called the Ruy Lopez.");
+    REQUIRE(game.moves.moves.at(4uz).comment == "This opening is called the Ruy Lopez.");
+
+    REQUIRE(game.moves.startingPosition == chess::game::Position { });
 
     REQUIRE(to_pgn(game) == pgn);
 }
@@ -80,9 +91,9 @@ TEST_CASE("PGN - tolerate spaces between move number and move", TAGS)
 
     const auto game = from_pgn(pgn).value();
 
-    REQUIRE(game.moves.size() == 20uz);
+    REQUIRE(game.moves.moves.size() == 20uz);
 
-    REQUIRE(game.moves.at(4uz).comment == "This opening is called the Ruy Lopez.");
+    REQUIRE(game.moves.moves.at(4uz).comment == "This opening is called the Ruy Lopez.");
 }
 
 TEST_CASE("PGN - multiline block comments", TAGS)
@@ -107,7 +118,7 @@ called the Ruy Lopez.} 3...a6 4.Ba4 Nf6 5.O-O Be7 6.Re1 b5 7.Bb3 d6 8.c3 O-O 9.h
 called the Ruy Lopez.)"
     };
 
-    REQUIRE(game.moves.at(4uz).comment == comment);
+    REQUIRE(game.moves.moves.at(4uz).comment == comment);
 
     REQUIRE(to_pgn(game) == pgn);
 }
@@ -142,7 +153,7 @@ TEST_CASE("PGN - line comments", TAGS)
     REQUIRE(game.result.has_value());
     REQUIRE(*game.result == chess::game::Result::Draw);
 
-    REQUIRE(game.moves.at(4uz).comment == "This opening is called the Ruy Lopez.");
+    REQUIRE(game.moves.moves.at(4uz).comment == "This opening is called the Ruy Lopez.");
 
     REQUIRE(to_pgn(game, false) == pgn);
 }
@@ -165,10 +176,10 @@ TEST_CASE("PGN - NAGs", TAGS)
 
     const auto game = from_pgn(pgn).value();
 
-    REQUIRE(game.moves.size() == 2uz);
+    REQUIRE(game.moves.moves.size() == 2uz);
 
     {
-        const auto& firstMove = game.moves.front();
+        const auto& firstMove = game.moves.moves.front();
 
         REQUIRE(firstMove.nags.size() == 2uz);
 
@@ -176,7 +187,7 @@ TEST_CASE("PGN - NAGs", TAGS)
         REQUIRE(to_underlying(firstMove.nags.back()) == 14u);
     }
     {
-        const auto& secondMove = game.moves.back();
+        const auto& secondMove = game.moves.moves.back();
 
         REQUIRE(secondMove.nags.size() == 1uz);
 
@@ -202,10 +213,10 @@ TEST_CASE("PGN - NAG inside a comment", TAGS)
 
     const auto game = from_pgn(pgn).value();
 
-    REQUIRE(game.moves.size() == 2uz);
+    REQUIRE(game.moves.moves.size() == 2uz);
 
     {
-        const auto& firstMove = game.moves.front();
+        const auto& firstMove = game.moves.moves.front();
 
         REQUIRE(firstMove.nags.size() == 1uz);
 
@@ -214,7 +225,7 @@ TEST_CASE("PGN - NAG inside a comment", TAGS)
         REQUIRE(firstMove.comment == "$14");
     }
     {
-        const auto& secondMove = game.moves.back();
+        const auto& secondMove = game.moves.moves.back();
 
         REQUIRE(secondMove.nags.size() == 1uz);
 
@@ -240,11 +251,11 @@ TEST_CASE("PGN - null NAGs", TAGS)
 
     auto game = from_pgn(pgn).value();
 
-    game.moves.front().nags.emplace_back(chess::notation::NAG::Null);
+    game.moves.moves.front().nags.emplace_back(chess::notation::NAG::Null);
 
     const auto roundTripped = from_pgn(to_pgn(game)).value();
 
-    REQUIRE(roundTripped.moves.front().nags.empty());
+    REQUIRE(roundTripped.moves.moves.front().nags.empty());
 }
 
 TEST_CASE("PGN - custom starting position", TAGS)
@@ -259,9 +270,9 @@ TEST_CASE("PGN - custom starting position", TAGS)
 
     const auto game = from_pgn(pgn).value();
 
-    REQUIRE(game.moves.size() == 2uz);
+    REQUIRE(game.moves.moves.size() == 2uz);
 
-    REQUIRE(game.startingPosition == chess::notation::from_fen("5r2/4k3/8/3R2n1/2K5/8/8/8 b - - 0 1").value());
+    REQUIRE(game.get_starting_position() == from_fen("5r2/4k3/8/3R2n1/2K5/8/8/8 b - - 0 1").value());
 }
 
 TEST_CASE("PGN - variations", TAGS)
@@ -280,15 +291,17 @@ TEST_CASE("PGN - variations", TAGS)
 
     const auto game = from_pgn(pgn).value();
 
-    REQUIRE(game.moves.size() == 6uz);
+    REQUIRE(game.moves.moves.size() == 6uz);
 
-    const auto& variations = game.moves.at(4uz).variations;
+    const auto& variations = game.moves.moves.at(4uz).variations;
 
     REQUIRE(variations.size() == 1uz);
 
     const auto& variation = variations.front();
 
-    REQUIRE(variation.size() == 2uz);
+    REQUIRE(variation.moves.size() == 2uz);
+
+    REQUIRE(variation.startingPosition == from_fen("r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3").value());
 
     REQUIRE(to_pgn(game) == pgn);
 }
@@ -309,21 +322,27 @@ TEST_CASE("PGN - nested variations", TAGS)
 
     const auto game = from_pgn(pgn).value();
 
-    REQUIRE(game.moves.size() == 6uz);
+    REQUIRE(game.moves.moves.size() == 6uz);
 
-    const auto& variations = game.moves.at(4uz).variations;
+    const auto& variations = game.moves.moves.at(4uz).variations;
 
     REQUIRE(variations.size() == 1uz);
 
     const auto& variation = variations.front();
 
-    REQUIRE(variation.size() == 4uz);
+    REQUIRE(variation.startingPosition == from_fen("r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3").value());
 
-    const auto& subvariations = variation.at(2uz).variations;
+    REQUIRE(variation.moves.size() == 4uz);
+
+    const auto& subvariations = variation.moves.at(2uz).variations;
 
     REQUIRE(subvariations.size() == 1uz);
 
-    REQUIRE(subvariations.front().size() == 1uz);
+    const auto& subvariation = subvariations.front();
+
+    REQUIRE(subvariation.startingPosition == from_fen("r1bqkbnr/pppp1ppp/2n5/8/3pP3/5N2/PPP2PPP/RNBQKB1R w KQkq - 0 4").value());
+
+    REQUIRE(subvariation.moves.size() == 1uz);
 
     REQUIRE(to_pgn(game) == pgn);
 }
@@ -371,7 +390,7 @@ Qd2 Qxd2+ 1/2-1/2
 
     REQUIRE(games.size() == 1uz);
 
-    REQUIRE(games.front().moves.size() == 16uz);
+    REQUIRE(games.front().moves.moves.size() == 16uz);
 }
 
 TEST_CASE("PGN - parse_all_pgns()", TAGS)
@@ -422,5 +441,5 @@ Bg5 Nbd7 1/2-1/2
     REQUIRE(games.size() == 3uz);
 
     for (const auto& game : games)
-        REQUIRE(game.moves.size() == 16uz);
+        REQUIRE(game.moves.moves.size() == 16uz);
 }

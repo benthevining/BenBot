@@ -63,33 +63,24 @@ jobs:
     runs-on: ubuntu-latest
     name: Analyze C++
     timeout-minutes: 20
-    env:
-      LANGUAGE: c-cpp
-      CMAKE_BUILD_PARALLEL_LEVEL: 8
-      PRESET: gcc
 
     steps:
-    - name: Install CMake 4.0
-      uses: lukka/get-cmake@ea83089aa35e08e459464341fe24ad024ee2466f # v4.3.1
-
     - name: Checkout repository
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@c10b8064de6f491fea524254123dbe5e09572f13 # v4
       with:
-        languages: ${{ env.LANGUAGE }}
+        languages: c-cpp
         build-mode: manual
         queries: security-and-quality
 
-    - name: Configure CMake
-      run: cmake --preset ${{ env.PRESET }}
-
     - name: Build
-      run: cmake --build . --config Debug
-      working-directory: Builds/${{ env.PRESET }}
+      uses: ./.github/actions/run_build
+      with:
+        build_config: Debug
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@c10b8064de6f491fea524254123dbe5e09572f13 # v4
       with:
-        category: "/language:${{ env.LANGUAGE }}"
+        category: "/language:c-cpp"

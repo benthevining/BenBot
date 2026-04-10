@@ -42,6 +42,9 @@ struct ThreefoldChecker final {
     /** Returns true if the last call to ``push()`` created a threefold repetition in the history. */
     [[nodiscard]] constexpr auto is_threefold() const noexcept -> bool;
 
+    /** Returns the number of times the current position has occurred since the last history reset. */
+    [[nodiscard]] constexpr auto repetition_count() const noexcept -> size_t;
+
 private:
     // stores a history of hash values
     // the most recent value is at front() and the oldest is at back()
@@ -91,10 +94,14 @@ constexpr void ThreefoldChecker::push(const HashValue newHash)
 
 constexpr auto ThreefoldChecker::is_threefold() const noexcept -> bool
 {
-    // NB. the threefold repetition doesn't need to be consecutive within the history
     return std::cmp_greater_equal(
-        std::ranges::count(history, history.front()),
-        3uz);
+        repetition_count(), 3uz);
+}
+
+constexpr auto ThreefoldChecker::repetition_count() const noexcept -> size_t
+{
+    return static_cast<size_t>(
+        std::ranges::count(history, history.front()));
 }
 
 } // namespace chess::game

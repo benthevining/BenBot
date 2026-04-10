@@ -12,7 +12,7 @@
 
 # This Dockerfile expects the context to be the repo root
 
-FROM lichessbotdevs/lichess-bot:2026.3.27.1
+FROM lichessbotdevs/lichess-bot:2026.4.3.1
 
 ARG CMAKE_VERSION=4.2.3
 ARG CMAKE_PRESET=clang
@@ -30,7 +30,7 @@ RUN --mount=type=bind,source=.,target=BenBot,rw \
   ln -s /opt/cmake-$CMAKE_VERSION/bin/* /usr/local/bin && \
   # configure & build \
   cd BenBot && \
-  cmake --preset $CMAKE_PRESET -D BENBOT_DOCS=OFF -D BENBOT_TESTS=OFF && \
+  cmake --preset $CMAKE_PRESET -D BENBOT_DOCS=OFF -D BUILD_TESTING=OFF && \
   cmake --build Builds/$CMAKE_PRESET -j4 --target ben_bot --config Release && \
   # install \
   cd .. && \

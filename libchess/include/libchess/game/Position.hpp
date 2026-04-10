@@ -356,6 +356,14 @@ struct [[nodiscard]] Position final {
      */
     [[nodiscard]] static auto empty() -> Position;
 
+    /** Returns the number of times this position has occurred in the game history since
+        the last pawn move or capture.
+     */
+    [[nodiscard]] constexpr auto get_repetition_count() const noexcept -> size_t
+    {
+        return threefoldChecker.repetition_count();
+    }
+
 private:
     [[nodiscard]] auto is_side_in_check(Color side) const noexcept -> bool;
 

@@ -60,12 +60,22 @@ enum class NAG : std::uint_least8_t {
     BlackDecisiveAdvantage = 19, ///< Indicates that black has a decisive advantage in this position.
     BlackCrushingAdvantage = 21, ///< Indicates that black has a crushing advantage in this position (white should resign).
     WhiteZugzwang          = 22, ///< Indicates that white is in Zugzwang in this position.
+    BlackZugzwang          = 23, ///< Indicates that black is in Zugzwang in this position.
     WhiteInitiative        = 36, ///< Indicates that white has the initiative in this position.
     BlackInitiative        = 37  ///< Indicates that black has the initiative in this position.
 };
 
+/** Converts a NAG to its typographic representation, encoded in UTF8.
+    @see NAG
+    @ingroup notation
+ */
+[[nodiscard]] auto format_nag(NAG nag) -> std::string_view;
+
 /** A record of a complete game, including some metadata.
     This structure is returned by the ``from_pgn()`` method.
+
+    @todo Pointer class for keeping track of a specific move within a specific variation
+    @todo get_all_moves_for(Pointer) function
 
     @ingroup notation
  */
@@ -75,9 +85,6 @@ struct [[nodiscard]] GameRecord final {
         surrounding quotes.
      */
     std::unordered_map<string, string> metadata;
-
-    /** The starting position of this game. */
-    Position startingPosition;
 
     /** If the game ended in a conclusive result, this holds the
         appropriate Result enumeration. If the game is ongoing,
@@ -89,7 +96,21 @@ struct [[nodiscard]] GameRecord final {
      */
     std::optional<game::Result> result;
 
-    /** Records a game move alongside an optional comment and possible variations. */
+    struct Move;
+
+    /** This struct represents a variation, or a line of moves. */
+    struct Variation final {
+        /** The moves in this variation. */
+        std::vector<Move> moves;
+
+        /** The starting position of this variation. */
+        Position startingPosition;
+
+        /** Each variation in a game is assigned a unique ID. */
+        size_t variationID { 0uz };
+    };
+
+    /** Records a game move alongside an optional comment, NAG annotations, and possible variations. */
     struct Move final {
         /** The move. */
         moves::Move move;
@@ -105,13 +126,8 @@ struct [[nodiscard]] GameRecord final {
 
             For example, for a move annotated ``!``, this would be 1,
             for a ``?`` this would be 2, etc.
-
-            See the ``nags`` namespace for some useful NAG constants.
          */
         std::vector<NAG> nags;
-
-        /** A variation is simply a nested list of moves. */
-        using Variation = std::vector<Move>;
 
         /** If this move has alternate possible continuations, they are
             stored here. The first move in each of these variations is
@@ -121,10 +137,21 @@ struct [[nodiscard]] GameRecord final {
     };
 
     /** This game's moves. */
-    std::vector<Move> moves;
+    Variation moves;
+
+    /** Returns the starting position of this game. */
+    [[nodiscard]] auto get_starting_position() const -> Position { return moves.startingPosition; }
 
     /** Returns the final position of this game. */
     [[nodiscard]] auto get_final_position() const -> Position;
+
+    struct PositionPointer final {
+        size_t totalPlyFromRoot { 0uz };
+
+        std::vector<size_t> variationIDs;
+    };
+
+    [[nodiscard]] auto get_move_at_pos(const PositionPointer& pos) const -> const Move*;
 };
 
 /** Parses the text of a PGN @cite Edwards_1994 file into a GameRecord object.
@@ -135,8 +162,9 @@ struct [[nodiscard]] GameRecord final {
     @relates GameRecord
     @see parse_all_pgns()
  */
-[[nodiscard]] auto from_pgn(std::string_view pgnText)
-    -> std::expected<GameRecord, std::string_view>;
+[[nodiscard]] auto from_pgn(
+    std::string_view pgnText)
+    -> std::expected<GameRecord, std::string>;
 
 /** Parses a text file that may contain 0 or more PGNs into a list of
     GameRecord objects. PGNs in the ``fileContent`` should be separated
@@ -148,7 +176,8 @@ struct [[nodiscard]] GameRecord final {
     @relates GameRecord
     @see from_pgn()
  */
-[[nodiscard]] auto parse_all_pgns(std::string_view fileContent)
+[[nodiscard]] auto parse_all_pgns(
+    std::string_view fileContent)
     -> std::vector<GameRecord>;
 
 /** Creates a PGN @cite Edwards_1994 string from the given game record.
@@ -162,6 +191,8 @@ struct [[nodiscard]] GameRecord final {
     @ingroup notation
     @relates GameRecord
  */
-[[nodiscard]] auto to_pgn(const GameRecord& game, bool useBlockComments = true) -> string;
+[[nodiscard]] auto to_pgn(
+    const GameRecord& game, bool useBlockComments = true)
+    -> string;
 
 } // namespace chess::notation

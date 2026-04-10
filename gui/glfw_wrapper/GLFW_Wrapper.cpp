@@ -12,7 +12,9 @@
  * ======================================================================================
  */
 
-#define STB_IMAGE_IMPLEMENTATION
+#ifndef STB_IMAGE_IMPLEMENTATION
+#    define STB_IMAGE_IMPLEMENTATION
+#endif
 
 #include "GLFW_Wrapper.hpp" // NOLINT(build/include_subdir)
 #include <GLFW/glfw3.h>
@@ -31,7 +33,8 @@ namespace ben_bot::gui::glfw {
 namespace {
     [[nodiscard]] auto get_main_scale() -> float
     {
-        return ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor());
+        return ImGui_ImplGlfw_GetContentScaleForMonitor(
+            glfwGetPrimaryMonitor());
     }
 } // namespace
 
@@ -55,8 +58,13 @@ auto create_window() -> Window*
 namespace {
     [[maybe_unused]] void set_window_app_icon(Window* window)
     {
+        const auto resourceData = resources::get_app_icon();
+
+        if (resourceData.empty())
+            return;
+
         // this is needed because stbi_load_from_memory() takes a mutable pointer to the data!
-        std::string iconData { resources::get_app_icon() };
+        std::string iconData { resourceData };
 
         std::array<GLFWimage, 1uz> images { };
 
@@ -73,7 +81,8 @@ namespace {
     }
 } // namespace
 
-void initialize([[maybe_unused]] Window* window, AppState& state)
+void initialize(
+    [[maybe_unused]] Window* window, AppState& state)
 {
     gui::initialize(get_main_scale(), state);
 

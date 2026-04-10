@@ -1,0 +1,38 @@
+/*
+ * ======================================================================================
+ *
+ * ░▒▓███████▓▒░░▒▓████████▓▒░▒▓███████▓▒░       ░▒▓███████▓▒░ ░▒▓██████▓▒░▒▓████████▓▒░
+ * ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+ * ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+ * ░▒▓███████▓▒░░▒▓██████▓▒░ ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+ * ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+ * ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+ * ░▒▓███████▓▒░░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░ ░▒▓██████▓▒░  ░▒▓█▓▒░
+ *
+ * ======================================================================================
+ */
+
+#pragma once
+
+#include <libchess/notation/PGN.hpp>
+#include <string>
+#include <string_view>
+
+namespace ben_bot {
+class Engine;
+} // namespace ben_bot
+
+namespace ben_bot::gui {
+
+struct GameViewerState final {
+    chess::notation::GameRecord game;
+
+    [[nodiscard]] auto to_string() const -> std::string;
+
+    [[nodiscard]] static auto from_string(std::string_view str) -> GameViewerState;
+};
+
+void render_game_viewer(
+    GameViewerState& state, const Engine& engine, bool showTooltips);
+
+} // namespace ben_bot::gui

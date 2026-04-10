@@ -52,7 +52,8 @@ enum class MoveFormat : std::uint_least8_t {
 [[nodiscard]] auto format_move(
     MoveFormat      format,
     const Position& position,
-    Move            move) -> std::string;
+    Move            move,
+    bool            algPieceTypeAsUTF8 = false) -> std::string;
 
 /** Parses a move from a string using the given notation format.
     @ingroup notation

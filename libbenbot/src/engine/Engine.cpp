@@ -27,47 +27,17 @@
 #include <libutil/Files.hpp>
 #include <libutil/Logger.hpp>
 #include <libutil/Variant.hpp>
-#include <magic_enum/magic_enum.hpp>
 #include <nlohmann/json.hpp>
 #include <ranges>
 #include <string>
 #include <string_view>
-#include <utility>
 #include <variant>
-#include <vector>
 
 namespace ben_bot {
 
 using std::filesystem::path;
 using std::size_t;
 using uci::printing::info_string;
-
-auto Engine::create_move_format_option() -> uci::ComboOption
-{
-    using chess::notation::MoveFormat;
-
-    auto strings = magic_enum::enum_names<MoveFormat>()
-                 | std::views::transform([](const std::string_view str) {
-                       return std::string { str };
-                   })
-                 | std::ranges::to<std::vector>();
-
-    std::string valueList;
-
-    for (const auto& value : strings | std::views::take(strings.size() - 1uz)) {
-        valueList.append(value);
-        valueList.append(", ");
-    }
-
-    valueList.append(strings.back());
-
-    return { "Move Format",
-        std::move(strings),
-        std::string { magic_enum::enum_name(MoveFormat::Algebraic) },
-        std::format(
-            "Notation format used to display moves in pretty printing mode. ({})",
-            valueList) };
-}
 
 void Engine::new_game(const bool firstCall)
 {
@@ -94,7 +64,7 @@ auto Engine::create_search_callbacks() -> search::Callbacks
 {
     if (prettyPrintMode.get_value()) {
         return search::Callbacks::make_pretty_printer(
-            [this](const Move move) { return pretty_print_move(move); });
+            [this](const Move move, const Position& pos) { return pretty_print_move(move, pos); });
     }
 
     return search::Callbacks::make_uci_printer(

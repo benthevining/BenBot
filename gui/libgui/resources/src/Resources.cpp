@@ -17,6 +17,7 @@
 #include <libgui/Resources.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <string_view>
+#include <system_error>
 
 CMRC_DECLARE(libgui_resources);
 
@@ -46,8 +47,10 @@ auto get_default_app_state() -> string_view
 }
 
 auto get_app_icon() -> string_view
-{
+try {
     return get_named_resource("icon.png");
+} catch ([[maybe_unused]] const std::system_error& error) {
+    return { };
 }
 
 auto get_piece_sprite(

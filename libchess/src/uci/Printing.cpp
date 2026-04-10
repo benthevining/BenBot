@@ -131,11 +131,11 @@ auto SearchInfo::Score::get_type() const noexcept -> Type
 {
     return std::visit(
         util::Visitor {
-            [](const Centipawns value) noexcept {
-                if (value.value == 0)
+            [](const Centipawns centi) noexcept {
+                if (centi.value == 0)
                     return Type::Equal;
 
-                if (value.value > 0)
+                if (centi.value > 0)
                     return Type::Winning;
 
                 return Type::Losing;
@@ -171,8 +171,8 @@ namespace {
     {
         auto string = std::visit(
             util::Visitor {
-                [](const Score::Centipawns& centipawns) { return std::format("cp {}", centipawns.value); },
-                [](const Score::MateIn& mate) { return std::format("mate {}", mate.moves()); } },
+                [](const Score::Centipawns centipawns) { return std::format("cp {}", centipawns.value); },
+                [](const Score::MateIn mate) { return std::format("mate {}", mate.moves()); } },
             score.value);
 
         assert(not(score.lowerBound and score.upperBound));
