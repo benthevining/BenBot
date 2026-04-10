@@ -10,51 +10,44 @@
 #
 # ======================================================================================
 
-set (BENBOT_APP_ICON_SVG "${CMAKE_CURRENT_LIST_DIR}/res/pieces/Queen-White.svg"
-     CACHE INTERNAL "Path to SVG file used for app icon"
+include_guard (GLOBAL)
+
+find_program (
+    INKSCAPE_PROGRAM inkscape
+    DOC "inkscape executable, used for converting SVG to PNG for app icon generation"
 )
 
-file (GLOB_RECURSE resources LIST_DIRECTORIES false CONFIGURE_DEPENDS
-                                                    "${CMAKE_CURRENT_LIST_DIR}/res/*.svg"
-)
+add_feature_info (benbot_app_icon INKSCAPE_PROGRAM "Generating app icon (requires inkscape)")
 
-unset (icon_png)
-
-if (INKSCAPE_PROGRAM)
-    set (icon_png "${CMAKE_CURRENT_LIST_DIR}/res/icon.png")
-
-    # cmake-format: off
+#[[
     add_svg_to_png_command (
-            INPUT  "${BENBOT_APP_ICON_SVG}"
-            OUTPUT "${icon_png}"
-            OUT_WIDTH  512
-            OUT_HEIGHT 512
-            COMMENT "Generating PNG app icon resource..."
+        INPUT <svg>
+        OUTPUT <png>
+        OUT_WIDTH <w>
+        OUT_HEIGHT <w>
+        COMMENT <comment>
     )
-    # cmake-format: on
-endif ()
+]]
+function (add_svg_to_png_command)
+    if (NOT INKSCAPE_PROGRAM)
+        message (
+            FATAL_ERROR
+                "${CMAKE_CURRENT_FUNCTION} cannot be used because INKSCAPE_PROGRAM was not found!"
+        )
+    endif ()
 
-cmrc_add_resource_library (
-    libgui_resources ${resources} res/default_layout.ini res/default_state.json ${icon_png}
-)
+    set (args # cmake-format: sortable
+              COMMENT INPUT OUT_HEIGHT OUT_WIDTH OUTPUT
+    )
 
-target_compile_features (libgui_resources PRIVATE cxx_std_23 PUBLIC cxx_std_17)
+    cmake_parse_arguments (ARG "" "${args}" "" ${ARGN})
 
-set_target_properties (
-    libgui_resources PROPERTIES CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN ON
-                                POSITION_INDEPENDENT_CODE ON VERIFY_INTERFACE_HEADER_SETS ON
-)
-
-target_link_libraries (libgui_resources PUBLIC ben_bot::libchess)
-
-set (header_file "include/libgui/Resources.hpp")
-set (source_file "src/Resources.cpp")
-
-target_sources (
-    libgui_resources PUBLIC FILE_SET HEADERS BASE_DIRS include FILES "${header_file}"
-    PRIVATE "${source_file}"
-)
-
-source_group (TREE "${CMAKE_CURRENT_LIST_DIR}" FILES "${header_file}" "${source_file}")
-
-add_library (ben_bot::gui_resources ALIAS libgui_resources)
+    add_custom_command (
+        OUTPUT "${ARG_OUTPUT}"
+        COMMAND "${INKSCAPE_PROGRAM}" -o "${ARG_OUTPUT}" -w "${ARG_OUT_WIDTH}" -h
+                "${ARG_OUT_HEIGHT}" "${ARG_INPUT}"
+        DEPENDS "${ARG_INPUT}"
+        COMMENT "${ARG_COMMENT}"
+        VERBATIM USES_TERMINAL
+    )
+endfunction ()

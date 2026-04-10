@@ -14,6 +14,8 @@ if (APPLE)
     enable_language (OBJCXX OBJC)
 endif ()
 
+include ("${CMAKE_CURRENT_LIST_DIR}/icons/SVGtoPNG.cmake")
+
 add_subdirectory (libgui)
 
 add_executable (benbot_gui MACOSX_BUNDLE WIN32)
@@ -37,7 +39,7 @@ set_target_properties (
         "Written in 2026 by Ben Vining and released under the terms of the GNU Public License"
 )
 
-include ("${CMAKE_CURRENT_LIST_DIR}/MacOSIcon.cmake")
+include ("${CMAKE_CURRENT_LIST_DIR}/icons/MacOSIcon.cmake")
 
 set (GLFW_BUILD_DOCS OFF)
 set (GLFW_INSTALL OFF)
