@@ -55,8 +55,13 @@ auto create_window() -> Window*
 namespace {
     [[maybe_unused]] void set_window_app_icon(Window* window)
     {
+        const auto resourceData = resources::get_app_icon();
+
+        if (resourceData.empty())
+            return;
+
         // this is needed because stbi_load_from_memory() takes a mutable pointer to the data!
-        std::string iconData { resources::get_app_icon() };
+        std::string iconData { resourceData };
 
         std::array<GLFWimage, 1uz> images { };
 
