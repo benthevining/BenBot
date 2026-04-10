@@ -47,9 +47,7 @@ target_link_libraries (benbot_gui PRIVATE ben_bot::glfw_wrapper)
 if (APPLE)
     message (VERBOSE "Using GLFW + Metal backend for ImGUI app")
 
-    target_sources (
-        benbot_gui PRIVATE main_glfw_metal.mm "${imgui_backends_dir}/imgui_impl_metal.mm"
-    )
+    target_sources (benbot_gui PRIVATE metal_main.mm "${imgui_backends_dir}/imgui_impl_metal.mm")
 
     target_link_libraries (
         benbot_gui PRIVATE "-framework Metal" "-framework MetalKit" "-framework Cocoa"
@@ -65,7 +63,7 @@ if (Vulkan_FOUND)
     message (VERBOSE "Using GLFW + Vulkan backend for ImGUI app")
 
     target_sources (
-        benbot_gui PRIVATE main_glfw_vulkan.cpp "${imgui_backends_dir}/imgui_impl_vulkan.cpp"
+        benbot_gui PRIVATE vulkan_main.cpp "${imgui_backends_dir}/imgui_impl_vulkan.cpp"
     )
 
     target_link_libraries (benbot_gui PRIVATE Vulkan::Vulkan)
