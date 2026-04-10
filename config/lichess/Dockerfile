@@ -30,7 +30,7 @@ RUN --mount=type=bind,source=.,target=BenBot,rw \
   ln -s /opt/cmake-$CMAKE_VERSION/bin/* /usr/local/bin && \
   # configure & build \
   cd BenBot && \
-  cmake --preset $CMAKE_PRESET -D BENBOT_DOCS=OFF -D BENBOT_TESTS=OFF && \
+  cmake --preset $CMAKE_PRESET -D BENBOT_DOCS=OFF -D BUILD_TESTING=OFF && \
   cmake --build Builds/$CMAKE_PRESET -j4 --target ben_bot --config Release && \
   # install \
   cd .. && \
