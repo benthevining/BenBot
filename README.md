@@ -13,6 +13,7 @@ We are currently using a handcrafted evaluation, and our search function is stil
 * Board representation and move generation is in `libchess/`
 * Evaluation and search is in `libbenbot/`
 * `ben-bot/` is the actual engine executable
+* `gui/` contains the implementation of the ImGUI app
 
 See each subdirectory's readme for details.
 
@@ -48,6 +49,9 @@ Our automated CI & releases include the following builds:
 ### CMake options
 
 * `BENBOT_GUI`: if on, builds the ImGUI app (defaults to off unless this is the top-level project)
+
+[!NOTE]
+The GUI application has additional dependencies & requirements, which may vary by target platform. See `gui/README.md` for details.
 
 ## Thanks
 
