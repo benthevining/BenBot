@@ -100,12 +100,10 @@ namespace {
                 = chess::notation::from_pgn(inputBuf)
                       .transform([&game, &errorPopup](GameRecord&& parsed) {
                           game = std::move(parsed);
-                          errorPopup.set_success();
-                          return std::monostate { };
+                          return errorPopup.set_success();
                       })
                       .transform_error([&errorPopup](string&& message) {
-                          errorPopup.set_error(std::move(message));
-                          return std::monostate { };
+                          return errorPopup.set_error(std::move(message));
                       });
         }
 

@@ -33,7 +33,7 @@ using std::string;
 using std::string_view;
 
 namespace {
-    void show_state_buttons(
+    void render_state_buttons(
         AppState& state)
     {
         const ScopedGroup group;
@@ -73,7 +73,7 @@ namespace {
             ImGui::SetItemTooltip("Reset UI layout to default");
     }
 
-    void show_build_info()
+    void render_build_info()
     {
         namespace res = ben_bot::resources;
 
@@ -90,7 +90,7 @@ namespace {
             std::format("Build configuration: {}", res::get_build_config()));
     }
 
-    [[maybe_unused]] void show_default_state_save_buttons(
+    [[maybe_unused]] void render_default_state_save_buttons(
         AppState& state, const path& srcTreeResourcesPath)
     {
         ImGui::SeparatorText("Save default state");
@@ -122,12 +122,10 @@ namespace {
                       .transform([&saveError] {
                           remove(
                               get_default_app_state_path());
-                          saveError.set_success();
-                          return std::monostate { };
+                          return saveError.set_success();
                       })
                       .transform_error([&saveError](string&& message) {
-                          saveError.set_error(std::move(message));
-                          return std::monostate { };
+                          return saveError.set_error(std::move(message));
                       });
         }
 
@@ -148,14 +146,14 @@ void render_app_settings_panel(AppState& state)
         if (showTooltips)
             ImGui::SetItemTooltip("Display widget tooltips");
 
-        show_state_buttons(state);
+        render_state_buttons(state);
 
         ImGui::Separator();
 
-        show_build_info();
+        render_build_info();
 
 #ifdef BENBOT_RES_SRC_TREE_PATH
-        show_default_state_save_buttons(
+        render_default_state_save_buttons(
             state,
             path { BENBOT_RES_SRC_TREE_PATH });
 #endif

@@ -15,6 +15,7 @@
 #pragma once
 
 #include <string>
+#include <variant>
 
 namespace ben_bot::gui {
 
@@ -26,9 +27,13 @@ struct ErrorPopup final {
 
     const char* PopupLabel;
 
-    void set_success() { errorMessage.clear(); }
+    auto set_success() -> std::monostate
+    {
+        errorMessage.clear();
+        return { };
+    }
 
-    void set_error(std::string&& message);
+    auto set_error(std::string&& message) -> std::monostate;
 
     void render();
 

@@ -266,12 +266,10 @@ namespace {
                 = from_fen(inputBuf)
                       .transform([&position, &errorPopup](const Position& newPos) {
                           position = newPos;
-                          errorPopup.set_success();
-                          return std::monostate { };
+                          return errorPopup.set_success();
                       })
                       .transform_error([&errorPopup](string&& error) {
-                          errorPopup.set_error(std::move(error));
-                          return std::monostate { };
+                          return errorPopup.set_error(std::move(error));
                       });
         }
 
@@ -294,12 +292,10 @@ namespace {
                 = from_epd(inputBuf)
                       .transform([&position, &errorPopup](EPDPosition&& newPos) {
                           position = std::move(newPos);
-                          errorPopup.set_success();
-                          return std::monostate { };
+                          return errorPopup.set_success();
                       })
                       .transform_error([&errorPopup](string&& error) {
-                          errorPopup.set_error(std::move(error));
-                          return std::monostate { };
+                          return errorPopup.set_error(std::move(error));
                       });
         }
 

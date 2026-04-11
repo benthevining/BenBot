@@ -18,14 +18,16 @@
 #include <libgui/ErrorPopup.hpp>
 #include <string>
 #include <utility>
+#include <variant>
 
 namespace ben_bot::gui {
 
-void ErrorPopup::set_error(std::string&& message)
+auto ErrorPopup::set_error(std::string&& message) -> std::monostate
 {
     assert(not message.empty());
     errorMessage = std::move(message);
     ImGui::OpenPopup(PopupLabel, ImGuiPopupFlags_NoReopen);
+    return { };
 }
 
 void ErrorPopup::render()

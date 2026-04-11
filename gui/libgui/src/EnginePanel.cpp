@@ -216,8 +216,7 @@ namespace {
                               return std::monostate { };
                           })
                           .transform_error([&errorPopup](string&& message) {
-                              errorPopup.set_error(std::move(message));
-                              return std::monostate { };
+                              return errorPopup.set_error(std::move(message));
                           });
             }
         }
