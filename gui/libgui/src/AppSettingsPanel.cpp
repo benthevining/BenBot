@@ -33,20 +33,6 @@ using std::string;
 using std::string_view;
 
 namespace {
-    void show_state_load_dialog(
-        AppState& state)
-    {
-        state.appSettings.stateLoadSave.show<true>(
-            [&state](const path& file) { state.load_from(file); });
-    }
-
-    void show_state_save_dialog(
-        AppState& state)
-    {
-        state.appSettings.stateLoadSave.show<false>(
-            [&state](const path& file) { state.write_to(file); });
-    }
-
     void show_state_buttons(
         AppState& state)
     {
@@ -54,16 +40,20 @@ namespace {
 
         const bool showTooltips = state.appSettings.showTooltips;
 
-        if (ImGui::Button("Load state"))
-            show_state_load_dialog(state);
+        if (ImGui::Button("Load state")) {
+            state.appSettings.stateLoadSave.load_file(
+                [&state](const path& file) { state.load_from(file); });
+        }
 
         if (showTooltips)
             ImGui::SetItemTooltip("Load app state from a file");
 
         ImGui::SameLine();
 
-        if (ImGui::Button("Save state"))
-            show_state_save_dialog(state);
+        if (ImGui::Button("Save state")) {
+            state.appSettings.stateLoadSave.save_file(
+                [&state](const path& file) { state.write_to(file); });
+        }
 
         if (showTooltips)
             ImGui::SetItemTooltip("Save app state to a file");

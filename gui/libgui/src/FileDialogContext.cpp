@@ -12,38 +12,76 @@
  * ======================================================================================
  */
 
-#pragma once
-
+#include <cstdio>
 #include <filesystem>
-#include <functional>
 #include <initializer_list>
+#include <libgui/FileDialogContext.hpp>
 #include <nfd.hpp>
-#include <vector>
+#include <print>
 
 namespace ben_bot::gui {
 
-// TODO: serialization for default path
-struct FileDialogContext final {
-    using Filter   = nfdu8filteritem_t;
-    using Callback = std::function<void(const std::filesystem::path&)>;
+FileDialogContext::FileDialogContext(
+    const char*                         defaultFilename_,
+    const std::initializer_list<Filter> filters_)
+    : defaultFilename { defaultFilename_ }
+    , filters { filters_ }
+{
+}
 
-    FileDialogContext(
-        const char*                   defaultFilename_,
-        std::initializer_list<Filter> filters_);
+void FileDialogContext::load_file(const Callback& callback)
+{
+    this->show<true>(callback);
+}
 
-    const char* defaultFilename;
+void FileDialogContext::save_file(const Callback& callback)
+{
+    this->show<false>(callback);
+}
 
-    std::vector<Filter> filters;
+template <bool IsLoading>
+void FileDialogContext::show(const Callback& callback)
+{
+    NFD::UniquePath outPath;
 
-    // TODO: init to documents path?
-    std::filesystem::path defaultPath;
+    const auto result = [this, &outPath]() noexcept {
+        if constexpr (IsLoading) {
+            return OpenDialog(
+                outPath,
+                filters.data(), static_cast<nfdfiltersize_t>(filters.size()),
+                defaultPath.c_str());
+        } else {
+            return SaveDialog(
+                outPath,
+                filters.data(), static_cast<nfdfiltersize_t>(filters.size()),
+                defaultPath.c_str(),
+                defaultFilename);
+        }
+    }();
 
-    void load_file(const Callback& callback);
-    void save_file(const Callback& callback);
+    switch (result) {
+        case NFD_OKAY: {
+            const auto resultPath = absolute(
+                std::filesystem::path { outPath.get() });
 
-private:
-    template <bool IsLoading>
-    void show(const Callback& callback);
-};
+            defaultPath = resultPath.parent_path();
+
+            callback(resultPath);
+            return;
+        }
+
+        case NFD_CANCEL:
+            std::println("Info: user canceled file selection dialog");
+            return;
+
+        default: [[fallthrough]];
+        case NFD_ERROR:
+            std::println(
+                stderr, "Info: error with file selection dialog");
+    }
+}
+
+template void FileDialogContext::show<true>(const Callback&);
+template void FileDialogContext::show<false>(const Callback&);
 
 } // namespace ben_bot::gui

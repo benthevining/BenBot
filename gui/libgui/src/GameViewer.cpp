@@ -43,7 +43,7 @@ namespace {
         GameRecord& game, FileDialogContext& context)
     {
         // TODO: show popup for PGN parse error
-        context.show<true>(
+        context.load_file(
             [&game](const path& file) {
                 [[maybe_unused]] const auto result
                     = util::files::load(file)
@@ -59,7 +59,7 @@ namespace {
     void show_pgn_save_dialog(
         const GameRecord& game, FileDialogContext& context)
     {
-        context.show<false>(
+        context.save_file(
             [&game](const path& file) {
                 [[maybe_unused]] const auto result
                     = util::files::overwrite(file, to_pgn(game))
