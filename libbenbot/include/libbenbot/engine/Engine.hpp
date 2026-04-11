@@ -154,6 +154,9 @@ private:
     void write_config_file(string_view arg) const;
     void read_config_file(string_view arg);
 
+    void write_pst_file(string_view arg) const;
+    void read_pst_file(string_view arg);
+
     void resize_transposition_table(const size_t sizeMB) override
     {
         searcher.context.resize_transposition_table(sizeMB);
@@ -223,7 +226,7 @@ private:
         &clearTT, &threads, &moveOverhead, &logFile, &prettyPrintMode, &moveFormat, &algFormatUTF8PieceType, &sanitizePositions
     };
 
-    std::array<EngineCommand, 10uz> customCommands {
+    std::array<EngineCommand, 12uz> customCommands {
         EngineCommand {
             .name   = "showpos",
             .action = [this](const string_view args) { print_current_position(args); },
@@ -268,6 +271,16 @@ private:
             .name   = "readconfig",
             .action = [this](const string_view args) { read_config_file(args); },
             .description = "Loads engine state from a configuration file at the given path",
+            .argsHelp    = "<path>" },
+        EngineCommand {
+            .name   = "writepst",
+            .action = [this](const string_view args) { write_pst_file(args); },
+            .description = "Writes the engine's current piece square tables to a file",
+            .argsHelp    = "<path>" },
+        EngineCommand {
+            .name   = "readpst",
+            .action = [this](const string_view args) { read_pst_file(args); },
+            .description = "Loads piece square tables from a file",
             .argsHelp    = "<path>" },
         EngineCommand {
             .name   = "help",

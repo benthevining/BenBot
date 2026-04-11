@@ -431,6 +431,8 @@ namespace {
 
                 childPV.to_movelist(pv);
 
+                killerMoves.store(0uz, move);
+
                 foundPV = true;
             }
 
