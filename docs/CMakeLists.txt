@@ -25,6 +25,8 @@ endif ()
 include ("${CMAKE_CURRENT_LIST_DIR}/DoxygenSettings.cmake")
 
 # inputs & filepaths
+set (DOXYGEN_PROJECT_ICON "${PROJECT_SOURCE_DIR}/gui/libgui/resources/res/pieces/Queen-White.svg")
+set (DOXYGEN_PROJECT_LOGO "${DOXYGEN_PROJECT_ICON}")
 set (DOXYGEN_USE_MDFILE_AS_MAINPAGE "${BenBot_SOURCE_DIR}/README.md")
 set (DOXYGEN_LAYOUT_FILE "${CMAKE_CURRENT_LIST_DIR}/DoxygenLayout.xml")
 set (DOXYGEN_CITE_BIB_FILES "${CMAKE_CURRENT_SOURCE_DIR}/references.bib")
