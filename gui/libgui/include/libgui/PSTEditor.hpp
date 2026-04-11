@@ -22,6 +22,10 @@
 #include <libbenbot/eval/PieceSquareTables.hpp>
 #include <libgui/FileDialogContext.hpp>
 
+namespace ben_bot {
+class Engine;
+} // namespace ben_bot
+
 namespace ben_bot::gui {
 
 /** This struct encapsulates the state of the piece square table editor.
@@ -52,6 +56,6 @@ struct PSTEditorState final {
     @relates PSTEditorState
  */
 void render_pst_editor(
-    PSTEditorState& state, bool showTooltips);
+    PSTEditorState& state, Engine& engine, bool showTooltips);
 
 } // namespace ben_bot::gui

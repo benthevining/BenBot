@@ -19,6 +19,7 @@
 #include <filesystem>
 #include <format>
 #include <libbenbot/engine/Engine.hpp>
+#include <libbenbot/eval/PieceSquareTables.hpp>
 #include <libbenbot/search/Callbacks.hpp>
 #include <libbenbot/search/Options.hpp>
 #include <libchess/notation/MoveFormats.hpp>
@@ -223,7 +224,8 @@ void Engine::read_pst_file(
     [[maybe_unused]] const auto result
         = util::files::load(filePath)
               .transform([this, &filePath](const string_view fileContent) {
-                  searcher.context.load_piece_square_tables(fileContent);
+                  searcher.context.set_piece_square_tables(
+                      eval::PieceSquareTables::from_string(fileContent));
 
                   info_string(std::format(
                       "Read piece square tables from file: {}", filePath.string()));

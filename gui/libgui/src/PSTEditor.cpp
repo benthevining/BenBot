@@ -12,15 +12,22 @@
  * ======================================================================================
  */
 
+#include "ImUtil.hpp" // NOLINT(build/include_subdir)
+#include <filesystem>
 #include <format>
 #include <imgui.h>
+#include <libbenbot/engine/Engine.hpp>
 #include <libbenbot/eval/PieceSquareTables.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
+#include <libgui/FileDialogContext.hpp>
 #include <libgui/PSTEditor.hpp>
+#include <libutil/Console.hpp>
+#include <libutil/Files.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <string>
+#include <string_view>
 
 namespace ben_bot::gui {
 
@@ -29,6 +36,7 @@ using Tables = eval::PieceSquareTables;
 namespace {
     using magic_enum::enum_name;
     using magic_enum::enum_values;
+    using std::filesystem::path;
     using std::string;
 
     void render_reset_button(
@@ -39,6 +47,60 @@ namespace {
 
         if (showTooltips)
             ImGui::SetItemTooltip("Reset to default BenBot tables");
+    }
+
+    void render_save_load_buttons(
+        Tables& tables, FileDialogContext& context, const bool showTooltips)
+    {
+        const ScopedGroup group;
+
+        if (ImGui::Button("Load")) {
+            context.load_file([&tables](const path& file) {
+                [[maybe_unused]] const auto result
+                    = util::files::load(file)
+                          .transform([&tables](const std::string_view text) {
+                              tables = Tables::from_string(text);
+                              return std::monostate { };
+                          })
+                          .transform_error(util::print_error);
+            });
+        }
+
+        if (showTooltips)
+            ImGui::SetItemTooltip("Load table data from file");
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Save")) {
+            context.save_file([&tables](const path& file) {
+                [[maybe_unused]] const auto result
+                    = util::files::overwrite(file, tables.to_string())
+                          .transform_error(util::print_error);
+            });
+        }
+
+        if (showTooltips)
+            ImGui::SetItemTooltip("Save table data to file");
+    }
+
+    void render_engine_interop_buttons(
+        Tables& tables, Engine& engine, const bool showTooltips)
+    {
+        const ScopedGroup group;
+
+        if (ImGui::Button("Send to engine"))
+            engine.set_piece_square_tables(tables);
+
+        if (showTooltips)
+            ImGui::SetItemTooltip("Send tables to engine (interrupts search if active)");
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Refresh from engine"))
+            tables = engine.get_piece_square_tables();
+
+        if (showTooltips)
+            ImGui::SetItemTooltip("Reset to engine's current tables");
     }
 
     void render_table_type_selector(
@@ -111,17 +173,19 @@ namespace {
 } // namespace
 
 void render_pst_editor(
-    PSTEditorState& state, const bool showTooltips)
+    PSTEditorState& state, Engine& engine, const bool showTooltips)
 {
     if (ImGui::Begin("Piece square tables")) {
-        // send to engine
-        // refresh from engine
-        // load from file
-        // save to file
         // overwrite default in source tree
 
         render_reset_button(
             state.tables, showTooltips);
+
+        render_save_load_buttons(
+            state.tables, state.loadSave, showTooltips);
+
+        render_engine_interop_buttons(
+            state.tables, engine, showTooltips);
 
         render_pst_values(
             state.tables, state.selectedType, showTooltips);

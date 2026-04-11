@@ -41,6 +41,10 @@ namespace search {
     struct Options;
 } // namespace search
 
+namespace eval {
+    struct PieceSquareTables;
+} // namespace eval
+
 namespace uci = chess::uci;
 
 using chess::game::Position;
@@ -94,6 +98,19 @@ public:
     /** Pretty-prints a move using the engine's current settings. */
     [[nodiscard]] auto pretty_print_move(
         Move move, const Position& position) const -> std::string;
+
+    /** Returns the engine's current piece square tables. */
+    [[nodiscard]] auto get_piece_square_tables() const -> const eval::PieceSquareTables&
+    {
+        return searcher.context.get_piece_square_tables();
+    }
+
+    /** Sets the engine's piece square tables. */
+    void set_piece_square_tables(
+        const eval::PieceSquareTables& tables)
+    {
+        searcher.context.set_piece_square_tables(tables);
+    }
 
 protected:
     /** This function is used to initialize the search context's result callbacks.

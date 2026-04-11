@@ -175,15 +175,15 @@ struct Context final {
     /** Returns the current piece square tables. */
     [[nodiscard]] auto get_piece_square_tables() const noexcept -> const eval::PieceSquareTables& { return pieceSquareTables; }
 
-    /** Loads piece square table data from a given JSON string.
+    /** Sets the engine's piece square tables.
         If a search is in progress, this function aborts it and blocks until it completes.
      */
-    void load_piece_square_tables(
-        const std::string_view data)
+    void set_piece_square_tables(
+        const eval::PieceSquareTables& tables)
     {
         abort();
         wait();
-        pieceSquareTables = eval::PieceSquareTables::from_string(data);
+        pieceSquareTables = tables;
     }
 
 private:

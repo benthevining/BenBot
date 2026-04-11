@@ -125,7 +125,7 @@ void render(AppState& state)
         state.gameViewer, state.enginePanel.engine, state.boardEditor.position.position, showTooltips);
 
     render_pst_editor(
-        state.pstEditor, showTooltips);
+        state.pstEditor, state.enginePanel.engine, showTooltips);
 
     ImGui::Render();
 }
