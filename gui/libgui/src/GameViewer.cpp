@@ -40,40 +40,46 @@ using std::string_view;
 
 namespace {
     void show_pgn_load_dialog(
-        GameRecord& game, FileDialogContext& context)
+        GameRecord& game, FileDialogContext& context, ErrorPopup& error)
     {
-        // TODO: show popup for PGN parse error
         context.load_file(
-            [&game](const path& file) {
+            [&game, &error](const path& file) {
                 [[maybe_unused]] const auto result
                     = util::files::load(file)
                           .and_then(chess::notation::from_pgn)
-                          .transform([&game](GameRecord&& loaded) {
+                          .transform([&game, &error](GameRecord&& loaded) {
                               game = std::move(loaded);
-                              return std::monostate { };
+                              return error.set_success();
                           })
-                          .transform_error(util::print_error);
+                          .transform_error([&error](string&& message) {
+                              return error.set_error(std::move(message));
+                          });
             });
     }
 
     void show_pgn_save_dialog(
-        const GameRecord& game, FileDialogContext& context)
+        const GameRecord& game, FileDialogContext& context, ErrorPopup& error)
     {
         context.save_file(
-            [&game](const path& file) {
+            [&game, &error](const path& file) {
                 [[maybe_unused]] const auto result
                     = util::files::overwrite(file, to_pgn(game))
-                          .transform_error(util::print_error);
+                          .transform([&error] {
+                              return error.set_success();
+                          })
+                          .transform_error([&error](string&& message) {
+                              return error.set_error(std::move(message));
+                          });
             });
     }
 
     void render_load_save_buttons(
-        GameRecord& game, FileDialogContext& context, const bool showTooltips)
+        GameRecord& game, FileDialogContext& context, ErrorPopup& error, const bool showTooltips)
     {
         const ScopedGroup group;
 
         if (ImGui::Button("Load"))
-            show_pgn_load_dialog(game, context);
+            show_pgn_load_dialog(game, context, error);
 
         if (showTooltips)
             ImGui::SetItemTooltip("Load a game from a PGN file");
@@ -81,14 +87,16 @@ namespace {
         ImGui::SameLine();
 
         if (ImGui::Button("Save"))
-            show_pgn_save_dialog(game, context);
+            show_pgn_save_dialog(game, context, error);
 
         if (showTooltips)
             ImGui::SetItemTooltip("Save game to a PGN file");
+
+        error.render();
     }
 
     void render_raw_pgn_text(
-        GameRecord& game, ErrorPopup& errorPopup)
+        GameRecord& game, ErrorPopup& error)
     {
         if (not ImGui::CollapsingHeader("PGN text"))
             return;
@@ -98,16 +106,16 @@ namespace {
         if (ImGui::InputTextMultiline("##PGN", &inputBuf)) {
             [[maybe_unused]] const auto result
                 = chess::notation::from_pgn(inputBuf)
-                      .transform([&game, &errorPopup](GameRecord&& parsed) {
+                      .transform([&game, &error](GameRecord&& parsed) {
                           game = std::move(parsed);
-                          return errorPopup.set_success();
+                          return error.set_success();
                       })
-                      .transform_error([&errorPopup](string&& message) {
-                          return errorPopup.set_error(std::move(message));
+                      .transform_error([&error](string&& message) {
+                          return error.set_error(std::move(message));
                       });
         }
 
-        errorPopup.render();
+        error.render();
     }
 
     void render_metadata_tags(
@@ -200,7 +208,7 @@ void render_game_viewer(
 {
     if (ImGui::Begin("Game")) {
         render_load_save_buttons(
-            state.game, state.pgnLoadSave, showTooltips);
+            state.game, state.pgnLoadSave, state.pgnFileError, showTooltips);
 
         render_raw_pgn_text(
             state.game, state.pgnParseError);

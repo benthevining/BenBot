@@ -197,7 +197,7 @@ namespace {
     void render_moves_to_search(
         search::Options& options,
         const Engine&    engine,
-        ErrorPopup&      errorPopup,
+        ErrorPopup&      error,
         const bool       showTooltips)
     {
         auto inputBuf = format_moves(options.movesToSearch, engine);
@@ -215,8 +215,8 @@ namespace {
                               options.movesToSearch.emplace_back(move);
                               return std::monostate { };
                           })
-                          .transform_error([&errorPopup](string&& message) {
-                              return errorPopup.set_error(std::move(message));
+                          .transform_error([&error](string&& message) {
+                              return error.set_error(std::move(message));
                           });
             }
         }
@@ -224,7 +224,7 @@ namespace {
         if (showTooltips)
             ImGui::SetItemTooltip("Search only the given moves");
 
-        errorPopup.render();
+        error.render();
     }
 
     void render_search_engine_interop_buttons(
@@ -259,7 +259,7 @@ namespace {
 
     void render_search_options(
         search::Options& options,
-        ErrorPopup&      moveParseError,
+        ErrorPopup&      error,
         Engine&          engine,
         const bool       showTooltips)
     {
@@ -268,7 +268,8 @@ namespace {
         if (not ImGui::CollapsingHeader("Search options"))
             return;
 
-        render_search_engine_interop_buttons(options, engine, showTooltips);
+        render_search_engine_interop_buttons(
+            options, engine, showTooltips);
 
         const ScopedGroup group;
 
@@ -305,7 +306,7 @@ namespace {
             ImGui::SetItemTooltip("Search for mate in X plies");
 
         render_moves_to_search(
-            options, engine, moveParseError, showTooltips);
+            options, engine, error, showTooltips);
 
         ImGui::Checkbox("Infinite", &options.infinite);
 

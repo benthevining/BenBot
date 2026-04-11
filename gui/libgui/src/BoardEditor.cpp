@@ -254,7 +254,7 @@ namespace {
     }
 
     void render_fen_string(
-        Position& position, ErrorPopup& errorPopup, const bool showTooltips)
+        Position& position, ErrorPopup& error, const bool showTooltips)
     {
         using chess::notation::from_fen;
         using chess::notation::to_fen;
@@ -264,45 +264,45 @@ namespace {
         if (ImGui::InputText("FEN", &inputBuf, InputTextFlags)) {
             [[maybe_unused]] const auto result
                 = from_fen(inputBuf)
-                      .transform([&position, &errorPopup](const Position& newPos) {
+                      .transform([&position, &error](const Position& newPos) {
                           position = newPos;
-                          return errorPopup.set_success();
+                          return error.set_success();
                       })
-                      .transform_error([&errorPopup](string&& error) {
-                          return errorPopup.set_error(std::move(error));
+                      .transform_error([&error](string&& message) {
+                          return error.set_error(std::move(message));
                       });
         }
 
         if (showTooltips)
             ImGui::SetItemTooltip("Enter a FEN string");
 
-        errorPopup.render();
+        error.render();
     }
 
     using chess::notation::from_epd;
     using chess::notation::to_epd;
 
     void render_epd_string(
-        EPDPosition& position, ErrorPopup& errorPopup, const bool showTooltips)
+        EPDPosition& position, ErrorPopup& error, const bool showTooltips)
     {
         auto inputBuf = to_epd(position);
 
         if (ImGui::InputText("EPD", &inputBuf, InputTextFlags)) {
             [[maybe_unused]] const auto result
                 = from_epd(inputBuf)
-                      .transform([&position, &errorPopup](EPDPosition&& newPos) {
+                      .transform([&position, &error](EPDPosition&& newPos) {
                           position = std::move(newPos);
-                          return errorPopup.set_success();
+                          return error.set_success();
                       })
-                      .transform_error([&errorPopup](string&& error) {
-                          return errorPopup.set_error(std::move(error));
+                      .transform_error([&error](string&& message) {
+                          return error.set_error(std::move(message));
                       });
         }
 
         if (showTooltips)
             ImGui::SetItemTooltip("Enter an EPD string");
 
-        errorPopup.render();
+        error.render();
     }
 
     enum class EPDOperationType : std::uint_least8_t {
@@ -463,11 +463,11 @@ namespace {
     }
 
     void render_epd_editor(
-        EPDPosition& position, ErrorPopup& errorPopup, const bool showTooltips)
+        EPDPosition& position, ErrorPopup& error, const bool showTooltips)
     {
         if (ImGui::CollapsingHeader("EPD editor")) {
             render_epd_string(
-                position, errorPopup, showTooltips);
+                position, error, showTooltips);
 
             render_standard_epd_operations(
                 position, showTooltips);

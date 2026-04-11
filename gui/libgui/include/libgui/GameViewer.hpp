@@ -36,6 +36,7 @@ struct GameViewerState final {
     };
 
     ErrorPopup pgnParseError { "PGN parse error" };
+    ErrorPopup pgnFileError { "PGN file error" };
 
     [[nodiscard]] auto to_string() const -> std::string;
 
