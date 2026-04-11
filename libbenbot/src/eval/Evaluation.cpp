@@ -22,6 +22,7 @@
 #include <cmath> // IWYU pragma: keep - for std::round
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Material.hpp>
+#include <libbenbot/eval/PieceSquareTables.hpp>
 #include <libbenbot/eval/Score.hpp>
 #include <libchess/board/Distances.hpp>
 #include <libchess/board/File.hpp>
@@ -286,7 +287,10 @@ namespace {
 
 } // namespace
 
-auto evaluate(const Position& position) -> Score
+auto evaluate(
+    const Position&          position,
+    const PieceSquareTables& pst)
+    -> Score
 {
     const auto endgameWeight = endgame_phase_weight(position);
 
@@ -295,7 +299,7 @@ auto evaluate(const Position& position) -> Score
     return Score { static_cast<Value>(
         materialScore
         + no_pieces_left_bonus(position)
-        // + score_piece_placement(position, endgameWeight) TODO!
+        + pst.score_piece_placement(position, endgameWeight)
         + score_rook_files(position)
         + score_connected_rooks(position)
         + score_king_safety(position, endgameWeight)

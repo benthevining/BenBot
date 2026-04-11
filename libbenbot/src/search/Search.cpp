@@ -33,6 +33,7 @@
 #include <libbenbot/data-structures/KillerMoves.hpp>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
+#include <libbenbot/eval/PieceSquareTables.hpp>
 #include <libbenbot/eval/Score.hpp>
 #include <libbenbot/search/Bounds.hpp>
 #include <libbenbot/search/Constants.hpp>
@@ -97,7 +98,8 @@ namespace {
             const Bounds bnd, const Position& pos,
             const size_t depthToSearch, const size_t ply,
             TranspositionTable& trans, Interrupter& inter, Stats& statsToUse,
-            PvList& parentPV, KillerMoves& killers)
+            PvList& parentPV, KillerMoves& killers,
+            const eval::PieceSquareTables& pst)
             : bounds { bnd }
             , position { pos }
             , depthLeft { depthToSearch }
@@ -106,6 +108,7 @@ namespace {
             , interrupter { inter }
             , stats { statsToUse }
             , killerMoves { killers }
+            , pieceSquareTables { pst }
             , pv { parentPV }
         {
         }
@@ -156,7 +159,7 @@ namespace {
                 if (not inCheck) {
                     const auto margin = 80 * static_cast<int>(depthLeft);
 
-                    const auto staticEval = eval::evaluate(position);
+                    const auto staticEval = eval::evaluate(position, pieceSquareTables);
 
                     if (std::cmp_greater_equal(staticEval.value, bounds.beta.value + margin))
                         return staticEval;
@@ -266,7 +269,7 @@ namespace {
             if (position.is_checkmate())
                 return Score::mate(plyFromRoot);
 
-            auto evaluation = eval::evaluate(position);
+            auto evaluation = eval::evaluate(position, pieceSquareTables);
 
             ++stats.staticEvals;
 
@@ -309,7 +312,7 @@ namespace {
                 after_move(position, move),
                 depthLeft > 0uz ? depthLeft - 1uz : 0uz,
                 plyFromRoot + 1uz,
-                transTable, interrupter, stats, childPV, killerMoves };
+                transTable, interrupter, stats, childPV, killerMoves, pieceSquareTables };
         }
 
         Bounds bounds;
@@ -329,6 +332,8 @@ namespace {
         KillerMoves& killerMoves; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
         PvList& pv; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
+
+        const eval::PieceSquareTables& pieceSquareTables; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
         PvList childPV;
     };
@@ -361,13 +366,14 @@ namespace {
     };
 
     [[nodiscard]] auto root_search(
-        const size_t        depth,
-        Options&            options,
-        const Position&     position,
-        TranspositionTable& transTable,
-        Interrupter&        interrupter,
-        KillerMoves&        killerMoves,
-        const Callbacks&    callbacks)
+        const size_t                   depth,
+        Options&                       options,
+        const Position&                position,
+        TranspositionTable&            transTable,
+        Interrupter&                   interrupter,
+        KillerMoves&                   killerMoves,
+        const eval::PieceSquareTables& pst,
+        const Callbacks&               callbacks)
         -> RootSearchResult
     {
         const Timer timer;
@@ -375,7 +381,7 @@ namespace {
         killerMoves.clear();
 
         detail::order_moves_for_search(
-            position, options.movesToSearch, transTable, { });
+            position, options.movesToSearch, transTable, killerMoves.get(0uz));
 
         Stats    stats;
         Bounds   bounds;
@@ -389,9 +395,9 @@ namespace {
 
             PvList childPV;
 
-            auto create_context = [depth, &transTable, &interrupter, &stats, &childPV, &killerMoves](const Bounds boundsToUse, const Position& pos) {
+            auto create_context = [depth, &transTable, &interrupter, &stats, &childPV, &killerMoves, &pst](const Bounds boundsToUse, const Position& pos) {
                 return AlphaBetaContext {
-                    boundsToUse, pos, depth, 1uz, transTable, interrupter, stats, childPV, killerMoves
+                    boundsToUse, pos, depth, 1uz, transTable, interrupter, stats, childPV, killerMoves, pst
                 };
             };
 
@@ -496,7 +502,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
             break;
 
         const auto res = root_search(
-            depth, options, position, transTable, interrupter, killerMoves, callbacks);
+            depth, options, position, transTable, interrupter, killerMoves, pieceSquareTables, callbacks);
 
         if (interrupter.was_aborted())
             break;

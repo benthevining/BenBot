@@ -22,6 +22,7 @@
 #include <atomic>
 #include <libbenbot/data-structures/KillerMoves.hpp>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
+#include <libbenbot/eval/PieceSquareTables.hpp>
 #include <libbenbot/search/Callbacks.hpp>
 #include <libbenbot/search/Options.hpp>
 #include <libchess/game/Position.hpp>
@@ -170,6 +171,9 @@ struct Context final {
     /** Returns the current search parameters. */
     [[nodiscard]] auto get_options() const noexcept -> const Options& { return options; }
 
+    /** Returns the current piece square tables. */
+    [[nodiscard]] auto get_piece_square_tables() const noexcept -> const eval::PieceSquareTables& { return pieceSquareTables; }
+
 private:
     Position position;
 
@@ -180,6 +184,8 @@ private:
     TranspositionTable transTable;
 
     KillerMoves killerMoves;
+
+    eval::PieceSquareTables pieceSquareTables { eval::PieceSquareTables::get_default() };
 
     // these flags are all on their own cache lines to prevent
     // false sharing between the searcher & main (input) threads

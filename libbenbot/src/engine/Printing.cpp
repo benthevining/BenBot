@@ -155,7 +155,9 @@ void Engine::print_current_position(const string_view arguments) const
 
     print_labeled_info("Zobrist key: ", std::format("{}", pos.hash));
 
-    print_labeled_info("Static eval: ", std::format("{}", eval::evaluate(pos)));
+    print_labeled_info(
+        "Static eval: ",
+        std::format("{}", eval::evaluate(pos, searcher.context.get_piece_square_tables())));
 
     searcher.context.probe_transposition_table(pos)
         .transform([this, &pos](const TTData& data) {
