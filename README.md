@@ -26,7 +26,7 @@ See each subdirectory's readme for details.
 
 ## Building
 
-Building or using `ben-bot`, `libbenbot` or `libchess` requires CMake and C++23.
+Building requires CMake and C++23.
 
 All dependencies are fetched via `FetchContent`, so everything should "just work" out of the box.
 

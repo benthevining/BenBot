@@ -49,7 +49,7 @@ using chess::notation::MoveFormat;
 using std::string_view;
 using uci::EngineCommand;
 
-/** The ``ben-bot`` UCI engine class.
+/** The BenBot UCI engine class.
     @ingroup libbenbot
  */
 class [[nodiscard]] Engine : public uci::EngineBase {

@@ -35,6 +35,8 @@ set (DOXYGEN_FILE_PATTERNS *.hpp)
 set (DOXYGEN_INCLUDE_FILE_PATTERNS *.hpp)
 
 set (DOXYGEN_STRIP_FROM_PATH "${BenBot_SOURCE_DIR}")
+
+# TODO: fix
 set (DOXYGEN_STRIP_FROM_INC_PATH
      "${BenBot_SOURCE_DIR}/libchess/include" "${BenBot_SOURCE_DIR}/libbenbot/include"
      "${BenBot_SOURCE_DIR}/ben-bot/include" "${BenBot_SOURCE_DIR}/ben-bot/resources/include"
