@@ -14,7 +14,6 @@
 
 #pragma once
 
-#include <filesystem>
 #include <libchess/notation/PGN.hpp>
 #include <libgui/ErrorPopup.hpp>
 #include <libgui/FileDialogContext.hpp>

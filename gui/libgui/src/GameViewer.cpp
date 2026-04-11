@@ -40,9 +40,9 @@ using std::string_view;
 
 namespace {
     void show_pgn_load_dialog(
-        GameRecord& game, FileDialogContext& context, ErrorPopup& error)
+        GameRecord& game, FileDialogContext& chooser, ErrorPopup& error)
     {
-        context.load_file(
+        chooser.load_file(
             [&game, &error](const path& file) {
                 [[maybe_unused]] const auto result
                     = util::files::load(file)
@@ -58,9 +58,9 @@ namespace {
     }
 
     void show_pgn_save_dialog(
-        const GameRecord& game, FileDialogContext& context, ErrorPopup& error)
+        const GameRecord& game, FileDialogContext& chooser, ErrorPopup& error)
     {
-        context.save_file(
+        chooser.save_file(
             [&game, &error](const path& file) {
                 [[maybe_unused]] const auto result
                     = util::files::overwrite(file, to_pgn(game))

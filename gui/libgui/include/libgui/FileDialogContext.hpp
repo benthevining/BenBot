@@ -31,19 +31,19 @@ struct FileDialogContext final {
         const char*                   defaultFilename_,
         std::initializer_list<Filter> filters_);
 
-    const char* defaultFilename;
-
-    std::vector<Filter> filters;
-
-    // TODO: init to documents path?
-    std::filesystem::path defaultPath;
-
     void load_file(const Callback& callback);
     void save_file(const Callback& callback);
 
 private:
     template <bool IsLoading>
     void show(const Callback& callback);
+
+    const char* defaultFilename;
+
+    std::vector<Filter> filters;
+
+    // TODO: init to documents path?
+    std::filesystem::path defaultPath;
 };
 
 } // namespace ben_bot::gui
