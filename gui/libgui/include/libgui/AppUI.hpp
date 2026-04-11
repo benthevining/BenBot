@@ -25,6 +25,7 @@
 #include <libgui/BoardEditor.hpp>
 #include <libgui/EnginePanel.hpp>
 #include <libgui/GameViewer.hpp>
+#include <libgui/PSTEditor.hpp>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -78,6 +79,9 @@ struct AppState final {
 
     /** The state of the PGN game viewer. */
     GameViewerState gameViewer;
+
+    /** The state of the piece square table editor. */
+    PSTEditorState pstEditor;
 
     /** Serializes this state to a JSON string. */
     [[nodiscard]] auto to_string() const -> std::string;

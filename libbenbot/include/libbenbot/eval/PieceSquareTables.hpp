@@ -20,6 +20,7 @@
 #pragma once
 
 #include <array>
+#include <cstdint>
 #include <libchess/board/BitboardIndex.hpp>
 #include <string>
 #include <string_view>
@@ -42,6 +43,17 @@ using chess::game::Position;
 struct PieceSquareTables final {
     /** Typedef for a single piece table. */
     using Table = std::array<int, chess::board::NUM_SQUARES>;
+
+    /** This enum identifies the different tables that are stored. */
+    enum class TableType : std::uint_least8_t {
+        Pawn,           ///< Table for pawns.
+        Knight,         ///< Table for knights.
+        Bishop,         ///< Table for bishops.
+        Rook,           ///< Table for rooks.
+        Queen,          ///< Table for queens.
+        KingMiddlegame, ///< Table for king middlegame values.
+        KingEndgame     ///< Table for king endgame values.
+    };
 
     /** Pawn values. */
     Table pawn;
@@ -68,6 +80,9 @@ struct PieceSquareTables final {
     [[nodiscard]] auto score_piece_placement(
         const Position& position, float endgameWeight) const
         -> int;
+
+    /** Returns the table of the given type. */
+    [[nodiscard]] auto get_table(TableType type) -> Table&;
 
     /** Serializes the current PST data to a JSON string. */
     [[nodiscard]] auto to_string() const -> std::string;

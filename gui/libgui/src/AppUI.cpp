@@ -21,6 +21,7 @@
 #include <libgui/BoardEditor.hpp>
 #include <libgui/EnginePanel.hpp>
 #include <libgui/GameViewer.hpp>
+#include <libgui/PSTEditor.hpp>
 #include <libgui/Resources.hpp>
 #include <libutil/Console.hpp>
 #include <libutil/Files.hpp>
@@ -122,6 +123,9 @@ void render(AppState& state)
 
     render_game_viewer(
         state.gameViewer, state.enginePanel.engine, state.boardEditor.position.position, showTooltips);
+
+    render_pst_editor(
+        state.pstEditor, showTooltips);
 
     ImGui::Render();
 }

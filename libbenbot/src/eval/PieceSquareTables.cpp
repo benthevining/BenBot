@@ -30,6 +30,24 @@
 
 namespace ben_bot::eval {
 
+auto PieceSquareTables::get_table(
+    const TableType type) -> Table&
+{
+    using enum TableType;
+
+    switch (type) {
+        case Knight        : return knight;
+        case Bishop        : return bishop;
+        case Rook          : return rook;
+        case Queen         : return queen;
+        case KingMiddlegame: return kingMiddlegame;
+        case KingEndgame   : return kingEndgame;
+
+        default  : [[fallthrough]];
+        case Pawn: return pawn;
+    }
+}
+
 namespace {
     using Table = PieceSquareTables::Table;
     using chess::board::Pieces;
