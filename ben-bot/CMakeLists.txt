@@ -85,7 +85,7 @@ cpack_add_component (
 
 add_custom_target (
     bench
-    COMMAND ben_bot::ben_bot bench --no-loop
+    COMMAND ben_bot::ben_bot bench
     WORKING_DIRECTORY "$<TARGET_FILE_DIR:ben_bot>"
     COMMENT "Running ben_bot bench..."
     VERBATIM USES_TERMINAL
