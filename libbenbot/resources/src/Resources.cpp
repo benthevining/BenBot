@@ -46,6 +46,11 @@ auto get_ascii_logo() -> string_view
     return get_named_resource("license_header.txt");
 }
 
+auto get_default_piece_square_tables() -> string_view
+{
+    return get_named_resource("piece_square_tables.json");
+}
+
 // the below functions are implemented this way because
 // this is the only TU that includes BenBotConfig.hpp
 

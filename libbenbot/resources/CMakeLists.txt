@@ -21,7 +21,7 @@ FetchContent_Declare (
 FetchContent_MakeAvailable (cmrc)
 
 set (resource_files # cmake-format: sortable
-                    res/bench.epd res/license_header.txt
+                    res/bench.epd res/license_header.txt res/piece_square_tables.json
 )
 
 cmrc_add_resource_library (ben_bot_resources ${resource_files})

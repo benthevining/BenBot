@@ -42,6 +42,9 @@ using std::string_view;
 /** Returns the engine's ASCII logo. */
 [[nodiscard]] auto get_ascii_logo() -> string_view;
 
+/** Returns the default piece square table data. */
+[[nodiscard]] auto get_default_piece_square_tables() -> string_view;
+
 /** Returns the engine's version string. */
 [[nodiscard, gnu::const]] auto get_version_string() -> string_view;
 

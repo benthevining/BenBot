@@ -17,7 +17,6 @@
 // - bonus for the bishop pair that increases with fewer pawns on the board, and also a bonus for knights when there are more pawns on the board
 
 #include "eval/PawnStructure.hpp"
-#include "eval/PieceSquareTables.hpp"
 #include "eval/Positional.hpp"
 #include <algorithm>
 #include <cmath> // IWYU pragma: keep - for std::round
@@ -296,7 +295,7 @@ auto evaluate(const Position& position) -> Score
     return Score { static_cast<Value>(
         materialScore
         + no_pieces_left_bonus(position)
-        + score_piece_placement(position, endgameWeight)
+        // + score_piece_placement(position, endgameWeight) TODO!
         + score_rook_files(position)
         + score_connected_rooks(position)
         + score_king_safety(position, endgameWeight)
