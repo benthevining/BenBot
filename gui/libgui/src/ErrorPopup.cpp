@@ -22,26 +22,44 @@
 
 namespace ben_bot::gui {
 
+ErrorPopup::ErrorPopup(const char* label)
+    : popupLabel { label }
+{
+}
+
+auto ErrorPopup::set_success() -> std::monostate
+{
+    errorMessage.clear();
+
+    if (ImGui::IsPopupOpen(popupLabel))
+        ImGui::CloseCurrentPopup();
+
+    return { };
+}
+
 auto ErrorPopup::set_error(std::string&& message) -> std::monostate
 {
     assert(not message.empty());
     errorMessage = std::move(message);
-    ImGui::OpenPopup(PopupLabel, ImGuiPopupFlags_NoReopen);
+
+    ImGui::OpenPopup(popupLabel, ImGuiPopupFlags_NoReopen);
+
     return { };
 }
 
 void ErrorPopup::render()
 {
-    if (ImGui::BeginPopupModal(PopupLabel, nullptr, PopupFlags)) {
-        UnformattedText(errorMessage);
+    if (not ImGui::BeginPopupModal(popupLabel, nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        return;
 
-        if (ImGui::Button("OK", { 120.f, 0.f })) {
-            ImGui::CloseCurrentPopup();
-            errorMessage.clear();
-        }
+    UnformattedText(errorMessage);
 
-        ImGui::EndPopup();
+    if (ImGui::Button("OK", { 120.f, 0.f })) {
+        ImGui::CloseCurrentPopup();
+        errorMessage.clear();
     }
+
+    ImGui::EndPopup();
 }
 
 } // namespace ben_bot::gui

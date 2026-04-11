@@ -42,11 +42,12 @@ set (DOXYGEN_OUTPUT_DIRECTORY "${BenBot_BINARY_DIR}/generated-docs")
 
 #
 
-get_target_property (libutil_headers ben_bot::libutil HEADER_SET)
-get_target_property (libchess_headers ben_bot::libchess HEADER_SET)
-get_target_property (libbenbot_headers ben_bot::libbenbot HEADER_SET)
-get_target_property (resource_headers ben_bot::resources HEADER_SET)
-get_target_property (gui_resource_headers ben_bot::gui_resources HEADER_SET)
+unset (header_files)
+
+foreach (lib_name IN ITEMS libutil libchess libbenbot resources libgui gui_resources)
+    get_target_property (lib_headers "ben_bot::${lib_name}" HEADER_SET)
+    list (APPEND header_files ${lib_headers})
+endforeach ()
 
 doxygen_add_docs (
     ben_bot_docs
@@ -56,11 +57,7 @@ doxygen_add_docs (
     "${CMAKE_CURRENT_LIST_DIR}/uci-spec.md"
     "${CMAKE_CURRENT_LIST_DIR}/top-level-groups.hpp"
     "${CMAKE_CURRENT_LIST_DIR}/CodeStyle.md"
-    ${libutil_headers}
-    ${libchess_headers}
-    ${libbenbot_headers}
-    ${resource_headers}
-    ${gui_resource_headers}
+    ${header_files}
     WORKING_DIRECTORY "${BenBot_SOURCE_DIR}"
     COMMENT "Building Doxygen documentation..." USE_STAMP_FILE
 )
