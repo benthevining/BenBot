@@ -23,15 +23,25 @@ FetchContent_Declare (
     FIND_PACKAGE_ARGS 1.3.0
 )
 
-FetchContent_MakeAvailable (nativefiledialog-extended)
+FetchContent_Declare (
+    platform-folders
+    SYSTEM
+    GIT_REPOSITORY "https://github.com/sago007/PlatformFolders.git"
+    GIT_TAG 4.3.0
+    GIT_SHALLOW ON
+    FIND_PACKAGE_ARGS 4.3.0
+)
+
+FetchContent_MakeAvailable (nativefiledialog-extended platform-folders)
 
 add_library (libgui STATIC)
 
 target_compile_features (libgui PUBLIC cxx_std_23)
 
 target_link_libraries (
-    libgui PUBLIC ben_bot::libbenbot nfd::nfd PRIVATE imgui::imgui nlohmann_json::nlohmann_json
-                                                      ben_bot::resources ben_bot::gui_resources
+    libgui PUBLIC ben_bot::libbenbot nfd::nfd
+    PRIVATE imgui::imgui nlohmann_json::nlohmann_json ben_bot::resources ben_bot::gui_resources
+            sago::platform_folders
 )
 
 set_target_properties (

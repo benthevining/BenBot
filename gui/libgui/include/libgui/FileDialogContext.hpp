@@ -42,7 +42,6 @@ private:
 
     std::vector<Filter> filters;
 
-    // TODO: init to documents path?
     std::filesystem::path defaultPath;
 };
 

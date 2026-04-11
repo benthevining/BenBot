@@ -17,15 +17,25 @@
 #include <initializer_list>
 #include <libgui/FileDialogContext.hpp>
 #include <nfd.hpp>
+#include <platform_folders.h>
 #include <print>
 
 namespace ben_bot::gui {
+
+namespace {
+    [[nodiscard]] auto get_default_file_chooser_dir()
+        -> std::filesystem::path
+    {
+        return sago::getDocumentsFolder();
+    }
+} // namespace
 
 FileDialogContext::FileDialogContext(
     const char*                         defaultFilename_,
     const std::initializer_list<Filter> filters_)
     : defaultFilename { defaultFilename_ }
     , filters { filters_ }
+    , defaultPath { get_default_file_chooser_dir() }
 {
 }
 
@@ -65,6 +75,9 @@ void FileDialogContext::show(const Callback& callback)
                 std::filesystem::path { outPath.get() });
 
             defaultPath = resultPath.parent_path();
+
+            if (not(is_directory(defaultPath) and exists(defaultPath)))
+                defaultPath = get_default_file_chooser_dir();
 
             callback(resultPath);
             return;

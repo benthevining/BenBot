@@ -23,3 +23,4 @@ This library aims to be platform-agnostic. Its public interface is simply a stat
 
 * [imgui](https://github.com/ocornut/imgui), for UI layout/rendering
 * [nativefiledialog-extended](https://github.com/btzy/nativefiledialog-extended), for file chooser dialogs
+* [platform-folders](https://github.com/sago007/PlatformFolders/), for finding user documents directory
