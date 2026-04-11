@@ -44,10 +44,9 @@ struct AppSettings final {
     };
 
     /** Error popup context used for writing the current application state
-        to the resource files in the source tree. This is only used if the
-        ``BENBOT_RES_SRC_TREE_PATH`` symbol is defined.
+        to the resource files in the source tree.
      */
-    [[maybe_unused]] ErrorPopup defaultStateSaveError { "State save error" };
+    [[maybe_unused]] ErrorPopup defaultStateSaveError { "Default state save error" };
 
     /** Serializes this state to a JSON string. */
     [[nodiscard]] auto to_string() const -> std::string;

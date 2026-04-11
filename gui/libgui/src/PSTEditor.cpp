@@ -21,6 +21,7 @@
 #include <libchess/board/File.hpp>
 #include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
+#include <libgui/ErrorPopup.hpp>
 #include <libgui/FileDialogContext.hpp>
 #include <libgui/PSTEditor.hpp>
 #include <libutil/Console.hpp>
@@ -28,6 +29,7 @@
 #include <magic_enum/magic_enum.hpp>
 #include <string>
 #include <string_view>
+#include <utility>
 
 namespace ben_bot::gui {
 
@@ -103,6 +105,23 @@ namespace {
             ImGui::SetItemTooltip("Reset to engine's current tables");
     }
 
+    [[maybe_unused]] void render_save_default_button(
+        const Tables& tables, ErrorPopup& error, const path& sourceTreeFile, const bool showTooltips)
+    {
+        if (ImGui::Button("Save default")) {
+            [[maybe_unused]] const auto result
+                = util::files::overwrite(sourceTreeFile, tables.to_string())
+                      .transform_error([&error](string&& message) {
+                          return error.set_error(std::move(message));
+                      });
+        }
+
+        if (showTooltips)
+            ImGui::SetItemTooltip("Save tables as default in source tree");
+
+        error.render();
+    }
+
     void render_table_type_selector(
         Tables::TableType& selectedType, const bool showTooltips)
     {
@@ -160,24 +179,12 @@ namespace {
 
         ImGui::EndTable();
     }
-
-    void render_pst_values(
-        Tables& tables, Tables::TableType& selectedType, const bool showTooltips)
-    {
-        render_table_type_selector(
-            selectedType, showTooltips);
-
-        render_value_grid(
-            tables, selectedType);
-    }
 } // namespace
 
 void render_pst_editor(
     PSTEditorState& state, Engine& engine, const bool showTooltips)
 {
     if (ImGui::Begin("Piece square tables")) {
-        // overwrite default in source tree
-
         render_reset_button(
             state.tables, showTooltips);
 
@@ -187,8 +194,18 @@ void render_pst_editor(
         render_engine_interop_buttons(
             state.tables, engine, showTooltips);
 
-        render_pst_values(
-            state.tables, state.selectedType, showTooltips);
+#ifdef BENBOT_PST_RES_SRC_TREE_PATH
+        render_save_default_button(
+            state.tables, state.defaultStateSaveError,
+            path { BENBOT_PST_RES_SRC_TREE_PATH },
+            showTooltips);
+#endif
+
+        render_table_type_selector(
+            state.selectedType, showTooltips);
+
+        render_value_grid(
+            state.tables, state.selectedType);
     }
 
     ImGui::End();

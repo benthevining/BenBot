@@ -81,6 +81,7 @@ target_compile_definitions (
     libgui
     PRIVATE
         "$<${config_debug}:BENBOT_RES_SRC_TREE_PATH=\"${CMAKE_CURRENT_LIST_DIR}/resources/res\">"
+        "$<${config_debug}:BENBOT_PST_RES_SRC_TREE_PATH=\"${PROJECT_SOURCE_DIR}/libbenbot/resources/res/piece_square_tables.json\">"
 )
 
 add_library (ben_bot::libgui ALIAS libgui)

@@ -20,6 +20,7 @@
 #pragma once
 
 #include <libbenbot/eval/PieceSquareTables.hpp>
+#include <libgui/ErrorPopup.hpp>
 #include <libgui/FileDialogContext.hpp>
 
 namespace ben_bot {
@@ -48,6 +49,11 @@ struct PSTEditorState final {
         "PieceSquareTables.json",
         { { "JSON", "json" } }
     };
+
+    /** Error popup context used for writing the default tables
+        to the source tree.
+     */
+    [[maybe_unused]] ErrorPopup defaultStateSaveError { "Default PST save error" };
 };
 
 /** Renders a piece square table editor.
