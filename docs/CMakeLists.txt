@@ -36,12 +36,6 @@ set (DOXYGEN_INCLUDE_FILE_PATTERNS *.hpp)
 
 set (DOXYGEN_STRIP_FROM_PATH "${BenBot_SOURCE_DIR}")
 
-# TODO: fix
-set (DOXYGEN_STRIP_FROM_INC_PATH
-     "${BenBot_SOURCE_DIR}/libchess/include" "${BenBot_SOURCE_DIR}/libbenbot/include"
-     "${BenBot_SOURCE_DIR}/ben-bot/include" "${BenBot_SOURCE_DIR}/ben-bot/resources/include"
-)
-
 set (DOXYGEN_OUTPUT_DIRECTORY "${BenBot_BINARY_DIR}/generated-docs")
 
 #
@@ -49,8 +43,13 @@ set (DOXYGEN_OUTPUT_DIRECTORY "${BenBot_BINARY_DIR}/generated-docs")
 unset (header_files)
 
 foreach (lib_name IN ITEMS libutil libchess libbenbot resources libgui gui_resources)
-    get_target_property (lib_headers "ben_bot::${lib_name}" HEADER_SET)
+    set (target_name "ben_bot::${lib_name}")
+
+    get_target_property (lib_headers "${target_name}" HEADER_SET)
     list (APPEND header_files ${lib_headers})
+
+    get_target_property (lib_include_base_dirs "${target_name}" HEADER_DIRS)
+    list (APPEND DOXYGEN_STRIP_FROM_INC_PATH ${lib_include_base_dirs})
 endforeach ()
 
 doxygen_add_docs (
