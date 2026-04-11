@@ -46,6 +46,7 @@ get_target_property (libutil_headers ben_bot::libutil HEADER_SET)
 get_target_property (libchess_headers ben_bot::libchess HEADER_SET)
 get_target_property (libbenbot_headers ben_bot::libbenbot HEADER_SET)
 get_target_property (resource_headers ben_bot::resources HEADER_SET)
+get_target_property (gui_resource_headers ben_bot::gui_resources HEADER_SET)
 
 doxygen_add_docs (
     ben_bot_docs
@@ -53,12 +54,13 @@ doxygen_add_docs (
     "${DOXYGEN_CITE_BIB_FILES}"
     "${DOXYGEN_USE_MDFILE_AS_MAINPAGE}"
     "${CMAKE_CURRENT_LIST_DIR}/uci-spec.md"
-    "${CMAKE_CURRENT_LIST_DIR}/top-level-groups.txt"
+    "${CMAKE_CURRENT_LIST_DIR}/top-level-groups.hpp"
     "${CMAKE_CURRENT_LIST_DIR}/CodeStyle.md"
     ${libutil_headers}
     ${libchess_headers}
     ${libbenbot_headers}
     ${resource_headers}
+    ${gui_resource_headers}
     WORKING_DIRECTORY "${BenBot_SOURCE_DIR}"
     COMMENT "Building Doxygen documentation..." USE_STAMP_FILE
 )
