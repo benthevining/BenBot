@@ -145,6 +145,16 @@ struct [[nodiscard]] GameRecord final {
     /** Returns the final position of this game. */
     [[nodiscard]] auto get_final_position() const -> Position;
 
+    /** Returns an empty game with the given starting position. */
+    [[nodiscard]] static auto from_starting_position(const Position& pos) -> GameRecord
+    {
+        GameRecord game;
+
+        game.moves.startingPosition = pos;
+
+        return game;
+    }
+
     struct PositionPointer final {
         size_t totalPlyFromRoot { 0uz };
 

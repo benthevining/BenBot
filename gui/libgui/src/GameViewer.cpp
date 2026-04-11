@@ -95,6 +95,16 @@ namespace {
         error.render();
     }
 
+    void render_new_game_button(
+        GameRecord& game, const Position& boardEditorPos, const bool showTooltips)
+    {
+        if (ImGui::Button("New game"))
+            game = GameRecord::from_starting_position(boardEditorPos);
+
+        if (showTooltips)
+            ImGui::SetItemTooltip("Start a new PGN game");
+    }
+
     void render_raw_pgn_text(
         GameRecord& game, ErrorPopup& error)
     {
@@ -204,11 +214,14 @@ namespace {
 } // namespace
 
 void render_game_viewer(
-    GameViewerState& state, const Engine& engine, const bool showTooltips)
+    GameViewerState& state, const Engine& engine, const Position& boardEditorPos, const bool showTooltips)
 {
     if (ImGui::Begin("Game")) {
         render_load_save_buttons(
             state.game, state.pgnLoadSave, state.pgnFileError, showTooltips);
+
+        render_new_game_button(
+            state.game, boardEditorPos, showTooltips);
 
         render_raw_pgn_text(
             state.game, state.pgnParseError);

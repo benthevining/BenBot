@@ -43,6 +43,6 @@ struct GameViewerState final {
 };
 
 void render_game_viewer(
-    GameViewerState& state, const Engine& engine, bool showTooltips);
+    GameViewerState& state, const Engine& engine, const Position& boardEditorPos, bool showTooltips);
 
 } // namespace ben_bot::gui
