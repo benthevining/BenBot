@@ -10,56 +10,33 @@
 #
 # ======================================================================================
 
-name: build_docs
-description: Build Doxygen documentation
+name: install_build_deps
+description: Installs dependencies needed for building
+
+inputs:
+  cmake_preset:
+    description: CMake preset to use
+    required: false
+    default: gcc
 
 runs:
   using: "composite"
   steps:
-  - name: Install dependencies
+  - name: Install libc++
+    if: runner.os == 'Linux' && inputs.cmake_preset == 'clang'
     shell: bash
     run: |
       sudo apt-get update
-      echo dependencies.txt | xargs sudo apt-get install -y
+      echo linux-clang-dependencies.txt | xargs sudo apt-get install -y
     working-directory: ${{ github.action_path }}
 
-  - name: Install latest Doxygen
-    uses: ssciwr/doxygen-install@329d88f5a303066a5bd006db7516b1925b86350e   # v2.0.1
-
-  - name: Build docs
-    uses: ./.github/actions/run_build
-    id: run_build
+      # TODO: ensure install of runtime libraries for sanitizers, set LD_LIBRARY_PATH
+  - name: Install Clang21
+    if: runner.os == 'Linux' && inputs.cmake_preset == 'clang'
+    uses: aminya/setup-cpp@1f17f92d6a52bfcb1a25348e2c526c2e5cbb1134     # v1.8.0
     with:
-      extra_config_args: -D BUILD_TESTING=OFF -D CMAKE_REQUIRE_FIND_PACKAGE_Doxygen=TRUE
-      build_target: ben_bot_docs
+      llvm: 21
+      clang: 21
 
-    # Parse Doxygen warnings to create JSON data for check status
-  - name: Produce summary for check
-    if: always()
-    id: parse_doxygen_warnings
-    env:
-      SCRIPT: ${{ github.action_path }}/ReportDoxygenWarnings.py
-      DOXYGEN_LOG: ${{ github.workspace }}/logs/Doxygen.log
-    shell: bash
-    run: |
-      summary="$(python3 ${{ env.SCRIPT }}  --summary --doxygen-log=${{ env.DOXYGEN_LOG }})"
-      echo "summary=$summary" >> "$GITHUB_OUTPUT"
-      annotations="$(python3 ${{ env.SCRIPT }} --doxygen-log=${{ env.DOXYGEN_LOG }} --repo-root ${{ github.workspace }})"
-      echo "annotations=$annotations" >> "$GITHUB_OUTPUT"
-
-    # Create status check to report warnings
-  - name: Report check state
-    if: always()
-    uses: LouisBrunner/checks-action@937cbbcde3259005b50746dc91cde29098aac2ff   # v3.1.0
-    with:
-      token: ${{ github.token }}
-      name: Docs warnings
-      conclusion: ${{ job.status }}   # expands to failure if any step has failed, success otherwise
-      output: ${{ steps.parse_doxygen_warnings.outputs.summary }}
-      annotations: ${{ steps.parse_doxygen_warnings.outputs.annotations }}
-
-  - name: Upload artifact
-    uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b   # v4
-    with:
-      name: BenBot-docs
-      path: ${{ steps.run_build.outputs.deploy_dir }}/share/doc/html
+  - name: Install CMake 4.0
+    uses: lukka/get-cmake@ea83089aa35e08e459464341fe24ad024ee2466f     # v4.3.1

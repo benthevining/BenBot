@@ -27,25 +27,12 @@ inputs:
 runs:
   using: "composite"
   steps:
-  - name: Install libc++
-    if: runner.os == 'Linux' && inputs.cmake_preset == 'clang'
-    shell: bash
-    run: |
-      sudo apt-get update
-      sudo apt-get install -y libc++-dev libc++abi-dev
-
-    # TODO: ensure install of runtime libraries for sanitizers, set LD_LIBRARY_PATH
-  - name: Install Clang21
-    if: runner.os == 'Linux' && inputs.cmake_preset == 'clang'
-    uses: aminya/setup-cpp@1f17f92d6a52bfcb1a25348e2c526c2e5cbb1134   # v1.8.0
+  - name: Install build dependencies
+    uses: ./.github/actions/install-build-deps
     with:
-      llvm: 21
-      clang: 21
+      cmake_preset: ${{ inputs.cmake_preset }}
 
-  - name: Install CMake 4.0
-    uses: lukka/get-cmake@ea83089aa35e08e459464341fe24ad024ee2466f   # v4.3.1
-
-  - name: Install Python dependencies
+  - name: Install Python test dependencies
     shell: bash
     run: cmake -D "REPO_ROOT=${{ github.workspace }}" -P InstallPythonDeps.cmake
     working-directory: ${{ github.action_path }}
