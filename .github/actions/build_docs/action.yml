@@ -20,7 +20,7 @@ runs:
     shell: bash
     run: |
       sudo apt-get update
-      echo dependencies.txt | xargs sudo apt-get install -y
+      cat dependencies.txt | xargs sudo apt-get install -y
     working-directory: ${{ github.action_path }}
 
   - name: Install latest Doxygen
