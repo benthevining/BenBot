@@ -25,7 +25,9 @@ if (NOT DEFINED REPO_ROOT)
 endif ()
 
 execute_process (
-    COMMAND "${Python_EXECUTABLE}" -m pip install -r
-            "${REPO_ROOT}/tests/position-solver/requirements.txt" COMMAND_ECHO STDOUT
+    COMMAND
+        "${Python_EXECUTABLE}" -m pip install -r
+        "${REPO_ROOT}/tests/position-solver/requirements.txt" --break-system-packages COMMAND_ECHO
+        STDOUT
     OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY
 )

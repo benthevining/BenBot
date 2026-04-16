@@ -45,6 +45,11 @@ unset (header_files)
 foreach (lib_name IN ITEMS libutil libchess libbenbot resources libgui gui_resources)
     set (target_name "ben_bot::${lib_name}")
 
+    # the GUI targets may not exist
+    if (NOT TARGET "${target_name}")
+        continue ()
+    endif ()
+
     get_target_property (lib_headers "${target_name}" HEADER_SET)
     list (APPEND header_files ${lib_headers})
 

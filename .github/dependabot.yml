@@ -44,7 +44,7 @@ updates:
   multi-ecosystem-group: dependencies
 
 - package-ecosystem: pip
-  directories: [config, tests/position-solver]
+  directories: [config, tests/position-solver, .github/actions/bump_version]
   patterns: ["*"]
   multi-ecosystem-group: dependencies
 
