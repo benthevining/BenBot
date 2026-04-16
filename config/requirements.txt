@@ -10,8 +10,6 @@
 #
 # ======================================================================================
 
-# install using: pip install -r config/requirements.txt
-
 --prefer-binary
 
 # cli tools
@@ -24,7 +22,3 @@ hadolint-bin >= 2.14.0
 ninja >= 1.11.1.3
 pre-commit >= 4.0.1
 rust-just >= 1.39.0
-
-# needed for test scripts
-python-chess >= 1.999
-tqdm >= 4.67.1

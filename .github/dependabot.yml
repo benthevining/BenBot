@@ -44,7 +44,7 @@ updates:
   multi-ecosystem-group: dependencies
 
 - package-ecosystem: pip
-  directory: /config
+  directories: [config, tests/position-solver]
   patterns: ["*"]
   multi-ecosystem-group: dependencies
 
