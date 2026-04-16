@@ -29,7 +29,8 @@ alias pc := pre-commit
 
 # Installs all development dependencies
 install:
-    python3 -m pip install -r config/requirements.txt
+    python3 -m pip install -r config/requirements.txt --break-system-packages
+    python3 -m pip install -r tests/position-solver/requirements.txt --break-system-packages
     npm install
     pre-commit install --install-hooks
 
