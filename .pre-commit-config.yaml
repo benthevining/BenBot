@@ -98,11 +98,11 @@ repos:
 
     # C++ formatting & linting
 - repo: https://github.com/pre-commit/mirrors-clang-format
-  rev: v22.1.3
+  rev: v22.1.4
   hooks:
   - id: clang-format
     exclude_types: [json]
-    additional_dependencies: [clang-format>=22.1.3]
+    additional_dependencies: [clang-format>=22.1.4]
 - repo: https://github.com/pocc/pre-commit-hooks
   rev: v1.3.5
   hooks:
