@@ -19,4 +19,4 @@ cpplint >= 2.0.2
 hadolint-bin >= 2.14.0
 ninja >= 1.13.0
 pre-commit >= 4.6.0
-rust-just >= 1.50.0
+rust-just >= 1.51.0
