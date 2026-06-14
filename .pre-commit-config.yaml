@@ -124,7 +124,7 @@ repos:
     args: [--config-files, config/.cmake-format.json]
 
 - repo: https://github.com/python-jsonschema/check-jsonschema
-  rev: 0.37.2
+  rev: 0.37.3
   hooks:
   - id: check-github-workflows
   - id: check-jsonschema
@@ -247,7 +247,7 @@ repos:
 
 # manual-only hook
 - repo: https://github.com/codingjoe/relint
-  rev: 3.4.0
+  rev: 3.4.1
   hooks:
   - id: relint
     args: [-c, config/relint.yml]
