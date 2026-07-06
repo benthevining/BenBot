@@ -247,7 +247,7 @@ repos:
 
 # manual-only hook
 - repo: https://github.com/codingjoe/relint
-  rev: 3.4.1
+  rev: 3.5.0
   hooks:
   - id: relint
     args: [-c, config/relint.yml]
