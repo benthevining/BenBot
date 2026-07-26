@@ -1,4 +1,5 @@
 {
+  "builtin-baseline": "cd61e1e26a038e82d6550a3ebbe0fbbfe7da78e3",
   "dependencies": [
     {
       "name": "magic-enum",
@@ -75,6 +76,5 @@
   ],
   "name": "BenBot",
   "supports": "windows|linux|osx",
-  "version": "1.7.5",
-  "builtin-baseline": "cd61e1e26a038e82d6550a3ebbe0fbbfe7da78e3"
+  "version": "1.7.5"
 }
