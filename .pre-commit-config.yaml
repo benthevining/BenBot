@@ -145,7 +145,7 @@ repos:
 
 # Dockerfile
 - repo: https://github.com/hadolint/hadolint
-  rev: v2.15.0
+  rev: v2.15.1
   hooks:
   - id: hadolint
     args: [--ignore, DL3003, --ignore, DL3008, --ignore, DL3045]
@@ -233,7 +233,7 @@ repos:
 
     # check editorconfig rules
 - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
-  rev: 3.6.1
+  rev: 3.8.0
   hooks:
   - id: editorconfig-checker
     args: [-config, config/.editorconfig-checker.json]
