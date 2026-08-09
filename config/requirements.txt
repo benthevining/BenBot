@@ -13,10 +13,10 @@
 --prefer-binary
 
 clang-tidy >= 22.1.8
-cmake >= 4.4.0
+cmake >= 4.4.2
 cppcheck >= 1.5.1
 cpplint >= 2.0.2
-hadolint-bin >= 2.14.0
+hadolint-bin >= 2.15.1
 ninja >= 1.13.0
 pre-commit >= 4.6.1
-rust-just >= 1.57.0
+rust-just >= 1.58.0
