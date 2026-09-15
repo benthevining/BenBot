@@ -10,56 +10,34 @@
 #
 # ======================================================================================
 
-find_package (Python 3.9 COMPONENTS Interpreter)
+check_python_modules_available (deps_available chess tqdm)
 
-set_package_properties (
-    Python PROPERTIES URL "https://www.python.org/" DESCRIPTION "Scripting language interpreter"
+add_feature_info (benbot_matetrack_testing deps_available "BenBot matetrack testing")
+
+if (NOT deps_available)
+    return ()
+endif ()
+
+FetchContent_Declare (
+    matetrack
+    SYSTEM
+    GIT_REPOSITORY "https://github.com/vondele/matetrack.git"
+    GIT_TAG origin/master
+    OVERRIDE_FIND_PACKAGE
 )
 
-function (check_python_modules_available outputVar)
-    if (NOT TARGET Python::Interpreter)
-        set ("${outputVar}" FALSE PARENT_SCOPE)
-        return ()
-    endif ()
-
-    foreach (moduleName IN LISTS ARGN)
-        execute_process (
-            COMMAND "${Python_EXECUTABLE}" -c "import ${moduleName}" RESULT_VARIABLE module_found
-            OUTPUT_QUIET ERROR_QUIET
-        )
-
-        if (NOT module_found EQUAL 0)
-            message (VERBOSE "Python module ${moduleName} not found")
-            set ("${outputVar}" FALSE PARENT_SCOPE)
-            return ()
-        endif ()
-    endforeach ()
-
-    set ("${outputVar}" TRUE PARENT_SCOPE)
-endfunction ()
-
-#
-
-configure_file (CTestCustom.cmake "${BenBot_BINARY_DIR}/CTestCustom.cmake" @ONLY)
-
-add_subdirectory (fastchess)
-add_subdirectory (matetrack)
-add_subdirectory (perft)
-add_subdirectory (position-solver)
-add_subdirectory (rampart)
-add_subdirectory (unit)
-
-#
-
-cmake_host_system_information (RESULT num_cores QUERY NUMBER_OF_PHYSICAL_CORES)
+FetchContent_MakeAvailable (matetrack)
 
 add_test (
-    NAME ben_bot.verify_headers
-    COMMAND
-        "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --target
-        libutil_verify_interface_header_sets libchess_verify_interface_header_sets
-        libbenbot_verify_interface_header_sets ben_bot_resources_verify_interface_header_sets
-        --config "$<CONFIG>" --parallel "${num_cores}"
+    NAME ben_bot.matetrack
+    COMMAND Python::Interpreter matecheck.py --engine "$<TARGET_FILE:ben_bot>" --epdFile
+            mates2000.epd --nodes 10000 --depth 10 --time 30 --showAllIssues --showAllStats --bench
+    WORKING_DIRECTORY "${matetrack_SOURCE_DIR}"
+    CONFIGURATIONS Release
 )
 
-set_tests_properties (ben_bot.verify_headers PROPERTIES RUN_SERIAL TRUE TIMEOUT 0)
+set_property (
+    TEST ben_bot.matetrack APPEND
+    PROPERTY FAIL_REGULAR_EXPRESSION "the following issues were detected:"
+             "Exception parsing pv from info:"
+)
