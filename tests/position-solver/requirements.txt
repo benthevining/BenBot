@@ -13,4 +13,4 @@
 --prefer-binary
 
 python-chess >= 1.999
-tqdm >= 4.70.0
+tqdm >= 4.70.1
