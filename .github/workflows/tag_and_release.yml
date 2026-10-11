@@ -93,7 +93,7 @@ jobs:
     steps:
     - name: Import signing certificate to keychain
       if: runner.os == 'macOS'
-      uses: Apple-Actions/import-codesign-certs@5142e029c445c10ffc7149d172e540235a065466 # v7.0.0
+      uses: Apple-Actions/import-codesign-certs@77ba2a2a8f5cfc8c405ebf3159f767c323e238f9 # v7.1.0
       with:
         p12-file-base64: ${{ secrets.CODESIGN_CERT_FILE_BASE64 }}
         p12-password: ${{ secrets.CODESIGN_CERT_PASSWORD }}
@@ -110,7 +110,7 @@ jobs:
         extra_config_args: -D "BENBOT_CODESIGN_ID=${{ secrets.BENBOT_CODESIGN_ID }}" -D BUILD_TESTING=OFF
 
     - name: Upload artifact
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
       with:
         name: BenBot-${{ matrix.os }}-${{ matrix.preset }}
         path: ${{ steps.run_build.outputs.deploy_dir }}
