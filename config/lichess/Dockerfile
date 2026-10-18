@@ -12,7 +12,7 @@
 
 # This Dockerfile expects the context to be the repo root
 
-FROM lichessbotdevs/lichess-bot:2026.8.9.2
+FROM lichessbotdevs/lichess-bot:2026.10.11.1
 
 ARG CMAKE_VERSION=4.2.3
 ARG CMAKE_PRESET=clang
