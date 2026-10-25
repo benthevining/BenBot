@@ -12,5 +12,5 @@
 
 --prefer-binary
 
-bump-my-version >= 1.6.0
+bump-my-version >= 1.6.3
 pre-commit >= 4.7.0
