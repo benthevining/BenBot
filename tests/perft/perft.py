@@ -12,6 +12,7 @@
 import argparse
 import json
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -71,14 +72,14 @@ def find_correct_result(file_content: Any, depth: int) -> dict[str, int]:
             return obj["results"]
 
     print(f"ERROR! Could not find correct result for depth {depth}")
-    exit(1)
+    sys.exit(1)
 
 
 def check_result(expected: dict[str, int], actual: dict[str, int]) -> None:
     for key in expected.keys():
         if actual[key] != expected[key]:
             print(f"FAILED! Expected {expected[key]} {key}, got {actual[key]}")
-            exit(1)
+            sys.exit(1)
 
 
 def run_perft_test(data_file: Path, engine_path: Path, depth: int) -> None:
@@ -134,4 +135,4 @@ if __name__ == "__main__":
     run_perft_test(data_file=args.test, engine_path=args.engine, depth=args.depth)
 
     print("Succeeded :-)")
-    exit(0)
+    sys.exit(0)

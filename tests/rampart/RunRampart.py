@@ -12,6 +12,7 @@
 import argparse
 import json
 import subprocess
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -41,7 +42,7 @@ def run_rampart_test(test_case_data: dict, rampart_program: Path) -> bool:
 
     if result.returncode != 0:
         print(f"Rampart executable exited with code {result.returncode}")
-        exit(result.returncode)
+        sys.exit(result.returncode)
 
     output = str(result.stdout)
 
@@ -118,7 +119,7 @@ def run_rampart_tests(test_file: Path, rampart_program: Path) -> None:
     print(f"{test_cases_passed} test cases passed")
     print(f"{test_cases_failed} test cases failed")
 
-    exit(test_cases_failed)
+    sys.exit(test_cases_failed)
 
 
 def parse_args() -> argparse.Namespace:

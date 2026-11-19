@@ -11,6 +11,7 @@
 # ======================================================================================
 import argparse
 import logging
+import sys
 from pathlib import Path
 
 import chess.engine
@@ -48,14 +49,14 @@ def run_position_solver_test(
 
     if result.move == expected_move:
         print("Passed!")
-        exit(0)
+        sys.exit(0)
 
     print("FAILED!")
     print(f"Expected {board.san(expected_move)}, got {board.san(result.move)}")
 
     print(board.unicode(borders=True, empty_square=" "))
 
-    exit(1)
+    sys.exit(1)
 
 
 def parse_args() -> argparse.Namespace:
