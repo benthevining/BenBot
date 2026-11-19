@@ -19,7 +19,9 @@
 
 #ifdef LIBCHESS_ARM
 
-#    include <arm_acle.h>
+#    if defined(_MSC_VER) and not defined(__clang__)
+#        include <intrin.h> // NOLINT(build/include)
+#    endif
 
 namespace util {
 
@@ -39,7 +41,12 @@ void progressive_backoff(std::function<bool()> pred)
             if (pred())
                 return;
 
+#    if defined(_MSC_VER) and not defined(__clang__)
             __wfe();
+#    else
+            // GCC's arm_acle.h doesn't provide __wfe()
+            __asm__ volatile("wfe");
+#    endif
         }
 
         // waiting longer than we should, let's give other threads a chance to recover
