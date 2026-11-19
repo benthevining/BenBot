@@ -54,6 +54,8 @@ TEST_CASE("Search - mate scores have matching PVs", TAGS)
         MateTestCase { "r5r1/1R4b1/1Q6/4nk1p/2p1R3/2P3PK/2BB4/q7 w - - 0 1", 3uz },
         MateTestCase { "8/7B/2R5/4Nr1p/4kb1Q/8/1B6/4K2R w K - 0 1", 3uz },
         MateTestCase { "1r4Rk/4Nq2/7K/8/8/8/b5Q1/6R1 b - - 0 1", 6uz },
+        // PV truncated by a transposition table hit in a PV node
+        MateTestCase { "3R4/8/8/2p3K1/2p5/5B2/R1pPNB2/1b1k4 w - - 0 1", 3uz },
         // final mating move is a capture found by the quiescence search
         MateTestCase { "3b2n1/1pp3N1/4p2p/1P1kP3/1B4N1/rpPB2p1/p3K3/8 b - - 0 1", 6uz },
         MateTestCase { "6K1/1B1NR2p/2rpP3/1p1k1p2/1R4Pn/1pB5/2N1P3/rbbq4 w - - 0 1", 7uz });

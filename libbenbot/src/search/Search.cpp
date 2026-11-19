@@ -139,9 +139,11 @@ namespace {
 
             // check if this position has been searched before to at
             // least this depth and within these bounds for non-PV nodes
-            if (const auto value = transTable.probe_eval(position, depthLeft, bounds, plyFromRoot)) {
-                ++stats.transTableHits;
-                return { value->first };
+            if constexpr (not PVNode) {
+                if (const auto value = transTable.probe_eval(position, depthLeft, bounds, plyFromRoot)) {
+                    ++stats.transTableHits;
+                    return { value->first };
+                }
             }
 
             if (position.is_draw()) {
