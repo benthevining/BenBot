@@ -108,7 +108,7 @@ repos:
   hooks:
   - id: cppcheck
     args: [--cppcheck-build-dir=Builds/cppcheck, --inline-suppr, --std=c++23, --check-level=exhaustive, --enable=all, --suppress=unusedFunction, --suppress=unusedStructMember, --suppress=unmatchedSuppression, --suppress=class_X_Y, --suppress=missingIncludeSystem, --suppress=missingInclude]
-    additional_dependencies: [cppcheck>=1.5.3]
+    additional_dependencies: [cppcheck==1.5.3]
     exclude: .mm
   - id: cpplint
     args: [--verbose=0]
