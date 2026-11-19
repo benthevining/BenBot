@@ -128,7 +128,7 @@ struct Square final {
     @relates Square
  */
 [[nodiscard, gnu::const]] constexpr auto operator<=>(
-    const Square& first, const Square& second) noexcept
+    const Square first, const Square second) noexcept
     -> std::strong_ordering
 {
     return first.index() <=> second.index();
@@ -164,7 +164,7 @@ struct std::formatter<chess::board::Square> final {
     template <typename FormatContext>
     // cppcheck-suppress functionStatic
     auto format(
-        const chess::board::Square& square, FormatContext& ctx) const
+        const chess::board::Square square, FormatContext& ctx) const
         -> typename FormatContext::iterator
     {
         return std::format_to(ctx.out(), "{}{}", square.file, square.rank);

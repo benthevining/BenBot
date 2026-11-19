@@ -45,7 +45,7 @@ namespace {
     }
 
     [[nodiscard]] constexpr auto piece_key(
-        const PieceType type, const Color side, const Square& square)
+        const PieceType type, const Color side, const Square square)
         -> Hash
     {
         static constexpr auto squares = static_cast<size_t>(board::NUM_SQUARES);
