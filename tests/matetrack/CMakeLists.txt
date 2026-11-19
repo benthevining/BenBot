@@ -36,6 +36,11 @@ add_test (
     CONFIGURATIONS Release
 )
 
+# matecheck.py runs one engine process per CPU core by default
+set_tests_properties (
+    ben_bot.matetrack PROPERTIES RUN_SERIAL TRUE REQUIRED_FILES "$<TARGET_FILE:ben_bot>"
+)
+
 set_property (
     TEST ben_bot.matetrack APPEND
     PROPERTY FAIL_REGULAR_EXPRESSION "the following issues were detected:"
