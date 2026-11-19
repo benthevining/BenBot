@@ -50,7 +50,7 @@ if (BUILD_TESTING)
     add_subdirectory (tests)
 endif ()
 
-add_subdirectory (docs EXCLUDE_FROM_ALL)
+add_subdirectory (docs)
 
 if (PROJECT_IS_TOP_LEVEL)
     include (CPack)
