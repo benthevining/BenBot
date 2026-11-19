@@ -22,6 +22,7 @@
 // Mate distance pruning
 // MultiPV
 // Static exchange evaluation
+// Aspiration windows
 
 #include "search/MoveOrdering.hpp"
 #include "search/TimeManagement.hpp"
@@ -57,6 +58,12 @@ using std::size_t;
 namespace {
 
     using eval::Score;
+
+    // aspiration windows are only used once this many iterations have been completed
+    constexpr auto ASPIRATION_MIN_DEPTH { 4uz };
+
+    // the initial half-width of the aspiration window, in centipawns
+    constexpr auto ASPIRATION_INITIAL_DELTA { 25 };
 
     struct Stats final {
         size_t nodesSearched { 0uz };
@@ -404,6 +411,8 @@ namespace {
     };
 
     // searches all the root moves, except for the excluded moves, to find the best line
+    // if the search fails low, the returned PV is empty; if the search fails high, the
+    // returned score is >= the initial beta and the PV holds the move that failed high
     [[nodiscard]] auto search_root_line(
         const size_t                   depth,
         const Options&                 options,
@@ -414,18 +423,22 @@ namespace {
         KillerMoves&                   killerMoves,
         const eval::PieceSquareTables& pst,
         const Callbacks&               callbacks,
-        Stats&                         stats)
+        Stats&                         stats,
+        const Bounds                   initialBounds = { })
         -> Result::Line
     {
-        Bounds   bounds;
+        Bounds   bounds { initialBounds };
         MoveList pv;
 
-        bool foundPV = false;
         auto moveIdx = 0uz;
 
         for (const auto move : options.movesToSearch) {
             if (std::ranges::find(excludedMoves, move) != excludedMoves.end())
                 continue;
+
+            // with an aspiration window, the first move may fail low without raising alpha,
+            // but we still want to search the later moves with a null window
+            const bool isFirstMove = moveIdx == 0uz;
 
             callbacks.root_move(move, moveIdx++);
 
@@ -438,10 +451,10 @@ namespace {
             };
 
             // principal variation search: first try searching with a null window
-            const auto score = [bounds, &position, move, foundPV, make_context = std::move(create_context)] {
+            const auto score = [bounds, &position, move, isFirstMove, make_context = std::move(create_context)] {
                 const auto newPos = after_move(position, move);
 
-                if (not foundPV) {
+                if (isFirstMove) {
                     return -make_context(bounds.invert(), newPos)
                                 .alpha_beta<true>();
                 }
@@ -468,11 +481,13 @@ namespace {
                 childPV.to_movelist(pv);
 
                 killerMoves.store(0uz, move);
-
-                foundPV = true;
             }
 
             if (interrupter.was_aborted())
+                break;
+
+            // fail high (only possible with an aspiration window)
+            if (bounds.alpha >= bounds.beta)
                 break;
         }
 
@@ -480,6 +495,64 @@ namespace {
             .score = bounds.alpha,
             .pv    = pv
         };
+    }
+
+    // aspiration windows: search the first line with a narrow window around
+    // the previous iteration's score, widening the window if the search fails
+    [[nodiscard]] auto search_root_line_aspiration(
+        const size_t                   depth,
+        const Options&                 options,
+        const Position&                position,
+        TranspositionTable&            transTable,
+        Interrupter&                   interrupter,
+        KillerMoves&                   killerMoves,
+        const eval::PieceSquareTables& pst,
+        const Callbacks&               callbacks,
+        Stats&                         stats,
+        const std::optional<Score>     prevScore)
+        -> Result::Line
+    {
+        const MoveList excludedMoves;
+
+        // don't use a window if we have no previous score to center it on,
+        // or if the previous score was mate
+        if (not prevScore.has_value() or prevScore->is_mate()) {
+            return search_root_line(
+                depth, options, excludedMoves, position, transTable, interrupter, killerMoves, pst, callbacks, stats);
+        }
+
+        static constexpr int maxValue = eval::MAX;
+
+        auto delta = ASPIRATION_INITIAL_DELTA;
+
+        auto alpha = std::max(prevScore->value - delta, -maxValue);
+        auto beta  = std::min(prevScore->value + delta, maxValue);
+
+        while (true) {
+            const Bounds bounds {
+                .alpha = Score { static_cast<eval::Value>(alpha) },
+                .beta  = Score { static_cast<eval::Value>(beta) }
+            };
+
+            auto line = search_root_line(
+                depth, options, excludedMoves, position, transTable, interrupter, killerMoves, pst, callbacks, stats, bounds);
+
+            if (interrupter.was_aborted())
+                return line;
+
+            if (line.pv.empty() or line.score <= bounds.alpha) {
+                // fail low
+                beta  = (alpha + beta) / 2;
+                alpha = std::max(alpha - delta, -maxValue);
+            } else if (line.score >= bounds.beta) {
+                // fail high
+                beta = std::min(beta + delta, maxValue);
+            } else {
+                return line;
+            }
+
+            delta += delta / 2;
+        }
     }
 
     [[nodiscard]] auto root_search(
@@ -490,7 +563,8 @@ namespace {
         Interrupter&                   interrupter,
         KillerMoves&                   killerMoves,
         const eval::PieceSquareTables& pst,
-        const Callbacks&               callbacks)
+        const Callbacks&               callbacks,
+        const std::optional<Score>     prevScore)
         -> RootSearchResult
     {
         const Timer timer;
@@ -511,8 +585,11 @@ namespace {
         MoveList excludedMoves;
 
         for (auto lineIdx = 0uz; lineIdx < numLines; ++lineIdx) {
-            auto line = search_root_line(
-                depth, options, excludedMoves, position, transTable, interrupter, killerMoves, pst, callbacks, result.stats);
+            auto line = lineIdx == 0uz
+                          ? search_root_line_aspiration(
+                                depth, options, position, transTable, interrupter, killerMoves, pst, callbacks, result.stats, prevScore)
+                          : search_root_line(
+                                depth, options, excludedMoves, position, transTable, interrupter, killerMoves, pst, callbacks, result.stats);
 
             if (interrupter.was_aborted() or line.pv.empty())
                 break;
@@ -589,8 +666,12 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         if (interrupter.should_abort(0uz))
             break;
 
+        const auto prevScore = completedDepth >= ASPIRATION_MIN_DEPTH
+                                 ? std::optional { result.bestScore }
+                                 : std::nullopt;
+
         const auto res = root_search(
-            depth, options, position, transTable, interrupter, killerMoves, pieceSquareTables, callbacks);
+            depth, options, position, transTable, interrupter, killerMoves, pieceSquareTables, callbacks, prevScore);
 
         if (interrupter.was_aborted())
             break;
