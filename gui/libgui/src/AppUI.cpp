@@ -116,7 +116,7 @@ void render(AppState& state)
     const bool showTooltips = state.appSettings.showTooltips;
 
     render_board_editor(
-        state.boardEditor, showTooltips, state.enginePanel.engine);
+        state.boardEditor, state.pieceTextures, showTooltips, state.enginePanel.engine);
 
     render_engine_panel(
         state.enginePanel, showTooltips);

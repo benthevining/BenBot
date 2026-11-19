@@ -27,8 +27,10 @@
 #include <libchess/notation/FEN.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libgui/BoardEditor.hpp>
+#include <libgui/ChessboardWidget.hpp>
 #include <libgui/EngineWrapper.hpp>
 #include <libgui/ErrorPopup.hpp>
+#include <libgui/PieceTextures.hpp>
 #include <libutil/Console.hpp>
 #include <libutil/Strings.hpp>
 #include <nlohmann/json.hpp>
@@ -508,12 +510,12 @@ namespace {
     }
 } // namespace
 
-void render_board_editor(
-    BoardEditorState& state,
-    const bool        showTooltips,
-    EngineWrapper&    engine)
-{
-    if (ImGui::Begin("Board editor")) {
+namespace {
+    void render_controls(
+        BoardEditorState& state,
+        const bool        showTooltips,
+        EngineWrapper&    engine)
+    {
         render_utility_buttons(
             state.position, showTooltips);
 
@@ -540,8 +542,38 @@ void render_board_editor(
 
         render_epd_editor(
             state.position, state.epdParseError, showTooltips);
+    }
+} // namespace
 
-        // TODO: render chessboard
+void render_board_editor(
+    BoardEditorState&    state,
+    const PieceTextures& pieceTextures,
+    const bool           showTooltips,
+    EngineWrapper&       engine)
+{
+    // board on the left, controls on the right
+    static constexpr auto BoardColumnWeight    = 0.6f;
+    static constexpr auto ControlsColumnWeight = 0.4f;
+
+    if (ImGui::Begin("Board editor")
+        and ImGui::BeginTable("BoardEditorLayout", 2,
+            ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerV)) {
+        ImGui::TableSetupColumn("Board", ImGuiTableColumnFlags_WidthStretch, BoardColumnWeight);
+        ImGui::TableSetupColumn("Controls", ImGuiTableColumnFlags_WidthStretch, ControlsColumnWeight);
+
+        ImGui::TableNextRow();
+
+        ImGui::TableNextColumn();
+
+        render_chessboard(
+            state.position.position, pieceTextures);
+
+        ImGui::TableNextColumn();
+
+        render_controls(
+            state, showTooltips, engine);
+
+        ImGui::EndTable();
     }
 
     ImGui::End();
