@@ -58,10 +58,9 @@ jobs:
         - os: ubuntu-latest
           preset: gcc
           config: Debug
-        # TODO: re-enable this configuration when bug is fixed! See https://github.com/benthevining/BenBot/issues/454
-#        - os: ubuntu-latest
-#          preset: gcc
-#          config: Release
+        - os: ubuntu-latest
+          preset: gcc
+          config: Release
         - os: ubuntu-latest
           preset: gcc
           config: ASAN
