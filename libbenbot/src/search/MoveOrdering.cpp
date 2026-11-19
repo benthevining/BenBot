@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Material.hpp>
+#include <libbenbot/eval/SEE.hpp>
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
@@ -72,10 +73,10 @@ namespace {
 
         auto score { 0 };
 
-        if (const auto capturedType = currentPosition.their_pieces().get_piece_on(move.to())) {
-            // we want to prioritize searching moves that capture valuable pieces with less valuable pieces
-            score += CAPTURE_MULTIPLIER
-                   * (piece_values::get(*capturedType) - piece_values::get(move.piece()));
+        if (currentPosition.is_capture(move)) {
+            // we want to prioritize searching captures that win the most material once
+            // all recaptures on the square have been played out
+            score += CAPTURE_MULTIPLIER * eval::see(currentPosition, move);
         } else if (std::ranges::contains(killerMoves, move)) {
             score += KILLER_MOVE_BONUS;
         }

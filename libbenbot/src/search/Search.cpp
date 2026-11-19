@@ -21,6 +21,7 @@
 // Killer moves
 // Mate distance pruning
 // MultiPV
+// Static exchange evaluation
 
 #include "search/MoveOrdering.hpp"
 #include "search/TimeManagement.hpp"
@@ -35,6 +36,7 @@
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/PieceSquareTables.hpp>
+#include <libbenbot/eval/SEE.hpp>
 #include <libbenbot/eval/Score.hpp>
 #include <libbenbot/search/Bounds.hpp>
 #include <libbenbot/search/Constants.hpp>
@@ -297,8 +299,14 @@ namespace {
 
             detail::order_moves_for_q_search(position, moves);
 
+            const bool inCheck = position.is_check();
+
             for (const auto move : moves) {
                 assert(position.is_capture(move));
+
+                // skip captures that lose material once all recaptures are played out
+                if (not inCheck and eval::see(position, move) < 0)
+                    continue;
 
                 if constexpr (PVNode) {
                     childPV.reset();
