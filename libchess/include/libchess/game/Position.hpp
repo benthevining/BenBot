@@ -378,7 +378,7 @@ private:
     @ingroup game
     @see after_null_move()
  */
-[[nodiscard, gnu::const]] auto after_move(
+[[nodiscard, gnu::pure]] auto after_move(
     const Position& starting, Move move)
     -> Position;
 
@@ -388,7 +388,7 @@ private:
     @ingroup game
     @see after_move(), flipped()
  */
-[[nodiscard, gnu::const]] auto after_null_move(const Position& starting) -> Position;
+[[nodiscard, gnu::pure]] auto after_null_move(const Position& starting) -> Position;
 
 /** Returns a copy of the starting position with colors flipped.
 
@@ -396,7 +396,7 @@ private:
     @ingroup game
     @see after_null_move()
  */
-[[nodiscard, gnu::const]] auto flipped(const Position& starting) -> Position;
+[[nodiscard, gnu::pure]] auto flipped(const Position& starting) -> Position;
 
 /** Creates a UTF8 representation of the given position.
     The returned string is meant to be interpreted visually by a human, probably for debugging purposes.

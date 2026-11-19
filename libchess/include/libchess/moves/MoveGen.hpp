@@ -121,7 +121,7 @@ template <bool CapturesOnly = false>
     the user a set of possible EP target square choices based on the position of the
     pawns on the board.
  */
-[[nodiscard, gnu::const]] auto get_potentially_legal_en_passant_target_squares(
+[[nodiscard, gnu::pure]] auto get_potentially_legal_en_passant_target_squares(
     const Position& position);
 
 /// @}
@@ -165,7 +165,7 @@ namespace detail {
     };
 
     template <Color Side>
-    [[nodiscard, gnu::const]] constexpr auto get_pawn_pushes(
+    [[nodiscard, gnu::pure]] constexpr auto get_pawn_pushes(
         const Position& position, const Bitboard emptySquares)
     {
         using Pushes = beman::inplace_vector::inplace_vector<Move, 32uz>;
@@ -212,7 +212,7 @@ namespace detail {
     }
 
     template <Color Side>
-    [[nodiscard, gnu::const]] constexpr auto get_pawn_double_pushes(
+    [[nodiscard, gnu::pure]] constexpr auto get_pawn_double_pushes(
         const Position& position, const Bitboard allOccupied)
     {
         static constexpr auto pawnStartingRank = Side == Color::White ? Rank::Two : Rank::Seven;
@@ -250,7 +250,7 @@ namespace detail {
     }
 
     template <Color Side>
-    [[nodiscard, gnu::const]] constexpr auto get_pawn_captures(
+    [[nodiscard, gnu::pure]] constexpr auto get_pawn_captures(
         const Position& position)
     {
         // We handle east & west captures separately to make set-wise operations easier.
@@ -307,7 +307,7 @@ namespace detail {
     }
 
     template <Color Side>
-    [[nodiscard, gnu::const]] constexpr auto get_en_passant(
+    [[nodiscard, gnu::pure]] constexpr auto get_en_passant(
         const Position& position) -> NMoveList<2uz>
     {
         // at most 2 captures are possible at a time
@@ -359,7 +359,7 @@ namespace detail {
     }
 
     template <Color Side, bool CapturesOnly>
-    [[nodiscard, gnu::const]] constexpr auto get_knight_moves(
+    [[nodiscard, gnu::pure]] constexpr auto get_knight_moves(
         const Position& position)
     {
         const auto& ourPieces = position.pieces_for<Side>();
@@ -389,7 +389,7 @@ namespace detail {
     }
 
     template <Color Side, bool CapturesOnly>
-    [[nodiscard, gnu::const]] auto get_bishop_moves(
+    [[nodiscard, gnu::pure]] auto get_bishop_moves(
         const Position& position,
         const Bitboard  occupiedSquares)
     {
@@ -420,7 +420,7 @@ namespace detail {
     }
 
     template <Color Side, bool CapturesOnly>
-    [[nodiscard, gnu::const]] auto get_rook_moves(
+    [[nodiscard, gnu::pure]] auto get_rook_moves(
         const Position& position,
         const Bitboard  occupiedSquares)
     {
@@ -451,7 +451,7 @@ namespace detail {
     }
 
     template <Color Side, bool CapturesOnly>
-    [[nodiscard, gnu::const]] auto get_queen_moves(
+    [[nodiscard, gnu::pure]] auto get_queen_moves(
         const Position& position,
         const Bitboard  occupiedSquares)
     {
@@ -482,7 +482,7 @@ namespace detail {
     }
 
     template <Color Side, bool CapturesOnly>
-    [[nodiscard, gnu::const]] constexpr auto get_king_moves(
+    [[nodiscard, gnu::pure]] constexpr auto get_king_moves(
         const Position& position)
     {
         const auto& ourPieces = position.pieces_for<Side>();
@@ -541,7 +541,7 @@ namespace detail {
     }
 
     template <Color Side>
-    [[nodiscard, gnu::const]] constexpr auto get_kingside_castling(
+    [[nodiscard, gnu::pure]] constexpr auto get_kingside_castling(
         const Position& position, const Bitboard allOccupied)
         -> std::optional<Move>
     {
@@ -571,7 +571,7 @@ namespace detail {
     }
 
     template <Color Side>
-    [[nodiscard, gnu::const]] constexpr auto get_queenside_castling(
+    [[nodiscard, gnu::pure]] constexpr auto get_queenside_castling(
         const Position& position, const Bitboard allOccupied)
         -> std::optional<Move>
     {
@@ -602,7 +602,7 @@ namespace detail {
     }
 
     template <Color Side>
-    [[nodiscard, gnu::const]] constexpr auto get_castling(
+    [[nodiscard, gnu::pure]] constexpr auto get_castling(
         const Position& position, const Bitboard allOccupied) -> NMoveList<2uz>
     {
         // castling out of check is not allowed
@@ -799,7 +799,7 @@ inline auto any_legal_moves(const Position& position) -> bool
 
 namespace detail {
     template <Color Side>
-    [[nodiscard, gnu::const]] auto potentially_legal_ep_squares(
+    [[nodiscard, gnu::pure]] auto potentially_legal_ep_squares(
         const Position& position) noexcept
     {
         using beman::inplace_vector::inplace_vector;

@@ -58,10 +58,9 @@ jobs:
         - os: ubuntu-latest
           preset: gcc
           config: Debug
-        # TODO: re-enable this configuration when bug is fixed! See https://github.com/benthevining/BenBot/issues/454
-#        - os: ubuntu-latest
-#          preset: gcc
-#          config: Release
+        - os: ubuntu-latest
+          preset: gcc
+          config: Release
         - os: ubuntu-latest
           preset: gcc
           config: ASAN
@@ -75,7 +74,7 @@ jobs:
     timeout-minutes: 180 # 3 hours
     steps:
     - name: Checkout code
-      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v6
+      uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803   # v6
 
     - name: Build and test
       uses: ./.github/actions/build_and_test

@@ -45,7 +45,7 @@ namespace {
     }
 
     [[nodiscard]] constexpr auto piece_key(
-        const PieceType type, const Color side, const Square& square)
+        const PieceType type, const Color side, const Square square)
         -> Hash
     {
         static constexpr auto squares = static_cast<size_t>(board::NUM_SQUARES);
@@ -59,7 +59,7 @@ namespace {
     }
 
     template <Color Side>
-    [[nodiscard, gnu::const]] constexpr auto add_piece_positions(
+    [[nodiscard, gnu::pure]] constexpr auto add_piece_positions(
         const Hash prevValue, const PieceType type, const Position& position)
         -> Hash
     {

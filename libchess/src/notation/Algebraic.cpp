@@ -45,7 +45,7 @@ namespace {
 
     // returns a vector containing all legal moves for the
     // given piece type that have the given target square
-    [[nodiscard, gnu::const]] auto get_possible_move_origins(
+    [[nodiscard, gnu::pure]] auto get_possible_move_origins(
         const Position& position, const Square targetSquare, const PieceType piece)
         -> moves::MoveList
     {
@@ -61,7 +61,7 @@ namespace {
         return moves;
     }
 
-    [[nodiscard, gnu::const]] auto get_check_string(
+    [[nodiscard, gnu::pure]] auto get_check_string(
         const Position& position, const Move move)
         -> string_view
     {
@@ -330,7 +330,7 @@ namespace {
         };
     }
 
-    [[nodiscard, gnu::const]] constexpr auto parse_pawn_capture(
+    [[nodiscard, gnu::pure]] constexpr auto parse_pawn_capture(
         const Square targetSquare, const string_view startingFileText, const Color color)
         -> MaybeMove
     {
@@ -375,7 +375,7 @@ namespace {
         }
     }
 
-    [[nodiscard, gnu::const]] constexpr auto parse_promotion(
+    [[nodiscard, gnu::pure]] constexpr auto parse_promotion(
         const string_view text, const Color color)
         -> MaybeMove
     {

@@ -70,7 +70,7 @@ inline constexpr auto CENTER = 0X1818000000_bb;
 inline constexpr auto PERIMETER = 0XFF818181818181FF_bb;
 
 /** Returns a bitboard with all squares on the same diagonal as the given square set to 1. */
-[[nodiscard, gnu::const]] constexpr auto diagonal(const Square& square) noexcept -> Bitboard
+[[nodiscard, gnu::const]] constexpr auto diagonal(const Square square) noexcept -> Bitboard
 {
     const auto diag = static_cast<int>(square.file) - static_cast<int>(square.rank);
 
@@ -81,7 +81,7 @@ inline constexpr auto PERIMETER = 0XFF818181818181FF_bb;
 }
 
 /** Returns a bitboard with all squares on the same antidiagonal as the given square set to 1. */
-[[nodiscard, gnu::const]] constexpr auto antidiagonal(const Square& square) noexcept -> Bitboard
+[[nodiscard, gnu::const]] constexpr auto antidiagonal(const Square square) noexcept -> Bitboard
 {
     const auto diag = 7 - static_cast<int>(square.file) - static_cast<int>(square.rank);
 

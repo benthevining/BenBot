@@ -28,7 +28,7 @@ using chess::pieces::Color;
 namespace masks = chess::board::masks;
 namespace moves = chess::moves;
 
-[[nodiscard, gnu::const]] inline auto score_center_control(
+[[nodiscard, gnu::pure]] inline auto score_center_control(
     const Position& position) noexcept -> int
 {
     const auto whiteControls = static_cast<int>(moves::num_squares_attacked<Color::White>(position.whitePieces, masks::CENTER, position.blackPieces.occupied, false));
@@ -45,7 +45,7 @@ namespace moves = chess::moves;
 // a crude way to evaluate "space":
 // we take each side's pawn rearfill, and look at how many more of those squares are controlled by that side than by their opponent
 // this serves to discourage the engine from overextending, but also to incentivize expanding the pawn line to claim more space
-[[nodiscard, gnu::const]] inline auto score_space(
+[[nodiscard, gnu::pure]] inline auto score_space(
     const Position& position) noexcept -> int
 {
     const auto behindWhitePawns = chess::board::fills::pawn_rear<Color::White>(position.whitePieces.pawns);
@@ -67,7 +67,7 @@ namespace moves = chess::moves;
     return (ourSquares - theirSquares) * 2;
 }
 
-[[nodiscard, gnu::const]] inline auto score_positional(
+[[nodiscard, gnu::pure]] inline auto score_positional(
     const Position& position) noexcept -> int
 {
     return score_center_control(position)

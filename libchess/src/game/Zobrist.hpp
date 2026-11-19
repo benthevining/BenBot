@@ -24,7 +24,7 @@ namespace chess::game::zobrist {
 using board::Square;
 using moves::Move;
 
-[[nodiscard, gnu::const]] auto calculate(const Position& pos) -> Position::Hash;
+[[nodiscard, gnu::pure]] auto calculate(const Position& pos) -> Position::Hash;
 
 // each of these bools should be true if the given right has changed since the last move
 struct [[nodiscard]] CastlingRightsChanges final {
@@ -36,13 +36,13 @@ struct [[nodiscard]] CastlingRightsChanges final {
     [[nodiscard]] auto update_hash(Position::Hash value) const noexcept -> Position::Hash;
 };
 
-[[nodiscard, gnu::const]] auto update(
+[[nodiscard, gnu::pure]] auto update(
     const Position& pos, Move move,
     std::optional<Square> newEPTarget,
     CastlingRightsChanges rightsChanges)
     -> Position::Hash;
 
-[[nodiscard, gnu::const]] auto after_null_move(
+[[nodiscard, gnu::pure]] auto after_null_move(
     const Position& pos)
     -> Position::Hash;
 

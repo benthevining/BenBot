@@ -53,7 +53,7 @@ namespace {
     using chess::board::Pieces;
 
     template <bool IsBlack>
-    [[nodiscard, gnu::const]] constexpr auto sum_squares(
+    [[nodiscard, gnu::pure]] constexpr auto sum_squares(
         chess::board::Bitboard board, const Table& table) noexcept
         -> int
     {
@@ -74,42 +74,42 @@ namespace {
     }
 
     template <bool IsBlack>
-    [[nodiscard, gnu::const]] constexpr auto score_pawns(
+    [[nodiscard, gnu::pure]] constexpr auto score_pawns(
         const Pieces& pieces, const PieceSquareTables& pst) noexcept -> int
     {
         return sum_squares<IsBlack>(pieces.pawns, pst.pawn);
     }
 
     template <bool IsBlack>
-    [[nodiscard, gnu::const]] constexpr auto score_knights(
+    [[nodiscard, gnu::pure]] constexpr auto score_knights(
         const Pieces& pieces, const PieceSquareTables& pst) noexcept -> int
     {
         return sum_squares<IsBlack>(pieces.knights, pst.knight);
     }
 
     template <bool IsBlack>
-    [[nodiscard, gnu::const]] constexpr auto score_bishops(
+    [[nodiscard, gnu::pure]] constexpr auto score_bishops(
         const Pieces& pieces, const PieceSquareTables& pst) noexcept -> int
     {
         return sum_squares<IsBlack>(pieces.bishops, pst.bishop);
     }
 
     template <bool IsBlack>
-    [[nodiscard, gnu::const]] constexpr auto score_rooks(
+    [[nodiscard, gnu::pure]] constexpr auto score_rooks(
         const Pieces& pieces, const PieceSquareTables& pst) noexcept -> int
     {
         return sum_squares<IsBlack>(pieces.rooks, pst.rook);
     }
 
     template <bool IsBlack>
-    [[nodiscard, gnu::const]] constexpr auto score_queens(
+    [[nodiscard, gnu::pure]] constexpr auto score_queens(
         const Pieces& pieces, const PieceSquareTables& pst) noexcept -> int
     {
         return sum_squares<IsBlack>(pieces.queens, pst.queen);
     }
 
     template <bool IsBlack>
-    [[nodiscard, gnu::const]] auto score_king(
+    [[nodiscard, gnu::pure]] auto score_king(
         const Pieces& pieces, const float endgameWeight, const PieceSquareTables& pst) noexcept -> int
     {
         auto king = pieces.king;
@@ -130,7 +130,7 @@ namespace {
     }
 
     template <bool IsBlack>
-    [[nodiscard, gnu::const]] auto score_side_pieces(
+    [[nodiscard, gnu::pure]] auto score_side_pieces(
         const Pieces& pieces, const float endgameWeight, const PieceSquareTables& pst)
         -> int
     {
