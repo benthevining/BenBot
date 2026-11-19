@@ -22,5 +22,6 @@ This library aims to be platform-agnostic. Its public interface is simply a stat
 ### C++ libraries
 
 * [imgui](https://github.com/ocornut/imgui), for UI layout/rendering
+* [lunasvg](https://github.com/sammycage/lunasvg), for rasterizing the piece sprites
 * [nativefiledialog-extended](https://github.com/btzy/nativefiledialog-extended), for file chooser dialogs
 * [platform-folders](https://github.com/sago007/PlatformFolders/), for finding user documents directory

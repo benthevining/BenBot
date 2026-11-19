@@ -19,10 +19,52 @@
 #include <GLFW/glfw3native.h>
 #import <Metal/Metal.h>
 #import <QuartzCore/QuartzCore.h>
+#include <cstdint>
 #include <cstdlib>
 #include <libgui/AppUI.hpp>
+#include <libgui/PieceTextures.hpp>
 
 namespace glfw_wrapper = ben_bot::gui::glfw;
+
+namespace {
+// Uploads the piece sprite sheet to a new mipmapped texture.
+// The caller owns the returned texture & must release it.
+[[nodiscard]] auto create_piece_texture(
+    const id<MTLDevice>       device,
+    const id<MTLCommandQueue> commandQueue) -> id<MTLTexture>
+{
+    const auto sheet = ben_bot::gui::rasterize_piece_sprites(
+        ben_bot::gui::DefaultPieceSpriteSize);
+
+    const auto width  = static_cast<NSUInteger>(sheet.width());
+    const auto height = static_cast<NSUInteger>(sheet.height());
+
+    MTLTextureDescriptor* descriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm
+                                                                                          width:width
+                                                                                         height:height
+                                                                                      mipmapped:YES];
+    descriptor.usage                 = MTLTextureUsageShaderRead;
+    descriptor.storageMode           = MTLStorageModeShared;
+
+    const id<MTLTexture> texture = [device newTextureWithDescriptor:descriptor];
+
+    [texture replaceRegion:MTLRegionMake2D(0, 0, width, height)
+               mipmapLevel:0
+                 withBytes:sheet.pixels.data()
+               bytesPerRow:width * 4];
+
+    // the sprites are rasterized larger than they'll usually be drawn,
+    // so we need mipmaps to get decent quality when scaling down
+    const id<MTLCommandBuffer>      commandBuffer = [commandQueue commandBuffer];
+    const id<MTLBlitCommandEncoder> blitEncoder   = [commandBuffer blitCommandEncoder];
+    [blitEncoder generateMipmapsForTexture:texture];
+    [blitEncoder endEncoding];
+    [commandBuffer commit];
+    [commandBuffer waitUntilCompleted];
+
+    return texture;
+}
+} // namespace
 
 int main(
     [[maybe_unused]] const int    argc,
@@ -42,6 +84,11 @@ int main(
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplMetal_Init(device);
+
+    const id<MTLTexture> pieceTexture = create_piece_texture(device, commandQueue);
+
+    state.pieceTextures.textureID = static_cast<std::uint64_t>(
+        reinterpret_cast<std::uintptr_t>(pieceTexture));
 
     NSWindow*     nswin          = glfwGetCocoaWindow(window);
     CAMetalLayer* layer          = [CAMetalLayer layer];
@@ -83,6 +130,9 @@ int main(
             [commandBuffer commit];
         }
     }
+
+    state.pieceTextures = { };
+    [pieceTexture release];
 
     ImGui_ImplMetal_Shutdown();
 

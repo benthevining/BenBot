@@ -26,6 +26,7 @@
 #include <libgui/EnginePanel.hpp>
 #include <libgui/GameViewer.hpp>
 #include <libgui/PSTEditor.hpp>
+#include <libgui/PieceTextures.hpp>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -82,6 +83,11 @@ struct AppState final {
 
     /** The state of the piece square table editor. */
     PSTEditorState pstEditor;
+
+    /** The piece sprite texture. This is created by the main application
+        after the rendering backend is initialized, and is not serialized.
+     */
+    PieceTextures pieceTextures;
 
     /** Serializes this state to a JSON string. */
     [[nodiscard]] auto to_string() const -> std::string;

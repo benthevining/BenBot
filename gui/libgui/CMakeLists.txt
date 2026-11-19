@@ -32,7 +32,19 @@ FetchContent_Declare (
     FIND_PACKAGE_ARGS 4.3.0
 )
 
-FetchContent_MakeAvailable (nativefiledialog-extended platform-folders)
+FetchContent_Declare (
+    lunasvg
+    SYSTEM
+    GIT_REPOSITORY "https://github.com/sammycage/lunasvg.git"
+    GIT_TAG v3.5.0
+    GIT_SHALLOW ON
+    FIND_PACKAGE_ARGS 3.5.0
+)
+
+set (LUNASVG_BUILD_EXAMPLES OFF)
+set (LUNASVG_DISABLE_LOAD_SYSTEM_FONTS ON)
+
+FetchContent_MakeAvailable (nativefiledialog-extended platform-folders lunasvg)
 
 add_library (libgui STATIC)
 
@@ -41,7 +53,7 @@ target_compile_features (libgui PUBLIC cxx_std_23)
 target_link_libraries (
     libgui PUBLIC ben_bot::libbenbot nfd::nfd
     PRIVATE imgui::imgui nlohmann_json::nlohmann_json ben_bot::resources ben_bot::gui_resources
-            sago::platform_folders
+            sago::platform_folders lunasvg::lunasvg
 )
 
 set_target_properties (
