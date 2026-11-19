@@ -137,9 +137,9 @@ namespace {
 
             // check if this position has been searched before to at
             // least this depth and within these bounds for non-PV nodes
-            if (const auto value = transTable.probe_eval(position, depthLeft, bounds)) {
+            if (const auto value = transTable.probe_eval(position, depthLeft, bounds, plyFromRoot)) {
                 ++stats.transTableHits;
-                return Score::from_tt(value->first, plyFromRoot);
+                return { value->first };
             }
 
             if (position.is_draw()) {
@@ -173,7 +173,7 @@ namespace {
 
                 transTable.store(
                     position, { .searchedDepth = depthLeft,
-                                  .eval        = score.to_tt(),
+                                  .eval        = score.to_tt(plyFromRoot),
                                   .evalType    = EvalType::Exact,
                                   .bestMove    = std::nullopt });
 
@@ -219,7 +219,7 @@ namespace {
                 if (eval >= bounds.beta) {
                     transTable.store(
                         position, { .searchedDepth = depthLeft,
-                                      .eval        = bounds.beta.to_tt(),
+                                      .eval        = bounds.beta.to_tt(plyFromRoot),
                                       .evalType    = EvalType::Beta,
                                       .bestMove    = bestMove });
 
@@ -244,7 +244,7 @@ namespace {
 
             transTable.store(
                 position, { .searchedDepth = depthLeft,
-                              .eval        = bounds.alpha.to_tt(),
+                              .eval        = bounds.alpha.to_tt(plyFromRoot),
                               .evalType    = evalType,
                               .bestMove    = bestMove });
 
