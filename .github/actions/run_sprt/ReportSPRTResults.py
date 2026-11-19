@@ -57,7 +57,7 @@ accepted = get_accepted()
 
 if accepted == 0:
     print(f"{test_type} SPRT failed!")
-    exit(1)
+    sys.exit(1)
 
 print(f"{test_type} SPRT passed!")
-exit(0)
+sys.exit(0)
