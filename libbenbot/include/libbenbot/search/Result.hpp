@@ -26,6 +26,7 @@
 #include <libchess/moves/Move.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <optional>
+#include <vector>
 
 namespace chess::notation {
 struct EPDPosition;
@@ -48,6 +49,15 @@ using std::size_t;
     on each iterative deepening iteration).
  */
 struct [[nodiscard]] Result final {
+    /** A single line found by the search. */
+    struct Line final {
+        /** The evaluation of the position resulting from playing this line's first move. */
+        eval::Score score;
+
+        /** The moves of this line. */
+        MoveList pv;
+    };
+
     /** The root position that was searched. */
     Position position;
 
@@ -70,6 +80,12 @@ struct [[nodiscard]] Result final {
 
     /** The principal variation found during the search. */
     MoveList pv;
+
+    /** In MultiPV mode, the additional lines found by the search, ordered from best
+        to worst. These do not include the principal variation, which is always stored
+        in ``score`` and ``pv``. This is empty when not in MultiPV mode.
+     */
+    std::vector<Line> otherLines;
 
     /** The total number of nodes visited during this search. For depths greater
         than 1, this value includes nodes visited in shallower depths of the
@@ -108,11 +124,22 @@ struct [[nodiscard]] Result final {
         return pv.at(1uz);
     }
 
+    /** Returns the total number of lines in this result, including the principal variation. */
+    [[nodiscard]] auto num_lines() const noexcept -> size_t { return otherLines.size() + 1uz; }
+
     /** Typedef for the libchess type used for printing UCI-formatted output. */
     using LibchessResult = chess::uci::printing::SearchInfo;
 
-    /** Converts this object to the libchess type used for printing UCI-formatted output. */
-    [[nodiscard]] auto to_libchess(bool includeDebugInfo) const -> LibchessResult;
+    /** Converts this object to the libchess type used for printing UCI-formatted output.
+
+        @param includeDebugInfo If true, extra search statistics are included in the output.
+        @param lineIdx The index of the line to convert. Index 0 is the principal variation,
+        and indices greater than 0 refer to ``otherLines``. In MultiPV mode, the output's
+        ``multiPV`` field is set to the 1-based line number.
+
+        @see num_lines()
+     */
+    [[nodiscard]] auto to_libchess(bool includeDebugInfo, size_t lineIdx = 0uz) const -> LibchessResult;
 
     /** Fills the EPD position's operations with the search results and statistics
         from this result. All standard EPD operations that contain search-related

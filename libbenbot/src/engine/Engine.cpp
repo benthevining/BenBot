@@ -75,6 +75,7 @@ auto Engine::create_search_callbacks() -> search::Callbacks
 void Engine::go_internal(search::Options opts)
 {
     opts.moveOverhead = std::chrono::milliseconds { moveOverhead.get_value() };
+    opts.multiPV      = static_cast<size_t>(multiPV.get_value());
 
     searcher.context.set_options(opts);
 

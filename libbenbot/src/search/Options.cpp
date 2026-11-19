@@ -166,6 +166,7 @@ inline constexpr string_view TAG_MAX_NODES { "max_nodes" };
 inline constexpr string_view TAG_MOVES_TO_SEARCH { "moves_to_search" };
 inline constexpr string_view TAG_INFINITE { "infinite" };
 inline constexpr string_view TAG_MATE_IN { "mate_in" };
+inline constexpr string_view TAG_MULTI_PV { "multi_pv" };
 
 auto Options::to_string() const -> std::string
 {
@@ -178,6 +179,7 @@ auto Options::to_string() const -> std::string
     data[TAG_MOVES_TO_SEARCH] = moves_to_json(movesToSearch);
     data[TAG_INFINITE]        = infinite;
     data[TAG_MATE_IN]         = opt_to_json(mateIn);
+    data[TAG_MULTI_PV]        = multiPV;
 
     return data.dump();
 }
@@ -198,7 +200,9 @@ auto Options::from_string(
             parsed.at(TAG_MOVES_TO_SEARCH),
             currentPosition),
         .infinite = parsed.at(TAG_INFINITE).get<bool>(),
-        .mateIn   = opt_from_json<size_t>(parsed.at(TAG_MATE_IN))
+        .mateIn   = opt_from_json<size_t>(parsed.at(TAG_MATE_IN)),
+        // older saved states may not contain this field
+        .multiPV = parsed.value(TAG_MULTI_PV, 1uz)
     };
 }
 
