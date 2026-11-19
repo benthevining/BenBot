@@ -499,6 +499,9 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
     // iterative deepening
     auto depth { 1uz };
 
+    // the last depth that was fully searched, which is the depth we report
+    auto completedDepth { 0uz };
+
     while (options.infinite or pondering.load(memory_order::acquire) or depth <= options.depth) {
         if (interrupter.should_abort(0uz))
             break;
@@ -509,7 +512,8 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         if (interrupter.was_aborted())
             break;
 
-        result = res;
+        result         = res;
+        completedDepth = depth;
 
         totalNodesSearched += result.stats.nodesSearched;
 
@@ -523,6 +527,12 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
                     result.bestScore.ply_to_mate() <= targetPliesToMate)
                     break;
             }
+
+            // if we've found a forced mate within the search depth, a deeper
+            // iteration can't find a shorter one, so don't keep searching
+            if (result.bestScore.is_winning_mate()
+                and result.bestScore.ply_to_mate() <= depth)
+                break;
 
             // only 1 legal move, don't do a deeper iteration
             if (options.movesToSearch.size() == 1uz) {
@@ -554,9 +564,6 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         ++depth;
     } // iterative deepening loop end
 
-    // we want to report the last completed depth
-    --depth;
-
     // when in ponder mode, we don't want to exit the search
     // until we've received either a stop or ponderhit command
     if (pondering.load(memory_order::acquire)) {
@@ -571,7 +578,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
     }
 
     callbacks.search_complete(
-        result.to_cb_result(depth, transTable.hashfull()));
+        result.to_cb_result(completedDepth, transTable.hashfull()));
 }
 
 void Context::wait() const
