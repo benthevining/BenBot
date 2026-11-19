@@ -456,7 +456,8 @@ namespace {
         Interrupter&                   interrupter,
         KillerMoves&                   killerMoves,
         const eval::PieceSquareTables& pst,
-        const Callbacks&               callbacks)
+        const Callbacks&               callbacks,
+        const std::optional<Move>      prevBestMove)
         -> RootSearchResult
     {
         const Timer timer;
@@ -465,6 +466,14 @@ namespace {
 
         detail::order_moves_for_search(
             position, options.movesToSearch, transTable, killerMoves.get(0uz));
+
+        // search the previous iteration's best move first
+        if (prevBestMove.has_value()) {
+            if (const auto it = std::ranges::find(options.movesToSearch, *prevBestMove);
+                it != options.movesToSearch.end()) {
+                std::rotate(options.movesToSearch.begin(), it, std::next(it));
+            }
+        }
 
         RootSearchResult result;
 
@@ -555,8 +564,12 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         if (interrupter.should_abort(0uz))
             break;
 
+        const auto prevBestMove = result.pv.empty()
+                                    ? std::nullopt
+                                    : std::optional { result.pv.front() };
+
         const auto res = root_search(
-            depth, options, position, transTable, interrupter, killerMoves, pieceSquareTables, callbacks);
+            depth, options, position, transTable, interrupter, killerMoves, pieceSquareTables, callbacks, prevBestMove);
 
         if (interrupter.was_aborted())
             break;
