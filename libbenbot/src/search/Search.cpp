@@ -219,6 +219,13 @@ namespace {
                     return { };
 
                 if (eval >= bounds.beta) {
+                    // mate distance pruning can lower beta to the exact mate score, so
+                    // a mating move found in a PV node causes a cutoff here, and must
+                    // still be recorded in the PV
+                    if constexpr (PVNode) {
+                        pv.update(move, childPV);
+                    }
+
                     transTable.store(
                         position, { .searchedDepth = depthLeft,
                                       .eval        = bounds.beta.to_tt(plyFromRoot),
