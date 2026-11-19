@@ -41,7 +41,7 @@ namespace ben_bot::eval {
 namespace {
 
     // returns a [0..1] value that is 0 at the start of the game and 1 in the late endgame
-    [[nodiscard, gnu::const]] constexpr auto endgame_phase_weight(
+    [[nodiscard, gnu::pure]] constexpr auto endgame_phase_weight(
         const Position& position) noexcept
         -> float
     {
@@ -68,7 +68,7 @@ namespace {
     namespace masks = chess::board::masks;
 
     // awards a bonus for rooks on open or half-open files
-    [[nodiscard, gnu::const]] auto score_rook_files(
+    [[nodiscard, gnu::pure]] auto score_rook_files(
         const Position& position) noexcept
         -> int
     {
@@ -92,7 +92,7 @@ namespace {
     }
 
     // bonus for connected rooks
-    [[nodiscard, gnu::const]] auto score_connected_rooks(
+    [[nodiscard, gnu::pure]] auto score_connected_rooks(
         const Position& position) noexcept
         -> int
     {
@@ -119,7 +119,7 @@ namespace {
     }
 
     // awards various penalties for king danger
-    [[nodiscard, gnu::const]] auto score_king_safety(
+    [[nodiscard, gnu::pure]] auto score_king_safety(
         const Position& position, const float endgameWeight) noexcept
         -> int
     {
@@ -196,7 +196,7 @@ namespace {
         return ourScore - theirScore;
     }
 
-    [[nodiscard, gnu::const]] auto score_squares_controlled_around_kings(
+    [[nodiscard, gnu::pure]] auto score_squares_controlled_around_kings(
         const Position& position) noexcept
         -> int
     {
@@ -232,7 +232,7 @@ namespace {
 
     // this "mop up" function gives a bonus for cornering the enemy king in the endgame
     // this can help to prevent draws when you're up material
-    [[nodiscard, gnu::const]] auto score_endgame_mopup(
+    [[nodiscard, gnu::pure]] auto score_endgame_mopup(
         const Position& position, const float endgameWeight, const int materialScore)
         -> int
     {
@@ -256,7 +256,7 @@ namespace {
     // gives a bonus if we have at least 1 non-pawn piece left and our opponent doesn't
     // in cases such as having a queen & piece vs a rook, this prompts the engine to
     // consider sac'ing the queen for the rook, to eliminate the opponent's last piece
-    [[nodiscard, gnu::const]] auto no_pieces_left_bonus(
+    [[nodiscard, gnu::pure]] auto no_pieces_left_bonus(
         const Position& position) noexcept
         -> int
     {

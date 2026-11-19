@@ -199,27 +199,27 @@ private:
 /** Returns the binary AND of two bitboards.
     @relates Bitboard
  */
-[[nodiscard, gnu::const]] constexpr auto operator&(const Bitboard& lhs, const Bitboard& rhs) noexcept -> Bitboard;
+[[nodiscard, gnu::pure]] constexpr auto operator&(const Bitboard& lhs, const Bitboard& rhs) noexcept -> Bitboard;
 
 /** Returns the binary OR of two bitboards.
     @relates Bitboard
  */
-[[nodiscard, gnu::const]] constexpr auto operator|(const Bitboard& lhs, const Bitboard& rhs) noexcept -> Bitboard;
+[[nodiscard, gnu::pure]] constexpr auto operator|(const Bitboard& lhs, const Bitboard& rhs) noexcept -> Bitboard;
 
 /** Returns the binary XOR of two bitboards.
     @relates Bitboard
  */
-[[nodiscard, gnu::const]] constexpr auto operator^(const Bitboard& lhs, const Bitboard& rhs) noexcept -> Bitboard;
+[[nodiscard, gnu::pure]] constexpr auto operator^(const Bitboard& lhs, const Bitboard& rhs) noexcept -> Bitboard;
 
 /** Returns a copy of the bitboard with a binary shift left applied.
     @relates Bitboard
  */
-[[nodiscard, gnu::const]] constexpr auto operator<<(const Bitboard& board, size_t num) noexcept -> Bitboard;
+[[nodiscard, gnu::pure]] constexpr auto operator<<(const Bitboard& board, size_t num) noexcept -> Bitboard;
 
 /** Returns a copy of the bitboard with a binary shift right applied.
     @relates Bitboard
  */
-[[nodiscard, gnu::const]] constexpr auto operator>>(const Bitboard& board, size_t num) noexcept -> Bitboard;
+[[nodiscard, gnu::pure]] constexpr auto operator>>(const Bitboard& board, size_t num) noexcept -> Bitboard;
 
 /** Creates an ASCII representation of the given bitboard.
     The returned string is meant to be interpreted visually by a human, probably for debugging purposes.

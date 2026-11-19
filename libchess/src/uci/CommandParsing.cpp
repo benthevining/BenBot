@@ -113,7 +113,7 @@ auto parse_position_options(string_view options)
 namespace {
     // splits the input string into sections before and after the given whitespace-delimited token
     // for input string "foo bar baz" and token "bar", this would return ["foo", "bar baz"]
-    [[nodiscard, gnu::const]] constexpr auto split_at_token(
+    [[nodiscard, gnu::pure]] constexpr auto split_at_token(
         const string_view input, const string_view token)
         -> std::pair<string_view, string_view>
     {
@@ -127,7 +127,7 @@ namespace {
             input.substr(tokenStart));
     }
 
-    [[nodiscard, gnu::const]] auto skip_first_word(const string_view input)
+    [[nodiscard, gnu::pure]] auto skip_first_word(const string_view input)
         -> string_view
     {
         [[maybe_unused]] const auto [firstWord, rest] = split_at_first_space(input);
@@ -183,7 +183,7 @@ namespace {
 
     // consumes one argument from ``options``,
     // and returns pair of the option value & the rest of the ``options`` that are left
-    [[nodiscard, gnu::const]] auto parse_int_value(const string_view options)
+    [[nodiscard, gnu::pure]] auto parse_int_value(const string_view options)
         -> std::pair<size_t, string_view>
     {
         const auto [valueStr, rest] = split_at_first_space(options);

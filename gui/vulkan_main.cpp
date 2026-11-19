@@ -97,7 +97,7 @@ void check_vk_result(VkResult err)
     return VK_FALSE;
 }
 
-[[nodiscard, gnu::const]] bool IsExtensionAvailable(
+[[nodiscard, gnu::pure]] bool IsExtensionAvailable(
     const std::span<const VkExtensionProperties> properties,
     const char*                                  extension)
 {

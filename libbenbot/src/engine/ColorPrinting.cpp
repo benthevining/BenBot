@@ -32,7 +32,7 @@ using std::string_view;
 
 namespace {
     template <size_t MaxLines>
-    [[nodiscard, gnu::const]] auto get_at_most_n_lines(const string_view input)
+    [[nodiscard, gnu::pure]] auto get_at_most_n_lines(const string_view input)
     {
         using Lines = beman::inplace_vector::inplace_vector<string_view, MaxLines>;
 

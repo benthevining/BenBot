@@ -42,7 +42,7 @@ using std::size_t;
     @see num_squares_attacked()
  */
 template <Color Side>
-[[nodiscard, gnu::const]] constexpr auto squares_attacked(
+[[nodiscard, gnu::pure]] constexpr auto squares_attacked(
     const Pieces& pieces, Bitboard targetSquares, Bitboard enemyPieces) noexcept
     -> bool;
 
@@ -56,7 +56,7 @@ template <Color Side>
     @see squares_attacked()
  */
 template <Color Side>
-[[nodiscard, gnu::const]] constexpr auto num_squares_attacked(
+[[nodiscard, gnu::pure]] constexpr auto num_squares_attacked(
     const Pieces& pieces, Bitboard targetSquares, Bitboard enemyPieces, bool includeKing = true) noexcept
     -> size_t;
 

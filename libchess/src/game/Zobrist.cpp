@@ -59,7 +59,7 @@ namespace {
     }
 
     template <Color Side>
-    [[nodiscard, gnu::const]] constexpr auto add_piece_positions(
+    [[nodiscard, gnu::pure]] constexpr auto add_piece_positions(
         const Hash prevValue, const PieceType type, const Position& position)
         -> Hash
     {

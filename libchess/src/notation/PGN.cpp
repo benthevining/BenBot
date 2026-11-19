@@ -456,7 +456,7 @@ namespace {
     // starts with or doesn't start with a '[' character
     // returns npos if no such line is found
     template <bool SearchForBracket>
-    [[nodiscard, gnu::const]] constexpr auto find_next_line(const string_view text) -> size_t
+    [[nodiscard, gnu::pure]] constexpr auto find_next_line(const string_view text) -> size_t
     {
         size_t lineStart { 0uz };
 
