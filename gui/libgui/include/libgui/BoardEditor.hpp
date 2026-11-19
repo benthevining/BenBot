@@ -22,6 +22,7 @@
 #include <libchess/board/Square.hpp>
 #include <libchess/notation/EPD.hpp>
 #include <libgui/ErrorPopup.hpp>
+#include <libgui/PieceTextures.hpp>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -61,8 +62,9 @@ struct BoardEditorState final {
     @relates BoardEditorState
  */
 void render_board_editor(
-    BoardEditorState& state,
-    bool              showTooltips,
-    EngineWrapper&    engine);
+    BoardEditorState&    state,
+    const PieceTextures& pieceTextures,
+    bool                 showTooltips,
+    EngineWrapper&       engine);
 
 } // namespace ben_bot::gui

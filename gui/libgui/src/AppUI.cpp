@@ -116,16 +116,18 @@ void render(AppState& state)
     const bool showTooltips = state.appSettings.showTooltips;
 
     render_board_editor(
-        state.boardEditor, showTooltips, state.enginePanel.engine);
+        state.boardEditor, state.pieceTextures, showTooltips, state.enginePanel.engine);
+
+    // new windows take focus as they're created, so this order
+    // determines which tabs are selected in the default layout
+    render_pst_editor(
+        state.pstEditor, state.enginePanel.engine, showTooltips);
 
     render_engine_panel(
         state.enginePanel, showTooltips);
 
     render_game_viewer(
         state.gameViewer, state.enginePanel.engine, state.boardEditor.position.position, showTooltips);
-
-    render_pst_editor(
-        state.pstEditor, state.enginePanel.engine, showTooltips);
 
     ImGui::Render();
 }

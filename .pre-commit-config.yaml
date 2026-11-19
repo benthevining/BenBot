@@ -220,6 +220,8 @@ repos:
   hooks:
   - id: pretty-format-ini
     args: [--autofix]
+    # imgui can't parse the reformatted file
+    exclude: gui/libgui/resources/res/default_layout.ini
   - id: pretty-format-yaml
     args: [--autofix, --preserve-quotes]
 
