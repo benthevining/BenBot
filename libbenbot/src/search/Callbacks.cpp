@@ -38,7 +38,11 @@ auto Callbacks::make_uci_printer(
     namespace uci_printing = chess::uci::printing;
 
     auto printInfo = [isDebugMode](const Result& res) {
-        search_info(res.to_libchess(isDebugMode()));
+        const bool debug = isDebugMode();
+
+        // in MultiPV mode, all lines are sent together
+        for (auto lineIdx = 0uz; lineIdx < res.num_lines(); ++lineIdx)
+            search_info(res.to_libchess(debug, lineIdx));
     };
 
     return {
@@ -190,6 +194,20 @@ namespace {
         const auto pv = format_pv(
             res.position, res.pv, printMove);
         std::cout << pv << '\n';
+
+        // in MultiPV mode, print the other lines below, with only the score & PV columns filled in
+        for (auto lineIdx = 1uz; lineIdx < res.num_lines(); ++lineIdx) {
+            static constexpr auto NumEmptyColumns = 9uz;
+
+            for (auto col = 0uz; col < NumEmptyColumns; ++col)
+                print_column_text({ });
+
+            print_score(res.to_libchess(false, lineIdx).score);
+
+            const auto linePV = format_pv(
+                res.position, res.otherLines.at(lineIdx - 1uz).pv, printMove);
+            std::cout << linePV << '\n';
+        }
     }
 } // namespace
 

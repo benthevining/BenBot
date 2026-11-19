@@ -12,6 +12,7 @@
  * ======================================================================================
  */
 
+#include <cassert>
 #include <chrono>
 #include <format>
 #include <libbenbot/search/Result.hpp>
@@ -19,6 +20,7 @@
 #include <libchess/notation/UCI.hpp>
 #include <libchess/uci/Printing.hpp>
 #include <libutil/Variant.hpp>
+#include <optional>
 #include <string>
 #include <variant>
 
@@ -54,16 +56,24 @@ namespace {
 
 } // namespace
 
-auto Result::to_libchess(const bool includeDebugInfo) const -> LibchessResult
+auto Result::to_libchess(
+    const bool includeDebugInfo, const size_t lineIdx) const -> LibchessResult
 {
+    assert(lineIdx < num_lines());
+
+    const bool isMultiPV = not otherLines.empty();
+
+    const auto& lineScore = lineIdx == 0uz ? score : otherLines.at(lineIdx - 1uz).score;
+    const auto& linePV    = lineIdx == 0uz ? pv : otherLines.at(lineIdx - 1uz).pv;
+
     return {
-        .score            = score.to_libchess(),
+        .score            = lineScore.to_libchess(),
         .depth            = depth,
         .selDepth         = qDepth,
         .time             = duration,
         .nodes            = nodesSearched,
-        .multiPV          = std::nullopt,
-        .pv               = pv,
+        .multiPV          = isMultiPV ? std::optional { lineIdx + 1uz } : std::nullopt,
+        .pv               = linePV,
         .hashfull         = hashfull,
         .tbHits           = 0uz,
         .extraInformation = get_extra_stats_string(*this, includeDebugInfo)

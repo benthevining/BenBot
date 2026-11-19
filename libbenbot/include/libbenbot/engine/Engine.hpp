@@ -24,6 +24,7 @@
 #include <functional>
 #include <libbenbot/search/Thread.hpp>
 #include <libchess/game/Position.hpp>
+#include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/MoveFormats.hpp>
 #include <libchess/uci/EngineBase.hpp>
 #include <libchess/uci/Options.hpp>
@@ -207,6 +208,11 @@ private:
         "Extra overhead time subtracted from search time (in ms). Increase this if engine loses on time."
     };
 
+    uci::IntOption multiPV {
+        "MultiPV", 1, static_cast<int>(chess::moves::MAX_MOVES), 1,
+        "Number of best lines to search for and report."
+    };
+
     uci::StringOption logFile {
         "Debug Log File", "<empty>",
         "If not empty, engine I/O will be mirrored to this file.",
@@ -239,8 +245,8 @@ private:
         [this](const bool sanitize) { set_sanitize_positions(sanitize); }
     };
 
-    std::array<uci::Option*, 8uz> options {
-        &clearTT, &threads, &moveOverhead, &logFile, &prettyPrintMode, &moveFormat, &algFormatUTF8PieceType, &sanitizePositions
+    std::array<uci::Option*, 9uz> options {
+        &clearTT, &threads, &moveOverhead, &multiPV, &logFile, &prettyPrintMode, &moveFormat, &algFormatUTF8PieceType, &sanitizePositions
     };
 
     std::array<EngineCommand, 12uz> customCommands {
