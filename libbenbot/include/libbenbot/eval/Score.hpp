@@ -203,12 +203,14 @@ inline auto Score::to_libchess() const noexcept -> LibchessScore
 template <>
 struct std::formatter<ben_bot::eval::Score> final {
     template <typename ParseContext>
+    // cppcheck-suppress functionStatic
     constexpr auto parse(ParseContext& ctx) -> typename ParseContext::iterator
     {
         return ctx.begin();
     }
 
     template <typename FormatContext>
+    // cppcheck-suppress functionStatic
     auto format(
         const ben_bot::eval::Score& score, FormatContext& ctx) const
         -> typename FormatContext::iterator

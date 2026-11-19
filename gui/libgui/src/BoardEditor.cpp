@@ -312,7 +312,7 @@ namespace {
 
     struct StandardEPDOperation final {
         string           mnemonic;
-        EPDOperationType type;
+        EPDOperationType type { EPDOperationType::Integer };
         string           tooltip;
     };
 

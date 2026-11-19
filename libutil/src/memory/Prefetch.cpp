@@ -15,6 +15,12 @@
 #include "DetectArch.hpp" // NOLINT(build/include_subdir)
 #include <libutil/Memory.hpp>
 
+// cppcheck can't evaluate __has_builtin() in a preprocessor condition,
+// so we provide a fallback definition if it isn't already defined
+#ifndef __has_builtin
+#    define __has_builtin(x) 0 // NOLINT(bugprone-reserved-identifier)
+#endif
+
 #ifdef LIBCHESS_INTEL
 
 #    include <mmintrin.h>
@@ -29,7 +35,7 @@ void prefetch(const void* mem)
 
 } // namespace util::memory
 
-#elif defined(__has_builtin) and __has_builtin(__builtin_prefetch)
+#elif __has_builtin(__builtin_prefetch)
 
 namespace util::memory {
 
