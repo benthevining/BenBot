@@ -20,6 +20,7 @@
 // Reverse futility pruning
 // Killer moves
 // Mate distance pruning
+// MultiPV
 
 #include "search/MoveOrdering.hpp"
 #include "search/TimeManagement.hpp"
@@ -44,6 +45,7 @@
 #include <libutil/Threading.hpp>
 #include <optional>
 #include <utility>
+#include <vector>
 
 namespace ben_bot::search {
 
@@ -339,14 +341,15 @@ namespace {
     };
 
     struct [[nodiscard]] RootSearchResult final {
-        Position     rootPosition;
-        MoveList     pv;
-        Score        bestScore;
-        Stats        stats;
-        milliseconds duration { 0 };
+        Position                  rootPosition;
+        MoveList                  pv;
+        Score                     bestScore;
+        std::vector<Result::Line> otherLines; // only used in MultiPV mode
+        Stats                     stats;
+        milliseconds              duration { 0 };
 
         [[nodiscard]] auto to_cb_result(
-            const size_t depth, const size_t hashfull) const noexcept -> Result
+            const size_t depth, const size_t hashfull) const -> Result
         {
             return {
                 .position               = rootPosition,
@@ -355,6 +358,7 @@ namespace {
                 .qDepth                 = stats.qDepth,
                 .score                  = bestScore,
                 .pv                     = pv,
+                .otherLines             = otherLines,
                 .nodesSearched          = stats.nodesSearched,
                 .transpositionTableHits = stats.transTableHits,
                 .betaCutoffs            = stats.betaCutoffs,
@@ -365,34 +369,20 @@ namespace {
         }
     };
 
-    [[nodiscard]] auto root_search(
+    // searches all the root moves, except for the excluded moves, to find the best line
+    [[nodiscard]] auto search_root_line(
         const size_t                   depth,
-        Options&                       options,
+        const Options&                 options,
+        const MoveList&                excludedMoves,
         const Position&                position,
         TranspositionTable&            transTable,
         Interrupter&                   interrupter,
         KillerMoves&                   killerMoves,
         const eval::PieceSquareTables& pst,
         const Callbacks&               callbacks,
-        const std::optional<Move>      prevBestMove)
-        -> RootSearchResult
+        Stats&                         stats)
+        -> Result::Line
     {
-        const Timer timer;
-
-        killerMoves.clear();
-
-        detail::order_moves_for_search(
-            position, options.movesToSearch, transTable, killerMoves.get(0uz));
-
-        // search the previous iteration's best move first
-        if (prevBestMove.has_value()) {
-            if (const auto it = std::ranges::find(options.movesToSearch, *prevBestMove);
-                it != options.movesToSearch.end()) {
-                std::rotate(options.movesToSearch.begin(), it, std::next(it));
-            }
-        }
-
-        Stats    stats;
         Bounds   bounds;
         MoveList pv;
 
@@ -400,6 +390,9 @@ namespace {
         auto moveIdx = 0uz;
 
         for (const auto move : options.movesToSearch) {
+            if (std::ranges::find(excludedMoves, move) != excludedMoves.end())
+                continue;
+
             callbacks.root_move(move, moveIdx++);
 
             PvList childPV;
@@ -450,12 +443,68 @@ namespace {
         }
 
         return {
-            .rootPosition = position,
-            .pv           = pv,
-            .bestScore    = bounds.alpha,
-            .stats        = stats,
-            .duration     = timer.get_duration()
+            .score = bounds.alpha,
+            .pv    = pv
         };
+    }
+
+    [[nodiscard]] auto root_search(
+        const size_t                   depth,
+        Options&                       options,
+        const Position&                position,
+        TranspositionTable&            transTable,
+        Interrupter&                   interrupter,
+        KillerMoves&                   killerMoves,
+        const eval::PieceSquareTables& pst,
+        const Callbacks&               callbacks,
+        const std::optional<Move>      prevBestMove)
+        -> RootSearchResult
+    {
+        const Timer timer;
+
+        killerMoves.clear();
+
+        detail::order_moves_for_search(
+            position, options.movesToSearch, transTable, killerMoves.get(0uz));
+
+        // search the previous iteration's best move first
+        if (prevBestMove.has_value()) {
+            if (const auto it = std::ranges::find(options.movesToSearch, *prevBestMove);
+                it != options.movesToSearch.end()) {
+                std::rotate(options.movesToSearch.begin(), it, std::next(it));
+            }
+        }
+
+        RootSearchResult result;
+
+        result.rootPosition = position;
+
+        // in MultiPV mode, we search the root moves once for each line, each time
+        // excluding the first moves of the lines that have already been found
+        const auto numLines = std::clamp(options.multiPV, 1uz, options.movesToSearch.size());
+
+        MoveList excludedMoves;
+
+        for (auto lineIdx = 0uz; lineIdx < numLines; ++lineIdx) {
+            auto line = search_root_line(
+                depth, options, excludedMoves, position, transTable, interrupter, killerMoves, pst, callbacks, result.stats);
+
+            if (interrupter.was_aborted() or line.pv.empty())
+                break;
+
+            excludedMoves.emplace_back(line.pv.front());
+
+            if (lineIdx == 0uz) {
+                result.pv        = std::move(line.pv);
+                result.bestScore = line.score;
+            } else {
+                result.otherLines.emplace_back(std::move(line));
+            }
+        }
+
+        result.duration = timer.get_duration();
+
+        return result;
     }
 
     using std::memory_order;
