@@ -116,11 +116,14 @@ public:
     /** Similar to ``find()``, this function instead probes for an
         evaluation value of the given position, searched to at least
         the given depth and honoring the given search bounds.
+        ``plyFromRoot`` is used to convert stored mate scores back to
+        ply-from-root mate scores (see ``eval::Score::from_tt()``).
 
         Returns pair of the evaluation value and the value type.
      */
     [[nodiscard]] auto probe_eval(
-        const Position& pos, size_t depth, const search::Bounds& bounds) const
+        const Position& pos, size_t depth, const search::Bounds& bounds,
+        size_t plyFromRoot) const
         -> std::optional<ProbedEval>;
 
     /** Returns the opponent's best response to the given move, if one

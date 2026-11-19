@@ -236,7 +236,7 @@ auto TranspositionTable::find(const Position& pos) const -> std::optional<TTData
 
 auto TranspositionTable::probe_eval(
     const Position& pos, const size_t depth,
-    const search::Bounds& bounds) const
+    const search::Bounds& bounds, const size_t plyFromRoot) const
     -> std::optional<ProbedEval>
 {
     return find(pos)
@@ -246,21 +246,23 @@ auto TranspositionTable::probe_eval(
 
             return data;
         })
-        .and_then([bounds](const TTData& data) -> std::optional<ProbedEval> {
+        .and_then([bounds, plyFromRoot](const TTData& data) -> std::optional<ProbedEval> {
+            const auto eval = eval::Score::from_tt(data.eval, plyFromRoot);
+
             switch (data.evalType) {
                 default: [[fallthrough]];
                 case EvalType::Exact:
-                    return std::make_pair(data.eval, data.evalType);
+                    return std::make_pair(eval.value, data.evalType);
 
                 case EvalType::Alpha: {
-                    if (data.eval < bounds.alpha)
+                    if (eval < bounds.alpha)
                         return std::make_pair(bounds.alpha, data.evalType);
 
                     break;
                 }
 
                 case EvalType::Beta: {
-                    if (data.eval >= bounds.beta)
+                    if (eval >= bounds.beta)
                         return std::make_pair(bounds.beta, data.evalType);
 
                     break;
