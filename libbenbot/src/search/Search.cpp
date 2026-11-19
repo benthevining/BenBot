@@ -196,7 +196,7 @@ namespace {
 
                 const auto eval = [this, move, foundPV = bestMove.has_value()] {
                     if (depthLeft == 0uz)
-                        return -recurse(move).quiescence();
+                        return -recurse(move).quiescence<PVNode>();
 
                     if (not foundPV)
                         return -recurse(move).alpha_beta<PVNode>();
@@ -263,6 +263,7 @@ namespace {
     private:
         // searches only captures, with no depth limit, to try to
         // improve the stability of the static evaluation function
+        template <bool PVNode>
         [[nodiscard]] auto quiescence() -> Score
         {
             if (interrupter.should_abort(plyFromRoot) or position.is_draw())
@@ -297,7 +298,11 @@ namespace {
             for (const auto move : moves) {
                 assert(position.is_capture(move));
 
-                evaluation = -(recurse(move).quiescence());
+                if constexpr (PVNode) {
+                    childPV.reset();
+                }
+
+                evaluation = -(recurse(move).quiescence<PVNode>());
 
                 ++stats.nodesSearched;
 
@@ -305,11 +310,23 @@ namespace {
                     return { };
 
                 if (evaluation >= bounds.beta) {
+                    // as in alpha_beta(), a mating capture may cause a cutoff
+                    // here, and must still be recorded in the PV
+                    if constexpr (PVNode) {
+                        pv.update(move, childPV);
+                    }
+
                     ++stats.betaCutoffs;
                     return bounds.beta;
                 }
 
-                bounds.alpha = std::max(bounds.alpha, evaluation);
+                if (evaluation > bounds.alpha) {
+                    bounds.alpha = evaluation;
+
+                    if constexpr (PVNode) {
+                        pv.update(move, childPV);
+                    }
+                }
             }
 
             return bounds.alpha;
