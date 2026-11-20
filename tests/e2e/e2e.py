@@ -772,8 +772,10 @@ class TestConfigFile(metaclass=OrderedClassMembers):
 class TestCLI(metaclass=OrderedClassMembers):
     @staticmethod
     def test_bench():
+        # the default bench depth takes too long in Debug & sanitizer builds,
+        # so this uses the bench UCI command, which takes a depth
         process = subprocess.run(
-            [get_path(), "bench"], capture_output=True, text=True, timeout=600
+            [get_path()], input="bench 3\n", capture_output=True, text=True, timeout=600
         )
 
         output = process.stdout + process.stderr
