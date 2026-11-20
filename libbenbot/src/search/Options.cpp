@@ -48,7 +48,7 @@ namespace {
 
         return milliseconds {
             (static_cast<size_t>(timeRemaining.count()) / movesToGo)
-            + (static_cast<size_t>(inc.count()) / (movesToGo / 10uz))
+            + (static_cast<size_t>(inc.count()) / std::max(movesToGo / 10uz, 1uz))
         };
     }
 } // namespace
