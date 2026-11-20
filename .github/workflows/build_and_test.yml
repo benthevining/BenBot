@@ -83,6 +83,37 @@ jobs:
         build_config: ${{ matrix.config }}
         dashboard_type: ${{ inputs.dashboard_type }}
 
+  # fails if bench isn't the same on every platform, which means that the search is different
+  # somewhere (e.g. #681). The SPRT tests only run on Linux, so they wouldn't catch this
+  check_bench:
+    runs-on: ubuntu-latest
+    name: Check bench is the same on every platform
+    timeout-minutes: 10
+    needs: build_and_test
+    permissions:
+      contents: read
+
+    steps:
+    - name: Download bench results
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+      with:
+        path: bench
+        pattern: bench-*
+        merge-multiple: true
+
+    - name: Compare bench results
+      run: |
+        {
+          echo "| OS | preset | bench |"
+          echo "|---|---|---|"
+          awk '{ print "| " $1 " | " $2 " | " $3 " |" }' bench/*.txt
+        } >> "$GITHUB_STEP_SUMMARY"
+        cat bench/*.txt
+        if [[ "$(awk '{ print $3 }' bench/*.txt | sort -u | wc -l)" -ne 1 ]]; then
+          echo "::error::Bench is different on different platforms"
+          exit 1
+        fi
+
   report_aggregate_test_results:
     runs-on: ubuntu-latest
     name: Report aggregate test results
