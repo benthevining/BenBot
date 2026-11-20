@@ -16,6 +16,7 @@
 #include <array>
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
+#include <expected>
 #include <filesystem>
 #include <format>
 #include <libbenbot/engine/Engine.hpp>
@@ -237,39 +238,67 @@ void Engine::read_pst_file(
               .transform_error(info_string);
 }
 
-void Engine::restore_state_from_string(const string_view state)
+auto Engine::restore_state_from_string(const string_view state)
+    -> std::expected<void, std::string>
 {
-    const auto data = json::parse(state);
+    // don't throw on invalid input, so that a bad config file can't terminate the engine
+    const auto data = json::parse(state, nullptr, false);
 
-    set_debug_mode(
-        data.at(TAG_DEBUG).get<bool>());
+    if (data.is_discarded() or not data.is_object())
+        return std::unexpected { std::string { "Error parsing engine state: invalid JSON" } };
 
+    if (const auto debug = data.find(TAG_DEBUG);
+        debug != data.end() and debug->is_boolean()) {
+        set_debug_mode(debug->get<bool>());
+    }
+
+    const auto optionsData = data.find(TAG_OPTIONS);
+
+    if (optionsData == data.end() or not optionsData->is_object())
+        return { };
+
+    // options missing from the saved state retain their current values
     std::ranges::for_each(
         std::views::join(std::array { get_custom_uci_options(), get_standard_uci_options() }),
-        [optionsData = data.at(TAG_OPTIONS)](uci::Option* opt) {
+        [&optionsData](uci::Option* opt) {
             if (not opt->has_value())
                 return;
 
-            const auto& optValue = optionsData.at(opt->get_name());
+            const auto optValue = optionsData->find(opt->get_name());
 
-            if (auto* boolOpt = dynamic_cast<uci::BoolOption*>(opt)) {
-                boolOpt->set_value(optValue.get<bool>());
+            if (optValue == optionsData->end())
+                return;
+
+            if (auto* boolOpt = dynamic_cast<uci::BoolOption*>(opt);
+                boolOpt != nullptr and optValue->is_boolean()) {
+                boolOpt->set_value(optValue->get<bool>());
                 return;
             }
 
-            if (auto* intOpt = dynamic_cast<uci::IntOption*>(opt)) {
-                intOpt->set_value(optValue.get<int>());
+            if (auto* intOpt = dynamic_cast<uci::IntOption*>(opt);
+                intOpt != nullptr and optValue->is_number_integer()) {
+                intOpt->set_value(optValue->get<int>());
                 return;
             }
 
-            if (auto* comboOpt = dynamic_cast<uci::ComboOption*>(opt)) {
-                comboOpt->set_value(optValue.get<std::string_view>());
+            if (auto* comboOpt = dynamic_cast<uci::ComboOption*>(opt);
+                comboOpt != nullptr and optValue->is_string()) {
+                comboOpt->set_value(optValue->get<std::string_view>());
                 return;
             }
 
-            if (auto* stringOpt = dynamic_cast<uci::StringOption*>(opt))
-                stringOpt->set_value(optValue.get<std::string_view>());
+            if (auto* stringOpt = dynamic_cast<uci::StringOption*>(opt);
+                stringOpt != nullptr and optValue->is_string()) {
+                stringOpt->set_value(optValue->get<std::string_view>());
+                return;
+            }
+
+            info_string(std::format(
+                "Ignoring invalid value for option '{}': {}",
+                opt->get_name(), optValue->dump()));
         });
+
+    return { };
 }
 
 void Engine::read_config_file(const path& file)
@@ -278,13 +307,12 @@ void Engine::read_config_file(const path& file)
 
     [[maybe_unused]] const auto result
         = util::files::load(filePath)
-              .transform([this, &filePath](const string_view fileContent) {
-                  restore_state_from_string(fileContent);
-
+              .and_then([this](const string_view fileContent) {
+                  return restore_state_from_string(fileContent);
+              })
+              .transform([&filePath] {
                   info_string(std::format(
                       "Read configuration from file: {}", filePath.string()));
-
-                  return std::monostate { };
               })
               .transform_error(info_string);
 }
