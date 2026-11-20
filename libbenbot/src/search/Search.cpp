@@ -24,6 +24,7 @@
 // MultiPV
 // Static exchange evaluation
 // Late move reductions
+// Futility pruning
 // History heuristic
 
 #include "search/MoveOrdering.hpp"
@@ -65,6 +66,9 @@ namespace {
 
     // null move pruning is only tried when at least this much depth is left
     inline constexpr auto NMP_MIN_DEPTH { 3uz };
+
+    // futility pruning is only done with at most this much depth left
+    inline constexpr auto FP_MAX_DEPTH { 2uz };
 
     // used as a zugzwang guard for null move pruning: returns true if the side to move has at
     // least 2 non-pawn pieces. Allowing a single minor piece misses zugzwang mates (see the
@@ -207,6 +211,9 @@ namespace {
 
             const bool inCheck = position.is_check();
 
+            // set to true if quiet moves after the first one can't raise alpha
+            bool futilityPruning = false;
+
             if constexpr (not PVNode) {
                 if (not inCheck) {
                     const auto staticEval = eval::evaluate(position, pieceSquareTables);
@@ -234,6 +241,14 @@ namespace {
                         // we return beta here instead of the score, so that we never return an unproven mate score
                         if (score >= bounds.beta)
                             return bounds.beta;
+                    }
+
+                    // futility pruning: near the horizon, if a quiet move would need to gain
+                    // more than the margin to raise alpha, don't bother searching it
+                    if (depthLeft <= FP_MAX_DEPTH and not bounds.alpha.is_mate()) {
+                        const auto fpMargin = 100 + (80 * static_cast<int>(depthLeft));
+
+                        futilityPruning = std::cmp_less_equal(staticEval.value + fpMargin, bounds.alpha.value);
                     }
                 }
             }
@@ -267,13 +282,18 @@ namespace {
             MoveList quietsSearched;
 
             for (const auto move : moves) {
+                const auto moveIdx  = nextMoveIdx++;
+                const auto childPos = after_move(position, move);
+
+                if (futilityPruning and moveIdx > 0uz
+                    and position.is_quiet(move) and not childPos.is_check())
+                    continue;
+
                 if constexpr (PVNode) {
                     childPV.reset();
                 }
 
-                const auto eval = [this, move, inCheck, killers, moveIdx = nextMoveIdx++, foundPV = bestMove.has_value()] {
-                    const auto childPos = after_move(position, move);
-
+                const auto eval = [this, move, &childPos, inCheck, killers, moveIdx, foundPV = bestMove.has_value()] {
                     if (depthLeft == 0uz)
                         return -recurse(childPos).quiescence<PVNode>();
 
@@ -786,6 +806,11 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
 
             // if we've hit our node limit, don't do a deeper iteration
             if (totalNodesSearched >= options.maxNodes)
+                break;
+
+            // once we've used up the soft time limit, don't start a deeper iteration
+            if (options.softSearchTime.has_value()
+                and interrupter.get_search_duration() >= *options.softSearchTime)
                 break;
 
             // if the iteration we just completed took as much or more time than we
