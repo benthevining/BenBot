@@ -22,10 +22,13 @@
 #include <atomic>
 #include <libbenbot/data-structures/KillerMoves.hpp>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
+#include <libbenbot/eval/PieceSquareTables.hpp>
 #include <libbenbot/search/Callbacks.hpp>
 #include <libbenbot/search/Options.hpp>
 #include <libchess/game/Position.hpp>
+#include <libutil/Memory.hpp>
 #include <optional>
+#include <string_view>
 #include <utility>
 
 namespace ben_bot::search {
@@ -75,19 +78,21 @@ struct Context final {
     void abort() noexcept { exitFlag.store(true, std::memory_order::release); }
 
     /** Clears the transposition table.
-        If a search is in progress, this method blocks until it returns.
+        If a search is in progress, this method aborts it and blocks until it returns.
      */
     void clear_transposition_table()
     {
+        abort();
         wait();
         transTable.clear();
     }
 
     /** Resizes the transposition table.
-        If a search is in progress, this method blocks until it returns.
+        If a search is in progress, this method aborts it and blocks until it returns.
      */
-    void resize_transposition_table(size_t sizeMB)
+    void resize_transposition_table(const size_t sizeMB)
     {
+        abort();
         wait();
         transTable.resize(sizeMB);
     }
@@ -119,10 +124,11 @@ struct Context final {
     void ponder_hit() noexcept { pondering.store(false, std::memory_order::release); }
 
     /** Sets the position to be searched by the next search.
-        If a search is in progress, this function blocks until it completes.
+        If a search is in progress, this function aborts it and blocks until it completes.
      */
     void set_position(const Position& pos)
     {
+        abort();
         wait();
         position = pos;
 
@@ -131,28 +137,31 @@ struct Context final {
     }
 
     /** Sets the options to be used by the next search.
-        If a search is in progress, this function blocks until it completes.
+        If a search is in progress, this function aborts it and blocks until it completes.
      */
     void set_options(const Options& opts)
     {
+        abort();
         wait();
         options = opts;
     }
 
     /** Sets the options to be used by the next search.
-        If a search is in progress, this function blocks until it completes.
+        If a search is in progress, this function aborts it and blocks until it completes.
      */
     void set_options(const chess::uci::GoCommandOptions& opts)
     {
+        abort();
         wait();
         options = Options::from_libchess(opts, position.is_white_to_move());
     }
 
     /** Sets the result callbacks that will be used for the next search.
-        If a search is in progress, this function blocks until it completes.
+        If a search is in progress, this function aborts it and blocks until it completes.
      */
     void set_callbacks(Callbacks&& callbacksToUse)
     {
+        abort();
         wait();
         callbacks = std::move(callbacksToUse);
     }
@@ -160,13 +169,24 @@ struct Context final {
     /** Returns the current position. */
     [[nodiscard]] auto get_position() const noexcept -> const Position& { return position; }
 
+    /** Returns the current search parameters. */
+    [[nodiscard]] auto get_options() const noexcept -> const Options& { return options; }
+
+    /** Returns the current piece square tables. */
+    [[nodiscard]] auto get_piece_square_tables() const noexcept -> const eval::PieceSquareTables& { return pieceSquareTables; }
+
+    /** Sets the engine's piece square tables.
+        If a search is in progress, this function aborts it and blocks until it completes.
+     */
+    void set_piece_square_tables(
+        const eval::PieceSquareTables& tables)
+    {
+        abort();
+        wait();
+        pieceSquareTables = tables;
+    }
+
 private:
-    std::atomic_bool exitFlag { false };
-
-    std::atomic_bool activeFlag { false };
-
-    std::atomic_bool pondering { false };
-
     Position position;
 
     Options options;
@@ -176,6 +196,14 @@ private:
     TranspositionTable transTable;
 
     KillerMoves killerMoves;
+
+    eval::PieceSquareTables pieceSquareTables { eval::PieceSquareTables::get_default() };
+
+    // these flags are all on their own cache lines to prevent
+    // false sharing between the searcher & main (input) threads
+    alignas(util::memory::CacheLineSize) std::atomic_bool exitFlag { false };
+    alignas(util::memory::CacheLineSize) std::atomic_bool activeFlag { false };
+    alignas(util::memory::CacheLineSize) std::atomic_bool pondering { false };
 };
 
 } // namespace ben_bot::search

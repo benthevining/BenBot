@@ -103,9 +103,11 @@ struct Score final {
 
     /** Returns a value suitable for storing in the transposition table.
         During search, mate scores are based on ply from the root position;
-        this function maps all mate scores to the MATE constant.
+        this function converts mate scores to be relative to the node being
+        stored (at ``plyFromRoot``), so that the mate distance is preserved
+        when the entry is probed at a different ply.
      */
-    [[nodiscard]] constexpr auto to_tt() const noexcept -> Value;
+    [[nodiscard]] constexpr auto to_tt(size_t plyFromRoot) const noexcept -> Value;
 
     /** The libchess type used for printing UCI-formatted search information. */
     using LibchessScore = chess::uci::printing::SearchInfo::Score;
@@ -125,7 +127,7 @@ struct Score final {
     }
 
     /** Converts a value from the transposition table to a score.
-        This maps the MATE constant to a ply-from-root mate score.
+        This converts node-relative mate scores back to ply-from-root mate scores.
      */
     [[nodiscard, gnu::const]] static constexpr auto from_tt(
         Value eval, size_t plyFromRoot) noexcept
@@ -149,13 +151,15 @@ struct Score final {
 
  */
 
-constexpr auto Score::to_tt() const noexcept -> Value
+constexpr auto Score::to_tt(const size_t plyFromRoot) const noexcept -> Value
 {
+    const auto ply = static_cast<Value>(plyFromRoot);
+
     if (is_losing_mate())
-        return -MATE;
+        return static_cast<Value>(value - ply);
 
     if (is_winning_mate())
-        return MATE;
+        return static_cast<Value>(value + ply);
 
     return value;
 }
@@ -164,11 +168,13 @@ constexpr auto Score::from_tt(
     const Value eval, const size_t plyFromRoot) noexcept
     -> Score
 {
+    const auto ply = static_cast<Value>(plyFromRoot);
+
     if (std::cmp_less_equal(eval, -MATE))
-        return mate(plyFromRoot);
+        return { static_cast<Value>(eval + ply) };
 
     if (std::cmp_greater_equal(eval, MATE))
-        return -mate(plyFromRoot);
+        return { static_cast<Value>(eval - ply) };
 
     return { eval };
 }
@@ -203,12 +209,14 @@ inline auto Score::to_libchess() const noexcept -> LibchessScore
 template <>
 struct std::formatter<ben_bot::eval::Score> final {
     template <typename ParseContext>
+    // cppcheck-suppress functionStatic
     constexpr auto parse(ParseContext& ctx) -> typename ParseContext::iterator
     {
         return ctx.begin();
     }
 
     template <typename FormatContext>
+    // cppcheck-suppress functionStatic
     auto format(
         const ben_bot::eval::Score& score, FormatContext& ctx) const
         -> typename FormatContext::iterator

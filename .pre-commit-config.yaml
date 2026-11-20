@@ -55,7 +55,7 @@ repos:
 
   # sync additional-dependencies version with repo rev where relevant
 - repo: https://github.com/pre-commit/sync-pre-commit-deps
-  rev: v0.0.3
+  rev: v0.0.5
   hooks:
   - id: sync-pre-commit-deps
 
@@ -82,33 +82,34 @@ repos:
   - id: insert-license
     name: Insert license header in CMake files
     args: [--license-filepath=libbenbot/resources/res/license_header.txt, --comment-style=#, --detect-license-in-X-top-lines=16]
-    types_or: [cmake, yaml, toml, ini, python, dockerfile]
+    types_or: [cmake, yaml, toml, ini, python, dockerfile, shell]
   - id: insert-license
     name: Insert license header in CMake and shell files
     args: [--license-filepath=libbenbot/resources/res/license_header.txt, --comment-style=#, --detect-license-in-X-top-lines=16]
     files: .git|.clang|.cfg|justfile|.editorconfig|requirements.txt|.dockerignore
-    exclude: config/.editorconfig-checker.json|.md
+    exclude: config/.editorconfig-checker.json|.md|dependencies.txt
 
     # auto-fix spelling mistakes
 - repo: https://github.com/codespell-project/codespell
-  rev: v2.4.2
+  rev: v2.4.3
   hooks:
   - id: codespell
     args: [--write-changes, --ignore-words=config/codespell_ignore.txt]
 
     # C++ formatting & linting
 - repo: https://github.com/pre-commit/mirrors-clang-format
-  rev: v22.1.2
+  rev: v23.1.5
   hooks:
   - id: clang-format
     exclude_types: [json]
-    additional_dependencies: [clang-format>=22.1.2]
+    additional_dependencies: [clang-format>=23.1.5]
 - repo: https://github.com/pocc/pre-commit-hooks
-  rev: v1.3.5
+  rev: v1.5.0
   hooks:
   - id: cppcheck
     args: [--cppcheck-build-dir=Builds/cppcheck, --inline-suppr, --std=c++23, --check-level=exhaustive, --enable=all, --suppress=unusedFunction, --suppress=unusedStructMember, --suppress=unmatchedSuppression, --suppress=class_X_Y, --suppress=missingIncludeSystem, --suppress=missingInclude]
-    additional_dependencies: [cppcheck>=1.5.1]
+    additional_dependencies: [cppcheck==1.5.3]
+    exclude: .mm
   - id: cpplint
     args: [--verbose=0]
     additional_dependencies: [cpplint>=2.0.2]
@@ -123,7 +124,7 @@ repos:
     args: [--config-files, config/.cmake-format.json]
 
 - repo: https://github.com/python-jsonschema/check-jsonschema
-  rev: 0.37.1
+  rev: 0.39.0
   hooks:
   - id: check-github-workflows
   - id: check-jsonschema
@@ -133,22 +134,28 @@ repos:
 
     # Python formatting & linting
 - repo: https://github.com/asottile/pyupgrade
-  rev: v3.21.2
+  rev: v3.22.0
   hooks:
   - id: pyupgrade
 
 - repo: https://github.com/psf/black-pre-commit-mirror
-  rev: 26.3.1
+  rev: 26.10.1
   hooks:
   - id: black
 
 # Dockerfile
 - repo: https://github.com/hadolint/hadolint
-  rev: v2.14.0
+  rev: v2.15.1
   hooks:
   - id: hadolint
     args: [--ignore, DL3003, --ignore, DL3008, --ignore, DL3045]
     exclude: .dockerignore
+
+# Bash scripts
+- repo: https://github.com/shellcheck-py/shellcheck-py
+  rev: v0.11.0.1-1
+  hooks:
+  - id: shellcheck
 
     # format justfile
 - repo: local
@@ -201,7 +208,7 @@ repos:
     args: [--markdown-linebreak-ext=md]
 
 - repo: https://github.com/sirosen/texthooks
-  rev: 0.7.1
+  rev: 1.0.0
   hooks:
   - id: fix-ligatures
   - id: fix-smartquotes
@@ -213,6 +220,8 @@ repos:
   hooks:
   - id: pretty-format-ini
     args: [--autofix]
+    # imgui can't parse the reformatted file
+    exclude: gui/libgui/resources/res/default_layout.ini
   - id: pretty-format-yaml
     args: [--autofix, --preserve-quotes]
 
@@ -226,7 +235,7 @@ repos:
 
     # check editorconfig rules
 - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
-  rev: 3.6.1
+  rev: 3.11.1
   hooks:
   - id: editorconfig-checker
     args: [-config, config/.editorconfig-checker.json]
@@ -240,7 +249,7 @@ repos:
 
 # manual-only hook
 - repo: https://github.com/codingjoe/relint
-  rev: 3.3.1
+  rev: 3.6.1
   hooks:
   - id: relint
     args: [-c, config/relint.yml]

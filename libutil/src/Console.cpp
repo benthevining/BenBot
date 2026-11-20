@@ -12,7 +12,11 @@
  * ======================================================================================
  */
 
+#include <cstdio>
 #include <libutil/Console.hpp>
+#include <print>
+#include <string_view>
+#include <variant>
 
 #ifdef _WIN32
 
@@ -44,3 +48,11 @@ void enable_utf8_console_output()
 } // namespace util
 
 #endif
+
+namespace util {
+auto print_error(std::string_view message) -> std::monostate
+{
+    std::println(stderr, "{}", message);
+    return std::monostate { };
+}
+} // namespace util

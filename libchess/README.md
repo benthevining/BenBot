@@ -13,7 +13,7 @@ Include style is:
 #include <libchess/board/Square.hpp>
 ```
 
-## Design goals
+## Design
 
 This library aims to avoid using global state as much as possible. The one exception to this is the magic bitboards move generation, which does require some constant arrays to be initialized at program startup. Aside from this, however, the board position is entirely object-oriented, there is no global `make_move()` function.
 

@@ -21,6 +21,7 @@
 
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t
+#include <cstdint>
 #include <libchess/moves/Move.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <optional>
@@ -120,6 +121,16 @@ struct SearchInfo final {
 
         /** True if the score is just an upper bound (ie, an alpha cutoff). */
         bool upperBound { false };
+
+        /** This enum describes the different types of evaluations. */
+        enum class Type : std::uint_least8_t {
+            Winning, ///< A winning evaluation.
+            Losing,  ///< A losing evaluation.
+            Equal    ///< A drawn evaluation.
+        };
+
+        /** Returns this score's type. */
+        [[nodiscard]] auto get_type() const noexcept -> Type;
     };
 
     /** The engine's evaluation of the root position. */

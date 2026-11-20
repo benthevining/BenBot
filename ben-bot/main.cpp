@@ -12,9 +12,11 @@
  * ======================================================================================
  */
 
+#include <algorithm>
 #include <beman/inplace_vector/inplace_vector.hpp>
 #include <cassert>
 #include <cstddef>
+#include <cstdint> // IWYU pragma: keep - for std::uint_least8_t
 #include <cstdlib>
 #include <exception>
 #include <filesystem>
@@ -28,34 +30,17 @@
 #include <string>
 #include <string_view>
 
+namespace {
 using std::string_view;
 
-namespace {
-[[nodiscard]] auto concat_strings(
-    const std::span<const string_view> strings)
-    -> std::string
-{
-    std::string result;
-
-    for (const auto fragment : strings)
-        result.append(std::format("{} ", fragment));
-
-    return result;
-}
-} // namespace
-
 struct [[nodiscard]] Arguments final {
-    /** If true, the executable should process the given UCI command and exit
-        immediately, not entering the UCI loop waiting for input.
-     */
-    bool noLoop { false };
+    enum class RunMode : std::uint_least8_t {
+        Bench,
+        UCILoop
+    };
 
-    /** If not empty, this is a one-shot UCI command that should be evaluated
-        after startup.
-     */
-    std::string uciCommand;
+    RunMode runMode { RunMode::UCILoop };
 
-    /** Parses the given command-line arguments into a populated Arguments struct. */
     [[nodiscard]] static auto parse(
         const int argc, const char** argv) -> Arguments
     {
@@ -74,30 +59,15 @@ struct [[nodiscard]] Arguments final {
         // consume program name
         args = args.subspan(1uz);
 
-        // returns true if token is present in argument list, and consumes it if so
-        auto check_for_arg = [&args](const string_view token) {
-            if (args.empty())
-                return false;
+        Arguments result;
 
-            if (args.front() == token) {
-                args = args.subspan(1uz);
-                return true;
-            }
+        if (std::ranges::contains(args, "bench"))
+            result.runMode = RunMode::Bench;
 
-            if (args.back() == token) {
-                args = args.first(args.size() - 1uz);
-                return true;
-            }
-
-            return false;
-        };
-
-        return Arguments {
-            .noLoop     = check_for_arg("--no-loop"),
-            .uciCommand = concat_strings(args)
-        };
+        return result;
     }
 };
+} // namespace
 
 using chess::uci::printing::info_string;
 
@@ -105,7 +75,7 @@ int main(const int argc, const char** argv)
 try {
     util::enable_utf8_console_output();
 
-    const auto [noLoop, uciCommand] = Arguments::parse(argc, argv);
+    const auto [mode] = Arguments::parse(argc, argv);
 
     ben_bot::Engine engine;
 
@@ -117,12 +87,16 @@ try {
             return std::monostate { };
         });
 
-    if (not uciCommand.empty())
-        engine.handle_command(uciCommand);
+    switch (mode) {
+        using enum Arguments::RunMode;
 
-    if (not noLoop) {
-        [[likely]];
-        engine.loop();
+        case Bench:
+            engine.handle_command("bench");
+            break;
+
+        default: [[fallthrough]];
+        case UCILoop:
+            engine.loop();
     }
 
     return EXIT_SUCCESS;

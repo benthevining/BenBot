@@ -32,7 +32,6 @@
 #include <libutil/Math.hpp>
 #include <libutil/Memory.hpp>
 #include <memory>
-#include <new>
 #include <numeric>
 #include <optional>
 #include <ranges>
@@ -100,15 +99,10 @@ struct TranspositionTable::Entry final {
     }
 };
 
-#if defined(__cpp_lib_hardware_interference_size) and (__cpp_lib_hardware_interference_size >= 201703L)
-inline constexpr auto CACHE_LINE_SIZE = std::hardware_constructive_interference_size;
-#else
-#    warning std::hardware_constructive_interference_size not available, using default value
-inline constexpr auto CACHE_LINE_SIZE = 32uz;
-#endif
+using util::memory::CacheLineSize;
 
-struct alignas(CACHE_LINE_SIZE) TranspositionTable::Cluster final {
-    static constexpr auto NumRecords = CACHE_LINE_SIZE / sizeof(Entry);
+struct alignas(CacheLineSize) TranspositionTable::Cluster final {
+    static constexpr auto NumRecords = CacheLineSize / sizeof(Entry);
 
     std::array<Entry, NumRecords> records { };
 };
@@ -125,7 +119,7 @@ TranspositionTable::TranspositionTable(TranspositionTable&& other) noexcept
         "TranspositionTable::Cluster size should be a power of 2!");
 
     static_assert(
-        sizeof(Cluster) <= CACHE_LINE_SIZE,
+        sizeof(Cluster) <= CacheLineSize,
         "TranspositionTable::Cluster should fit in a CPU cache line!");
 }
 
@@ -242,7 +236,7 @@ auto TranspositionTable::find(const Position& pos) const -> std::optional<TTData
 
 auto TranspositionTable::probe_eval(
     const Position& pos, const size_t depth,
-    const search::Bounds& bounds) const
+    const search::Bounds& bounds, const size_t plyFromRoot) const
     -> std::optional<ProbedEval>
 {
     return find(pos)
@@ -252,21 +246,23 @@ auto TranspositionTable::probe_eval(
 
             return data;
         })
-        .and_then([bounds](const TTData& data) -> std::optional<ProbedEval> {
+        .and_then([bounds, plyFromRoot](const TTData& data) -> std::optional<ProbedEval> {
+            const auto eval = eval::Score::from_tt(data.eval, plyFromRoot);
+
             switch (data.evalType) {
                 default: [[fallthrough]];
                 case EvalType::Exact:
-                    return std::make_pair(data.eval, data.evalType);
+                    return std::make_pair(eval.value, data.evalType);
 
                 case EvalType::Alpha: {
-                    if (data.eval < bounds.alpha)
+                    if (eval < bounds.alpha)
                         return std::make_pair(bounds.alpha, data.evalType);
 
                     break;
                 }
 
                 case EvalType::Beta: {
-                    if (data.eval >= bounds.beta)
+                    if (eval >= bounds.beta)
                         return std::make_pair(bounds.beta, data.evalType);
 
                     break;

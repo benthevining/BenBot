@@ -131,8 +131,17 @@ void write_integer(
 [[nodiscard]] auto words_view(string_view text);
 
 /** Computes the Levenshtein distance between the two strings. */
-[[nodiscard, gnu::const]] auto levenshtein_distance(
+[[nodiscard, gnu::pure]] auto levenshtein_distance(
     string_view first, string_view second) -> size_t;
+
+/** Converts a string_view to an owning string. This function is provided for ease
+    of passing to ``std::expected::transform_error``.
+ */
+[[nodiscard]] inline auto to_owning_string(
+    const string_view text) -> std::string
+{
+    return std::string { text };
+}
 
 /// @}
 

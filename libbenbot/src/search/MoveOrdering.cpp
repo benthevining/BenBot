@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Material.hpp>
+#include <libbenbot/eval/SEE.hpp>
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
@@ -37,7 +38,7 @@ namespace {
     using chess::pieces::Color;
     using PieceType = chess::pieces::Type;
 
-    [[nodiscard, gnu::const]] auto get_opponent_pawn_attacks(const Position& position) noexcept
+    [[nodiscard, gnu::pure]] auto get_opponent_pawn_attacks(const Position& position) noexcept
         -> Bitboard
     {
         using chess::moves::patterns::pawn_attacks;
@@ -49,7 +50,7 @@ namespace {
     }
 
     // higher scored moves will be searched first
-    [[nodiscard, gnu::const]] auto move_ordering_score(
+    [[nodiscard, gnu::pure]] auto move_ordering_score(
         const Position& currentPosition, const Move move,
         const TranspositionTable&   transTable,
         const Bitboard              opponentPawnAttacks,
@@ -72,10 +73,10 @@ namespace {
 
         auto score { 0 };
 
-        if (const auto capturedType = currentPosition.their_pieces().get_piece_on(move.to())) {
-            // we want to prioritize searching moves that capture valuable pieces with less valuable pieces
-            score += CAPTURE_MULTIPLIER
-                   * (piece_values::get(*capturedType) - piece_values::get(move.piece()));
+        if (currentPosition.is_capture(move)) {
+            // we want to prioritize searching captures that win the most material once
+            // all recaptures on the square have been played out
+            score += CAPTURE_MULTIPLIER * eval::see(currentPosition, move);
         } else if (std::ranges::contains(killerMoves, move)) {
             score += KILLER_MOVE_BONUS;
         }
@@ -134,7 +135,7 @@ void order_moves_for_search(
 
 namespace {
     // MVV-LVA scoring
-    [[nodiscard, gnu::const]] auto q_search_move_order_score(
+    [[nodiscard, gnu::pure]] auto q_search_move_order_score(
         const Position& currentPosition, const Move move) noexcept -> int
     {
         return currentPosition.their_pieces()

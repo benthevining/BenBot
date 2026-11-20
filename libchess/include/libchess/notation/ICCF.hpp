@@ -40,7 +40,8 @@ using moves::Move;
     @ingroup notation
     @see from_iccf()
  */
-[[nodiscard]] auto to_iccf(Move move) -> std::string;
+[[nodiscard]] auto to_iccf(
+    Move move) -> std::string;
 
 /** Parses the ICCF-format @cite Just_Burg_2003 notation string into a Move object.
     The current position is used to determine the type of the moved piece.

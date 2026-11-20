@@ -111,7 +111,7 @@ namespace {
         }
     }
 
-    [[nodiscard, gnu::const]] auto parse_square(const std::string_view input)
+    [[nodiscard, gnu::pure]] auto parse_square(const std::string_view input)
         -> std::expected<Square, string>
     {
         if (input.size() != 2uz)

@@ -20,9 +20,14 @@
 #pragma once
 
 #include <functional>
+#include <magic_enum/magic_enum.hpp>
+#include <ranges>
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <type_traits>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -77,6 +82,9 @@ struct Option {
      */
     [[nodiscard]] virtual auto get_default_value_variant() const -> Variant = 0;
 
+    /** Resets the option's value to the default. */
+    virtual void reset_to_default_value() = 0;
+
     /** Will be called with everything in the "setoption" command after the option name.
         This is typically not called directly by user code.
      */
@@ -111,6 +119,8 @@ struct BoolOption final : Option {
     [[nodiscard]] auto get_default_value() const noexcept -> bool { return optionDefault; }
 
     [[nodiscard]] auto get_default_value_variant() const -> Variant override { return optionDefault; }
+
+    void reset_to_default_value() override { value = optionDefault; }
 
     [[nodiscard]] auto get_name() const noexcept -> string_view override { return optionName; }
 
@@ -165,6 +175,8 @@ struct IntOption final : Option {
 
     [[nodiscard]] auto get_default_value_variant() const -> Variant override { return optionDefault; }
 
+    void reset_to_default_value() override { value = optionDefault; }
+
     [[nodiscard]] auto get_name() const noexcept -> string_view override { return optionName; }
 
     [[nodiscard]] auto get_declaration_string() const -> string override;
@@ -193,8 +205,9 @@ private:
 /** A multiple-choice option that can have one of several predefined string values.
 
     @ingroup uci
+    @see EnumOption
  */
-struct ComboOption final : Option {
+struct ComboOption : Option {
     using Value    = string_view;
     using Callback = std::function<void(string_view)>;
 
@@ -218,6 +231,8 @@ struct ComboOption final : Option {
 
     [[nodiscard]] auto get_default_value_variant() const -> Variant override { return get_default_value(); }
 
+    void reset_to_default_value() override { value = optionDefault; }
+
     [[nodiscard]] auto get_name() const noexcept -> string_view override { return optionName; }
 
     [[nodiscard]] auto get_declaration_string() const -> string override;
@@ -227,6 +242,13 @@ struct ComboOption final : Option {
     [[nodiscard]] auto get_help() const noexcept -> string_view override { return help; }
 
     void handle_setvalue(string_view arguments) override;
+
+    /** Returns the possible value strings that the combo option may be assigned to. */
+    [[nodiscard]] auto get_possible_values() const noexcept
+        -> std::span<const string>
+    {
+        return possibleValues;
+    }
 
 private:
     string optionName;
@@ -240,6 +262,25 @@ private:
     string help;
 
     Callback onChange { [](string_view) { } };
+};
+
+/** This simple concept matches any enumeration type. */
+template <typename T>
+concept Enum = std::is_enum_v<T>;
+
+/** A ComboOption with options for each value of an enum.
+
+    @ingroup uci
+    @see ComboOption
+ */
+template <Enum T>
+struct EnumOption final : ComboOption {
+    /** Creates an enum option. */
+    EnumOption(
+        string name, T defaultValue, string helpString);
+
+    /** Returns the option's current value as an enum. */
+    [[nodiscard]] auto get_enum_value() const -> T;
 };
 
 /** An option that can have any arbitrary string value.
@@ -270,7 +311,9 @@ struct StringOption final : Option {
 
     [[nodiscard]] auto get_value_variant() const -> Variant override { return get_value(); }
 
-    [[nodiscard]] auto get_default_value_variant() const -> Variant override { return string_view { }; }
+    [[nodiscard]] auto get_default_value_variant() const -> Variant override { return optionDefault; }
+
+    void reset_to_default_value() override { value = optionDefault; }
 
     [[nodiscard]] auto get_name() const noexcept -> string_view override { return optionName; }
 
@@ -285,7 +328,9 @@ struct StringOption final : Option {
 private:
     string optionName;
 
-    string value;
+    string optionDefault;
+
+    string value { optionDefault };
 
     string help;
 
@@ -308,6 +353,9 @@ struct Action final : Option {
 
     [[nodiscard]] auto get_value_variant() const -> Variant override { throw_value_error(); }
     [[nodiscard]] auto get_default_value_variant() const -> Variant override { throw_value_error(); }
+
+    /** Does nothing. */
+    void reset_to_default_value() override { }
 
     [[nodiscard]] auto get_name() const noexcept -> string_view override { return optionName; }
 
@@ -333,5 +381,52 @@ private:
 
     string help;
 };
+
+/*
+                         ___                           ,--,
+      ,---,            ,--.'|_                ,--,   ,--.'|
+    ,---.'|            |  | :,'             ,--.'|   |  | :
+    |   | :            :  : ' :             |  |,    :  : '    .--.--.
+    |   | |   ,---.  .;__,'  /    ,--.--.   `--'_    |  ' |   /  /    '
+  ,--.__| |  /     \ |  |   |    /       \  ,' ,'|   '  | |  |  :  /`./
+ /   ,'   | /    /  |:__,'| :   .--.  .-. | '  | |   |  | :  |  :  ;_
+.   '  /  |.    ' / |  '  : |__  \__\/: . . |  | :   '  : |__ \  \    `.
+'   ; |:  |'   ;   /|  |  | '.'| ," .--.; | '  : |__ |  | '.'| `----.   \
+|   | '/  ''   |  / |  ;  :    ;/  /  ,.  | |  | '.'|;  :    ;/  /`--'  /__  ___  ___
+|   :    :||   :    |  |  ,   /;  :   .'   \;  :    ;|  ,   /'--'.     /  .\/  .\/  .\
+ \   \  /   \   \  /    ---`-' |  ,     .-./|  ,   /  ---`-'   `--'---'\  ; \  ; \  ; |
+  `----'     `----'             `--`---'     ---`-'                     `--" `--" `--"
+
+ */
+
+namespace detail {
+    template <Enum T>
+    [[nodiscard]] auto get_all_value_strings()
+        -> std::vector<string>
+    {
+        return magic_enum::enum_names<T>()
+             | std::views::transform([](const string_view str) { return string { str }; })
+             | std::ranges::to<std::vector>();
+    }
+} // namespace detail
+
+template <Enum T>
+EnumOption<T>::EnumOption(
+    string name, T defaultValue, string helpString)
+    : ComboOption {
+        std::move(name),
+        detail::get_all_value_strings<T>(),
+        std::string { magic_enum::enum_name(defaultValue) },
+        std::move(helpString)
+    }
+{
+}
+
+template <Enum T>
+auto EnumOption<T>::get_enum_value() const -> T
+{
+    return magic_enum::enum_cast<T>(get_value())
+        .value();
+}
 
 } // namespace chess::uci

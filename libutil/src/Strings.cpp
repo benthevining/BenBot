@@ -37,7 +37,7 @@ using std::string_view;
     return std::isspace(static_cast<unsigned char>(text)) == 0;
 }
 
-[[nodiscard, gnu::const]] auto index_of_first_space(const string_view text) -> size_t
+[[nodiscard, gnu::pure]] auto index_of_first_space(const string_view text) -> size_t
 {
     const auto it = std::ranges::find_if(text, is_non_whitespace);
 
@@ -48,7 +48,7 @@ using std::string_view;
         std::ranges::distance(text.begin(), it));
 }
 
-[[nodiscard, gnu::const]] auto index_of_last_space(const string_view text) -> size_t
+[[nodiscard, gnu::pure]] auto index_of_last_space(const string_view text) -> size_t
 {
     const auto it = std::ranges::find_if(
         std::views::reverse(text), is_non_whitespace);
@@ -60,7 +60,7 @@ using std::string_view;
         std::ranges::distance(text.begin(), it.base()));
 }
 
-[[nodiscard, gnu::const]] auto trim_start(const string_view text) noexcept -> string_view
+[[nodiscard, gnu::pure]] auto trim_start(const string_view text) noexcept -> string_view
 {
     const auto firstSpace = index_of_first_space(text);
 
@@ -70,7 +70,7 @@ using std::string_view;
     return text.substr(firstSpace);
 }
 
-[[nodiscard, gnu::const]] auto trim_end(const string_view text) -> string_view
+[[nodiscard, gnu::pure]] auto trim_end(const string_view text) -> string_view
 {
     const auto lastSpace = index_of_last_space(text);
 

@@ -30,10 +30,16 @@
 #include <libchess/moves/MoveGen.hpp>
 #include <limits>
 #include <optional>
+#include <string>
+#include <string_view>
 
 namespace chess::uci {
 struct GoCommandOptions;
 } // namespace chess::uci
+
+namespace chess::game {
+struct Position;
+} // namespace chess::game
 
 /** This namespace contains functions related to searching the
     move tree for the principal variation.
@@ -76,6 +82,19 @@ struct Options final {
 
     /** Search for mate in this many moves. */
     std::optional<size_t> mateIn;
+
+    /** The number of principal variations to search for and report.
+        If this is greater than 1, the search will find the N best lines.
+     */
+    size_t multiPV { 1uz };
+
+    /** Serializes these options to a string. */
+    [[nodiscard]] auto to_string() const -> std::string;
+
+    /** Deserializes options from a string. */
+    [[nodiscard]] static auto from_string(
+        std::string_view             text,
+        const chess::game::Position& currentPosition) -> Options;
 
     /** Translates the raw UCI "go" command options into this struct's fields. */
     [[nodiscard]] static auto from_libchess(

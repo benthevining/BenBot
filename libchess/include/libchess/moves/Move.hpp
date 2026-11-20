@@ -142,7 +142,7 @@ private:
     @ingroup moves
     @relates Move
  */
-[[nodiscard, gnu::const]] constexpr auto operator<=>(const Move& first, const Move& second) noexcept
+[[nodiscard, gnu::pure]] constexpr auto operator<=>(const Move& first, const Move& second) noexcept
     -> std::strong_ordering
 {
     return first.hash() <=> second.hash();

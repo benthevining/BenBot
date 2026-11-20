@@ -15,7 +15,7 @@
 #pragma once
 
 #ifndef LIBCHESS_ARM
-#    if defined(__arm__) or defined(__arm64__)
+#    if defined(__arm__) or defined(__arm64__) or defined(__aarch64__) or defined(_M_ARM) or defined(_M_ARM64)
 #        define LIBCHESS_ARM 1
 #    endif
 #endif

@@ -7,7 +7,7 @@ Include style is:
 #include <libbenbot/search/Search.hpp>
 ```
 
-## Design goals
+## Design
 
 This library avoids global state and encapsulates the resources needed to perform a search into a context object. Its interface aims to support both sequential playing of entire games, or one-off searches from a set position.
 

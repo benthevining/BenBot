@@ -20,6 +20,8 @@
 // Reverse futility pruning
 // Killer moves
 // Mate distance pruning
+// MultiPV
+// Static exchange evaluation
 
 #include "search/MoveOrdering.hpp"
 #include "search/TimeManagement.hpp"
@@ -33,6 +35,8 @@
 #include <libbenbot/data-structures/KillerMoves.hpp>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
+#include <libbenbot/eval/PieceSquareTables.hpp>
+#include <libbenbot/eval/SEE.hpp>
 #include <libbenbot/eval/Score.hpp>
 #include <libbenbot/search/Bounds.hpp>
 #include <libbenbot/search/Constants.hpp>
@@ -43,6 +47,7 @@
 #include <libutil/Threading.hpp>
 #include <optional>
 #include <utility>
+#include <vector>
 
 namespace ben_bot::search {
 
@@ -97,7 +102,8 @@ namespace {
             const Bounds bnd, const Position& pos,
             const size_t depthToSearch, const size_t ply,
             TranspositionTable& trans, Interrupter& inter, Stats& statsToUse,
-            PvList& parentPV, KillerMoves& killers)
+            PvList& parentPV, KillerMoves& killers,
+            const eval::PieceSquareTables& pst)
             : bounds { bnd }
             , position { pos }
             , depthLeft { depthToSearch }
@@ -106,6 +112,7 @@ namespace {
             , interrupter { inter }
             , stats { statsToUse }
             , killerMoves { killers }
+            , pieceSquareTables { pst }
             , pv { parentPV }
         {
         }
@@ -134,9 +141,11 @@ namespace {
 
             // check if this position has been searched before to at
             // least this depth and within these bounds for non-PV nodes
-            if (const auto value = transTable.probe_eval(position, depthLeft, bounds)) {
-                ++stats.transTableHits;
-                return Score::from_tt(value->first, plyFromRoot);
+            if constexpr (not PVNode) {
+                if (const auto value = transTable.probe_eval(position, depthLeft, bounds, plyFromRoot)) {
+                    ++stats.transTableHits;
+                    return { value->first };
+                }
             }
 
             if (position.is_draw()) {
@@ -156,7 +165,7 @@ namespace {
                 if (not inCheck) {
                     const auto margin = 80 * static_cast<int>(depthLeft);
 
-                    const auto staticEval = eval::evaluate(position);
+                    const auto staticEval = eval::evaluate(position, pieceSquareTables);
 
                     if (std::cmp_greater_equal(staticEval.value, bounds.beta.value + margin))
                         return staticEval;
@@ -170,7 +179,7 @@ namespace {
 
                 transTable.store(
                     position, { .searchedDepth = depthLeft,
-                                  .eval        = score.to_tt(),
+                                  .eval        = score.to_tt(plyFromRoot),
                                   .evalType    = EvalType::Exact,
                                   .bestMove    = std::nullopt });
 
@@ -191,7 +200,7 @@ namespace {
 
                 const auto eval = [this, move, foundPV = bestMove.has_value()] {
                     if (depthLeft == 0uz)
-                        return -recurse(move).quiescence();
+                        return -recurse(move).quiescence<PVNode>();
 
                     if (not foundPV)
                         return -recurse(move).alpha_beta<PVNode>();
@@ -214,9 +223,16 @@ namespace {
                     return { };
 
                 if (eval >= bounds.beta) {
+                    // mate distance pruning can lower beta to the exact mate score, so
+                    // a mating move found in a PV node causes a cutoff here, and must
+                    // still be recorded in the PV
+                    if constexpr (PVNode) {
+                        pv.update(move, childPV);
+                    }
+
                     transTable.store(
                         position, { .searchedDepth = depthLeft,
-                                      .eval        = bounds.beta.to_tt(),
+                                      .eval        = bounds.beta.to_tt(plyFromRoot),
                                       .evalType    = EvalType::Beta,
                                       .bestMove    = bestMove });
 
@@ -241,7 +257,7 @@ namespace {
 
             transTable.store(
                 position, { .searchedDepth = depthLeft,
-                              .eval        = bounds.alpha.to_tt(),
+                              .eval        = bounds.alpha.to_tt(plyFromRoot),
                               .evalType    = evalType,
                               .bestMove    = bestMove });
 
@@ -251,6 +267,7 @@ namespace {
     private:
         // searches only captures, with no depth limit, to try to
         // improve the stability of the static evaluation function
+        template <bool PVNode>
         [[nodiscard]] auto quiescence() -> Score
         {
             if (interrupter.should_abort(plyFromRoot) or position.is_draw())
@@ -266,7 +283,7 @@ namespace {
             if (position.is_checkmate())
                 return Score::mate(plyFromRoot);
 
-            auto evaluation = eval::evaluate(position);
+            auto evaluation = eval::evaluate(position, pieceSquareTables);
 
             ++stats.staticEvals;
 
@@ -282,10 +299,20 @@ namespace {
 
             detail::order_moves_for_q_search(position, moves);
 
+            const bool inCheck = position.is_check();
+
             for (const auto move : moves) {
                 assert(position.is_capture(move));
 
-                evaluation = -(recurse(move).quiescence());
+                // skip captures that lose material once all recaptures are played out
+                if (not inCheck and eval::see(position, move) < 0)
+                    continue;
+
+                if constexpr (PVNode) {
+                    childPV.reset();
+                }
+
+                evaluation = -(recurse(move).quiescence<PVNode>());
 
                 ++stats.nodesSearched;
 
@@ -293,11 +320,23 @@ namespace {
                     return { };
 
                 if (evaluation >= bounds.beta) {
+                    // as in alpha_beta(), a mating capture may cause a cutoff
+                    // here, and must still be recorded in the PV
+                    if constexpr (PVNode) {
+                        pv.update(move, childPV);
+                    }
+
                     ++stats.betaCutoffs;
                     return bounds.beta;
                 }
 
-                bounds.alpha = std::max(bounds.alpha, evaluation);
+                if (evaluation > bounds.alpha) {
+                    bounds.alpha = evaluation;
+
+                    if constexpr (PVNode) {
+                        pv.update(move, childPV);
+                    }
+                }
             }
 
             return bounds.alpha;
@@ -309,7 +348,7 @@ namespace {
                 after_move(position, move),
                 depthLeft > 0uz ? depthLeft - 1uz : 0uz,
                 plyFromRoot + 1uz,
-                transTable, interrupter, stats, childPV, killerMoves };
+                transTable, interrupter, stats, childPV, killerMoves, pieceSquareTables };
         }
 
         Bounds bounds;
@@ -330,50 +369,54 @@ namespace {
 
         PvList& pv; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
+        const eval::PieceSquareTables& pieceSquareTables; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
+
         PvList childPV;
     };
 
     struct [[nodiscard]] RootSearchResult final {
-        MoveList     pv;
-        Score        bestScore;
-        Stats        stats;
-        milliseconds duration { 0 };
+        Position                  rootPosition;
+        MoveList                  pv;
+        Score                     bestScore;
+        std::vector<Result::Line> otherLines; // only used in MultiPV mode
+        Stats                     stats;
+        milliseconds              duration { 0 };
 
         [[nodiscard]] auto to_cb_result(
-            const size_t depth, const size_t hashfull) const noexcept -> Result
+            const size_t depth, const size_t hashfull) const -> Result
         {
-            return { .duration          = duration,
+            return {
+                .position               = rootPosition,
+                .duration               = duration,
                 .depth                  = depth,
                 .qDepth                 = stats.qDepth,
                 .score                  = bestScore,
                 .pv                     = pv,
+                .otherLines             = otherLines,
                 .nodesSearched          = stats.nodesSearched,
                 .transpositionTableHits = stats.transTableHits,
                 .betaCutoffs            = stats.betaCutoffs,
                 .staticEvals            = stats.staticEvals,
                 .mdpCutoffs             = stats.mdpCutoffs,
-                .hashfull               = hashfull };
+                .hashfull               = hashfull
+            };
         }
     };
 
-    [[nodiscard]] auto root_search(
-        const size_t        depth,
-        Options&            options,
-        const Position&     position,
-        TranspositionTable& transTable,
-        Interrupter&        interrupter,
-        KillerMoves&        killerMoves,
-        const Callbacks&    callbacks)
-        -> RootSearchResult
+    // searches all the root moves, except for the excluded moves, to find the best line
+    [[nodiscard]] auto search_root_line(
+        const size_t                   depth,
+        const Options&                 options,
+        const MoveList&                excludedMoves,
+        const Position&                position,
+        TranspositionTable&            transTable,
+        Interrupter&                   interrupter,
+        KillerMoves&                   killerMoves,
+        const eval::PieceSquareTables& pst,
+        const Callbacks&               callbacks,
+        Stats&                         stats)
+        -> Result::Line
     {
-        const Timer timer;
-
-        killerMoves.clear();
-
-        detail::order_moves_for_search(
-            position, options.movesToSearch, transTable, { });
-
-        Stats    stats;
         Bounds   bounds;
         MoveList pv;
 
@@ -381,13 +424,16 @@ namespace {
         auto moveIdx = 0uz;
 
         for (const auto move : options.movesToSearch) {
+            if (std::ranges::find(excludedMoves, move) != excludedMoves.end())
+                continue;
+
             callbacks.root_move(move, moveIdx++);
 
             PvList childPV;
 
-            auto create_context = [depth, &transTable, &interrupter, &stats, &childPV, &killerMoves](const Bounds boundsToUse, const Position& pos) {
+            auto create_context = [depth, &transTable, &interrupter, &stats, &childPV, &killerMoves, &pst](const Bounds boundsToUse, const Position& pos) {
                 return AlphaBetaContext {
-                    boundsToUse, pos, depth, 1uz, transTable, interrupter, stats, childPV, killerMoves
+                    boundsToUse, pos, depth, 1uz, transTable, interrupter, stats, childPV, killerMoves, pst
                 };
             };
 
@@ -421,6 +467,8 @@ namespace {
 
                 childPV.to_movelist(pv);
 
+                killerMoves.store(0uz, move);
+
                 foundPV = true;
             }
 
@@ -429,11 +477,59 @@ namespace {
         }
 
         return {
-            .pv        = pv,
-            .bestScore = bounds.alpha,
-            .stats     = stats,
-            .duration  = timer.get_duration()
+            .score = bounds.alpha,
+            .pv    = pv
         };
+    }
+
+    [[nodiscard]] auto root_search(
+        const size_t                   depth,
+        Options&                       options,
+        const Position&                position,
+        TranspositionTable&            transTable,
+        Interrupter&                   interrupter,
+        KillerMoves&                   killerMoves,
+        const eval::PieceSquareTables& pst,
+        const Callbacks&               callbacks)
+        -> RootSearchResult
+    {
+        const Timer timer;
+
+        killerMoves.clear();
+
+        detail::order_moves_for_search(
+            position, options.movesToSearch, transTable, killerMoves.get(0uz));
+
+        RootSearchResult result;
+
+        result.rootPosition = position;
+
+        // in MultiPV mode, we search the root moves once for each line, each time
+        // excluding the first moves of the lines that have already been found
+        const auto numLines = std::clamp(options.multiPV, 1uz, options.movesToSearch.size());
+
+        MoveList excludedMoves;
+
+        for (auto lineIdx = 0uz; lineIdx < numLines; ++lineIdx) {
+            auto line = search_root_line(
+                depth, options, excludedMoves, position, transTable, interrupter, killerMoves, pst, callbacks, result.stats);
+
+            if (interrupter.was_aborted() or line.pv.empty())
+                break;
+
+            excludedMoves.emplace_back(line.pv.front());
+
+            if (lineIdx == 0uz) {
+                result.pv        = std::move(line.pv);
+                result.bestScore = line.score;
+            } else {
+                result.otherLines.emplace_back(std::move(line));
+            }
+        }
+
+        result.duration = timer.get_duration();
+
+        return result;
     }
 
     using std::memory_order;
@@ -475,6 +571,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
     if (options.movesToSearch.empty()) {
         chess::moves::generate(position, std::back_inserter(options.movesToSearch));
 
+        // we shouldn't have been given a checkmated position to search
         assert(not options.movesToSearch.empty());
     }
 
@@ -485,22 +582,27 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
     // iterative deepening
     auto depth { 1uz };
 
-    while (depth <= options.depth) {
+    // the last depth that was fully searched, which is the depth we report
+    auto completedDepth { 0uz };
+
+    while (options.infinite or pondering.load(memory_order::acquire) or depth <= options.depth) {
         if (interrupter.should_abort(0uz))
             break;
 
         const auto res = root_search(
-            depth, options, position, transTable, interrupter, killerMoves, callbacks);
+            depth, options, position, transTable, interrupter, killerMoves, pieceSquareTables, callbacks);
 
         if (interrupter.was_aborted())
             break;
 
-        result = res;
+        result         = res;
+        completedDepth = depth;
 
         totalNodesSearched += result.stats.nodesSearched;
 
         interrupter.iteration_completed();
 
+        // check if we should abort the search
         if (not(options.infinite or pondering.load(memory_order::acquire))) {
             // check "mate in X" search bound
             if (options.mateIn.has_value() and result.bestScore.is_mate()) {
@@ -508,6 +610,12 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
                     result.bestScore.ply_to_mate() <= targetPliesToMate)
                     break;
             }
+
+            // if we've found a forced mate within the search depth, a deeper
+            // iteration can't find a shorter one, so don't keep searching
+            if (result.bestScore.is_winning_mate()
+                and result.bestScore.ply_to_mate() <= depth)
+                break;
 
             // only 1 legal move, don't do a deeper iteration
             if (options.movesToSearch.size() == 1uz) {
@@ -531,7 +639,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         // in the infinite case, we do allow this repetition because we want to print the
         // final output before we're going to spin, then the stop command will print the
         // final info again and the bestmove
-        if (depth < options.depth or options.infinite) {
+        if (depth < options.depth or options.infinite or pondering.load(memory_order::acquire)) {
             callbacks.iteration_complete(
                 result.to_cb_result(depth, transTable.hashfull()));
         }
@@ -539,29 +647,26 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         ++depth;
     } // iterative deepening loop end
 
-    // we want to report the last completed depth
-    --depth;
-
     // when in ponder mode, we don't want to exit the search
     // until we've received either a stop or ponderhit command
     if (pondering.load(memory_order::acquire)) {
-        util::progressive_backoff([this] {
+        util::progressive_backoff([this]() noexcept {
             return exitFlag.load(memory_order::acquire)
                 or not pondering.load(memory_order::acquire);
         });
     } else if (options.infinite) {
-        util::progressive_backoff([this] {
+        util::progressive_backoff([this]() noexcept {
             return exitFlag.load(memory_order::acquire);
         });
     }
 
     callbacks.search_complete(
-        result.to_cb_result(depth, transTable.hashfull()));
+        result.to_cb_result(completedDepth, transTable.hashfull()));
 }
 
 void Context::wait() const
 {
-    util::progressive_backoff([this] {
+    util::progressive_backoff([this]() noexcept {
         return not activeFlag.load(memory_order::relaxed);
     });
 }

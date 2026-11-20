@@ -16,14 +16,14 @@ AI-generated code is not accepted and will not be accepted into this repository.
 * If a function returns a value, use trailing return types.
 * Always prefer standard library algorithms or range-based for loops over raw `for` loops whenever possible.
 * Prefer to use `std::expected` for error handling instead of throwing exceptions.
-* When working with monadic objects such as `std::optional` or `std::expected`, prefer to use the monadic operations over checking `has_value()` whenever possible.
-* Avoid lambda capture defaults. Always explicitly capture everything a lambda needs; this forces you to be more explicit about references vs. copies and makes it obvious what objects are used in the lambda.
+* When working with monadic objects such as `std::optional` or `std::expected`, prefer to use the monadic operations over checking `has_value()` whenever possible. If passing a function pointer instead of a lambda is possible, prefer this.
+* Avoid lambda capture defaults. Always explicitly capture everything a lambda needs; this forces you to be more explicit about references vs. copies and makes it obvious what objects are used in the lambda (which makes lifetimes more explicit).
 * Prefer to use standard library mechanisms over reinventing the wheel.
 * Always prefer brackets for initialization.
 For example, a constructor init list:
 ```cpp
 MyStruct::MyStruct(const Foo& obj)
-: member{ obj }
+    : member { obj }
 {}
 ```
 or a local variable:

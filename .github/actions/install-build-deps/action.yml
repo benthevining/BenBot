@@ -1,0 +1,50 @@
+# ======================================================================================
+#
+# ░▒▓███████▓▒░░▒▓████████▓▒░▒▓███████▓▒░       ░▒▓███████▓▒░ ░▒▓██████▓▒░▒▓████████▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓███████▓▒░░▒▓██████▓▒░ ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓███████▓▒░░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░ ░▒▓██████▓▒░  ░▒▓█▓▒░
+#
+# ======================================================================================
+
+name: install_build_deps
+description: Installs dependencies needed for building
+
+inputs:
+  cmake_preset:
+    description: CMake preset to use
+    required: false
+    default: gcc
+
+runs:
+  using: "composite"
+  steps:
+  - name: Install libc++
+    if: runner.os == 'Linux' && inputs.cmake_preset == 'clang'
+    shell: bash
+    run: |
+      sudo apt-get update
+      cat linux-clang-dependencies.txt | xargs sudo apt-get install -y
+    working-directory: ${{ github.action_path }}
+
+      # TODO: ensure install of runtime libraries for sanitizers, set LD_LIBRARY_PATH
+  - name: Install Clang21
+    if: runner.os == 'Linux' && inputs.cmake_preset == 'clang'
+    uses: aminya/setup-cpp@1f17f92d6a52bfcb1a25348e2c526c2e5cbb1134     # v1.8.0
+    with:
+      llvm: 21
+      clang: 21
+
+    # the MSVC STL on newer Windows runner images requires Clang 22+, but the runners still ship Clang 20
+  - name: Install Clang22 (Windows)
+    if: runner.os == 'Windows' && inputs.cmake_preset == 'clang'
+    shell: pwsh
+    run: |
+      choco upgrade llvm --version=22.1.8 -y --no-progress
+      clang++ --version
+
+  - name: Install CMake 4.0
+    uses: lukka/get-cmake@ea83089aa35e08e459464341fe24ad024ee2466f     # v4.3.1

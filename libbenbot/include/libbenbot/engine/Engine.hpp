@@ -24,6 +24,8 @@
 #include <functional>
 #include <libbenbot/search/Thread.hpp>
 #include <libchess/game/Position.hpp>
+#include <libchess/moves/MoveGen.hpp>
+#include <libchess/notation/MoveFormats.hpp>
 #include <libchess/uci/EngineBase.hpp>
 #include <libchess/uci/Options.hpp>
 #include <span>
@@ -36,17 +38,26 @@ struct GoCommandOptions;
 
 namespace ben_bot {
 
+namespace search {
+    struct Options;
+} // namespace search
+
+namespace eval {
+    struct PieceSquareTables;
+} // namespace eval
+
 namespace uci = chess::uci;
 
 using chess::game::Position;
 using chess::moves::Move;
+using chess::notation::MoveFormat;
 using std::string_view;
 using uci::EngineCommand;
 
-/** The ``ben-bot`` UCI engine class.
+/** The BenBot UCI engine class.
     @ingroup libbenbot
  */
-class [[nodiscard]] Engine final : public uci::EngineBase {
+class [[nodiscard]] Engine : public uci::EngineBase {
 public:
     Engine() = default;
 
@@ -61,15 +72,66 @@ public:
     /** Loads the engine's state from a configuration file at the given path. */
     void read_config_file(const std::filesystem::path& file);
 
+    /** Saves the engine's state to a string. */
+    [[nodiscard]] auto state_to_string() const -> std::string;
+
+    /** Restores the engine's state from a stringified version. */
+    void restore_state_from_string(string_view state);
+
+    /** Sets the options to be used for the next search. */
+    void set_search_options(const search::Options& opts) { searcher.context.set_options(opts); }
+
+    /** Returns the engine's current search parameters, set by the last go command. */
+    [[nodiscard]] auto get_search_options() const noexcept -> const search::Options&
+    {
+        return searcher.context.get_options();
+    }
+
+    /** Starts a search with the specified options. */
+    void go(const search::Options& opts);
+
+    /** Returns the move format being used to pretty-print moves. */
+    [[nodiscard]] auto get_pretty_print_move_format() const -> MoveFormat
+    {
+        return moveFormat.get_enum_value();
+    }
+
+    /** Pretty-prints a move using the engine's current settings. */
+    [[nodiscard]] auto pretty_print_move(
+        Move move, const Position& position) const -> std::string;
+
+    /** Returns the engine's current piece square tables. */
+    [[nodiscard]] auto get_piece_square_tables() const -> const eval::PieceSquareTables&
+    {
+        return searcher.context.get_piece_square_tables();
+    }
+
+    /** Sets the engine's piece square tables. */
+    void set_piece_square_tables(
+        const eval::PieceSquareTables& tables)
+    {
+        searcher.context.set_piece_square_tables(tables);
+    }
+
+protected:
+    /** This function is used to initialize the search context's result callbacks.
+        The default implementation returns either a console pretty printer or a
+        UCI printer depending on the value of the pretty printing parameter, but
+        other engine use cases can override this to return other sets of callbacks.
+     */
+    [[nodiscard]] virtual auto create_search_callbacks() -> search::Callbacks;
+
 private:
     [[nodiscard]] auto get_name() const -> std::string override;
     [[nodiscard]] auto get_author() const -> string_view override { return "Ben Vining"; }
 
     void new_game(bool firstCall) override;
 
-    void set_position(const Position& pos) override { searcher.context.set_position(pos); }
+    void position_changed(const Position& pos) override { searcher.context.set_position(pos); }
 
     void go(const uci::GoCommandOptions& opts) override;
+
+    void go_internal(search::Options opts);
 
     void abort_search() override { searcher.context.abort(); }
 
@@ -101,9 +163,7 @@ private:
     void print_options();
     void print_current_position(string_view arguments) const;
 
-    void set_pretty_printing(bool shouldPrettyPrint);
-
-    [[nodiscard]] auto pretty_print_move(Move move) const -> std::string;
+    void init_search_callbacks();
 
     static void print_compiler_info();
 
@@ -112,7 +172,8 @@ private:
     void write_config_file(string_view arg) const;
     void read_config_file(string_view arg);
 
-    [[nodiscard]] static auto create_move_format_option() -> uci::ComboOption;
+    void write_pst_file(string_view arg) const;
+    void read_pst_file(string_view arg);
 
     void resize_transposition_table(const size_t sizeMB) override
     {
@@ -147,6 +208,11 @@ private:
         "Extra overhead time subtracted from search time (in ms). Increase this if engine loses on time."
     };
 
+    uci::IntOption multiPV {
+        "MultiPV", 1, static_cast<int>(chess::moves::MAX_MOVES), 1,
+        "Number of best lines to search for and report."
+    };
+
     uci::StringOption logFile {
         "Debug Log File", "<empty>",
         "If not empty, engine I/O will be mirrored to this file.",
@@ -157,10 +223,20 @@ private:
         "Pretty Print",
         false,
         "When on, search output is pretty-printed instead of printed in UCI format.",
-        [this](const bool usePretty) { set_pretty_printing(usePretty); }
+        [this]([[maybe_unused]] const bool usePretty) { init_search_callbacks(); }
     };
 
-    uci::ComboOption moveFormat { create_move_format_option() };
+    uci::EnumOption<MoveFormat> moveFormat {
+        "Move Format",
+        MoveFormat::Algebraic,
+        "Notation format used to display moves in pretty printing mode."
+    };
+
+    uci::BoolOption algFormatUTF8PieceType {
+        "Algebraic Format UTF8",
+        false,
+        "When on and printing algebraic move format, uses UTF8 glyphs for piece types."
+    };
 
     uci::BoolOption sanitizePositions {
         "Sanitize Positions",
@@ -169,11 +245,11 @@ private:
         [this](const bool sanitize) { set_sanitize_positions(sanitize); }
     };
 
-    std::array<uci::Option*, 7uz> options {
-        &clearTT, &threads, &moveOverhead, &logFile, &prettyPrintMode, &moveFormat, &sanitizePositions
+    std::array<uci::Option*, 9uz> options {
+        &clearTT, &threads, &moveOverhead, &multiPV, &logFile, &prettyPrintMode, &moveFormat, &algFormatUTF8PieceType, &sanitizePositions
     };
 
-    std::array<EngineCommand, 10uz> customCommands {
+    std::array<EngineCommand, 12uz> customCommands {
         EngineCommand {
             .name   = "showpos",
             .action = [this](const string_view args) { print_current_position(args); },
@@ -218,6 +294,16 @@ private:
             .name   = "readconfig",
             .action = [this](const string_view args) { read_config_file(args); },
             .description = "Loads engine state from a configuration file at the given path",
+            .argsHelp    = "<path>" },
+        EngineCommand {
+            .name   = "writepst",
+            .action = [this](const string_view args) { write_pst_file(args); },
+            .description = "Writes the engine's current piece square tables to a file",
+            .argsHelp    = "<path>" },
+        EngineCommand {
+            .name   = "readpst",
+            .action = [this](const string_view args) { read_pst_file(args); },
+            .description = "Loads piece square tables from a file",
             .argsHelp    = "<path>" },
         EngineCommand {
             .name   = "help",

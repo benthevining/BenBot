@@ -155,10 +155,12 @@ void Engine::print_current_position(const string_view arguments) const
     print_labeled_info("XFEN: ", chess::notation::to_fen(pos, false));
 
     print_labeled_info("Zobrist key: ", std::format("{}", pos.hash));
-    print_labeled_info("Static eval: ", std::format("{}", eval::evaluate(pos)));
+    print_labeled_info(
+        "Static eval: ",
+        std::format("{}", eval::evaluate(pos, searcher.context.get_piece_square_tables())));
 
     searcher.context.probe_transposition_table(pos)
-        .transform([this](const TTData& data) {
+        .transform([this, &pos](const TTData& data) {
             println("");
             print_labeled_info(
                 "TT hit: ",
@@ -167,7 +169,8 @@ void Engine::print_current_position(const string_view arguments) const
                     data.searchedDepth, data.eval,
                     magic_enum::enum_name(data.evalType),
                     eval::Score::from_tt(data.eval, 0uz),
-                    pretty_print_move(data.bestMove.value_or(Move { }))));
+                    pretty_print_move(
+                        data.bestMove.value_or(Move { }), pos)));
 
             return std::monostate { };
         });
@@ -188,15 +191,13 @@ void Engine::print_compiler_info()
         resources::get_build_config()));
 }
 
-auto Engine::pretty_print_move(const Move move) const -> std::string
+auto Engine::pretty_print_move(
+    const Move move, const Position& position) const -> std::string
 {
-    using chess::notation::MoveFormat;
-
-    return magic_enum::enum_cast<MoveFormat>(moveFormat.get_value())
-        .transform([this, move](const MoveFormat format) {
-            return format_move(format, searcher.context.get_position(), move);
-        })
-        .value_or(std::string { });
+    return format_move(
+        get_pretty_print_move_format(),
+        position, move,
+        algFormatUTF8PieceType.get_value());
 }
 
 } // namespace ben_bot

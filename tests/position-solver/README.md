@@ -1,6 +1,6 @@
 # Position solver
 
-This directory contains a set of EPD files describing a test position with a known best move. The Python script in this directory executes the `ben-bot` executable in the test position and checks that it outputs the best move.
+This directory contains a set of EPD files describing a test position with a known best move. The Python script in this directory executes the BenBot executable in the test position and checks that it outputs the best move.
 
 Each EPD entry must have the following operations:
 * `bm`: best move, in algebraic (SAN) notation

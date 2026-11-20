@@ -1,0 +1,3 @@
+graphviz
+perl
+texlive-binaries

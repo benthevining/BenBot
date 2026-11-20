@@ -110,7 +110,7 @@ TEST_CASE("Transposition table - probe_eval()", TAGS)
 
     TranspositionTable table;
 
-    REQUIRE_FALSE(table.probe_eval(startPos, DEPTH, BOUNDS));
+    REQUIRE_FALSE(table.probe_eval(startPos, DEPTH, BOUNDS, 0uz));
 
     SECTION("Exact eval stored")
     {
@@ -120,7 +120,7 @@ TEST_CASE("Transposition table - probe_eval()", TAGS)
                 .evalType    = EvalType::Exact,
                 .bestMove    = { } });
 
-        const auto probed = table.probe_eval(startPos, DEPTH, BOUNDS);
+        const auto probed = table.probe_eval(startPos, DEPTH, BOUNDS, 0uz);
 
         REQUIRE(probed);
 
@@ -145,7 +145,7 @@ TEST_CASE("Transposition table - probe_eval()", TAGS)
             auto thisBounds  = BOUNDS;
             thisBounds.alpha = { SEARCH_ALPHA };
 
-            const auto probed = table.probe_eval(startPos, DEPTH, thisBounds);
+            const auto probed = table.probe_eval(startPos, DEPTH, thisBounds, 0uz);
 
             REQUIRE(probed);
 
@@ -160,7 +160,7 @@ TEST_CASE("Transposition table - probe_eval()", TAGS)
             auto thisBounds  = BOUNDS;
             thisBounds.alpha = { EVAL - 1 };
 
-            REQUIRE_FALSE(table.probe_eval(startPos, DEPTH, thisBounds));
+            REQUIRE_FALSE(table.probe_eval(startPos, DEPTH, thisBounds, 0uz));
         }
     }
 
@@ -179,7 +179,7 @@ TEST_CASE("Transposition table - probe_eval()", TAGS)
             auto thisBounds = BOUNDS;
             thisBounds.beta = { SEARCH_BETA };
 
-            const auto probed = table.probe_eval(startPos, DEPTH, thisBounds);
+            const auto probed = table.probe_eval(startPos, DEPTH, thisBounds, 0uz);
 
             REQUIRE(probed);
 
@@ -194,7 +194,34 @@ TEST_CASE("Transposition table - probe_eval()", TAGS)
             auto thisBounds = BOUNDS;
             thisBounds.beta = { EVAL + 1 };
 
-            REQUIRE_FALSE(table.probe_eval(startPos, DEPTH, thisBounds));
+            REQUIRE_FALSE(table.probe_eval(startPos, DEPTH, thisBounds, 0uz));
+        }
+    }
+
+    SECTION("Mate score stored")
+    {
+        using ben_bot::eval::Score;
+
+        // mated 5 plies from the root, stored at a node 2 plies from the root
+        static constexpr auto MATE_PLY  = 5uz;
+        static constexpr auto STORE_PLY = 2uz;
+
+        table.store(startPos,
+            { .searchedDepth = DEPTH,
+                .eval        = Score::mate(MATE_PLY).to_tt(STORE_PLY),
+                .evalType    = EvalType::Exact,
+                .bestMove    = { } });
+
+        // probing the same position at a different ply preserves the distance to mate
+        for (auto probePly = 0uz; probePly <= 10uz; ++probePly) {
+            const auto probed = table.probe_eval(startPos, DEPTH, BOUNDS, probePly);
+
+            REQUIRE(probed);
+
+            const auto [eval, type] = probed.value();
+
+            REQUIRE(type == EvalType::Exact);
+            REQUIRE(Score { eval } == Score::mate(probePly + (MATE_PLY - STORE_PLY)));
         }
     }
 }

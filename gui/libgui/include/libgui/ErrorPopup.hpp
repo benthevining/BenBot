@@ -12,18 +12,40 @@
  * ======================================================================================
  */
 
+/** @file
+    This file defines the ErrorPopup struct.
+    @ingroup libgui
+ */
+
 #pragma once
 
-namespace chess::game {
-struct Position;
-} // namespace chess::game
+#include <string>
+#include <variant>
 
-namespace ben_bot::eval {
+namespace ben_bot::gui {
 
-using chess::game::Position;
+/** This struct provides stateful handling of a simple
+    popup showing an error message and an "ok" button.
 
-[[nodiscard, gnu::const]] auto score_piece_placement(
-    const Position& position, float endgameWeight)
-    -> int;
+    @ingroup libgui
+ */
+struct ErrorPopup final {
+    /** Creates an error popup with the given title. */
+    explicit ErrorPopup(const char* label);
 
-} // namespace ben_bot::eval
+    /** Dismisses the popup. */
+    auto set_success() -> std::monostate;
+
+    /** Opens the popup with the given error message. */
+    auto set_error(std::string&& message) -> std::monostate;
+
+    /** Renders the popup, if it is active. */
+    void render();
+
+private:
+    const char* popupLabel;
+
+    std::string errorMessage; // empty if no error occurred
+};
+
+} // namespace ben_bot::gui

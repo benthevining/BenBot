@@ -1,0 +1,51 @@
+/*
+ * ======================================================================================
+ *
+ * ░▒▓███████▓▒░░▒▓████████▓▒░▒▓███████▓▒░       ░▒▓███████▓▒░ ░▒▓██████▓▒░▒▓████████▓▒░
+ * ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+ * ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+ * ░▒▓███████▓▒░░▒▓██████▓▒░ ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+ * ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+ * ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+ * ░▒▓███████▓▒░░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░ ░▒▓██████▓▒░  ░▒▓█▓▒░
+ *
+ * ======================================================================================
+ */
+
+#pragma once
+
+/** @defgroup util Utilities
+    General utilities not specifically related to chess.
+ */
+
+/** @namespace util
+    This namespace contains generic utilities.
+    @ingroup util
+ */
+
+/** @defgroup libchess libchess
+    A general purpose chess library and generic chess engine backend.
+ */
+
+/** @namespace chess
+    This namespace contains the libchess chess library.
+    @ingroup libchess
+ */
+
+/** @defgroup libbenbot libbenbot
+    BenBot's evaluation and search logic, implemented as a library.
+ */
+
+/** @namespace ben_bot
+    This namespace contains all BenBot-specific code.
+    @ingroup libbenbot
+ */
+
+/** @defgroup libgui libgui
+    Implementation of the BenBot GUI app.
+ */
+
+/** @namespace ben_bot::gui
+    This namespace contains the implementation of the BenBot ImGUI app.
+    @ingroup libgui
+ */

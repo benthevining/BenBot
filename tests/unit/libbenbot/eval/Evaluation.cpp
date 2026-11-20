@@ -14,6 +14,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
+#include <libbenbot/eval/PieceSquareTables.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/notation/FEN.hpp>
 
@@ -25,13 +26,15 @@ using chess::notation::from_fen;
 
 TEST_CASE("Evaluation symmetry", TAGS)
 {
+    const auto pieceSquareTables = ben_bot::eval::PieceSquareTables::get_default();
+
     SECTION("Starting position")
     {
         static const Position startPos;
 
         REQUIRE(
-            evaluate(startPos)
-            == evaluate(flipped(startPos)));
+            evaluate(startPos, pieceSquareTables)
+            == evaluate(flipped(startPos), pieceSquareTables));
     }
 
     SECTION("Kiwipete")
@@ -39,8 +42,8 @@ TEST_CASE("Evaluation symmetry", TAGS)
         const auto position = from_fen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1").value();
 
         REQUIRE(
-            evaluate(position)
-            == evaluate(flipped(position)));
+            evaluate(position, pieceSquareTables)
+            == evaluate(flipped(position), pieceSquareTables));
     }
 
     SECTION("Mate in 1")
@@ -48,8 +51,8 @@ TEST_CASE("Evaluation symmetry", TAGS)
         const auto position = from_fen("r2qkb1r/ppp1p1pp/2n3p1/1b6/2BpP3/5Q2/PPPP1PPP/RNB1K1NR w KQkq - 0 1").value();
 
         REQUIRE(
-            evaluate(position)
-            == evaluate(flipped(position)));
+            evaluate(position, pieceSquareTables)
+            == evaluate(flipped(position), pieceSquareTables));
     }
 
     SECTION("Mate")
@@ -57,8 +60,8 @@ TEST_CASE("Evaluation symmetry", TAGS)
         const auto position = from_fen("8/8/8/8/8/8/3q4/2K1k3 w - - 0 1").value();
 
         REQUIRE(
-            evaluate(position)
-            == evaluate(flipped(position)));
+            evaluate(position, pieceSquareTables)
+            == evaluate(flipped(position), pieceSquareTables));
     }
 
     SECTION("Promoting")
@@ -66,7 +69,7 @@ TEST_CASE("Evaluation symmetry", TAGS)
         const auto position = from_fen("8/2P5/8/8/k1K5/8/8/8 w - - 0 1").value();
 
         REQUIRE(
-            evaluate(position)
-            == evaluate(flipped(position)));
+            evaluate(position, pieceSquareTables)
+            == evaluate(flipped(position), pieceSquareTables));
     }
 }

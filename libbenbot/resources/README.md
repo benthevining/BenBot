@@ -1,6 +1,6 @@
-# ben-bot resources
+# BenBot resources
 
-This directory defines the `ben-bot` engine's resources library.
+This directory defines `libbenbot`'s resources library.
 
 The main include is:
 ```cpp

@@ -73,7 +73,7 @@ namespace piece_values {
 
     @ingroup eval
  */
-[[nodiscard, gnu::const]] constexpr auto score_material(const Position& position) noexcept -> Value;
+[[nodiscard, gnu::pure]] constexpr auto score_material(const Position& position) noexcept -> Value;
 
 /*
                          ___                           ,--,
@@ -112,7 +112,7 @@ namespace piece_values {
 namespace detail {
 
     template <bool IncludePawns = true>
-    [[nodiscard, gnu::const]] constexpr auto count_material(
+    [[nodiscard, gnu::pure]] constexpr auto count_material(
         const chess::board::Pieces& pieces) noexcept
         -> Value
     {

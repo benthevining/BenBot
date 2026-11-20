@@ -12,6 +12,10 @@
 
 find_package (Doxygen 1.16.1 OPTIONAL_COMPONENTS dot)
 
+set_package_properties (
+    Doxygen PROPERTIES URL "https://www.doxygen.nl/" DESCRIPTION "Code documentation generator"
+)
+
 add_feature_info (benbot_docs DOXYGEN_FOUND "Building BenBot docs with Doxygen")
 
 if (NOT DOXYGEN_FOUND)
@@ -21,6 +25,8 @@ endif ()
 include ("${CMAKE_CURRENT_LIST_DIR}/DoxygenSettings.cmake")
 
 # inputs & filepaths
+set (DOXYGEN_PROJECT_ICON "${PROJECT_SOURCE_DIR}/gui/libgui/resources/res/pieces/Queen-White.svg")
+set (DOXYGEN_PROJECT_LOGO "${DOXYGEN_PROJECT_ICON}")
 set (DOXYGEN_USE_MDFILE_AS_MAINPAGE "${BenBot_SOURCE_DIR}/README.md")
 set (DOXYGEN_LAYOUT_FILE "${CMAKE_CURRENT_LIST_DIR}/DoxygenLayout.xml")
 set (DOXYGEN_CITE_BIB_FILES "${CMAKE_CURRENT_SOURCE_DIR}/references.bib")
@@ -29,19 +35,27 @@ set (DOXYGEN_FILE_PATTERNS *.hpp)
 set (DOXYGEN_INCLUDE_FILE_PATTERNS *.hpp)
 
 set (DOXYGEN_STRIP_FROM_PATH "${BenBot_SOURCE_DIR}")
-set (DOXYGEN_STRIP_FROM_INC_PATH
-     "${BenBot_SOURCE_DIR}/libchess/include" "${BenBot_SOURCE_DIR}/libbenbot/include"
-     "${BenBot_SOURCE_DIR}/ben-bot/include" "${BenBot_SOURCE_DIR}/ben-bot/resources/include"
-)
 
 set (DOXYGEN_OUTPUT_DIRECTORY "${BenBot_BINARY_DIR}/generated-docs")
 
 #
 
-get_target_property (libutil_headers ben_bot::libutil HEADER_SET)
-get_target_property (libchess_headers ben_bot::libchess HEADER_SET)
-get_target_property (libbenbot_headers ben_bot::libbenbot HEADER_SET)
-get_target_property (resource_headers ben_bot::resources HEADER_SET)
+unset (header_files)
+
+foreach (lib_name IN ITEMS libutil libchess libbenbot resources libgui gui_resources)
+    set (target_name "ben_bot::${lib_name}")
+
+    # the GUI targets may not exist
+    if (NOT TARGET "${target_name}")
+        continue ()
+    endif ()
+
+    get_target_property (lib_headers "${target_name}" HEADER_SET)
+    list (APPEND header_files ${lib_headers})
+
+    get_target_property (lib_include_base_dirs "${target_name}" HEADER_DIRS)
+    list (APPEND DOXYGEN_STRIP_FROM_INC_PATH ${lib_include_base_dirs})
+endforeach ()
 
 doxygen_add_docs (
     ben_bot_docs
@@ -49,12 +63,9 @@ doxygen_add_docs (
     "${DOXYGEN_CITE_BIB_FILES}"
     "${DOXYGEN_USE_MDFILE_AS_MAINPAGE}"
     "${CMAKE_CURRENT_LIST_DIR}/uci-spec.md"
-    "${CMAKE_CURRENT_LIST_DIR}/top-level-groups.txt"
+    "${CMAKE_CURRENT_LIST_DIR}/top-level-groups.hpp"
     "${CMAKE_CURRENT_LIST_DIR}/CodeStyle.md"
-    ${libutil_headers}
-    ${libchess_headers}
-    ${libbenbot_headers}
-    ${resource_headers}
+    ${header_files}
     WORKING_DIRECTORY "${BenBot_SOURCE_DIR}"
     COMMENT "Building Doxygen documentation..." USE_STAMP_FILE
 )

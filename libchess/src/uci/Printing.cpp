@@ -127,6 +127,28 @@ auto SearchInfo::Score::MateIn::moves() const noexcept -> int
     }();
 }
 
+auto SearchInfo::Score::get_type() const noexcept -> Type
+{
+    return std::visit(
+        util::Visitor {
+            [](const Centipawns centi) noexcept {
+                if (centi.value == 0)
+                    return Type::Equal;
+
+                if (centi.value > 0)
+                    return Type::Winning;
+
+                return Type::Losing;
+            },
+            [](const MateIn mate) {
+                if (mate.plies > 0)
+                    return Type::Winning;
+
+                return Type::Losing;
+            } },
+        value);
+}
+
 auto SearchInfo::get_nps() const noexcept -> size_t
 {
     using FractionalSeconds = util::FractionalDuration<std::chrono::seconds, double>;
@@ -149,8 +171,8 @@ namespace {
     {
         auto string = std::visit(
             util::Visitor {
-                [](const Score::Centipawns& centipawns) { return std::format("cp {}", centipawns.value); },
-                [](const Score::MateIn& mate) { return std::format("mate {}", mate.moves()); } },
+                [](const Score::Centipawns centipawns) { return std::format("cp {}", centipawns.value); },
+                [](const Score::MateIn mate) { return std::format("mate {}", mate.moves()); } },
             score.value);
 
         assert(not(score.lowerBound and score.upperBound));

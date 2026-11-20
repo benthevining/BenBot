@@ -199,27 +199,27 @@ private:
 /** Returns the binary AND of two bitboards.
     @relates Bitboard
  */
-[[nodiscard, gnu::const]] constexpr auto operator&(const Bitboard& lhs, const Bitboard& rhs) noexcept -> Bitboard;
+[[nodiscard, gnu::pure]] constexpr auto operator&(const Bitboard& lhs, const Bitboard& rhs) noexcept -> Bitboard;
 
 /** Returns the binary OR of two bitboards.
     @relates Bitboard
  */
-[[nodiscard, gnu::const]] constexpr auto operator|(const Bitboard& lhs, const Bitboard& rhs) noexcept -> Bitboard;
+[[nodiscard, gnu::pure]] constexpr auto operator|(const Bitboard& lhs, const Bitboard& rhs) noexcept -> Bitboard;
 
 /** Returns the binary XOR of two bitboards.
     @relates Bitboard
  */
-[[nodiscard, gnu::const]] constexpr auto operator^(const Bitboard& lhs, const Bitboard& rhs) noexcept -> Bitboard;
+[[nodiscard, gnu::pure]] constexpr auto operator^(const Bitboard& lhs, const Bitboard& rhs) noexcept -> Bitboard;
 
 /** Returns a copy of the bitboard with a binary shift left applied.
     @relates Bitboard
  */
-[[nodiscard, gnu::const]] constexpr auto operator<<(const Bitboard& board, size_t num) noexcept -> Bitboard;
+[[nodiscard, gnu::pure]] constexpr auto operator<<(const Bitboard& board, size_t num) noexcept -> Bitboard;
 
 /** Returns a copy of the bitboard with a binary shift right applied.
     @relates Bitboard
  */
-[[nodiscard, gnu::const]] constexpr auto operator>>(const Bitboard& board, size_t num) noexcept -> Bitboard;
+[[nodiscard, gnu::pure]] constexpr auto operator>>(const Bitboard& board, size_t num) noexcept -> Bitboard;
 
 /** Creates an ASCII representation of the given bitboard.
     The returned string is meant to be interpreted visually by a human, probably for debugging purposes.
@@ -408,16 +408,17 @@ namespace detail {
         using iterator_category = std::forward_iterator_tag;
         using iterator_concept  = std::forward_iterator_tag;
 
-        consteval BitboardIterator() = default;
+        consteval BitboardIterator() noexcept = default;
 
-        explicit constexpr BitboardIterator(const Bitboard& bitboard)
+        explicit constexpr BitboardIterator(const Bitboard& bitboard) noexcept
             : value { bitboard.to_int() }
         {
         }
 
         constexpr auto operator==(const BitboardIterator& other) const noexcept -> bool = default;
 
-        constexpr auto operator==([[maybe_unused]] std::default_sentinel_t sentinel) const noexcept -> bool
+        constexpr auto operator==(
+            [[maybe_unused]] std::default_sentinel_t sentinel) const noexcept -> bool
         {
             return std::cmp_equal(value, 0);
         }

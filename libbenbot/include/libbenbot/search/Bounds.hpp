@@ -101,27 +101,19 @@ constexpr auto Bounds::contains(const Score score) const noexcept -> bool
 
 constexpr auto Bounds::mate_distance_pruning(const size_t plyFromRoot) noexcept -> std::optional<Score>
 {
-    const auto mateScore = Score::mate(plyFromRoot);
+    // the worst we can do from here is be mated in this position,
+    // and the best we can do is deliver mate on our next move
+    const auto matedScore = Score::mate(plyFromRoot);
+    const auto mateScore  = -Score::mate(plyFromRoot + 1uz);
 
-    if (alpha.is_winning_mate()) {
-        if (mateScore < beta) {
-            beta = mateScore;
+    if (alpha < matedScore)
+        alpha = matedScore;
 
-            if (alpha >= mateScore)
-                return mateScore;
-        }
+    if (beta > mateScore)
+        beta = mateScore;
 
-        return std::nullopt;
-    }
-
-    if (alpha.is_losing_mate()) {
-        if (mateScore > alpha) {
-            alpha = mateScore;
-
-            if (beta <= mateScore)
-                return mateScore;
-        }
-    }
+    if (alpha >= beta)
+        return alpha;
 
     return std::nullopt;
 }

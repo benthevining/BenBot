@@ -1,4 +1,4 @@
-# ben-bot
+# BenBot
 
 This directory contains the `ben_bot` executable. This executable is a command line UCI engine.
 

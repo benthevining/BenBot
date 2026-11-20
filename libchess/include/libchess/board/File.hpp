@@ -73,12 +73,14 @@ enum class File : BitboardIndex {
 template <>
 struct std::formatter<chess::board::File> final {
     template <typename ParseContext>
+    // cppcheck-suppress functionStatic
     constexpr auto parse(ParseContext& ctx) -> typename ParseContext::iterator
     {
         return ctx.begin();
     }
 
     template <typename FormatContext>
+    // cppcheck-suppress functionStatic
     auto format(
         chess::board::File file, FormatContext& ctx) const -> typename FormatContext::iterator
     {

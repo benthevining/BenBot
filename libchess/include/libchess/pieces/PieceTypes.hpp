@@ -84,12 +84,14 @@ enum class Type : std::uint_fast8_t {
 template <>
 struct std::formatter<chess::pieces::Type> final {
     template <typename ParseContext>
+    // cppcheck-suppress functionStatic
     constexpr auto parse(ParseContext& ctx) -> typename ParseContext::iterator
     {
         return ctx.begin();
     }
 
     template <typename FormatContext>
+    // cppcheck-suppress functionStatic
     auto format(
         chess::pieces::Type piece, FormatContext& ctx) const
         -> typename FormatContext::iterator

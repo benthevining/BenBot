@@ -343,6 +343,11 @@ struct [[nodiscard]] Position final {
      */
     [[nodiscard]] auto is_illegal() const -> std::optional<std::string>;
 
+    /** If the en passant target square is set to a square that is not a potentially legal
+        en passant target, this function resets the EP square to ``nullopt``.
+     */
+    void sanitize_ep_square();
+
     /** Returns an empty position with none of the piece bitboards initialized.
         This is useful for tasks like parsing a FEN string, for example.
         After you've set up the position, don't forget to call ``whitePieces.refresh_occupied()``,
@@ -350,6 +355,14 @@ struct [[nodiscard]] Position final {
         all relevant cached state.
      */
     [[nodiscard]] static auto empty() -> Position;
+
+    /** Returns the number of times this position has occurred in the game history since
+        the last pawn move or capture.
+     */
+    [[nodiscard]] constexpr auto get_repetition_count() const noexcept -> size_t
+    {
+        return threefoldChecker.repetition_count();
+    }
 
 private:
     [[nodiscard]] auto is_side_in_check(Color side) const noexcept -> bool;
@@ -365,7 +378,7 @@ private:
     @ingroup game
     @see after_null_move()
  */
-[[nodiscard, gnu::const]] auto after_move(
+[[nodiscard, gnu::pure]] auto after_move(
     const Position& starting, Move move)
     -> Position;
 
@@ -375,7 +388,7 @@ private:
     @ingroup game
     @see after_move(), flipped()
  */
-[[nodiscard, gnu::const]] auto after_null_move(const Position& starting) -> Position;
+[[nodiscard, gnu::pure]] auto after_null_move(const Position& starting) -> Position;
 
 /** Returns a copy of the starting position with colors flipped.
 
@@ -383,7 +396,7 @@ private:
     @ingroup game
     @see after_null_move()
  */
-[[nodiscard, gnu::const]] auto flipped(const Position& starting) -> Position;
+[[nodiscard, gnu::pure]] auto flipped(const Position& starting) -> Position;
 
 /** Creates a UTF8 representation of the given position.
     The returned string is meant to be interpreted visually by a human, probably for debugging purposes.

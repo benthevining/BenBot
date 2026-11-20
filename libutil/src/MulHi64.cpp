@@ -75,26 +75,6 @@ auto mul_hi64(
 
 } // namespace util::math
 
-#elifdef _M_IA64
-
-#    include <intrin.h> // NOLINT(build/include)
-
-// https://learn.microsoft.com/en-gb/cpp/intrinsics/umul128
-// incorrectly say that _umul128 is available for ARM
-
-namespace util::math {
-
-auto mul_hi64(
-    const uint64_t first, const uint64_t second) noexcept
-    -> uint64_t
-{
-    unsigned __int64 highProduct { 0 };
-    _umul128(a, b, &highProduct);
-    return highProduct;
-}
-
-} // namespace util::math
-
 #else
 #    warning "No optimized version of mul_hi64() is available, using fallback"
 

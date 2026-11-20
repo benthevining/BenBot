@@ -42,7 +42,7 @@ using std::size_t;
     @see num_squares_attacked()
  */
 template <Color Side>
-[[nodiscard, gnu::const]] constexpr auto squares_attacked(
+[[nodiscard, gnu::pure]] constexpr auto squares_attacked(
     const Pieces& pieces, Bitboard targetSquares, Bitboard enemyPieces) noexcept
     -> bool;
 
@@ -56,7 +56,7 @@ template <Color Side>
     @see squares_attacked()
  */
 template <Color Side>
-[[nodiscard, gnu::const]] constexpr auto num_squares_attacked(
+[[nodiscard, gnu::pure]] constexpr auto num_squares_attacked(
     const Pieces& pieces, Bitboard targetSquares, Bitboard enemyPieces, bool includeKing = true) noexcept
     -> size_t;
 
@@ -100,8 +100,6 @@ constexpr auto squares_attacked(
 
     const auto friendlyPieces = pieces.occupied;
     const auto emptySquares   = (friendlyPieces | enemyPieces).inverse();
-
-    // TODO: could try replacing the pseudo-legal funcs with the magics funcs here
 
     if (const auto queenAttacks = pseudo_legal::queen(pieces.queens, emptySquares, friendlyPieces);
         (queenAttacks & targetSquares).any()) {

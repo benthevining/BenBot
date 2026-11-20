@@ -22,9 +22,15 @@
 #include <chrono>
 #include <cstddef> // IWYU pragma: keep - for size_t;
 #include <libbenbot/eval/Score.hpp>
+#include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <optional>
+#include <vector>
+
+namespace chess::notation {
+struct EPDPosition;
+} // namespace chess::notation
 
 namespace chess::uci::printing {
 struct SearchInfo;
@@ -32,6 +38,7 @@ struct SearchInfo;
 
 namespace ben_bot::search {
 
+using chess::game::Position;
 using chess::moves::Move;
 using chess::moves::MoveList;
 using std::chrono::milliseconds;
@@ -42,6 +49,18 @@ using std::size_t;
     on each iterative deepening iteration).
  */
 struct [[nodiscard]] Result final {
+    /** A single line found by the search. */
+    struct Line final {
+        /** The evaluation of the position resulting from playing this line's first move. */
+        eval::Score score;
+
+        /** The moves of this line. */
+        MoveList pv;
+    };
+
+    /** The root position that was searched. */
+    Position position;
+
     /** The total amount of time spent searching to produce this result.
         For depths greater than 1, this value is the duration of the entire
         search, including lower depths of the iterative deepening loop.
@@ -61,6 +80,12 @@ struct [[nodiscard]] Result final {
 
     /** The principal variation found during the search. */
     MoveList pv;
+
+    /** In MultiPV mode, the additional lines found by the search, ordered from best
+        to worst. These do not include the principal variation, which is always stored
+        in ``score`` and ``pv``. This is empty when not in MultiPV mode.
+     */
+    std::vector<Line> otherLines;
 
     /** The total number of nodes visited during this search. For depths greater
         than 1, this value includes nodes visited in shallower depths of the
@@ -88,10 +113,10 @@ struct [[nodiscard]] Result final {
     size_t hashfull { 0uz };
 
     /** Returns the best move found by this search. */
-    [[nodiscard]] Move best_move() const { return pv.front(); }
+    [[nodiscard]] auto best_move() const -> Move { return pv.front(); }
 
     /** Returns the ponder move found by this search, if one exists. */
-    [[nodiscard]] std::optional<Move> ponder_move() const
+    [[nodiscard]] auto ponder_move() const -> std::optional<Move>
     {
         if (pv.size() < 2uz)
             return std::nullopt;
@@ -99,11 +124,30 @@ struct [[nodiscard]] Result final {
         return pv.at(1uz);
     }
 
+    /** Returns the total number of lines in this result, including the principal variation. */
+    [[nodiscard]] auto num_lines() const noexcept -> size_t { return otherLines.size() + 1uz; }
+
     /** Typedef for the libchess type used for printing UCI-formatted output. */
     using LibchessResult = chess::uci::printing::SearchInfo;
 
-    /** Converts this object to the libchess type used for printing UCI-formatted output. */
-    [[nodiscard]] auto to_libchess(bool includeDebugInfo) const -> LibchessResult;
+    /** Converts this object to the libchess type used for printing UCI-formatted output.
+
+        @param includeDebugInfo If true, extra search statistics are included in the output.
+        @param lineIdx The index of the line to convert. Index 0 is the principal variation,
+        and indices greater than 0 refer to ``otherLines``. In MultiPV mode, the output's
+        ``multiPV`` field is set to the 1-based line number.
+
+        @see num_lines()
+     */
+    [[nodiscard]] auto to_libchess(bool includeDebugInfo, size_t lineIdx = 0uz) const -> LibchessResult;
+
+    /** Fills the EPD position's operations with the search results and statistics
+        from this result. All standard EPD operations that contain search-related
+        statistics and information that correspond to fields of this structure are
+        filled in or updated.
+     */
+    void fill_standard_epd_operations(
+        chess::notation::EPDPosition& position) const;
 };
 
 } // namespace ben_bot::search

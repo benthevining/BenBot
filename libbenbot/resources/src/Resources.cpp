@@ -19,21 +19,20 @@
 #include <string>
 #include <string_view>
 
-CMRC_DECLARE(ben_bot_resources_internal);
+CMRC_DECLARE(ben_bot_resources);
 
 namespace ben_bot::resources {
 
 using std::string_view;
 
 namespace {
-    [[nodiscard]] auto get_named_resource(const string_view name) -> string_view
+    [[nodiscard]] auto get_named_resource(
+        const string_view name) -> string_view
     {
-        const auto relPath = std::format("res/{}", name);
-
-        const auto file = cmrc::ben_bot_resources_internal::get_filesystem()
-                              .open(relPath);
-
-        return string_view { file };
+        return string_view {
+            cmrc::ben_bot_resources::get_filesystem()
+                .open(std::format("res/{}", name))
+        };
     }
 } // namespace
 
@@ -45,6 +44,11 @@ auto get_bench_epd_text() -> string_view
 auto get_ascii_logo() -> string_view
 {
     return get_named_resource("license_header.txt");
+}
+
+auto get_default_piece_square_tables() -> string_view
+{
+    return get_named_resource("piece_square_tables.json");
 }
 
 // the below functions are implemented this way because

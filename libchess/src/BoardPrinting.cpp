@@ -53,8 +53,9 @@ namespace {
     // Func is a callable that takes an argument of type Square
     // and must return the character to go inside that square,
     // or a space if it's empty
-    template <bool IncludeLabels, SquarePrinter Func>
-    [[nodiscard]] auto generate_board_string(Func getSquareText) -> string
+    template <bool IncludeLabels>
+    [[nodiscard]] auto generate_board_string(
+        SquarePrinter auto getSquareText) -> string
     {
         string result;
 

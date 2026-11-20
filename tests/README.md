@@ -8,4 +8,4 @@ Results are tracked via the [CDash dashboard](https://my.cdash.org/index.php?pro
 
 ### Options
 
-* `BENBOT_TESTS`: this directory is not entered by CMake unless this option is on. Defaults to off unless `BenBot` is the top-level CMake project.
+* `BUILD_TESTING`: this directory is not entered by CMake unless this option is on.

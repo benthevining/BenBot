@@ -24,7 +24,7 @@ namespace chess::board {
 using std::size_t;
 
 auto knight_distance(
-    const Square& first, const Square& second)
+    const Square first, const Square second)
     -> BitboardIndex
 {
     static constexpr std::array ndis {

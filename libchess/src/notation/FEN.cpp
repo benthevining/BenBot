@@ -30,7 +30,8 @@ namespace chess::notation {
 using pieces::Color;
 using std::size_t;
 
-auto to_fen(const Position& position, const bool alwaysWriteEPSqare) -> std::string
+auto to_fen(
+    const Position& position, const bool alwaysWriteEPSqare) -> std::string
 {
     std::string fen;
 

@@ -40,7 +40,8 @@ using moves::Move;
     @ingroup notation
     @see from_uci()
  */
-[[nodiscard]] auto to_uci(Move move) -> std::string;
+[[nodiscard]] auto to_uci(
+    Move move) -> std::string;
 
 /** Parses the UCI-format @cite Meyer-Kahlen_2006 algebraic notation string into a Move object.
     The current position is used to determine the type of the moved piece.

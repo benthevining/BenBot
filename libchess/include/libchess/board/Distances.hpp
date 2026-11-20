@@ -39,7 +39,7 @@ namespace chess::board {
     @relates Square
  */
 [[nodiscard, gnu::const]] constexpr auto file_distance(
-    const Square& first, const Square& second) noexcept
+    const Square first, const Square second) noexcept
     -> BitboardIndex;
 
 /** Returns as an integer the distance between the rank of the first square
@@ -51,7 +51,7 @@ namespace chess::board {
     @relates Square
  */
 [[nodiscard, gnu::const]] constexpr auto rank_distance(
-    const Square& first, const Square& second) noexcept
+    const Square first, const Square second) noexcept
     -> BitboardIndex;
 
 /** Returns true if two squares are on the same diagonal of the chessboard.
@@ -60,7 +60,7 @@ namespace chess::board {
     @relates Square
  */
 [[nodiscard, gnu::const]] constexpr auto are_on_same_diagonal(
-    const Square& first, const Square& second) noexcept
+    const Square first, const Square second) noexcept
     -> bool;
 
 /** Returns the Manhattan distance between the two squares.
@@ -76,7 +76,7 @@ namespace chess::board {
     @relates Square
  */
 [[nodiscard, gnu::const]] constexpr auto manhattan_distance(
-    const Square& first, const Square& second) noexcept
+    const Square first, const Square second) noexcept
     -> BitboardIndex;
 
 /** Returns the smallest Manhattan distance from the given square to any of the four central squares.
@@ -86,7 +86,7 @@ namespace chess::board {
     @relates Square
  */
 [[nodiscard, gnu::const]] constexpr auto center_manhattan_distance(
-    const Square& square) noexcept
+    const Square square) noexcept
     -> BitboardIndex;
 
 /** Returns the Chebyshev distance between the two squares.
@@ -101,7 +101,7 @@ namespace chess::board {
     @relates Square
  */
 [[nodiscard, gnu::const]] constexpr auto chebyshev_distance(
-    const Square& first, const Square& second) noexcept
+    const Square first, const Square second) noexcept
     -> BitboardIndex;
 
 /** Returns the knight distance between the two squares; that is, the number of moves a knight
@@ -112,7 +112,7 @@ namespace chess::board {
     @relates Square
  */
 [[nodiscard, gnu::const]] auto knight_distance(
-    const Square& first, const Square& second)
+    const Square first, const Square second)
     -> BitboardIndex;
 
 /// @}
@@ -135,7 +135,7 @@ namespace chess::board {
  */
 
 constexpr auto file_distance(
-    const Square& first, const Square& second) noexcept
+    const Square first, const Square second) noexcept
     -> BitboardIndex
 {
     const auto firstFile  = std::to_underlying(first.file);
@@ -147,7 +147,7 @@ constexpr auto file_distance(
 }
 
 constexpr auto rank_distance(
-    const Square& first, const Square& second) noexcept
+    const Square first, const Square second) noexcept
     -> BitboardIndex
 {
     const auto firstRank  = std::to_underlying(first.rank);
@@ -159,21 +159,21 @@ constexpr auto rank_distance(
 }
 
 constexpr auto are_on_same_diagonal(
-    const Square& first, const Square& second) noexcept
+    const Square first, const Square second) noexcept
     -> bool
 {
     return std::cmp_equal(file_distance(first, second), rank_distance(first, second));
 }
 
 constexpr auto manhattan_distance(
-    const Square& first, const Square& second) noexcept
+    const Square first, const Square second) noexcept
     -> BitboardIndex
 {
     return static_cast<BitboardIndex>(file_distance(first, second) + rank_distance(first, second));
 }
 
 constexpr auto center_manhattan_distance(
-    const Square& square) noexcept
+    const Square square) noexcept
     -> BitboardIndex
 {
     auto file = static_cast<int>(square.file);
@@ -186,7 +186,7 @@ constexpr auto center_manhattan_distance(
 }
 
 constexpr auto chebyshev_distance(
-    const Square& first, const Square& second) noexcept
+    const Square first, const Square second) noexcept
     -> BitboardIndex
 {
     const auto fileDist = file_distance(first, second);

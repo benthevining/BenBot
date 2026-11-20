@@ -1,0 +1,64 @@
+# ======================================================================================
+#
+# ░▒▓███████▓▒░░▒▓████████▓▒░▒▓███████▓▒░       ░▒▓███████▓▒░ ░▒▓██████▓▒░▒▓████████▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓███████▓▒░░▒▓██████▓▒░ ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓███████▓▒░░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░ ░▒▓██████▓▒░  ░▒▓█▓▒░
+#
+# ======================================================================================
+
+name: download_github_release
+description: Fetch a release from Github, download & extract the executable & add execution permissions
+
+inputs:
+  repository:
+    description: Github repository (<user>/<repo>)
+    required: true
+  file_filter:
+    description: Filename filter to apply to release artifacts
+    required: true
+  artifact_xtn:
+    description: File extension of the downloaded artifact
+    required: true
+  path_to_exec:
+    description: Relative path from the unzipped artifact where the executable file will be found
+    required: true
+
+outputs:
+  executable:
+    description: Path to the downloaded executable
+    value: ${{ steps.print_filename.outputs.executable }}
+
+runs:
+  using: "composite"
+
+  steps:
+  - name: Download release
+    id: download_release
+    uses: robinraju/release-downloader@daf26c55d821e836577a15f77d86ddc078948b05   # v1.12
+    with:
+      repository: ${{ inputs.repository}}
+      latest: true
+      fileName: ${{ inputs.file_filter }}
+      tarBall: false
+      zipBall: false
+      out-file-path: downloaded_release
+      extract: true
+
+  - name: Print executable filename
+    id: print_filename
+    shell: bash
+    run: |
+      tar_path=${{ fromJson(steps.download_release.outputs.downloaded_files)[0] }}
+      filename=$(basename "$tar_path" ".${{ inputs.artifact_xtn }}")
+      dirpath=$(dirname "$tar_path")
+      result="$dirpath/$filename/${{ inputs.path_to_exec }}"
+      echo "executable=$result" >> "$GITHUB_OUTPUT"
+
+  - name: Add execution permissions
+    shell: bash
+    run: |
+      chmod --preserve-root 777 ${{ steps.print_filename.outputs.executable }}
