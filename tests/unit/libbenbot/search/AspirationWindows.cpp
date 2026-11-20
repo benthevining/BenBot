@@ -89,6 +89,9 @@ TEST_CASE("Search - aspiration windows report valid results", TAGS)
 
     ctx.set_options(options);
 
+    // set_options() aborts any search in progress, so the flag needs to be cleared
+    ctx.reset_abort();
+
     ctx.search();
 
     // make sure we searched past the aspiration window's minimum depth
