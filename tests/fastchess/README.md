@@ -15,7 +15,14 @@ In CI, tagging a PR's title runs an SPRT test of the PR's head against its base 
 
 Adding a tag to the title of an existing PR (or switching to a different test type) starts the test; each new push restarts it.
 
+The PR tests are sharded across 4 runners, in rounds of about 40 minutes. Each shard plays games with a different opening order, without stopping at the SPRT bounds. After each round, the shards' pentanomial results from all the rounds so far are combined (by `.github/actions/run_sprt/CombineSPRTResults.py`), and the test stops if a bound has been reached. The test stops after 8 rounds even if it hasn't reached a bound.
+
 ## CMake
+
+### Options
+
+* `BENBOT_SPRT_SHARD`: if `ON`, the SPRT targets play games until they're stopped instead of stopping at the SPRT bounds, so that the results can be combined with other shards'. Defaults to `OFF`.
+* `BENBOT_SPRT_SEED`: seed for the SPRT targets' random opening order. If empty (the default), fastchess picks one.
 
 ### Targets
 
