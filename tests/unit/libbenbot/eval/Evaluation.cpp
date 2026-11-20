@@ -89,9 +89,10 @@ TEST_CASE("Evaluation - mobility", "[eval][evaluation][mobility]")
 
     SECTION("Bishop blocked in by its own pawns")
     {
-        // same material & king placement, but the bishop on c1 can't move in the first position
-        const auto trapped = from_fen("4k3/8/8/8/8/8/1P1P4/2B1K3 w - - 0 1").value();
-        const auto free    = from_fen("4k3/8/8/8/8/1P1P4/8/2B1K3 w - - 0 1").value();
+        // The only difference is the white bishop on c1 vs f1, which are mirrored squares, so
+        // all the other eval terms are the same. The bishop on c1 can't move.
+        const auto trapped = from_fen("2b4k/1p1p4/8/8/8/8/1P1P4/K1B5 w - - 0 1").value();
+        const auto free    = from_fen("2b4k/1p1p4/8/8/8/8/1P1P4/K4B2 w - - 0 1").value();
 
         REQUIRE(evaluate(trapped, pieceSquareTables) < evaluate(free, pieceSquareTables));
     }
