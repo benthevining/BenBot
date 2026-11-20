@@ -20,6 +20,15 @@ inputs:
   target_name:
     description: Name of the CMake target to build to invoke the SPRT test
     required: true
+  main_ref:
+    description: If use_main is true, the git ref to build as the baseline
+    required: false
+    default: main
+
+outputs:
+  summary_file:
+    description: Path to a Markdown file containing a summary of the SPRT results
+    value: ${{ github.workspace }}/logs/sprt/summary.md
 
 runs:
   using: "composite"
@@ -51,7 +60,7 @@ runs:
     if: inputs.use_main == 'true'
     uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd   # v6
     with:
-      ref: main
+      ref: ${{ inputs.main_ref }}
       path: ${{ github.workspace }}/tmp-main
 
   - name: Build main
@@ -102,5 +111,5 @@ runs:
 
   - name: Report results
     shell: bash
-    run: python3 ReportSPRTResults.py ${{ env.SPRT_OUTPUT_LOG }} >> $GITHUB_STEP_SUMMARY
+    run: python3 ReportSPRTResults.py ${{ env.SPRT_OUTPUT_LOG }} | tee ${{ github.workspace }}/logs/sprt/summary.md >> $GITHUB_STEP_SUMMARY
     working-directory: ${{ github.action_path }}

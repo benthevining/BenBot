@@ -8,6 +8,12 @@ SPRT testing works by playing a match between the previous ("baseline") build an
 
 None of these targets are run by CTest; SPRT testing should be invoked manually.
 
+In CI, tagging a PR's title runs an SPRT test of the PR's head against its base commit, and the results are posted as a PR comment:
+* `[sprt-gain]` or `[sprt]`: gainer bounds
+* `[sprt-nonreg]`: non-regression bounds (wins if the title has more than one tag)
+
+Adding a tag to the title of an existing PR (or switching between gainer and non-regression) starts the test; each new push restarts it.
+
 ## CMake
 
 ### Targets

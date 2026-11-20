@@ -49,15 +49,39 @@ def get_accepted() -> int:
     return int(RESULT_LINE[idx : idx + 1].strip())
 
 
+def get_final_results() -> str:
+    # fastchess prints a block starting with "Results of ..." each rating interval;
+    # the last one has the final Elo, LLR, game counts, etc.
+    start = None
+    for idx, line in enumerate(SPRT_OUTPUT):
+        if line.startswith("Results of"):
+            start = idx
+
+    if start is None:
+        return ""
+
+    block = []
+    for line in SPRT_OUTPUT[start:]:
+        if line.startswith("---"):
+            break
+        block.append(line.rstrip())
+
+    return "\n".join(block)
+
+
 elo0, elo1 = get_elos()
 
 test_type = "Non-regression" if elo0 < 0 else "Gainer"
 
 accepted = get_accepted()
 
-if accepted == 0:
-    print(f"{test_type} SPRT failed!")
-    sys.exit(1)
+passed = accepted != 0
 
-print(f"{test_type} SPRT passed!")
-sys.exit(0)
+print(f"{test_type} SPRT {'passed' if passed else 'failed'}!")
+
+final_results = get_final_results()
+
+if final_results:
+    print(f"\n```\n{final_results}\n```")
+
+sys.exit(0 if passed else 1)
