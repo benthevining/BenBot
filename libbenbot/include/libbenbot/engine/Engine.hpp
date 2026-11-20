@@ -20,6 +20,7 @@
 #pragma once
 
 #include <array>
+#include <expected>
 #include <filesystem>
 #include <functional>
 #include <libbenbot/search/Thread.hpp>
@@ -75,8 +76,12 @@ public:
     /** Saves the engine's state to a string. */
     [[nodiscard]] auto state_to_string() const -> std::string;
 
-    /** Restores the engine's state from a stringified version. */
-    void restore_state_from_string(string_view state);
+    /** Restores the engine's state from a stringified version.
+        Options that are missing from the saved state retain their current values,
+        and options with invalid saved values are skipped. Returns an error if the
+        state string could not be parsed at all.
+     */
+    auto restore_state_from_string(string_view state) -> std::expected<void, std::string>;
 
     /** Sets the options to be used for the next search. */
     void set_search_options(const search::Options& opts) { searcher.context.set_options(opts); }

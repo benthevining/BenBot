@@ -33,29 +33,49 @@ namespace {
     using std::chrono::milliseconds;
     using std::size_t;
 
+    struct TimeLimits final {
+        milliseconds soft;
+        milliseconds hard;
+    };
+
+    // number of moves we assume are left in the game if we aren't told
+    inline constexpr auto DEFAULT_MOVES_TO_GO { 30uz };
+
     [[nodiscard, gnu::const]] constexpr auto determine_search_time(
         const milliseconds                timeRemaining,
         const std::optional<milliseconds> increment,
-        const std::optional<size_t>       movesToNextTimeControl)
-        -> milliseconds
+        const std::optional<size_t>       movesToNextTimeControl,
+        const milliseconds                overhead)
+        -> TimeLimits
     {
+        // never plan to use more time than we have
+        const auto available = std::max(timeRemaining - overhead, milliseconds { 1 });
+
         const auto inc = increment.value_or(milliseconds { 0 });
 
-        const auto movesToGo = movesToNextTimeControl.value_or(40uz);
+        const auto movesToGo = static_cast<milliseconds::rep>(
+            std::max(movesToNextTimeControl.value_or(DEFAULT_MOVES_TO_GO), 1uz));
 
-        if (movesToGo <= 1uz)
-            return timeRemaining + inc;
+        // the soft limit is our share of the remaining time, plus most of the increment,
+        // but never more than half the clock (even if this is the last move before the time control)
+        const auto soft = std::min(
+            (available / movesToGo) + (inc * 3 / 4),
+            available / 2);
 
-        return milliseconds {
-            (static_cast<size_t>(timeRemaining.count()) / movesToGo)
-            + (static_cast<size_t>(inc.count()) / (movesToGo / 10uz))
-        };
+        // the hard limit lets an iteration that's already started run on for a while, but
+        // never past twice our share of the clock, or 3/4 of the clock (whichever is less)
+        const auto hard = std::max(
+            soft,
+            std::min({ soft * 3, available * 2 / movesToGo, available * 3 / 4 }));
+
+        return { .soft = std::max(soft, milliseconds { 1 }), .hard = std::max(hard, milliseconds { 1 }) };
     }
 } // namespace
 
 auto Options::from_libchess(
     const chess::uci::GoCommandOptions& goOptions,
-    const bool                          isWhiteToMove) -> Options
+    const bool                          isWhiteToMove,
+    const milliseconds                  overhead) -> Options
 {
     Options opts { };
 
@@ -68,25 +88,30 @@ auto Options::from_libchess(
     opts.depth    = goOptions.depth.value_or(MAX);
     opts.maxNodes = goOptions.nodes.value_or(MAX);
 
-    opts.searchTime = goOptions.searchTime
-                          .or_else([isWhiteToMove, &goOptions] -> std::optional<milliseconds> {
-                              if (goOptions.infinite)
-                                  return std::nullopt;
+    opts.moveOverhead = overhead;
 
-                              // need to know at least our time remaining in order to calculate search time limit
-                              const auto& timeLeft = isWhiteToMove ? goOptions.whiteTimeLeft : goOptions.blackTimeLeft;
+    // "go movetime": search for exactly this long
+    if (goOptions.searchTime.has_value()) {
+        opts.searchTime = std::max(*goOptions.searchTime - overhead, milliseconds { 1 });
+        return opts;
+    }
 
-                              return timeLeft
-                                  .transform([isWhiteToMove, &goOptions](const milliseconds msLeft) {
-                                      return determine_search_time(
-                                          msLeft,
-                                          isWhiteToMove ? goOptions.whiteInc : goOptions.blackInc,
-                                          goOptions.movesToGo);
-                                  });
-                          })
-                          .transform([overhead = opts.moveOverhead](const milliseconds time) {
-                              return time - overhead;
-                          });
+    if (goOptions.infinite)
+        return opts;
+
+    // need to know at least our time remaining in order to calculate search time limits
+    const auto& timeLeft = isWhiteToMove ? goOptions.whiteTimeLeft : goOptions.blackTimeLeft;
+
+    if (timeLeft.has_value()) {
+        const auto limits = determine_search_time(
+            *timeLeft,
+            isWhiteToMove ? goOptions.whiteInc : goOptions.blackInc,
+            goOptions.movesToGo,
+            overhead);
+
+        opts.searchTime     = limits.hard;
+        opts.softSearchTime = limits.soft;
+    }
 
     return opts;
 }
@@ -161,6 +186,7 @@ namespace {
 
 inline constexpr string_view TAG_DEPTH { "depth" };
 inline constexpr string_view TAG_SEARCH_TIME { "search_time" };
+inline constexpr string_view TAG_SOFT_SEARCH_TIME { "soft_search_time" };
 inline constexpr string_view TAG_MOVE_OVERHEAD { "move_overhead" };
 inline constexpr string_view TAG_MAX_NODES { "max_nodes" };
 inline constexpr string_view TAG_MOVES_TO_SEARCH { "moves_to_search" };
@@ -172,14 +198,15 @@ auto Options::to_string() const -> std::string
 {
     json data;
 
-    data[TAG_DEPTH]           = depth;
-    data[TAG_SEARCH_TIME]     = opt_to_json(searchTime.transform(&milliseconds::count));
-    data[TAG_MOVE_OVERHEAD]   = moveOverhead.count();
-    data[TAG_MAX_NODES]       = maxNodes;
-    data[TAG_MOVES_TO_SEARCH] = moves_to_json(movesToSearch);
-    data[TAG_INFINITE]        = infinite;
-    data[TAG_MATE_IN]         = opt_to_json(mateIn);
-    data[TAG_MULTI_PV]        = multiPV;
+    data[TAG_DEPTH]            = depth;
+    data[TAG_SEARCH_TIME]      = opt_to_json(searchTime.transform(&milliseconds::count));
+    data[TAG_SOFT_SEARCH_TIME] = opt_to_json(softSearchTime.transform(&milliseconds::count));
+    data[TAG_MOVE_OVERHEAD]    = moveOverhead.count();
+    data[TAG_MAX_NODES]        = maxNodes;
+    data[TAG_MOVES_TO_SEARCH]  = moves_to_json(movesToSearch);
+    data[TAG_INFINITE]         = infinite;
+    data[TAG_MATE_IN]          = opt_to_json(mateIn);
+    data[TAG_MULTI_PV]         = multiPV;
 
     return data.dump();
 }
@@ -194,6 +221,11 @@ auto Options::from_string(
         .depth      = parsed.at(TAG_DEPTH).get<size_t>(),
         .searchTime = opt_from_json<size_t>(parsed.at(TAG_SEARCH_TIME))
             .transform([](const size_t count) { return milliseconds { count }; }),
+        // older saved states may not contain this field
+        .softSearchTime = parsed.contains(TAG_SOFT_SEARCH_TIME)
+                            ? opt_from_json<size_t>(parsed.at(TAG_SOFT_SEARCH_TIME))
+                                  .transform([](const size_t count) { return milliseconds { count }; })
+                            : std::nullopt,
         .moveOverhead  = milliseconds { parsed.at(TAG_MOVE_OVERHEAD).get<size_t>() },
         .maxNodes      = parsed.at(TAG_MAX_NODES).get<size_t>(),
         .movesToSearch = moves_from_json(

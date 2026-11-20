@@ -59,8 +59,13 @@ struct Options final {
     /** The maximum search depth (in plies). */
     size_t depth { std::numeric_limits<size_t>::max() };
 
-    /** The maximum search time. */
+    /** The maximum search time. The search is aborted once this much time has passed. */
     std::optional<std::chrono::milliseconds> searchTime;
+
+    /** A softer time limit: once this much time has passed, we don't start
+        another iteration, but the current one is allowed to finish (up to ``searchTime``).
+     */
+    std::optional<std::chrono::milliseconds> softSearchTime;
 
     /** Move overhead time subtracted from maximum search time. */
     std::chrono::milliseconds moveOverhead { 0uz };
@@ -96,10 +101,13 @@ struct Options final {
         std::string_view             text,
         const chess::game::Position& currentPosition) -> Options;
 
-    /** Translates the raw UCI "go" command options into this struct's fields. */
+    /** Translates the raw UCI "go" command options into this struct's fields.
+        The move overhead is subtracted from the time we have available.
+     */
     [[nodiscard]] static auto from_libchess(
         const chess::uci::GoCommandOptions& goOptions,
-        bool                                isWhiteToMove) -> Options;
+        bool                                isWhiteToMove,
+        std::chrono::milliseconds           overhead = std::chrono::milliseconds { 0 }) -> Options;
 };
 
 } // namespace ben_bot::search

@@ -148,6 +148,18 @@ void EngineBase::respond_to_newgame()
     new_game(not wasInitialized);
 }
 
+void EngineBase::handle_go(const string_view arguments)
+{
+    // if we haven't received a ucinewgame yet, make sure the subclass
+    // gets its expected new_game() call before its first go() call
+    if (not initialized.exchange(true, memory_order_relaxed)) {
+        new_game(true);
+    }
+
+    go(
+        parse_go_options(arguments, position));
+}
+
 void EngineBase::handle_quit()
 {
     abort_search();
@@ -278,7 +290,12 @@ void EngineBase::loop()
     std::string inputBuf;
 
     do {
-        std::getline(std::cin, inputBuf);
+        // treat EOF on stdin (e.g. the GUI closed the pipe) as a quit command,
+        // otherwise we'd spin forever processing empty input
+        if (not std::getline(std::cin, inputBuf)) {
+            handle_quit();
+            return;
+        }
 
         handle_command(inputBuf);
     } while (not shouldExit.load(memory_order_acquire));
