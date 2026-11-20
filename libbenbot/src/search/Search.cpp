@@ -23,6 +23,7 @@
 // Mate distance pruning
 // MultiPV
 // Static exchange evaluation
+// Late move reductions
 
 #include "search/MoveOrdering.hpp"
 #include "search/TimeManagement.hpp"
@@ -30,7 +31,7 @@
 #include <array>
 #include <atomic>
 #include <cassert>
-#include <cmath>   // IWYU pragma: keep - for std::max()
+#include <cmath>   // IWYU pragma: keep - for std::max(), std::log()
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <iterator>
 #include <libbenbot/data-structures/KillerMoves.hpp>
@@ -47,6 +48,7 @@
 #include <libchess/moves/MoveGen.hpp>
 #include <libutil/Threading.hpp>
 #include <optional>
+#include <span>
 #include <utility>
 #include <vector>
 
@@ -82,6 +84,35 @@ namespace {
         size_t mdpCutoffs { 0uz }; // cutoffs due to mate distance pruning
         size_t qDepth { 0uz };     // max depth reached by any quiescence search
     };
+
+    // late move reductions table, indexed by [depth][move index]
+    // the formula is similar to Ethereal's: see https://www.chessprogramming.org/Late_Move_Reductions
+    constexpr auto LMR_TABLE_SIZE { 64uz };
+
+    using LMRTable = std::array<std::array<size_t, LMR_TABLE_SIZE>, LMR_TABLE_SIZE>;
+
+    [[nodiscard]] auto make_lmr_table() -> LMRTable
+    {
+        LMRTable table { };
+
+        for (auto depth = 1uz; depth < LMR_TABLE_SIZE; ++depth) {
+            for (auto moveIdx = 1uz; moveIdx < LMR_TABLE_SIZE; ++moveIdx) {
+                table[depth][moveIdx] = static_cast<size_t>(
+                    0.78 + (std::log(static_cast<double>(depth)) * std::log(static_cast<double>(moveIdx)) / 2.47));
+            }
+        }
+
+        return table;
+    }
+
+    const auto lmrTable = make_lmr_table();
+
+    [[nodiscard]] auto lmr_table_lookup(const size_t depth, const size_t moveIdx) noexcept -> size_t
+    {
+        static constexpr auto MAX_IDX = LMR_TABLE_SIZE - 1uz;
+
+        return lmrTable[std::min(depth, MAX_IDX)][std::min(moveIdx, MAX_IDX)];
+    }
 
     struct PvList final {
         void update(const Move move, const PvList& child)
@@ -228,25 +259,41 @@ namespace {
 
             std::optional<Move> bestMove;
 
+            const auto killers = killerMoves.get(plyFromRoot);
+
+            auto nextMoveIdx { 0uz };
+
             for (const auto move : moves) {
                 if constexpr (PVNode) {
                     childPV.reset();
                 }
 
-                const auto eval = [this, move, foundPV = bestMove.has_value()] {
+                const auto eval = [this, move, inCheck, killers, moveIdx = nextMoveIdx++, foundPV = bestMove.has_value()] {
+                    const auto childPos = after_move(position, move);
+
                     if (depthLeft == 0uz)
-                        return -recurse(move).quiescence<PVNode>();
+                        return -recurse(childPos).quiescence<PVNode>();
+
+                    // late move reductions: search moves late in the ordering at a reduced depth
+                    // with a null window, and only re-search at full depth if they beat alpha
+                    if (const size_t reduction = get_reduction<PVNode>(move, childPos, moveIdx, inCheck, killers);
+                        reduction > 0uz) {
+                        const auto reducedScore = -recurse(childPos, true, reduction).alpha_beta<false>();
+
+                        if (reducedScore <= bounds.alpha)
+                            return reducedScore;
+                    }
 
                     if (not foundPV)
-                        return -recurse(move).alpha_beta<PVNode>();
+                        return -recurse(childPos).alpha_beta<PVNode>();
 
                     // principal variation search: first try searching with a null window
 
-                    const auto nullWinScore = -recurse(move, true).alpha_beta<false>();
+                    const auto nullWinScore = -recurse(childPos, true).alpha_beta<false>();
 
                     if constexpr (PVNode) {
                         if (nullWinScore > bounds.alpha)
-                            return -recurse(move).alpha_beta<true>();
+                            return -recurse(childPos).alpha_beta<true>();
                     }
 
                     return nullWinScore;
@@ -300,6 +347,35 @@ namespace {
         }
 
     private:
+        // returns the number of plies by which to reduce the search of the given move
+        template <bool PVNode>
+        [[nodiscard]] auto get_reduction(
+            const Move move, const Position& childPos, const size_t moveIdx, const bool inCheck,
+            const std::span<const Move> killers) const -> size_t
+        {
+            static constexpr auto MIN_DEPTH { 3uz };
+
+            // number of moves to search at full depth before reducing
+            static constexpr auto FULL_DEPTH_MOVES { PVNode ? 3uz : 2uz };
+
+            if (depthLeft < MIN_DEPTH or moveIdx < FULL_DEPTH_MOVES or inCheck
+                or not position.is_quiet(move)
+                or std::ranges::contains(killers, move)
+                or childPos.is_check())
+                return 0uz;
+
+            auto reduction = lmr_table_lookup(depthLeft, moveIdx);
+
+            // reduce less in PV nodes
+            if constexpr (PVNode) {
+                if (reduction > 0uz)
+                    --reduction;
+            }
+
+            // never reduce straight into the quiescence search
+            return std::min(reduction, depthLeft - 2uz);
+        }
+
         // searches only captures, with no depth limit, to try to
         // improve the stability of the static evaluation function
         template <bool PVNode>
@@ -347,7 +423,7 @@ namespace {
                     childPV.reset();
                 }
 
-                evaluation = -(recurse(move).quiescence<PVNode>());
+                evaluation = -(recurse(after_move(position, move)).quiescence<PVNode>());
 
                 ++stats.nodesSearched;
 
@@ -377,11 +453,15 @@ namespace {
             return bounds.alpha;
         }
 
-        [[nodiscard]] auto recurse(const Move move, const bool useNullWindow = false) -> AlphaBetaContext
+        [[nodiscard]] auto recurse(
+            const Position& childPos, const bool useNullWindow = false, const size_t reduction = 0uz)
+            -> AlphaBetaContext
         {
+            assert(reduction == 0uz or reduction + 1uz < depthLeft);
+
             return { useNullWindow ? bounds.null_window() : bounds.invert(),
-                after_move(position, move),
-                depthLeft > 0uz ? depthLeft - 1uz : 0uz,
+                childPos,
+                depthLeft > reduction ? depthLeft - 1uz - reduction : 0uz,
                 plyFromRoot + 1uz,
                 transTable, interrupter, stats, childPV, killerMoves, pieceSquareTables };
         }
