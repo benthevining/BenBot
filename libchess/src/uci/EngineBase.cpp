@@ -84,6 +84,11 @@ void EngineBase::handle_command(const string_view command)
     if (firstWord.empty())
         return;
 
+    // the UCI spec doesn't require GUIs to send ucinewgame, so make sure
+    // new_game() has been called once before handling any other command
+    if (firstWord != "ucinewgame" and not initialized.exchange(true, memory_order_relaxed))
+        new_game(true);
+
     if (const auto it = std::ranges::find(standardUCICommands, firstWord, &EngineCommand::name);
         it != standardUCICommands.end()) {
         it->action(rest);

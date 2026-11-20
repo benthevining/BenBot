@@ -12,6 +12,7 @@
 
 # Runs an SPRT test for any PR with one of these tags in its title:
 # - [sprt-gain] or [sprt]: gainer bounds
+# - [sprt-big]: wider gainer bounds, for changes expected to gain a lot of Elo (takes precedence over [sprt-gain] & [sprt])
 # - [sprt-nonreg]: non-regression bounds (takes precedence if multiple tags are present)
 # The PR's head is tested against the PR's base commit, and the results are posted as a PR comment.
 
@@ -51,6 +52,8 @@ jobs:
         get_target() {
           if [[ "$1" == *"[sprt-nonreg]"* ]]; then
             echo sprt_non_regression
+          elif [[ "$1" == *"[sprt-big]"* ]]; then
+            echo sprt_gain_big
           elif [[ "$1" == *"[sprt-gain]"* || "$1" == *"[sprt]"* ]]; then
             echo sprt_gain
           fi
@@ -68,6 +71,7 @@ jobs:
 
         case "$target" in
           sprt_gain) description=gainer ;;
+          sprt_gain_big) description="big gainer" ;;
           sprt_non_regression) description=non-regression ;;
           *) description="" ;;
         esac
@@ -80,7 +84,7 @@ jobs:
     if: needs.parse_title.outputs.target != ''
     runs-on: ubuntu-latest
     name: Run SPRT test
-    timeout-minutes: 300 # 5 hours
+    timeout-minutes: 300 # 5 hours; see the run_sprt action's timeout input
     concurrency:
       group: ${{ github.workflow }}.${{ github.event.pull_request.number }}
       cancel-in-progress: true
@@ -88,7 +92,6 @@ jobs:
       contents: read
       pull-requests: write
     env:
-      GH_TOKEN: ${{ github.token }}
       PR_NUMBER: ${{ github.event.pull_request.number }}
       RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
       HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -100,8 +103,11 @@ jobs:
       uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       with:
         ref: ${{ env.HEAD_SHA }}
+        persist-credentials: false
 
     - name: Post in-progress comment
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
         echo "## SPRT" > "$RUNNER_TEMP/comment.md"
         echo "" >> "$RUNNER_TEMP/comment.md"
@@ -119,6 +125,7 @@ jobs:
     - name: Post results comment
       if: ${{ !cancelled() }}
       env:
+        GH_TOKEN: ${{ github.token }}
         SUMMARY_FILE: ${{ steps.run_sprt.outputs.summary_file || format('{0}/logs/sprt/summary.md', github.workspace) }}
       run: |
         echo "## SPRT" > "$RUNNER_TEMP/comment.md"
