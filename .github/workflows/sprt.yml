@@ -20,6 +20,7 @@ on:
         type: choice
         options:
         - sprt_gain
+        - sprt_gain_big
         - sprt_non_regression
         required: true
       use_main:
@@ -41,11 +42,11 @@ jobs:
   sprt:
     runs-on: ubuntu-latest
     name: Run SPRT test
-    timeout-minutes: 300 # 5 hours
+    timeout-minutes: 300 # 5 hours; see the run_sprt action's timeout input
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+      uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
     - name: Run SPRT
       uses: ./.github/actions/run_sprt
