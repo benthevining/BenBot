@@ -18,6 +18,7 @@
 // Quiescence search
 // Principal variation search
 // Reverse futility pruning
+// Null move pruning
 // Killer moves
 // Mate distance pruning
 // MultiPV
@@ -57,6 +58,21 @@ using std::size_t;
 namespace {
 
     using eval::Score;
+
+    // null move pruning is only tried when at least this much depth is left
+    inline constexpr auto NMP_MIN_DEPTH { 3uz };
+
+    // used as a zugzwang guard for null move pruning: returns true if the side to move has at
+    // least 2 non-pawn pieces. Allowing a single minor piece misses zugzwang mates (see the
+    // MatePV unit test).
+    [[nodiscard]] auto has_enough_non_pawn_material(const Position& position) noexcept -> bool
+    {
+        const auto& pieces = position.is_white_to_move()
+                               ? position.pieces_for<chess::pieces::Color::White>()
+                               : position.pieces_for<chess::pieces::Color::Black>();
+
+        return (pieces.knights | pieces.bishops | pieces.rooks | pieces.queens).count() >= 2uz;
+    }
 
     struct Stats final {
         size_t nodesSearched { 0uz };
@@ -160,15 +176,34 @@ namespace {
 
             const bool inCheck = position.is_check();
 
-            // reverse futility pruning
             if constexpr (not PVNode) {
                 if (not inCheck) {
-                    const auto margin = 80 * static_cast<int>(depthLeft);
-
                     const auto staticEval = eval::evaluate(position, pieceSquareTables);
+
+                    // reverse futility pruning
+                    const auto margin = 80 * static_cast<int>(depthLeft);
 
                     if (std::cmp_greater_equal(staticEval.value, bounds.beta.value + margin))
                         return staticEval;
+
+                    // null move pruning: if we can pass our turn and still fail high in a
+                    // reduced-depth search, this node is almost certainly a cutoff
+                    if (nullMoveAllowed
+                        and depthLeft >= NMP_MIN_DEPTH
+                        and staticEval >= bounds.beta
+                        and not bounds.beta.is_mate()
+                        and has_enough_non_pawn_material(position)) {
+                        const auto reduction = 3uz + (depthLeft / 3uz); // includes the 1 ply for the null move itself
+
+                        const auto score = -recurse_null(reduction).alpha_beta<false>();
+
+                        if (interrupter.was_aborted())
+                            return { };
+
+                        // we return beta here instead of the score, so that we never return an unproven mate score
+                        if (score >= bounds.beta)
+                            return bounds.beta;
+                    }
                 }
             }
 
@@ -351,6 +386,23 @@ namespace {
                 transTable, interrupter, stats, childPV, killerMoves, pieceSquareTables };
         }
 
+        // the reduction includes the 1 ply for the null move itself
+        [[nodiscard]] auto recurse_null(const size_t reduction) -> AlphaBetaContext
+        {
+            AlphaBetaContext child {
+                bounds.null_window_beta(),
+                after_null_move(position),
+                depthLeft > reduction ? depthLeft - reduction : 0uz,
+                plyFromRoot + 1uz,
+                transTable, interrupter, stats, childPV, killerMoves, pieceSquareTables
+            };
+
+            // don't allow 2 null moves in a row
+            child.nullMoveAllowed = false;
+
+            return child;
+        }
+
         Bounds bounds;
 
         Position position;
@@ -358,6 +410,8 @@ namespace {
         size_t depthLeft { 0uz }; // decreases each iteration, and when this reaches 0, we call the quiescence search
 
         size_t plyFromRoot { 0uz }; // increases each iteration
+
+        bool nullMoveAllowed { true }; // false for the child of a null move
 
         TranspositionTable& transTable; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
