@@ -316,7 +316,7 @@ namespace {
                         position, { .searchedDepth = depthLeft,
                                       .eval        = bounds.beta.to_tt(plyFromRoot),
                                       .evalType    = EvalType::Beta,
-                                      .bestMove    = bestMove });
+                                      .bestMove    = move });
 
                     ++stats.betaCutoffs;
 
