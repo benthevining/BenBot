@@ -71,6 +71,10 @@ struct Thread final {
         context.abort();
         context.wait();
 
+        // reset the abort flag here, rather than on the background thread, so that
+        // a stop command received before the background thread begins searching isn't lost
+        context.reset_abort();
+
         startSearch.store(true, std::memory_order::release);
     }
 

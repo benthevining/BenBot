@@ -390,6 +390,8 @@ auto Position::is_illegal() const -> std::optional<std::string>
     if (hasIllegalEPSquare)
         return std::format("Invalid EP square {}", *enPassantTargetSquare);
 
+    // TODO: our king cannot be in check by more than 2 pieces
+
     return std::nullopt;
 }
 
