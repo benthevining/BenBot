@@ -48,7 +48,10 @@ inline constexpr auto GENERATION_CYCLE = 255uz + GENERATION_DELTA;
 struct TranspositionTable::Entry final {
     std::uint16_t key { UINT16_C(0) }; // the lowest 16 bits of the position's Zobrist key
 
-    std::uint8_t depth { UINT8_C(0) }; // empty slots are marked with a depth of 0
+    // the searched depth + 1, so that empty slots can be marked with a depth of 0. Nodes
+    // searched with a depth of 0 (whose children go into the quiescence search) are the
+    // most common nodes stored, so we can't just leave them out.
+    std::uint8_t depth { UINT8_C(0) };
 
     std::uint8_t generation { UINT8_C(0) };
 
@@ -61,6 +64,13 @@ struct TranspositionTable::Entry final {
     [[nodiscard]] auto occupied() const noexcept -> bool
     {
         return std::cmp_greater(depth, 0);
+    }
+
+    [[nodiscard]] auto searched_depth() const noexcept -> size_t
+    {
+        assert(occupied());
+
+        return depth - 1uz;
     }
 
     [[nodiscard]] auto relative_age(const std::uint8_t gen) const noexcept -> std::uint8_t
@@ -78,7 +88,7 @@ struct TranspositionTable::Entry final {
             bestMove.emplace(move);
 
         return {
-            .searchedDepth = depth,
+            .searchedDepth = searched_depth(),
             .eval          = eval,
             .evalType      = evalType,
             .bestMove      = bestMove
@@ -91,7 +101,7 @@ struct TranspositionTable::Entry final {
         const std::uint8_t  gen) noexcept
     {
         key        = keyToUse;
-        depth      = static_cast<std::uint_least8_t>(data.searchedDepth);
+        depth      = static_cast<std::uint_least8_t>(data.searchedDepth + 1uz);
         generation = gen;
         eval       = static_cast<std::int16_t>(data.eval);
         evalType   = data.evalType;
@@ -291,11 +301,16 @@ void TranspositionTable::store(const Position& pos, const TTData& record)
             [key](const Entry& entry) { return entry.occupied() and entry.key == key; });
         it != cluster.end()) {
         // keep the old evaluation if it was an exact one & the new one isn't,
-        // or if the new evaluation is a lower depth than the old one
+        // or if the new evaluation is a lower depth than the old one. A new bound
+        // at the same depth replaces an old bound, since it was searched with more
+        // recent bounds & has a more recent best move.
+        const bool isExact  = record.evalType == EvalType::Exact;
+        const bool wasExact = it->evalType == EvalType::Exact;
+
         const bool shouldReplace
-            = record.searchedDepth > it->depth
-           or (it->evalType != EvalType::Exact
-               and record.evalType == EvalType::Exact);
+            = record.searchedDepth > it->searched_depth()
+           or (isExact and not wasExact)
+           or (record.searchedDepth == it->searched_depth() and not wasExact);
 
         if (shouldReplace)
             it->save(key, record, generation);
