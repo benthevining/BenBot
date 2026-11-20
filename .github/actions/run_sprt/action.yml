@@ -24,6 +24,10 @@ inputs:
     description: If use_main is true, the git ref to build as the baseline
     required: false
     default: main
+  timeout:
+    description: Time limit for the SPRT games (in the format accepted by the timeout command). Should be a bit less than the calling job's timeout-minutes, so that partial results can still be reported.
+    required: false
+    default: 270m
 
 outputs:
   summary_file:
@@ -98,13 +102,22 @@ runs:
     env:
       SPRT_OUTPUT_LOG: ${{ github.workspace }}/logs/sprt/output.log
       TARGET_NAME: ${{ inputs.target_name }}
+      SPRT_TIMEOUT: ${{ inputs.timeout }}
       # NB. tee needs the output directory to exist before it's invoked
+      # if the time limit is hit, carry on so that the partial results still get uploaded & reported
     run: |
       cmake -E make_directory "$(dirname "$SPRT_OUTPUT_LOG")"
-      cmake --build . --target "$TARGET_NAME" --config Release | tee "$SPRT_OUTPUT_LOG"
+      status=0
+      timeout "$SPRT_TIMEOUT" cmake --build . --target "$TARGET_NAME" --config Release | tee "$SPRT_OUTPUT_LOG" || status=$?
+      if [[ "$status" -eq 124 ]]; then
+        echo "::warning::SPRT didn't reach a bound within $SPRT_TIMEOUT"
+      elif [[ "$status" -ne 0 ]]; then
+        exit "$status"
+      fi
     working-directory: ${{ steps.run_build.outputs.build_dir }}
 
   - name: Upload logs
+    if: ${{ !cancelled() }}
     uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f   # v7
     with:
       name: sprt-logs

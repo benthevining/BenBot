@@ -15,7 +15,7 @@
 import re
 import sys
 from pathlib import Path
-from typing import Tuple
+from typing import Optional, Tuple
 
 LOG_FILE = Path(sys.argv[1])
 
@@ -23,30 +23,13 @@ with open(LOG_FILE) as file:
     SPRT_OUTPUT = file.readlines()
 
 
-def find_result_line() -> str:
+def find_result_line() -> Optional[str]:
     for line in reversed(SPRT_OUTPUT):
         if re.search(r"SPRT .* completed", line):
             return line
 
-    raise Exception("Result line not found in fastchess log")
-
-
-RESULT_LINE = find_result_line()
-
-
-def get_elos() -> Tuple[int, int]:
-    comma_idx = RESULT_LINE.find(",")
-
-    return (
-        round(float(RESULT_LINE[RESULT_LINE.find("[") + 1 : comma_idx].strip())),
-        round(float(RESULT_LINE[comma_idx + 1 : RESULT_LINE.find("]")].strip())),
-    )
-
-
-def get_accepted() -> int:
-    idx = RESULT_LINE.find("H") + 1
-
-    return int(RESULT_LINE[idx : idx + 1].strip())
+    # no result line means that the test was stopped before reaching a bound
+    return None
 
 
 def get_final_results() -> str:
@@ -69,19 +52,46 @@ def get_final_results() -> str:
     return "\n".join(block)
 
 
+RESULT_LINE = find_result_line()
+
+FINAL_RESULTS = get_final_results()
+
+if RESULT_LINE is None and not FINAL_RESULTS:
+    raise Exception("No results found in fastchess log")
+
+
+def get_elos() -> Tuple[int, int]:
+    # both the result line and the LLR line contain the bounds, like "[0.00, 5.00]"
+    line = RESULT_LINE or next(
+        l for l in FINAL_RESULTS.splitlines() if l.startswith("LLR:")
+    )
+
+    match = re.search(r"\[\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*\]", line)
+
+    if match is None:
+        raise Exception(f"SPRT bounds not found in line: {line}")
+
+    return round(float(match.group(1))), round(float(match.group(2)))
+
+
+def get_accepted() -> int:
+    idx = RESULT_LINE.find("H") + 1
+
+    return int(RESULT_LINE[idx : idx + 1].strip())
+
+
 elo0, elo1 = get_elos()
 
 test_type = "Non-regression" if elo0 < 0 else "Gainer"
 
-accepted = get_accepted()
+if RESULT_LINE is None:
+    passed = False
+    print(f"{test_type} SPRT stopped before reaching a bound.")
+else:
+    passed = get_accepted() != 0
+    print(f"{test_type} SPRT {'passed' if passed else 'failed'}!")
 
-passed = accepted != 0
-
-print(f"{test_type} SPRT {'passed' if passed else 'failed'}!")
-
-final_results = get_final_results()
-
-if final_results:
-    print(f"\n```\n{final_results}\n```")
+if FINAL_RESULTS:
+    print(f"\n```\n{FINAL_RESULTS}\n```")
 
 sys.exit(0 if passed else 1)
