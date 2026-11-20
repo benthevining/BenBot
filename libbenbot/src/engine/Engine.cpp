@@ -98,7 +98,8 @@ void Engine::go(const uci::GoCommandOptions& opts)
     go_internal(
         search::Options::from_libchess(
             opts,
-            searcher.context.get_position().is_white_to_move()));
+            searcher.context.get_position().is_white_to_move(),
+            std::chrono::milliseconds { moveOverhead.get_value() }));
 }
 
 void Engine::start_file_logger(const string_view arg)

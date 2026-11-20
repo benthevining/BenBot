@@ -126,5 +126,7 @@ runs:
 
   - name: Report results
     shell: bash
-    run: python3 ReportSPRTResults.py ${{ env.SPRT_OUTPUT_LOG }} | tee ${{ github.workspace }}/logs/sprt/summary.md >> $GITHUB_STEP_SUMMARY
+    env:
+      SPRT_OUTPUT_LOG: ${{ github.workspace }}/logs/sprt/output.log
+    run: python3 ReportSPRTResults.py "$SPRT_OUTPUT_LOG" | tee ${{ github.workspace }}/logs/sprt/summary.md >> $GITHUB_STEP_SUMMARY
     working-directory: ${{ github.action_path }}
