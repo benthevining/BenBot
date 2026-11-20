@@ -497,9 +497,11 @@ namespace {
                 assert(position.is_capture(move));
 
                 // delta pruning: skip captures that can't raise alpha even if they win the captured
-                // piece for free. Not done when alpha is a mate score, so we never skip a mating capture.
+                // piece for free. Not done when alpha is a mate score (so we don't miss a faster mate),
+                // or for captures that give check, since those can be mating captures.
                 if (deltaPruning and not bounds.alpha.is_mate()
-                    and std::cmp_less(standPat.value + max_capture_gain(move) + DELTA_MARGIN, bounds.alpha.value))
+                    and std::cmp_less(standPat.value + max_capture_gain(move) + DELTA_MARGIN, bounds.alpha.value)
+                    and not after_move(position, move).is_check())
                     continue;
 
                 // skip captures that lose material once all recaptures are played out
