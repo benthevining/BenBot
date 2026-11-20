@@ -71,17 +71,23 @@ struct Thread final {
         context.abort();
         context.wait();
 
+        // reset the abort flag here, rather than on the background thread, so that
+        // a stop command received before the background thread begins searching isn't lost
+        context.reset_abort();
+
         startSearch.store(true, std::memory_order::release);
     }
 
 private:
     void thread_func();
 
-    std::thread searcherThread { [this] { thread_func(); } };
-
     // align to cache lines to prevent false sharing of these flags
     alignas(util::memory::CacheLineSize) std::atomic_bool threadShouldExit { false };
     alignas(util::memory::CacheLineSize) std::atomic_bool startSearch { false };
+
+    // this must be declared after everything that thread_func() uses, since members are
+    // initialized in declaration order and the thread starts running as soon as it's created
+    std::thread searcherThread { [this] { thread_func(); } };
 };
 
 } // namespace ben_bot::search

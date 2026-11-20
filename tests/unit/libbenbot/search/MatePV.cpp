@@ -100,10 +100,15 @@ TEST_CASE("Search - mate scores have matching PVs", TAGS)
 
     ctx.set_position(rootPosition);
 
+    // every case reports a mate score by depth 5. Check extensions make the deeper
+    // iterations a lot slower, which matters in the Debug & sanitizer builds
     ben_bot::search::Options options;
-    options.depth = 6uz;
+    options.depth = 5uz;
 
     ctx.set_options(options);
+
+    // the setters above abort any in-progress search, so clear that before searching
+    ctx.reset_abort();
 
     ctx.search();
 

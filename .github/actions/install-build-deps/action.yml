@@ -38,5 +38,13 @@ runs:
       llvm: 21
       clang: 21
 
+    # the MSVC STL on newer Windows runner images requires Clang 22+, but the runners still ship Clang 20
+  - name: Install Clang22 (Windows)
+    if: runner.os == 'Windows' && inputs.cmake_preset == 'clang'
+    shell: pwsh
+    run: |
+      choco upgrade llvm --version=22.1.8 -y --no-progress
+      clang++ --version
+
   - name: Install CMake 4.0
     uses: lukka/get-cmake@ea83089aa35e08e459464341fe24ad024ee2466f     # v4.3.1

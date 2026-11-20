@@ -116,6 +116,8 @@ struct EngineBase {
     [[nodiscard]] virtual auto is_searching() const noexcept -> bool = 0;
 
     /** This function will be called when the "ucinewgame" command is received.
+        Since GUIs aren't required to send "ucinewgame", it's also called before
+        handling the first command if that command isn't "ucinewgame".
         This should flush any game-specific data structures such as hash tables,
         transposition table, etc. ``wait()`` will be called after this, before
         the next search begins.
@@ -302,7 +304,7 @@ protected:
             .argsHelp    = "[startpos|fen <fen>] [moves <move...>]" },
         EngineCommand {
             .name   = "go",
-            .action = [this](const string_view args) { go(parse_go_options(args, position)); },
+            .action = [this](const string_view args) { handle_go(args); },
             .description = "Start a search",
             .argsHelp    = { } },
         EngineCommand {
@@ -335,6 +337,7 @@ private:
     void handle_quit();
     void handle_setpos(string_view arguments);
     void handle_setoption(string_view arguments);
+    void handle_go(string_view arguments);
 
     static_assert(
         std::atomic_bool::is_always_lock_free,

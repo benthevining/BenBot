@@ -1,0 +1,140 @@
+# ======================================================================================
+#
+# ░▒▓███████▓▒░░▒▓████████▓▒░▒▓███████▓▒░       ░▒▓███████▓▒░ ░▒▓██████▓▒░▒▓████████▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓███████▓▒░░▒▓██████▓▒░ ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓███████▓▒░░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░ ░▒▓██████▓▒░  ░▒▓█▓▒░
+#
+# ======================================================================================
+
+# Runs an SPRT test for any PR with one of these tags in its title:
+# - [sprt-gain] or [sprt]: gainer bounds
+# - [sprt-big]: wider gainer bounds, for changes expected to gain a lot of Elo (takes precedence over [sprt-gain] & [sprt])
+# - [sprt-nonreg]: non-regression bounds (takes precedence if multiple tags are present)
+# The PR's head is tested against the PR's base commit, and the results are posted as a PR comment.
+
+name: SPRT (PR)
+
+run-name: SPRT (PR #${{ github.event.pull_request.number }})
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, edited]
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: read
+
+jobs:
+
+  parse_title:
+    runs-on: ubuntu-latest
+    name: Parse PR title
+    timeout-minutes: 5
+    outputs:
+      target: ${{ steps.parse.outputs.target }}
+      description: ${{ steps.parse.outputs.description }}
+    steps:
+    - name: Parse PR title
+      id: parse
+      env:
+        TITLE: ${{ github.event.pull_request.title }}
+        OLD_TITLE: ${{ github.event.changes.title.from }}
+        TITLE_CHANGED: ${{ github.event.changes.title != null }}
+        ACTION: ${{ github.event.action }}
+      run: |
+        get_target() {
+          if [[ "$1" == *"[sprt-nonreg]"* ]]; then
+            echo sprt_non_regression
+          elif [[ "$1" == *"[sprt-big]"* ]]; then
+            echo sprt_gain_big
+          elif [[ "$1" == *"[sprt-gain]"* || "$1" == *"[sprt]"* ]]; then
+            echo sprt_gain
+          fi
+        }
+
+        target="$(get_target "$TITLE")"
+
+        # for edits, only start a new test if the title now asks for a different test,
+        # so that editing the PR description doesn't restart the test
+        if [[ "$ACTION" == edited ]]; then
+          if [[ "$TITLE_CHANGED" != true || "$(get_target "$OLD_TITLE")" == "$target" ]]; then
+            target=""
+          fi
+        fi
+
+        case "$target" in
+          sprt_gain) description=gainer ;;
+          sprt_gain_big) description="big gainer" ;;
+          sprt_non_regression) description=non-regression ;;
+          *) description="" ;;
+        esac
+
+        echo "target=$target" >> "$GITHUB_OUTPUT"
+        echo "description=$description" >> "$GITHUB_OUTPUT"
+
+  sprt:
+    needs: parse_title
+    if: needs.parse_title.outputs.target != ''
+    runs-on: ubuntu-latest
+    name: Run SPRT test
+    timeout-minutes: 300 # 5 hours; see the run_sprt action's timeout input
+    concurrency:
+      group: ${{ github.workflow }}.${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      TEST_DESCRIPTION: ${{ needs.parse_title.outputs.description }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      with:
+        ref: ${{ env.HEAD_SHA }}
+        persist-credentials: false
+
+    - name: Post in-progress comment
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        echo "## SPRT" > "$RUNNER_TEMP/comment.md"
+        echo "" >> "$RUNNER_TEMP/comment.md"
+        echo "Running ${TEST_DESCRIPTION} SPRT for ${HEAD_SHA} against ${BASE_SHA}... ([run]($RUN_URL))" >> "$RUNNER_TEMP/comment.md"
+        .github/actions/run_sprt/UpdatePRComment.sh "$RUNNER_TEMP/comment.md"
+
+    - name: Run SPRT
+      id: run_sprt
+      uses: ./.github/actions/run_sprt
+      with:
+        use_main: true
+        main_ref: ${{ env.BASE_SHA }}
+        target_name: ${{ needs.parse_title.outputs.target }}
+
+    - name: Post results comment
+      if: ${{ !cancelled() }}
+      env:
+        GH_TOKEN: ${{ github.token }}
+        SUMMARY_FILE: ${{ steps.run_sprt.outputs.summary_file || format('{0}/logs/sprt/summary.md', github.workspace) }}
+      run: |
+        echo "## SPRT" > "$RUNNER_TEMP/comment.md"
+        echo "" >> "$RUNNER_TEMP/comment.md"
+        if [[ -s "$SUMMARY_FILE" ]]; then
+          cat "$SUMMARY_FILE" >> "$RUNNER_TEMP/comment.md"
+        else
+          echo "SPRT didn't finish, check the logs for details." >> "$RUNNER_TEMP/comment.md"
+        fi
+        echo "" >> "$RUNNER_TEMP/comment.md"
+        echo "Tested ${HEAD_SHA} against ${BASE_SHA} ([run]($RUN_URL))" >> "$RUNNER_TEMP/comment.md"
+        .github/actions/run_sprt/UpdatePRComment.sh "$RUNNER_TEMP/comment.md"

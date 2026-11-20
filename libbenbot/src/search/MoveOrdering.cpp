@@ -14,12 +14,16 @@
 
 #include "search/MoveOrdering.hpp"
 #include <algorithm>
+#include <array>
+#include <cassert>
+#include <libbenbot/data-structures/HistoryTable.hpp>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Material.hpp>
 #include <libbenbot/eval/SEE.hpp>
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
+#include <libchess/moves/MoveGen.hpp>
 #include <libchess/moves/Patterns.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
@@ -55,7 +59,8 @@ namespace {
         const TranspositionTable&   transTable,
         const Bitboard              opponentPawnAttacks,
         const std::optional<Move>   bestMove,
-        const std::span<const Move> killerMoves)
+        const std::span<const Move> killerMoves,
+        const HistoryTable&         history)
         -> int
     {
         static constexpr auto PV_NODE_BONUS { 15000 };       // cppcheck-suppress variableScope
@@ -66,6 +71,7 @@ namespace {
         static constexpr auto CASTLING_BONUS { 30 };         // cppcheck-suppress variableScope
         static constexpr auto PAWN_CONTROLS_PENALTY { 350 }; // cppcheck-suppress variableScope
         static constexpr auto CHECK_BONUS { 1250 };          // cppcheck-suppress variableScope
+        static constexpr auto HISTORY_DIVISOR { 8 };         // cppcheck-suppress variableScope
 
         // check if this move was recorded as the best move in this position
         if (bestMove.has_value() and *bestMove == move)
@@ -79,6 +85,8 @@ namespace {
             score += CAPTURE_MULTIPLIER * eval::see(currentPosition, move);
         } else if (std::ranges::contains(killerMoves, move)) {
             score += KILLER_MOVE_BONUS;
+        } else if (not move.promoted_type().has_value()) {
+            score += history.get(currentPosition.is_white_to_move(), move) / HISTORY_DIVISOR;
         }
 
         if (const auto prom = move.promoted_type()) {
@@ -118,19 +126,41 @@ void order_moves_for_search(
     const Position&             currentPosition,
     const std::span<Move>       moves,
     const TranspositionTable&   transTable,
-    const std::span<const Move> killerMoves)
+    const std::span<const Move> killerMoves,
+    const HistoryTable&         history)
 {
     const auto bestMove = transTable
                               .find(currentPosition)
                               .and_then(&TTData::bestMove);
 
-    std::ranges::sort(
-        moves,
-        [&currentPosition, &transTable, bestMove, killerMoves,
-            opponentPawnAttacks = get_opponent_pawn_attacks(currentPosition)](const Move first, const Move second) {
-            return move_ordering_score(currentPosition, first, transTable, opponentPawnAttacks, bestMove, killerMoves)
-                 > move_ordering_score(currentPosition, second, transTable, opponentPawnAttacks, bestMove, killerMoves);
+    const auto opponentPawnAttacks = get_opponent_pawn_attacks(currentPosition);
+
+    // scoring a move is expensive (it makes the move & probes the TT), so we
+    // score each move once up front instead of in the sort's comparison function
+    using ScoredMove = std::pair<int, Move>;
+
+    assert(moves.size() <= chess::moves::MAX_MOVES);
+
+    std::array<ScoredMove, chess::moves::MAX_MOVES> scored { };
+
+    const auto scoredMoves = std::span { scored }.first(moves.size());
+
+    std::ranges::transform(
+        moves, scoredMoves.begin(),
+        [&currentPosition, &transTable, bestMove, killerMoves, &history, opponentPawnAttacks](const Move move) {
+            return ScoredMove {
+                move_ordering_score(currentPosition, move, transTable, opponentPawnAttacks, bestMove, killerMoves, history),
+                move
+            };
         });
+
+    std::ranges::sort(
+        scoredMoves,
+        [](const ScoredMove& first, const ScoredMove& second) {
+            return first.first > second.first;
+        });
+
+    std::ranges::transform(scoredMoves, moves.begin(), &ScoredMove::second);
 }
 
 namespace {

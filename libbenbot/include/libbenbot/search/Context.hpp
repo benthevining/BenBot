@@ -20,6 +20,7 @@
 #pragma once
 
 #include <atomic>
+#include <libbenbot/data-structures/HistoryTable.hpp>
 #include <libbenbot/data-structures/KillerMoves.hpp>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/PieceSquareTables.hpp>
@@ -76,6 +77,13 @@ struct Context final {
         calling this method.
      */
     void abort() noexcept { exitFlag.store(true, std::memory_order::release); }
+
+    /** Clears any previous ``abort()`` request, so that the next call to ``search()``
+        will run. This must be called before starting each search; ``search()`` itself
+        doesn't reset the flag, so that an ``abort()`` call made after a search has been
+        requested but before it has actually begun still takes effect.
+     */
+    void reset_abort() noexcept { exitFlag.store(false, std::memory_order::release); }
 
     /** Clears the transposition table.
         If a search is in progress, this method aborts it and blocks until it returns.
@@ -196,6 +204,8 @@ private:
     TranspositionTable transTable;
 
     KillerMoves killerMoves;
+
+    HistoryTable history;
 
     eval::PieceSquareTables pieceSquareTables { eval::PieceSquareTables::get_default() };
 

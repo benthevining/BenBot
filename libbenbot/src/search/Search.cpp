@@ -18,10 +18,15 @@
 // Quiescence search
 // Principal variation search
 // Reverse futility pruning
+// Null move pruning
 // Killer moves
 // Mate distance pruning
 // MultiPV
 // Static exchange evaluation
+// Late move reductions
+// Futility pruning
+// Check extensions
+// History heuristic
 // Aspiration windows
 
 #include "search/MoveOrdering.hpp"
@@ -30,9 +35,10 @@
 #include <array>
 #include <atomic>
 #include <cassert>
-#include <cmath>   // IWYU pragma: keep - for std::max()
+#include <cmath>   // IWYU pragma: keep - for std::max(), std::log()
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <iterator>
+#include <libbenbot/data-structures/HistoryTable.hpp>
 #include <libbenbot/data-structures/KillerMoves.hpp>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
@@ -47,6 +53,7 @@
 #include <libchess/moves/MoveGen.hpp>
 #include <libutil/Threading.hpp>
 #include <optional>
+#include <span>
 #include <utility>
 #include <vector>
 
@@ -58,6 +65,28 @@ using std::size_t;
 namespace {
 
     using eval::Score;
+
+    // null move pruning is only tried when at least this much depth is left
+    inline constexpr auto NMP_MIN_DEPTH { 3uz };
+
+    // futility pruning is only done with at most this much depth left
+    inline constexpr auto FP_MAX_DEPTH { 2uz };
+
+    // moves that give check are only extended up to this ply. Reaching MAX_PLY aborts
+    // the entire search, so this stops long sequences of checks from getting there.
+    inline constexpr auto MAX_EXTENSION_PLY { MAX_PLY / 4uz };
+
+    // used as a zugzwang guard for null move pruning: returns true if the side to move has at
+    // least 2 non-pawn pieces. Allowing a single minor piece misses zugzwang mates (see the
+    // MatePV unit test).
+    [[nodiscard]] auto has_enough_non_pawn_material(const Position& position) noexcept -> bool
+    {
+        const auto& pieces = position.is_white_to_move()
+                               ? position.pieces_for<chess::pieces::Color::White>()
+                               : position.pieces_for<chess::pieces::Color::Black>();
+
+        return (pieces.knights | pieces.bishops | pieces.rooks | pieces.queens).count() >= 2uz;
+    }
 
     // aspiration windows are only used once this many iterations have been completed
     constexpr auto ASPIRATION_MIN_DEPTH { 4uz };
@@ -73,6 +102,32 @@ namespace {
         size_t mdpCutoffs { 0uz }; // cutoffs due to mate distance pruning
         size_t qDepth { 0uz };     // max depth reached by any quiescence search
     };
+
+    // late move reductions table, indexed by [depth][move index]
+    // the formula is similar to Ethereal's: see https://www.chessprogramming.org/Late_Move_Reductions
+    constexpr auto LMR_TABLE_SIZE { 64uz };
+
+    using LMRTable = std::array<std::array<size_t, LMR_TABLE_SIZE>, LMR_TABLE_SIZE>;
+
+    const auto lmrTable = [] {
+        LMRTable table { };
+
+        for (auto depth = 1uz; depth < LMR_TABLE_SIZE; ++depth) {
+            for (auto moveIdx = 1uz; moveIdx < LMR_TABLE_SIZE; ++moveIdx) {
+                table[depth][moveIdx] = static_cast<size_t>(
+                    0.78 + (std::log(static_cast<double>(depth)) * std::log(static_cast<double>(moveIdx)) / 2.47));
+            }
+        }
+
+        return table;
+    }();
+
+    [[nodiscard]] auto lmr_table_lookup(const size_t depth, const size_t moveIdx) noexcept -> size_t
+    {
+        static constexpr auto MAX_IDX = LMR_TABLE_SIZE - 1uz;
+
+        return lmrTable[std::min(depth, MAX_IDX)][std::min(moveIdx, MAX_IDX)];
+    }
 
     struct PvList final {
         void update(const Move move, const PvList& child)
@@ -109,7 +164,7 @@ namespace {
             const Bounds bnd, const Position& pos,
             const size_t depthToSearch, const size_t ply,
             TranspositionTable& trans, Interrupter& inter, Stats& statsToUse,
-            PvList& parentPV, KillerMoves& killers,
+            PvList& parentPV, KillerMoves& killers, HistoryTable& hist,
             const eval::PieceSquareTables& pst)
             : bounds { bnd }
             , position { pos }
@@ -119,6 +174,7 @@ namespace {
             , interrupter { inter }
             , stats { statsToUse }
             , killerMoves { killers }
+            , history { hist }
             , pieceSquareTables { pst }
             , pv { parentPV }
         {
@@ -167,15 +223,45 @@ namespace {
 
             const bool inCheck = position.is_check();
 
-            // reverse futility pruning
+            // set to true if quiet moves after the first one can't raise alpha
+            bool futilityPruning = false;
+
             if constexpr (not PVNode) {
                 if (not inCheck) {
-                    const auto margin = 80 * static_cast<int>(depthLeft);
-
                     const auto staticEval = eval::evaluate(position, pieceSquareTables);
+
+                    // reverse futility pruning
+                    const auto margin = 80 * static_cast<int>(depthLeft);
 
                     if (std::cmp_greater_equal(staticEval.value, bounds.beta.value + margin))
                         return staticEval;
+
+                    // null move pruning: if we can pass our turn and still fail high in a
+                    // reduced-depth search, this node is almost certainly a cutoff
+                    if (nullMoveAllowed
+                        and depthLeft >= NMP_MIN_DEPTH
+                        and staticEval >= bounds.beta
+                        and not bounds.beta.is_mate()
+                        and has_enough_non_pawn_material(position)) {
+                        const auto reduction = 3uz + (depthLeft / 3uz); // includes the 1 ply for the null move itself
+
+                        const auto score = -recurse_null(reduction).alpha_beta<false>();
+
+                        if (interrupter.was_aborted())
+                            return { };
+
+                        // we return beta here instead of the score, so that we never return an unproven mate score
+                        if (score >= bounds.beta)
+                            return bounds.beta;
+                    }
+
+                    // futility pruning: near the horizon, if a quiet move would need to gain
+                    // more than the margin to raise alpha, don't bother searching it
+                    if (depthLeft <= FP_MAX_DEPTH and not bounds.alpha.is_mate()) {
+                        const auto fpMargin = 100 + (80 * static_cast<int>(depthLeft));
+
+                        futilityPruning = std::cmp_less_equal(staticEval.value + fpMargin, bounds.alpha.value);
+                    }
                 }
             }
 
@@ -194,31 +280,61 @@ namespace {
             }
 
             detail::order_moves_for_search(
-                position, moves, transTable, killerMoves.get(plyFromRoot));
+                position, moves, transTable, killerMoves.get(plyFromRoot), history);
 
             auto evalType { EvalType::Alpha };
 
             std::optional<Move> bestMove;
 
+            const auto killers = killerMoves.get(plyFromRoot);
+
+            auto nextMoveIdx { 0uz };
+
+            // quiet moves that were searched without causing a cutoff
+            MoveList quietsSearched;
+
             for (const auto move : moves) {
+                const auto moveIdx  = nextMoveIdx++;
+                const auto childPos = after_move(position, move);
+
+                if (futilityPruning and moveIdx > 0uz
+                    and position.is_quiet(move) and not childPos.is_check())
+                    continue;
+
                 if constexpr (PVNode) {
                     childPV.reset();
                 }
 
-                const auto eval = [this, move, foundPV = bestMove.has_value()] {
-                    if (depthLeft == 0uz)
-                        return -recurse(move).quiescence<PVNode>();
+                const auto eval = [this, move, &childPos, inCheck, killers, moveIdx, foundPV = bestMove.has_value()] {
+                    // check extensions: search moves that give check one ply deeper, so that
+                    // we don't drop into the quiescence search in the middle of a forcing line
+                    const auto extension = childPos.is_check() and plyFromRoot < MAX_EXTENSION_PLY
+                                             ? 1uz
+                                             : 0uz;
+
+                    if (depthLeft + extension == 0uz)
+                        return -recurse(childPos).quiescence<PVNode>();
+
+                    // late move reductions: search moves late in the ordering at a reduced depth
+                    // with a null window, and only re-search at full depth if they beat alpha
+                    if (const size_t reduction = get_reduction<PVNode>(move, childPos, moveIdx, inCheck, killers);
+                        reduction > 0uz) {
+                        const auto reducedScore = -recurse(childPos, true, reduction, extension).alpha_beta<false>();
+
+                        if (reducedScore <= bounds.alpha)
+                            return reducedScore;
+                    }
 
                     if (not foundPV)
-                        return -recurse(move).alpha_beta<PVNode>();
+                        return -recurse(childPos, false, 0uz, extension).alpha_beta<PVNode>();
 
                     // principal variation search: first try searching with a null window
 
-                    const auto nullWinScore = -recurse(move, true).alpha_beta<false>();
+                    const auto nullWinScore = -recurse(childPos, true, 0uz, extension).alpha_beta<false>();
 
                     if constexpr (PVNode) {
                         if (nullWinScore > bounds.alpha)
-                            return -recurse(move).alpha_beta<true>();
+                            return -recurse(childPos, false, 0uz, extension).alpha_beta<true>();
                     }
 
                     return nullWinScore;
@@ -245,11 +361,16 @@ namespace {
 
                     ++stats.betaCutoffs;
 
-                    if (position.is_quiet(move))
+                    if (position.is_quiet(move)) {
                         killerMoves.store(plyFromRoot, move);
+                        update_history(move, quietsSearched);
+                    }
 
                     return bounds.beta;
                 }
+
+                if (position.is_quiet(move))
+                    quietsSearched.emplace_back(move);
 
                 if (eval > bounds.alpha) {
                     bestMove     = move;
@@ -272,6 +393,50 @@ namespace {
         }
 
     private:
+        // gives the move that caused a cutoff a history bonus, and the
+        // quiet moves that were searched before it a penalty
+        void update_history(const Move cutoffMove, const MoveList& quietsSearched)
+        {
+            const auto depth = static_cast<int>(depthLeft) + 1;
+            const auto bonus = depth * depth;
+
+            const bool whiteToMove = position.is_white_to_move();
+
+            history.update(whiteToMove, cutoffMove, bonus);
+
+            for (const auto move : quietsSearched)
+                history.update(whiteToMove, move, -bonus);
+        }
+
+        // returns the number of plies by which to reduce the search of the given move
+        template <bool PVNode>
+        [[nodiscard]] auto get_reduction(
+            const Move move, const Position& childPos, const size_t moveIdx, const bool inCheck,
+            const std::span<const Move> killers) const -> size_t
+        {
+            static constexpr auto MIN_DEPTH { 3uz };
+
+            // number of moves to search at full depth before reducing
+            static constexpr auto FULL_DEPTH_MOVES { PVNode ? 3uz : 2uz };
+
+            if (depthLeft < MIN_DEPTH or moveIdx < FULL_DEPTH_MOVES or inCheck
+                or not position.is_quiet(move)
+                or std::ranges::contains(killers, move)
+                or childPos.is_check())
+                return 0uz;
+
+            auto reduction = lmr_table_lookup(depthLeft, moveIdx);
+
+            // reduce less in PV nodes
+            if constexpr (PVNode) {
+                if (reduction > 0uz)
+                    --reduction;
+            }
+
+            // never reduce straight into the quiescence search
+            return std::min(reduction, depthLeft - 2uz);
+        }
+
         // searches only captures, with no depth limit, to try to
         // improve the stability of the static evaluation function
         template <bool PVNode>
@@ -319,7 +484,7 @@ namespace {
                     childPV.reset();
                 }
 
-                evaluation = -(recurse(move).quiescence<PVNode>());
+                evaluation = -(recurse(after_move(position, move)).quiescence<PVNode>());
 
                 ++stats.nodesSearched;
 
@@ -349,13 +514,37 @@ namespace {
             return bounds.alpha;
         }
 
-        [[nodiscard]] auto recurse(const Move move, const bool useNullWindow = false) -> AlphaBetaContext
+        [[nodiscard]] auto recurse(
+            const Position& childPos, const bool useNullWindow = false,
+            const size_t reduction = 0uz, const size_t extension = 0uz)
+            -> AlphaBetaContext
         {
+            assert(reduction == 0uz or reduction + 1uz < depthLeft);
+
+            const auto depth = depthLeft + extension;
+
             return { useNullWindow ? bounds.null_window() : bounds.invert(),
-                after_move(position, move),
-                depthLeft > 0uz ? depthLeft - 1uz : 0uz,
+                childPos,
+                depth > reduction ? depth - 1uz - reduction : 0uz,
                 plyFromRoot + 1uz,
-                transTable, interrupter, stats, childPV, killerMoves, pieceSquareTables };
+                transTable, interrupter, stats, childPV, killerMoves, history, pieceSquareTables };
+        }
+
+        // the reduction includes the 1 ply for the null move itself
+        [[nodiscard]] auto recurse_null(const size_t reduction) -> AlphaBetaContext
+        {
+            AlphaBetaContext child {
+                bounds.null_window_beta(),
+                after_null_move(position),
+                depthLeft > reduction ? depthLeft - reduction : 0uz,
+                plyFromRoot + 1uz,
+                transTable, interrupter, stats, childPV, killerMoves, history, pieceSquareTables
+            };
+
+            // don't allow 2 null moves in a row
+            child.nullMoveAllowed = false;
+
+            return child;
         }
 
         Bounds bounds;
@@ -366,6 +555,8 @@ namespace {
 
         size_t plyFromRoot { 0uz }; // increases each iteration
 
+        bool nullMoveAllowed { true }; // false for the child of a null move
+
         TranspositionTable& transTable; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
         Interrupter& interrupter; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
@@ -373,6 +564,8 @@ namespace {
         Stats& stats; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
         KillerMoves& killerMoves; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
+
+        HistoryTable& history; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
         PvList& pv; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
@@ -421,6 +614,7 @@ namespace {
         TranspositionTable&            transTable,
         Interrupter&                   interrupter,
         KillerMoves&                   killerMoves,
+        HistoryTable&                  history,
         const eval::PieceSquareTables& pst,
         const Callbacks&               callbacks,
         Stats&                         stats,
@@ -444,9 +638,9 @@ namespace {
 
             PvList childPV;
 
-            auto create_context = [depth, &transTable, &interrupter, &stats, &childPV, &killerMoves, &pst](const Bounds boundsToUse, const Position& pos) {
+            auto create_context = [depth, &transTable, &interrupter, &stats, &childPV, &killerMoves, &history, &pst](const Bounds boundsToUse, const Position& pos) {
                 return AlphaBetaContext {
-                    boundsToUse, pos, depth, 1uz, transTable, interrupter, stats, childPV, killerMoves, pst
+                    boundsToUse, pos, depth, 1uz, transTable, interrupter, stats, childPV, killerMoves, history, pst
                 };
             };
 
@@ -506,6 +700,7 @@ namespace {
         TranspositionTable&            transTable,
         Interrupter&                   interrupter,
         KillerMoves&                   killerMoves,
+        HistoryTable&                  history,
         const eval::PieceSquareTables& pst,
         const Callbacks&               callbacks,
         Stats&                         stats,
@@ -518,7 +713,7 @@ namespace {
         // or if the previous score was mate
         if (not prevScore.has_value() or prevScore->is_mate()) {
             return search_root_line(
-                depth, options, excludedMoves, position, transTable, interrupter, killerMoves, pst, callbacks, stats);
+                depth, options, excludedMoves, position, transTable, interrupter, killerMoves, history, pst, callbacks, stats);
         }
 
         static constexpr int maxValue = eval::MAX;
@@ -535,7 +730,7 @@ namespace {
             };
 
             auto line = search_root_line(
-                depth, options, excludedMoves, position, transTable, interrupter, killerMoves, pst, callbacks, stats, bounds);
+                depth, options, excludedMoves, position, transTable, interrupter, killerMoves, history, pst, callbacks, stats, bounds);
 
             if (interrupter.was_aborted())
                 return line;
@@ -562,6 +757,7 @@ namespace {
         TranspositionTable&            transTable,
         Interrupter&                   interrupter,
         KillerMoves&                   killerMoves,
+        HistoryTable&                  history,
         const eval::PieceSquareTables& pst,
         const Callbacks&               callbacks,
         const std::optional<Score>     prevScore)
@@ -572,7 +768,7 @@ namespace {
         killerMoves.clear();
 
         detail::order_moves_for_search(
-            position, options.movesToSearch, transTable, killerMoves.get(0uz));
+            position, options.movesToSearch, transTable, killerMoves.get(0uz), history);
 
         RootSearchResult result;
 
@@ -587,9 +783,9 @@ namespace {
         for (auto lineIdx = 0uz; lineIdx < numLines; ++lineIdx) {
             auto line = lineIdx == 0uz
                           ? search_root_line_aspiration(
-                                depth, options, position, transTable, interrupter, killerMoves, pst, callbacks, result.stats, prevScore)
+                                depth, options, position, transTable, interrupter, killerMoves, history, pst, callbacks, result.stats, prevScore)
                           : search_root_line(
-                                depth, options, excludedMoves, position, transTable, interrupter, killerMoves, pst, callbacks, result.stats);
+                                depth, options, excludedMoves, position, transTable, interrupter, killerMoves, history, pst, callbacks, result.stats);
 
             if (interrupter.was_aborted() or line.pv.empty())
                 break;
@@ -642,6 +838,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
     Interrupter interrupter { exitFlag, pondering, options.searchTime, options.infinite };
 
     transTable.new_search();
+    history.age();
     callbacks.search_start(options);
 
     // if the movesToSearch was empty, then we search all legal moves
@@ -671,7 +868,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
                                  : std::nullopt;
 
         const auto res = root_search(
-            depth, options, position, transTable, interrupter, killerMoves, pieceSquareTables, callbacks, prevScore);
+            depth, options, position, transTable, interrupter, killerMoves, history, pieceSquareTables, callbacks, prevScore);
 
         if (interrupter.was_aborted())
             break;
@@ -705,6 +902,11 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
 
             // if we've hit our node limit, don't do a deeper iteration
             if (totalNodesSearched >= options.maxNodes)
+                break;
+
+            // once we've used up the soft time limit, don't start a deeper iteration
+            if (options.softSearchTime.has_value()
+                and interrupter.get_search_duration() >= *options.softSearchTime)
                 break;
 
             // if the iteration we just completed took as much or more time than we
