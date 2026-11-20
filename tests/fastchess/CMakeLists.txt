@@ -63,7 +63,8 @@ add_custom_command (
 
 #
 
-cmake_host_system_information (RESULT num_cores QUERY NUMBER_OF_PHYSICAL_CORES)
+# engines don't ponder, so only one engine per game is thinking at a time
+cmake_host_system_information (RESULT num_cores QUERY NUMBER_OF_LOGICAL_CORES)
 
 set (logs_dir "${BenBot_SOURCE_DIR}/logs/sprt")
 
@@ -111,4 +112,5 @@ function (add_sprt_test name elo0 elo1 description)
 endfunction ()
 
 add_sprt_test (sprt_gain 0 5 "gainer")
+add_sprt_test (sprt_gain_big 0 10 "big gainer")
 add_sprt_test (sprt_non_regression -5 0 "non-regression")

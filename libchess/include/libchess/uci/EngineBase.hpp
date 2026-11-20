@@ -116,6 +116,8 @@ struct EngineBase {
     [[nodiscard]] virtual auto is_searching() const noexcept -> bool = 0;
 
     /** This function will be called when the "ucinewgame" command is received.
+        Since GUIs aren't required to send "ucinewgame", it's also called before
+        handling the first command if that command isn't "ucinewgame".
         This should flush any game-specific data structures such as hash tables,
         transposition table, etc. ``wait()`` will be called after this, before
         the next search begins.

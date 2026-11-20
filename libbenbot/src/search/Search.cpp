@@ -18,10 +18,12 @@
 // Quiescence search
 // Principal variation search
 // Reverse futility pruning
+// Null move pruning
 // Killer moves
 // Mate distance pruning
 // MultiPV
 // Static exchange evaluation
+// Late move reductions
 
 #include "search/MoveOrdering.hpp"
 #include "search/TimeManagement.hpp"
@@ -29,7 +31,7 @@
 #include <array>
 #include <atomic>
 #include <cassert>
-#include <cmath>   // IWYU pragma: keep - for std::max()
+#include <cmath>   // IWYU pragma: keep - for std::max(), std::log()
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <iterator>
 #include <libbenbot/data-structures/KillerMoves.hpp>
@@ -46,6 +48,7 @@
 #include <libchess/moves/MoveGen.hpp>
 #include <libutil/Threading.hpp>
 #include <optional>
+#include <span>
 #include <utility>
 #include <vector>
 
@@ -58,6 +61,21 @@ namespace {
 
     using eval::Score;
 
+    // null move pruning is only tried when at least this much depth is left
+    inline constexpr auto NMP_MIN_DEPTH { 3uz };
+
+    // used as a zugzwang guard for null move pruning: returns true if the side to move has at
+    // least 2 non-pawn pieces. Allowing a single minor piece misses zugzwang mates (see the
+    // MatePV unit test).
+    [[nodiscard]] auto has_enough_non_pawn_material(const Position& position) noexcept -> bool
+    {
+        const auto& pieces = position.is_white_to_move()
+                               ? position.pieces_for<chess::pieces::Color::White>()
+                               : position.pieces_for<chess::pieces::Color::Black>();
+
+        return (pieces.knights | pieces.bishops | pieces.rooks | pieces.queens).count() >= 2uz;
+    }
+
     struct Stats final {
         size_t nodesSearched { 0uz };
         size_t transTableHits { 0uz };
@@ -66,6 +84,32 @@ namespace {
         size_t mdpCutoffs { 0uz }; // cutoffs due to mate distance pruning
         size_t qDepth { 0uz };     // max depth reached by any quiescence search
     };
+
+    // late move reductions table, indexed by [depth][move index]
+    // the formula is similar to Ethereal's: see https://www.chessprogramming.org/Late_Move_Reductions
+    constexpr auto LMR_TABLE_SIZE { 64uz };
+
+    using LMRTable = std::array<std::array<size_t, LMR_TABLE_SIZE>, LMR_TABLE_SIZE>;
+
+    const auto lmrTable = [] {
+        LMRTable table { };
+
+        for (auto depth = 1uz; depth < LMR_TABLE_SIZE; ++depth) {
+            for (auto moveIdx = 1uz; moveIdx < LMR_TABLE_SIZE; ++moveIdx) {
+                table[depth][moveIdx] = static_cast<size_t>(
+                    0.78 + (std::log(static_cast<double>(depth)) * std::log(static_cast<double>(moveIdx)) / 2.47));
+            }
+        }
+
+        return table;
+    }();
+
+    [[nodiscard]] auto lmr_table_lookup(const size_t depth, const size_t moveIdx) noexcept -> size_t
+    {
+        static constexpr auto MAX_IDX = LMR_TABLE_SIZE - 1uz;
+
+        return lmrTable[std::min(depth, MAX_IDX)][std::min(moveIdx, MAX_IDX)];
+    }
 
     struct PvList final {
         void update(const Move move, const PvList& child)
@@ -160,15 +204,34 @@ namespace {
 
             const bool inCheck = position.is_check();
 
-            // reverse futility pruning
             if constexpr (not PVNode) {
                 if (not inCheck) {
-                    const auto margin = 80 * static_cast<int>(depthLeft);
-
                     const auto staticEval = eval::evaluate(position, pieceSquareTables);
+
+                    // reverse futility pruning
+                    const auto margin = 80 * static_cast<int>(depthLeft);
 
                     if (std::cmp_greater_equal(staticEval.value, bounds.beta.value + margin))
                         return staticEval;
+
+                    // null move pruning: if we can pass our turn and still fail high in a
+                    // reduced-depth search, this node is almost certainly a cutoff
+                    if (nullMoveAllowed
+                        and depthLeft >= NMP_MIN_DEPTH
+                        and staticEval >= bounds.beta
+                        and not bounds.beta.is_mate()
+                        and has_enough_non_pawn_material(position)) {
+                        const auto reduction = 3uz + (depthLeft / 3uz); // includes the 1 ply for the null move itself
+
+                        const auto score = -recurse_null(reduction).alpha_beta<false>();
+
+                        if (interrupter.was_aborted())
+                            return { };
+
+                        // we return beta here instead of the score, so that we never return an unproven mate score
+                        if (score >= bounds.beta)
+                            return bounds.beta;
+                    }
                 }
             }
 
@@ -193,25 +256,41 @@ namespace {
 
             std::optional<Move> bestMove;
 
+            const auto killers = killerMoves.get(plyFromRoot);
+
+            auto nextMoveIdx { 0uz };
+
             for (const auto move : moves) {
                 if constexpr (PVNode) {
                     childPV.reset();
                 }
 
-                const auto eval = [this, move, foundPV = bestMove.has_value()] {
+                const auto eval = [this, move, inCheck, killers, moveIdx = nextMoveIdx++, foundPV = bestMove.has_value()] {
+                    const auto childPos = after_move(position, move);
+
                     if (depthLeft == 0uz)
-                        return -recurse(move).quiescence<PVNode>();
+                        return -recurse(childPos).quiescence<PVNode>();
+
+                    // late move reductions: search moves late in the ordering at a reduced depth
+                    // with a null window, and only re-search at full depth if they beat alpha
+                    if (const size_t reduction = get_reduction<PVNode>(move, childPos, moveIdx, inCheck, killers);
+                        reduction > 0uz) {
+                        const auto reducedScore = -recurse(childPos, true, reduction).alpha_beta<false>();
+
+                        if (reducedScore <= bounds.alpha)
+                            return reducedScore;
+                    }
 
                     if (not foundPV)
-                        return -recurse(move).alpha_beta<PVNode>();
+                        return -recurse(childPos).alpha_beta<PVNode>();
 
                     // principal variation search: first try searching with a null window
 
-                    const auto nullWinScore = -recurse(move, true).alpha_beta<false>();
+                    const auto nullWinScore = -recurse(childPos, true).alpha_beta<false>();
 
                     if constexpr (PVNode) {
                         if (nullWinScore > bounds.alpha)
-                            return -recurse(move).alpha_beta<true>();
+                            return -recurse(childPos).alpha_beta<true>();
                     }
 
                     return nullWinScore;
@@ -265,6 +344,35 @@ namespace {
         }
 
     private:
+        // returns the number of plies by which to reduce the search of the given move
+        template <bool PVNode>
+        [[nodiscard]] auto get_reduction(
+            const Move move, const Position& childPos, const size_t moveIdx, const bool inCheck,
+            const std::span<const Move> killers) const -> size_t
+        {
+            static constexpr auto MIN_DEPTH { 3uz };
+
+            // number of moves to search at full depth before reducing
+            static constexpr auto FULL_DEPTH_MOVES { PVNode ? 3uz : 2uz };
+
+            if (depthLeft < MIN_DEPTH or moveIdx < FULL_DEPTH_MOVES or inCheck
+                or not position.is_quiet(move)
+                or std::ranges::contains(killers, move)
+                or childPos.is_check())
+                return 0uz;
+
+            auto reduction = lmr_table_lookup(depthLeft, moveIdx);
+
+            // reduce less in PV nodes
+            if constexpr (PVNode) {
+                if (reduction > 0uz)
+                    --reduction;
+            }
+
+            // never reduce straight into the quiescence search
+            return std::min(reduction, depthLeft - 2uz);
+        }
+
         // searches only captures, with no depth limit, to try to
         // improve the stability of the static evaluation function
         template <bool PVNode>
@@ -312,7 +420,7 @@ namespace {
                     childPV.reset();
                 }
 
-                evaluation = -(recurse(move).quiescence<PVNode>());
+                evaluation = -(recurse(after_move(position, move)).quiescence<PVNode>());
 
                 ++stats.nodesSearched;
 
@@ -342,13 +450,34 @@ namespace {
             return bounds.alpha;
         }
 
-        [[nodiscard]] auto recurse(const Move move, const bool useNullWindow = false) -> AlphaBetaContext
+        [[nodiscard]] auto recurse(
+            const Position& childPos, const bool useNullWindow = false, const size_t reduction = 0uz)
+            -> AlphaBetaContext
         {
+            assert(reduction == 0uz or reduction + 1uz < depthLeft);
+
             return { useNullWindow ? bounds.null_window() : bounds.invert(),
-                after_move(position, move),
-                depthLeft > 0uz ? depthLeft - 1uz : 0uz,
+                childPos,
+                depthLeft > reduction ? depthLeft - 1uz - reduction : 0uz,
                 plyFromRoot + 1uz,
                 transTable, interrupter, stats, childPV, killerMoves, pieceSquareTables };
+        }
+
+        // the reduction includes the 1 ply for the null move itself
+        [[nodiscard]] auto recurse_null(const size_t reduction) -> AlphaBetaContext
+        {
+            AlphaBetaContext child {
+                bounds.null_window_beta(),
+                after_null_move(position),
+                depthLeft > reduction ? depthLeft - reduction : 0uz,
+                plyFromRoot + 1uz,
+                transTable, interrupter, stats, childPV, killerMoves, pieceSquareTables
+            };
+
+            // don't allow 2 null moves in a row
+            child.nullMoveAllowed = false;
+
+            return child;
         }
 
         Bounds bounds;
@@ -358,6 +487,8 @@ namespace {
         size_t depthLeft { 0uz }; // decreases each iteration, and when this reaches 0, we call the quiescence search
 
         size_t plyFromRoot { 0uz }; // increases each iteration
+
+        bool nullMoveAllowed { true }; // false for the child of a null move
 
         TranspositionTable& transTable; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
