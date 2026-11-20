@@ -84,7 +84,7 @@ jobs:
     if: needs.parse_title.outputs.target != ''
     runs-on: ubuntu-latest
     name: Run SPRT test
-    timeout-minutes: 300 # 5 hours; see the run_sprt action's timeout input
+    timeout-minutes: 360 # 6 hours (GitHub's limit); see the run_sprt action's timeout input
     concurrency:
       group: ${{ github.workflow }}.${{ github.event.pull_request.number }}
       cancel-in-progress: true
