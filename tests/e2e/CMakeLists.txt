@@ -22,4 +22,4 @@ add_test (NAME ben_bot.e2e COMMAND Python::Interpreter "${CMAKE_CURRENT_LIST_DIR
                                    "$<TARGET_FILE:ben_bot>" --version "${BenBot_VERSION}"
 )
 
-set_tests_properties (ben_bot.e2e PROPERTIES REQUIRED_FILES "$<TARGET_FILE:ben_bot>")
+set_tests_properties (ben_bot.e2e PROPERTIES REQUIRED_FILES "$<TARGET_FILE:ben_bot>" TIMEOUT 1800)
