@@ -635,7 +635,9 @@ class TestOptions(metaclass=OrderedClassMembers):
             engine.setoption("Hash", "0")
             engine.setoption("MultiPV", "1000")
             engine.setoption("Move Overhead", "-1")
-            engine.send_command("go depth 5")
+            # MultiPV gets clamped to the number of legal moves, so this searches
+            # every root move as its own line; keep the depth low for the Debug builds
+            engine.send_command("go depth 3")
             engine.starts_with("bestmove")
 
 
