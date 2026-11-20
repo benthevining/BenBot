@@ -27,6 +27,7 @@
 // Futility pruning
 // Check extensions
 // History heuristic
+// Internal iterative reductions
 
 #include "search/MoveOrdering.hpp"
 #include "search/TimeManagement.hpp"
@@ -70,6 +71,9 @@ namespace {
 
     // futility pruning is only done with at most this much depth left
     inline constexpr auto FP_MAX_DEPTH { 2uz };
+
+    // internal iterative reductions are only done with at least this much depth left
+    inline constexpr auto IIR_MIN_DEPTH { 4uz };
 
     // moves that give check are only extended up to this ply. Reaching MAX_PLY aborts
     // the entire search, so this stops long sequences of checks from getting there.
@@ -215,6 +219,13 @@ namespace {
             }
 
             const bool inCheck = position.is_check();
+
+            // internal iterative reductions: with no TT move our move ordering is probably poor,
+            // so search this node one ply shallower. The next visit should then have a TT move.
+            if (not inCheck
+                and depthLeft >= IIR_MIN_DEPTH
+                and not transTable.find(position).and_then(&TTData::bestMove).has_value())
+                --depthLeft;
 
             // set to true if quiet moves after the first one can't raise alpha
             bool futilityPruning = false;
