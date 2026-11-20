@@ -695,7 +695,7 @@ namespace {
     // the previous iteration's score, widening the window if the search fails
     [[nodiscard]] auto search_root_line_aspiration(
         const size_t                   depth,
-        const Options&                 options,
+        Options&                       options,
         const Position&                position,
         TranspositionTable&            transTable,
         Interrupter&                   interrupter,
@@ -740,8 +740,13 @@ namespace {
                 beta  = (alpha + beta) / 2;
                 alpha = std::max(alpha - delta, -maxValue);
             } else if (line.score >= bounds.beta) {
-                // fail high
+                // fail high: search the move that failed high first in the re-search
                 beta = std::min(beta + delta, maxValue);
+
+                if (const auto it = std::ranges::find(options.movesToSearch, line.pv.front());
+                    it != options.movesToSearch.end()) {
+                    std::rotate(options.movesToSearch.begin(), it, std::next(it));
+                }
             } else {
                 return line;
             }
