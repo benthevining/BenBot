@@ -285,6 +285,18 @@ namespace {
         return 0;
     }
 
+    // the side to move gets a small bonus, since having the move is worth something
+    // (evaluate() always scores from the side to move's perspective)
+    [[nodiscard, gnu::const]] constexpr auto score_tempo(const float endgameWeight) noexcept
+        -> int
+    {
+        static constexpr auto MIDDLEGAME_TEMPO = 20.f;
+        static constexpr auto ENDGAME_TEMPO    = 10.f;
+
+        return static_cast<int>(
+            std::lerp(MIDDLEGAME_TEMPO, ENDGAME_TEMPO, endgameWeight));
+    }
+
 } // namespace
 
 auto evaluate(
@@ -306,7 +318,8 @@ auto evaluate(
         + score_squares_controlled_around_kings(position)
         + score_endgame_mopup(position, endgameWeight, materialScore)
         + detail::score_positional(position)
-        + detail::score_pawn_structure(position)) };
+        + detail::score_pawn_structure(position)
+        + score_tempo(endgameWeight)) };
 }
 
 } // namespace ben_bot::eval
