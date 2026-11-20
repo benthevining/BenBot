@@ -26,6 +26,7 @@
 // Late move reductions
 // Futility pruning
 // Check extensions
+// History heuristic
 
 #include "search/MoveOrdering.hpp"
 #include "search/TimeManagement.hpp"
@@ -36,6 +37,7 @@
 #include <cmath>   // IWYU pragma: keep - for std::max(), std::log()
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <iterator>
+#include <libbenbot/data-structures/HistoryTable.hpp>
 #include <libbenbot/data-structures/KillerMoves.hpp>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
@@ -155,7 +157,7 @@ namespace {
             const Bounds bnd, const Position& pos,
             const size_t depthToSearch, const size_t ply,
             TranspositionTable& trans, Interrupter& inter, Stats& statsToUse,
-            PvList& parentPV, KillerMoves& killers,
+            PvList& parentPV, KillerMoves& killers, HistoryTable& hist,
             const eval::PieceSquareTables& pst)
             : bounds { bnd }
             , position { pos }
@@ -165,6 +167,7 @@ namespace {
             , interrupter { inter }
             , stats { statsToUse }
             , killerMoves { killers }
+            , history { hist }
             , pieceSquareTables { pst }
             , pv { parentPV }
         {
@@ -270,7 +273,7 @@ namespace {
             }
 
             detail::order_moves_for_search(
-                position, moves, transTable, killerMoves.get(plyFromRoot));
+                position, moves, transTable, killerMoves.get(plyFromRoot), history);
 
             auto evalType { EvalType::Alpha };
 
@@ -279,6 +282,9 @@ namespace {
             const auto killers = killerMoves.get(plyFromRoot);
 
             auto nextMoveIdx { 0uz };
+
+            // quiet moves that were searched without causing a cutoff
+            MoveList quietsSearched;
 
             for (const auto move : moves) {
                 const auto moveIdx  = nextMoveIdx++;
@@ -348,11 +354,16 @@ namespace {
 
                     ++stats.betaCutoffs;
 
-                    if (position.is_quiet(move))
+                    if (position.is_quiet(move)) {
                         killerMoves.store(plyFromRoot, move);
+                        update_history(move, quietsSearched);
+                    }
 
                     return bounds.beta;
                 }
+
+                if (position.is_quiet(move))
+                    quietsSearched.emplace_back(move);
 
                 if (eval > bounds.alpha) {
                     bestMove     = move;
@@ -375,6 +386,21 @@ namespace {
         }
 
     private:
+        // gives the move that caused a cutoff a history bonus, and the
+        // quiet moves that were searched before it a penalty
+        void update_history(const Move cutoffMove, const MoveList& quietsSearched)
+        {
+            const auto depth = static_cast<int>(depthLeft) + 1;
+            const auto bonus = depth * depth;
+
+            const bool whiteToMove = position.is_white_to_move();
+
+            history.update(whiteToMove, cutoffMove, bonus);
+
+            for (const auto move : quietsSearched)
+                history.update(whiteToMove, move, -bonus);
+        }
+
         // returns the number of plies by which to reduce the search of the given move
         template <bool PVNode>
         [[nodiscard]] auto get_reduction(
@@ -494,7 +520,7 @@ namespace {
                 childPos,
                 depth > reduction ? depth - 1uz - reduction : 0uz,
                 plyFromRoot + 1uz,
-                transTable, interrupter, stats, childPV, killerMoves, pieceSquareTables };
+                transTable, interrupter, stats, childPV, killerMoves, history, pieceSquareTables };
         }
 
         // the reduction includes the 1 ply for the null move itself
@@ -505,7 +531,7 @@ namespace {
                 after_null_move(position),
                 depthLeft > reduction ? depthLeft - reduction : 0uz,
                 plyFromRoot + 1uz,
-                transTable, interrupter, stats, childPV, killerMoves, pieceSquareTables
+                transTable, interrupter, stats, childPV, killerMoves, history, pieceSquareTables
             };
 
             // don't allow 2 null moves in a row
@@ -531,6 +557,8 @@ namespace {
         Stats& stats; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
         KillerMoves& killerMoves; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
+
+        HistoryTable& history; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
         PvList& pv; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
@@ -577,6 +605,7 @@ namespace {
         TranspositionTable&            transTable,
         Interrupter&                   interrupter,
         KillerMoves&                   killerMoves,
+        HistoryTable&                  history,
         const eval::PieceSquareTables& pst,
         const Callbacks&               callbacks,
         Stats&                         stats)
@@ -596,9 +625,9 @@ namespace {
 
             PvList childPV;
 
-            auto create_context = [depth, &transTable, &interrupter, &stats, &childPV, &killerMoves, &pst](const Bounds boundsToUse, const Position& pos) {
+            auto create_context = [depth, &transTable, &interrupter, &stats, &childPV, &killerMoves, &history, &pst](const Bounds boundsToUse, const Position& pos) {
                 return AlphaBetaContext {
-                    boundsToUse, pos, depth, 1uz, transTable, interrupter, stats, childPV, killerMoves, pst
+                    boundsToUse, pos, depth, 1uz, transTable, interrupter, stats, childPV, killerMoves, history, pst
                 };
             };
 
@@ -654,6 +683,7 @@ namespace {
         TranspositionTable&            transTable,
         Interrupter&                   interrupter,
         KillerMoves&                   killerMoves,
+        HistoryTable&                  history,
         const eval::PieceSquareTables& pst,
         const Callbacks&               callbacks)
         -> RootSearchResult
@@ -663,7 +693,7 @@ namespace {
         killerMoves.clear();
 
         detail::order_moves_for_search(
-            position, options.movesToSearch, transTable, killerMoves.get(0uz));
+            position, options.movesToSearch, transTable, killerMoves.get(0uz), history);
 
         RootSearchResult result;
 
@@ -677,7 +707,7 @@ namespace {
 
         for (auto lineIdx = 0uz; lineIdx < numLines; ++lineIdx) {
             auto line = search_root_line(
-                depth, options, excludedMoves, position, transTable, interrupter, killerMoves, pst, callbacks, result.stats);
+                depth, options, excludedMoves, position, transTable, interrupter, killerMoves, history, pst, callbacks, result.stats);
 
             if (interrupter.was_aborted() or line.pv.empty())
                 break;
@@ -730,6 +760,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
     Interrupter interrupter { exitFlag, pondering, options.searchTime, options.infinite };
 
     transTable.new_search();
+    history.age();
     callbacks.search_start(options);
 
     // if the movesToSearch was empty, then we search all legal moves
@@ -755,7 +786,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
             break;
 
         const auto res = root_search(
-            depth, options, position, transTable, interrupter, killerMoves, pieceSquareTables, callbacks);
+            depth, options, position, transTable, interrupter, killerMoves, history, pieceSquareTables, callbacks);
 
         if (interrupter.was_aborted())
             break;

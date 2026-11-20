@@ -20,6 +20,7 @@
 #pragma once
 
 #include <atomic>
+#include <libbenbot/data-structures/HistoryTable.hpp>
 #include <libbenbot/data-structures/KillerMoves.hpp>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/PieceSquareTables.hpp>
@@ -196,6 +197,8 @@ private:
     TranspositionTable transTable;
 
     KillerMoves killerMoves;
+
+    HistoryTable history;
 
     eval::PieceSquareTables pieceSquareTables { eval::PieceSquareTables::get_default() };
 
