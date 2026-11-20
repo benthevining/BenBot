@@ -11,7 +11,7 @@
 # ======================================================================================
 
 import subprocess
-from typing import List
+from typing import List, Optional
 import os
 import collections
 import time
@@ -61,17 +61,23 @@ class UnexpectedOutputException(Exception):
 def timeout_decorator(timeout: float):
     def decorator(func):
         @wraps(func)
-        def wrapper(*args, **kwargs):
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                future = executor.submit(func, *args, **kwargs)
-                try:
-                    result = future.result(timeout=timeout)
-                except concurrent.futures.TimeoutError:
-                    raise TimeoutException(
-                        f"Function {func.__name__} timed out after {timeout} seconds",
-                        int(timeout),
-                    )
-            return result
+        def wrapper(self, *args, **kwargs):
+            # not using the executor as a context manager, because its __exit__
+            # would block waiting for the worker thread, which is stuck reading
+            # the engine's output, so the timeout would never actually fire
+            executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+            future = executor.submit(func, self, *args, **kwargs)
+            try:
+                return future.result(timeout=timeout)
+            except concurrent.futures.TimeoutError:
+                # killing the engine unblocks the worker thread's readline()
+                self.kill()
+                raise TimeoutException(
+                    f"Function {func.__name__} timed out after {timeout} seconds",
+                    int(timeout),
+                )
+            finally:
+                executor.shutdown(wait=False)
 
         return wrapper
 
@@ -132,11 +138,9 @@ class MiniTestFramework:
         print(f"    Running {method}... \r", end="", flush=True)
 
         buffer = io.StringIO()
-        fails = 0
+        t0 = time.time()
 
         try:
-            t0 = time.time()
-
             with redirect_stdout(buffer):
                 getattr(test_instance, method)()
 
@@ -144,29 +148,28 @@ class MiniTestFramework:
 
             self.print_success(f" {method} ({duration * 1000:.2f}ms)")
             self.passed_tests += 1
+            return 0
         except Exception as e:
             if isinstance(e, TimeoutException):
                 self.print_failure(
                     f" {method} (hit execution limit of {e.timeout} seconds)"
                 )
-
-            if isinstance(e, UnexpectedOutputException):
+            elif isinstance(e, UnexpectedOutputException):
                 self.print_failure(
                     f' {method} encountered unexpected output: "{e.actual}" when output matching "{e.expected}" was expected'
                 )
-
-            if isinstance(e, AssertionError):
+            elif isinstance(e, AssertionError):
                 self.__handle_assertion_error(t0, method)
+            else:
+                self.print_failure(f" {method} raised {type(e).__name__}: {e}")
 
             if self.stop_on_failure:
-                self.__print_buffer_output(buffer)
-                raise e
+                self.failed_tests += 1
+                raise
 
-            fails += 1
+            return 1
         finally:
             self.__print_buffer_output(buffer)
-
-        return fails
 
     def __handle_assertion_error(self, start_time, method: str):
         duration = time.time() - start_time
@@ -209,17 +212,34 @@ class MiniTestFramework:
 
 
 class BenBot:
-    def __init__(self, path: str, args: List[str] = []):
+    """Wraps a BenBot process. Use as a context manager, so that on exit the engine
+    is sent a quit command and is checked to have exited cleanly."""
+
+    def __init__(
+        self, path: str, args: Optional[List[str]] = None, env: Optional[dict] = None
+    ):
         self.path = path
         self.process = None
-        self.args = args
+        self.args = args or []
+        self.env = env
         self.output = []
 
         self.start()
 
-    def __del__(self):
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        if exc_type is not None:
+            self.kill()
+            return
+
         self.quit()
-        assert self.close() == 0
+        returncode = self.close()
+        assert returncode == 0, f"BenBot exited with return code {returncode}"
+
+    def __del__(self):
+        self.kill()
 
     def _check_process_alive(self):
         if not self.process or self.process.poll() is not None:
@@ -234,6 +254,7 @@ class BenBot:
             stderr=subprocess.STDOUT,
             universal_newlines=True,
             bufsize=1,
+            env=None if self.env is None else {**os.environ, **self.env},
         )
 
     def setoption(self, name: str, value: str):
@@ -296,7 +317,14 @@ class BenBot:
 
         while True:
             self._check_process_alive()
-            line = self.process.stdout.readline().strip()
+            line = self.process.stdout.readline()
+
+            # an empty string (without a newline) means the engine closed its output
+            if not line:
+                print("\n".join(self.output))
+                raise RuntimeError("BenBot process closed its output")
+
+            line = line.strip()
             self.output.append(line)
 
             yield line
@@ -311,10 +339,25 @@ class BenBot:
         if self.process:
             self.send_command("quit")
 
-    def close(self):
-        if self.process:
-            self.process.stdin.close()
-            self.process.stdout.close()
-            return self.process.wait()
+    def close(self) -> int:
+        if not self.process:
+            return 0
 
-        return 0
+        self.process.stdin.close()
+
+        try:
+            returncode = self.process.wait(timeout=MAX_TIMEOUT)
+        except subprocess.TimeoutExpired:
+            self.kill()
+            raise TimeoutException(
+                f"BenBot did not exit within {MAX_TIMEOUT} seconds", MAX_TIMEOUT
+            )
+
+        self.process.stdout.close()
+        self.process = None
+        return returncode
+
+    def kill(self):
+        if self.process and self.process.poll() is None:
+            self.process.kill()
+            self.process.wait()
