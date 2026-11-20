@@ -205,7 +205,9 @@ void Engine::run_bench(const string_view arguments) const
 {
     const auto [depth, filePath] = util::strings::split_at_first_space(arguments);
 
-    const auto defaultDepth = util::strings::int_from_string(depth, 3uz);
+    // deep enough that iterations reach features that only kick in at higher
+    // depths (like aspiration windows), so the bench number reflects them
+    const auto defaultDepth = util::strings::int_from_string(depth, 6uz);
 
     if (filePath.empty()) {
         info_string("Running bench for default position set...");
