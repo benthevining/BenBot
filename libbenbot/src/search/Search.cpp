@@ -757,6 +757,11 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
             if (totalNodesSearched >= options.maxNodes)
                 break;
 
+            // once we've used up the soft time limit, don't start a deeper iteration
+            if (options.softSearchTime.has_value()
+                and interrupter.get_search_duration() >= *options.softSearchTime)
+                break;
+
             // if the iteration we just completed took as much or more time than we
             // have remaining for the search, then don't start a deeper iteration
             // because it would probably get interrupted
