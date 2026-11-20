@@ -88,7 +88,6 @@ jobs:
       contents: read
       pull-requests: write
     env:
-      GH_TOKEN: ${{ github.token }}
       PR_NUMBER: ${{ github.event.pull_request.number }}
       RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
       HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -100,8 +99,11 @@ jobs:
       uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       with:
         ref: ${{ env.HEAD_SHA }}
+        persist-credentials: false
 
     - name: Post in-progress comment
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
         echo "## SPRT" > "$RUNNER_TEMP/comment.md"
         echo "" >> "$RUNNER_TEMP/comment.md"
@@ -119,6 +121,7 @@ jobs:
     - name: Post results comment
       if: ${{ !cancelled() }}
       env:
+        GH_TOKEN: ${{ github.token }}
         SUMMARY_FILE: ${{ steps.run_sprt.outputs.summary_file || format('{0}/logs/sprt/summary.md', github.workspace) }}
       run: |
         echo "## SPRT" > "$RUNNER_TEMP/comment.md"

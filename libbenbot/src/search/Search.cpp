@@ -91,8 +91,7 @@ namespace {
 
     using LMRTable = std::array<std::array<size_t, LMR_TABLE_SIZE>, LMR_TABLE_SIZE>;
 
-    [[nodiscard]] auto make_lmr_table() -> LMRTable
-    {
+    const auto lmrTable = [] {
         LMRTable table { };
 
         for (auto depth = 1uz; depth < LMR_TABLE_SIZE; ++depth) {
@@ -103,9 +102,7 @@ namespace {
         }
 
         return table;
-    }
-
-    const auto lmrTable = make_lmr_table();
+    }();
 
     [[nodiscard]] auto lmr_table_lookup(const size_t depth, const size_t moveIdx) noexcept -> size_t
     {
