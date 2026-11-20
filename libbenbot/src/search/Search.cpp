@@ -265,7 +265,7 @@ namespace {
                     childPV.reset();
                 }
 
-                const auto eval = [this, move, inCheck, killers, moveIdx = nextMoveIdx++, foundPV = bestMove.has_value()] {
+                const auto eval = [this, move, inCheck, killers, moveIdx = nextMoveIdx++] {
                     const auto childPos = after_move(position, move);
 
                     if (depthLeft == 0uz)
@@ -281,7 +281,10 @@ namespace {
                             return reducedScore;
                     }
 
-                    if (not foundPV)
+                    // only the first move gets a full window. Waiting for a move to raise alpha
+                    // instead means that in a PV node where every move fails low, every move is
+                    // searched as a PV node.
+                    if (moveIdx == 0uz)
                         return -recurse(childPos).alpha_beta<PVNode>();
 
                     // principal variation search: first try searching with a null window
