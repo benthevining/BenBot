@@ -24,6 +24,8 @@
 // MultiPV
 // Static exchange evaluation
 // Late move reductions
+// Futility pruning
+// Check extensions
 
 #include "search/MoveOrdering.hpp"
 #include "search/TimeManagement.hpp"
@@ -63,6 +65,13 @@ namespace {
 
     // null move pruning is only tried when at least this much depth is left
     inline constexpr auto NMP_MIN_DEPTH { 3uz };
+
+    // futility pruning is only done with at most this much depth left
+    inline constexpr auto FP_MAX_DEPTH { 2uz };
+
+    // moves that give check are only extended up to this ply. Reaching MAX_PLY aborts
+    // the entire search, so this stops long sequences of checks from getting there.
+    inline constexpr auto MAX_EXTENSION_PLY { MAX_PLY / 4uz };
 
     // used as a zugzwang guard for null move pruning: returns true if the side to move has at
     // least 2 non-pawn pieces. Allowing a single minor piece misses zugzwang mates (see the
@@ -204,6 +213,9 @@ namespace {
 
             const bool inCheck = position.is_check();
 
+            // set to true if quiet moves after the first one can't raise alpha
+            bool futilityPruning = false;
+
             if constexpr (not PVNode) {
                 if (not inCheck) {
                     const auto staticEval = eval::evaluate(position, pieceSquareTables);
@@ -231,6 +243,14 @@ namespace {
                         // we return beta here instead of the score, so that we never return an unproven mate score
                         if (score >= bounds.beta)
                             return bounds.beta;
+                    }
+
+                    // futility pruning: near the horizon, if a quiet move would need to gain
+                    // more than the margin to raise alpha, don't bother searching it
+                    if (depthLeft <= FP_MAX_DEPTH and not bounds.alpha.is_mate()) {
+                        const auto fpMargin = 100 + (80 * static_cast<int>(depthLeft));
+
+                        futilityPruning = std::cmp_less_equal(staticEval.value + fpMargin, bounds.alpha.value);
                     }
                 }
             }
@@ -261,36 +281,47 @@ namespace {
             auto nextMoveIdx { 0uz };
 
             for (const auto move : moves) {
+                const auto moveIdx  = nextMoveIdx++;
+                const auto childPos = after_move(position, move);
+
+                if (futilityPruning and moveIdx > 0uz
+                    and position.is_quiet(move) and not childPos.is_check())
+                    continue;
+
                 if constexpr (PVNode) {
                     childPV.reset();
                 }
 
-                const auto eval = [this, move, inCheck, killers, moveIdx = nextMoveIdx++, foundPV = bestMove.has_value()] {
-                    const auto childPos = after_move(position, move);
+                const auto eval = [this, move, &childPos, inCheck, killers, moveIdx, foundPV = bestMove.has_value()] {
+                    // check extensions: search moves that give check one ply deeper, so that
+                    // we don't drop into the quiescence search in the middle of a forcing line
+                    const auto extension = childPos.is_check() and plyFromRoot < MAX_EXTENSION_PLY
+                                             ? 1uz
+                                             : 0uz;
 
-                    if (depthLeft == 0uz)
+                    if (depthLeft + extension == 0uz)
                         return -recurse(childPos).quiescence<PVNode>();
 
                     // late move reductions: search moves late in the ordering at a reduced depth
                     // with a null window, and only re-search at full depth if they beat alpha
                     if (const size_t reduction = get_reduction<PVNode>(move, childPos, moveIdx, inCheck, killers);
                         reduction > 0uz) {
-                        const auto reducedScore = -recurse(childPos, true, reduction).alpha_beta<false>();
+                        const auto reducedScore = -recurse(childPos, true, reduction, extension).alpha_beta<false>();
 
                         if (reducedScore <= bounds.alpha)
                             return reducedScore;
                     }
 
                     if (not foundPV)
-                        return -recurse(childPos).alpha_beta<PVNode>();
+                        return -recurse(childPos, false, 0uz, extension).alpha_beta<PVNode>();
 
                     // principal variation search: first try searching with a null window
 
-                    const auto nullWinScore = -recurse(childPos, true).alpha_beta<false>();
+                    const auto nullWinScore = -recurse(childPos, true, 0uz, extension).alpha_beta<false>();
 
                     if constexpr (PVNode) {
                         if (nullWinScore > bounds.alpha)
-                            return -recurse(childPos).alpha_beta<true>();
+                            return -recurse(childPos, false, 0uz, extension).alpha_beta<true>();
                     }
 
                     return nullWinScore;
@@ -451,14 +482,17 @@ namespace {
         }
 
         [[nodiscard]] auto recurse(
-            const Position& childPos, const bool useNullWindow = false, const size_t reduction = 0uz)
+            const Position& childPos, const bool useNullWindow = false,
+            const size_t reduction = 0uz, const size_t extension = 0uz)
             -> AlphaBetaContext
         {
             assert(reduction == 0uz or reduction + 1uz < depthLeft);
 
+            const auto depth = depthLeft + extension;
+
             return { useNullWindow ? bounds.null_window() : bounds.invert(),
                 childPos,
-                depthLeft > reduction ? depthLeft - 1uz - reduction : 0uz,
+                depth > reduction ? depth - 1uz - reduction : 0uz,
                 plyFromRoot + 1uz,
                 transTable, interrupter, stats, childPV, killerMoves, pieceSquareTables };
         }
