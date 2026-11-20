@@ -760,6 +760,7 @@ namespace {
         HistoryTable&                  history,
         const eval::PieceSquareTables& pst,
         const Callbacks&               callbacks,
+        const std::optional<Move>      prevBestMove,
         const std::optional<Score>     prevScore)
         -> RootSearchResult
     {
@@ -769,6 +770,15 @@ namespace {
 
         detail::order_moves_for_search(
             position, options.movesToSearch, transTable, killerMoves.get(0uz), history);
+
+        // the root position is never stored in the transposition table, so the move ordering
+        // can't know about the previous iteration's best move. Search it first explicitly
+        if (prevBestMove.has_value()) {
+            if (const auto it = std::ranges::find(options.movesToSearch, *prevBestMove);
+                it != options.movesToSearch.end()) {
+                std::rotate(options.movesToSearch.begin(), it, std::next(it));
+            }
+        }
 
         RootSearchResult result;
 
@@ -863,12 +873,16 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         if (interrupter.should_abort(0uz))
             break;
 
+        const auto prevBestMove = result.pv.empty()
+                                    ? std::nullopt
+                                    : std::optional { result.pv.front() };
+
         const auto prevScore = completedDepth >= ASPIRATION_MIN_DEPTH
                                  ? std::optional { result.bestScore }
                                  : std::nullopt;
 
         const auto res = root_search(
-            depth, options, position, transTable, interrupter, killerMoves, history, pieceSquareTables, callbacks, prevScore);
+            depth, options, position, transTable, interrupter, killerMoves, history, pieceSquareTables, callbacks, prevBestMove, prevScore);
 
         if (interrupter.was_aborted())
             break;
