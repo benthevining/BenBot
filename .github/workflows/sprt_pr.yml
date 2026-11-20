@@ -12,6 +12,7 @@
 
 # Runs an SPRT test for any PR with one of these tags in its title:
 # - [sprt-gain] or [sprt]: gainer bounds
+# - [sprt-big]: wider gainer bounds, for changes expected to gain a lot of Elo (takes precedence over [sprt-gain] & [sprt])
 # - [sprt-nonreg]: non-regression bounds (takes precedence if multiple tags are present)
 # The PR's head is tested against the PR's base commit, and the results are posted as a PR comment.
 
@@ -51,6 +52,8 @@ jobs:
         get_target() {
           if [[ "$1" == *"[sprt-nonreg]"* ]]; then
             echo sprt_non_regression
+          elif [[ "$1" == *"[sprt-big]"* ]]; then
+            echo sprt_gain_big
           elif [[ "$1" == *"[sprt-gain]"* || "$1" == *"[sprt]"* ]]; then
             echo sprt_gain
           fi
@@ -68,6 +71,7 @@ jobs:
 
         case "$target" in
           sprt_gain) description=gainer ;;
+          sprt_gain_big) description="big gainer" ;;
           sprt_non_regression) description=non-regression ;;
           *) description="" ;;
         esac
@@ -80,7 +84,7 @@ jobs:
     if: needs.parse_title.outputs.target != ''
     runs-on: ubuntu-latest
     name: Run SPRT test
-    timeout-minutes: 300 # 5 hours
+    timeout-minutes: 300 # 5 hours; see the run_sprt action's timeout input
     concurrency:
       group: ${{ github.workflow }}.${{ github.event.pull_request.number }}
       cancel-in-progress: true
