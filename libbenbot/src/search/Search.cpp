@@ -89,10 +89,10 @@ namespace {
     }
 
     // aspiration windows are only used once this many iterations have been completed
-    constexpr auto ASPIRATION_MIN_DEPTH { 4uz };
+    constexpr auto ASPIRATION_MIN_DEPTH { 6uz };
 
     // the initial half-width of the aspiration window, in centipawns
-    constexpr auto ASPIRATION_INITIAL_DELTA { 25 };
+    constexpr auto ASPIRATION_INITIAL_DELTA { 50 };
 
     struct Stats final {
         size_t nodesSearched { 0uz };

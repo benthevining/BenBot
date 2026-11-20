@@ -33,7 +33,7 @@ using std::size_t;
 
 namespace notation = chess::notation;
 
-// Searches deep enough for the aspiration window to kick in (which happens after depth 4),
+// Searches deep enough for the aspiration window to kick in (which happens after depth 6),
 // including a position where the score swings between iterations. Every completed
 // iteration must report a legal, non-empty PV, and a score that isn't a window bound left over
 // from a failed search.
@@ -85,7 +85,7 @@ TEST_CASE("Search - aspiration windows report valid results", TAGS)
     ctx.set_position(rootPosition);
 
     ben_bot::search::Options options;
-    options.depth = 6uz;
+    options.depth = 7uz;
 
     ctx.set_options(options);
 
@@ -95,5 +95,5 @@ TEST_CASE("Search - aspiration windows report valid results", TAGS)
     ctx.search();
 
     // make sure we searched past the aspiration window's minimum depth
-    REQUIRE(numResults >= 5uz);
+    REQUIRE(numResults >= 7uz);
 }
