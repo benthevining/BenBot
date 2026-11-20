@@ -59,8 +59,9 @@ struct Interrupter final {
         , searchTime { maxSearchTime }
         , infiniteMode { infinite }
     {
-        // make sure exit flag is false when search starts
-        exitFlagToUse.store(false, memory_order::release);
+        // the exit flag is deliberately not reset here: a stop command received after
+        // the search was requested but before this point must still abort the search.
+        // Thread::start() resets the flag before handing the search to the background thread.
     }
 
     Interrupter(const Interrupter&)            = delete;
