@@ -154,10 +154,15 @@ void order_moves_for_search(
             };
         });
 
+    // std::sort doesn't keep equal elements in order, and different standard libraries order them
+    // differently, so ties are broken by the move itself to make the order (& bench) the same everywhere
     std::ranges::sort(
         scoredMoves,
         [](const ScoredMove& first, const ScoredMove& second) {
-            return first.first > second.first;
+            if (first.first != second.first)
+                return first.first > second.first;
+
+            return first.second < second.second;
         });
 
     std::ranges::transform(scoredMoves, moves.begin(), &ScoredMove::second);
@@ -181,11 +186,17 @@ void order_moves_for_q_search(
     const Position&       currentPosition,
     const std::span<Move> moves)
 {
+    // ties are broken by the move itself, as in order_moves_for_search()
     std::ranges::sort(
         moves,
         [&currentPosition](const Move first, const Move second) {
-            return q_search_move_order_score(currentPosition, first)
-                 > q_search_move_order_score(currentPosition, second);
+            const auto firstScore  = q_search_move_order_score(currentPosition, first);
+            const auto secondScore = q_search_move_order_score(currentPosition, second);
+
+            if (firstScore != secondScore)
+                return firstScore > secondScore;
+
+            return first < second;
         });
 }
 
