@@ -25,6 +25,7 @@
 // Static exchange evaluation
 // Late move reductions
 // Futility pruning
+// Check extensions
 // History heuristic
 
 #include "search/MoveOrdering.hpp"
@@ -69,6 +70,10 @@ namespace {
 
     // futility pruning is only done with at most this much depth left
     inline constexpr auto FP_MAX_DEPTH { 2uz };
+
+    // moves that give check are only extended up to this ply. Reaching MAX_PLY aborts
+    // the entire search, so this stops long sequences of checks from getting there.
+    inline constexpr auto MAX_EXTENSION_PLY { MAX_PLY / 4uz };
 
     // used as a zugzwang guard for null move pruning: returns true if the side to move has at
     // least 2 non-pawn pieces. Allowing a single minor piece misses zugzwang mates (see the
@@ -294,29 +299,35 @@ namespace {
                 }
 
                 const auto eval = [this, move, &childPos, inCheck, killers, moveIdx, foundPV = bestMove.has_value()] {
-                    if (depthLeft == 0uz)
+                    // check extensions: search moves that give check one ply deeper, so that
+                    // we don't drop into the quiescence search in the middle of a forcing line
+                    const auto extension = childPos.is_check() and plyFromRoot < MAX_EXTENSION_PLY
+                                             ? 1uz
+                                             : 0uz;
+
+                    if (depthLeft + extension == 0uz)
                         return -recurse(childPos).quiescence<PVNode>();
 
                     // late move reductions: search moves late in the ordering at a reduced depth
                     // with a null window, and only re-search at full depth if they beat alpha
                     if (const size_t reduction = get_reduction<PVNode>(move, childPos, moveIdx, inCheck, killers);
                         reduction > 0uz) {
-                        const auto reducedScore = -recurse(childPos, true, reduction).alpha_beta<false>();
+                        const auto reducedScore = -recurse(childPos, true, reduction, extension).alpha_beta<false>();
 
                         if (reducedScore <= bounds.alpha)
                             return reducedScore;
                     }
 
                     if (not foundPV)
-                        return -recurse(childPos).alpha_beta<PVNode>();
+                        return -recurse(childPos, false, 0uz, extension).alpha_beta<PVNode>();
 
                     // principal variation search: first try searching with a null window
 
-                    const auto nullWinScore = -recurse(childPos, true).alpha_beta<false>();
+                    const auto nullWinScore = -recurse(childPos, true, 0uz, extension).alpha_beta<false>();
 
                     if constexpr (PVNode) {
                         if (nullWinScore > bounds.alpha)
-                            return -recurse(childPos).alpha_beta<true>();
+                            return -recurse(childPos, false, 0uz, extension).alpha_beta<true>();
                     }
 
                     return nullWinScore;
@@ -497,14 +508,17 @@ namespace {
         }
 
         [[nodiscard]] auto recurse(
-            const Position& childPos, const bool useNullWindow = false, const size_t reduction = 0uz)
+            const Position& childPos, const bool useNullWindow = false,
+            const size_t reduction = 0uz, const size_t extension = 0uz)
             -> AlphaBetaContext
         {
             assert(reduction == 0uz or reduction + 1uz < depthLeft);
 
+            const auto depth = depthLeft + extension;
+
             return { useNullWindow ? bounds.null_window() : bounds.invert(),
                 childPos,
-                depthLeft > reduction ? depthLeft - 1uz - reduction : 0uz,
+                depth > reduction ? depth - 1uz - reduction : 0uz,
                 plyFromRoot + 1uz,
                 transTable, interrupter, stats, childPV, killerMoves, history, pieceSquareTables };
         }
