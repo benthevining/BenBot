@@ -27,7 +27,7 @@ inputs:
   timeout:
     description: Time limit for the SPRT games (in the format accepted by the timeout command). Should be a bit less than the calling job's timeout-minutes, so that partial results can still be reported.
     required: false
-    default: 270m
+    default: 345m
 
 outputs:
   summary_file:
