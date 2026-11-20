@@ -287,7 +287,7 @@ namespace {
 
     // the side to move gets a small bonus, since having the move is worth something
     // (evaluate() always scores from the side to move's perspective)
-    [[nodiscard, gnu::const]] constexpr auto score_tempo(const float endgameWeight) noexcept
+    [[nodiscard, gnu::const]] auto score_tempo(const float endgameWeight) noexcept
         -> int
     {
         static constexpr auto MIDDLEGAME_TEMPO = 20.f;
