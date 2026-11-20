@@ -50,6 +50,11 @@ struct Bounds final {
      */
     [[nodiscard]] constexpr auto null_window() const noexcept -> Bounds;
 
+    /** Returns a null window around beta, from the opponent's perspective. For
+        usage with null move pruning.
+     */
+    [[nodiscard]] constexpr auto null_window_beta() const noexcept -> Bounds;
+
     /** Returns true if the score is between alpha and beta. */
     [[nodiscard]] constexpr auto contains(Score score) const noexcept -> bool;
 
@@ -91,6 +96,14 @@ constexpr auto Bounds::null_window() const noexcept -> Bounds
     return {
         .alpha = Score { static_cast<eval::Value>(-alpha.value - UINT16_C(1)) },
         .beta  = -alpha
+    };
+}
+
+constexpr auto Bounds::null_window_beta() const noexcept -> Bounds
+{
+    return {
+        .alpha = -beta,
+        .beta  = Score { static_cast<eval::Value>(-beta.value + UINT16_C(1)) }
     };
 }
 
