@@ -23,6 +23,10 @@ using Hash = Position::Hash;
 
 inline constexpr Hash BLACK_TO_MOVE { UINT64_C(0x679ebe6f2ed869a4) };
 
+// starting value for the pawn-only hash. This is non-zero so that a position with no
+// pawns doesn't hash to 0, which is the key of an empty pawn table entry
+inline constexpr Hash NO_PAWNS { UINT64_C(0xcbaec1a80e3783d0) };
+
 inline constexpr Hash WHITE_KINGSIDE_CASTLE { UINT64_C(0x6b63254b15e00a87) };
 inline constexpr Hash WHITE_QUEENSIDE_CASTLE { UINT64_C(0x098dc1575ddbd151) };
 inline constexpr Hash BLACK_KINGSIDE_CASTLE { UINT64_C(0xdbb675f686df04a9) };
