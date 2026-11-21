@@ -27,12 +27,29 @@ inputs:
   timeout:
     description: Time limit for the SPRT games (in the format accepted by the timeout command). Should be a bit less than the calling job's timeout-minutes, so that partial results can still be reported.
     required: false
-    default: 270m
+    default: 345m
+  shard:
+    description: If true, plays games until the time limit without stopping at the SPRT bounds, so that the results can be combined with other shards' (see the sprt_pr workflow). The fastchess log is uploaded, but the results aren't reported.
+    required: false
+    default: 'false'
+  seed:
+    description: Seed for the random opening order. Each shard of a test should use a different seed, otherwise they'll play the same openings.
+    required: false
+    default: ''
+  artifact_name:
+    description: Name of the artifact that the SPRT logs are uploaded to
+    required: false
+    default: sprt-logs
 
 outputs:
   summary_file:
     description: Path to a Markdown file containing a summary of the SPRT results
     value: ${{ github.workspace }}/logs/sprt/summary.md
+
+# This works on Linux & macOS runners. On Linux it builds with the gcc preset; on macOS it builds with
+# the clang preset (Apple Clang), the same as the build & test CI workflow does, but only for arm64
+# (CI builds universal binaries), since the macOS runners are Apple silicon & the build time comes out
+# of each shard's time limit.
 
 runs:
   using: "composite"
@@ -42,7 +59,7 @@ runs:
     uses: ./.github/actions/download_github_release
     with:
       repository: Disservin/fastchess
-      file_filter: '*-linux-x86-64*'
+      file_filter: ${{ format('*-{0}-{1}*', runner.os == 'macOS' && 'mac' || 'linux', runner.arch == 'ARM64' && 'arm64' || 'x86-64') }}
       artifact_xtn: tar
       path_to_exec: fastchess
 
@@ -73,6 +90,8 @@ runs:
     id: build_main
     uses: ./.github/actions/run_build
     with:
+      cmake_preset: ${{ runner.os == 'macOS' && 'clang' || 'gcc' }}
+      extra_config_args: ${{ runner.os == 'macOS' && '-D CMAKE_OSX_ARCHITECTURES=arm64' || '' }}
       root_dir: ${{ github.workspace }}/tmp-main
 
     # --- Build SPRT ---
@@ -81,7 +100,8 @@ runs:
     uses: ./.github/actions/run_build
     id: run_build
     with:
-      extra_config_args: -D "FASTCHESS_PROGRAM=${{ steps.download_fastchess.outputs.executable }}"
+      cmake_preset: ${{ runner.os == 'macOS' && 'clang' || 'gcc' }}
+      extra_config_args: ${{ runner.os == 'macOS' && '-D CMAKE_OSX_ARCHITECTURES=arm64' || '' }} -D "FASTCHESS_PROGRAM=${{ steps.download_fastchess.outputs.executable }}" -D "BENBOT_SPRT_SHARD=${{ inputs.shard == 'true' && 'ON' || 'OFF' }}" -D "BENBOT_SPRT_SEED=${{ inputs.seed }}"
 
   - name: Inject baseline binary
     if: inputs.use_main == 'false'
@@ -97,22 +117,44 @@ runs:
       cmake -D BASELINE_BINARY=${{ steps.build_main.outputs.deploy_dir }}/bin/ben_bot -P InjectSPRTBaseline-Release.cmake
     working-directory: ${{ steps.run_build.outputs.build_dir }}
 
+    # macOS doesn't come with GNU timeout, which the next step uses
+  - name: Install coreutils (macOS)
+    if: runner.os == 'macOS'
+    shell: bash
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: 1
+    run: |
+      if ! command -v timeout > /dev/null && ! command -v gtimeout > /dev/null; then
+        brew install coreutils
+      fi
+
   - name: Run SPRT test
     shell: bash
     env:
       SPRT_OUTPUT_LOG: ${{ github.workspace }}/logs/sprt/output.log
       TARGET_NAME: ${{ inputs.target_name }}
       SPRT_TIMEOUT: ${{ inputs.timeout }}
+      SHARD: ${{ inputs.shard }}
       # NB. tee needs the output directory to exist before it's invoked
       # if the time limit is hit, carry on so that the partial results still get uploaded & reported
     run: |
       cmake -E make_directory "$(dirname "$SPRT_OUTPUT_LOG")"
+      # Homebrew's coreutils may only provide it as gtimeout
+      timeout_cmd="$(command -v timeout || command -v gtimeout)"
       status=0
-      timeout "$SPRT_TIMEOUT" cmake --build . --target "$TARGET_NAME" --config Release | tee "$SPRT_OUTPUT_LOG" || status=$?
+      "$timeout_cmd" "$SPRT_TIMEOUT" cmake --build . --target "$TARGET_NAME" --config Release | tee "$SPRT_OUTPUT_LOG" || status=$?
       if [[ "$status" -eq 124 ]]; then
-        echo "::warning::SPRT didn't reach a bound within $SPRT_TIMEOUT"
+        # shards are always stopped by the time limit
+        if [[ "$SHARD" != true ]]; then
+          echo "::warning::SPRT didn't reach a bound within $SPRT_TIMEOUT"
+        fi
       elif [[ "$status" -ne 0 ]]; then
         exit "$status"
+      fi
+      # fastchess failing to start (e.g. a missing system library) doesn't always fail the build
+      if ! grep -q '^Finished game' "$SPRT_OUTPUT_LOG"; then
+        echo "::error::No SPRT games were finished, check the output above for details"
+        exit 1
       fi
     working-directory: ${{ steps.run_build.outputs.build_dir }}
 
@@ -120,11 +162,12 @@ runs:
     if: ${{ !cancelled() }}
     uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f   # v7
     with:
-      name: sprt-logs
+      name: ${{ inputs.artifact_name }}
       path: logs/sprt
       if-no-files-found: error
 
   - name: Report results
+    if: inputs.shard != 'true'
     shell: bash
     env:
       SPRT_OUTPUT_LOG: ${{ github.workspace }}/logs/sprt/output.log
