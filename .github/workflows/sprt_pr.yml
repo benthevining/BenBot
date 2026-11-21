@@ -108,10 +108,10 @@ jobs:
           fi
         }
 
-        # macos-15 is Apple silicon
+        # macos-26 is Apple silicon. fastchess's macOS release needs macOS 26, so this can't be macos-15
         get_runner() {
           if [[ "$1" == *"[macos]"* ]]; then
-            echo macos-15
+            echo macos-26
           else
             echo ubuntu-latest
           fi

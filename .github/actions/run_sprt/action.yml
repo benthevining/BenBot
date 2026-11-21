@@ -151,6 +151,11 @@ runs:
       elif [[ "$status" -ne 0 ]]; then
         exit "$status"
       fi
+      # fastchess failing to start (e.g. a missing system library) doesn't always fail the build
+      if ! grep -q '^Finished game' "$SPRT_OUTPUT_LOG"; then
+        echo "::error::No SPRT games were finished, check the output above for details"
+        exit 1
+      fi
     working-directory: ${{ steps.run_build.outputs.build_dir }}
 
   - name: Upload logs

@@ -42,7 +42,7 @@ on:
         type: string
         required: true
       runner:
-        description: Runner label for the shard jobs (e.g. ubuntu-latest or macos-15)
+        description: Runner label for the shard jobs (e.g. ubuntu-latest or macos-26)
         type: string
         required: true
       platform:
