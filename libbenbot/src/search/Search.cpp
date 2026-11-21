@@ -42,6 +42,7 @@
 #include <iterator>
 #include <libbenbot/data-structures/HistoryTable.hpp>
 #include <libbenbot/data-structures/KillerMoves.hpp>
+#include <libbenbot/data-structures/SearchStack.hpp>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Material.hpp>
@@ -178,6 +179,19 @@ namespace {
         return (pieces.knights | pieces.bishops | pieces.rooks | pieces.queens).count() >= 2uz;
     }
 
+    // used for debug assertions: returns true if the given move could have been the last move
+    // played to reach this position, i.e. the piece it moved (or promoted to) is on its target
+    // square & belongs to the side that just moved. Null moves are always allowed.
+    [[nodiscard, maybe_unused]] auto could_be_last_move(const Position& position, const Move move) noexcept -> bool
+    {
+        if (move.is_null())
+            return true;
+
+        const auto expected = move.promoted_type().value_or(move.piece());
+
+        return position.their_pieces().get_piece_on(move.to()) == expected;
+    }
+
     struct Stats final {
         size_t nodesSearched { 0uz };
         size_t transTableHits { 0uz };
@@ -249,7 +263,7 @@ namespace {
             const size_t depthToSearch, const size_t ply,
             TranspositionTable& trans, Interrupter& inter, Stats& statsToUse,
             PvList& parentPV, KillerMoves& killers, HistoryTable& hist,
-            const eval::PieceSquareTables& pst)
+            const eval::PieceSquareTables& pst, SearchStackEntry* stackEntry)
             : bounds { bnd }
             , position { pos }
             , depthLeft { depthToSearch }
@@ -261,7 +275,10 @@ namespace {
             , history { hist }
             , pieceSquareTables { pst }
             , pv { parentPV }
+            , ss { stackEntry }
         {
+            assert(ss != nullptr);
+            assert(could_be_last_move(position, ss->move));
         }
 
         AlphaBetaContext(const AlphaBetaContext&)            = default;
@@ -320,6 +337,9 @@ namespace {
             if constexpr (not PVNode) {
                 if (not inCheck) {
                     const auto staticEval = eval::evaluate(position, pieceSquareTables);
+
+                    // this must be stored before any children are searched
+                    ss->staticEval = staticEval;
 
                     // reverse futility pruning
                     const auto margin = 80 * static_cast<int>(depthLeft);
@@ -440,13 +460,13 @@ namespace {
                                              : 0uz;
 
                     if (depthLeft + extension == 0uz)
-                        return -recurse(childPos).quiescence<PVNode>();
+                        return -recurse(childPos, move).quiescence<PVNode>();
 
                     // late move reductions: search moves late in the ordering at a reduced depth
                     // with a null window, and only re-search at full depth if they beat alpha
                     if (const size_t reduction = get_reduction<PVNode>(move, childPos, moveIdx, inCheck, killers);
                         reduction > 0uz) {
-                        const auto reducedScore = -recurse(childPos, true, reduction, extension).alpha_beta<false>();
+                        const auto reducedScore = -recurse(childPos, move, true, reduction, extension).alpha_beta<false>();
 
                         if (reducedScore <= bounds.alpha)
                             return reducedScore;
@@ -456,15 +476,15 @@ namespace {
                     // instead means that in a PV node where every move fails low, every move is
                     // searched as a PV node.
                     if (moveIdx == 0uz)
-                        return -recurse(childPos, false, 0uz, extension).alpha_beta<PVNode>();
+                        return -recurse(childPos, move, false, 0uz, extension).alpha_beta<PVNode>();
 
                     // principal variation search: first try searching with a null window
 
-                    const auto nullWinScore = -recurse(childPos, true, 0uz, extension).alpha_beta<false>();
+                    const auto nullWinScore = -recurse(childPos, move, true, 0uz, extension).alpha_beta<false>();
 
                     if constexpr (PVNode) {
                         if (nullWinScore > bounds.alpha)
-                            return -recurse(childPos, false, 0uz, extension).alpha_beta<true>();
+                            return -recurse(childPos, move, false, 0uz, extension).alpha_beta<true>();
                     }
 
                     return nullWinScore;
@@ -585,9 +605,14 @@ namespace {
             if (position.is_checkmate())
                 return Score::mate(plyFromRoot);
 
+            const bool inCheck = position.is_check();
+
             auto evaluation = eval::evaluate(position, pieceSquareTables);
 
             ++stats.staticEvals;
+
+            if (not inCheck)
+                ss->staticEval = evaluation;
 
             // see if we can get a cutoff (we may not need to generate moves for this position)
             if (evaluation >= bounds.beta) {
@@ -601,8 +626,6 @@ namespace {
 
             detail::order_moves_for_q_search(position, moves);
 
-            const bool inCheck = position.is_check();
-
             for (const auto move : moves) {
                 assert(position.is_capture(move));
 
@@ -614,7 +637,7 @@ namespace {
                     childPV.reset();
                 }
 
-                evaluation = -(recurse(after_move(position, move)).quiescence<PVNode>());
+                evaluation = -(recurse(after_move(position, move), move).quiescence<PVNode>());
 
                 ++stats.nodesSearched;
 
@@ -644,8 +667,9 @@ namespace {
             return bounds.alpha;
         }
 
+        // move is the move that leads from this position to childPos
         [[nodiscard]] auto recurse(
-            const Position& childPos, const bool useNullWindow = false,
+            const Position& childPos, const Move move, const bool useNullWindow = false,
             const size_t reduction = 0uz, const size_t extension = 0uz)
             -> AlphaBetaContext
         {
@@ -657,7 +681,8 @@ namespace {
                 childPos,
                 depth > reduction ? depth - 1uz - reduction : 0uz,
                 plyFromRoot + 1uz,
-                transTable, interrupter, stats, childPV, killerMoves, history, pieceSquareTables };
+                transTable, interrupter, stats, childPV, killerMoves, history, pieceSquareTables,
+                reset_child_stack_entry(move) };
         }
 
         // the reduction includes the 1 ply for the null move itself
@@ -668,11 +693,26 @@ namespace {
                 after_null_move(position),
                 depthLeft > reduction ? depthLeft - reduction : 0uz,
                 plyFromRoot + 1uz,
-                transTable, interrupter, stats, childPV, killerMoves, history, pieceSquareTables
+                transTable, interrupter, stats, childPV, killerMoves, history, pieceSquareTables,
+                reset_child_stack_entry(Move { })
             };
 
             // don't allow 2 null moves in a row
             child.nullMoveAllowed = false;
+
+            return child;
+        }
+
+        // resets the search stack entry for a child of this node, & returns it.
+        // This is called each time a child is searched, so that the child doesn't
+        // see anything left over from a node searched earlier at the same ply
+        [[nodiscard]] auto reset_child_stack_entry(const Move move) const noexcept -> SearchStackEntry*
+        {
+            assert(plyFromRoot < MAX_PLY);
+
+            auto* const child = std::next(ss);
+
+            *child = { .move = move, .staticEval = std::nullopt };
 
             return child;
         }
@@ -700,6 +740,10 @@ namespace {
         PvList& pv; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
         const eval::PieceSquareTables& pieceSquareTables; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
+
+        // this node's entry in the search stack. The entries for the previous
+        // plies, including the sentinels before the root, are std::prev(ss, n)
+        SearchStackEntry* ss;
 
         PvList childPV;
     };
@@ -743,6 +787,7 @@ namespace {
         Interrupter&                   interrupter,
         KillerMoves&                   killerMoves,
         HistoryTable&                  history,
+        SearchStack&                   stack,
         const eval::PieceSquareTables& pst,
         const Callbacks&               callbacks,
         Stats&                         stats)
@@ -762,9 +807,14 @@ namespace {
 
             PvList childPV;
 
-            auto create_context = [depth, &transTable, &interrupter, &stats, &childPV, &killerMoves, &history, &pst](const Bounds boundsToUse, const Position& pos) {
+            auto create_context = [depth, move, &transTable, &interrupter, &stats, &childPV, &killerMoves, &history, &stack, &pst](const Bounds boundsToUse, const Position& pos) {
+                // reset each time, as in AlphaBetaContext::recurse()
+                auto* const stackEntry = stack.at(1uz);
+
+                *stackEntry = { .move = move, .staticEval = std::nullopt };
+
                 return AlphaBetaContext {
-                    boundsToUse, pos, depth, 1uz, transTable, interrupter, stats, childPV, killerMoves, history, pst
+                    boundsToUse, pos, depth, 1uz, transTable, interrupter, stats, childPV, killerMoves, history, pst, stackEntry
                 };
             };
 
@@ -821,6 +871,7 @@ namespace {
         Interrupter&                   interrupter,
         KillerMoves&                   killerMoves,
         HistoryTable&                  history,
+        SearchStack&                   stack,
         const eval::PieceSquareTables& pst,
         const Callbacks&               callbacks,
         const std::optional<Move>      prevBestMove)
@@ -854,7 +905,7 @@ namespace {
 
         for (auto lineIdx = 0uz; lineIdx < numLines; ++lineIdx) {
             auto line = search_root_line(
-                depth, options, excludedMoves, position, transTable, interrupter, killerMoves, history, pst, callbacks, result.stats);
+                depth, options, excludedMoves, position, transTable, interrupter, killerMoves, history, stack, pst, callbacks, result.stats);
 
             if (interrupter.was_aborted() or line.pv.empty())
                 break;
@@ -907,7 +958,12 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
     Interrupter interrupter { exitFlag, pondering, options.searchTime, options.infinite };
 
     transTable.new_search();
-    history.age();
+    history->age();
+
+    // the root's entry & the sentinels before it are never written to, so they keep the null
+    // moves & missing static evals that they start with. The game's real previous moves aren't
+    // known here, since Position doesn't store them.
+    SearchStack stack;
     callbacks.search_start(options);
 
     // if the movesToSearch was empty, then we search all legal moves
@@ -941,7 +997,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
                                     : std::optional { result.pv.front() };
 
         const auto res = root_search(
-            depth, options, position, transTable, interrupter, killerMoves, history, pieceSquareTables, callbacks, prevBestMove);
+            depth, options, position, transTable, interrupter, killerMoves, *history, stack, pieceSquareTables, callbacks, prevBestMove);
 
         if (interrupter.was_aborted())
             break;
