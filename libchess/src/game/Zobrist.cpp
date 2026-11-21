@@ -19,8 +19,8 @@
 #include <functional>
 #include <libchess/board/BitboardIndex.hpp>
 #include <libchess/board/File.hpp>
-#include <libchess/board/Masks.hpp>
 #include <libchess/board/Pieces.hpp>
+#include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
@@ -178,10 +178,16 @@ auto update(
                 capturedType.value(), otherColor, move.to());
         }
     } else if (move.is_castling()) {
-        if (move.to().is_kingside())
-            value ^= board::masks::kingside_castle_rook_pos_mask(pos.sideToMove).to_int();
-        else
-            value ^= board::masks::queenside_castle_rook_pos_mask(pos.sideToMove).to_int();
+        // move the rook
+        const auto rank = board::back_rank_for(pos.sideToMove);
+
+        const bool isKingside = move.to().is_kingside();
+
+        const Square rookFrom { .file = isKingside ? File::H : File::A, .rank = rank };
+        const Square rookTo { .file = isKingside ? File::F : File::D, .rank = rank };
+
+        value ^= piece_key(PieceType::Rook, pos.sideToMove, rookFrom);
+        value ^= piece_key(PieceType::Rook, pos.sideToMove, rookTo);
     }
 
     value = rightsChanges.update_hash(value);
