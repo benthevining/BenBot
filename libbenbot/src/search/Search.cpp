@@ -774,6 +774,10 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         assert(not options.movesToSearch.empty());
     }
 
+    // this can't just check movesToSearch, because searchmoves may have restricted the search to 1
+    // move out of many, & then we still want to search it as deep as we were asked to
+    const bool onlyOneLegalMove = chess::moves::generate(position).size() == 1uz;
+
     RootSearchResult result;
 
     auto totalNodesSearched { 0uz };
@@ -817,9 +821,8 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
                 break;
 
             // only 1 legal move, don't do a deeper iteration
-            if (options.movesToSearch.size() == 1uz) {
+            if (onlyOneLegalMove)
                 break;
-            }
 
             // if we've hit our node limit, don't do a deeper iteration
             if (totalNodesSearched >= options.maxNodes)
