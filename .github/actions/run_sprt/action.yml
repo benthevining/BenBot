@@ -28,6 +28,18 @@ inputs:
     description: Time limit for the SPRT games (in the format accepted by the timeout command). Should be a bit less than the calling job's timeout-minutes, so that partial results can still be reported.
     required: false
     default: 345m
+  shard:
+    description: If true, plays games until the time limit without stopping at the SPRT bounds, so that the results can be combined with other shards' (see the sprt_pr workflow). The fastchess log is uploaded, but the results aren't reported.
+    required: false
+    default: 'false'
+  seed:
+    description: Seed for the random opening order. Each shard of a test should use a different seed, otherwise they'll play the same openings.
+    required: false
+    default: ''
+  artifact_name:
+    description: Name of the artifact that the SPRT logs are uploaded to
+    required: false
+    default: sprt-logs
 
 outputs:
   summary_file:
@@ -81,7 +93,7 @@ runs:
     uses: ./.github/actions/run_build
     id: run_build
     with:
-      extra_config_args: -D "FASTCHESS_PROGRAM=${{ steps.download_fastchess.outputs.executable }}"
+      extra_config_args: -D "FASTCHESS_PROGRAM=${{ steps.download_fastchess.outputs.executable }}" -D "BENBOT_SPRT_SHARD=${{ inputs.shard == 'true' && 'ON' || 'OFF' }}" -D "BENBOT_SPRT_SEED=${{ inputs.seed }}"
 
   - name: Inject baseline binary
     if: inputs.use_main == 'false'
@@ -103,6 +115,7 @@ runs:
       SPRT_OUTPUT_LOG: ${{ github.workspace }}/logs/sprt/output.log
       TARGET_NAME: ${{ inputs.target_name }}
       SPRT_TIMEOUT: ${{ inputs.timeout }}
+      SHARD: ${{ inputs.shard }}
       # NB. tee needs the output directory to exist before it's invoked
       # if the time limit is hit, carry on so that the partial results still get uploaded & reported
     run: |
@@ -110,7 +123,10 @@ runs:
       status=0
       timeout "$SPRT_TIMEOUT" cmake --build . --target "$TARGET_NAME" --config Release | tee "$SPRT_OUTPUT_LOG" || status=$?
       if [[ "$status" -eq 124 ]]; then
-        echo "::warning::SPRT didn't reach a bound within $SPRT_TIMEOUT"
+        # shards are always stopped by the time limit
+        if [[ "$SHARD" != true ]]; then
+          echo "::warning::SPRT didn't reach a bound within $SPRT_TIMEOUT"
+        fi
       elif [[ "$status" -ne 0 ]]; then
         exit "$status"
       fi
@@ -120,11 +136,12 @@ runs:
     if: ${{ !cancelled() }}
     uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f   # v7
     with:
-      name: sprt-logs
+      name: ${{ inputs.artifact_name }}
       path: logs/sprt
       if-no-files-found: error
 
   - name: Report results
+    if: inputs.shard != 'true'
     shell: bash
     env:
       SPRT_OUTPUT_LOG: ${{ github.workspace }}/logs/sprt/output.log
