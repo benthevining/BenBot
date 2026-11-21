@@ -15,6 +15,7 @@
 #include "eval/PawnStructure.hpp"
 #include <array>
 #include <cmath> // IWYU pragma: keep - for std::abs()
+#include <libbenbot/data-structures/PawnTable.hpp>
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/Distances.hpp> // IWYU pragma: keep - for chebyshev_distance()
 #include <libchess/board/File.hpp>
@@ -231,10 +232,33 @@ auto score_passer_piece_terms(
          - score_side_passer_piece_terms<Color::Black>(position, passers & position.blackPieces.pawns);
 }
 
-auto score_pawn_structure(const Position& position) -> int
+auto score_pawn_structure(const Position& position, PawnTable* pawnTable) -> int
 {
-    const auto pawnTerms = score_pawns_only(position);
+    const auto pawnTerms = [&position, pawnTable] {
+        if (pawnTable == nullptr)
+            return score_pawns_only(position);
 
+        auto& entry = pawnTable->probe(position.pawnHash);
+
+        if (entry.key != position.pawnHash) {
+            const auto terms = score_pawns_only(position);
+
+            entry = PawnEntry {
+                .key     = position.pawnHash,
+                .passers = terms.passers,
+                .score   = terms.whiteScore
+            };
+
+            return terms;
+        }
+
+        return PawnTerms {
+            .whiteScore = entry.score,
+            .passers    = entry.passers
+        };
+    }();
+
+    // these terms depend on the rooks & kings, so they're never cached
     const auto whiteScore = pawnTerms.whiteScore + score_passer_piece_terms(position, pawnTerms.passers);
 
     return position.is_white_to_move() ? whiteScore : -whiteScore;

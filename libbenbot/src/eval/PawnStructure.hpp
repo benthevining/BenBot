@@ -20,6 +20,10 @@ namespace chess::game {
 struct Position;
 } // namespace chess::game
 
+namespace ben_bot {
+class PawnTable;
+} // namespace ben_bot
+
 namespace ben_bot::eval::detail {
 
 using chess::game::Position;
@@ -42,6 +46,7 @@ struct PawnTerms final {
     -> int;
 
 // returns the pawn structure score from the side to move's point of view
-[[nodiscard, gnu::pure]] auto score_pawn_structure(const Position& position) -> int;
+// if pawnTable isn't null, the pawn-only terms are looked up in it (or stored in it on a miss)
+[[nodiscard]] auto score_pawn_structure(const Position& position, PawnTable* pawnTable) -> int;
 
 } // namespace ben_bot::eval::detail
