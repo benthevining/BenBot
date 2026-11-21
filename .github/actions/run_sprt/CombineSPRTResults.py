@@ -12,7 +12,8 @@
 # This script combines the results of an SPRT test that was sharded across several machines.
 # Each shard runs fastchess without -sprt, so it plays games until it's stopped, and the
 # pentanomial counts from all the shards' logs are summed to compute the overall LLR.
-# The LLR is the same normalized pentanomial GSPRT that fastchess uses.
+# The LLR is the same normalized pentanomial GSPRT that fastchess uses (see getLLR_normalized()
+# in fastchess's sprt.cpp), so a combined test gives the same result as a single fastchess run.
 #
 # Usage: CombineSPRTResults.py <elo0> <elo1> <final> <log files...>
 # where <final> is true if no more games will be played if no bound has been reached.
@@ -38,6 +39,63 @@ ELO0 = float(sys.argv[1])
 ELO1 = float(sys.argv[2])
 FINAL = sys.argv[3] == "true"
 LOG_FILES = [Path(arg) for arg in sys.argv[4:]]
+
+
+def get_llr(ptnml: list[int]) -> float:
+    # The generalized log-likelihood ratio, using the maximum likelihood estimates of the
+    # pentanomial distribution with a normalized Elo of ELO0 & ELO1 (Section 4.1 of
+    # Michel Van den Bergh, "Comments on normalized Elo",
+    # https://www.cantate.be/Fishtest/normalized_elo_practical.pdf)
+
+    # like fastchess, replace zero counts with a small value so that the logs are finite
+    counts = [count if count else 1e-3 for count in ptnml]
+    total = sum(counts)
+    probs = [count / total for count in counts]
+
+    def mle(t_star: float) -> list[float]:
+        # iterative method, starting from a uniform distribution
+        p = [1 / len(PAIR_SCORES)] * len(PAIR_SCORES)
+
+        for _ in range(10):
+            mu = sum(p_i * a_i for p_i, a_i in zip(p, PAIR_SCORES))
+            sigma = math.sqrt(
+                sum(p_i * (a_i - mu) ** 2 for p_i, a_i in zip(p, PAIR_SCORES))
+            )
+
+            phi = [
+                a_i - 0.5 - 0.5 * t_star * sigma * (1 + ((a_i - mu) / sigma) ** 2)
+                for a_i in PAIR_SCORES
+            ]
+
+            # solve equation 4.9 for theta: the function is decreasing between these bounds
+            low = -1 / max(phi)
+            high = -1 / min(phi)
+
+            while high - low > 2e-7:
+                theta = (low + high) / 2
+                if sum(ph * f / (1 + theta * f) for ph, f in zip(probs, phi)) > 0:
+                    low = theta
+                else:
+                    high = theta
+
+            theta = (low + high) / 2
+
+            new_p = [ph / (1 + theta * f) for ph, f in zip(probs, phi)]
+            max_diff = max(abs(new - old) for new, old in zip(new_p, p))
+            p = new_p
+
+            if max_diff < 1e-4:
+                break
+
+        return p
+
+    # the t-values of the bounds; the sqrt(2) is because the outcomes are pairs of games
+    p0 = mle(math.sqrt(2) * ELO0 / NELO_PER_T)
+    p1 = mle(math.sqrt(2) * ELO1 / NELO_PER_T)
+
+    return total * sum(
+        ph * (math.log(p1_i) - math.log(p0_i)) for ph, p0_i, p1_i in zip(probs, p0, p1)
+    )
 
 
 def get_ptnml(log_file: Path) -> list[int]:
@@ -81,10 +139,7 @@ if variance == 0:
 # per-pair standard deviation, in units of a single game's score
 sigma = math.sqrt(2 * variance)
 
-score0 = 0.5 + ELO0 / NELO_PER_T * sigma
-score1 = 0.5 + ELO1 / NELO_PER_T * sigma
-
-llr = (score1 - score0) * (2 * mean - score0 - score1) / (2 * variance / pairs)
+llr = get_llr(ptnml)
 
 
 def score_to_elo(score: float) -> float:
