@@ -184,7 +184,7 @@ jobs:
         .github/actions/run_sprt/UpdatePRComment.sh "$RUNNER_TEMP/comment.md"
 
   # each round only runs if the previous one didn't reach a bound. With 4 shards, each round plays
-  # about 1900 games on Linux, so 8 rounds is about 15000 games (fewer on macOS, see above)
+  # about 1900 games on Linux, so 16 rounds is about 30000 games (fewer on macOS, see above)
 
   round1:
     needs: [parse_title, start]
@@ -322,6 +322,150 @@ jobs:
     uses: ./.github/workflows/sprt_pr_round.yml
     with:
       round: 8
+      final_round: false
+      target: ${{ needs.parse_title.outputs.target }}
+      description: ${{ needs.parse_title.outputs.description }}
+      elo0: ${{ needs.parse_title.outputs.elo0 }}
+      elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
+
+  round9:
+    needs: [parse_title, round8]
+    if: needs.round8.outputs.status == 'continue'
+    name: Round 9
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/sprt_pr_round.yml
+    with:
+      round: 9
+      final_round: false
+      target: ${{ needs.parse_title.outputs.target }}
+      description: ${{ needs.parse_title.outputs.description }}
+      elo0: ${{ needs.parse_title.outputs.elo0 }}
+      elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
+
+  round10:
+    needs: [parse_title, round9]
+    if: needs.round9.outputs.status == 'continue'
+    name: Round 10
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/sprt_pr_round.yml
+    with:
+      round: 10
+      final_round: false
+      target: ${{ needs.parse_title.outputs.target }}
+      description: ${{ needs.parse_title.outputs.description }}
+      elo0: ${{ needs.parse_title.outputs.elo0 }}
+      elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
+
+  round11:
+    needs: [parse_title, round10]
+    if: needs.round10.outputs.status == 'continue'
+    name: Round 11
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/sprt_pr_round.yml
+    with:
+      round: 11
+      final_round: false
+      target: ${{ needs.parse_title.outputs.target }}
+      description: ${{ needs.parse_title.outputs.description }}
+      elo0: ${{ needs.parse_title.outputs.elo0 }}
+      elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
+
+  round12:
+    needs: [parse_title, round11]
+    if: needs.round11.outputs.status == 'continue'
+    name: Round 12
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/sprt_pr_round.yml
+    with:
+      round: 12
+      final_round: false
+      target: ${{ needs.parse_title.outputs.target }}
+      description: ${{ needs.parse_title.outputs.description }}
+      elo0: ${{ needs.parse_title.outputs.elo0 }}
+      elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
+
+  round13:
+    needs: [parse_title, round12]
+    if: needs.round12.outputs.status == 'continue'
+    name: Round 13
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/sprt_pr_round.yml
+    with:
+      round: 13
+      final_round: false
+      target: ${{ needs.parse_title.outputs.target }}
+      description: ${{ needs.parse_title.outputs.description }}
+      elo0: ${{ needs.parse_title.outputs.elo0 }}
+      elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
+
+  round14:
+    needs: [parse_title, round13]
+    if: needs.round13.outputs.status == 'continue'
+    name: Round 14
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/sprt_pr_round.yml
+    with:
+      round: 14
+      final_round: false
+      target: ${{ needs.parse_title.outputs.target }}
+      description: ${{ needs.parse_title.outputs.description }}
+      elo0: ${{ needs.parse_title.outputs.elo0 }}
+      elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
+
+  round15:
+    needs: [parse_title, round14]
+    if: needs.round14.outputs.status == 'continue'
+    name: Round 15
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/sprt_pr_round.yml
+    with:
+      round: 15
+      final_round: false
+      target: ${{ needs.parse_title.outputs.target }}
+      description: ${{ needs.parse_title.outputs.description }}
+      elo0: ${{ needs.parse_title.outputs.elo0 }}
+      elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
+
+  round16:
+    needs: [parse_title, round15]
+    if: needs.round15.outputs.status == 'continue'
+    name: Round 16
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/sprt_pr_round.yml
+    with:
+      round: 16
       final_round: true
       target: ${{ needs.parse_title.outputs.target }}
       description: ${{ needs.parse_title.outputs.description }}

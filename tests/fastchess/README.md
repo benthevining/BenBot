@@ -17,7 +17,7 @@ Adding a tag to the title of an existing PR (or switching to a different test ty
 
 By default the games are played on Linux (x86) runners. Adding `[macos]` to the title as well as one of the tags above (e.g. `fix: ... [sprt-nonreg] [macos]`) plays them on macOS (Apple silicon) runners instead, for changes that only affect behaviour on some platforms (for example, ones that depend on the cache line size, which is 128 bytes on Apple silicon but 64 on x86). `[macos]` on its own does nothing. Adding or removing `[macos]` while a test is running restarts it on the other platform. Public repos only get 5 concurrent macOS jobs, which CI's macOS jobs share, so a macOS test's shards may have to queue. The macOS runners also have 3 cores instead of 4, so each shard plays fewer games at once, and the test gets through fewer games per round.
 
-The PR tests are sharded across 4 runners, in rounds of about 40 minutes. Each shard plays games with a different opening order, without stopping at the SPRT bounds. After each round, the shards' pentanomial results from all the rounds so far are combined (by `.github/actions/run_sprt/CombineSPRTResults.py`), and the test stops if a bound has been reached. The test stops after 8 rounds even if it hasn't reached a bound.
+The PR tests are sharded across 4 runners, in rounds of about 40 minutes. Each shard plays games with a different opening order, without stopping at the SPRT bounds. After each round, the shards' pentanomial results from all the rounds so far are combined (by `.github/actions/run_sprt/CombineSPRTResults.py`), and the test stops if a bound has been reached. The test stops after 16 rounds (about 30000 games, or about 11.5 hours) even if it hasn't reached a bound.
 
 ## CMake
 
