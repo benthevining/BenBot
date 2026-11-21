@@ -177,8 +177,13 @@ namespace {
             static constexpr auto STARTING_NON_PAWN_MATERIAL
                 = piece_values::QUEEN + (piece_values::ROOK * 2) + (piece_values::BISHOP * 2) + (piece_values::KNIGHT * 2);
 
+            static constexpr auto multiplier = 1.f / static_cast<float>(STARTING_NON_PAWN_MATERIAL);
+
             // weight score by opponent's remaining material
-            return score * (detail::count_material<false>(enemyPieces) / STARTING_NON_PAWN_MATERIAL);
+            const auto materialWeight = std::min(
+                1.f, static_cast<float>(detail::count_material<false>(enemyPieces)) * multiplier);
+
+            return static_cast<int>(std::round(static_cast<float>(score) * materialWeight));
         };
 
         const bool isWhite = position.is_white_to_move();
