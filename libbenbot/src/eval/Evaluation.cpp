@@ -24,6 +24,7 @@
 #include <libbenbot/eval/Material.hpp>
 #include <libbenbot/eval/PieceSquareTables.hpp>
 #include <libbenbot/eval/Score.hpp>
+#include <libchess/board/Bitboard.hpp>
 #include <libchess/board/Distances.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Masks.hpp>
@@ -31,7 +32,7 @@
 #include <libchess/board/Square.hpp>
 #include <libchess/game/CastlingRights.hpp>
 #include <libchess/game/Position.hpp>
-#include <libchess/moves/Attacks.hpp>
+#include <libchess/moves/Magics.hpp>
 #include <libchess/moves/Patterns.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <utility>
@@ -62,6 +63,7 @@ namespace {
         return 1.f - std::min(1.f, pcntLeft);
     }
 
+    using chess::board::Bitboard;
     using chess::board::Pieces;
     using chess::pieces::Color;
 
@@ -196,11 +198,104 @@ namespace {
         return ourScore - theirScore;
     }
 
-    [[nodiscard, gnu::pure]] auto score_squares_controlled_around_kings(
-        const Position& position) noexcept
+    // Attack sets for one side, calculated once per evaluate() call & shared between
+    // the mobility & king zone terms
+    struct SideAttacks final {
+        // all squares attacked by pawns, knights, bishops, rooks & queens (not the king)
+        Bitboard attacked;
+
+        // total mobility bonus for this side's pieces, before blending by game phase
+        int mobilityMG { 0 };
+        int mobilityEG { 0 };
+    };
+
+    // Mobility weights. Each piece gets (number of moves - baseline) * weight, so that an
+    // average piece scores about 0. We count pseudo-legal moves, not counting squares
+    // occupied by our own pieces or attacked by enemy pawns.
+    namespace mobility {
+
+        struct Weights final {
+            int baseline;
+            int middlegame;
+            int endgame;
+        };
+
+        inline constexpr Weights KNIGHT { .baseline = 4, .middlegame = 4, .endgame = 4 };
+        inline constexpr Weights BISHOP { .baseline = 6, .middlegame = 5, .endgame = 5 };
+        inline constexpr Weights ROOK { .baseline = 7, .middlegame = 2, .endgame = 4 };
+        inline constexpr Weights QUEEN { .baseline = 13, .middlegame = 1, .endgame = 2 };
+
+    } // namespace mobility
+
+    template <Color Side>
+    [[nodiscard, gnu::pure]] auto calculate_attacks(
+        const Position& position, const Bitboard ourPawnAttacks, const Bitboard enemyPawnAttacks) noexcept
+        -> SideAttacks
+    {
+        namespace magics   = chess::moves::magics;
+        namespace patterns = chess::moves::patterns;
+
+        const auto& pieces = position.pieces_for<Side>();
+
+        const auto friendly = pieces.occupied;
+        const auto occupied = position.occupied();
+
+        const auto mobilityArea = (friendly | enemyPawnAttacks).inverse();
+
+        // pawn & knight attacks include squares occupied by friendly pieces, but slider attacks
+        // don't (same as chess::moves::num_squares_attacked())
+        SideAttacks result {
+            .attacked = ourPawnAttacks | patterns::knight(pieces.knights)
+        };
+
+        auto add_mobility = [&result, mobilityArea](
+                                const Bitboard moves, const mobility::Weights& weights) {
+            const auto numMoves = static_cast<int>((moves & mobilityArea).count()) - weights.baseline;
+
+            result.mobilityMG += numMoves * weights.middlegame;
+            result.mobilityEG += numMoves * weights.endgame;
+        };
+
+        for (const auto square : pieces.knights.squares())
+            add_mobility(patterns::knight(Bitboard::from_square(square)), mobility::KNIGHT);
+
+        for (const auto square : pieces.bishops.squares()) {
+            const auto moves = magics::bishop(square, occupied, friendly);
+            result.attacked |= moves;
+            add_mobility(moves, mobility::BISHOP);
+        }
+
+        for (const auto square : pieces.rooks.squares()) {
+            const auto moves = magics::rook(square, occupied, friendly);
+            result.attacked |= moves;
+            add_mobility(moves, mobility::ROOK);
+        }
+
+        for (const auto square : pieces.queens.squares()) {
+            const auto moves = magics::queen(square, occupied, friendly);
+            result.attacked |= moves;
+            add_mobility(moves, mobility::QUEEN);
+        }
+
+        return result;
+    }
+
+    // bonus for pieces with more available moves
+    [[nodiscard, gnu::pure]] auto score_mobility(
+        const SideAttacks& ours, const SideAttacks& theirs, const float endgameWeight) noexcept
         -> int
     {
-        namespace moves = chess::moves;
+        const auto middlegame = static_cast<float>(ours.mobilityMG - theirs.mobilityMG);
+        const auto endgame    = static_cast<float>(ours.mobilityEG - theirs.mobilityEG);
+
+        return static_cast<int>(std::round((middlegame * (1.f - endgameWeight)) + (endgame * endgameWeight)));
+    }
+
+    [[nodiscard, gnu::pure]] auto score_squares_controlled_around_kings(
+        const Position& position, const SideAttacks& white, const SideAttacks& black) noexcept
+        -> int
+    {
+        namespace patterns = chess::moves::patterns;
 
         // We give a penalty if the opponent attacks more squares around our king than we do.
         // One detail here is that in calculating the attack sets, the defender's king isn't
@@ -208,17 +303,19 @@ namespace {
         // about the number of pieces/pawns that are defending the king. However, we do count
         // king attacks offensively against squares surrounding the opponent's king.
 
-        const auto surroundingWhiteKing = moves::patterns::king(position.whitePieces.king);
+        const auto whiteKingAttacks = patterns::king(position.whitePieces.king);
+        const auto blackKingAttacks = patterns::king(position.blackPieces.king);
 
-        const auto whiteControlsAroundWK = static_cast<int>(moves::num_squares_attacked<Color::White>(position.whitePieces, surroundingWhiteKing, position.blackPieces.occupied, false));
-        const auto blackControlsAroundWK = static_cast<int>(moves::num_squares_attacked<Color::Black>(position.blackPieces, surroundingWhiteKing, position.whitePieces.occupied));
+        const auto whiteAttacksWithKing = white.attacked | whiteKingAttacks;
+        const auto blackAttacksWithKing = black.attacked | blackKingAttacks;
+
+        const auto whiteControlsAroundWK = static_cast<int>((white.attacked & whiteKingAttacks).count());
+        const auto blackControlsAroundWK = static_cast<int>((blackAttacksWithKing & whiteKingAttacks).count());
 
         const auto whiteScore = whiteControlsAroundWK - blackControlsAroundWK;
 
-        const auto surroundingBlackKing = moves::patterns::king(position.blackPieces.king);
-
-        const auto whiteControlsAroundBK = static_cast<int>(moves::num_squares_attacked<Color::White>(position.whitePieces, surroundingBlackKing, position.blackPieces.occupied));
-        const auto blackControlsAroundBK = static_cast<int>(moves::num_squares_attacked<Color::Black>(position.blackPieces, surroundingBlackKing, position.whitePieces.occupied, false));
+        const auto whiteControlsAroundBK = static_cast<int>((whiteAttacksWithKing & blackKingAttacks).count());
+        const auto blackControlsAroundBK = static_cast<int>((black.attacked & blackKingAttacks).count());
 
         const auto blackScore = blackControlsAroundBK - whiteControlsAroundBK;
 
@@ -296,6 +393,19 @@ auto evaluate(
 
     const auto materialScore = score_material(position);
 
+    namespace patterns = chess::moves::patterns;
+
+    const auto whitePawnAttacks = patterns::pawn_attacks<Color::White>(position.whitePieces.pawns);
+    const auto blackPawnAttacks = patterns::pawn_attacks<Color::Black>(position.blackPieces.pawns);
+
+    const auto whiteAttacks = calculate_attacks<Color::White>(position, whitePawnAttacks, blackPawnAttacks);
+    const auto blackAttacks = calculate_attacks<Color::Black>(position, blackPawnAttacks, whitePawnAttacks);
+
+    const bool isWhite = position.is_white_to_move();
+
+    const auto& ourAttacks   = isWhite ? whiteAttacks : blackAttacks;
+    const auto& theirAttacks = isWhite ? blackAttacks : whiteAttacks;
+
     return Score { static_cast<Value>(
         materialScore
         + no_pieces_left_bonus(position)
@@ -303,7 +413,8 @@ auto evaluate(
         + score_rook_files(position)
         + score_connected_rooks(position)
         + score_king_safety(position, endgameWeight)
-        + score_squares_controlled_around_kings(position)
+        + score_squares_controlled_around_kings(position, whiteAttacks, blackAttacks)
+        + score_mobility(ourAttacks, theirAttacks, endgameWeight)
         + score_endgame_mopup(position, endgameWeight, materialScore)
         + detail::score_positional(position)
         + detail::score_pawn_structure(position)) };

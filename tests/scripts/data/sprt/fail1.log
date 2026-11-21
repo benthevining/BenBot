@@ -1,0 +1,18 @@
+Results of Refactor vs Baseline (8+0.08, 1t, 32MB, 8moves_v3.pgn):
+Elo: -20.36 +/- 13.27, nElo: -23.53 +/- 15.30
+LOS: 0.13 %, DrawRatio: 37.64 %, PairsRatio: 0.75
+Games: 1982, Wins: 722, Losses: 838, Draws: 422, Points: 933.0 (47.07 %)
+Ptnml(0-2): [160, 193, 373, 133, 132], WL/DD Ratio: 6.77
+LLR: -2.12 (-94.3%) (-2.25, 2.89) [0.00, 5.00]
+--------------------------------------------------
+--------------------------------------------------
+Results of Refactor vs Baseline (8+0.08, 1t, 32MB, 8moves_v3.pgn):
+Elo: -21.79 +/- 13.25, nElo: -25.14 +/- 15.24
+LOS: 0.06 %, DrawRatio: 37.58 %, PairsRatio: 0.74
+Games: 1996, Wins: 723, Losses: 848, Draws: 425, Points: 935.5 (46.87 %)
+Ptnml(0-2): [164, 194, 375, 133, 132], WL/DD Ratio: 6.65
+LLR: -2.27 (-100.7%) (-2.25, 2.89) [0.00, 5.00]
+--------------------------------------------------
+SPRT ([0.00, 5.00]) completed - H0 was accepted
+Finished match
+Total Time: 02:51:09 (hours:minutes:seconds)
