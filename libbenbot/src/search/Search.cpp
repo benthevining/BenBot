@@ -28,6 +28,7 @@
 // Check extensions
 // History heuristic
 // Late move pruning
+// SEE pruning
 
 #include "search/MoveOrdering.hpp"
 #include "search/TimeManagement.hpp"
@@ -42,6 +43,7 @@
 #include <libbenbot/data-structures/KillerMoves.hpp>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
+#include <libbenbot/eval/Material.hpp>
 #include <libbenbot/eval/PieceSquareTables.hpp>
 #include <libbenbot/eval/SEE.hpp>
 #include <libbenbot/eval/Score.hpp>
@@ -65,6 +67,7 @@ using std::size_t;
 namespace {
 
     using eval::Score;
+    namespace piece_values = eval::piece_values;
 
     // null move pruning is only tried when at least this much depth is left
     inline constexpr auto NMP_MIN_DEPTH { 3uz };
@@ -93,6 +96,50 @@ namespace {
     static_assert(lmp_move_count(5uz) == 39uz);
     static_assert(lmp_move_count(6uz) == 52uz);
     static_assert(lmp_move_count(LMP_MAX_DEPTH) == 67uz);
+
+    // SEE pruning of captures is only done with at most this much depth left
+    inline constexpr auto SEE_PRUNING_MAX_DEPTH { 7uz };
+
+    // captures whose SEE is below this are skipped by SEE pruning. This uses depth as other
+    // engines count it, where a frontier node (depthLeft == 0) is depth 1. The threshold is
+    // never positive and never goes up with depth, so a capture pruned at some depth would
+    // also be pruned at every lower depth, down to the quiescence search's SEE < 0 skip.
+    // For example, a knight taking a pawn that's defended by a pawn (SEE -220) is pruned at
+    // depths 1 and 2.
+    [[nodiscard]] constexpr auto capture_see_pruning_threshold(const size_t depthLeft) noexcept -> int
+    {
+        const auto depth = static_cast<int>(depthLeft) + 1;
+
+        return -100 * depth;
+    }
+
+    static_assert(capture_see_pruning_threshold(0uz) == -100);
+    static_assert(capture_see_pruning_threshold(1uz) == -200);
+    static_assert(capture_see_pruning_threshold(2uz) == -300);
+    static_assert(capture_see_pruning_threshold(3uz) == -400);
+    static_assert(capture_see_pruning_threshold(4uz) == -500);
+    static_assert(capture_see_pruning_threshold(5uz) == -600);
+    static_assert(capture_see_pruning_threshold(6uz) == -700);
+    static_assert(capture_see_pruning_threshold(SEE_PRUNING_MAX_DEPTH) == -800);
+
+    // a lower bound on the SEE of a capture or promotion, without playing out the exchange:
+    // the side making the move can always stop after the opponent's first recapture, so it
+    // can't do worse than winning what it takes and then losing the piece it moved there
+    [[nodiscard]] auto see_lower_bound(const Position& position, const Move move) noexcept -> int
+    {
+        const int captured = position.is_en_passant(move)
+                               ? piece_values::PAWN
+                               : position.their_pieces()
+                                     .get_piece_on(move.to())
+                                     .transform(piece_values::get)
+                                     .value_or(eval::Value { 0 });
+
+        // a promoted piece gains (promoted - pawn), then the promoted piece can be lost
+        if (move.is_promotion())
+            return captured - piece_values::PAWN;
+
+        return captured - piece_values::get(move.piece());
+    }
 
     // moves that give check are only extended up to this ply. Reaching MAX_PLY aborts
     // the entire search, so this stops long sequences of checks from getting there.
@@ -314,6 +361,10 @@ namespace {
             // always at least 4, so the first move is never pruned
             const auto lmpCount = lmp_move_count(depthLeft);
 
+            const bool seePruning = depthLeft <= SEE_PRUNING_MAX_DEPTH and not inCheck;
+
+            const auto seeThreshold = capture_see_pruning_threshold(depthLeft);
+
             for (const auto move : moves) {
                 const auto moveIdx  = nextMoveIdx++;
                 const auto childPos = after_move(position, move);
@@ -329,6 +380,17 @@ namespace {
                     and position.is_quiet(move)
                     and not std::ranges::contains(killers, move)
                     and not childPos.is_check())
+                    continue;
+
+                // SEE pruning: near the horizon, skip captures that lose too much material once
+                // all recaptures are played out. We only call see() if the cheap lower bound
+                // can't rule this out, so captures of equal or more valuable pieces never pay for it
+                if (seePruning and moveIdx > 0uz
+                    and not bounds.alpha.is_losing_mate()
+                    and not position.is_quiet(move)
+                    and not childPos.is_check()
+                    and see_lower_bound(position, move) < seeThreshold
+                    and eval::see(position, move) < seeThreshold)
                     continue;
 
                 if constexpr (PVNode) {
