@@ -232,7 +232,7 @@ TEST_CASE("Zobrist - incremental updates match fresh calculation", TAGS)
     SECTION("En passant")
     {
         check_incremental_hashes(
-            from_fen("8/2p5/3p4/KP5r/1R3p2/8/4P1P1/8 w - - 0 1").value(),
+            from_fen("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1").value(),
             DEPTH + 1uz);
     }
 
