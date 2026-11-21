@@ -20,6 +20,7 @@
 #pragma once
 
 #include <libchess/board/Bitboard.hpp>
+#include <libchess/board/Shifts.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Magics.hpp>
 #include <libchess/moves/Patterns.hpp>
@@ -53,6 +54,11 @@ struct AttackInfo final {
 
         /** Squares attacked by any of this side's pieces, including the king. */
         Bitboard all;
+
+        /** Squares attacked at least twice by this side's pieces, including the king.
+            Two pieces of the same type attacking a square count as two attackers.
+         */
+        Bitboard twice;
 
         /** Compares two attack sets for equality. */
         [[nodiscard]] constexpr auto operator==(const Side&) const noexcept -> bool = default;
@@ -91,7 +97,7 @@ struct AttackInfo final {
     is that one piece's raw attack set. This lets an eval term that needs per-piece attacks
     (such as mobility) share the same pass over the pieces, instead of calculating them again.
     When the callback is called, ``info`` already holds both sides' pawn & king attacks, but
-    the other fields are still being filled in.
+    the other fields (including ``all`` & ``twice``) are still being filled in.
 
     @ingroup moves
  */
@@ -139,32 +145,40 @@ namespace detail {
 
         const auto occupied = position.occupied();
 
+        // each piece's attacks are added to the running totals one at a time,
+        // so that two pieces of the same type attacking a square show up in twice
+        auto add_attacks = [&result](const Bitboard attacks) noexcept {
+            result.twice |= result.all & attacks;
+            result.all |= attacks;
+        };
+
         for (const auto square : pieces.knights.squares()) {
             const auto attacks = patterns::knight(Bitboard::from_square(square));
+            add_attacks(attacks);
             result.knights |= attacks;
             onPieceAttacks(Side, PieceType::Knight, attacks, info);
         }
 
         for (const auto square : pieces.bishops.squares()) {
             const auto attacks = magics::bishop(square, occupied, { });
+            add_attacks(attacks);
             result.bishops |= attacks;
             onPieceAttacks(Side, PieceType::Bishop, attacks, info);
         }
 
         for (const auto square : pieces.rooks.squares()) {
             const auto attacks = magics::rook(square, occupied, { });
+            add_attacks(attacks);
             result.rooks |= attacks;
             onPieceAttacks(Side, PieceType::Rook, attacks, info);
         }
 
         for (const auto square : pieces.queens.squares()) {
             const auto attacks = magics::queen(square, occupied, { });
+            add_attacks(attacks);
             result.queens |= attacks;
             onPieceAttacks(Side, PieceType::Queen, attacks, info);
         }
-
-        result.all = result.pawns | result.knights | result.bishops
-                   | result.rooks | result.queens | result.king;
     }
 
 } // namespace detail
@@ -182,6 +196,18 @@ auto compute_attacks(
 
     info.white.king = patterns::king(position.whitePieces.king);
     info.black.king = patterns::king(position.blackPieces.king);
+
+    // squares attacked by two pawns (one capturing east & one capturing west), or by a pawn & the king
+    info.white.twice = board::shifts::pawn_capture_east<Color::White>(position.whitePieces.pawns)
+                     & board::shifts::pawn_capture_west<Color::White>(position.whitePieces.pawns);
+    info.black.twice = board::shifts::pawn_capture_east<Color::Black>(position.blackPieces.pawns)
+                     & board::shifts::pawn_capture_west<Color::Black>(position.blackPieces.pawns);
+
+    info.white.twice |= info.white.pawns & info.white.king;
+    info.black.twice |= info.black.pawns & info.black.king;
+
+    info.white.all = info.white.pawns | info.white.king;
+    info.black.all = info.black.pawns | info.black.king;
 
     detail::compute_piece_attacks<Color::White>(position, info, info.white, onPieceAttacks);
     detail::compute_piece_attacks<Color::Black>(position, info, info.black, onPieceAttacks);
