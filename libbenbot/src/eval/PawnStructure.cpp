@@ -30,17 +30,62 @@
 
 namespace ben_bot::eval::detail {
 
+using chess::board::Bitboard;
 using chess::pieces::Color;
 
 namespace {
 
     namespace board = chess::board;
 
+    // the passed pawn terms that only depend on the pawns
     template <Color Side>
-    [[nodiscard, gnu::pure]] auto score_side_passed_pawns(const Position& position) -> int
+    [[nodiscard, gnu::pure]] auto score_side_passed_pawns(
+        const Position& position, const Bitboard passers)
+        -> int
     {
-        using board::Rank;
+        static constexpr auto promotionRank = board::back_rank_for(chess::pieces::other_side<Side>());
 
+        const auto ourPawns = position.pieces_for<Side>().pawns;
+
+        auto score { 0 };
+
+        for (const auto pawn : passers.subboards()) {
+            const auto square = board::Square::from_index(pawn.first());
+
+            const auto squaresFromPromoting = std::abs(
+                static_cast<int>(square.rank) - static_cast<int>(promotionRank));
+
+            static constexpr std::array bonuses {
+                10000, 100, 85, 70, 60, 50, 35
+            };
+
+            score += bonuses.at(static_cast<size_t>(squaresFromPromoting));
+
+            namespace shifts = board::shifts;
+
+            // bonus for being protected by a friendly pawn
+
+            const auto protectorMask
+                = shifts::pawn_inv_capture_east<Side>(pawn)
+                | shifts::pawn_inv_capture_west<Side>(pawn);
+
+            for (const auto protector : (ourPawns & protectorMask).subboards()) {
+                if ((protector & passers).any()) // protected passed pawns
+                    score += 15;
+                else
+                    score += 10; // protected by a non-passed pawn
+            }
+        }
+
+        return score;
+    }
+
+    // the passed pawn terms that depend on the rooks & kings, so these can't be cached by pawn hash
+    template <Color Side>
+    [[nodiscard, gnu::pure]] auto score_side_passer_piece_terms(
+        const Position& position, const Bitboard passers) noexcept
+        -> int
+    {
         static constexpr auto OtherSide = chess::pieces::other_side<Side>();
 
         static constexpr auto promotionRank = board::back_rank_for(OtherSide);
@@ -48,8 +93,6 @@ namespace {
         static constexpr auto ROOK_BEHIND_BONUS           = 25;
         static constexpr auto KING_ESCORT_BONUS           = 2;
         static constexpr auto ENEMY_KING_BLOCKING_PENALTY = 50;
-
-        const auto passers = position.get_passed_pawns<Side>();
 
         const auto& ourPieces   = position.pieces_for<Side>();
         const auto& theirPieces = position.pieces_for<OtherSide>();
@@ -81,36 +124,12 @@ namespace {
                 score += static_cast<int>(MAX_DIST - kingDist) * KING_ESCORT_BONUS;
             }
 
-            const auto squaresFromPromoting = std::abs(
-                static_cast<int>(square.rank) - static_cast<int>(promotionRank));
-
-            static constexpr std::array bonuses {
-                10000, 100, 85, 70, 60, 50, 35
-            };
-
-            score += bonuses.at(static_cast<size_t>(squaresFromPromoting));
-
             // penalty for enemy king on promotion square
             // this is intended to help the engine reduce the draw rate in king/pawn endgames,
             // by seeing that if the enemy king can blockade the promotion square, then we're
             // less likely to be able to force promotion
             if (enemyKing == board::Square { .file = square.file, .rank = promotionRank })
                 score -= ENEMY_KING_BLOCKING_PENALTY;
-
-            namespace shifts = board::shifts;
-
-            // bonus for being protected by a friendly pawn
-
-            const auto protectorMask
-                = shifts::pawn_inv_capture_east<Side>(pawn)
-                | shifts::pawn_inv_capture_west<Side>(pawn);
-
-            for (const auto protector : (ourPieces.pawns & protectorMask).subboards()) {
-                if ((protector & passers).any()) // protected passed pawns
-                    score += 15;
-                else
-                    score += 10; // protected by a non-passed pawn
-            }
         }
 
         return score;
@@ -179,9 +198,11 @@ namespace {
     }
 
     template <Color Side>
-    [[nodiscard, gnu::pure]] auto score_side_pawns(const Position& position) -> int
+    [[nodiscard, gnu::pure]] auto score_side_pawns(
+        const Position& position, const Bitboard passers)
+        -> int
     {
-        return score_side_passed_pawns<Side>(position)
+        return score_side_passed_pawns<Side>(position, passers)
              + score_side_isolated_pawns<Side>(position)
              + score_side_doubled_pawns<Side>(position)
              + score_side_backward_pawns<Side>(position)
@@ -190,17 +211,33 @@ namespace {
 
 } // namespace
 
+auto score_pawns_only(const Position& position) -> PawnTerms
+{
+    const auto whitePassers = position.get_passed_pawns<Color::White>();
+    const auto blackPassers = position.get_passed_pawns<Color::Black>();
+
+    return {
+        .whiteScore = score_side_pawns<Color::White>(position, whitePassers)
+                    - score_side_pawns<Color::Black>(position, blackPassers),
+        .passers    = whitePassers | blackPassers
+    };
+}
+
+auto score_passer_piece_terms(
+    const Position& position, const Bitboard passers) noexcept
+    -> int
+{
+    return score_side_passer_piece_terms<Color::White>(position, passers & position.whitePieces.pawns)
+         - score_side_passer_piece_terms<Color::Black>(position, passers & position.blackPieces.pawns);
+}
+
 auto score_pawn_structure(const Position& position) -> int
 {
-    const auto whiteScore = score_side_pawns<Color::White>(position);
-    const auto blackScore = score_side_pawns<Color::Black>(position);
+    const auto pawnTerms = score_pawns_only(position);
 
-    const bool isWhite = position.is_white_to_move();
+    const auto whiteScore = pawnTerms.whiteScore + score_passer_piece_terms(position, pawnTerms.passers);
 
-    const auto ourScore   = isWhite ? whiteScore : blackScore;
-    const auto theirScore = isWhite ? blackScore : whiteScore;
-
-    return ourScore - theirScore;
+    return position.is_white_to_move() ? whiteScore : -whiteScore;
 }
 
 } // namespace ben_bot::eval::detail
