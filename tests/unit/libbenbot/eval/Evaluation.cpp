@@ -135,6 +135,42 @@ TEST_CASE("Evaluation symmetry", TAGS)
             evaluate(position, pieceSquareTables)
             == evaluate(flipped(position), pieceSquareTables));
     }
+
+    SECTION("Pawn push threatening a knight")
+    {
+        const auto position = from_fen("6k1/8/3n4/8/4P3/8/8/6K1 w - - 0 1").value();
+
+        REQUIRE(
+            evaluate(position, pieceSquareTables)
+            == evaluate(flipped(position), pieceSquareTables));
+    }
+
+    SECTION("Pawn double push threatening a knight")
+    {
+        const auto position = from_fen("6k1/8/8/4n3/8/8/3P4/6K1 w - - 0 1").value();
+
+        REQUIRE(
+            evaluate(position, pieceSquareTables)
+            == evaluate(flipped(position), pieceSquareTables));
+    }
+
+    SECTION("Black pawn double push threatening a rook")
+    {
+        const auto position = from_fen("6k1/2p5/8/8/3R4/8/8/6K1 b - - 0 1").value();
+
+        REQUIRE(
+            evaluate(position, pieceSquareTables)
+            == evaluate(flipped(position), pieceSquareTables));
+    }
+
+    SECTION("Pawn push square attacked by an enemy pawn")
+    {
+        const auto position = from_fen("r5k1/pp4pp/3n1p2/8/4P3/8/PP3PPP/R5K1 w - - 0 1").value();
+
+        REQUIRE(
+            evaluate(position, pieceSquareTables)
+            == evaluate(flipped(position), pieceSquareTables));
+    }
 }
 
 TEST_CASE("Evaluation - mobility", "[eval][evaluation][mobility]")
@@ -208,5 +244,53 @@ TEST_CASE("Evaluation - threats", "[eval][evaluation][threats]")
         const auto safe     = from_fen("6k1/8/3q4/8/8/8/4R3/6K1 w - - 0 1").value();
 
         REQUIRE(evaluate(attacked, pieceSquareTables) > evaluate(safe, pieceSquareTables));
+    }
+
+    // In the rest of these, the pawn on e4 could push to e5 and attack the knight on d6, or the
+    // pawn on d2 could push to d4 and attack the piece on e5
+
+    SECTION("Pawn push threatening a knight - push square attacked by an enemy pawn")
+    {
+        // the black pawn is on f7 (e5 is safe) or f6 (e5 is attacked by the pawn)
+        const auto threat   = from_fen("r5k1/pp3ppp/3n4/8/4P3/8/PP3PPP/R5K1 w - - 0 1").value();
+        const auto noThreat = from_fen("r5k1/pp4pp/3n1p2/8/4P3/8/PP3PPP/R5K1 w - - 0 1").value();
+
+        REQUIRE(evaluate(threat, pieceSquareTables) > evaluate(noThreat, pieceSquareTables));
+    }
+
+    SECTION("Pawn push threatening a knight - push square attacked by an enemy pawn, black to move")
+    {
+        const auto threat   = from_fen("r5k1/pp3ppp/3n4/8/4P3/8/PP3PPP/R5K1 b - - 0 1").value();
+        const auto noThreat = from_fen("r5k1/pp4pp/3n1p2/8/4P3/8/PP3PPP/R5K1 b - - 0 1").value();
+
+        REQUIRE(evaluate(threat, pieceSquareTables) < evaluate(noThreat, pieceSquareTables));
+    }
+
+    SECTION("Pawn push threatening a knight - push blocked")
+    {
+        // the white knight is on d5 or e5 (blocking the push), which are mirrored squares
+        const auto threat   = from_fen("6k1/8/3n4/3N4/4P3/8/8/6K1 w - - 0 1").value();
+        const auto noThreat = from_fen("6k1/8/3n4/4N3/4P3/8/8/6K1 w - - 0 1").value();
+
+        REQUIRE(evaluate(threat, pieceSquareTables) > evaluate(noThreat, pieceSquareTables));
+    }
+
+    SECTION("Pawn double push threatening a knight")
+    {
+        // the black knight is on e5 or d5 (mirrored squares). It attacks d3, so only the
+        // double push is safe.
+        const auto threat   = from_fen("6k1/8/8/4n3/8/8/3P4/6K1 w - - 0 1").value();
+        const auto noThreat = from_fen("6k1/8/8/3n4/8/8/3P4/6K1 w - - 0 1").value();
+
+        REQUIRE(evaluate(threat, pieceSquareTables) > evaluate(noThreat, pieceSquareTables));
+    }
+
+    SECTION("Black pawn double push threatening a knight")
+    {
+        // the same as the last one, with the colours swapped
+        const auto threat   = from_fen("6k1/3p4/8/8/4N3/8/8/6K1 b - - 0 1").value();
+        const auto noThreat = from_fen("6k1/3p4/8/8/3N4/8/8/6K1 b - - 0 1").value();
+
+        REQUIRE(evaluate(threat, pieceSquareTables) > evaluate(noThreat, pieceSquareTables));
     }
 }
