@@ -41,13 +41,32 @@ inline constexpr TaperedScore MINOR_ON_QUEEN { .mg = 45, .eg = 20 };
 // defended by it or traded off, so this is the smallest of the piece threats
 inline constexpr TaperedScore ROOK_ON_QUEEN { .mg = 40, .eg = 15 };
 
+// bonus for each enemy piece or pawn (not the king) that we attack and that's hanging: either
+// they don't defend it at all, or it's a piece that we attack twice and they don't defend
+// strongly enough. The middlegame value is about two-thirds of Stockfish's 54, since when
+// we're to move the quiescence search will often just take it, so this partly double-counts
+// the capture. The endgame value is close to Stockfish's 17, since in the endgame there are
+// fewer other pieces to tie down, so a hanging piece can usually just move away.
+inline constexpr TaperedScore HANGING { .mg = 35, .eg = 15 };
+
 [[nodiscard, gnu::pure]] inline auto threats_for_side(
-    const AttackInfo::Side& ourAttacks, const chess::board::Pieces& theirPieces) noexcept
+    const AttackInfo::Side& ourAttacks, const AttackInfo::Side& theirAttacks,
+    const chess::board::Pieces& theirPieces) noexcept
     -> TaperedScore
 {
     const auto targets = theirPieces.knights | theirPieces.bishops | theirPieces.rooks | theirPieces.queens;
 
     const auto minors = ourAttacks.knights | ourAttacks.bishops;
+
+    // A piece or pawn is strongly protected if one of their pawns defends it, or if they attack
+    // its square twice and we don't. It's weak if we attack it and it isn't strongly protected.
+    // A weak target is hanging if they don't defend it at all, or if it's a piece (not a pawn)
+    // that we attack twice.
+    const auto stronglyProtected = theirAttacks.pawns | (theirAttacks.twice & ourAttacks.twice.inverse());
+
+    const auto weak = (targets | theirPieces.pawns) & stronglyProtected.inverse() & ourAttacks.all;
+
+    const auto hanging = weak & (theirAttacks.all.inverse() | (targets & ourAttacks.twice));
 
     // Each term counts the pieces it hits once, even if several of our pieces attack them.
     // The terms themselves stack, so a rook attacked by a pawn & a knight gets both bonuses,
@@ -55,7 +74,8 @@ inline constexpr TaperedScore ROOK_ON_QUEEN { .mg = 40, .eg = 15 };
     return PAWN_THREAT * static_cast<int>((ourAttacks.pawns & targets).count())
          + MINOR_ON_ROOK * static_cast<int>((minors & theirPieces.rooks).count())
          + MINOR_ON_QUEEN * static_cast<int>((minors & theirPieces.queens).count())
-         + ROOK_ON_QUEEN * static_cast<int>((ourAttacks.rooks & theirPieces.queens).count());
+         + ROOK_ON_QUEEN * static_cast<int>((ourAttacks.rooks & theirPieces.queens).count())
+         + HANGING * static_cast<int>(hanging.count());
 }
 
 // bonus for attacking enemy pieces. Each side's threats count the same whoever's turn it is,
@@ -64,8 +84,8 @@ inline constexpr TaperedScore ROOK_ON_QUEEN { .mg = 40, .eg = 15 };
     const Position& position, const AttackInfo& attacks) noexcept
     -> TaperedScore
 {
-    const auto white = threats_for_side(attacks.white, position.blackPieces);
-    const auto black = threats_for_side(attacks.black, position.whitePieces);
+    const auto white = threats_for_side(attacks.white, attacks.black, position.blackPieces);
+    const auto black = threats_for_side(attacks.black, attacks.white, position.whitePieces);
 
     if (position.is_white_to_move())
         return white - black;

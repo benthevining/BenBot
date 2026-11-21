@@ -17,6 +17,8 @@
 #include <libbenbot/eval/PieceSquareTables.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/notation/FEN.hpp>
+#include <string>
+#include <string_view>
 
 inline constexpr auto TAGS { "[eval][evaluation][!mayfail]" };
 
@@ -135,6 +137,43 @@ TEST_CASE("Evaluation symmetry", TAGS)
             evaluate(position, pieceSquareTables)
             == evaluate(flipped(position), pieceSquareTables));
     }
+
+    SECTION("Hanging bishop - white to move")
+    {
+        const auto position = from_fen("6k1/7p/4b3/8/8/8/4R3/6K1 w - - 0 1").value();
+
+        REQUIRE(
+            evaluate(position, pieceSquareTables)
+            == evaluate(flipped(position), pieceSquareTables));
+    }
+
+    SECTION("Hanging bishop - black to move")
+    {
+        const auto position = from_fen("6k1/7p/4b3/8/8/8/4R3/6K1 b - - 0 1").value();
+
+        REQUIRE(
+            evaluate(position, pieceSquareTables)
+            == evaluate(flipped(position), pieceSquareTables));
+    }
+
+    SECTION("Knight attacked twice & defended once")
+    {
+        const auto position = from_fen("8/8/4k3/4n3/2N5/4NN2/6K1/8 b - - 0 1").value();
+
+        REQUIRE(
+            evaluate(position, pieceSquareTables)
+            == evaluate(flipped(position), pieceSquareTables));
+    }
+
+    SECTION("Hanging pieces on both sides")
+    {
+        // the knight on e5 & the bishop on d3 attack each other, and neither is defended
+        const auto position = from_fen("6k1/8/8/4n3/8/2BB4/8/6K1 w - - 0 1").value();
+
+        REQUIRE(
+            evaluate(position, pieceSquareTables)
+            == evaluate(flipped(position), pieceSquareTables));
+    }
 }
 
 TEST_CASE("Evaluation - mobility", "[eval][evaluation][mobility]")
@@ -208,5 +247,60 @@ TEST_CASE("Evaluation - threats", "[eval][evaluation][threats]")
         const auto safe     = from_fen("6k1/8/3q4/8/8/8/4R3/6K1 w - - 0 1").value();
 
         REQUIRE(evaluate(attacked, pieceSquareTables) > evaluate(safe, pieceSquareTables));
+    }
+}
+
+TEST_CASE("Evaluation - hanging pieces", "[eval][evaluation][threats]")
+{
+    const auto pieceSquareTables = ben_bot::eval::PieceSquareTables::get_default();
+
+    // In each pair, the black knight is on d5 or e5, which are mirrored squares, and the white
+    // knights on e3 & f3 attack d5 & e5 once each. The pairs differ in how the black knight is
+    // attacked & defended. Each pair is checked with white to move, with black to move, and with
+    // the colours swapped (so that black is the attacker).
+
+    // hangingFEN & safeFEN have white to move
+    auto check_pair = [&pieceSquareTables](const std::string_view hangingFEN, const std::string_view safeFEN) {
+        const auto hanging = from_fen(hangingFEN).value();
+        const auto safe    = from_fen(safeFEN).value();
+
+        REQUIRE(evaluate(hanging, pieceSquareTables) > evaluate(safe, pieceSquareTables));
+
+        REQUIRE(evaluate(flipped(hanging), pieceSquareTables) > evaluate(flipped(safe), pieceSquareTables));
+
+        auto black_to_move = [](const std::string_view fen) {
+            auto str = std::string { fen };
+            str.replace(str.find(" w "), 3, " b ");
+            return from_fen(str).value();
+        };
+
+        REQUIRE(
+            evaluate(black_to_move(hangingFEN), pieceSquareTables)
+            < evaluate(black_to_move(safeFEN), pieceSquareTables));
+    };
+
+    SECTION("Undefended knight vs knight defended by a pawn")
+    {
+        // the pawn on d6 defends e5, but not d5
+        check_pair(
+            "7k/8/3p4/3n4/8/4NN2/5K2/8 w - - 0 1",
+            "7k/8/3p4/4n3/8/4NN2/5K2/8 w - - 0 1");
+    }
+
+    SECTION("Attacked once & undefended vs attacked once & defended once")
+    {
+        // the knight on c6 defends e5, but not d5. Attacked once & defended once isn't hanging.
+        check_pair(
+            "7k/8/2n5/3n4/8/4NN2/5K2/8 w - - 0 1",
+            "7k/8/2n5/4n3/8/4NN2/5K2/8 w - - 0 1");
+    }
+
+    SECTION("Attacked twice & defended once vs attacked once & defended once")
+    {
+        // the black king defends both d5 & e5. The knights on c4 & f3 both attack e5,
+        // but only the one on e3 attacks d5.
+        check_pair(
+            "8/8/4k3/4n3/2N5/4NN2/6K1/8 w - - 0 1",
+            "8/8/4k3/3n4/2N5/4NN2/6K1/8 w - - 0 1");
     }
 }
