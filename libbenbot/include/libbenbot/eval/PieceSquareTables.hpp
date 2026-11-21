@@ -21,6 +21,7 @@
 
 #include <array>
 #include <cstdint>
+#include <libbenbot/eval/TaperedScore.hpp>
 #include <libchess/board/BitboardIndex.hpp>
 #include <string>
 #include <string_view>
@@ -76,10 +77,12 @@ struct PieceSquareTables final {
     /** King endgame values. */
     Table kingEndgame;
 
-    /** Scores piece placement using the current PST data. */
+    /** Scores piece placement using the current PST data.
+        Only the king has separate middlegame & endgame values.
+     */
     [[nodiscard]] auto score_piece_placement(
-        const Position& position, float endgameWeight) const
-        -> int;
+        const Position& position) const
+        -> TaperedScore;
 
     /** Returns the table of the given type. */
     [[nodiscard]] auto get_table(TableType type) -> Table&;

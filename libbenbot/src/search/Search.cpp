@@ -27,6 +27,9 @@
 // Futility pruning
 // Check extensions
 // History heuristic
+// Late move pruning
+// SEE pruning
+// Internal iterative reductions
 
 #include "search/MoveOrdering.hpp"
 #include "search/TimeManagement.hpp"
@@ -41,6 +44,7 @@
 #include <libbenbot/data-structures/KillerMoves.hpp>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
+#include <libbenbot/eval/Material.hpp>
 #include <libbenbot/eval/PieceSquareTables.hpp>
 #include <libbenbot/eval/SEE.hpp>
 #include <libbenbot/eval/Score.hpp>
@@ -64,12 +68,99 @@ using std::size_t;
 namespace {
 
     using eval::Score;
+    namespace piece_values = eval::piece_values;
 
     // null move pruning is only tried when at least this much depth is left
     inline constexpr auto NMP_MIN_DEPTH { 3uz };
 
     // futility pruning is only done with at most this much depth left
     inline constexpr auto FP_MAX_DEPTH { 2uz };
+
+    // late move pruning is only done with at most this much depth left
+    inline constexpr auto LMP_MAX_DEPTH { 7uz };
+
+    // the number of moves to search before late move pruning starts skipping quiet moves.
+    // This uses depth as other engines count it, where a frontier node (depthLeft == 0) is
+    // depth 1. It uses integer maths only, so that bench is the same on every platform.
+    [[nodiscard]] constexpr auto lmp_move_count(const size_t depthLeft) noexcept -> size_t
+    {
+        const auto depth = depthLeft + 1uz;
+
+        return 3uz + (depth * depth);
+    }
+
+    static_assert(lmp_move_count(0uz) == 4uz);
+    static_assert(lmp_move_count(1uz) == 7uz);
+    static_assert(lmp_move_count(2uz) == 12uz);
+    static_assert(lmp_move_count(3uz) == 19uz);
+    static_assert(lmp_move_count(4uz) == 28uz);
+    static_assert(lmp_move_count(5uz) == 39uz);
+    static_assert(lmp_move_count(6uz) == 52uz);
+    static_assert(lmp_move_count(LMP_MAX_DEPTH) == 67uz);
+
+    // SEE pruning is only done with at most this much depth left
+    inline constexpr auto SEE_PRUNING_MAX_DEPTH { 7uz };
+
+    // moves whose SEE is below this are skipped by SEE pruning. This uses depth as other
+    // engines count it, where a frontier node (depthLeft == 0) is depth 1. The thresholds are
+    // never positive and never go up with depth, so a move pruned at some depth would also be
+    // pruned at every lower depth (for captures, down to the quiescence search's SEE < 0 skip).
+    // Captures use a linear threshold: for example, a knight taking a pawn that's defended by
+    // a pawn (SEE -220) is pruned at depths 1 and 2. Quiet moves use a quadratic one, so that
+    // they're pruned more readily very close to the horizon, where a quiet move has little time
+    // to make up for the material it loses, but less readily further away: a quiet move that
+    // hangs a pawn (SEE -100) is pruned at depths 1 and 2, a minor piece at depths 1 to 4, and
+    // a rook at depths 1 to 5.
+    [[nodiscard]] constexpr auto see_pruning_threshold(
+        const size_t depthLeft, const bool quiet) noexcept -> int
+    {
+        const auto depth = static_cast<int>(depthLeft) + 1;
+
+        if (quiet)
+            return -15 * depth * depth;
+
+        return -100 * depth;
+    }
+
+    static_assert(see_pruning_threshold(0uz, false) == -100);
+    static_assert(see_pruning_threshold(1uz, false) == -200);
+    static_assert(see_pruning_threshold(2uz, false) == -300);
+    static_assert(see_pruning_threshold(3uz, false) == -400);
+    static_assert(see_pruning_threshold(4uz, false) == -500);
+    static_assert(see_pruning_threshold(5uz, false) == -600);
+    static_assert(see_pruning_threshold(6uz, false) == -700);
+    static_assert(see_pruning_threshold(SEE_PRUNING_MAX_DEPTH, false) == -800);
+
+    static_assert(see_pruning_threshold(0uz, true) == -15);
+    static_assert(see_pruning_threshold(1uz, true) == -60);
+    static_assert(see_pruning_threshold(2uz, true) == -135);
+    static_assert(see_pruning_threshold(3uz, true) == -240);
+    static_assert(see_pruning_threshold(4uz, true) == -375);
+    static_assert(see_pruning_threshold(5uz, true) == -540);
+    static_assert(see_pruning_threshold(6uz, true) == -735);
+    static_assert(see_pruning_threshold(SEE_PRUNING_MAX_DEPTH, true) == -960);
+
+    // a lower bound on the SEE of a capture or promotion, without playing out the exchange:
+    // the side making the move can always stop after the opponent's first recapture, so it
+    // can't do worse than winning what it takes and then losing the piece it moved there
+    [[nodiscard]] auto see_lower_bound(const Position& position, const Move move) noexcept -> int
+    {
+        const int captured = position.is_en_passant(move)
+                               ? piece_values::PAWN
+                               : position.their_pieces()
+                                     .get_piece_on(move.to())
+                                     .transform(piece_values::get)
+                                     .value_or(eval::Value { 0 });
+
+        // a promoted piece gains (promoted - pawn), then the promoted piece can be lost
+        if (move.is_promotion())
+            return captured - piece_values::PAWN;
+
+        return captured - piece_values::get(move.piece());
+    }
+
+    // internal iterative reductions are only done with at least this much depth left
+    inline constexpr auto IIR_MIN_DEPTH { 4uz };
 
     // moves that give check are only extended up to this ply. Reaching MAX_PLY aborts
     // the entire search, so this stops long sequences of checks from getting there.
@@ -216,6 +307,13 @@ namespace {
 
             const bool inCheck = position.is_check();
 
+            // internal iterative reductions: with no TT move our move ordering is probably poor,
+            // so search this node one ply shallower. The next visit should then have a TT move.
+            if (not inCheck
+                and depthLeft >= IIR_MIN_DEPTH
+                and not transTable.find(position).and_then(&TTData::bestMove).has_value())
+                --depthLeft;
+
             // set to true if quiet moves after the first one can't raise alpha
             bool futilityPruning = false;
 
@@ -286,6 +384,16 @@ namespace {
             // quiet moves that were searched without causing a cutoff
             MoveList quietsSearched;
 
+            const bool lateMovePruning = depthLeft <= LMP_MAX_DEPTH and not inCheck;
+
+            // always at least 4, so the first move is never pruned
+            const auto lmpCount = lmp_move_count(depthLeft);
+
+            const bool seePruning = depthLeft <= SEE_PRUNING_MAX_DEPTH and not inCheck;
+
+            const auto captureSeeThreshold = see_pruning_threshold(depthLeft, false);
+            const auto quietSeeThreshold   = see_pruning_threshold(depthLeft, true);
+
             for (const auto move : moves) {
                 const auto moveIdx  = nextMoveIdx++;
                 const auto childPos = after_move(position, move);
@@ -293,6 +401,32 @@ namespace {
                 if (futilityPruning and moveIdx > 0uz
                     and position.is_quiet(move) and not childPos.is_check())
                     continue;
+
+                // late move pruning: near the horizon, once we've searched enough moves, the
+                // remaining quiet moves are unlikely to raise alpha, so we skip them
+                if (lateMovePruning and moveIdx >= lmpCount
+                    and not bounds.alpha.is_losing_mate()
+                    and position.is_quiet(move)
+                    and not std::ranges::contains(killers, move)
+                    and not childPos.is_check())
+                    continue;
+
+                // SEE pruning: near the horizon, skip moves that lose too much material once all
+                // recaptures are played out. For captures, we only call see() if the cheap lower
+                // bound can't rule this out, so captures of equal or more valuable pieces never pay
+                // for it. Killers aren't exempt (unlike in LMP): a move that loses material by SEE
+                // isn't saved by having caused a cutoff in a sibling position
+                if (seePruning and moveIdx > 0uz
+                    and not bounds.alpha.is_losing_mate()
+                    and not childPos.is_check()) {
+                    if (position.is_quiet(move)) {
+                        if (eval::see(position, move) < quietSeeThreshold)
+                            continue;
+                    } else if (see_lower_bound(position, move) < captureSeeThreshold
+                               and eval::see(position, move) < captureSeeThreshold) {
+                        continue;
+                    }
+                }
 
                 if constexpr (PVNode) {
                     childPV.reset();
@@ -688,7 +822,8 @@ namespace {
         KillerMoves&                   killerMoves,
         HistoryTable&                  history,
         const eval::PieceSquareTables& pst,
-        const Callbacks&               callbacks)
+        const Callbacks&               callbacks,
+        const std::optional<Move>      prevBestMove)
         -> RootSearchResult
     {
         const Timer timer;
@@ -697,6 +832,15 @@ namespace {
 
         detail::order_moves_for_search(
             position, options.movesToSearch, transTable, killerMoves.get(0uz), history);
+
+        // the root position is never stored in the transposition table, so the move ordering
+        // can't know about the previous iteration's best move. Search it first explicitly
+        if (prevBestMove.has_value()) {
+            if (const auto it = std::ranges::find(options.movesToSearch, *prevBestMove);
+                it != options.movesToSearch.end()) {
+                std::rotate(options.movesToSearch.begin(), it, std::next(it));
+            }
+        }
 
         RootSearchResult result;
 
@@ -792,8 +936,12 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         if (interrupter.should_abort(0uz))
             break;
 
+        const auto prevBestMove = result.pv.empty()
+                                    ? std::nullopt
+                                    : std::optional { result.pv.front() };
+
         const auto res = root_search(
-            depth, options, position, transTable, interrupter, killerMoves, history, pieceSquareTables, callbacks);
+            depth, options, position, transTable, interrupter, killerMoves, history, pieceSquareTables, callbacks, prevBestMove);
 
         if (interrupter.was_aborted())
             break;

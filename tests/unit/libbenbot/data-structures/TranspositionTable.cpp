@@ -286,3 +286,58 @@ TEST_CASE("Transposition table - store() overwriting rules", TAGS)
         }
     }
 }
+
+TEST_CASE("Transposition table - store() keeps the best move on a fail-low", TAGS)
+{
+    const auto oldMove = notation::from_alg(startPos, "e4").value();
+
+    TranspositionTable table;
+
+    table.store(startPos,
+        { .searchedDepth = 4uz,
+            .eval        = 50,
+            .evalType    = EvalType::Beta,
+            .bestMove    = oldMove });
+
+    SECTION("A fail-low with no best move keeps the old one")
+    {
+        table.store(startPos,
+            { .searchedDepth = 5uz,
+                .eval        = -20,
+                .evalType    = EvalType::Alpha,
+                .bestMove    = { } });
+
+        const auto record = table.find(startPos);
+
+        REQUIRE(record);
+        REQUIRE(record->searchedDepth == 5uz);
+        REQUIRE(record->evalType == EvalType::Alpha);
+        REQUIRE(record->bestMove == oldMove);
+    }
+
+    SECTION("A new best move replaces the old one")
+    {
+        const auto newMove = notation::from_alg(startPos, "d4").value();
+
+        table.store(startPos,
+            { .searchedDepth = 5uz,
+                .eval        = 30,
+                .evalType    = EvalType::Exact,
+                .bestMove    = newMove });
+
+        REQUIRE(table.find(startPos)->bestMove == newMove);
+    }
+
+    SECTION("A different position doesn't get the old best move")
+    {
+        const auto otherPos = chess::game::after_move(startPos, oldMove);
+
+        table.store(otherPos,
+            { .searchedDepth = 5uz,
+                .eval        = -20,
+                .evalType    = EvalType::Alpha,
+                .bestMove    = { } });
+
+        REQUIRE_FALSE(table.find(otherPos)->bestMove.has_value());
+    }
+}

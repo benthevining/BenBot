@@ -14,11 +14,11 @@
 
 #include <algorithm>
 #include <cassert>
-#include <cmath> // IWYU pragma: keep - for std::round()
 #include <functional>
 #include <iterator>
 #include <libbenbot/Resources.hpp>
 #include <libbenbot/eval/PieceSquareTables.hpp>
+#include <libbenbot/eval/TaperedScore.hpp>
 #include <libchess/board/Flips.hpp>
 #include <libchess/board/Pieces.hpp>
 #include <libchess/game/Position.hpp>
@@ -110,7 +110,7 @@ namespace {
 
     template <bool IsBlack>
     [[nodiscard, gnu::pure]] auto score_king(
-        const Pieces& pieces, const float endgameWeight, const PieceSquareTables& pst) noexcept -> int
+        const Pieces& pieces, const PieceSquareTables& pst) noexcept -> TaperedScore
     {
         auto king = pieces.king;
 
@@ -122,42 +122,42 @@ namespace {
 
         const auto idx = king.first();
 
-        const auto middlegameValue = pst.kingMiddlegame.at(idx);
-        const auto endgameValue    = pst.kingEndgame.at(idx);
-
-        return static_cast<int>(std::round(static_cast<float>(middlegameValue) * (1.f - endgameWeight)))
-             + static_cast<int>(std::round(static_cast<float>(endgameValue) * endgameWeight));
+        return {
+            .mg = pst.kingMiddlegame.at(idx),
+            .eg = pst.kingEndgame.at(idx)
+        };
     }
 
     template <bool IsBlack>
     [[nodiscard, gnu::pure]] auto score_side_pieces(
-        const Pieces& pieces, const float endgameWeight, const PieceSquareTables& pst)
-        -> int
+        const Pieces& pieces, const PieceSquareTables& pst)
+        -> TaperedScore
     {
-        return score_pawns<IsBlack>(pieces, pst)
-             + score_knights<IsBlack>(pieces, pst)
-             + score_bishops<IsBlack>(pieces, pst)
-             + score_rooks<IsBlack>(pieces, pst)
-             + score_queens<IsBlack>(pieces, pst)
-             + score_king<IsBlack>(pieces, endgameWeight, pst);
+        const auto untapered = score_pawns<IsBlack>(pieces, pst)
+                             + score_knights<IsBlack>(pieces, pst)
+                             + score_bishops<IsBlack>(pieces, pst)
+                             + score_rooks<IsBlack>(pieces, pst)
+                             + score_queens<IsBlack>(pieces, pst);
+
+        return TaperedScore::both(untapered) + score_king<IsBlack>(pieces, pst);
     }
 
 } // namespace
 
 auto PieceSquareTables::score_piece_placement(
-    const Position& position, const float endgameWeight) const
-    -> int
+    const Position& position) const
+    -> TaperedScore
 {
-    const auto [ourScore, theirScore] = [this, &position, endgameWeight] {
+    const auto [ourScore, theirScore] = [this, &position] {
         if (position.is_black_to_move()) {
             return std::make_pair(
-                score_side_pieces<true>(position.our_pieces(), endgameWeight, *this),
-                score_side_pieces<false>(position.their_pieces(), endgameWeight, *this));
+                score_side_pieces<true>(position.our_pieces(), *this),
+                score_side_pieces<false>(position.their_pieces(), *this));
         }
 
         return std::make_pair(
-            score_side_pieces<false>(position.our_pieces(), endgameWeight, *this),
-            score_side_pieces<true>(position.their_pieces(), endgameWeight, *this));
+            score_side_pieces<false>(position.our_pieces(), *this),
+            score_side_pieces<true>(position.their_pieces(), *this));
     }();
 
     return ourScore - theirScore;
