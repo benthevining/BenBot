@@ -18,8 +18,8 @@
 # Usage: CombineSPRTResults.py <elo0> <elo1> <final> <log files...>
 # where <final> is true if no more games will be played if no bound has been reached.
 #
-# Prints a Markdown summary, and exits with 0 if the test passed, 1 if it failed or
-# didn't reach a bound in the final round, or 2 if more games are needed.
+# Prints a Markdown summary, and exits with 0 if the test passed, 1 if it failed, didn't
+# finish any games, or didn't reach a bound in the final round, or 2 if more games are needed.
 
 import math
 import re
@@ -123,8 +123,10 @@ upper_bound = math.log((1 - BETA) / ALPHA)
 test_type = "Non-regression" if ELO0 < 0 else "Gainer"
 
 if pairs == 0:
-    print(f"{test_type} SPRT didn't finish any games.")
-    sys.exit(1 if FINAL else 2)
+    # every shard plays for long enough to finish some games, so playing none means that
+    # something is broken (e.g. fastchess couldn't start), and later rounds won't do any better
+    print(f"{test_type} SPRT didn't finish any games, check the logs for details.")
+    sys.exit(1)
 
 probs = [count / pairs for count in ptnml]
 

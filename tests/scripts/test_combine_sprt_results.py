@@ -208,19 +208,26 @@ def test_shard_without_games(write_log):
     assert with_empty.stdout.replace("Shards: 17", "Shards: 16") == without.stdout
 
 
-@pytest.mark.parametrize("final,status", [(False, 2), (True, 1)])
-def test_no_games(write_log, final, status):
+@pytest.mark.parametrize("final", [False, True])
+def test_no_games(write_log, final):
+    # e.g. fastchess couldn't start, so more rounds won't help
     log = write_log("ninja: build stopped: interrupted by user.\n")
     result = combine(-5, 0, final, log)
-    assert result.returncode == status
-    assert result.stdout.strip() == "Non-regression SPRT didn't finish any games."
+    assert result.returncode == 1
+    assert (
+        result.stdout.strip()
+        == "Non-regression SPRT didn't finish any games, check the logs for details."
+    )
 
 
-@pytest.mark.parametrize("final,status", [(False, 2), (True, 1)])
-def test_no_logs(final, status):
+@pytest.mark.parametrize("final", [False, True])
+def test_no_logs(final):
     result = combine(0, 5, final)
-    assert result.returncode == status
-    assert result.stdout.strip() == "Gainer SPRT didn't finish any games."
+    assert result.returncode == 1
+    assert (
+        result.stdout.strip()
+        == "Gainer SPRT didn't finish any games, check the logs for details."
+    )
 
 
 @pytest.mark.parametrize("final,status", [(False, 2), (True, 1)])
