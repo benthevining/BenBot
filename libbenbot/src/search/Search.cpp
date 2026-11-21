@@ -298,7 +298,7 @@ namespace {
                     childPV.reset();
                 }
 
-                const auto eval = [this, move, &childPos, inCheck, killers, moveIdx, foundPV = bestMove.has_value()] {
+                const auto eval = [this, move, &childPos, inCheck, killers, moveIdx] {
                     // check extensions: search moves that give check one ply deeper, so that
                     // we don't drop into the quiescence search in the middle of a forcing line
                     const auto extension = childPos.is_check() and plyFromRoot < MAX_EXTENSION_PLY
@@ -318,7 +318,10 @@ namespace {
                             return reducedScore;
                     }
 
-                    if (not foundPV)
+                    // only the first move gets a full window. Waiting for a move to raise alpha
+                    // instead means that in a PV node where every move fails low, every move is
+                    // searched as a PV node.
+                    if (moveIdx == 0uz)
                         return -recurse(childPos, false, 0uz, extension).alpha_beta<PVNode>();
 
                     // principal variation search: first try searching with a null window
