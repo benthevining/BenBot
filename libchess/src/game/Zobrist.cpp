@@ -195,6 +195,41 @@ auto update(
     return value;
 }
 
+auto calculate_pawns(const Position& pos) -> Hash
+{
+    const auto value = add_piece_positions<Color::White>(keys::NO_PAWNS, PieceType::Pawn, pos);
+
+    return add_piece_positions<Color::Black>(value, PieceType::Pawn, pos);
+}
+
+auto update_pawns(const Position& pos, const Move move) -> Hash
+{
+    auto value = pos.pawnHash;
+
+    if (move.piece() == PieceType::Pawn) {
+        value ^= piece_key(PieceType::Pawn, pos.sideToMove, move.from());
+
+        // on a promotion, the pawn leaves the pawn structure
+        if (not move.is_promotion())
+            value ^= piece_key(PieceType::Pawn, pos.sideToMove, move.to());
+    }
+
+    // remove a captured pawn
+    const auto otherColor = pos.is_white_to_move() ? Color::Black : Color::White;
+
+    if (pos.is_en_passant(move)) {
+        value ^= piece_key(
+            PieceType::Pawn, otherColor,
+            get_en_passant_captured_square(
+                pos.enPassantTargetSquare.value(),
+                pos.is_white_to_move()));
+    } else if (pos.their_pieces().pawns.test(move.to())) {
+        value ^= piece_key(PieceType::Pawn, otherColor, move.to());
+    }
+
+    return value;
+}
+
 auto after_null_move(const Position& pos) -> Hash
 {
     auto value = pos.hash;
