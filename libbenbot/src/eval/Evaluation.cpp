@@ -18,6 +18,7 @@
 
 #include "eval/PawnStructure.hpp"
 #include "eval/Positional.hpp"
+#include "eval/Threats.hpp"
 #include <algorithm>
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Material.hpp>
@@ -367,7 +368,7 @@ auto evaluate(
 {
     const auto materialScore = score_material(position);
 
-    // attack sets are calculated once & shared between the mobility, king zone, center control & space terms
+    // attack sets are calculated once & shared between the mobility, king zone, center control, space & threat terms
     mobility::Counter mobilityCounter { position };
 
     const auto attacks = chess::moves::compute_attacks(position, mobilityCounter);
@@ -387,6 +388,7 @@ auto evaluate(
                      + pst.score_piece_placement(position)
                      + score_king_safety(position)
                      + score_mobility(position, mobilityCounter)
+                     + detail::score_threats(position, attacks)
                      + score_endgame_mopup(position, materialScore);
 
     return Score { static_cast<Value>(total.blend(middlegame_phase(position), MAX_PHASE)) };
