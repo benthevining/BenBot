@@ -61,4 +61,4 @@ runs:
   - name: Add execution permissions
     shell: bash
     run: |
-      chmod --preserve-root 777 ${{ steps.print_filename.outputs.executable }}
+      chmod 777 ${{ steps.print_filename.outputs.executable }}

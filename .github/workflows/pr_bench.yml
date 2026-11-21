@@ -13,6 +13,11 @@
 # Runs bench on each push to a PR, and keeps a "Bench: <nodes>" line at the end of the PR's
 # description up to date. The repo's default merge commit message is the PR's description, so
 # merging from the web UI puts the bench in the merge commit.
+# The PR's base is built & benched too, and the paragraph above the bench line says whether the
+# bench changed. The PR is checked out at its merge commit with the base, so comparing against
+# the base shows the PR's own changes. The base is built instead of reading the bench from its
+# commit message because not every commit on main has one, and a merge commit's bench line is
+# the PR's bench, which can be out of date if main changed before the PR was merged.
 
 name: PR bench
 
@@ -54,25 +59,53 @@ jobs:
       id: build
       uses: ./.github/actions/run_build
 
+    - name: Checkout base
+      uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      with:
+        ref: ${{ github.event.pull_request.base.sha }}
+        path: tmp-base
+        persist-credentials: false
+
+      # if the base doesn't build, the bench line is still updated, just without the comparison
+    - name: Build base
+      id: build_base
+      continue-on-error: true
+      uses: ./.github/actions/run_build
+      with:
+        root_dir: ${{ github.workspace }}/tmp-base
+
     - name: Run bench
       id: bench
       env:
         BEN_BOT: ${{ steps.build.outputs.deploy_dir }}/bin/ben_bot
+        BASE_BEN_BOT: ${{ steps.build_base.outputs.deploy_dir }}/bin/ben_bot
       run: |
-        nodes="$( (echo bench; echo quit) | "$BEN_BOT" | sed -n 's/^info string Total nodes: \([0-9][0-9]*\).*/\1/p')"
+        bench() {
+          (echo bench; echo quit) | "$1" | sed -n 's/^info string Total nodes: \([0-9][0-9]*\).*/\1/p'
+        }
+        nodes="$(bench "$BEN_BOT")"
         if [[ -z "$nodes" ]]; then
           echo "::error::Couldn't find the node count in the bench output"
           exit 1
         fi
-        echo "Bench: $nodes" >> "$GITHUB_STEP_SUMMARY"
+        base_nodes=""
+        if [[ -x "$BASE_BEN_BOT" ]]; then
+          base_nodes="$(bench "$BASE_BEN_BOT" || true)"
+        fi
+        if [[ -z "$base_nodes" ]]; then
+          echo "::warning::Couldn't get the base's bench, so the PR description won't say how the bench changed"
+        fi
+        echo "Bench: $nodes (base: ${base_nodes:-unknown})" >> "$GITHUB_STEP_SUMMARY"
         echo "nodes=$nodes" >> "$GITHUB_OUTPUT"
+        echo "base_nodes=$base_nodes" >> "$GITHUB_OUTPUT"
 
       # fetch the description now instead of using the event's, in case it's been edited since
     - name: Update PR description
       env:
         GH_TOKEN: ${{ github.token }}
         NODES: ${{ steps.bench.outputs.nodes }}
+        BASE_NODES: ${{ steps.bench.outputs.base_nodes }}
       run: |
         gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" --jq '.body // ""' > "$RUNNER_TEMP/body.md"
-        python3 .github/actions/UpdateBenchLine.py "$RUNNER_TEMP/body.md" "$NODES"
+        python3 .github/actions/UpdateBenchLine.py "$RUNNER_TEMP/body.md" "$NODES" "$BASE_NODES"
         gh api --method PATCH "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" -F "body=@$RUNNER_TEMP/body.md" > /dev/null
