@@ -1,0 +1,177 @@
+# ======================================================================================
+#
+# ░▒▓███████▓▒░░▒▓████████▓▒░▒▓███████▓▒░       ░▒▓███████▓▒░ ░▒▓██████▓▒░▒▓████████▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓███████▓▒░░▒▓██████▓▒░ ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓███████▓▒░░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░ ░▒▓██████▓▒░  ░▒▓█▓▒░
+#
+# ======================================================================================
+
+# Plays one round of a sharded SPRT test for the SPRT (PR) workflow. Each shard plays games on its
+# own runner until the time limit, then the results of all the rounds so far are combined. The
+# status output is "continue" if no bound has been reached yet & there are more rounds to go.
+
+name: SPRT round
+
+on:
+  workflow_call:
+    inputs:
+      round:
+        description: Number of this round, starting from 1
+        type: number
+        required: true
+      final_round:
+        description: If true, this is the last round, so the test stops even if no bound has been reached
+        type: boolean
+        required: true
+      target:
+        description: Name of the CMake target to build to play the SPRT games
+        type: string
+        required: true
+      description:
+        description: Description of the test, for the PR comment
+        type: string
+        required: true
+      elo0:
+        type: string
+        required: true
+      elo1:
+        type: string
+        required: true
+      runner:
+        description: Runner label for the shard jobs (e.g. ubuntu-latest or macos-26)
+        type: string
+        required: true
+      platform:
+        description: Name of the platform the games are played on, for the PR comment
+        type: string
+        required: true
+    outputs:
+      status:
+        description: '"passed", "failed", or "continue"'
+        value: ${{ jobs.combine.outputs.status }}
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: read
+
+env:
+  PR_NUMBER: ${{ github.event.pull_request.number }}
+  RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+  HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+  BASE_SHA: ${{ github.event.pull_request.base.sha }}
+
+jobs:
+
+  shard:
+    runs-on: ${{ inputs.runner }}
+    name: Shard ${{ matrix.shard }}
+    timeout-minutes: 60 # see the run_sprt action's timeout input below
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      with:
+        ref: ${{ env.HEAD_SHA }}
+        persist-credentials: false
+
+    - name: Play SPRT games
+      uses: ./.github/actions/run_sprt
+      with:
+        use_main: true
+        main_ref: ${{ env.BASE_SHA }}
+        target_name: ${{ inputs.target }}
+        timeout: 40m
+        shard: true
+        # each shard of each round needs to play different openings
+        seed: ${{ github.run_id }}${{ inputs.round }}${{ matrix.shard }}
+        artifact_name: sprt-round${{ inputs.round }}-shard${{ matrix.shard }}
+
+  combine:
+    needs: shard
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    name: Combine results
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
+    outputs:
+      status: ${{ steps.combine.outputs.status }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      with:
+        ref: ${{ env.HEAD_SHA }}
+        persist-credentials: false
+
+      # downloads the logs from all of this run's shards so far, including previous rounds
+    - name: Download shard logs
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+      with:
+        pattern: sprt-round*-shard*
+        path: ${{ runner.temp }}/shards
+
+    - name: Combine results
+      id: combine
+      env:
+        ELO0: ${{ inputs.elo0 }}
+        ELO1: ${{ inputs.elo1 }}
+        FINAL_ROUND: ${{ inputs.final_round }}
+        ROUND: ${{ inputs.round }}
+        PLATFORM: ${{ inputs.platform }}
+        SUMMARY_FILE: ${{ runner.temp }}/summary.md
+      run: |
+        printf "Games played on %s.\n\n" "$PLATFORM" >> "$GITHUB_STEP_SUMMARY"
+        # if none of this round's shards played any games (e.g. the build failed), the next round won't either
+        if ! compgen -G "$RUNNER_TEMP/shards/sprt-round${ROUND}-shard*/output.log" > /dev/null; then
+          echo "SPRT stopped because round ${ROUND} didn't play any games, check the logs for details." > "$SUMMARY_FILE"
+          cat "$SUMMARY_FILE" >> "$GITHUB_STEP_SUMMARY"
+          echo "status=failed" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        status=0
+        python3 .github/actions/run_sprt/CombineSPRTResults.py "$ELO0" "$ELO1" "$FINAL_ROUND" \
+          "$RUNNER_TEMP"/shards/*/output.log > "$SUMMARY_FILE" || status=$?
+        cat "$SUMMARY_FILE" >> "$GITHUB_STEP_SUMMARY"
+        case "$status" in
+          0) echo "status=passed" >> "$GITHUB_OUTPUT" ;;
+          2) echo "status=continue" >> "$GITHUB_OUTPUT" ;;
+          *) echo "status=failed" >> "$GITHUB_OUTPUT" ;;
+        esac
+
+    - name: Post results comment
+      env:
+        GH_TOKEN: ${{ github.token }}
+        SUMMARY_FILE: ${{ runner.temp }}/summary.md
+        STATUS: ${{ steps.combine.outputs.status }}
+        ROUND: ${{ inputs.round }}
+        TEST_DESCRIPTION: ${{ inputs.description }}
+        PLATFORM: ${{ inputs.platform }}
+      run: |
+        {
+          echo "## SPRT"
+          echo ""
+          cat "$SUMMARY_FILE"
+          echo ""
+          if [[ "$STATUS" == continue ]]; then
+            echo "Running ${TEST_DESCRIPTION} SPRT on ${PLATFORM} for ${HEAD_SHA} against ${BASE_SHA}, round ${ROUND} done... ([run]($RUN_URL))"
+          else
+            echo "Tested ${HEAD_SHA} against ${BASE_SHA} on ${PLATFORM} ([run]($RUN_URL))"
+          fi
+        } > "$RUNNER_TEMP/comment.md"
+        .github/actions/run_sprt/UpdatePRComment.sh "$RUNNER_TEMP/comment.md"
+
+      # the workflow's result should show whether the test passed
+    - name: Check result
+      if: steps.combine.outputs.status == 'failed'
+      run: exit 1
