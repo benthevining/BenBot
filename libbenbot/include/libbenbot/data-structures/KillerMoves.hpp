@@ -36,11 +36,15 @@ using std::size_t;
 
 /** This structure stores killer moves collected during the search.
     This is essentially a set of lists of moves, indexed by ply from
-    the root of the search.
+    the root of the search. Each list holds at most ``MAX_KILLERS``
+    moves, with the most recently stored move first.
 
     @ingroup benbot_data_structures
  */
 struct KillerMoves final {
+    /** The maximum number of killer moves stored for each ply. */
+    static constexpr auto MAX_KILLERS { 2uz };
+
     /** Clears all the stored moves. */
     void clear()
     {
@@ -48,15 +52,22 @@ struct KillerMoves final {
             list.clear();
     }
 
-    /** Stores a killer move. */
+    /** Stores a killer move.
+        If the list for this ply is full, the oldest move is removed.
+     */
     void store(const size_t plyFromRoot, const Move move)
     {
         assert(plyFromRoot < search::MAX_PLY);
 
         auto& list = lists.at(plyFromRoot);
 
-        if (not std::ranges::contains(list, move))
-            list.emplace_back(move);
+        if (std::ranges::contains(list, move))
+            return;
+
+        list.insert(list.begin(), move);
+
+        if (list.size() > MAX_KILLERS)
+            list.pop_back();
     }
 
     /** Returns the killer moves for the given ply. */
