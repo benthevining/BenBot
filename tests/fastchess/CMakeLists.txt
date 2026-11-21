@@ -68,6 +68,13 @@ cmake_host_system_information (RESULT num_cores QUERY NUMBER_OF_LOGICAL_CORES)
 
 set (logs_dir "${BenBot_SOURCE_DIR}/logs/sprt")
 
+# used by the sprt pr ci workflow to shard SPRT tests across several machines. Each shard plays
+# games with a different opening order until it's stopped, and the workflow combines the results
+option (BENBOT_SPRT_SHARD "Play SPRT games without stopping at the SPRT bounds" OFF)
+set (BENBOT_SPRT_SEED "" CACHE STRING "Seed for the SPRT tests' random opening order")
+
+mark_as_advanced (BENBOT_SPRT_SHARD BENBOT_SPRT_SEED)
+
 add_custom_command (
     OUTPUT "${logs_dir}/stamp"
     COMMAND "${CMAKE_COMMAND}" -E make_directory "${logs_dir}"
@@ -81,6 +88,18 @@ function (add_sprt_test name elo0 elo1 description)
     set (epd_out "${logs_dir}/${name}-final-positions.epd")
     set (logfile "${logs_dir}/${name}-sprt.log")
 
+    if (BENBOT_SPRT_SHARD)
+        set (sprt_args "")
+    else ()
+        set (sprt_args -sprt "elo0=${elo0}" "elo1=${elo1}" alpha=0.05 beta=0.1)
+    endif ()
+
+    if (BENBOT_SPRT_SEED STREQUAL "")
+        set (seed_args "")
+    else ()
+        set (seed_args -srand "${BENBOT_SPRT_SEED}")
+    endif ()
+
     # cmake-format: off
     add_custom_target (
         "${name}"
@@ -89,7 +108,7 @@ function (add_sprt_test name elo0 elo1 description)
             -engine "cmd=${baseline_binary}" name=Baseline
             -each tc=8+0.08 option.Hash=32
             -rounds 100000 -repeat
-            -sprt "elo0=${elo0}" "elo1=${elo1}" alpha=0.05 beta=0.1
+            ${sprt_args} ${seed_args}
             -ratinginterval 10
             -maxmoves 400
             -resign movecount=3 score=500 twosided=true
