@@ -418,16 +418,29 @@ namespace {
                 or childPos.is_check())
                 return 0uz;
 
-            auto reduction = lmr_table_lookup(depthLeft, moveIdx);
+            // each this much history score changes the reduction by 1 ply, up to MAX_HISTORY_ADJUSTMENT plies.
+            // History bonuses are only (depth + 1)^2, so most scores are well below HistoryTable::MAX_SCORE:
+            // over bench, about 99% of the moves we reduce have scores within +/-1024, & most are negative
+            static constexpr auto HISTORY_DIVISOR { 256 };
+            static constexpr auto MAX_HISTORY_ADJUSTMENT { 2 };
+
+            auto reduction = static_cast<int>(lmr_table_lookup(depthLeft, moveIdx));
 
             // reduce less in PV nodes
             if constexpr (PVNode) {
-                if (reduction > 0uz)
-                    --reduction;
+                --reduction;
             }
 
+            // reduce moves with a good history less, and moves with a bad history more
+            reduction -= std::clamp(
+                history.get(position.is_white_to_move(), move) / HISTORY_DIVISOR,
+                -MAX_HISTORY_ADJUSTMENT, MAX_HISTORY_ADJUSTMENT);
+
+            if (reduction <= 0)
+                return 0uz;
+
             // never reduce straight into the quiescence search
-            return std::min(reduction, depthLeft - 2uz);
+            return std::min(static_cast<size_t>(reduction), depthLeft - 2uz);
         }
 
         // searches only captures, with no depth limit, to try to
