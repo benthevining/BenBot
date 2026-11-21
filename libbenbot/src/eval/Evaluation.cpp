@@ -19,11 +19,11 @@
 #include "eval/PawnStructure.hpp"
 #include "eval/Positional.hpp"
 #include <algorithm>
-#include <cmath> // IWYU pragma: keep - for std::round
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Material.hpp>
 #include <libbenbot/eval/PieceSquareTables.hpp>
 #include <libbenbot/eval/Score.hpp>
+#include <libbenbot/eval/TaperedScore.hpp>
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/Distances.hpp>
 #include <libchess/board/File.hpp>
@@ -41,26 +41,21 @@ namespace ben_bot::eval {
 
 namespace {
 
-    // returns a [0..1] value that is 0 at the start of the game and 1 in the late endgame
-    [[nodiscard, gnu::pure]] constexpr auto endgame_phase_weight(
+    // game phase is roughly determined based on the total amount of non-pawn material left on the board
+    // we say that the endgame has begun once the queens & two pairs of minor pieces have been traded
+    inline constexpr int MAX_PHASE
+        = ((piece_values::ROOK * 2) + piece_values::BISHOP + piece_values::KNIGHT) * 2;
+
+    // returns a [0..MAX_PHASE] value that is MAX_PHASE until the endgame starts, then falls
+    // linearly to 0 as the remaining non-pawn material is traded off
+    [[nodiscard, gnu::pure]] constexpr auto middlegame_phase(
         const Position& position) noexcept
-        -> float
+        -> int
     {
-        // game phase is roughly determined based on the total amount of non-pawn material left on the board
-        // we say that the endgame has begun once the queens & two pairs of minor pieces have been traded
-        static constexpr auto EG_MATERIAL_START_ONE_SIDE = static_cast<float>(
-            (piece_values::ROOK * 2uz) + piece_values::BISHOP + piece_values::KNIGHT);
-
-        static constexpr auto EG_MATERIAL_START = EG_MATERIAL_START_ONE_SIDE * 2.f;
-
-        static constexpr auto multiplier = 1.f / EG_MATERIAL_START;
-
         const auto nonPawnMaterialLeft = detail::count_material<false>(position.whitePieces)
                                        + detail::count_material<false>(position.blackPieces);
 
-        const auto pcntLeft = static_cast<float>(nonPawnMaterialLeft) * multiplier;
-
-        return 1.f - std::min(1.f, pcntLeft);
+        return std::min(nonPawnMaterialLeft, MAX_PHASE);
     }
 
     using chess::board::Bitboard;
@@ -122,39 +117,37 @@ namespace {
 
     // awards various penalties for king danger
     [[nodiscard, gnu::pure]] auto score_king_safety(
-        const Position& position, const float endgameWeight) noexcept
-        -> int
+        const Position& position) noexcept
+        -> TaperedScore
     {
         static constexpr auto OPEN_KING_PENALTY        = -50;
         static constexpr auto STRANDED_KING_PENALTY    = -75;
         static constexpr auto ATTACKING_KNIGHT_PENALTY = -3;
         static constexpr auto ATTACKING_QUEEN_PENALTY  = -7;
 
-        auto score_side_king = [&position, endgameWeight,
+        auto score_side_king = [&position,
                                    allPawns = position.whitePieces.pawns | position.blackPieces.pawns](
                                    const Pieces& pieces, const chess::game::CastlingRights& castlingRights,
                                    const Pieces& enemyPieces) {
-            auto score { 0 };
+            // open/stranded king penalties are middlegame only
+            TaperedScore score;
 
             const auto location = pieces.get_king_location();
 
             // king on open file or diagonal
             if (position.is_file_half_open(location.file))
-                score += (OPEN_KING_PENALTY / 2);
+                score.mg += (OPEN_KING_PENALTY / 2);
             else if (position.is_file_open(location.file)
                      or (masks::diagonal(location) & allPawns).none()
                      or (masks::antidiagonal(location) & allPawns).none())
-                score += OPEN_KING_PENALTY;
+                score.mg += OPEN_KING_PENALTY;
 
             using chess::board::File;
 
             // king stranded in center without castling rights
             if (castlingRights.neither()
                 and (location.file == File::D or location.file == File::E))
-                score += STRANDED_KING_PENALTY;
-
-            // open/stranded king penalties matter less in endgame
-            score = static_cast<int>(std::round(static_cast<float>(score) * (1.f - endgameWeight)));
+                score.mg += STRANDED_KING_PENALTY;
 
             // enemy knights & queens near king
 
@@ -164,7 +157,7 @@ namespace {
                 const auto distance = knight_distance(location, knightPos);
 
                 // penalty increases with smaller distance
-                score += static_cast<int>(MAX_DISTANCE - distance) * ATTACKING_KNIGHT_PENALTY;
+                score += TaperedScore::both(static_cast<int>(MAX_DISTANCE - distance) * ATTACKING_KNIGHT_PENALTY);
             }
 
             for (const auto queenPos : enemyPieces.queens.squares()) {
@@ -173,7 +166,7 @@ namespace {
                 const auto distance = chebyshev_distance(location, queenPos);
 
                 // penalty increases with smaller distance
-                score += static_cast<int>(MAX_DISTANCE - distance) * ATTACKING_QUEEN_PENALTY;
+                score += TaperedScore::both(static_cast<int>(MAX_DISTANCE - distance) * ATTACKING_QUEEN_PENALTY);
             }
 
             static constexpr auto STARTING_NON_PAWN_MATERIAL
@@ -204,9 +197,8 @@ namespace {
         // all squares attacked by pawns, knights, bishops, rooks & queens (not the king)
         Bitboard attacked;
 
-        // total mobility bonus for this side's pieces, before blending by game phase
-        int mobilityMG { 0 };
-        int mobilityEG { 0 };
+        // total mobility bonus for this side's pieces
+        TaperedScore mobility;
     };
 
     // Mobility weights. Each piece gets (number of moves - baseline) * weight, so that an
@@ -252,8 +244,7 @@ namespace {
                                 const Bitboard moves, const mobility::Weights& weights) {
             const auto numMoves = static_cast<int>((moves & mobilityArea).count()) - weights.baseline;
 
-            result.mobilityMG += numMoves * weights.middlegame;
-            result.mobilityEG += numMoves * weights.endgame;
+            result.mobility += TaperedScore { .mg = weights.middlegame, .eg = weights.endgame } * numMoves;
         };
 
         for (const auto square : pieces.knights.squares())
@@ -282,13 +273,10 @@ namespace {
 
     // bonus for pieces with more available moves
     [[nodiscard, gnu::pure]] auto score_mobility(
-        const SideAttacks& ours, const SideAttacks& theirs, const float endgameWeight) noexcept
-        -> int
+        const SideAttacks& ours, const SideAttacks& theirs) noexcept
+        -> TaperedScore
     {
-        const auto middlegame = static_cast<float>(ours.mobilityMG - theirs.mobilityMG);
-        const auto endgame    = static_cast<float>(ours.mobilityEG - theirs.mobilityEG);
-
-        return static_cast<int>(std::round((middlegame * (1.f - endgameWeight)) + (endgame * endgameWeight)));
+        return ours.mobility - theirs.mobility;
     }
 
     [[nodiscard, gnu::pure]] auto score_squares_controlled_around_kings(
@@ -330,8 +318,8 @@ namespace {
     // this "mop up" function gives a bonus for cornering the enemy king in the endgame
     // this can help to prevent draws when you're up material
     [[nodiscard, gnu::pure]] auto score_endgame_mopup(
-        const Position& position, const float endgameWeight, const int materialScore)
-        -> int
+        const Position& position, const int materialScore)
+        -> TaperedScore
     {
         // only give a mop up score if we're the one up material (and on the attack)
         if (std::cmp_greater(materialScore, piece_values::PAWN * 2uz)) {
@@ -344,10 +332,11 @@ namespace {
             // use ortho distance to encourage direct opposition
             score += (14 - static_cast<int>(manhattan_distance(ourKing, theirKing))) * 4;
 
-            return static_cast<int>(std::round(static_cast<float>(score) * endgameWeight));
+            // endgame only
+            return { .mg = 0, .eg = score };
         }
 
-        return 0;
+        return { };
     }
 
     // gives a bonus if we have at least 1 non-pawn piece left and our opponent doesn't
@@ -389,8 +378,6 @@ auto evaluate(
     const PieceSquareTables& pst)
     -> Score
 {
-    const auto endgameWeight = endgame_phase_weight(position);
-
     const auto materialScore = score_material(position);
 
     namespace patterns = chess::moves::patterns;
@@ -406,18 +393,22 @@ auto evaluate(
     const auto& ourAttacks   = isWhite ? whiteAttacks : blackAttacks;
     const auto& theirAttacks = isWhite ? blackAttacks : whiteAttacks;
 
-    return Score { static_cast<Value>(
-        materialScore
-        + no_pieces_left_bonus(position)
-        + pst.score_piece_placement(position, endgameWeight)
-        + score_rook_files(position)
-        + score_connected_rooks(position)
-        + score_king_safety(position, endgameWeight)
-        + score_squares_controlled_around_kings(position, whiteAttacks, blackAttacks)
-        + score_mobility(ourAttacks, theirAttacks, endgameWeight)
-        + score_endgame_mopup(position, endgameWeight, materialScore)
-        + detail::score_positional(position)
-        + detail::score_pawn_structure(position)) };
+    // terms with the same value in the middlegame & endgame
+    const auto untapered = materialScore
+                         + no_pieces_left_bonus(position)
+                         + score_rook_files(position)
+                         + score_connected_rooks(position)
+                         + score_squares_controlled_around_kings(position, whiteAttacks, blackAttacks)
+                         + detail::score_positional(position)
+                         + detail::score_pawn_structure(position);
+
+    const auto total = TaperedScore::both(untapered)
+                     + pst.score_piece_placement(position)
+                     + score_king_safety(position)
+                     + score_mobility(ourAttacks, theirAttacks)
+                     + score_endgame_mopup(position, materialScore);
+
+    return Score { static_cast<Value>(total.blend(middlegame_phase(position), MAX_PHASE)) };
 }
 
 } // namespace ben_bot::eval
