@@ -100,12 +100,16 @@ struct TranspositionTable::Entry final {
         const TTData&       data,
         const std::uint8_t  gen) noexcept
     {
+        // a fail-low has no best move. If this entry is already for the same position, keep
+        // the best move it has, since that's still our best guess for move ordering
+        if (data.bestMove.has_value() or keyToUse != key)
+            move = data.bestMove.value_or(Move { });
+
         key        = keyToUse;
         depth      = static_cast<std::uint_least8_t>(data.searchedDepth + 1uz);
         generation = gen;
         eval       = static_cast<std::int16_t>(data.eval);
         evalType   = data.evalType;
-        move       = data.bestMove.value_or(Move { });
     }
 };
 
