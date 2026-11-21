@@ -15,6 +15,18 @@
 # - [sprt-big]: wider gainer bounds, for changes expected to gain a lot of Elo (takes precedence over [sprt-gain] & [sprt])
 # - [sprt-nonreg]: non-regression bounds (takes precedence if multiple tags are present)
 # The PR's head is tested against the PR's base commit, and the results are posted as a PR comment.
+#
+# The games are played on Linux (x86) runners, unless the title also has a [macos] tag (e.g.
+# "fix: ... [sprt-nonreg] [macos]"), in which case they're played on macOS (Apple silicon) runners.
+# This is for changes that only affect behaviour on some platforms, such as ones that depend on the
+# cache line size. [macos] on its own does nothing. Public repos only get 5 concurrent macOS jobs,
+# and CI's macOS jobs share them, so a macOS test's shards may queue. The macOS runners also have
+# fewer cores (3 vs 4), so each shard plays fewer games concurrently.
+#
+# The games are sharded across several runners, in rounds (see sprt_pr_round.yml). After each round,
+# the results so far are combined, and if a bound has been reached, the test stops. This means that
+# a test isn't limited by GitHub's 6 hour limit for a single job, and gets through about 4 times as
+# many games per hour.
 
 name: SPRT (PR)
 
@@ -31,6 +43,39 @@ defaults:
 permissions:
   contents: read
 
+# a new test for a PR cancels its previous one. This has to be at the workflow level because the test
+# is split over several jobs, but other edits to the PR (e.g. to its description) shouldn't cancel a
+# running test, so those runs get a group of their own. Adding or removing [macos] counts as a new
+# test, since it changes what's being measured. This duplicates the title parsing below
+concurrency:
+  group: >-
+    ${{ github.workflow }}.${{ github.event.pull_request.number }}.${{
+      (
+        (contains(github.event.pull_request.title, '[sprt-nonreg]') && 'nonreg')
+        || (contains(github.event.pull_request.title, '[sprt-big]') && 'big')
+        || ((contains(github.event.pull_request.title, '[sprt-gain]') || contains(github.event.pull_request.title, '[sprt]')) && 'gain')
+        || ''
+      ) != ''
+      && (
+        github.event.action != 'edited'
+        || format('{0}.{1}',
+          (contains(github.event.pull_request.title, '[sprt-nonreg]') && 'nonreg')
+          || (contains(github.event.pull_request.title, '[sprt-big]') && 'big')
+          || ((contains(github.event.pull_request.title, '[sprt-gain]') || contains(github.event.pull_request.title, '[sprt]')) && 'gain')
+          || '',
+          contains(github.event.pull_request.title, '[macos]') && 'macos' || 'linux'
+        ) != format('{0}.{1}',
+          (contains(github.event.changes.title.from || github.event.pull_request.title, '[sprt-nonreg]') && 'nonreg')
+          || (contains(github.event.changes.title.from || github.event.pull_request.title, '[sprt-big]') && 'big')
+          || ((contains(github.event.changes.title.from || github.event.pull_request.title, '[sprt-gain]') || contains(github.event.changes.title.from || github.event.pull_request.title, '[sprt]')) && 'gain')
+          || '',
+          contains(github.event.changes.title.from || github.event.pull_request.title, '[macos]') && 'macos' || 'linux'
+        )
+      )
+      && 'sprt' || github.run_id
+    }}
+  cancel-in-progress: true
+
 jobs:
 
   parse_title:
@@ -40,6 +85,10 @@ jobs:
     outputs:
       target: ${{ steps.parse.outputs.target }}
       description: ${{ steps.parse.outputs.description }}
+      elo0: ${{ steps.parse.outputs.elo0 }}
+      elo1: ${{ steps.parse.outputs.elo1 }}
+      runner: ${{ steps.parse.outputs.runner }}
+      platform: ${{ steps.parse.outputs.platform }}
     steps:
     - name: Parse PR title
       id: parse
@@ -59,35 +108,55 @@ jobs:
           fi
         }
 
-        target="$(get_target "$TITLE")"
+        # macos-26 is Apple silicon. fastchess's macOS release needs macOS 26, so this can't be macos-15
+        get_runner() {
+          if [[ "$1" == *"[macos]"* ]]; then
+            echo macos-26
+          else
+            echo ubuntu-latest
+          fi
+        }
 
-        # for edits, only start a new test if the title now asks for a different test,
-        # so that editing the PR description doesn't restart the test
+        target="$(get_target "$TITLE")"
+        runner="$(get_runner "$TITLE")"
+
+        # for edits, only start a new test if the title now asks for a different test (including
+        # a different platform), so that editing the PR description doesn't restart the test
         if [[ "$ACTION" == edited ]]; then
-          if [[ "$TITLE_CHANGED" != true || "$(get_target "$OLD_TITLE")" == "$target" ]]; then
+          if [[ "$TITLE_CHANGED" != true ]] \
+            || [[ "$(get_target "$OLD_TITLE")" == "$target" && "$(get_runner "$OLD_TITLE")" == "$runner" ]]; then
             target=""
           fi
         fi
 
-        case "$target" in
-          sprt_gain) description=gainer ;;
-          sprt_gain_big) description="big gainer" ;;
-          sprt_non_regression) description=non-regression ;;
-          *) description="" ;;
+        case "$runner" in
+          macos-*) platform=macOS ;;
+          *) platform=Linux ;;
         esac
 
-        echo "target=$target" >> "$GITHUB_OUTPUT"
-        echo "description=$description" >> "$GITHUB_OUTPUT"
+        # the Elo bounds must match the ones in tests/fastchess/CMakeLists.txt
+        case "$target" in
+          sprt_gain) description=gainer elo0=0 elo1=5 ;;
+          sprt_gain_big) description="big gainer" elo0=0 elo1=10 ;;
+          sprt_non_regression) description=non-regression elo0=-5 elo1=0 ;;
+          *) description="" elo0="" elo1="" ;;
+        esac
 
-  sprt:
+        {
+          echo "target=$target"
+          echo "description=$description"
+          echo "elo0=$elo0"
+          echo "elo1=$elo1"
+          echo "runner=$runner"
+          echo "platform=$platform"
+        } >> "$GITHUB_OUTPUT"
+
+  start:
     needs: parse_title
     if: needs.parse_title.outputs.target != ''
     runs-on: ubuntu-latest
-    name: Run SPRT test
-    timeout-minutes: 360 # 6 hours (GitHub's limit); see the run_sprt action's timeout input
-    concurrency:
-      group: ${{ github.workflow }}.${{ github.event.pull_request.number }}
-      cancel-in-progress: true
+    name: Start SPRT
+    timeout-minutes: 5
     permissions:
       contents: read
       pull-requests: write
@@ -97,7 +166,7 @@ jobs:
       HEAD_SHA: ${{ github.event.pull_request.head.sha }}
       BASE_SHA: ${{ github.event.pull_request.base.sha }}
       TEST_DESCRIPTION: ${{ needs.parse_title.outputs.description }}
-
+      PLATFORM: ${{ needs.parse_title.outputs.platform }}
     steps:
     - name: Checkout code
       uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -111,30 +180,296 @@ jobs:
       run: |
         echo "## SPRT" > "$RUNNER_TEMP/comment.md"
         echo "" >> "$RUNNER_TEMP/comment.md"
-        echo "Running ${TEST_DESCRIPTION} SPRT for ${HEAD_SHA} against ${BASE_SHA}... ([run]($RUN_URL))" >> "$RUNNER_TEMP/comment.md"
+        echo "Running ${TEST_DESCRIPTION} SPRT on ${PLATFORM} for ${HEAD_SHA} against ${BASE_SHA}... ([run]($RUN_URL))" >> "$RUNNER_TEMP/comment.md"
         .github/actions/run_sprt/UpdatePRComment.sh "$RUNNER_TEMP/comment.md"
 
-    - name: Run SPRT
-      id: run_sprt
-      uses: ./.github/actions/run_sprt
-      with:
-        use_main: true
-        main_ref: ${{ env.BASE_SHA }}
-        target_name: ${{ needs.parse_title.outputs.target }}
+  # each round only runs if the previous one didn't reach a bound. With 4 shards, each round plays
+  # about 1900 games on Linux, so 16 rounds is about 30000 games (fewer on macOS, see above)
 
-    - name: Post results comment
-      if: ${{ !cancelled() }}
-      env:
-        GH_TOKEN: ${{ github.token }}
-        SUMMARY_FILE: ${{ steps.run_sprt.outputs.summary_file || format('{0}/logs/sprt/summary.md', github.workspace) }}
-      run: |
-        echo "## SPRT" > "$RUNNER_TEMP/comment.md"
-        echo "" >> "$RUNNER_TEMP/comment.md"
-        if [[ -s "$SUMMARY_FILE" ]]; then
-          cat "$SUMMARY_FILE" >> "$RUNNER_TEMP/comment.md"
-        else
-          echo "SPRT didn't finish, check the logs for details." >> "$RUNNER_TEMP/comment.md"
-        fi
-        echo "" >> "$RUNNER_TEMP/comment.md"
-        echo "Tested ${HEAD_SHA} against ${BASE_SHA} ([run]($RUN_URL))" >> "$RUNNER_TEMP/comment.md"
-        .github/actions/run_sprt/UpdatePRComment.sh "$RUNNER_TEMP/comment.md"
+  round1:
+    needs: [parse_title, start]
+    if: needs.parse_title.outputs.target != ''
+    name: Round 1
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/sprt_pr_round.yml
+    with:
+      round: 1
+      final_round: false
+      target: ${{ needs.parse_title.outputs.target }}
+      description: ${{ needs.parse_title.outputs.description }}
+      elo0: ${{ needs.parse_title.outputs.elo0 }}
+      elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
+
+  round2:
+    needs: [parse_title, round1]
+    if: needs.round1.outputs.status == 'continue'
+    name: Round 2
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/sprt_pr_round.yml
+    with:
+      round: 2
+      final_round: false
+      target: ${{ needs.parse_title.outputs.target }}
+      description: ${{ needs.parse_title.outputs.description }}
+      elo0: ${{ needs.parse_title.outputs.elo0 }}
+      elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
+
+  round3:
+    needs: [parse_title, round2]
+    if: needs.round2.outputs.status == 'continue'
+    name: Round 3
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/sprt_pr_round.yml
+    with:
+      round: 3
+      final_round: false
+      target: ${{ needs.parse_title.outputs.target }}
+      description: ${{ needs.parse_title.outputs.description }}
+      elo0: ${{ needs.parse_title.outputs.elo0 }}
+      elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
+
+  round4:
+    needs: [parse_title, round3]
+    if: needs.round3.outputs.status == 'continue'
+    name: Round 4
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/sprt_pr_round.yml
+    with:
+      round: 4
+      final_round: false
+      target: ${{ needs.parse_title.outputs.target }}
+      description: ${{ needs.parse_title.outputs.description }}
+      elo0: ${{ needs.parse_title.outputs.elo0 }}
+      elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
+
+  round5:
+    needs: [parse_title, round4]
+    if: needs.round4.outputs.status == 'continue'
+    name: Round 5
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/sprt_pr_round.yml
+    with:
+      round: 5
+      final_round: false
+      target: ${{ needs.parse_title.outputs.target }}
+      description: ${{ needs.parse_title.outputs.description }}
+      elo0: ${{ needs.parse_title.outputs.elo0 }}
+      elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
+
+  round6:
+    needs: [parse_title, round5]
+    if: needs.round5.outputs.status == 'continue'
+    name: Round 6
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/sprt_pr_round.yml
+    with:
+      round: 6
+      final_round: false
+      target: ${{ needs.parse_title.outputs.target }}
+      description: ${{ needs.parse_title.outputs.description }}
+      elo0: ${{ needs.parse_title.outputs.elo0 }}
+      elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
+
+  round7:
+    needs: [parse_title, round6]
+    if: needs.round6.outputs.status == 'continue'
+    name: Round 7
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/sprt_pr_round.yml
+    with:
+      round: 7
+      final_round: false
+      target: ${{ needs.parse_title.outputs.target }}
+      description: ${{ needs.parse_title.outputs.description }}
+      elo0: ${{ needs.parse_title.outputs.elo0 }}
+      elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
+
+  round8:
+    needs: [parse_title, round7]
+    if: needs.round7.outputs.status == 'continue'
+    name: Round 8
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/sprt_pr_round.yml
+    with:
+      round: 8
+      final_round: false
+      target: ${{ needs.parse_title.outputs.target }}
+      description: ${{ needs.parse_title.outputs.description }}
+      elo0: ${{ needs.parse_title.outputs.elo0 }}
+      elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
+
+  round9:
+    needs: [parse_title, round8]
+    if: needs.round8.outputs.status == 'continue'
+    name: Round 9
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/sprt_pr_round.yml
+    with:
+      round: 9
+      final_round: false
+      target: ${{ needs.parse_title.outputs.target }}
+      description: ${{ needs.parse_title.outputs.description }}
+      elo0: ${{ needs.parse_title.outputs.elo0 }}
+      elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
+
+  round10:
+    needs: [parse_title, round9]
+    if: needs.round9.outputs.status == 'continue'
+    name: Round 10
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/sprt_pr_round.yml
+    with:
+      round: 10
+      final_round: false
+      target: ${{ needs.parse_title.outputs.target }}
+      description: ${{ needs.parse_title.outputs.description }}
+      elo0: ${{ needs.parse_title.outputs.elo0 }}
+      elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
+
+  round11:
+    needs: [parse_title, round10]
+    if: needs.round10.outputs.status == 'continue'
+    name: Round 11
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/sprt_pr_round.yml
+    with:
+      round: 11
+      final_round: false
+      target: ${{ needs.parse_title.outputs.target }}
+      description: ${{ needs.parse_title.outputs.description }}
+      elo0: ${{ needs.parse_title.outputs.elo0 }}
+      elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
+
+  round12:
+    needs: [parse_title, round11]
+    if: needs.round11.outputs.status == 'continue'
+    name: Round 12
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/sprt_pr_round.yml
+    with:
+      round: 12
+      final_round: false
+      target: ${{ needs.parse_title.outputs.target }}
+      description: ${{ needs.parse_title.outputs.description }}
+      elo0: ${{ needs.parse_title.outputs.elo0 }}
+      elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
+
+  round13:
+    needs: [parse_title, round12]
+    if: needs.round12.outputs.status == 'continue'
+    name: Round 13
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/sprt_pr_round.yml
+    with:
+      round: 13
+      final_round: false
+      target: ${{ needs.parse_title.outputs.target }}
+      description: ${{ needs.parse_title.outputs.description }}
+      elo0: ${{ needs.parse_title.outputs.elo0 }}
+      elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
+
+  round14:
+    needs: [parse_title, round13]
+    if: needs.round13.outputs.status == 'continue'
+    name: Round 14
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/sprt_pr_round.yml
+    with:
+      round: 14
+      final_round: false
+      target: ${{ needs.parse_title.outputs.target }}
+      description: ${{ needs.parse_title.outputs.description }}
+      elo0: ${{ needs.parse_title.outputs.elo0 }}
+      elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
+
+  round15:
+    needs: [parse_title, round14]
+    if: needs.round14.outputs.status == 'continue'
+    name: Round 15
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/sprt_pr_round.yml
+    with:
+      round: 15
+      final_round: false
+      target: ${{ needs.parse_title.outputs.target }}
+      description: ${{ needs.parse_title.outputs.description }}
+      elo0: ${{ needs.parse_title.outputs.elo0 }}
+      elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
+
+  round16:
+    needs: [parse_title, round15]
+    if: needs.round15.outputs.status == 'continue'
+    name: Round 16
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/sprt_pr_round.yml
+    with:
+      round: 16
+      final_round: true
+      target: ${{ needs.parse_title.outputs.target }}
+      description: ${{ needs.parse_title.outputs.description }}
+      elo0: ${{ needs.parse_title.outputs.elo0 }}
+      elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
