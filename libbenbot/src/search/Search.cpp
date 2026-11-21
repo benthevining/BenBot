@@ -27,6 +27,7 @@
 // Futility pruning
 // Check extensions
 // History heuristic
+// Late move pruning
 // Aspiration windows
 
 #include "search/MoveOrdering.hpp"
@@ -71,6 +72,28 @@ namespace {
 
     // futility pruning is only done with at most this much depth left
     inline constexpr auto FP_MAX_DEPTH { 2uz };
+
+    // late move pruning is only done with at most this much depth left
+    inline constexpr auto LMP_MAX_DEPTH { 7uz };
+
+    // the number of moves to search before late move pruning starts skipping quiet moves.
+    // This uses depth as other engines count it, where a frontier node (depthLeft == 0) is
+    // depth 1. It uses integer maths only, so that bench is the same on every platform.
+    [[nodiscard]] constexpr auto lmp_move_count(const size_t depthLeft) noexcept -> size_t
+    {
+        const auto depth = depthLeft + 1uz;
+
+        return 3uz + (depth * depth);
+    }
+
+    static_assert(lmp_move_count(0uz) == 4uz);
+    static_assert(lmp_move_count(1uz) == 7uz);
+    static_assert(lmp_move_count(2uz) == 12uz);
+    static_assert(lmp_move_count(3uz) == 19uz);
+    static_assert(lmp_move_count(4uz) == 28uz);
+    static_assert(lmp_move_count(5uz) == 39uz);
+    static_assert(lmp_move_count(6uz) == 52uz);
+    static_assert(lmp_move_count(LMP_MAX_DEPTH) == 67uz);
 
     // moves that give check are only extended up to this ply. Reaching MAX_PLY aborts
     // the entire search, so this stops long sequences of checks from getting there.
@@ -293,12 +316,26 @@ namespace {
             // quiet moves that were searched without causing a cutoff
             MoveList quietsSearched;
 
+            const bool lateMovePruning = depthLeft <= LMP_MAX_DEPTH and not inCheck;
+
+            // always at least 4, so the first move is never pruned
+            const auto lmpCount = lmp_move_count(depthLeft);
+
             for (const auto move : moves) {
                 const auto moveIdx  = nextMoveIdx++;
                 const auto childPos = after_move(position, move);
 
                 if (futilityPruning and moveIdx > 0uz
                     and position.is_quiet(move) and not childPos.is_check())
+                    continue;
+
+                // late move pruning: near the horizon, once we've searched enough moves, the
+                // remaining quiet moves are unlikely to raise alpha, so we skip them
+                if (lateMovePruning and moveIdx >= lmpCount
+                    and not bounds.alpha.is_losing_mate()
+                    and position.is_quiet(move)
+                    and not std::ranges::contains(killers, move)
+                    and not childPos.is_check())
                     continue;
 
                 if constexpr (PVNode) {
