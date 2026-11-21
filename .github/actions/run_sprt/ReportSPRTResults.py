@@ -63,8 +63,11 @@ if RESULT_LINE is None and not FINAL_RESULTS:
 def get_elos() -> Tuple[int, int]:
     # both the result line and the LLR line contain the bounds, like "[0.00, 5.00]"
     line = RESULT_LINE or next(
-        l for l in FINAL_RESULTS.splitlines() if l.startswith("LLR:")
+        (l for l in FINAL_RESULTS.splitlines() if l.startswith("LLR:")), None
     )
+
+    if line is None:
+        raise Exception("SPRT bounds not found: the results have no LLR line")
 
     match = re.search(r"\[\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*\]", line)
 
