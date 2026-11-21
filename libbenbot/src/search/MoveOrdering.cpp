@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cstddef>
 #include <libbenbot/data-structures/HistoryTable.hpp>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Material.hpp>
@@ -122,6 +123,32 @@ namespace {
 
 } // namespace
 
+namespace {
+    struct ScoredMove final {
+        int         score { 0 };
+        std::size_t index { 0uz }; // where the move generator put this move
+        Move        move;
+    };
+
+    // sorts the moves by score, highest first. std::sort doesn't keep equal elements in their
+    // original order, and different standard libraries order them differently, so ties are broken
+    // by the order the move generator produced the moves in. That keeps the order (and bench) the
+    // same on every platform, without std::stable_sort's allocation.
+    void sort_scored_moves(const std::span<ScoredMove> scoredMoves, const std::span<Move> moves)
+    {
+        std::ranges::sort(
+            scoredMoves,
+            [](const ScoredMove& first, const ScoredMove& second) {
+                if (first.score != second.score)
+                    return first.score > second.score;
+
+                return first.index < second.index;
+            });
+
+        std::ranges::transform(scoredMoves, moves.begin(), &ScoredMove::move);
+    }
+} // namespace
+
 void order_moves_for_search(
     const Position&             currentPosition,
     const std::span<Move>       moves,
@@ -137,35 +164,23 @@ void order_moves_for_search(
 
     // scoring a move is expensive (it makes the move & probes the TT), so we
     // score each move once up front instead of in the sort's comparison function
-    using ScoredMove = std::pair<int, Move>;
-
     assert(moves.size() <= chess::moves::MAX_MOVES);
 
     std::array<ScoredMove, chess::moves::MAX_MOVES> scored { };
 
     const auto scoredMoves = std::span { scored }.first(moves.size());
 
-    std::ranges::transform(
-        moves, scoredMoves.begin(),
-        [&currentPosition, &transTable, bestMove, killerMoves, &history, opponentPawnAttacks](const Move move) {
-            return ScoredMove {
-                move_ordering_score(currentPosition, move, transTable, opponentPawnAttacks, bestMove, killerMoves, history),
-                move
-            };
-        });
+    for (auto idx = 0uz; idx < moves.size(); ++idx) {
+        const auto move = moves[idx];
 
-    // std::sort doesn't keep equal elements in order, and different standard libraries order them
-    // differently, so ties are broken by the move itself to make the order (& bench) the same everywhere
-    std::ranges::sort(
-        scoredMoves,
-        [](const ScoredMove& first, const ScoredMove& second) {
-            if (first.first != second.first)
-                return first.first > second.first;
+        scoredMoves[idx] = {
+            .score = move_ordering_score(currentPosition, move, transTable, opponentPawnAttacks, bestMove, killerMoves, history),
+            .index = idx,
+            .move  = move
+        };
+    }
 
-            return first.second < second.second;
-        });
-
-    std::ranges::transform(scoredMoves, moves.begin(), &ScoredMove::second);
+    sort_scored_moves(scoredMoves, moves);
 }
 
 namespace {
@@ -186,18 +201,23 @@ void order_moves_for_q_search(
     const Position&       currentPosition,
     const std::span<Move> moves)
 {
-    // ties are broken by the move itself, as in order_moves_for_search()
-    std::ranges::sort(
-        moves,
-        [&currentPosition](const Move first, const Move second) {
-            const auto firstScore  = q_search_move_order_score(currentPosition, first);
-            const auto secondScore = q_search_move_order_score(currentPosition, second);
+    assert(moves.size() <= chess::moves::MAX_MOVES);
 
-            if (firstScore != secondScore)
-                return firstScore > secondScore;
+    std::array<ScoredMove, chess::moves::MAX_MOVES> scored { };
 
-            return first < second;
-        });
+    const auto scoredMoves = std::span { scored }.first(moves.size());
+
+    for (auto idx = 0uz; idx < moves.size(); ++idx) {
+        const auto move = moves[idx];
+
+        scoredMoves[idx] = {
+            .score = q_search_move_order_score(currentPosition, move),
+            .index = idx,
+            .move  = move
+        };
+    }
+
+    sort_scored_moves(scoredMoves, moves);
 }
 
 } // namespace ben_bot::search::detail
