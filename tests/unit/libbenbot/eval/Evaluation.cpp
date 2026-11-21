@@ -72,4 +72,28 @@ TEST_CASE("Evaluation symmetry", TAGS)
             evaluate(position, pieceSquareTables)
             == evaluate(flipped(position), pieceSquareTables));
     }
+
+    SECTION("Uneven piece mobility")
+    {
+        const auto position = from_fen("r1b2rk1/pp1nqppp/2p1p3/3n4/2BP4/2N1PN2/PPQ2PPP/R4RK1 w - - 0 1").value();
+
+        REQUIRE(
+            evaluate(position, pieceSquareTables)
+            == evaluate(flipped(position), pieceSquareTables));
+    }
+}
+
+TEST_CASE("Evaluation - mobility", "[eval][evaluation][mobility]")
+{
+    const auto pieceSquareTables = ben_bot::eval::PieceSquareTables::get_default();
+
+    SECTION("Bishop blocked in by its own pawns")
+    {
+        // The only difference is the white bishop on c1 vs f1, which are mirrored squares, so
+        // all the other eval terms are the same. The bishop on c1 can't move.
+        const auto trapped = from_fen("2b4k/1p1p4/8/8/8/8/1P1P4/K1B5 w - - 0 1").value();
+        const auto free    = from_fen("2b4k/1p1p4/8/8/8/8/1P1P4/K4B2 w - - 0 1").value();
+
+        REQUIRE(evaluate(trapped, pieceSquareTables) < evaluate(free, pieceSquareTables));
+    }
 }
