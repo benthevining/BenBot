@@ -28,6 +28,7 @@
 // Check extensions
 // History heuristic
 // Late move pruning
+// Delta pruning
 
 #include "search/MoveOrdering.hpp"
 #include "search/TimeManagement.hpp"
@@ -42,6 +43,7 @@
 #include <libbenbot/data-structures/KillerMoves.hpp>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
+#include <libbenbot/eval/Material.hpp>
 #include <libbenbot/eval/PieceSquareTables.hpp>
 #include <libbenbot/eval/SEE.hpp>
 #include <libbenbot/eval/Score.hpp>
@@ -98,9 +100,13 @@ namespace {
     // the entire search, so this stops long sequences of checks from getting there.
     inline constexpr auto MAX_EXTENSION_PLY { MAX_PLY / 4uz };
 
-    // used as a zugzwang guard for null move pruning: returns true if the side to move has at
-    // least 2 non-pawn pieces. Allowing a single minor piece misses zugzwang mates (see the
-    // MatePV unit test).
+    // in the quiescence search, a capture is skipped if winning the captured piece for
+    // free (plus any promotion gain) still leaves us more than this margin below alpha
+    inline constexpr auto DELTA_MARGIN { 200 };
+
+    // used as a zugzwang guard for null move pruning, and to turn off delta pruning in the
+    // late endgame: returns true if the side to move has at least 2 non-pawn pieces.
+    // Allowing a single minor piece misses zugzwang mates (see the MatePV unit test).
     [[nodiscard]] auto has_enough_non_pawn_material(const Position& position) noexcept -> bool
     {
         const auto& pieces = position.is_white_to_move()
@@ -470,6 +476,23 @@ namespace {
             return std::min(reduction, depthLeft - 2uz);
         }
 
+        // returns the most material the given capture can win: the
+        // captured piece, plus the promotion gain for promotions
+        [[nodiscard]] auto max_capture_gain(const Move move) const noexcept -> int
+        {
+            namespace piece_values = eval::piece_values;
+
+            int gain = piece_values::PAWN; // en passant
+
+            if (const auto captured = position.their_pieces().get_piece_on(move.to()))
+                gain = piece_values::get(*captured);
+
+            if (const auto promoted = move.promoted_type())
+                gain += piece_values::get(*promoted) - piece_values::PAWN;
+
+            return gain;
+        }
+
         // searches only captures, with no depth limit, to try to
         // improve the stability of the static evaluation function
         template <bool PVNode>
@@ -488,17 +511,17 @@ namespace {
             if (position.is_checkmate())
                 return Score::mate(plyFromRoot);
 
-            auto evaluation = eval::evaluate(position, pieceSquareTables);
+            const auto standPat = eval::evaluate(position, pieceSquareTables);
 
             ++stats.staticEvals;
 
             // see if we can get a cutoff (we may not need to generate moves for this position)
-            if (evaluation >= bounds.beta) {
+            if (standPat >= bounds.beta) {
                 ++stats.betaCutoffs;
                 return bounds.beta;
             }
 
-            bounds.alpha = std::max(bounds.alpha, evaluation);
+            bounds.alpha = std::max(bounds.alpha, standPat);
 
             auto moves = chess::moves::generate<true>(position); // captures only
 
@@ -506,8 +529,20 @@ namespace {
 
             const bool inCheck = position.is_check();
 
+            // delta pruning is turned off in the late endgame, where a capture can
+            // be worth much more than the material it wins
+            const bool deltaPruning = not inCheck and has_enough_non_pawn_material(position);
+
             for (const auto move : moves) {
                 assert(position.is_capture(move));
+
+                // delta pruning: skip captures that can't raise alpha even if they win the captured
+                // piece for free. Not done when alpha is a mate score (so we don't miss a faster mate),
+                // or for captures that give check, since those can be mating captures.
+                if (deltaPruning and not bounds.alpha.is_mate()
+                    and std::cmp_less(standPat.value + max_capture_gain(move) + DELTA_MARGIN, bounds.alpha.value)
+                    and not after_move(position, move).is_check())
+                    continue;
 
                 // skip captures that lose material once all recaptures are played out
                 if (not inCheck and eval::see(position, move) < 0)
@@ -517,7 +552,7 @@ namespace {
                     childPV.reset();
                 }
 
-                evaluation = -(recurse(after_move(position, move)).quiescence<PVNode>());
+                const auto evaluation = -(recurse(after_move(position, move)).quiescence<PVNode>());
 
                 ++stats.nodesSearched;
 
