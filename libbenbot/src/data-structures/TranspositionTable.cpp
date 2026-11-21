@@ -109,10 +109,13 @@ struct TranspositionTable::Entry final {
     }
 };
 
-using util::memory::CacheLineSize;
+// this isn't util::memory::CacheLineSize, because that's 128 bytes on Apple silicon & 64 on x86. The
+// number of entries per cluster changes which entries get replaced, so the search (& bench) would
+// be different on different platforms
+inline constexpr auto ClusterSize = 64uz;
 
-struct alignas(CacheLineSize) TranspositionTable::Cluster final {
-    static constexpr auto NumRecords = CacheLineSize / sizeof(Entry);
+struct alignas(ClusterSize) TranspositionTable::Cluster final {
+    static constexpr auto NumRecords = ClusterSize / sizeof(Entry);
 
     std::array<Entry, NumRecords> records { };
 };
@@ -129,8 +132,8 @@ TranspositionTable::TranspositionTable(TranspositionTable&& other) noexcept
         "TranspositionTable::Cluster size should be a power of 2!");
 
     static_assert(
-        sizeof(Cluster) <= CacheLineSize,
-        "TranspositionTable::Cluster should fit in a CPU cache line!");
+        sizeof(Cluster) == ClusterSize,
+        "TranspositionTable::Cluster should be exactly ClusterSize bytes!");
 }
 
 auto TranspositionTable::operator=(TranspositionTable&& other) noexcept -> TranspositionTable&

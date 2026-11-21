@@ -27,6 +27,7 @@
 // Futility pruning
 // Check extensions
 // History heuristic
+// Late move pruning
 
 #include "search/MoveOrdering.hpp"
 #include "search/TimeManagement.hpp"
@@ -70,6 +71,28 @@ namespace {
 
     // futility pruning is only done with at most this much depth left
     inline constexpr auto FP_MAX_DEPTH { 2uz };
+
+    // late move pruning is only done with at most this much depth left
+    inline constexpr auto LMP_MAX_DEPTH { 7uz };
+
+    // the number of moves to search before late move pruning starts skipping quiet moves.
+    // This uses depth as other engines count it, where a frontier node (depthLeft == 0) is
+    // depth 1. It uses integer maths only, so that bench is the same on every platform.
+    [[nodiscard]] constexpr auto lmp_move_count(const size_t depthLeft) noexcept -> size_t
+    {
+        const auto depth = depthLeft + 1uz;
+
+        return 3uz + (depth * depth);
+    }
+
+    static_assert(lmp_move_count(0uz) == 4uz);
+    static_assert(lmp_move_count(1uz) == 7uz);
+    static_assert(lmp_move_count(2uz) == 12uz);
+    static_assert(lmp_move_count(3uz) == 19uz);
+    static_assert(lmp_move_count(4uz) == 28uz);
+    static_assert(lmp_move_count(5uz) == 39uz);
+    static_assert(lmp_move_count(6uz) == 52uz);
+    static_assert(lmp_move_count(LMP_MAX_DEPTH) == 67uz);
 
     // moves that give check are only extended up to this ply. Reaching MAX_PLY aborts
     // the entire search, so this stops long sequences of checks from getting there.
@@ -286,6 +309,11 @@ namespace {
             // quiet moves that were searched without causing a cutoff
             MoveList quietsSearched;
 
+            const bool lateMovePruning = depthLeft <= LMP_MAX_DEPTH and not inCheck;
+
+            // always at least 4, so the first move is never pruned
+            const auto lmpCount = lmp_move_count(depthLeft);
+
             for (const auto move : moves) {
                 const auto moveIdx  = nextMoveIdx++;
                 const auto childPos = after_move(position, move);
@@ -294,11 +322,20 @@ namespace {
                     and position.is_quiet(move) and not childPos.is_check())
                     continue;
 
+                // late move pruning: near the horizon, once we've searched enough moves, the
+                // remaining quiet moves are unlikely to raise alpha, so we skip them
+                if (lateMovePruning and moveIdx >= lmpCount
+                    and not bounds.alpha.is_losing_mate()
+                    and position.is_quiet(move)
+                    and not std::ranges::contains(killers, move)
+                    and not childPos.is_check())
+                    continue;
+
                 if constexpr (PVNode) {
                     childPV.reset();
                 }
 
-                const auto eval = [this, move, &childPos, inCheck, killers, moveIdx, foundPV = bestMove.has_value()] {
+                const auto eval = [this, move, &childPos, inCheck, killers, moveIdx] {
                     // check extensions: search moves that give check one ply deeper, so that
                     // we don't drop into the quiescence search in the middle of a forcing line
                     const auto extension = childPos.is_check() and plyFromRoot < MAX_EXTENSION_PLY
@@ -318,7 +355,10 @@ namespace {
                             return reducedScore;
                     }
 
-                    if (not foundPV)
+                    // only the first move gets a full window. Waiting for a move to raise alpha
+                    // instead means that in a PV node where every move fails low, every move is
+                    // searched as a PV node.
+                    if (moveIdx == 0uz)
                         return -recurse(childPos, false, 0uz, extension).alpha_beta<PVNode>();
 
                     // principal variation search: first try searching with a null window
@@ -685,7 +725,8 @@ namespace {
         KillerMoves&                   killerMoves,
         HistoryTable&                  history,
         const eval::PieceSquareTables& pst,
-        const Callbacks&               callbacks)
+        const Callbacks&               callbacks,
+        const std::optional<Move>      prevBestMove)
         -> RootSearchResult
     {
         const Timer timer;
@@ -694,6 +735,15 @@ namespace {
 
         detail::order_moves_for_search(
             position, options.movesToSearch, transTable, killerMoves.get(0uz), history);
+
+        // the root position is never stored in the transposition table, so the move ordering
+        // can't know about the previous iteration's best move. Search it first explicitly
+        if (prevBestMove.has_value()) {
+            if (const auto it = std::ranges::find(options.movesToSearch, *prevBestMove);
+                it != options.movesToSearch.end()) {
+                std::rotate(options.movesToSearch.begin(), it, std::next(it));
+            }
+        }
 
         RootSearchResult result;
 
@@ -789,8 +839,12 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         if (interrupter.should_abort(0uz))
             break;
 
+        const auto prevBestMove = result.pv.empty()
+                                    ? std::nullopt
+                                    : std::optional { result.pv.front() };
+
         const auto res = root_search(
-            depth, options, position, transTable, interrupter, killerMoves, history, pieceSquareTables, callbacks);
+            depth, options, position, transTable, interrupter, killerMoves, history, pieceSquareTables, callbacks, prevBestMove);
 
         if (interrupter.was_aborted())
             break;

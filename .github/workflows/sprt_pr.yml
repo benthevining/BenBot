@@ -16,6 +16,13 @@
 # - [sprt-nonreg]: non-regression bounds (takes precedence if multiple tags are present)
 # The PR's head is tested against the PR's base commit, and the results are posted as a PR comment.
 #
+# The games are played on Linux (x86) runners, unless the title also has a [macos] tag (e.g.
+# "fix: ... [sprt-nonreg] [macos]"), in which case they're played on macOS (Apple silicon) runners.
+# This is for changes that only affect behaviour on some platforms, such as ones that depend on the
+# cache line size. [macos] on its own does nothing. Public repos only get 5 concurrent macOS jobs,
+# and CI's macOS jobs share them, so a macOS test's shards may queue. The macOS runners also have
+# fewer cores (3 vs 4), so each shard plays fewer games concurrently.
+#
 # The games are sharded across several runners, in rounds (see sprt_pr_round.yml). After each round,
 # the results so far are combined, and if a bound has been reached, the test stops. This means that
 # a test isn't limited by GitHub's 6 hour limit for a single job, and gets through about 4 times as
@@ -38,7 +45,8 @@ permissions:
 
 # a new test for a PR cancels its previous one. This has to be at the workflow level because the test
 # is split over several jobs, but other edits to the PR (e.g. to its description) shouldn't cancel a
-# running test, so those runs get a group of their own. This duplicates the title parsing below
+# running test, so those runs get a group of their own. Adding or removing [macos] counts as a new
+# test, since it changes what's being measured. This duplicates the title parsing below
 concurrency:
   group: >-
     ${{ github.workflow }}.${{ github.event.pull_request.number }}.${{
@@ -50,16 +58,18 @@ concurrency:
       ) != ''
       && (
         github.event.action != 'edited'
-        || (
+        || format('{0}.{1}',
           (contains(github.event.pull_request.title, '[sprt-nonreg]') && 'nonreg')
           || (contains(github.event.pull_request.title, '[sprt-big]') && 'big')
           || ((contains(github.event.pull_request.title, '[sprt-gain]') || contains(github.event.pull_request.title, '[sprt]')) && 'gain')
-          || ''
-        ) != (
+          || '',
+          contains(github.event.pull_request.title, '[macos]') && 'macos' || 'linux'
+        ) != format('{0}.{1}',
           (contains(github.event.changes.title.from || github.event.pull_request.title, '[sprt-nonreg]') && 'nonreg')
           || (contains(github.event.changes.title.from || github.event.pull_request.title, '[sprt-big]') && 'big')
           || ((contains(github.event.changes.title.from || github.event.pull_request.title, '[sprt-gain]') || contains(github.event.changes.title.from || github.event.pull_request.title, '[sprt]')) && 'gain')
-          || ''
+          || '',
+          contains(github.event.changes.title.from || github.event.pull_request.title, '[macos]') && 'macos' || 'linux'
         )
       )
       && 'sprt' || github.run_id
@@ -77,6 +87,8 @@ jobs:
       description: ${{ steps.parse.outputs.description }}
       elo0: ${{ steps.parse.outputs.elo0 }}
       elo1: ${{ steps.parse.outputs.elo1 }}
+      runner: ${{ steps.parse.outputs.runner }}
+      platform: ${{ steps.parse.outputs.platform }}
     steps:
     - name: Parse PR title
       id: parse
@@ -96,15 +108,31 @@ jobs:
           fi
         }
 
-        target="$(get_target "$TITLE")"
+        # macos-26 is Apple silicon. fastchess's macOS release needs macOS 26, so this can't be macos-15
+        get_runner() {
+          if [[ "$1" == *"[macos]"* ]]; then
+            echo macos-26
+          else
+            echo ubuntu-latest
+          fi
+        }
 
-        # for edits, only start a new test if the title now asks for a different test,
-        # so that editing the PR description doesn't restart the test
+        target="$(get_target "$TITLE")"
+        runner="$(get_runner "$TITLE")"
+
+        # for edits, only start a new test if the title now asks for a different test (including
+        # a different platform), so that editing the PR description doesn't restart the test
         if [[ "$ACTION" == edited ]]; then
-          if [[ "$TITLE_CHANGED" != true || "$(get_target "$OLD_TITLE")" == "$target" ]]; then
+          if [[ "$TITLE_CHANGED" != true ]] \
+            || [[ "$(get_target "$OLD_TITLE")" == "$target" && "$(get_runner "$OLD_TITLE")" == "$runner" ]]; then
             target=""
           fi
         fi
+
+        case "$runner" in
+          macos-*) platform=macOS ;;
+          *) platform=Linux ;;
+        esac
 
         # the Elo bounds must match the ones in tests/fastchess/CMakeLists.txt
         case "$target" in
@@ -119,6 +147,8 @@ jobs:
           echo "description=$description"
           echo "elo0=$elo0"
           echo "elo1=$elo1"
+          echo "runner=$runner"
+          echo "platform=$platform"
         } >> "$GITHUB_OUTPUT"
 
   start:
@@ -136,6 +166,7 @@ jobs:
       HEAD_SHA: ${{ github.event.pull_request.head.sha }}
       BASE_SHA: ${{ github.event.pull_request.base.sha }}
       TEST_DESCRIPTION: ${{ needs.parse_title.outputs.description }}
+      PLATFORM: ${{ needs.parse_title.outputs.platform }}
     steps:
     - name: Checkout code
       uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -149,11 +180,11 @@ jobs:
       run: |
         echo "## SPRT" > "$RUNNER_TEMP/comment.md"
         echo "" >> "$RUNNER_TEMP/comment.md"
-        echo "Running ${TEST_DESCRIPTION} SPRT for ${HEAD_SHA} against ${BASE_SHA}... ([run]($RUN_URL))" >> "$RUNNER_TEMP/comment.md"
+        echo "Running ${TEST_DESCRIPTION} SPRT on ${PLATFORM} for ${HEAD_SHA} against ${BASE_SHA}... ([run]($RUN_URL))" >> "$RUNNER_TEMP/comment.md"
         .github/actions/run_sprt/UpdatePRComment.sh "$RUNNER_TEMP/comment.md"
 
   # each round only runs if the previous one didn't reach a bound. With 4 shards, each round plays
-  # about 1900 games, so 16 rounds is about 30000 games
+  # about 1900 games on Linux, so 16 rounds is about 30000 games (fewer on macOS, see above)
 
   round1:
     needs: [parse_title, start]
@@ -170,6 +201,8 @@ jobs:
       description: ${{ needs.parse_title.outputs.description }}
       elo0: ${{ needs.parse_title.outputs.elo0 }}
       elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
 
   round2:
     needs: [parse_title, round1]
@@ -186,6 +219,8 @@ jobs:
       description: ${{ needs.parse_title.outputs.description }}
       elo0: ${{ needs.parse_title.outputs.elo0 }}
       elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
 
   round3:
     needs: [parse_title, round2]
@@ -202,6 +237,8 @@ jobs:
       description: ${{ needs.parse_title.outputs.description }}
       elo0: ${{ needs.parse_title.outputs.elo0 }}
       elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
 
   round4:
     needs: [parse_title, round3]
@@ -218,6 +255,8 @@ jobs:
       description: ${{ needs.parse_title.outputs.description }}
       elo0: ${{ needs.parse_title.outputs.elo0 }}
       elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
 
   round5:
     needs: [parse_title, round4]
@@ -234,6 +273,8 @@ jobs:
       description: ${{ needs.parse_title.outputs.description }}
       elo0: ${{ needs.parse_title.outputs.elo0 }}
       elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
 
   round6:
     needs: [parse_title, round5]
@@ -250,6 +291,8 @@ jobs:
       description: ${{ needs.parse_title.outputs.description }}
       elo0: ${{ needs.parse_title.outputs.elo0 }}
       elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
 
   round7:
     needs: [parse_title, round6]
@@ -266,6 +309,8 @@ jobs:
       description: ${{ needs.parse_title.outputs.description }}
       elo0: ${{ needs.parse_title.outputs.elo0 }}
       elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
 
   round8:
     needs: [parse_title, round7]
@@ -282,6 +327,8 @@ jobs:
       description: ${{ needs.parse_title.outputs.description }}
       elo0: ${{ needs.parse_title.outputs.elo0 }}
       elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
 
   round9:
     needs: [parse_title, round8]
@@ -298,6 +345,8 @@ jobs:
       description: ${{ needs.parse_title.outputs.description }}
       elo0: ${{ needs.parse_title.outputs.elo0 }}
       elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
 
   round10:
     needs: [parse_title, round9]
@@ -314,6 +363,8 @@ jobs:
       description: ${{ needs.parse_title.outputs.description }}
       elo0: ${{ needs.parse_title.outputs.elo0 }}
       elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
 
   round11:
     needs: [parse_title, round10]
@@ -330,6 +381,8 @@ jobs:
       description: ${{ needs.parse_title.outputs.description }}
       elo0: ${{ needs.parse_title.outputs.elo0 }}
       elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
 
   round12:
     needs: [parse_title, round11]
@@ -346,6 +399,8 @@ jobs:
       description: ${{ needs.parse_title.outputs.description }}
       elo0: ${{ needs.parse_title.outputs.elo0 }}
       elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
 
   round13:
     needs: [parse_title, round12]
@@ -362,6 +417,8 @@ jobs:
       description: ${{ needs.parse_title.outputs.description }}
       elo0: ${{ needs.parse_title.outputs.elo0 }}
       elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
 
   round14:
     needs: [parse_title, round13]
@@ -378,6 +435,8 @@ jobs:
       description: ${{ needs.parse_title.outputs.description }}
       elo0: ${{ needs.parse_title.outputs.elo0 }}
       elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
 
   round15:
     needs: [parse_title, round14]
@@ -394,6 +453,8 @@ jobs:
       description: ${{ needs.parse_title.outputs.description }}
       elo0: ${{ needs.parse_title.outputs.elo0 }}
       elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
 
   round16:
     needs: [parse_title, round15]
@@ -410,3 +471,5 @@ jobs:
       description: ${{ needs.parse_title.outputs.description }}
       elo0: ${{ needs.parse_title.outputs.elo0 }}
       elo1: ${{ needs.parse_title.outputs.elo1 }}
+      runner: ${{ needs.parse_title.outputs.runner }}
+      platform: ${{ needs.parse_title.outputs.platform }}
