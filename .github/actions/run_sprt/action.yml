@@ -46,6 +46,9 @@ outputs:
     description: Path to a Markdown file containing a summary of the SPRT results
     value: ${{ github.workspace }}/logs/sprt/summary.md
 
+# This works on Linux & macOS runners. On Linux it builds with the gcc preset; on macOS it builds with
+# the clang preset (Apple Clang), the same as the build & test CI workflow does.
+
 runs:
   using: "composite"
   steps:
@@ -54,7 +57,7 @@ runs:
     uses: ./.github/actions/download_github_release
     with:
       repository: Disservin/fastchess
-      file_filter: '*-linux-x86-64*'
+      file_filter: ${{ format('*-{0}-{1}*', runner.os == 'macOS' && 'mac' || 'linux', runner.arch == 'ARM64' && 'arm64' || 'x86-64') }}
       artifact_xtn: tar
       path_to_exec: fastchess
 
@@ -85,6 +88,7 @@ runs:
     id: build_main
     uses: ./.github/actions/run_build
     with:
+      cmake_preset: ${{ runner.os == 'macOS' && 'clang' || 'gcc' }}
       root_dir: ${{ github.workspace }}/tmp-main
 
     # --- Build SPRT ---
@@ -93,6 +97,7 @@ runs:
     uses: ./.github/actions/run_build
     id: run_build
     with:
+      cmake_preset: ${{ runner.os == 'macOS' && 'clang' || 'gcc' }}
       extra_config_args: -D "FASTCHESS_PROGRAM=${{ steps.download_fastchess.outputs.executable }}" -D "BENBOT_SPRT_SHARD=${{ inputs.shard == 'true' && 'ON' || 'OFF' }}" -D "BENBOT_SPRT_SEED=${{ inputs.seed }}"
 
   - name: Inject baseline binary
@@ -109,6 +114,17 @@ runs:
       cmake -D BASELINE_BINARY=${{ steps.build_main.outputs.deploy_dir }}/bin/ben_bot -P InjectSPRTBaseline-Release.cmake
     working-directory: ${{ steps.run_build.outputs.build_dir }}
 
+    # macOS doesn't come with GNU timeout, which the next step uses
+  - name: Install coreutils (macOS)
+    if: runner.os == 'macOS'
+    shell: bash
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: 1
+    run: |
+      if ! command -v timeout > /dev/null && ! command -v gtimeout > /dev/null; then
+        brew install coreutils
+      fi
+
   - name: Run SPRT test
     shell: bash
     env:
@@ -120,8 +136,10 @@ runs:
       # if the time limit is hit, carry on so that the partial results still get uploaded & reported
     run: |
       cmake -E make_directory "$(dirname "$SPRT_OUTPUT_LOG")"
+      # Homebrew's coreutils may only provide it as gtimeout
+      timeout_cmd="$(command -v timeout || command -v gtimeout)"
       status=0
-      timeout "$SPRT_TIMEOUT" cmake --build . --target "$TARGET_NAME" --config Release | tee "$SPRT_OUTPUT_LOG" || status=$?
+      "$timeout_cmd" "$SPRT_TIMEOUT" cmake --build . --target "$TARGET_NAME" --config Release | tee "$SPRT_OUTPUT_LOG" || status=$?
       if [[ "$status" -eq 124 ]]; then
         # shards are always stopped by the time limit
         if [[ "$SHARD" != true ]]; then

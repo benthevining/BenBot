@@ -41,6 +41,14 @@ on:
       elo1:
         type: string
         required: true
+      runner:
+        description: Runner label for the shard jobs (e.g. ubuntu-latest or macos-15)
+        type: string
+        required: true
+      platform:
+        description: Name of the platform the games are played on, for the PR comment
+        type: string
+        required: true
     outputs:
       status:
         description: '"passed", "failed", or "continue"'
@@ -62,7 +70,7 @@ env:
 jobs:
 
   shard:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner }}
     name: Shard ${{ matrix.shard }}
     timeout-minutes: 60 # see the run_sprt action's timeout input below
     strategy:
@@ -120,8 +128,10 @@ jobs:
         ELO1: ${{ inputs.elo1 }}
         FINAL_ROUND: ${{ inputs.final_round }}
         ROUND: ${{ inputs.round }}
+        PLATFORM: ${{ inputs.platform }}
         SUMMARY_FILE: ${{ runner.temp }}/summary.md
       run: |
+        printf "Games played on %s.\n\n" "$PLATFORM" >> "$GITHUB_STEP_SUMMARY"
         # if none of this round's shards played any games (e.g. the build failed), the next round won't either
         if ! compgen -G "$RUNNER_TEMP/shards/sprt-round${ROUND}-shard*/output.log" > /dev/null; then
           echo "SPRT stopped because round ${ROUND} didn't play any games, check the logs for details." > "$SUMMARY_FILE"
@@ -146,6 +156,7 @@ jobs:
         STATUS: ${{ steps.combine.outputs.status }}
         ROUND: ${{ inputs.round }}
         TEST_DESCRIPTION: ${{ inputs.description }}
+        PLATFORM: ${{ inputs.platform }}
       run: |
         {
           echo "## SPRT"
@@ -153,9 +164,9 @@ jobs:
           cat "$SUMMARY_FILE"
           echo ""
           if [[ "$STATUS" == continue ]]; then
-            echo "Running ${TEST_DESCRIPTION} SPRT for ${HEAD_SHA} against ${BASE_SHA}, round ${ROUND} done... ([run]($RUN_URL))"
+            echo "Running ${TEST_DESCRIPTION} SPRT on ${PLATFORM} for ${HEAD_SHA} against ${BASE_SHA}, round ${ROUND} done... ([run]($RUN_URL))"
           else
-            echo "Tested ${HEAD_SHA} against ${BASE_SHA} ([run]($RUN_URL))"
+            echo "Tested ${HEAD_SHA} against ${BASE_SHA} on ${PLATFORM} ([run]($RUN_URL))"
           fi
         } > "$RUNNER_TEMP/comment.md"
         .github/actions/run_sprt/UpdatePRComment.sh "$RUNNER_TEMP/comment.md"
