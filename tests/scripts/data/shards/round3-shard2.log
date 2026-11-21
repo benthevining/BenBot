@@ -1,0 +1,16 @@
+Results of Refactor vs Baseline (8+0.08, 1t, 32MB, 8moves_v3.pgn):
+Elo: -26.11 +/- 28.08, nElo: -30.36 +/- 32.46
+LOS: 3.34 %, DrawRatio: 40.45 %, PairsRatio: 0.82
+Games: 440, Wins: 163, Losses: 196, Draws: 81, Points: 203.5 (46.25 %)
+Ptnml(0-2): [43, 29, 89, 36, 23], WL/DD Ratio: 10.12
+--------------------------------------------------
+--------------------------------------------------
+Results of Refactor vs Baseline (8+0.08, 1t, 32MB, 8moves_v3.pgn):
+Elo: -25.73 +/- 27.54, nElo: -29.83 +/- 31.75
+LOS: 3.28 %, DrawRatio: 40.87 %, PairsRatio: 0.81
+Games: 460, Wins: 169, Losses: 203, Draws: 88, Points: 213.0 (46.30 %)
+Ptnml(0-2): [45, 30, 94, 36, 25], WL/DD Ratio: 7.55
+--------------------------------------------------
+Tournament was interrupted. To resume the tournament, run: fastchess -config file=config.json
+Finished match
+Total Time: 00:40:00 (hours:minutes:seconds)
