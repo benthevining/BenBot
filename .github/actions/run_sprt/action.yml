@@ -47,7 +47,9 @@ outputs:
     value: ${{ github.workspace }}/logs/sprt/summary.md
 
 # This works on Linux & macOS runners. On Linux it builds with the gcc preset; on macOS it builds with
-# the clang preset (Apple Clang), the same as the build & test CI workflow does.
+# the clang preset (Apple Clang), the same as the build & test CI workflow does, but only for arm64
+# (CI builds universal binaries), since the macOS runners are Apple silicon & the build time comes out
+# of each shard's time limit.
 
 runs:
   using: "composite"
@@ -89,6 +91,7 @@ runs:
     uses: ./.github/actions/run_build
     with:
       cmake_preset: ${{ runner.os == 'macOS' && 'clang' || 'gcc' }}
+      extra_config_args: ${{ runner.os == 'macOS' && '-D CMAKE_OSX_ARCHITECTURES=arm64' || '' }}
       root_dir: ${{ github.workspace }}/tmp-main
 
     # --- Build SPRT ---
@@ -98,7 +101,7 @@ runs:
     id: run_build
     with:
       cmake_preset: ${{ runner.os == 'macOS' && 'clang' || 'gcc' }}
-      extra_config_args: -D "FASTCHESS_PROGRAM=${{ steps.download_fastchess.outputs.executable }}" -D "BENBOT_SPRT_SHARD=${{ inputs.shard == 'true' && 'ON' || 'OFF' }}" -D "BENBOT_SPRT_SEED=${{ inputs.seed }}"
+      extra_config_args: ${{ runner.os == 'macOS' && '-D CMAKE_OSX_ARCHITECTURES=arm64' || '' }} -D "FASTCHESS_PROGRAM=${{ steps.download_fastchess.outputs.executable }}" -D "BENBOT_SPRT_SHARD=${{ inputs.shard == 'true' && 'ON' || 'OFF' }}" -D "BENBOT_SPRT_SEED=${{ inputs.seed }}"
 
   - name: Inject baseline binary
     if: inputs.use_main == 'false'
