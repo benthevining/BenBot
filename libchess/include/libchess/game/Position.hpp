@@ -136,6 +136,14 @@ struct [[nodiscard]] Position final {
      */
     Hash hash { UINT64_C(0) };
 
+    /** A Zobrist hash of only the pawns in this position.
+        Positions with the same pawns on the same squares have the same ``pawnHash``,
+        regardless of the other pieces, side to move, castling rights or en passant
+        square. Like ``hash``, this is incrementally updated by ``make_move()`` and
+        recalculated by ``refresh_zobrist()``.
+     */
+    Hash pawnHash { UINT64_C(0) };
+
     /** Returns true if the two positions have the same Zobrist hash. */
     [[nodiscard]] auto operator==(const Position& other) const noexcept -> bool
     {
@@ -332,7 +340,7 @@ struct [[nodiscard]] Position final {
     /** Performs a color flip of this position. */
     void flip();
 
-    /** Recalculates the Zobrist hash for this position. */
+    /** Recalculates the Zobrist hash and pawn hash for this position. */
     void refresh_zobrist();
 
     /** Tests if the position is legal. If it is, returns ``nullopt``; if the position is
