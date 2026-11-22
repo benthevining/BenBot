@@ -58,6 +58,23 @@ using Params = std::vector<FloatScore>;
  */
 [[nodiscard]] auto round_params(const Params& params) -> eval::Weights;
 
+/** Moves the average of each piece square table & mobility table into that piece's
+    material value, for the middlegame & endgame separately, and returns the result.
+
+    Every piece of a type uses its material value once, one square of its piece square
+    table once and (for knights, bishops, rooks & queens) one entry of its mobility table
+    once. So adding a constant to every entry of one of those tables and taking it off the
+    material doesn't change any eval. The tuner can't tell those apart, so the split
+    between them drifts as it tunes. This fixes it: afterwards each table averages 0 (over
+    the squares that the piece can stand on, so ranks 2 to 7 for pawns, which are left
+    alone on ranks 1 & 8), and the material is the piece's value on an average square with
+    an average number of moves. The king has no material value, and each side always has
+    one king, so its table is just shifted to average 0.
+
+    @ingroup tuner
+ */
+[[nodiscard]] auto recentre(Params params) -> Params;
+
 /** Returns, for each weight in ``eval::Weights::values``, whether its term is tunable.
     @ingroup tuner
  */
@@ -115,6 +132,18 @@ struct LossAndGradient final {
 [[nodiscard]] auto compute_loss_and_gradient(
     const Dataset& dataset, const Params& params, double k, Loss loss, size_t numThreads)
     -> LossAndGradient;
+
+/** Adds the gradient of an L2 pull towards the starting weights, ``lambda * sum((w - w0)^2)``
+    over the tunable weights, to ``gradient``, and returns that penalty.
+
+    This keeps rarely seen weights (such as a king on the far side of the board in the
+    middlegame) near their starting values, where the data says little about them. With a
+    small ``lambda``, it hardly moves the weights that the data does say a lot about.
+
+    @ingroup tuner
+ */
+auto add_l2_pull(
+    Params& gradient, const Params& params, const Params& start, double lambda) -> double;
 
 /** Finds the K that minimises the loss of the given parameters on the dataset,
     using a golden-section search over ``[minK, maxK]``.
