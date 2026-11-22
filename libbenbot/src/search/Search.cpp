@@ -42,6 +42,7 @@
 #include <iterator>
 #include <libbenbot/data-structures/HistoryTable.hpp>
 #include <libbenbot/data-structures/KillerMoves.hpp>
+#include <libbenbot/data-structures/PawnTable.hpp>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Material.hpp>
@@ -249,7 +250,7 @@ namespace {
             const size_t depthToSearch, const size_t ply,
             TranspositionTable& trans, Interrupter& inter, Stats& statsToUse,
             PvList& parentPV, KillerMoves& killers, HistoryTable& hist,
-            const eval::PieceSquareTables& pst)
+            const eval::PieceSquareTables& pst, PawnTable& pawns)
             : bounds { bnd }
             , position { pos }
             , depthLeft { depthToSearch }
@@ -259,8 +260,9 @@ namespace {
             , stats { statsToUse }
             , killerMoves { killers }
             , history { hist }
-            , pieceSquareTables { pst }
             , pv { parentPV }
+            , pieceSquareTables { pst }
+            , pawnTable { pawns }
         {
         }
 
@@ -319,7 +321,7 @@ namespace {
 
             if constexpr (not PVNode) {
                 if (not inCheck) {
-                    const auto staticEval = eval::evaluate(position, pieceSquareTables);
+                    const auto staticEval = eval::evaluate(position, pieceSquareTables, &pawnTable);
 
                     // reverse futility pruning
                     const auto margin = 80 * static_cast<int>(depthLeft);
@@ -585,7 +587,7 @@ namespace {
             if (position.is_checkmate())
                 return Score::mate(plyFromRoot);
 
-            auto evaluation = eval::evaluate(position, pieceSquareTables);
+            auto evaluation = eval::evaluate(position, pieceSquareTables, &pawnTable);
 
             ++stats.staticEvals;
 
@@ -657,7 +659,7 @@ namespace {
                 childPos,
                 depth > reduction ? depth - 1uz - reduction : 0uz,
                 plyFromRoot + 1uz,
-                transTable, interrupter, stats, childPV, killerMoves, history, pieceSquareTables };
+                transTable, interrupter, stats, childPV, killerMoves, history, pieceSquareTables, pawnTable };
         }
 
         // the reduction includes the 1 ply for the null move itself
@@ -668,7 +670,7 @@ namespace {
                 after_null_move(position),
                 depthLeft > reduction ? depthLeft - reduction : 0uz,
                 plyFromRoot + 1uz,
-                transTable, interrupter, stats, childPV, killerMoves, history, pieceSquareTables
+                transTable, interrupter, stats, childPV, killerMoves, history, pieceSquareTables, pawnTable
             };
 
             // don't allow 2 null moves in a row
@@ -700,6 +702,8 @@ namespace {
         PvList& pv; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
         const eval::PieceSquareTables& pieceSquareTables; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
+
+        PawnTable& pawnTable; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
         PvList childPV;
     };
@@ -744,6 +748,7 @@ namespace {
         KillerMoves&                   killerMoves,
         HistoryTable&                  history,
         const eval::PieceSquareTables& pst,
+        PawnTable&                     pawnTable,
         const Callbacks&               callbacks,
         Stats&                         stats)
         -> Result::Line
@@ -762,9 +767,9 @@ namespace {
 
             PvList childPV;
 
-            auto create_context = [depth, &transTable, &interrupter, &stats, &childPV, &killerMoves, &history, &pst](const Bounds boundsToUse, const Position& pos) {
+            auto create_context = [depth, &transTable, &interrupter, &stats, &childPV, &killerMoves, &history, &pst, &pawnTable](const Bounds boundsToUse, const Position& pos) {
                 return AlphaBetaContext {
-                    boundsToUse, pos, depth, 1uz, transTable, interrupter, stats, childPV, killerMoves, history, pst
+                    boundsToUse, pos, depth, 1uz, transTable, interrupter, stats, childPV, killerMoves, history, pst, pawnTable
                 };
             };
 
@@ -822,6 +827,7 @@ namespace {
         KillerMoves&                   killerMoves,
         HistoryTable&                  history,
         const eval::PieceSquareTables& pst,
+        PawnTable&                     pawnTable,
         const Callbacks&               callbacks,
         const std::optional<Move>      prevBestMove)
         -> RootSearchResult
@@ -854,7 +860,7 @@ namespace {
 
         for (auto lineIdx = 0uz; lineIdx < numLines; ++lineIdx) {
             auto line = search_root_line(
-                depth, options, excludedMoves, position, transTable, interrupter, killerMoves, history, pst, callbacks, result.stats);
+                depth, options, excludedMoves, position, transTable, interrupter, killerMoves, history, pst, pawnTable, callbacks, result.stats);
 
             if (interrupter.was_aborted() or line.pv.empty())
                 break;
@@ -941,7 +947,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
                                     : std::optional { result.pv.front() };
 
         const auto res = root_search(
-            depth, options, position, transTable, interrupter, killerMoves, history, pieceSquareTables, callbacks, prevBestMove);
+            depth, options, position, transTable, interrupter, killerMoves, history, pieceSquareTables, pawnTable, callbacks, prevBestMove);
 
         if (interrupter.was_aborted())
             break;
