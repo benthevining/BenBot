@@ -1,0 +1,264 @@
+# ======================================================================================
+#
+# ░▒▓███████▓▒░░▒▓████████▓▒░▒▓███████▓▒░       ░▒▓███████▓▒░ ░▒▓██████▓▒░▒▓████████▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓███████▓▒░░▒▓██████▓▒░ ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓███████▓▒░░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░ ░▒▓██████▓▒░  ░▒▓█▓▒░
+#
+# ======================================================================================
+
+#
+# Estimates the engine's Elo with tests/fastchess/EstimateElo.py & opens a PR that updates the
+# README with the estimate. Each Stockfish level is played on its own runner, since the whole
+# gauntlet takes longer than GitHub's 6 hour job limit, & the logs are then combined.
+# The tag_and_release workflow calls this for each new release.
+
+name: Estimate Elo
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to build & rate
+        type: string
+        default: main
+      levels:
+        description: Stockfish UCI_Elo levels to play, separated by spaces (from 1320 to 3190)
+        type: string
+        default: 1700 2000 2300 2600
+      games:
+        description: Games against each level
+        type: number
+        default: 200
+      tc:
+        description: Time control
+        type: string
+        default: 60+0.6
+  workflow_call:
+    inputs:
+      ref:
+        description: Git ref to build & rate
+        type: string
+        default: main
+      levels:
+        description: Stockfish UCI_Elo levels to play, separated by spaces (from 1320 to 3190)
+        type: string
+        default: 1700 2000 2300 2600
+      games:
+        description: Games against each level
+        type: number
+        default: 200
+      tc:
+        description: Time control
+        type: string
+        default: 60+0.6
+
+run-name: Estimate Elo (${{ inputs.ref }})
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: read
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    name: Build engine
+    timeout-minutes: 30
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+
+      # built in its own directory, so that the build actions used are this workflow's, which
+      # might be newer than the ref's
+    - name: Checkout ref to rate
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        ref: ${{ inputs.ref }}
+        path: ${{ github.workspace }}/tmp-rated
+        fetch-depth: 0   # for git describe
+        persist-credentials: false
+
+    - name: Build
+      uses: ./.github/actions/run_build
+      id: run_build
+      with:
+        cmake_preset: gcc
+        extra_config_args: -D BUILD_TESTING=OFF
+        root_dir: ${{ github.workspace }}/tmp-rated
+
+    - name: Describe version
+      id: version
+      run: echo "version=$(git describe --tags --always)" >> "$GITHUB_OUTPUT"
+      working-directory: ${{ github.workspace }}/tmp-rated
+
+    - name: Parse levels
+      id: levels
+      env:
+        LEVELS: ${{ inputs.levels }}
+      run: |
+        levels="$(jq -c -n --arg levels "$LEVELS" '[$levels | splits(" +") | select(length > 0) | tonumber]')"
+        if [[ "$levels" == "[]" ]]; then
+          echo "::error::No Stockfish levels given"
+          exit 1
+        fi
+        echo "levels=$levels" >> "$GITHUB_OUTPUT"
+
+    - name: Upload engine
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+      with:
+        name: elo-engine
+        path: ${{ steps.run_build.outputs.deploy_dir }}/bin/ben_bot
+        if-no-files-found: error
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      levels: ${{ steps.levels.outputs.levels }}
+
+  play:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        level: ${{ fromJSON(needs.build.outputs.levels) }}
+    runs-on: ubuntu-latest
+    name: Play Stockfish ${{ matrix.level }}
+    timeout-minutes: 360 # 6 hours (GitHub's limit); see the time limit on the games below
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+
+    - name: Download fastchess
+      id: download_fastchess
+      uses: ./.github/actions/download_github_release
+      with:
+        repository: Disservin/fastchess
+        file_filter: '*-linux-x86-64*'
+        artifact_xtn: tar
+        path_to_exec: fastchess
+
+    - name: Install Stockfish
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y stockfish
+
+    - name: Download engine
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+      with:
+        name: elo-engine
+        path: engine
+
+      # artifacts don't keep the execute permission
+    - name: Make engine executable
+      run: chmod +x engine/ben_bot
+
+    - name: Download openings book
+      run: |
+        mkdir book
+        cd book
+        cmake -D BOOK_NAME=8moves_v3.pgn -P ../tests/fastchess/DownloadBook.cmake
+
+      # if the time limit is hit, carry on so that the partial results still get uploaded & counted
+    - name: Play games
+      env:
+        LEVEL: ${{ matrix.level }}
+        GAMES: ${{ inputs.games }}
+        TC: ${{ inputs.tc }}
+        FASTCHESS: ${{ steps.download_fastchess.outputs.executable }}
+      run: |
+        status=0
+        timeout 345m python3 tests/fastchess/EstimateElo.py engine/ben_bot \
+          --book book/8moves_v3.pgn --stockfish /usr/games/stockfish --levels "$LEVEL" \
+          --games "$GAMES" --tc "$TC" --fastchess "$FASTCHESS" --out-dir logs/elo \
+          >> "$GITHUB_STEP_SUMMARY" || status=$?
+        if [[ "$status" -eq 124 ]]; then
+          echo "::warning::Not all the games were played within the time limit"
+        elif [[ "$status" -ne 0 ]]; then
+          exit "$status"
+        fi
+
+    - name: Upload logs
+      if: ${{ !cancelled() }}
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+      with:
+        name: elo-logs-${{ matrix.level }}
+        path: logs/elo
+        if-no-files-found: error
+
+  # combines the logs of all the levels that finished, & opens a PR updating the README
+  report:
+    needs: [build, play]
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
+    runs-on: ubuntu-latest
+    name: Report results
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        ref: ${{ github.event.repository.default_branch }}
+
+    - name: Download logs
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+      with:
+        pattern: elo-logs-*
+        path: logs/elo
+        merge-multiple: true
+
+      # every log should have results, so fastchess & Stockfish are never run here
+    - name: Estimate Elo
+      env:
+        LEVELS: ${{ needs.build.outputs.levels }}
+        TC: ${{ inputs.tc }}
+      run: |
+        read -r -a levels <<< "$(jq -r 'join(" ")' <<< "$LEVELS")"
+        python3 tests/fastchess/EstimateElo.py ben_bot --book none.pgn --stockfish stockfish \
+          --levels "${levels[@]}" --tc "$TC" --fastchess false --out-dir logs/elo --reuse-logs \
+          > "$RUNNER_TEMP/summary.md"
+        cat "$RUNNER_TEMP/summary.md" >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Update README
+      env:
+        VERSION: ${{ needs.build.outputs.version }}
+      run: python3 .github/actions/UpdateReadmeElo.py README.md "$RUNNER_TEMP/summary.md" "$VERSION"
+
+    - name: Open PR
+      env:
+        GH_TOKEN: ${{ github.token }}
+        VERSION: ${{ needs.build.outputs.version }}
+        BASE: ${{ github.event.repository.default_branch }}
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      run: |
+        if git diff --quiet README.md; then
+          echo "The README already has this estimate"
+          exit 0
+        fi
+        branch="elo/$VERSION-$GITHUB_RUN_ID"
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git switch -c "$branch"
+        git commit -am "docs: update the README's Elo estimate ($VERSION)"
+        git push origin "$branch"
+        {
+          echo "Measured by the [Estimate Elo workflow]($RUN_URL) for $VERSION."
+          echo
+          cat "$RUNNER_TEMP/summary.md"
+        } > "$RUNNER_TEMP/body.md"
+        gh pr create --base "$BASE" --head "$branch" \
+          --title "docs: update the README's Elo estimate ($VERSION)" --body-file "$RUNNER_TEMP/body.md"

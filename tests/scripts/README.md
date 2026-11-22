@@ -6,6 +6,7 @@
 * `.github/actions/run_sprt/CombineSPRTResults.py`, which combines the results of sharded SPRT tests
 * `.github/actions/run_sprt/ReportSPRTResults.py`, which summarizes a fastchess SPRT log
 * `tests/fastchess/EstimateElo.py`, which estimates the engine's Elo from a gauntlet
+* `.github/actions/UpdateReadmeElo.py`, which puts the estimate in the README
 
 These aren't registered with CTest, because they don't test the engine. To run them:
 
