@@ -138,8 +138,8 @@ TEST_CASE("Trace - changing one weight changes the eval by its coefficient", "[e
     static constexpr auto NUM_SQUARES = chess::board::NUM_SQUARES;
 
     // a few terms of different kinds: material, a piece square table entry, an indexed table,
-    // a king safety term (which is scaled by the enemy material), pawn structure, mobility,
-    // a term that counts our squares minus theirs, and a threat term
+    // a king safety term, pawn structure, mobility, a term that counts our squares minus theirs,
+    // and a threat term
     static constexpr std::array indices {
         offset_of(Term::Material) + static_cast<size_t>(Type::Pawn),
         offset_of(Term::Material) + static_cast<size_t>(Type::Rook),

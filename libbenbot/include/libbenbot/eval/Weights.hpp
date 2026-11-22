@@ -54,10 +54,10 @@ enum class Term : std::uint8_t {
     RookBehindPasser,        ///< Bonus for our rook behind our passer (penalty for their rook behind it).
     KingEscortsPasser,       ///< Bonus per square that our king is closer than 7 to our passer.
     EnemyKingBlocksPasser,   ///< Bonus (penalty) for the enemy king on our passer's promotion square.
-    RookHalfOpenFile,        ///< Bonus for each rook on a half-open file.
+    RookHalfOpenFile,        ///< Bonus for each rook on a file with an enemy pawn but none of ours.
     RookOpenFile,            ///< Bonus for each rook on an open file.
     ConnectedRooksOpenFile,  ///< Bonus for each open file with two of our rooks on it.
-    KingHalfOpenFile,        ///< Bonus (penalty) for the king on a half-open file.
+    KingHalfOpenFile,        ///< Bonus (penalty) for the king on a file with an enemy pawn but none of ours.
     KingOpenLine,            ///< Bonus (penalty) for the king on an open file or a pawnless diagonal.
     KingStranded,            ///< Bonus (penalty) for the king on the d/e file with no castling rights.
     KnightTropism,           ///< Bonus (penalty) per square that an enemy knight is closer than 6 to the king.
