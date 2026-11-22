@@ -133,3 +133,28 @@ endfunction ()
 add_sprt_test (sprt_gain 0 5 "gainer")
 add_sprt_test (sprt_gain_big 0 10 "big gainer")
 add_sprt_test (sprt_non_regression -5 0 "non-regression")
+
+#
+
+if (NOT TARGET Python::Interpreter)
+    return ()
+endif ()
+
+# plays a gauntlet against Stockfish at several UCI_Elo levels & estimates ben_bot's Elo. Not run by
+# CTest, since it takes hours; run EstimateElo.py directly for the other options
+# cmake-format: off
+add_custom_target (
+    estimate_elo
+    COMMAND Python::Interpreter "${CMAKE_CURRENT_LIST_DIR}/EstimateElo.py"
+        "$<TARGET_FILE:ben_bot>"
+        --book "${openings_file}"
+        --fastchess "${FASTCHESS_PROGRAM}"
+        --out-dir "${BenBot_SOURCE_DIR}/logs/elo"
+    WORKING_DIRECTORY "$<TARGET_FILE_DIR:ben_bot>"
+    DEPENDS "${openings_file}" ben_bot::ben_bot
+    COMMENT "Estimating ben_bot's Elo..."
+    VERBATIM USES_TERMINAL
+)
+# cmake-format: on
+
+add_dependencies (estimate_elo ben_bot)
