@@ -64,7 +64,28 @@ void parallel_for(size_t numThreads, const size_t count, Func&& func)
     std::vector<std::exception_ptr> errors(numThreads);
 
     {
-        std::vector<std::jthread> threads;
+        std::vector<std::thread> threads;
+
+        // std::jthread isn't in every standard library that CI builds with yet (Apple's libc++ on
+        // macos-15 doesn't have it), so this joins the threads itself, even if starting one throws
+        struct Joiner final {
+            std::vector<std::thread>& toJoin;
+
+            explicit Joiner(std::vector<std::thread>& threadsToJoin) noexcept
+                : toJoin { threadsToJoin }
+            {
+            }
+
+            Joiner(const Joiner&)            = delete;
+            Joiner& operator=(const Joiner&) = delete;
+
+            ~Joiner()
+            {
+                for (auto& thread : toJoin)
+                    if (thread.joinable())
+                        thread.join();
+            }
+        } joiner { threads };
 
         threads.reserve(numThreads);
 
@@ -77,7 +98,7 @@ void parallel_for(size_t numThreads, const size_t count, Func&& func)
                 }
             });
         }
-    } // the jthreads join here
+    } // the threads join here
 
     for (const auto& error : errors)
         if (error)
