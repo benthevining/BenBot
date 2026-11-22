@@ -14,17 +14,15 @@
 # Estimates the engine's Elo with tests/fastchess/EstimateElo.py & opens a PR that updates the
 # README with the estimate. Each Stockfish level is played on its own runner, since the whole
 # gauntlet takes longer than GitHub's 6 hour job limit, & the logs are then combined.
-# The tag_and_release workflow calls this for each new release.
+# The tag_and_release workflow calls this for each new release. When started by hand, it rates
+# the ref chosen to run the workflow from; it doesn't take a ref to check out, since building
+# another ref in the default branch's context could poison the caches that CI uses there.
 
 name: Estimate Elo
 
 on:
   workflow_dispatch:
     inputs:
-      ref:
-        description: Git ref to build & rate
-        type: string
-        default: main
       levels:
         description: Stockfish UCI_Elo levels to play, separated by spaces (from 1320 to 3190)
         type: string
@@ -40,9 +38,9 @@ on:
   workflow_call:
     inputs:
       ref:
-        description: Git ref to build & rate
+        description: Git ref to build & rate, if not the ref the workflow runs on
         type: string
-        default: main
+        default: ''
       levels:
         description: Stockfish UCI_Elo levels to play, separated by spaces (from 1320 to 3190)
         type: string
@@ -56,7 +54,7 @@ on:
         type: string
         default: 60+0.6
 
-run-name: Estimate Elo (${{ inputs.ref }})
+run-name: Estimate Elo (${{ github.ref_name }})
 
 defaults:
   run:
@@ -83,7 +81,7 @@ jobs:
     - name: Checkout ref to rate
       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
-        ref: ${{ inputs.ref }}
+        ref: ${{ inputs.ref || github.sha }}
         path: ${{ github.workspace }}/tmp-rated
         fetch-depth: 0   # for git describe
         persist-credentials: false
