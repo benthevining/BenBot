@@ -1,0 +1,9 @@
+Indexing opening suite...
+--------------------------------------------------
+Results of BenBot vs Stockfish-1800 (5+0.05, 1t, 32MB, 8moves_v3.pgn):
+Elo: 190.85 +/- 457.95, nElo: 245.67 +/- 240.76
+LOS: 97.72 %, DrawRatio: 50.00 %, PairsRatio: inf
+Games: 8, Wins: 6, Losses: 2, Draws: 0, Points: 6.0 (75.00 %)
+Ptnml(0-2): [0, 0, 2, 0, 2], WL/DD Ratio: inf
+--------------------------------------------------
+Finished match
