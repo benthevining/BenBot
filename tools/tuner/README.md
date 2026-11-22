@@ -56,6 +56,15 @@ alongside the training loss.
 * The optimiser is Adam over the whole training set each epoch. Each step moves a weight by about `--lr` centipawns.
 * Only the terms marked `tunable` in `TERMS` (`libbenbot/include/libbenbot/eval/Weights.hpp`) change. The others
   (the endgame conversion helpers) keep their default values, and are treated as a fixed part of each position's eval.
+* Each piece's material value, piece square table and mobility table are redundant: adding the same amount to every
+  entry of a table and taking it off the material doesn't change any eval, so the split between them drifts as it
+  tunes. When the weights are written out, each table's average (over the squares that the piece can stand on, so
+  ranks 2 to 7 for pawns) is moved into the material, separately for the middlegame & endgame. The tables then average
+  0, and the material is the value of a piece on an average square with an average number of moves. This doesn't
+  change any eval (the king's table is only shifted, since each side always has one king).
+* `--l2` adds a penalty of `x * (w - w0)^2` for each weight's distance from its starting value. With a small `x`, this
+  keeps weights that the data says little about (such as a white king on a7 in the middlegame) from running off to
+  extreme values, while hardly moving the others. The losses printed don't include it.
 * The weights are kept as floating point numbers while tuning, and are rounded to the nearest integer when they're
   written out. The loss with the rounded weights is printed at the end, so you can check that rounding didn't cost
   anything.
@@ -74,6 +83,7 @@ alongside the training loss.
 | `--save-every <n>` | 100 | Also write the weights every `n` epochs (0 = only at the end). |
 | `--loss <mse\|ce>` | `mse` | Mean squared error or cross-entropy. |
 | `--k <x>` | fitted | Use this K instead of fitting it. |
+| `--l2 <x>` | 0 | Pull each weight towards its starting value with a penalty of `x * (w - w0)^2`. On zurichess, `1e-10` keeps rarely seen weights sane without costing any validation loss. |
 | `--patience <n>` | 200 | Stop early if the validation loss hasn't improved for `n` epochs (0 = never). |
 | `--seed <n>` | 1 | The seed used to choose the validation positions. |
 | `--limit <n>` | 0 (all) | Only load the first `n` positions that pass the filters. |

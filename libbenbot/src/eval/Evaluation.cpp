@@ -21,6 +21,7 @@
 #include "eval/Threats.hpp"
 #include <algorithm>
 #include <cassert>
+#include <cstdint>
 #include <libbenbot/eval/DefaultWeights.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Material.hpp>
@@ -46,20 +47,22 @@ namespace ben_bot::eval {
 
 namespace {
 
-    // game phase is roughly determined based on the total amount of non-pawn material left on the board
-    // we say that the endgame has begun once the queens & two pairs of minor pieces have been traded
-    // (the phase uses the fixed piece_values, not the eval's material weights). MAX_PHASE is in Trace.hpp
-
-    // returns a [0..MAX_PHASE] value that is MAX_PHASE until the endgame starts, then falls
-    // linearly to 0 as the remaining non-pawn material is traded off
+    // the game phase is the sum of the phase weights of the non-pawn pieces left on the board
+    // (knights & bishops 1, rooks 2, queens 4, see Trace.hpp). Returns a [0..MAX_PHASE] value that
+    // is MAX_PHASE in the starting position, and falls to 0 as the pieces are traded off. It's capped
+    // at MAX_PHASE, for positions with promoted pieces
     [[nodiscard, gnu::pure]] constexpr auto middlegame_phase(
         const Position& position) noexcept
-        -> int
+        -> std::int32_t
     {
-        const auto nonPawnMaterialLeft = detail::count_material<false>(position.whitePieces)
-                                       + detail::count_material<false>(position.blackPieces);
+        const auto side_phase = [](const chess::board::Pieces& pieces) {
+            return (static_cast<std::int32_t>(pieces.knights.count()) * phase_weights::KNIGHT)
+                 + (static_cast<std::int32_t>(pieces.bishops.count()) * phase_weights::BISHOP)
+                 + (static_cast<std::int32_t>(pieces.rooks.count()) * phase_weights::ROOK)
+                 + (static_cast<std::int32_t>(pieces.queens.count()) * phase_weights::QUEEN);
+        };
 
-        return std::min(nonPawnMaterialLeft, MAX_PHASE);
+        return std::min(side_phase(position.whitePieces) + side_phase(position.blackPieces), MAX_PHASE);
     }
 
     using chess::board::Bitboard;

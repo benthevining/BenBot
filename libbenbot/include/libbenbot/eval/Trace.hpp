@@ -40,15 +40,44 @@ namespace ben_bot::eval {
 using chess::game::Position;
 using chess::pieces::Color;
 
+/** How much each non-pawn piece counts towards the game phase.
+    This is Fruit's phase: pawns & kings don't count.
+
+    @ingroup eval
+ */
+namespace phase_weights {
+
+    /// @ingroup eval
+    /// @{
+
+    /** The phase weight of a knight. */
+    inline constexpr std::int32_t KNIGHT { 1 };
+
+    /** The phase weight of a bishop. */
+    inline constexpr std::int32_t BISHOP { 1 };
+
+    /** The phase weight of a rook. */
+    inline constexpr std::int32_t ROOK { 2 };
+
+    /** The phase weight of a queen. */
+    inline constexpr std::int32_t QUEEN { 4 };
+
+    /// @}
+
+} // namespace phase_weights
+
 /** The game phase of a pure middlegame.
     The eval blends its middlegame & endgame scores with a phase in ``[0, MAX_PHASE]``,
-    which is the non-pawn material left on the board (using the fixed ``piece_values``,
-    not the eval's material weights), capped at this value.
+    which is the sum of the phase weights of the pieces on the board, capped at this
+    value (which is the phase of the starting position), so that promotions don't push
+    it past a pure middlegame.
 
     @ingroup eval
  */
 inline constexpr std::int32_t MAX_PHASE
-    = ((piece_values::ROOK * 2) + piece_values::BISHOP + piece_values::KNIGHT) * 2;
+    = (phase_weights::QUEEN + (phase_weights::ROOK * 2) + (phase_weights::BISHOP * 2) + (phase_weights::KNIGHT * 2)) * 2;
+
+static_assert(MAX_PHASE == 24);
 
 /** The tracer that the engine's eval uses. It records nothing, and compiles away.
     @ingroup eval

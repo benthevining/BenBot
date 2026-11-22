@@ -16,7 +16,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstddef>
 #include <libbenbot/data-structures/PawnTable.hpp>
+#include <libbenbot/eval/DefaultWeights.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
+#include <libbenbot/eval/Trace.hpp>
+#include <libbenbot/eval/Weights.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/FEN.hpp>
@@ -286,58 +289,60 @@ TEST_CASE("Evaluation - pawn table gives the same result", "[eval][evaluation][P
 
 TEST_CASE("Evaluation - threats", "[eval][evaluation][threats]")
 {
-    // The black knight is on e5 (attacked by the white pawn) or d5 (not attacked). These are
-    // mirrored squares, so the knight's placement & mobility score the same.
+    // Each pair of positions differs only in whether a black piece is attacked by a white one. The
+    // threat's weight is tuned, and so are the piece square tables (which aren't left-right
+    // symmetric), so this checks that the threat is found and counted for the right side, rather
+    // than the sign of the eval difference. The trace test checks that the counts are exactly what
+    // the eval uses.
+
+    using ben_bot::eval::evaluate_traced;
+    using ben_bot::eval::offset_of;
+    using ben_bot::eval::Term;
+
+    // white's count minus black's count of the given threat
+    auto count = [](const std::string_view fen, const Term term) {
+        return evaluate_traced(from_fen(fen).value()).coefficient(offset_of(term));
+    };
+
+    auto check = [&count](const std::string_view attacked, const std::string_view safe, const Term term) {
+        INFO(attacked);
+
+        REQUIRE(count(attacked, term) == 1);
+        REQUIRE(count(safe, term) == 0);
+    };
+
+    // the black knight is on e5 (attacked by the white pawn) or d5 (not attacked)
 
     SECTION("Pawn attacking a knight - white to move")
     {
-        const auto attacked = from_fen("6k1/8/8/4n3/3P4/8/8/6K1 w - - 0 1").value();
-        const auto safe     = from_fen("6k1/8/8/3n4/3P4/8/8/6K1 w - - 0 1").value();
-
-        REQUIRE(evaluate(attacked) > evaluate(safe));
+        check("6k1/8/8/4n3/3P4/8/8/6K1 w - - 0 1", "6k1/8/8/3n4/3P4/8/8/6K1 w - - 0 1", Term::PawnThreat);
     }
 
     SECTION("Pawn attacking a knight - black to move")
     {
-        const auto attacked = from_fen("6k1/8/8/4n3/3P4/8/8/6K1 b - - 0 1").value();
-        const auto safe     = from_fen("6k1/8/8/3n4/3P4/8/8/6K1 b - - 0 1").value();
-
-        REQUIRE(evaluate(attacked) < evaluate(safe));
+        check("6k1/8/8/4n3/3P4/8/8/6K1 b - - 0 1", "6k1/8/8/3n4/3P4/8/8/6K1 b - - 0 1", Term::PawnThreat);
     }
 
-    // In the rest of these, the black piece is on e6 (attacked) or d6 (not attacked), which are
-    // also mirrored squares.
+    // in the rest of these, the black piece is on e6 (attacked) or d6 (not attacked)
 
     SECTION("Knight attacking a rook")
     {
-        const auto attacked = from_fen("6k1/8/4r3/8/5N2/8/8/6K1 w - - 0 1").value();
-        const auto safe     = from_fen("6k1/8/3r4/8/5N2/8/8/6K1 w - - 0 1").value();
-
-        REQUIRE(evaluate(attacked) > evaluate(safe));
+        check("6k1/8/4r3/8/5N2/8/8/6K1 w - - 0 1", "6k1/8/3r4/8/5N2/8/8/6K1 w - - 0 1", Term::MinorOnRook);
     }
 
     SECTION("Bishop attacking a rook")
     {
-        const auto attacked = from_fen("6k1/8/4r3/8/2B5/8/8/6K1 b - - 0 1").value();
-        const auto safe     = from_fen("6k1/8/3r4/8/2B5/8/8/6K1 b - - 0 1").value();
-
-        REQUIRE(evaluate(attacked) < evaluate(safe));
+        check("6k1/8/4r3/8/2B5/8/8/6K1 b - - 0 1", "6k1/8/3r4/8/2B5/8/8/6K1 b - - 0 1", Term::MinorOnRook);
     }
 
     SECTION("Knight attacking a queen")
     {
-        const auto attacked = from_fen("6k1/8/4q3/6N1/8/8/PPP5/1K6 w - - 0 1").value();
-        const auto safe     = from_fen("6k1/8/3q4/6N1/8/8/PPP5/1K6 w - - 0 1").value();
-
-        REQUIRE(evaluate(attacked) > evaluate(safe));
+        check("6k1/8/4q3/6N1/8/8/PPP5/1K6 w - - 0 1", "6k1/8/3q4/6N1/8/8/PPP5/1K6 w - - 0 1", Term::MinorOnQueen);
     }
 
     SECTION("Rook attacking a queen")
     {
-        const auto attacked = from_fen("6k1/8/4q3/8/8/8/4R3/6K1 w - - 0 1").value();
-        const auto safe     = from_fen("6k1/8/3q4/8/8/8/4R3/6K1 w - - 0 1").value();
-
-        REQUIRE(evaluate(attacked) > evaluate(safe));
+        check("6k1/8/4q3/8/8/8/4R3/6K1 w - - 0 1", "6k1/8/3q4/8/8/8/4R3/6K1 w - - 0 1", Term::RookOnQueen);
     }
 }
 
@@ -391,5 +396,72 @@ TEST_CASE("Evaluation - hanging pieces", "[eval][evaluation][threats]")
         check_pair(
             "8/8/4k3/4n3/2N5/4NN2/6K1/8 w - - 0 1",
             "8/8/4k3/3n4/2N5/4NN2/6K1/8 w - - 0 1");
+    }
+}
+
+TEST_CASE("Evaluation - threats raise the eval", "[eval][evaluation][threats]")
+{
+    // The threat weights are tuned, and some of them are slightly negative in one phase: the minor
+    // & rook threats in the endgame, and the hanging bonus in the middlegame (a hanging piece is
+    // often attacked by a pawn too, which already scores). But in the phase where each one's
+    // weight is positive, a threat should be worth something to the side making it. Each of these
+    // positions has a threat by White, and its eval is compared with the eval of the same position
+    // with that threat's weight set to 0, so the check doesn't depend on any other eval terms.
+
+    using ben_bot::eval::count_of;
+    using ben_bot::eval::DEFAULT_WEIGHTS;
+    using ben_bot::eval::evaluate_traced;
+    using ben_bot::eval::offset_of;
+    using ben_bot::eval::Term;
+
+    auto check = [](const std::string_view fen, const Term term) {
+        INFO(fen);
+
+        const auto position = from_fen(fen).value();
+        const auto trace    = evaluate_traced(position);
+
+        REQUIRE(trace.score(DEFAULT_WEIGHTS) == evaluate(position));
+        REQUIRE(trace.coefficient(offset_of(term)) > 0);
+
+        auto withoutThreat = DEFAULT_WEIGHTS;
+
+        for (auto i = 0uz; i < count_of(term); ++i)
+            withoutThreat.values.at(offset_of(term) + i) = { };
+
+        // scores are from the side to move's point of view
+        if (position.is_white_to_move())
+            REQUIRE(trace.score(DEFAULT_WEIGHTS) > trace.score(withoutThreat));
+        else
+            REQUIRE(trace.score(DEFAULT_WEIGHTS) < trace.score(withoutThreat));
+    };
+
+    for (const auto* const toMove : { " w", " b" }) {
+        const std::string side { toMove };
+
+        SECTION("Pawn attacking a knight" + side)
+        {
+            check("r1bqkb1r/pppp1ppp/5n2/4p3/2n1P3/1P6/P1PP1PPP/RNBQKBNR" + side + " KQkq - 0 1", Term::PawnThreat);
+        }
+
+        SECTION("Knight attacking a rook" + side)
+        {
+            check("rnbqkbn1/ppppppp1/8/8/7r/5N2/PPPPPPPP/RNBQKB1R" + side + " KQq - 0 1", Term::MinorOnRook);
+        }
+
+        SECTION("Knight attacking a queen" + side)
+        {
+            check("rnb1kbnr/pppp1ppp/8/4p3/7q/5N2/PPPPPPPP/RNBQKB1R" + side + " KQkq - 0 1", Term::MinorOnQueen);
+        }
+
+        SECTION("Rook attacking a queen" + side)
+        {
+            check("rnb1kbnr/pppp1ppp/8/4q3/8/8/PPPP1PPP/RNBQR1K1" + side + " kq - 0 1", Term::RookOnQueen);
+        }
+
+        // an endgame, since the hanging bonus is the one that's positive in the endgame
+        SECTION("Hanging knight" + side)
+        {
+            check("6k1/8/8/4n3/8/8/4R3/6K1" + side + " - - 0 1", Term::Hanging);
+        }
     }
 }
