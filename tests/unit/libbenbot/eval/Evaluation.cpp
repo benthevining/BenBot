@@ -17,7 +17,6 @@
 #include <cstddef>
 #include <libbenbot/data-structures/PawnTable.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
-#include <libbenbot/eval/PieceSquareTables.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/FEN.hpp>
@@ -32,15 +31,13 @@ using chess::notation::from_fen;
 
 TEST_CASE("Evaluation symmetry", TAGS)
 {
-    const auto pieceSquareTables = ben_bot::eval::PieceSquareTables::get_default();
-
     SECTION("Starting position")
     {
         static const Position startPos;
 
         REQUIRE(
-            evaluate(startPos, pieceSquareTables)
-            == evaluate(flipped(startPos), pieceSquareTables));
+            evaluate(startPos)
+            == evaluate(flipped(startPos)));
     }
 
     SECTION("Kiwipete")
@@ -48,8 +45,8 @@ TEST_CASE("Evaluation symmetry", TAGS)
         const auto position = from_fen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1").value();
 
         REQUIRE(
-            evaluate(position, pieceSquareTables)
-            == evaluate(flipped(position), pieceSquareTables));
+            evaluate(position)
+            == evaluate(flipped(position)));
     }
 
     SECTION("Mate in 1")
@@ -57,8 +54,8 @@ TEST_CASE("Evaluation symmetry", TAGS)
         const auto position = from_fen("r2qkb1r/ppp1p1pp/2n3p1/1b6/2BpP3/5Q2/PPPP1PPP/RNB1K1NR w KQkq - 0 1").value();
 
         REQUIRE(
-            evaluate(position, pieceSquareTables)
-            == evaluate(flipped(position), pieceSquareTables));
+            evaluate(position)
+            == evaluate(flipped(position)));
     }
 
     SECTION("Mate")
@@ -66,8 +63,8 @@ TEST_CASE("Evaluation symmetry", TAGS)
         const auto position = from_fen("8/8/8/8/8/8/3q4/2K1k3 w - - 0 1").value();
 
         REQUIRE(
-            evaluate(position, pieceSquareTables)
-            == evaluate(flipped(position), pieceSquareTables));
+            evaluate(position)
+            == evaluate(flipped(position)));
     }
 
     SECTION("Promoting")
@@ -75,8 +72,8 @@ TEST_CASE("Evaluation symmetry", TAGS)
         const auto position = from_fen("8/2P5/8/8/k1K5/8/8/8 w - - 0 1").value();
 
         REQUIRE(
-            evaluate(position, pieceSquareTables)
-            == evaluate(flipped(position), pieceSquareTables));
+            evaluate(position)
+            == evaluate(flipped(position)));
     }
 
     SECTION("Uneven piece mobility")
@@ -84,8 +81,8 @@ TEST_CASE("Evaluation symmetry", TAGS)
         const auto position = from_fen("r1b2rk1/pp1nqppp/2p1p3/3n4/2BP4/2N1PN2/PPQ2PPP/R4RK1 w - - 0 1").value();
 
         REQUIRE(
-            evaluate(position, pieceSquareTables)
-            == evaluate(flipped(position), pieceSquareTables));
+            evaluate(position)
+            == evaluate(flipped(position)));
     }
 
     SECTION("Pawn attacking a rook")
@@ -93,8 +90,8 @@ TEST_CASE("Evaluation symmetry", TAGS)
         const auto position = from_fen("4k3/8/2r5/3P4/8/8/8/4K3 w - - 0 1").value();
 
         REQUIRE(
-            evaluate(position, pieceSquareTables)
-            == evaluate(flipped(position), pieceSquareTables));
+            evaluate(position)
+            == evaluate(flipped(position)));
     }
 
     SECTION("Pawn forking a knight & bishop")
@@ -102,8 +99,8 @@ TEST_CASE("Evaluation symmetry", TAGS)
         const auto position = from_fen("r2qk2r/ppp2ppp/3n1b2/4P3/8/8/PPP2PPP/R2QK2R b KQkq - 0 1").value();
 
         REQUIRE(
-            evaluate(position, pieceSquareTables)
-            == evaluate(flipped(position), pieceSquareTables));
+            evaluate(position)
+            == evaluate(flipped(position)));
     }
 
     SECTION("Knight forking a rook & queen")
@@ -111,8 +108,8 @@ TEST_CASE("Evaluation symmetry", TAGS)
         const auto position = from_fen("2r1k3/3q4/1N6/8/8/8/8/4K3 w - - 0 1").value();
 
         REQUIRE(
-            evaluate(position, pieceSquareTables)
-            == evaluate(flipped(position), pieceSquareTables));
+            evaluate(position)
+            == evaluate(flipped(position)));
     }
 
     SECTION("Bishop attacking a rook")
@@ -120,8 +117,8 @@ TEST_CASE("Evaluation symmetry", TAGS)
         const auto position = from_fen("4k3/8/4r3/8/2B5/8/8/4K3 b - - 0 1").value();
 
         REQUIRE(
-            evaluate(position, pieceSquareTables)
-            == evaluate(flipped(position), pieceSquareTables));
+            evaluate(position)
+            == evaluate(flipped(position)));
     }
 
     SECTION("Rook attacking a queen")
@@ -129,8 +126,8 @@ TEST_CASE("Evaluation symmetry", TAGS)
         const auto position = from_fen("6k1/8/4q3/8/8/8/4R3/6K1 w - - 0 1").value();
 
         REQUIRE(
-            evaluate(position, pieceSquareTables)
-            == evaluate(flipped(position), pieceSquareTables));
+            evaluate(position)
+            == evaluate(flipped(position)));
     }
 
     SECTION("Rook attacked by a pawn & a knight")
@@ -138,8 +135,8 @@ TEST_CASE("Evaluation symmetry", TAGS)
         const auto position = from_fen("6k1/8/8/4r3/3P4/5N2/8/6K1 w - - 0 1").value();
 
         REQUIRE(
-            evaluate(position, pieceSquareTables)
-            == evaluate(flipped(position), pieceSquareTables));
+            evaluate(position)
+            == evaluate(flipped(position)));
     }
 
     SECTION("Hanging bishop - white to move")
@@ -147,8 +144,8 @@ TEST_CASE("Evaluation symmetry", TAGS)
         const auto position = from_fen("6k1/7p/4b3/8/8/8/4R3/6K1 w - - 0 1").value();
 
         REQUIRE(
-            evaluate(position, pieceSquareTables)
-            == evaluate(flipped(position), pieceSquareTables));
+            evaluate(position)
+            == evaluate(flipped(position)));
     }
 
     SECTION("Hanging bishop - black to move")
@@ -156,8 +153,8 @@ TEST_CASE("Evaluation symmetry", TAGS)
         const auto position = from_fen("6k1/7p/4b3/8/8/8/4R3/6K1 b - - 0 1").value();
 
         REQUIRE(
-            evaluate(position, pieceSquareTables)
-            == evaluate(flipped(position), pieceSquareTables));
+            evaluate(position)
+            == evaluate(flipped(position)));
     }
 
     SECTION("Knight attacked twice & defended once")
@@ -165,8 +162,8 @@ TEST_CASE("Evaluation symmetry", TAGS)
         const auto position = from_fen("8/8/4k3/4n3/2N5/4NN2/6K1/8 b - - 0 1").value();
 
         REQUIRE(
-            evaluate(position, pieceSquareTables)
-            == evaluate(flipped(position), pieceSquareTables));
+            evaluate(position)
+            == evaluate(flipped(position)));
     }
 
     SECTION("Hanging pieces on both sides")
@@ -175,15 +172,13 @@ TEST_CASE("Evaluation symmetry", TAGS)
         const auto position = from_fen("6k1/8/8/4n3/8/2BB4/8/6K1 w - - 0 1").value();
 
         REQUIRE(
-            evaluate(position, pieceSquareTables)
-            == evaluate(flipped(position), pieceSquareTables));
+            evaluate(position)
+            == evaluate(flipped(position)));
     }
 }
 
 TEST_CASE("Evaluation - mobility", "[eval][evaluation][mobility]")
 {
-    const auto pieceSquareTables = ben_bot::eval::PieceSquareTables::get_default();
-
     SECTION("Bishop blocked in by its own pawns")
     {
         // The only difference is the white bishop on c1 vs f1, which are mirrored squares, so
@@ -191,7 +186,7 @@ TEST_CASE("Evaluation - mobility", "[eval][evaluation][mobility]")
         const auto trapped = from_fen("2b4k/1p1p4/8/8/8/8/1P1P4/K1B5 w - - 0 1").value();
         const auto free    = from_fen("2b4k/1p1p4/8/8/8/8/1P1P4/K4B2 w - - 0 1").value();
 
-        REQUIRE(evaluate(trapped, pieceSquareTables) < evaluate(free, pieceSquareTables));
+        REQUIRE(evaluate(trapped) < evaluate(free));
     }
 }
 
@@ -202,24 +197,21 @@ namespace {
 // positions visited, so most of the evaluations after the first few are cache hits for
 // positions with the same pawns but different pieces
 void check_pawn_table_evals( // NOLINT(misc-no-recursion)
-    const Position& pos, const size_t depth,
-    const ben_bot::eval::PieceSquareTables& pst, ben_bot::PawnTable& table)
+    const Position& pos, const size_t depth, ben_bot::PawnTable& table)
 {
-    REQUIRE(evaluate(pos, pst, &table) == evaluate(pos, pst));
+    REQUIRE(evaluate(pos, &table) == evaluate(pos));
 
     if (depth == 0uz)
         return;
 
     for (const auto& move : chess::moves::generate(pos))
-        check_pawn_table_evals(after_move(pos, move), depth - 1uz, pst, table);
+        check_pawn_table_evals(after_move(pos, move), depth - 1uz, table);
 }
 
 } // namespace
 
 TEST_CASE("Evaluation - pawn table gives the same result", "[eval][evaluation][PawnTable]")
 {
-    const auto pieceSquareTables = ben_bot::eval::PieceSquareTables::get_default();
-
     SECTION("Miss, then hit")
     {
         static constexpr std::array<std::string_view, 8> fens {
@@ -238,21 +230,21 @@ TEST_CASE("Evaluation - pawn table gives the same result", "[eval][evaluation][P
 
             ben_bot::PawnTable table;
 
-            const auto uncached = evaluate(pos, pieceSquareTables);
+            const auto uncached = evaluate(pos);
 
             // empty entries must never look like a hit, even with no pawns on the board
             REQUIRE(table.probe(pos.pawnHash).key != pos.pawnHash);
 
-            REQUIRE(evaluate(pos, pieceSquareTables, &table) == uncached); // miss
+            REQUIRE(evaluate(pos, &table) == uncached); // miss
 
             REQUIRE(table.probe(pos.pawnHash).key == pos.pawnHash);
 
-            REQUIRE(evaluate(pos, pieceSquareTables, &table) == uncached); // hit
+            REQUIRE(evaluate(pos, &table) == uncached); // hit
 
             // the same position with the other side to move has the same pawn hash
             const auto nullMove = after_null_move(pos);
 
-            REQUIRE(evaluate(nullMove, pieceSquareTables, &table) == evaluate(nullMove, pieceSquareTables));
+            REQUIRE(evaluate(nullMove, &table) == evaluate(nullMove));
         }
     }
 
@@ -274,7 +266,7 @@ TEST_CASE("Evaluation - pawn table gives the same result", "[eval][evaluation][P
         for (const auto fen : fens) {
             const auto pos = from_fen(fen).value();
 
-            REQUIRE(evaluate(pos, pieceSquareTables, &table) == evaluate(pos, pieceSquareTables));
+            REQUIRE(evaluate(pos, &table) == evaluate(pos));
         }
     }
 
@@ -287,15 +279,13 @@ TEST_CASE("Evaluation - pawn table gives the same result", "[eval][evaluation][P
                  "6k1/5ppp/8/1P6/8/8/5PPP/1R4K1 w - - 0 1" }) {
             ben_bot::PawnTable table;
 
-            check_pawn_table_evals(from_fen(fen).value(), 2uz, pieceSquareTables, table);
+            check_pawn_table_evals(from_fen(fen).value(), 2uz, table);
         }
     }
 }
 
 TEST_CASE("Evaluation - threats", "[eval][evaluation][threats]")
 {
-    const auto pieceSquareTables = ben_bot::eval::PieceSquareTables::get_default();
-
     // The black knight is on e5 (attacked by the white pawn) or d5 (not attacked). These are
     // mirrored squares, so the knight's placement & mobility score the same.
 
@@ -304,7 +294,7 @@ TEST_CASE("Evaluation - threats", "[eval][evaluation][threats]")
         const auto attacked = from_fen("6k1/8/8/4n3/3P4/8/8/6K1 w - - 0 1").value();
         const auto safe     = from_fen("6k1/8/8/3n4/3P4/8/8/6K1 w - - 0 1").value();
 
-        REQUIRE(evaluate(attacked, pieceSquareTables) > evaluate(safe, pieceSquareTables));
+        REQUIRE(evaluate(attacked) > evaluate(safe));
     }
 
     SECTION("Pawn attacking a knight - black to move")
@@ -312,7 +302,7 @@ TEST_CASE("Evaluation - threats", "[eval][evaluation][threats]")
         const auto attacked = from_fen("6k1/8/8/4n3/3P4/8/8/6K1 b - - 0 1").value();
         const auto safe     = from_fen("6k1/8/8/3n4/3P4/8/8/6K1 b - - 0 1").value();
 
-        REQUIRE(evaluate(attacked, pieceSquareTables) < evaluate(safe, pieceSquareTables));
+        REQUIRE(evaluate(attacked) < evaluate(safe));
     }
 
     // In the rest of these, the black piece is on e6 (attacked) or d6 (not attacked), which are
@@ -323,7 +313,7 @@ TEST_CASE("Evaluation - threats", "[eval][evaluation][threats]")
         const auto attacked = from_fen("6k1/8/4r3/8/5N2/8/8/6K1 w - - 0 1").value();
         const auto safe     = from_fen("6k1/8/3r4/8/5N2/8/8/6K1 w - - 0 1").value();
 
-        REQUIRE(evaluate(attacked, pieceSquareTables) > evaluate(safe, pieceSquareTables));
+        REQUIRE(evaluate(attacked) > evaluate(safe));
     }
 
     SECTION("Bishop attacking a rook")
@@ -331,7 +321,7 @@ TEST_CASE("Evaluation - threats", "[eval][evaluation][threats]")
         const auto attacked = from_fen("6k1/8/4r3/8/2B5/8/8/6K1 b - - 0 1").value();
         const auto safe     = from_fen("6k1/8/3r4/8/2B5/8/8/6K1 b - - 0 1").value();
 
-        REQUIRE(evaluate(attacked, pieceSquareTables) < evaluate(safe, pieceSquareTables));
+        REQUIRE(evaluate(attacked) < evaluate(safe));
     }
 
     SECTION("Knight attacking a queen")
@@ -339,7 +329,7 @@ TEST_CASE("Evaluation - threats", "[eval][evaluation][threats]")
         const auto attacked = from_fen("6k1/8/4q3/6N1/8/8/PPP5/1K6 w - - 0 1").value();
         const auto safe     = from_fen("6k1/8/3q4/6N1/8/8/PPP5/1K6 w - - 0 1").value();
 
-        REQUIRE(evaluate(attacked, pieceSquareTables) > evaluate(safe, pieceSquareTables));
+        REQUIRE(evaluate(attacked) > evaluate(safe));
     }
 
     SECTION("Rook attacking a queen")
@@ -347,27 +337,25 @@ TEST_CASE("Evaluation - threats", "[eval][evaluation][threats]")
         const auto attacked = from_fen("6k1/8/4q3/8/8/8/4R3/6K1 w - - 0 1").value();
         const auto safe     = from_fen("6k1/8/3q4/8/8/8/4R3/6K1 w - - 0 1").value();
 
-        REQUIRE(evaluate(attacked, pieceSquareTables) > evaluate(safe, pieceSquareTables));
+        REQUIRE(evaluate(attacked) > evaluate(safe));
     }
 }
 
 TEST_CASE("Evaluation - hanging pieces", "[eval][evaluation][threats]")
 {
-    const auto pieceSquareTables = ben_bot::eval::PieceSquareTables::get_default();
-
     // In each pair, the black knight is on d5 or e5, which are mirrored squares, and the white
     // knights on e3 & f3 attack d5 & e5 once each. The pairs differ in how the black knight is
     // attacked & defended. Each pair is checked with white to move, with black to move, and with
     // the colours swapped (so that black is the attacker).
 
     // hangingFEN & safeFEN have white to move
-    auto check_pair = [&pieceSquareTables](const std::string_view hangingFEN, const std::string_view safeFEN) {
+    auto check_pair = [](const std::string_view hangingFEN, const std::string_view safeFEN) {
         const auto hanging = from_fen(hangingFEN).value();
         const auto safe    = from_fen(safeFEN).value();
 
-        REQUIRE(evaluate(hanging, pieceSquareTables) > evaluate(safe, pieceSquareTables));
+        REQUIRE(evaluate(hanging) > evaluate(safe));
 
-        REQUIRE(evaluate(flipped(hanging), pieceSquareTables) > evaluate(flipped(safe), pieceSquareTables));
+        REQUIRE(evaluate(flipped(hanging)) > evaluate(flipped(safe)));
 
         auto black_to_move = [](const std::string_view fen) {
             auto str = std::string { fen };
@@ -376,8 +364,8 @@ TEST_CASE("Evaluation - hanging pieces", "[eval][evaluation][threats]")
         };
 
         REQUIRE(
-            evaluate(black_to_move(hangingFEN), pieceSquareTables)
-            < evaluate(black_to_move(safeFEN), pieceSquareTables));
+            evaluate(black_to_move(hangingFEN))
+            < evaluate(black_to_move(safeFEN)));
     };
 
     SECTION("Undefended knight vs knight defended by a pawn")

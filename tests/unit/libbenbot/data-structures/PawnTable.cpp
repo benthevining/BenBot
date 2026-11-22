@@ -15,10 +15,12 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstdint>
 #include <libbenbot/data-structures/PawnTable.hpp>
+#include <libbenbot/eval/TaperedScore.hpp>
 #include <libchess/board/Bitboard.hpp>
 
 inline constexpr auto TAGS { "[data-structures][PawnTable]" };
 
+using ben_bot::eval::TaperedScore;
 using ben_bot::PawnEntry;
 using ben_bot::PawnTable;
 
@@ -47,21 +49,21 @@ TEST_CASE("Pawn table - entries start empty & clear() empties them", TAGS)
 
     REQUIRE(table.probe(key).key == 0u);
     REQUIRE(table.probe(key).passers.none());
-    REQUIRE(table.probe(key).score == 0);
+    REQUIRE(table.probe(key).score == TaperedScore { });
 
     table.probe(key) = PawnEntry {
         .key     = key,
         .passers = chess::board::Bitboard { UINT64_C(0x0000100000000800) },
-        .score   = -42
+        .score   = TaperedScore { .mg = -42, .eg = 17 }
     };
 
     REQUIRE(table.probe(key).key == key);
     REQUIRE(table.probe(key).passers.count() == 2uz);
-    REQUIRE(table.probe(key).score == -42);
+    REQUIRE(table.probe(key).score == TaperedScore { .mg = -42, .eg = 17 });
 
     table.clear();
 
     REQUIRE(table.probe(key).key == 0u);
     REQUIRE(table.probe(key).passers.none());
-    REQUIRE(table.probe(key).score == 0);
+    REQUIRE(table.probe(key).score == TaperedScore { });
 }

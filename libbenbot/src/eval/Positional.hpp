@@ -14,6 +14,9 @@
 
 #pragma once
 
+#include <libbenbot/eval/DefaultWeights.hpp>
+#include <libbenbot/eval/TaperedScore.hpp>
+#include <libbenbot/eval/Weights.hpp>
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/Fills.hpp>
 #include <libchess/board/Masks.hpp>
@@ -62,7 +65,7 @@ struct SquareControl final {
 }
 
 [[nodiscard, gnu::pure]] inline auto score_center_control(
-    const Position& position, const SquareControl& control) noexcept -> int
+    const Position& position, const SquareControl& control) noexcept -> TaperedScore
 {
     const auto whiteControls = static_cast<int>((masks::CENTER & control.white).count());
     const auto blackControls = static_cast<int>((masks::CENTER & control.black).count());
@@ -72,14 +75,14 @@ struct SquareControl final {
     const auto ourControl   = isWhite ? whiteControls : blackControls;
     const auto theirControl = isWhite ? blackControls : whiteControls;
 
-    return ourControl - theirControl;
+    return DEFAULT_WEIGHTS.get(Term::CenterControl) * (ourControl - theirControl);
 }
 
 // a crude way to evaluate "space":
 // we take each side's pawn rearfill, and look at how many more of those squares are controlled by that side than by their opponent
 // this serves to discourage the engine from overextending, but also to incentivize expanding the pawn line to claim more space
 [[nodiscard, gnu::pure]] inline auto score_space(
-    const Position& position, const SquareControl& control) noexcept -> int
+    const Position& position, const SquareControl& control) noexcept -> TaperedScore
 {
     const auto behindWhitePawns = chess::board::fills::pawn_rear<Color::White>(position.whitePieces.pawns);
     const auto behindBlackPawns = chess::board::fills::pawn_rear<Color::Black>(position.blackPieces.pawns);
@@ -97,11 +100,11 @@ struct SquareControl final {
     const auto ourSquares   = isWhite ? whiteSquares : blackSquares;
     const auto theirSquares = isWhite ? blackSquares : whiteSquares;
 
-    return (ourSquares - theirSquares) * 2;
+    return DEFAULT_WEIGHTS.get(Term::Space) * (ourSquares - theirSquares);
 }
 
 [[nodiscard, gnu::pure]] inline auto score_positional(
-    const Position& position, const SquareControl& control) noexcept -> int
+    const Position& position, const SquareControl& control) noexcept -> TaperedScore
 {
     return score_center_control(position, control)
          + score_space(position, control);

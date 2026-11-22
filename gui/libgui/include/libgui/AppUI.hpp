@@ -25,7 +25,6 @@
 #include <libgui/BoardEditor.hpp>
 #include <libgui/EnginePanel.hpp>
 #include <libgui/GameViewer.hpp>
-#include <libgui/PSTEditor.hpp>
 #include <libgui/PieceTextures.hpp>
 #include <string>
 #include <string_view>
@@ -80,9 +79,6 @@ struct AppState final {
 
     /** The state of the PGN game viewer. */
     GameViewerState gameViewer;
-
-    /** The state of the piece square table editor. */
-    PSTEditorState pstEditor;
 
     /** The piece sprite texture. This is created by the main application
         after the rendering backend is initialized, and is not serialized.
