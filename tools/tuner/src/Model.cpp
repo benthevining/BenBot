@@ -49,13 +49,18 @@ namespace {
         const auto scale = k / 400.;
 
         if (loss == Loss::CrossEntropy) {
-            // keep log() finite for positions that the model is certain about
-            static constexpr auto TINY = 1e-12;
+            // log(1 + exp(x)), without overflow or losing precision when the model is nearly certain
+            const auto softplus = [](const double x) {
+                return x > 0. ? x + std::log1p(std::exp(-x)) : std::log1p(std::exp(x));
+            };
 
-            const auto clamped = std::clamp(expected, TINY, 1. - TINY);
+            // -log(s) = softplus(-x) and -log(1 - s) = softplus(x), where s = sigmoid(x). Computing
+            // these directly, rather than taking the log of 1 - s, keeps the loss accurate for the
+            // positions that the model is nearly sure about
+            const auto x = scale * eval;
 
             return {
-                .loss       = -((result * std::log(clamped)) + ((1. - result) * std::log(1. - clamped))),
+                .loss       = (result * softplus(-x)) + ((1. - result) * softplus(x)),
                 .derivative = (expected - result) * scale
             };
         }
