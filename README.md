@@ -6,7 +6,7 @@ This is a command-line chess playing program, designed to be used with a chess G
 
 ## Strength
 
-We are currently using a handcrafted evaluation, and our search function is still in its early days. The engine's ELO is approximately 1700-1800.
+We are currently using a handcrafted evaluation, and our search function is still in its early days. The engine's Elo is estimated at 2197 ± 294 (v1.7.5-772-gcce89f39), from a gauntlet against Stockfish's `UCI_Elo` levels (see `tests/fastchess/README.md`).
 
 ## Repository layout
 
