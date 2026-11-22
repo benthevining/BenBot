@@ -988,7 +988,12 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
     // the last depth that was fully searched, which is the depth we report
     auto completedDepth { 0uz };
 
-    while (options.infinite or pondering.load(memory_order::acquire) or depth <= options.depth) {
+    // the deepest iteration we'll search. Without this limit, when we're being mated each
+    // iteration only searches a handful of nodes, so we'd keep going far past MAX_PLY
+    const auto maxDepth = std::min(options.depth, MAX_DEPTH);
+
+    while ((options.infinite or pondering.load(memory_order::acquire) or depth <= maxDepth)
+           and depth <= MAX_DEPTH) {
         if (interrupter.should_abort(0uz))
             break;
 
@@ -1050,7 +1055,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         // in the infinite case, we do allow this repetition because we want to print the
         // final output before we're going to spin, then the stop command will print the
         // final info again and the bestmove
-        if (depth < options.depth or options.infinite or pondering.load(memory_order::acquire)) {
+        if (depth < maxDepth or options.infinite or pondering.load(memory_order::acquire)) {
             callbacks.iteration_complete(
                 result.to_cb_result(depth, transTable.hashfull()));
         }
