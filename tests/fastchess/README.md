@@ -46,6 +46,8 @@ The main options are `--levels` (Stockfish levels to play, from 1320 to 3190), `
 
 With the defaults, a run takes about 5 hours on 8 cores.
 
+The `estimate_elo` workflow runs it in CI & opens a PR that updates the Elo in the main README. It runs for each new release, & can be started by hand on any branch or tag that has the workflow, with other levels, game counts or time controls. Each level is played on its own runner (about 2.5 hours each with the defaults), & a level that hits the time limit still counts the games it finished.
+
 ## Dependencies
 
 ### Programs
