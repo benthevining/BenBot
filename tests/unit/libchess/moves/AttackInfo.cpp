@@ -88,6 +88,40 @@ inline constexpr std::array FENS {
     result.all = result.pawns | result.knights | result.bishops
                | result.rooks | result.queens | result.king;
 
+    // brute force: count the attackers of each square, one piece at a time
+    std::array<int, 64> numAttackers { };
+
+    auto add_piece = [&numAttackers](const Bitboard attacks) {
+        for (const auto square : attacks.squares())
+            ++numAttackers.at(square.index());
+    };
+
+    for (const auto square : pieces.pawns.squares()) {
+        const auto pawn = Bitboard::from_square(square);
+
+        add_piece(side == Color::White
+                      ? patterns::pawn_attacks<Color::White>(pawn)
+                      : patterns::pawn_attacks<Color::Black>(pawn));
+    }
+
+    for (const auto square : pieces.knights.squares())
+        add_piece(patterns::knight(Bitboard::from_square(square)));
+
+    for (const auto square : pieces.bishops.squares())
+        add_piece(pseudo_legal::bishop(Bitboard::from_square(square), emptySquares, { }));
+
+    for (const auto square : pieces.rooks.squares())
+        add_piece(pseudo_legal::rook(Bitboard::from_square(square), emptySquares, { }));
+
+    for (const auto square : pieces.queens.squares())
+        add_piece(pseudo_legal::queen(Bitboard::from_square(square), emptySquares, { }));
+
+    add_piece(patterns::king(pieces.king));
+
+    for (const auto square : chess::board::masks::ALL.squares())
+        if (numAttackers.at(square.index()) >= 2)
+            result.twice.set(square);
+
     return result;
 }
 
@@ -184,6 +218,24 @@ TEST_CASE("AttackInfo - defended pieces are included", TAGS)
 
     REQUIRE(info.white.pawns == chess::board::masks::ranks::THREE);
     REQUIRE(info.black.pawns == chess::board::masks::ranks::SIX);
+}
+
+TEST_CASE("AttackInfo - squares attacked twice", TAGS)
+{
+    // the white knights on b1 & c4 both attack d2 & a3, and the pawns on c3 & e3 both attack d4
+    const auto position = from_fen("4k3/8/8/8/2N5/2P1P3/8/1N5K w - - 0 1").value();
+
+    const auto info = compute_attacks(position);
+
+    REQUIRE(info.white.twice.test(Square { File::D, Rank::Two }));
+    REQUIRE(info.white.twice.test(Square { File::A, Rank::Three }));
+    REQUIRE(info.white.twice.test(Square { File::D, Rank::Four }));
+
+    // only the c3 pawn attacks b4, and only the b1 knight attacks c3
+    REQUIRE_FALSE(info.white.twice.test(Square { File::B, Rank::Four }));
+    REQUIRE_FALSE(info.white.twice.test(Square { File::C, Rank::Three }));
+
+    REQUIRE(info.black.twice.none());
 }
 
 TEST_CASE("AttackInfo - per-piece callback", TAGS)
