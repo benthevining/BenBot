@@ -16,6 +16,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstddef>
 #include <libbenbot/data-structures/PawnTable.hpp>
+#include <libbenbot/eval/DefaultWeights.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Trace.hpp>
 #include <libbenbot/eval/Weights.hpp>
@@ -395,5 +396,72 @@ TEST_CASE("Evaluation - hanging pieces", "[eval][evaluation][threats]")
         check_pair(
             "8/8/4k3/4n3/2N5/4NN2/6K1/8 w - - 0 1",
             "8/8/4k3/3n4/2N5/4NN2/6K1/8 w - - 0 1");
+    }
+}
+
+TEST_CASE("Evaluation - threats raise the eval", "[eval][evaluation][threats]")
+{
+    // The threat weights are tuned, and some of them are slightly negative in one phase: the minor
+    // & rook threats in the endgame, and the hanging bonus in the middlegame (a hanging piece is
+    // often attacked by a pawn too, which already scores). But in the phase where each one's
+    // weight is positive, a threat should be worth something to the side making it. Each of these
+    // positions has a threat by White, and its eval is compared with the eval of the same position
+    // with that threat's weight set to 0, so the check doesn't depend on any other eval terms.
+
+    using ben_bot::eval::count_of;
+    using ben_bot::eval::DEFAULT_WEIGHTS;
+    using ben_bot::eval::evaluate_traced;
+    using ben_bot::eval::offset_of;
+    using ben_bot::eval::Term;
+
+    auto check = [](const std::string_view fen, const Term term) {
+        INFO(fen);
+
+        const auto position = from_fen(fen).value();
+        const auto trace    = evaluate_traced(position);
+
+        REQUIRE(trace.score(DEFAULT_WEIGHTS) == evaluate(position));
+        REQUIRE(trace.coefficient(offset_of(term)) > 0);
+
+        auto withoutThreat = DEFAULT_WEIGHTS;
+
+        for (auto i = 0uz; i < count_of(term); ++i)
+            withoutThreat.values.at(offset_of(term) + i) = { };
+
+        // scores are from the side to move's point of view
+        if (position.is_white_to_move())
+            REQUIRE(trace.score(DEFAULT_WEIGHTS) > trace.score(withoutThreat));
+        else
+            REQUIRE(trace.score(DEFAULT_WEIGHTS) < trace.score(withoutThreat));
+    };
+
+    for (const auto* const toMove : { " w", " b" }) {
+        const std::string side { toMove };
+
+        SECTION("Pawn attacking a knight" + side)
+        {
+            check("r1bqkb1r/pppp1ppp/5n2/4p3/2n1P3/1P6/P1PP1PPP/RNBQKBNR" + side + " KQkq - 0 1", Term::PawnThreat);
+        }
+
+        SECTION("Knight attacking a rook" + side)
+        {
+            check("rnbqkbn1/ppppppp1/8/8/7r/5N2/PPPPPPPP/RNBQKB1R" + side + " KQq - 0 1", Term::MinorOnRook);
+        }
+
+        SECTION("Knight attacking a queen" + side)
+        {
+            check("rnb1kbnr/pppp1ppp/8/4p3/7q/5N2/PPPPPPPP/RNBQKB1R" + side + " KQkq - 0 1", Term::MinorOnQueen);
+        }
+
+        SECTION("Rook attacking a queen" + side)
+        {
+            check("rnb1kbnr/pppp1ppp/8/4q3/8/8/PPPP1PPP/RNBQR1K1" + side + " kq - 0 1", Term::RookOnQueen);
+        }
+
+        // an endgame, since the hanging bonus is the one that's positive in the endgame
+        SECTION("Hanging knight" + side)
+        {
+            check("6k1/8/8/4n3/8/8/4R3/6K1" + side + " - - 0 1", Term::Hanging);
+        }
     }
 }
