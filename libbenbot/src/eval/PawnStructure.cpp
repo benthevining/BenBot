@@ -13,9 +13,12 @@
  */
 
 #include "eval/PawnStructure.hpp"
-#include <array>
+#include <cassert>
 #include <cmath> // IWYU pragma: keep - for std::abs()
 #include <libbenbot/data-structures/PawnTable.hpp>
+#include <libbenbot/eval/DefaultWeights.hpp>
+#include <libbenbot/eval/TaperedScore.hpp>
+#include <libbenbot/eval/Weights.hpp>
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/Distances.hpp> // IWYU pragma: keep - for chebyshev_distance()
 #include <libchess/board/File.hpp>
@@ -42,13 +45,13 @@ namespace {
     template <Color Side>
     [[nodiscard, gnu::pure]] auto score_side_passed_pawns(
         const Position& position, const Bitboard passers)
-        -> int
+        -> TaperedScore
     {
         static constexpr auto promotionRank = board::back_rank_for(chess::pieces::other_side<Side>());
 
         const auto ourPawns = position.pieces_for<Side>().pawns;
 
-        auto score { 0 };
+        TaperedScore score;
 
         for (const auto pawn : passers.subboards()) {
             const auto square = board::Square::from_index(pawn.first());
@@ -56,11 +59,10 @@ namespace {
             const auto squaresFromPromoting = std::abs(
                 static_cast<int>(square.rank) - static_cast<int>(promotionRank));
 
-            static constexpr std::array bonuses {
-                10000, 100, 85, 70, 60, 50, 35
-            };
+            // a pawn can't be on its promotion rank
+            assert(squaresFromPromoting > 0);
 
-            score += bonuses.at(static_cast<size_t>(squaresFromPromoting));
+            score += DEFAULT_WEIGHTS.get(Term::PassedPawn, static_cast<size_t>(squaresFromPromoting - 1));
 
             namespace shifts = board::shifts;
 
@@ -72,9 +74,9 @@ namespace {
 
             for (const auto protector : (ourPawns & protectorMask).subboards()) {
                 if ((protector & passers).any()) // protected passed pawns
-                    score += 15;
+                    score += DEFAULT_WEIGHTS.get(Term::PasserProtectedByPasser);
                 else
-                    score += 10; // protected by a non-passed pawn
+                    score += DEFAULT_WEIGHTS.get(Term::PasserProtectedByPawn); // protected by a non-passed pawn
             }
         }
 
@@ -85,20 +87,16 @@ namespace {
     template <Color Side>
     [[nodiscard, gnu::pure]] auto score_side_passer_piece_terms(
         const Position& position, const Bitboard passers) noexcept
-        -> int
+        -> TaperedScore
     {
         static constexpr auto OtherSide = chess::pieces::other_side<Side>();
 
         static constexpr auto promotionRank = board::back_rank_for(OtherSide);
 
-        static constexpr auto ROOK_BEHIND_BONUS           = 25;
-        static constexpr auto KING_ESCORT_BONUS           = 2;
-        static constexpr auto ENEMY_KING_BLOCKING_PENALTY = 50;
-
         const auto& ourPieces   = position.pieces_for<Side>();
         const auto& theirPieces = position.pieces_for<OtherSide>();
 
-        auto score { 0 };
+        TaperedScore score;
 
         const auto rooks = ourPieces.rooks;
         const auto king  = ourPieces.get_king_location();
@@ -110,9 +108,9 @@ namespace {
 
             // bonus for friendly rook behind the pawn, penalty for enemy rook behind the pawn
             if ((mask & rooks).any())
-                score += ROOK_BEHIND_BONUS;
+                score += DEFAULT_WEIGHTS.get(Term::RookBehindPasser);
             else if ((mask & theirPieces.rooks).any())
-                score -= ROOK_BEHIND_BONUS;
+                score -= DEFAULT_WEIGHTS.get(Term::RookBehindPasser);
 
             const auto square = board::Square::from_index(pawn.first());
 
@@ -122,7 +120,7 @@ namespace {
 
                 const auto kingDist = chebyshev_distance(king, square);
 
-                score += static_cast<int>(MAX_DIST - kingDist) * KING_ESCORT_BONUS;
+                score += DEFAULT_WEIGHTS.get(Term::KingEscortsPasser) * static_cast<int>(MAX_DIST - kingDist);
             }
 
             // penalty for enemy king on promotion square
@@ -130,16 +128,16 @@ namespace {
             // by seeing that if the enemy king can blockade the promotion square, then we're
             // less likely to be able to force promotion
             if (enemyKing == board::Square { .file = square.file, .rank = promotionRank })
-                score -= ENEMY_KING_BLOCKING_PENALTY;
+                score += DEFAULT_WEIGHTS.get(Term::EnemyKingBlocksPasser);
         }
 
         return score;
     }
 
     template <Color Side>
-    [[nodiscard, gnu::pure]] auto score_side_isolated_pawns(const Position& position) noexcept -> int
+    [[nodiscard, gnu::pure]] auto score_side_isolated_pawns(const Position& position) noexcept -> TaperedScore
     {
-        auto score { 0 };
+        TaperedScore score;
 
         const auto ourPawns = position.pieces_for<Side>().pawns;
 
@@ -148,16 +146,16 @@ namespace {
                 chess::moves::patterns::pawn_attacks<Side>(pawn));
 
             if ((mask & ourPawns).none())
-                score -= 20;
+                score += DEFAULT_WEIGHTS.get(Term::IsolatedPawn);
         }
 
         return score;
     }
 
     template <Color Side>
-    [[nodiscard, gnu::pure]] auto score_side_doubled_pawns(const Position& position) noexcept -> int
+    [[nodiscard, gnu::pure]] auto score_side_doubled_pawns(const Position& position) noexcept -> TaperedScore
     {
-        auto score { 0 };
+        TaperedScore score;
 
         const auto pawns = position.pieces_for<Side>().pawns;
 
@@ -165,25 +163,25 @@ namespace {
             const auto pawnsOnFile = (pawns & board::masks::files::get(file)).count();
 
             if (pawnsOnFile > 1uz)
-                score -= 10;
+                score += DEFAULT_WEIGHTS.get(Term::DoubledPawn);
         }
 
         return score;
     }
 
     template <Color Side>
-    [[nodiscard, gnu::pure]] auto score_side_backward_pawns(const Position& position) noexcept -> int
+    [[nodiscard, gnu::pure]] auto score_side_backward_pawns(const Position& position) noexcept -> TaperedScore
     {
-        return static_cast<int>(position.get_backward_pawns<Side>().count()) * -20;
+        return DEFAULT_WEIGHTS.get(Term::BackwardPawn) * static_cast<int>(position.get_backward_pawns<Side>().count());
     }
 
     template <Color Side>
-    [[nodiscard, gnu::pure]] auto score_side_pawn_chains(const Position& position) noexcept -> int
+    [[nodiscard, gnu::pure]] auto score_side_pawn_chains(const Position& position) noexcept -> TaperedScore
     {
         // for each pawn, we award a bonus for each square it attacks that has a friendly pawn on it
         // this has the effect of awarding a larger bonus for larger pawn chains
 
-        auto score { 0 };
+        TaperedScore score;
 
         const auto pawns = position.pieces_for<Side>().pawns;
 
@@ -192,7 +190,7 @@ namespace {
 
             const auto defended = static_cast<int>((pawns & attacks).count());
 
-            score += (defended * 10);
+            score += DEFAULT_WEIGHTS.get(Term::PawnChain) * defended;
         }
 
         return score;
@@ -201,7 +199,7 @@ namespace {
     template <Color Side>
     [[nodiscard, gnu::pure]] auto score_side_pawns(
         const Position& position, const Bitboard passers)
-        -> int
+        -> TaperedScore
     {
         return score_side_passed_pawns<Side>(position, passers)
              + score_side_isolated_pawns<Side>(position)
@@ -226,13 +224,13 @@ auto score_pawns_only(const Position& position) -> PawnTerms
 
 auto score_passer_piece_terms(
     const Position& position, const Bitboard passers) noexcept
-    -> int
+    -> TaperedScore
 {
     return score_side_passer_piece_terms<Color::White>(position, passers & position.whitePieces.pawns)
          - score_side_passer_piece_terms<Color::Black>(position, passers & position.blackPieces.pawns);
 }
 
-auto score_pawn_structure(const Position& position, PawnTable* pawnTable) -> int
+auto score_pawn_structure(const Position& position, PawnTable* pawnTable) -> TaperedScore
 {
     const auto pawnTerms = [&position, pawnTable] {
         if (pawnTable == nullptr)

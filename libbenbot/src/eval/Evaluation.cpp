@@ -20,14 +20,17 @@
 #include "eval/Positional.hpp"
 #include "eval/Threats.hpp"
 #include <algorithm>
+#include <cassert>
+#include <libbenbot/eval/DefaultWeights.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Material.hpp>
-#include <libbenbot/eval/PieceSquareTables.hpp>
 #include <libbenbot/eval/Score.hpp>
 #include <libbenbot/eval/TaperedScore.hpp>
+#include <libbenbot/eval/Weights.hpp>
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/Distances.hpp>
 #include <libchess/board/File.hpp>
+#include <libchess/board/Flips.hpp>
 #include <libchess/board/Masks.hpp>
 #include <libchess/board/Pieces.hpp>
 #include <libchess/board/Square.hpp>
@@ -44,6 +47,7 @@ namespace {
 
     // game phase is roughly determined based on the total amount of non-pawn material left on the board
     // we say that the endgame has begun once the queens & two pairs of minor pieces have been traded
+    // (the phase uses the fixed piece_values, not the eval's material weights)
     inline constexpr int MAX_PHASE
         = ((piece_values::ROOK * 2) + piece_values::BISHOP + piece_values::KNIGHT) * 2;
 
@@ -65,22 +69,64 @@ namespace {
 
     namespace masks = chess::board::masks;
 
+    // the material & piece square table terms for one side, from that side's point of view
+    template <bool IsBlack>
+    [[nodiscard, gnu::pure]] auto score_side_pieces(
+        const Pieces& pieces) noexcept
+        -> TaperedScore
+    {
+        TaperedScore score;
+
+        for (const auto type : { PieceType::Pawn, PieceType::Knight, PieceType::Bishop,
+                 PieceType::Rook, PieceType::Queen, PieceType::King }) {
+            auto board = pieces.get_type(type);
+
+            if (type != PieceType::King)
+                score += DEFAULT_WEIGHTS.material(type) * static_cast<int>(board.count());
+
+            // the tables are from White's point of view
+            if constexpr (IsBlack) {
+                board = chess::board::flips::vertical(board);
+            }
+
+            const auto pst = DEFAULT_WEIGHTS.pst(type);
+
+            for (const auto idx : board.indices()) {
+                assert(idx < pst.size());
+                score += pst[idx];
+            }
+        }
+
+        return score;
+    }
+
+    // material & piece placement
+    [[nodiscard, gnu::pure]] auto score_pieces(
+        const Position& position) noexcept
+        -> TaperedScore
+    {
+        if (position.is_black_to_move()) {
+            return score_side_pieces<true>(position.our_pieces())
+                 - score_side_pieces<false>(position.their_pieces());
+        }
+
+        return score_side_pieces<false>(position.our_pieces())
+             - score_side_pieces<true>(position.their_pieces());
+    }
+
     // awards a bonus for rooks on open or half-open files
     [[nodiscard, gnu::pure]] auto score_rook_files(
         const Position& position) noexcept
-        -> int
+        -> TaperedScore
     {
-        static constexpr auto HALF_OPEN_FILE_BONUS = 30;
-        static constexpr auto OPEN_FILE_BONUS      = 70;
-
         auto score_side_rooks = [&position](const Pieces& pieces) {
-            auto score { 0 };
+            TaperedScore score;
 
             for (const auto square : pieces.rooks.squares()) {
                 if (position.is_file_half_open(square.file))
-                    score += HALF_OPEN_FILE_BONUS;
+                    score += DEFAULT_WEIGHTS.get(Term::RookHalfOpenFile);
                 else if (position.is_file_open(square.file))
-                    score += OPEN_FILE_BONUS;
+                    score += DEFAULT_WEIGHTS.get(Term::RookOpenFile);
             }
 
             return score;
@@ -92,12 +138,10 @@ namespace {
     // bonus for connected rooks
     [[nodiscard, gnu::pure]] auto score_connected_rooks(
         const Position& position) noexcept
-        -> int
+        -> TaperedScore
     {
-        static constexpr auto OPEN_FILE_BONUS = 10; // extra bonus for connected rooks on open file
-
         auto score_connected_rooks = [&position](const Pieces& pieces) {
-            auto score { 0 };
+            TaperedScore score;
 
             // I originally tried adding a smaller bonus for connected rooks on any rank or file,
             // but experimental results showed that the engine was stronger with just the bonus
@@ -106,7 +150,7 @@ namespace {
             for (const auto file : position.get_open_files()) {
                 if (const auto mask = masks::files::get(file);
                     (mask & pieces.rooks).count() > 1uz) {
-                    score += OPEN_FILE_BONUS;
+                    score += DEFAULT_WEIGHTS.get(Term::ConnectedRooksOpenFile);
                 }
             }
 
@@ -121,34 +165,28 @@ namespace {
         const Position& position) noexcept
         -> TaperedScore
     {
-        static constexpr auto OPEN_KING_PENALTY        = -50;
-        static constexpr auto STRANDED_KING_PENALTY    = -75;
-        static constexpr auto ATTACKING_KNIGHT_PENALTY = -3;
-        static constexpr auto ATTACKING_QUEEN_PENALTY  = -7;
-
         auto score_side_king = [&position,
                                    allPawns = position.whitePieces.pawns | position.blackPieces.pawns](
                                    const Pieces& pieces, const chess::game::CastlingRights& castlingRights,
                                    const Pieces& enemyPieces) {
-            // open/stranded king penalties are middlegame only
             TaperedScore score;
 
             const auto location = pieces.get_king_location();
 
             // king on open file or diagonal
             if (position.is_file_half_open(location.file))
-                score.mg += (OPEN_KING_PENALTY / 2);
+                score += DEFAULT_WEIGHTS.get(Term::KingHalfOpenFile);
             else if (position.is_file_open(location.file)
                      or (masks::diagonal(location) & allPawns).none()
                      or (masks::antidiagonal(location) & allPawns).none())
-                score.mg += OPEN_KING_PENALTY;
+                score += DEFAULT_WEIGHTS.get(Term::KingOpenLine);
 
             using chess::board::File;
 
             // king stranded in center without castling rights
             if (castlingRights.neither()
                 and (location.file == File::D or location.file == File::E))
-                score.mg += STRANDED_KING_PENALTY;
+                score += DEFAULT_WEIGHTS.get(Term::KingStranded);
 
             // enemy knights & queens near king
 
@@ -158,7 +196,7 @@ namespace {
                 const auto distance = knight_distance(location, knightPos);
 
                 // penalty increases with smaller distance
-                score += TaperedScore::both(static_cast<int>(MAX_DISTANCE - distance) * ATTACKING_KNIGHT_PENALTY);
+                score += DEFAULT_WEIGHTS.get(Term::KnightTropism) * static_cast<int>(MAX_DISTANCE - distance);
             }
 
             for (const auto queenPos : enemyPieces.queens.squares()) {
@@ -167,7 +205,7 @@ namespace {
                 const auto distance = chebyshev_distance(location, queenPos);
 
                 // penalty increases with smaller distance
-                score += TaperedScore::both(static_cast<int>(MAX_DISTANCE - distance) * ATTACKING_QUEEN_PENALTY);
+                score += DEFAULT_WEIGHTS.get(Term::QueenTropism) * static_cast<int>(MAX_DISTANCE - distance);
             }
 
             static constexpr auto STARTING_NON_PAWN_MATERIAL
@@ -193,37 +231,23 @@ namespace {
     }
 
     using chess::moves::AttackInfo;
-    using PieceType = chess::pieces::Type;
 
-    // Mobility weights. Each piece gets (number of moves - baseline) * weight, so that an
-    // average piece scores about 0. We count pseudo-legal moves, not counting squares
-    // occupied by our own pieces or attacked by enemy pawns.
+    // Each piece's mobility bonus is looked up by its number of moves. We count pseudo-legal
+    // moves, not counting squares occupied by our own pieces or attacked by enemy pawns.
     namespace mobility {
 
-        struct Weights final {
-            int baseline;
-            int middlegame;
-            int endgame;
-        };
-
-        inline constexpr Weights KNIGHT { .baseline = 4, .middlegame = 4, .endgame = 4 };
-        inline constexpr Weights BISHOP { .baseline = 6, .middlegame = 5, .endgame = 5 };
-        inline constexpr Weights ROOK { .baseline = 7, .middlegame = 2, .endgame = 4 };
-        inline constexpr Weights QUEEN { .baseline = 13, .middlegame = 1, .endgame = 2 };
-
-        [[nodiscard, gnu::const]] constexpr auto weights_for(const PieceType type) noexcept
-            -> const Weights&
+        [[nodiscard, gnu::const]] constexpr auto term_for(const PieceType type) noexcept -> Term
         {
             if (type == PieceType::Knight)
-                return KNIGHT;
+                return Term::KnightMobility;
 
             if (type == PieceType::Bishop)
-                return BISHOP;
+                return Term::BishopMobility;
 
             if (type == PieceType::Rook)
-                return ROOK;
+                return Term::RookMobility;
 
-            return QUEEN;
+            return Term::QueenMobility;
         }
 
         // Adds up each side's mobility bonus. compute_attacks() calls this once for each
@@ -251,11 +275,9 @@ namespace {
 
                 const auto mobilityArea = (friendly | enemyPawnAttacks).inverse();
 
-                const auto& weights = weights_for(type);
+                const auto numMoves = (attacks & mobilityArea).count();
 
-                const auto numMoves = static_cast<int>((attacks & mobilityArea).count()) - weights.baseline;
-
-                (isWhite ? white : black) += TaperedScore { .mg = weights.middlegame, .eg = weights.endgame } * numMoves;
+                (isWhite ? white : black) += DEFAULT_WEIGHTS.get(term_for(type), numMoves);
             }
         };
 
@@ -274,7 +296,7 @@ namespace {
 
     [[nodiscard, gnu::pure]] auto score_squares_controlled_around_kings(
         const Position& position, const AttackInfo& attacks, const detail::SquareControl& control) noexcept
-        -> int
+        -> TaperedScore
     {
         // We give a penalty if the opponent attacks more squares around our king than we do.
         // One detail here is that in calculating the attack sets, the defender's king isn't
@@ -300,28 +322,28 @@ namespace {
         const auto ourScore   = isWhite ? whiteScore : blackScore;
         const auto theirScore = isWhite ? blackScore : whiteScore;
 
-        return (ourScore - theirScore) * 2;
+        return DEFAULT_WEIGHTS.get(Term::KingAreaControl) * (ourScore - theirScore);
     }
 
     // this "mop up" function gives a bonus for cornering the enemy king in the endgame
     // this can help to prevent draws when you're up material
     [[nodiscard, gnu::pure]] auto score_endgame_mopup(
-        const Position& position, const int materialScore)
+        const Position& position)
         -> TaperedScore
     {
         // only give a mop up score if we're the one up material (and on the attack)
-        if (std::cmp_greater(materialScore, piece_values::PAWN * 2uz)) {
+        // (this uses the fixed piece_values, not the eval's material weights)
+        if (std::cmp_greater(score_material(position), piece_values::PAWN * 2uz)) {
             const auto ourKing   = position.our_pieces().get_king_location();
             const auto theirKing = position.their_pieces().get_king_location();
 
             // bonus for forcing enemy king to edge of board
-            auto score = static_cast<int>(center_manhattan_distance(theirKing)) * 10;
+            const auto edge = DEFAULT_WEIGHTS.get(Term::MopUpEdge) * static_cast<int>(center_manhattan_distance(theirKing));
 
             // use ortho distance to encourage direct opposition
-            score += (14 - static_cast<int>(manhattan_distance(ourKing, theirKing))) * 4;
+            const auto distance = DEFAULT_WEIGHTS.get(Term::MopUpKingDistance) * (14 - static_cast<int>(manhattan_distance(ourKing, theirKing)));
 
-            // endgame only
-            return { .mg = 0, .eg = score };
+            return edge + distance;
         }
 
         return { };
@@ -332,10 +354,8 @@ namespace {
     // consider sac'ing the queen for the rook, to eliminate the opponent's last piece
     [[nodiscard, gnu::pure]] auto no_pieces_left_bonus(
         const Position& position) noexcept
-        -> int
+        -> TaperedScore
     {
-        static constexpr auto LAST_PIECE_BONUS = 500;
-
         auto num_non_pawn_pieces = [](const Pieces& pieces) {
             return pieces.knights.count() + pieces.bishops.count()
                  + pieces.rooks.count() + pieces.queens.count();
@@ -347,28 +367,25 @@ namespace {
         if (ourNumPieces == 0uz) {
             // we have no non-pawn pieces left, give a penalty if our opponent does
             if (theirNumPieces > 0uz)
-                return -LAST_PIECE_BONUS;
+                return -DEFAULT_WEIGHTS.get(Term::LastPiece);
 
-            return 0;
+            return { };
         }
 
         // we have at least one piece left, award the bonus if our opponent doesn't
         if (theirNumPieces == 0uz)
-            return LAST_PIECE_BONUS;
+            return DEFAULT_WEIGHTS.get(Term::LastPiece);
 
-        return 0;
+        return { };
     }
 
 } // namespace
 
 auto evaluate(
-    const Position&          position,
-    const PieceSquareTables& pst,
-    PawnTable*               pawnTable)
+    const Position& position,
+    PawnTable*      pawnTable)
     -> Score
 {
-    const auto materialScore = score_material(position);
-
     // attack sets are calculated once & shared between the mobility, king zone, center control, space & threat terms
     mobility::Counter mobilityCounter { position };
 
@@ -376,21 +393,17 @@ auto evaluate(
 
     const auto control = detail::square_control(position, attacks);
 
-    // terms with the same value in the middlegame & endgame
-    const auto untapered = materialScore
-                         + no_pieces_left_bonus(position)
-                         + score_rook_files(position)
-                         + score_connected_rooks(position)
-                         + score_squares_controlled_around_kings(position, attacks, control)
-                         + detail::score_positional(position, control)
-                         + detail::score_pawn_structure(position, pawnTable);
-
-    const auto total = TaperedScore::both(untapered)
-                     + pst.score_piece_placement(position)
+    const auto total = score_pieces(position)
+                     + no_pieces_left_bonus(position)
+                     + score_rook_files(position)
+                     + score_connected_rooks(position)
+                     + score_squares_controlled_around_kings(position, attacks, control)
+                     + detail::score_positional(position, control)
+                     + detail::score_pawn_structure(position, pawnTable)
                      + score_king_safety(position)
                      + score_mobility(position, mobilityCounter)
                      + detail::score_threats(position, attacks)
-                     + score_endgame_mopup(position, materialScore);
+                     + score_endgame_mopup(position);
 
     return Score { static_cast<Value>(total.blend(middlegame_phase(position), MAX_PHASE)) };
 }
