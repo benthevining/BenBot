@@ -8,6 +8,7 @@ This directory contains unit tests, which are written using Catch2.
 
 * `libbenbot_tests`: unit test executable for `libbenbot`
 * `libchess_tests`: unit test executable for `libchess`
+* `tuner_tests`: unit test executable for the eval tuner (only if `BENBOT_TUNER` is on)
 
 ## Dependencies
 
