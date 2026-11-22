@@ -99,30 +99,47 @@ namespace {
     static_assert(lmp_move_count(6uz) == 52uz);
     static_assert(lmp_move_count(LMP_MAX_DEPTH) == 67uz);
 
-    // SEE pruning of captures is only done with at most this much depth left
+    // SEE pruning is only done with at most this much depth left
     inline constexpr auto SEE_PRUNING_MAX_DEPTH { 7uz };
 
-    // captures whose SEE is below this are skipped by SEE pruning. This uses depth as other
-    // engines count it, where a frontier node (depthLeft == 0) is depth 1. The threshold is
-    // never positive and never goes up with depth, so a capture pruned at some depth would
-    // also be pruned at every lower depth, down to the quiescence search's SEE < 0 skip.
-    // For example, a knight taking a pawn that's defended by a pawn (SEE -220) is pruned at
-    // depths 1 and 2.
-    [[nodiscard]] constexpr auto capture_see_pruning_threshold(const size_t depthLeft) noexcept -> int
+    // moves whose SEE is below this are skipped by SEE pruning. This uses depth as other
+    // engines count it, where a frontier node (depthLeft == 0) is depth 1. The thresholds are
+    // never positive and never go up with depth, so a move pruned at some depth would also be
+    // pruned at every lower depth (for captures, down to the quiescence search's SEE < 0 skip).
+    // Captures use a linear threshold: for example, a knight taking a pawn that's defended by
+    // a pawn (SEE -220) is pruned at depths 1 and 2. Quiet moves use a quadratic one, so that
+    // they're pruned more readily very close to the horizon, where a quiet move has little time
+    // to make up for the material it loses, but less readily further away: a quiet move that
+    // hangs a pawn (SEE -100) is pruned at depths 1 and 2, a minor piece at depths 1 to 4, and
+    // a rook at depths 1 to 5.
+    [[nodiscard]] constexpr auto see_pruning_threshold(
+        const size_t depthLeft, const bool quiet) noexcept -> int
     {
         const auto depth = static_cast<int>(depthLeft) + 1;
+
+        if (quiet)
+            return -15 * depth * depth;
 
         return -100 * depth;
     }
 
-    static_assert(capture_see_pruning_threshold(0uz) == -100);
-    static_assert(capture_see_pruning_threshold(1uz) == -200);
-    static_assert(capture_see_pruning_threshold(2uz) == -300);
-    static_assert(capture_see_pruning_threshold(3uz) == -400);
-    static_assert(capture_see_pruning_threshold(4uz) == -500);
-    static_assert(capture_see_pruning_threshold(5uz) == -600);
-    static_assert(capture_see_pruning_threshold(6uz) == -700);
-    static_assert(capture_see_pruning_threshold(SEE_PRUNING_MAX_DEPTH) == -800);
+    static_assert(see_pruning_threshold(0uz, false) == -100);
+    static_assert(see_pruning_threshold(1uz, false) == -200);
+    static_assert(see_pruning_threshold(2uz, false) == -300);
+    static_assert(see_pruning_threshold(3uz, false) == -400);
+    static_assert(see_pruning_threshold(4uz, false) == -500);
+    static_assert(see_pruning_threshold(5uz, false) == -600);
+    static_assert(see_pruning_threshold(6uz, false) == -700);
+    static_assert(see_pruning_threshold(SEE_PRUNING_MAX_DEPTH, false) == -800);
+
+    static_assert(see_pruning_threshold(0uz, true) == -15);
+    static_assert(see_pruning_threshold(1uz, true) == -60);
+    static_assert(see_pruning_threshold(2uz, true) == -135);
+    static_assert(see_pruning_threshold(3uz, true) == -240);
+    static_assert(see_pruning_threshold(4uz, true) == -375);
+    static_assert(see_pruning_threshold(5uz, true) == -540);
+    static_assert(see_pruning_threshold(6uz, true) == -735);
+    static_assert(see_pruning_threshold(SEE_PRUNING_MAX_DEPTH, true) == -960);
 
     // a lower bound on the SEE of a capture or promotion, without playing out the exchange:
     // the side making the move can always stop after the opponent's first recapture, so it
@@ -376,7 +393,8 @@ namespace {
 
             const bool seePruning = depthLeft <= SEE_PRUNING_MAX_DEPTH and not inCheck;
 
-            const auto seeThreshold = capture_see_pruning_threshold(depthLeft);
+            const auto captureSeeThreshold = see_pruning_threshold(depthLeft, false);
+            const auto quietSeeThreshold   = see_pruning_threshold(depthLeft, true);
 
             for (const auto move : moves) {
                 const auto moveIdx  = nextMoveIdx++;
@@ -395,16 +413,22 @@ namespace {
                     and not childPos.is_check())
                     continue;
 
-                // SEE pruning: near the horizon, skip captures that lose too much material once
-                // all recaptures are played out. We only call see() if the cheap lower bound
-                // can't rule this out, so captures of equal or more valuable pieces never pay for it
+                // SEE pruning: near the horizon, skip moves that lose too much material once all
+                // recaptures are played out. For captures, we only call see() if the cheap lower
+                // bound can't rule this out, so captures of equal or more valuable pieces never pay
+                // for it. Killers aren't exempt (unlike in LMP): a move that loses material by SEE
+                // isn't saved by having caused a cutoff in a sibling position
                 if (seePruning and moveIdx > 0uz
                     and not bounds.alpha.is_losing_mate()
-                    and not position.is_quiet(move)
-                    and not childPos.is_check()
-                    and see_lower_bound(position, move) < seeThreshold
-                    and eval::see(position, move) < seeThreshold)
-                    continue;
+                    and not childPos.is_check()) {
+                    if (position.is_quiet(move)) {
+                        if (eval::see(position, move) < quietSeeThreshold)
+                            continue;
+                    } else if (see_lower_bound(position, move) < captureSeeThreshold
+                               and eval::see(position, move) < captureSeeThreshold) {
+                        continue;
+                    }
+                }
 
                 if constexpr (PVNode) {
                     childPV.reset();

@@ -86,6 +86,60 @@ TEST_CASE("Evaluation symmetry", TAGS)
             evaluate(position, pieceSquareTables)
             == evaluate(flipped(position), pieceSquareTables));
     }
+
+    SECTION("Pawn attacking a rook")
+    {
+        const auto position = from_fen("4k3/8/2r5/3P4/8/8/8/4K3 w - - 0 1").value();
+
+        REQUIRE(
+            evaluate(position, pieceSquareTables)
+            == evaluate(flipped(position), pieceSquareTables));
+    }
+
+    SECTION("Pawn forking a knight & bishop")
+    {
+        const auto position = from_fen("r2qk2r/ppp2ppp/3n1b2/4P3/8/8/PPP2PPP/R2QK2R b KQkq - 0 1").value();
+
+        REQUIRE(
+            evaluate(position, pieceSquareTables)
+            == evaluate(flipped(position), pieceSquareTables));
+    }
+
+    SECTION("Knight forking a rook & queen")
+    {
+        const auto position = from_fen("2r1k3/3q4/1N6/8/8/8/8/4K3 w - - 0 1").value();
+
+        REQUIRE(
+            evaluate(position, pieceSquareTables)
+            == evaluate(flipped(position), pieceSquareTables));
+    }
+
+    SECTION("Bishop attacking a rook")
+    {
+        const auto position = from_fen("4k3/8/4r3/8/2B5/8/8/4K3 b - - 0 1").value();
+
+        REQUIRE(
+            evaluate(position, pieceSquareTables)
+            == evaluate(flipped(position), pieceSquareTables));
+    }
+
+    SECTION("Rook attacking a queen")
+    {
+        const auto position = from_fen("6k1/8/4q3/8/8/8/4R3/6K1 w - - 0 1").value();
+
+        REQUIRE(
+            evaluate(position, pieceSquareTables)
+            == evaluate(flipped(position), pieceSquareTables));
+    }
+
+    SECTION("Rook attacked by a pawn & a knight")
+    {
+        const auto position = from_fen("6k1/8/8/4r3/3P4/5N2/8/6K1 w - - 0 1").value();
+
+        REQUIRE(
+            evaluate(position, pieceSquareTables)
+            == evaluate(flipped(position), pieceSquareTables));
+    }
 }
 
 TEST_CASE("Evaluation - mobility", "[eval][evaluation][mobility]")
@@ -197,5 +251,64 @@ TEST_CASE("Evaluation - pawn table gives the same result", "[eval][evaluation][P
 
             check_pawn_table_evals(from_fen(fen).value(), 2uz, pieceSquareTables, table);
         }
+    }
+}
+
+TEST_CASE("Evaluation - threats", "[eval][evaluation][threats]")
+{
+    const auto pieceSquareTables = ben_bot::eval::PieceSquareTables::get_default();
+
+    // The black knight is on e5 (attacked by the white pawn) or d5 (not attacked). These are
+    // mirrored squares, so the knight's placement & mobility score the same.
+
+    SECTION("Pawn attacking a knight - white to move")
+    {
+        const auto attacked = from_fen("6k1/8/8/4n3/3P4/8/8/6K1 w - - 0 1").value();
+        const auto safe     = from_fen("6k1/8/8/3n4/3P4/8/8/6K1 w - - 0 1").value();
+
+        REQUIRE(evaluate(attacked, pieceSquareTables) > evaluate(safe, pieceSquareTables));
+    }
+
+    SECTION("Pawn attacking a knight - black to move")
+    {
+        const auto attacked = from_fen("6k1/8/8/4n3/3P4/8/8/6K1 b - - 0 1").value();
+        const auto safe     = from_fen("6k1/8/8/3n4/3P4/8/8/6K1 b - - 0 1").value();
+
+        REQUIRE(evaluate(attacked, pieceSquareTables) < evaluate(safe, pieceSquareTables));
+    }
+
+    // In the rest of these, the black piece is on e6 (attacked) or d6 (not attacked), which are
+    // also mirrored squares.
+
+    SECTION("Knight attacking a rook")
+    {
+        const auto attacked = from_fen("6k1/8/4r3/8/5N2/8/8/6K1 w - - 0 1").value();
+        const auto safe     = from_fen("6k1/8/3r4/8/5N2/8/8/6K1 w - - 0 1").value();
+
+        REQUIRE(evaluate(attacked, pieceSquareTables) > evaluate(safe, pieceSquareTables));
+    }
+
+    SECTION("Bishop attacking a rook")
+    {
+        const auto attacked = from_fen("6k1/8/4r3/8/2B5/8/8/6K1 b - - 0 1").value();
+        const auto safe     = from_fen("6k1/8/3r4/8/2B5/8/8/6K1 b - - 0 1").value();
+
+        REQUIRE(evaluate(attacked, pieceSquareTables) < evaluate(safe, pieceSquareTables));
+    }
+
+    SECTION("Knight attacking a queen")
+    {
+        const auto attacked = from_fen("6k1/8/4q3/6N1/8/8/PPP5/1K6 w - - 0 1").value();
+        const auto safe     = from_fen("6k1/8/3q4/6N1/8/8/PPP5/1K6 w - - 0 1").value();
+
+        REQUIRE(evaluate(attacked, pieceSquareTables) > evaluate(safe, pieceSquareTables));
+    }
+
+    SECTION("Rook attacking a queen")
+    {
+        const auto attacked = from_fen("6k1/8/4q3/8/8/8/4R3/6K1 w - - 0 1").value();
+        const auto safe     = from_fen("6k1/8/3q4/8/8/8/4R3/6K1 w - - 0 1").value();
+
+        REQUIRE(evaluate(attacked, pieceSquareTables) > evaluate(safe, pieceSquareTables));
     }
 }
