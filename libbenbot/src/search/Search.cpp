@@ -52,6 +52,7 @@
 #include <libbenbot/search/Bounds.hpp>
 #include <libbenbot/search/Constants.hpp>
 #include <libbenbot/search/Context.hpp>
+#include <libbenbot/search/LateMovePruning.hpp>
 #include <libbenbot/search/Result.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
@@ -76,28 +77,6 @@ namespace {
 
     // futility pruning is only done with at most this much depth left
     inline constexpr auto FP_MAX_DEPTH { 2uz };
-
-    // late move pruning is only done with at most this much depth left
-    inline constexpr auto LMP_MAX_DEPTH { 7uz };
-
-    // the number of moves to search before late move pruning starts skipping quiet moves.
-    // This uses depth as other engines count it, where a frontier node (depthLeft == 0) is
-    // depth 1. It uses integer maths only, so that bench is the same on every platform.
-    [[nodiscard]] constexpr auto lmp_move_count(const size_t depthLeft) noexcept -> size_t
-    {
-        const auto depth = depthLeft + 1uz;
-
-        return 3uz + (depth * depth);
-    }
-
-    static_assert(lmp_move_count(0uz) == 4uz);
-    static_assert(lmp_move_count(1uz) == 7uz);
-    static_assert(lmp_move_count(2uz) == 12uz);
-    static_assert(lmp_move_count(3uz) == 19uz);
-    static_assert(lmp_move_count(4uz) == 28uz);
-    static_assert(lmp_move_count(5uz) == 39uz);
-    static_assert(lmp_move_count(6uz) == 52uz);
-    static_assert(lmp_move_count(LMP_MAX_DEPTH) == 67uz);
 
     // SEE pruning is only done with at most this much depth left
     inline constexpr auto SEE_PRUNING_MAX_DEPTH { 7uz };
@@ -409,8 +388,9 @@ namespace {
 
             const bool lateMovePruning = depthLeft <= LMP_MAX_DEPTH and not inCheck;
 
-            // always at least 4, so the first move is never pruned
-            const auto lmpCount = lmp_move_count(depthLeft);
+            // always at least 2, so the first move is never pruned. Nodes that aren't
+            // improving on their static eval from 2 plies ago prune about twice as soon
+            const auto lmpCount = lmp_move_count(depthLeft, is_improving(ss));
 
             const bool seePruning = depthLeft <= SEE_PRUNING_MAX_DEPTH and not inCheck;
 
