@@ -74,7 +74,8 @@ namespace {
         static constexpr auto CASTLING_BONUS { 30 };         // cppcheck-suppress variableScope
         static constexpr auto PAWN_CONTROLS_PENALTY { 350 }; // cppcheck-suppress variableScope
         static constexpr auto CHECK_BONUS { 1250 };          // cppcheck-suppress variableScope
-        static constexpr auto HISTORY_DIVISOR { 8 };         // cppcheck-suppress variableScope
+        // the sum of the history & the continuation history, so twice the range of either
+        static constexpr auto HISTORY_DIVISOR { 16 }; // cppcheck-suppress variableScope
 
         // check if this move was recorded as the best move in this position
         if (bestMove.has_value() and *bestMove == move)
