@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <libbenbot/data-structures/ContinuationHistory.hpp>
 #include <libbenbot/data-structures/HistoryTable.hpp>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Material.hpp>
@@ -60,7 +61,9 @@ namespace {
         const Bitboard              opponentPawnAttacks,
         const std::optional<Move>   bestMove,
         const std::span<const Move> killerMoves,
-        const HistoryTable&         history)
+        const HistoryTable&         history,
+        const ContinuationHistory&  continuationHistory,
+        const Move                  prevMove)
         -> int
     {
         static constexpr auto PV_NODE_BONUS { 15000 };       // cppcheck-suppress variableScope
@@ -86,7 +89,13 @@ namespace {
         } else if (std::ranges::contains(killerMoves, move)) {
             score += KILLER_MOVE_BONUS;
         } else if (not move.promoted_type().has_value()) {
-            score += history.get(currentPosition.is_white_to_move(), move) / HISTORY_DIVISOR;
+            const bool whiteToMove = currentPosition.is_white_to_move();
+
+            // prevMove was played by the opponent
+            const auto quietScore = history.get(whiteToMove, move)
+                                  + continuationHistory.get(not whiteToMove, prevMove, whiteToMove, move);
+
+            score += quietScore / HISTORY_DIVISOR;
         }
 
         if (const auto prom = move.promoted_type()) {
@@ -127,7 +136,9 @@ void order_moves_for_search(
     const std::span<Move>       moves,
     const TranspositionTable&   transTable,
     const std::span<const Move> killerMoves,
-    const HistoryTable&         history)
+    const HistoryTable&         history,
+    const ContinuationHistory&  continuationHistory,
+    const Move                  prevMove)
 {
     const auto bestMove = transTable
                               .find(currentPosition)
@@ -147,9 +158,9 @@ void order_moves_for_search(
 
     std::ranges::transform(
         moves, scoredMoves.begin(),
-        [&currentPosition, &transTable, bestMove, killerMoves, &history, opponentPawnAttacks](const Move move) {
+        [&currentPosition, &transTable, bestMove, killerMoves, &history, &continuationHistory, prevMove, opponentPawnAttacks](const Move move) {
             return ScoredMove {
-                move_ordering_score(currentPosition, move, transTable, opponentPawnAttacks, bestMove, killerMoves, history),
+                move_ordering_score(currentPosition, move, transTable, opponentPawnAttacks, bestMove, killerMoves, history, continuationHistory, prevMove),
                 move
             };
         });
