@@ -57,3 +57,7 @@ endfunction ()
 add_subdirectory (libutil)
 add_subdirectory (libchess)
 add_subdirectory (libbenbot)
+
+if (BENBOT_TUNER)
+    add_subdirectory (tuner)
+endif ()

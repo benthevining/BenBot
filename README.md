@@ -49,6 +49,7 @@ Our automated CI & releases include the following builds:
 ### CMake options
 
 * `BENBOT_GUI`: if on, builds the ImGUI app (defaults to off unless this is the top-level project)
+* `BENBOT_TUNER`: if on, builds the eval tuner & its unit tests (defaults to off). See `tools/tuner/README.md` for details.
 
 > [!NOTE]
 > The GUI application has additional dependencies & requirements, which may vary by target platform. See `gui/README.md` for details.
