@@ -26,6 +26,7 @@
 #include <libbenbot/eval/Material.hpp>
 #include <libbenbot/eval/Score.hpp>
 #include <libbenbot/eval/TaperedScore.hpp>
+#include <libbenbot/eval/Trace.hpp>
 #include <libbenbot/eval/Weights.hpp>
 #include <libchess/board/Bitboard.hpp>
 #include <libchess/board/Distances.hpp>
@@ -47,9 +48,7 @@ namespace {
 
     // game phase is roughly determined based on the total amount of non-pawn material left on the board
     // we say that the endgame has begun once the queens & two pairs of minor pieces have been traded
-    // (the phase uses the fixed piece_values, not the eval's material weights)
-    inline constexpr int MAX_PHASE
-        = ((piece_values::ROOK * 2) + piece_values::BISHOP + piece_values::KNIGHT) * 2;
+    // (the phase uses the fixed piece_values, not the eval's material weights). MAX_PHASE is in Trace.hpp
 
     // returns a [0..MAX_PHASE] value that is MAX_PHASE until the endgame starts, then falls
     // linearly to 0 as the remaining non-pawn material is traded off
@@ -69,20 +68,35 @@ namespace {
 
     namespace masks = chess::board::masks;
 
+    [[nodiscard, gnu::const]] constexpr auto opposite(const Color side) noexcept -> Color
+    {
+        return side == Color::White ? Color::Black : Color::White;
+    }
+
+    // The scoring functions below take a tracer, and tell it how many times each weight applied
+    // for each side. The engine's eval uses the NullTracer, which does nothing.
+
     // the material & piece square table terms for one side, from that side's point of view
-    template <bool IsBlack>
-    [[nodiscard, gnu::pure]] auto score_side_pieces(
-        const Pieces& pieces) noexcept
+    template <bool IsBlack, typename Tracer>
+    [[nodiscard]] auto score_side_pieces(
+        const Pieces& pieces, Tracer& tracer) noexcept
         -> TaperedScore
     {
+        static constexpr auto Side = IsBlack ? Color::Black : Color::White;
+
         TaperedScore score;
 
         for (const auto type : { PieceType::Pawn, PieceType::Knight, PieceType::Bishop,
                  PieceType::Rook, PieceType::Queen, PieceType::King }) {
             auto board = pieces.get_type(type);
 
-            if (type != PieceType::King)
-                score += DEFAULT_WEIGHTS.material(type) * static_cast<int>(board.count());
+            if (type != PieceType::King) {
+                const auto count = static_cast<int>(board.count());
+
+                score += DEFAULT_WEIGHTS.material(type) * count;
+
+                tracer.add(Term::Material, Side, count, static_cast<size_t>(type));
+            }
 
             // the tables are from White's point of view
             if constexpr (IsBlack) {
@@ -94,6 +108,8 @@ namespace {
             for (const auto idx : board.indices()) {
                 assert(idx < pst.size());
                 score += pst[idx];
+
+                tracer.add(Term::Pst, Side, 1, (static_cast<size_t>(type) * chess::board::NUM_SQUARES) + idx);
             }
         }
 
@@ -101,46 +117,53 @@ namespace {
     }
 
     // material & piece placement
-    [[nodiscard, gnu::pure]] auto score_pieces(
-        const Position& position) noexcept
+    template <typename Tracer>
+    [[nodiscard]] auto score_pieces(
+        const Position& position, Tracer& tracer) noexcept
         -> TaperedScore
     {
         if (position.is_black_to_move()) {
-            return score_side_pieces<true>(position.our_pieces())
-                 - score_side_pieces<false>(position.their_pieces());
+            return score_side_pieces<true>(position.our_pieces(), tracer)
+                 - score_side_pieces<false>(position.their_pieces(), tracer);
         }
 
-        return score_side_pieces<false>(position.our_pieces())
-             - score_side_pieces<true>(position.their_pieces());
+        return score_side_pieces<false>(position.our_pieces(), tracer)
+             - score_side_pieces<true>(position.their_pieces(), tracer);
     }
 
     // awards a bonus for rooks on open or half-open files
-    [[nodiscard, gnu::pure]] auto score_rook_files(
-        const Position& position) noexcept
+    template <typename Tracer>
+    [[nodiscard]] auto score_rook_files(
+        const Position& position, Tracer& tracer) noexcept
         -> TaperedScore
     {
-        auto score_side_rooks = [&position](const Pieces& pieces) {
+        auto score_side_rooks = [&position, &tracer](const Pieces& pieces, const Color side) {
             TaperedScore score;
 
             for (const auto square : pieces.rooks.squares()) {
-                if (position.is_file_half_open(square.file))
+                if (position.is_file_half_open(square.file)) {
                     score += DEFAULT_WEIGHTS.get(Term::RookHalfOpenFile);
-                else if (position.is_file_open(square.file))
+                    tracer.add(Term::RookHalfOpenFile, side, 1);
+                } else if (position.is_file_open(square.file)) {
                     score += DEFAULT_WEIGHTS.get(Term::RookOpenFile);
+                    tracer.add(Term::RookOpenFile, side, 1);
+                }
             }
 
             return score;
         };
 
-        return score_side_rooks(position.our_pieces()) - score_side_rooks(position.their_pieces());
+        return score_side_rooks(position.our_pieces(), position.sideToMove)
+             - score_side_rooks(position.their_pieces(), opposite(position.sideToMove));
     }
 
     // bonus for connected rooks
-    [[nodiscard, gnu::pure]] auto score_connected_rooks(
-        const Position& position) noexcept
+    template <typename Tracer>
+    [[nodiscard]] auto score_connected_rooks(
+        const Position& position, Tracer& tracer) noexcept
         -> TaperedScore
     {
-        auto score_connected_rooks = [&position](const Pieces& pieces) {
+        auto score_connected_rooks = [&position, &tracer](const Pieces& pieces, const Color side) {
             TaperedScore score;
 
             // I originally tried adding a smaller bonus for connected rooks on any rank or file,
@@ -151,68 +174,82 @@ namespace {
                 if (const auto mask = masks::files::get(file);
                     (mask & pieces.rooks).count() > 1uz) {
                     score += DEFAULT_WEIGHTS.get(Term::ConnectedRooksOpenFile);
+                    tracer.add(Term::ConnectedRooksOpenFile, side, 1);
                 }
             }
 
             return score;
         };
 
-        return score_connected_rooks(position.our_pieces()) - score_connected_rooks(position.their_pieces());
+        return score_connected_rooks(position.our_pieces(), position.sideToMove)
+             - score_connected_rooks(position.their_pieces(), opposite(position.sideToMove));
     }
 
     // awards various penalties for king danger
-    [[nodiscard, gnu::pure]] auto score_king_safety(
-        const Position& position) noexcept
+    template <typename Tracer>
+    [[nodiscard]] auto score_king_safety(
+        const Position& position, Tracer& tracer) noexcept
         -> TaperedScore
     {
-        auto score_side_king = [&position,
+        auto score_side_king = [&position, &tracer,
                                    allPawns = position.whitePieces.pawns | position.blackPieces.pawns](
                                    const Pieces& pieces, const chess::game::CastlingRights& castlingRights,
-                                   const Pieces& enemyPieces) {
+                                   const Pieces& enemyPieces, const Color side) {
+            static constexpr auto STARTING_NON_PAWN_MATERIAL
+                = piece_values::QUEEN + (piece_values::ROOK * 2) + (piece_values::BISHOP * 2) + (piece_values::KNIGHT * 2);
+
+            // the score is weighted by the opponent's remaining material (with the fixed piece_values),
+            // so the tracer counts each term this many times
+            const auto materialFactor = detail::count_material<false>(enemyPieces) / STARTING_NON_PAWN_MATERIAL;
+
             TaperedScore score;
 
             const auto location = pieces.get_king_location();
 
             // king on open file or diagonal
-            if (position.is_file_half_open(location.file))
+            if (position.is_file_half_open(location.file)) {
                 score += DEFAULT_WEIGHTS.get(Term::KingHalfOpenFile);
-            else if (position.is_file_open(location.file)
-                     or (masks::diagonal(location) & allPawns).none()
-                     or (masks::antidiagonal(location) & allPawns).none())
+                tracer.add(Term::KingHalfOpenFile, side, materialFactor);
+            } else if (position.is_file_open(location.file)
+                       or (masks::diagonal(location) & allPawns).none()
+                       or (masks::antidiagonal(location) & allPawns).none()) {
                 score += DEFAULT_WEIGHTS.get(Term::KingOpenLine);
+                tracer.add(Term::KingOpenLine, side, materialFactor);
+            }
 
             using chess::board::File;
 
             // king stranded in center without castling rights
             if (castlingRights.neither()
-                and (location.file == File::D or location.file == File::E))
+                and (location.file == File::D or location.file == File::E)) {
                 score += DEFAULT_WEIGHTS.get(Term::KingStranded);
+                tracer.add(Term::KingStranded, side, materialFactor);
+            }
 
             // enemy knights & queens near king
 
             for (const auto knightPos : enemyPieces.knights.squares()) {
                 static constexpr auto MAX_DISTANCE = 6uz;
 
-                const auto distance = knight_distance(location, knightPos);
+                const auto distance = static_cast<int>(MAX_DISTANCE - knight_distance(location, knightPos));
 
                 // penalty increases with smaller distance
-                score += DEFAULT_WEIGHTS.get(Term::KnightTropism) * static_cast<int>(MAX_DISTANCE - distance);
+                score += DEFAULT_WEIGHTS.get(Term::KnightTropism) * distance;
+                tracer.add(Term::KnightTropism, side, distance * materialFactor);
             }
 
             for (const auto queenPos : enemyPieces.queens.squares()) {
                 static constexpr auto MAX_DISTANCE = 7uz;
 
-                const auto distance = chebyshev_distance(location, queenPos);
+                const auto distance = static_cast<int>(MAX_DISTANCE - chebyshev_distance(location, queenPos));
 
                 // penalty increases with smaller distance
-                score += DEFAULT_WEIGHTS.get(Term::QueenTropism) * static_cast<int>(MAX_DISTANCE - distance);
+                score += DEFAULT_WEIGHTS.get(Term::QueenTropism) * distance;
+                tracer.add(Term::QueenTropism, side, distance * materialFactor);
             }
 
-            static constexpr auto STARTING_NON_PAWN_MATERIAL
-                = piece_values::QUEEN + (piece_values::ROOK * 2) + (piece_values::BISHOP * 2) + (piece_values::KNIGHT * 2);
-
             // weight score by opponent's remaining material
-            return score * (detail::count_material<false>(enemyPieces) / STARTING_NON_PAWN_MATERIAL);
+            return score * materialFactor;
         };
 
         const bool isWhite = position.is_white_to_move();
@@ -220,12 +257,14 @@ namespace {
         const auto ourScore = score_side_king(
             position.our_pieces(),
             isWhite ? position.whiteCastlingRights : position.blackCastlingRights,
-            position.their_pieces());
+            position.their_pieces(),
+            position.sideToMove);
 
         const auto theirScore = score_side_king(
             position.their_pieces(),
             isWhite ? position.blackCastlingRights : position.whiteCastlingRights,
-            position.our_pieces());
+            position.our_pieces(),
+            opposite(position.sideToMove));
 
         return ourScore - theirScore;
     }
@@ -252,10 +291,12 @@ namespace {
 
         // Adds up each side's mobility bonus. compute_attacks() calls this once for each
         // knight, bishop, rook & queen, with that piece's attack set.
+        template <typename Tracer>
         struct Counter final {
-            explicit Counter(const Position& position) noexcept
+            Counter(const Position& position, Tracer& tracerToUse) noexcept
                 : whitePieces { position.whitePieces.occupied }
                 , blackPieces { position.blackPieces.occupied }
+                , tracer { tracerToUse }
             {
             }
 
@@ -264,6 +305,8 @@ namespace {
 
             TaperedScore white;
             TaperedScore black;
+
+            Tracer& tracer;
 
             void operator()(
                 const Color side, const PieceType type, const Bitboard attacks, const AttackInfo& info) noexcept
@@ -278,14 +321,17 @@ namespace {
                 const auto numMoves = (attacks & mobilityArea).count();
 
                 (isWhite ? white : black) += DEFAULT_WEIGHTS.get(term_for(type), numMoves);
+
+                tracer.add(term_for(type), side, 1, numMoves);
             }
         };
 
     } // namespace mobility
 
     // bonus for pieces with more available moves
+    template <typename Tracer>
     [[nodiscard, gnu::pure]] auto score_mobility(
-        const Position& position, const mobility::Counter& counter) noexcept
+        const Position& position, const mobility::Counter<Tracer>& counter) noexcept
         -> TaperedScore
     {
         if (position.is_white_to_move())
@@ -294,8 +340,10 @@ namespace {
         return counter.black - counter.white;
     }
 
-    [[nodiscard, gnu::pure]] auto score_squares_controlled_around_kings(
-        const Position& position, const AttackInfo& attacks, const detail::SquareControl& control) noexcept
+    template <typename Tracer>
+    [[nodiscard]] auto score_squares_controlled_around_kings(
+        const Position& position, const AttackInfo& attacks, const detail::SquareControl& control,
+        Tracer& tracer) noexcept
         -> TaperedScore
     {
         // We give a penalty if the opponent attacks more squares around our king than we do.
@@ -316,6 +364,9 @@ namespace {
         const auto blackControlsAroundBK = static_cast<int>((control.black & blackKingAttacks).count());
 
         const auto blackScore = blackControlsAroundBK - whiteControlsAroundBK;
+
+        tracer.add(Term::KingAreaControl, Color::White, whiteScore);
+        tracer.add(Term::KingAreaControl, Color::Black, blackScore);
 
         const bool isWhite = position.is_white_to_move();
 
@@ -379,6 +430,49 @@ namespace {
         return { };
     }
 
+    // The mop-up & last piece terms are endgame conversion helpers that aren't tunable, so
+    // the tracer gets them as a fixed part of the eval rather than by weight.
+    template <typename Tracer>
+    [[nodiscard]] auto score_endgame_helpers(
+        const Position& position, Tracer& tracer) noexcept
+        -> TaperedScore
+    {
+        const auto score = no_pieces_left_bonus(position) + score_endgame_mopup(position);
+
+        tracer.add_base(position.sideToMove, score);
+
+        return score;
+    }
+
+    // the eval, from the side to move's point of view
+    template <typename Tracer>
+    [[nodiscard]] auto evaluate_impl(
+        const Position& position,
+        PawnTable*      pawnTable,
+        Tracer&         tracer)
+        -> Score
+    {
+        // attack sets are calculated once & shared between the mobility, king zone, center control, space & threat terms
+        mobility::Counter<Tracer> mobilityCounter { position, tracer };
+
+        const auto attacks = chess::moves::compute_attacks(position, mobilityCounter);
+
+        const auto control = detail::square_control(position, attacks);
+
+        const auto total = score_pieces(position, tracer)
+                         + score_endgame_helpers(position, tracer)
+                         + score_rook_files(position, tracer)
+                         + score_connected_rooks(position, tracer)
+                         + score_squares_controlled_around_kings(position, attacks, control, tracer)
+                         + detail::score_positional(position, control, tracer)
+                         + detail::score_pawn_structure(position, pawnTable, tracer)
+                         + score_king_safety(position, tracer)
+                         + score_mobility(position, mobilityCounter)
+                         + detail::score_threats(position, attacks, tracer);
+
+        return Score { static_cast<Value>(total.blend(middlegame_phase(position), MAX_PHASE)) };
+    }
+
 } // namespace
 
 auto evaluate(
@@ -386,26 +480,24 @@ auto evaluate(
     PawnTable*      pawnTable)
     -> Score
 {
-    // attack sets are calculated once & shared between the mobility, king zone, center control, space & threat terms
-    mobility::Counter mobilityCounter { position };
+    NullTracer tracer;
 
-    const auto attacks = chess::moves::compute_attacks(position, mobilityCounter);
+    return evaluate_impl(position, pawnTable, tracer);
+}
 
-    const auto control = detail::square_control(position, attacks);
+auto evaluate_traced(const Position& position) -> CoeffTracer
+{
+    CoeffTracer tracer;
 
-    const auto total = score_pieces(position)
-                     + no_pieces_left_bonus(position)
-                     + score_rook_files(position)
-                     + score_connected_rooks(position)
-                     + score_squares_controlled_around_kings(position, attacks, control)
-                     + detail::score_positional(position, control)
-                     + detail::score_pawn_structure(position, pawnTable)
-                     + score_king_safety(position)
-                     + score_mobility(position, mobilityCounter)
-                     + detail::score_threats(position, attacks)
-                     + score_endgame_mopup(position);
+    tracer.phase      = middlegame_phase(position);
+    tracer.sideToMove = position.sideToMove;
 
-    return Score { static_cast<Value>(total.blend(middlegame_phase(position), MAX_PHASE)) };
+    // the traced eval never uses the pawn table, so that the tracer sees every pawn term
+    [[maybe_unused]] const auto score = evaluate_impl(position, nullptr, tracer);
+
+    assert(tracer.score(DEFAULT_WEIGHTS) == score);
+
+    return tracer;
 }
 
 } // namespace ben_bot::eval

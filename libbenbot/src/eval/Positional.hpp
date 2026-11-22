@@ -64,11 +64,15 @@ struct SquareControl final {
     };
 }
 
-[[nodiscard, gnu::pure]] inline auto score_center_control(
-    const Position& position, const SquareControl& control) noexcept -> TaperedScore
+template <typename Tracer>
+[[nodiscard]] auto score_center_control(
+    const Position& position, const SquareControl& control, Tracer& tracer) noexcept -> TaperedScore
 {
     const auto whiteControls = static_cast<int>((masks::CENTER & control.white).count());
     const auto blackControls = static_cast<int>((masks::CENTER & control.black).count());
+
+    tracer.add(Term::CenterControl, Color::White, whiteControls);
+    tracer.add(Term::CenterControl, Color::Black, blackControls);
 
     const bool isWhite = position.is_white_to_move();
 
@@ -81,8 +85,9 @@ struct SquareControl final {
 // a crude way to evaluate "space":
 // we take each side's pawn rearfill, and look at how many more of those squares are controlled by that side than by their opponent
 // this serves to discourage the engine from overextending, but also to incentivize expanding the pawn line to claim more space
-[[nodiscard, gnu::pure]] inline auto score_space(
-    const Position& position, const SquareControl& control) noexcept -> TaperedScore
+template <typename Tracer>
+[[nodiscard]] auto score_space(
+    const Position& position, const SquareControl& control, Tracer& tracer) noexcept -> TaperedScore
 {
     const auto behindWhitePawns = chess::board::fills::pawn_rear<Color::White>(position.whitePieces.pawns);
     const auto behindBlackPawns = chess::board::fills::pawn_rear<Color::Black>(position.blackPieces.pawns);
@@ -95,6 +100,9 @@ struct SquareControl final {
         = static_cast<int>((behindBlackPawns & control.blackWithKing).count())
         - static_cast<int>((behindBlackPawns & control.whiteWithKing).count());
 
+    tracer.add(Term::Space, Color::White, whiteSquares);
+    tracer.add(Term::Space, Color::Black, blackSquares);
+
     const bool isWhite = position.is_white_to_move();
 
     const auto ourSquares   = isWhite ? whiteSquares : blackSquares;
@@ -103,11 +111,12 @@ struct SquareControl final {
     return DEFAULT_WEIGHTS.get(Term::Space) * (ourSquares - theirSquares);
 }
 
-[[nodiscard, gnu::pure]] inline auto score_positional(
-    const Position& position, const SquareControl& control) noexcept -> TaperedScore
+template <typename Tracer>
+[[nodiscard]] auto score_positional(
+    const Position& position, const SquareControl& control, Tracer& tracer) noexcept -> TaperedScore
 {
-    return score_center_control(position, control)
-         + score_space(position, control);
+    return score_center_control(position, control, tracer)
+         + score_space(position, control, tracer);
 }
 
 } // namespace ben_bot::eval::detail

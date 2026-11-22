@@ -23,7 +23,7 @@
 #include <string>
 #include <string_view>
 
-inline constexpr auto TAGS { "[eval][evaluation][!mayfail]" };
+inline constexpr auto TAGS { "[eval][evaluation]" };
 
 using ben_bot::eval::evaluate;
 using chess::game::Position;
