@@ -17,6 +17,8 @@
 #include <cstddef>
 #include <libbenbot/data-structures/PawnTable.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
+#include <libbenbot/eval/Trace.hpp>
+#include <libbenbot/eval/Weights.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/FEN.hpp>
@@ -286,58 +288,60 @@ TEST_CASE("Evaluation - pawn table gives the same result", "[eval][evaluation][P
 
 TEST_CASE("Evaluation - threats", "[eval][evaluation][threats]")
 {
-    // The black knight is on e5 (attacked by the white pawn) or d5 (not attacked). These are
-    // mirrored squares, so the knight's placement & mobility score the same.
+    // Each pair of positions differs only in whether a black piece is attacked by a white one. The
+    // threat's weight is tuned, and so are the piece square tables (which aren't left-right
+    // symmetric), so this checks that the threat is found and counted for the right side, rather
+    // than the sign of the eval difference. The trace test checks that the counts are exactly what
+    // the eval uses.
+
+    using ben_bot::eval::evaluate_traced;
+    using ben_bot::eval::offset_of;
+    using ben_bot::eval::Term;
+
+    // white's count minus black's count of the given threat
+    auto count = [](const std::string_view fen, const Term term) {
+        return evaluate_traced(from_fen(fen).value()).coefficient(offset_of(term));
+    };
+
+    auto check = [&count](const std::string_view attacked, const std::string_view safe, const Term term) {
+        INFO(attacked);
+
+        REQUIRE(count(attacked, term) == 1);
+        REQUIRE(count(safe, term) == 0);
+    };
+
+    // the black knight is on e5 (attacked by the white pawn) or d5 (not attacked)
 
     SECTION("Pawn attacking a knight - white to move")
     {
-        const auto attacked = from_fen("6k1/8/8/4n3/3P4/8/8/6K1 w - - 0 1").value();
-        const auto safe     = from_fen("6k1/8/8/3n4/3P4/8/8/6K1 w - - 0 1").value();
-
-        REQUIRE(evaluate(attacked) > evaluate(safe));
+        check("6k1/8/8/4n3/3P4/8/8/6K1 w - - 0 1", "6k1/8/8/3n4/3P4/8/8/6K1 w - - 0 1", Term::PawnThreat);
     }
 
     SECTION("Pawn attacking a knight - black to move")
     {
-        const auto attacked = from_fen("6k1/8/8/4n3/3P4/8/8/6K1 b - - 0 1").value();
-        const auto safe     = from_fen("6k1/8/8/3n4/3P4/8/8/6K1 b - - 0 1").value();
-
-        REQUIRE(evaluate(attacked) < evaluate(safe));
+        check("6k1/8/8/4n3/3P4/8/8/6K1 b - - 0 1", "6k1/8/8/3n4/3P4/8/8/6K1 b - - 0 1", Term::PawnThreat);
     }
 
-    // In the rest of these, the black piece is on e6 (attacked) or d6 (not attacked), which are
-    // also mirrored squares.
+    // in the rest of these, the black piece is on e6 (attacked) or d6 (not attacked)
 
     SECTION("Knight attacking a rook")
     {
-        const auto attacked = from_fen("6k1/8/4r3/8/5N2/8/8/6K1 w - - 0 1").value();
-        const auto safe     = from_fen("6k1/8/3r4/8/5N2/8/8/6K1 w - - 0 1").value();
-
-        REQUIRE(evaluate(attacked) > evaluate(safe));
+        check("6k1/8/4r3/8/5N2/8/8/6K1 w - - 0 1", "6k1/8/3r4/8/5N2/8/8/6K1 w - - 0 1", Term::MinorOnRook);
     }
 
     SECTION("Bishop attacking a rook")
     {
-        const auto attacked = from_fen("6k1/8/4r3/8/2B5/8/8/6K1 b - - 0 1").value();
-        const auto safe     = from_fen("6k1/8/3r4/8/2B5/8/8/6K1 b - - 0 1").value();
-
-        REQUIRE(evaluate(attacked) < evaluate(safe));
+        check("6k1/8/4r3/8/2B5/8/8/6K1 b - - 0 1", "6k1/8/3r4/8/2B5/8/8/6K1 b - - 0 1", Term::MinorOnRook);
     }
 
     SECTION("Knight attacking a queen")
     {
-        const auto attacked = from_fen("6k1/8/4q3/6N1/8/8/PPP5/1K6 w - - 0 1").value();
-        const auto safe     = from_fen("6k1/8/3q4/6N1/8/8/PPP5/1K6 w - - 0 1").value();
-
-        REQUIRE(evaluate(attacked) > evaluate(safe));
+        check("6k1/8/4q3/6N1/8/8/PPP5/1K6 w - - 0 1", "6k1/8/3q4/6N1/8/8/PPP5/1K6 w - - 0 1", Term::MinorOnQueen);
     }
 
     SECTION("Rook attacking a queen")
     {
-        const auto attacked = from_fen("6k1/8/4q3/8/8/8/4R3/6K1 w - - 0 1").value();
-        const auto safe     = from_fen("6k1/8/3q4/8/8/8/4R3/6K1 w - - 0 1").value();
-
-        REQUIRE(evaluate(attacked) > evaluate(safe));
+        check("6k1/8/4q3/8/8/8/4R3/6K1 w - - 0 1", "6k1/8/3q4/8/8/8/4R3/6K1 w - - 0 1", Term::RookOnQueen);
     }
 }
 
