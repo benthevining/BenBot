@@ -50,6 +50,7 @@ void Engine::new_game(const bool firstCall)
         init_search_callbacks();
     } else {
         searcher.context.clear_transposition_table();
+        searcher.context.clear_history();
     }
 }
 

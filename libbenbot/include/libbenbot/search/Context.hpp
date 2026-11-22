@@ -29,6 +29,7 @@
 #include <libbenbot/search/Options.hpp>
 #include <libchess/game/Position.hpp>
 #include <libutil/Memory.hpp>
+#include <memory>
 #include <optional>
 #include <string_view>
 #include <utility>
@@ -96,6 +97,23 @@ struct Context final {
         transTable.clear();
         pawnTable.clear();
     }
+
+    /** Clears the killer moves & the history heuristic table.
+        This should be called at the start of each new game, along with
+        ``clear_transposition_table()``, so that what was learnt in one game
+        doesn't affect the next one.
+        If a search is in progress, this method aborts it and blocks until it returns.
+     */
+    void clear_history()
+    {
+        abort();
+        wait();
+        killerMoves.clear();
+        history->clear();
+    }
+
+    /** Returns the history heuristic table. */
+    [[nodiscard]] auto get_history_table() const noexcept -> const HistoryTable& { return *history; }
 
     /** Resizes the transposition table.
         If a search is in progress, this method aborts it and blocks until it returns.
@@ -209,7 +227,9 @@ private:
 
     KillerMoves killerMoves;
 
-    HistoryTable history;
+    // on the heap, so that this context doesn't take up too much
+    // space on the stack of whichever thread creates it
+    std::unique_ptr<HistoryTable> history { std::make_unique<HistoryTable>() };
 
     eval::PieceSquareTables pieceSquareTables { eval::PieceSquareTables::get_default() };
 
