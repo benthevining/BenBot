@@ -334,12 +334,15 @@ namespace {
             // set to true if quiet moves after the first one can't raise alpha
             bool futilityPruning = false;
 
+            // nodes in check don't have a static eval. Every other node works it out, PV nodes
+            // included, and stores it before any children are searched, so that the nodes 2 & 4
+            // plies below this one can tell whether they're improving on it
+            if (not inCheck)
+                ss->staticEval = eval::evaluate(position, &pawnTable);
+
             if constexpr (not PVNode) {
                 if (not inCheck) {
-                    const auto staticEval = eval::evaluate(position, &pawnTable);
-
-                    // this must be stored before any children are searched
-                    ss->staticEval = staticEval;
+                    const auto staticEval = ss->staticEval.value();
 
                     // reverse futility pruning
                     const auto margin = 80 * static_cast<int>(depthLeft);
@@ -960,10 +963,15 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
     transTable.new_search();
     history->age();
 
-    // the root's entry & the sentinels before it are never written to, so they keep the null
-    // moves & missing static evals that they start with. The game's real previous moves aren't
-    // known here, since Position doesn't store them.
+    // the sentinels before the root are never written to, so they keep the null moves & missing
+    // static evals that they start with. The root's entry keeps its null move (the game's real
+    // previous moves aren't known here, since Position doesn't store them), but gets the root's
+    // static eval, so that nodes 2 plies from the root can compare with it.
     SearchStack stack;
+
+    if (not position.is_check())
+        stack.at(0uz)->staticEval = eval::evaluate(position, &pawnTable);
+
     callbacks.search_start(options);
 
     // if the movesToSearch was empty, then we search all legal moves
