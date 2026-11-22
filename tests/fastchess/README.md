@@ -32,11 +32,25 @@ The PR tests are sharded across 4 runners, in rounds of about 40 minutes. Each s
 * `sprt_gain`: runs SPRT testing with gainer bounds
 * `sprt_gain_big`: runs SPRT testing with wider gainer bounds
 * `sprt_non_regression`: runs SPRT testing with non-regression bounds
+* `estimate_elo`: estimates the engine's Elo (see below). Needs Python & Stockfish
+
+## Estimating the Elo
+
+`EstimateElo.py` plays a gauntlet against opponents of known strength & fits one rating to all the results (the maximum likelihood fit of the logistic Elo model). By default the opponents are Stockfish with `UCI_LimitStrength` at `UCI_Elo` 1700, 2000, 2300 & 2600, 200 games each at 60+0.6. Stockfish calibrated `UCI_Elo` against versions of the Stash engine that are rated on CCRL Blitz, so the estimate is roughly on the CCRL Blitz scale, but only to within about 100 Elo ([Stockfish PR #4341](https://github.com/official-stockfish/Stockfish/pull/4341)). Self-play SPRT gains don't add up to a rating like this, since they overstate how much stronger the engine is against other engines.
+
+```shell
+python3 tests/fastchess/EstimateElo.py <path/to/ben_bot> --book <openings.pgn>
+```
+
+The main options are `--levels` (Stockfish levels to play, from 1320 to 3190), `--opponent <elo> <cmd>` (another engine with a known rating, can be given more than once), `--games`, `--tc` and `--concurrency`; run it with `--help` for the rest. Each match's log & games go in `logs/elo/`, and `--reuse-logs` skips matches whose log already has results, so an interrupted run can carry on & extra opponents can be added to an earlier run. It prints a Markdown table of the results against each opponent & the estimate with its 95% error margin, and warns when a result is too lopsided to say much, in which case closer levels narrow the error.
+
+With the defaults, a run takes about 5 hours on 8 cores.
 
 ## Dependencies
 
 ### Programs
 * [fastchess](https://github.com/Disservin/fastchess), for UCI compliance testing and SPRT testing
+* [Stockfish](https://stockfishchess.org/), as the opponent for estimating the Elo
 
 ## Scripts
 

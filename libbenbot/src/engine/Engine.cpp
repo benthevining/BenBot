@@ -20,7 +20,6 @@
 #include <filesystem>
 #include <format>
 #include <libbenbot/engine/Engine.hpp>
-#include <libbenbot/eval/PieceSquareTables.hpp>
 #include <libbenbot/search/Callbacks.hpp>
 #include <libbenbot/search/Options.hpp>
 #include <libchess/notation/MoveFormats.hpp>
@@ -192,51 +191,6 @@ void Engine::read_config_file(
     }
 
     read_config_file(path { arg });
-}
-
-void Engine::write_pst_file(
-    const string_view arg) const
-{
-    if (arg.empty()) {
-        info_string("No filepath provided for writepst");
-        return;
-    }
-
-    const auto filePath = absolute(path { arg });
-
-    [[maybe_unused]] const auto result
-        = util::files::overwrite(
-            filePath,
-            searcher.context.get_piece_square_tables().to_string())
-              .transform([&filePath] {
-                  info_string(std::format(
-                      "Wrote configuration file to: {}", filePath.string()));
-              })
-              .transform_error(info_string);
-}
-
-void Engine::read_pst_file(
-    const string_view arg)
-{
-    if (arg.empty()) {
-        info_string("No filepath provided for readconfig");
-        return;
-    }
-
-    const auto filePath = absolute(path { arg });
-
-    [[maybe_unused]] const auto result
-        = util::files::load(filePath)
-              .transform([this, &filePath](const string_view fileContent) {
-                  searcher.context.set_piece_square_tables(
-                      eval::PieceSquareTables::from_string(fileContent));
-
-                  info_string(std::format(
-                      "Read piece square tables from file: {}", filePath.string()));
-
-                  return std::monostate { };
-              })
-              .transform_error(info_string);
 }
 
 auto Engine::restore_state_from_string(const string_view state)

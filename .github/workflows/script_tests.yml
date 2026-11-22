@@ -20,12 +20,14 @@ on:
     branches: [main]
     paths:
     - .github/actions/**.py
+    - tests/fastchess/**.py
     - tests/scripts/**
     - .github/workflows/script_tests.yml
   pull_request:
     types: [opened, reopened, synchronize]
     paths:
     - .github/actions/**.py
+    - tests/fastchess/**.py
     - tests/scripts/**
     - .github/workflows/script_tests.yml
 

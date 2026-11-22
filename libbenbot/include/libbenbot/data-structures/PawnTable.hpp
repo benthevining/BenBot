@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <cstdint>
+#include <libbenbot/eval/TaperedScore.hpp>
 #include <libchess/board/Bitboard.hpp>
 #include <vector>
 
@@ -41,7 +42,7 @@ struct PawnEntry final {
     chess::board::Bitboard passers;
 
     /** The sum of all the pawn-only evaluation terms, from White's point of view. */
-    std::int32_t score { 0 };
+    eval::TaperedScore score;
 };
 
 /** A fixed-size cache of pawn structure evaluations, indexed by the
