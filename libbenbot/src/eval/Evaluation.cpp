@@ -134,7 +134,8 @@ namespace {
              - score_side_pieces<true>(position.their_pieces(), tracer);
     }
 
-    // awards a bonus for rooks on open or half-open files
+    // awards a bonus for rooks on open or half-open files. A file is open if neither side has a
+    // pawn on it, and half-open for us if we have no pawn on it but they do
     template <typename Tracer>
     [[nodiscard]] auto score_rook_files(
         const Position& position, Tracer& tracer) noexcept
@@ -144,12 +145,12 @@ namespace {
             TaperedScore score;
 
             for (const auto square : pieces.rooks.squares()) {
-                if (position.is_file_half_open(square.file)) {
-                    score += DEFAULT_WEIGHTS.get(Term::RookHalfOpenFile);
-                    tracer.add(Term::RookHalfOpenFile, side, 1);
-                } else if (position.is_file_open(square.file)) {
+                if (position.is_file_open(square.file)) {
                     score += DEFAULT_WEIGHTS.get(Term::RookOpenFile);
                     tracer.add(Term::RookOpenFile, side, 1);
+                } else if (pieces.is_file_half_open(square.file)) {
+                    score += DEFAULT_WEIGHTS.get(Term::RookHalfOpenFile);
+                    tracer.add(Term::RookHalfOpenFile, side, 1);
                 }
             }
 
@@ -206,11 +207,14 @@ namespace {
 
             const auto location = pieces.get_king_location();
 
-            // king on open file or diagonal
-            if (position.is_file_half_open(location.file)) {
+            // king on a half-open file (we have no pawn on it, but they do), or on an open
+            // file or pawnless diagonal
+            const bool fileOpen = position.is_file_open(location.file);
+
+            if (not fileOpen and pieces.is_file_half_open(location.file)) {
                 score += DEFAULT_WEIGHTS.get(Term::KingHalfOpenFile);
                 tracer.add(Term::KingHalfOpenFile, side, 1);
-            } else if (position.is_file_open(location.file)
+            } else if (fileOpen
                        or (masks::diagonal(location) & allPawns).none()
                        or (masks::antidiagonal(location) & allPawns).none()) {
                 score += DEFAULT_WEIGHTS.get(Term::KingOpenLine);

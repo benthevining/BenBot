@@ -530,3 +530,90 @@ TEST_CASE("Evaluation - king safety", "[eval][evaluation][king-safety]")
         check("r1bqk2r/pppp1ppp/5N2/8/8/8/PPPP1PPP/R1BQK2R w KQkq - 0 1", Term::KnightTropism, -5);
     }
 }
+
+TEST_CASE("Evaluation - open & half-open files", "[eval][evaluation][files]")
+{
+    // A file is open if neither side has a pawn on it, and half-open for a side if that side has
+    // no pawn on it but the other side does. A rook or king behind its own pawn isn't on a
+    // half-open file, even if the opponent has no pawn there.
+
+    using ben_bot::eval::evaluate_traced;
+    using ben_bot::eval::offset_of;
+    using ben_bot::eval::Term;
+
+    // white's count minus black's count of the given term
+    auto count = [](const std::string_view fen, const Term term) {
+        INFO(fen);
+
+        const auto position = from_fen(fen).value();
+        const auto trace    = evaluate_traced(position);
+
+        REQUIRE(trace.score(ben_bot::eval::DEFAULT_WEIGHTS) == evaluate(position));
+
+        return trace.coefficient(offset_of(term));
+    };
+
+    SECTION("White rook behind its own pawn")
+    {
+        static constexpr std::string_view fen { "6k1/8/8/8/4P3/8/8/4RK2 w - - 0 1" };
+
+        REQUIRE(count(fen, Term::RookHalfOpenFile) == 0);
+        REQUIRE(count(fen, Term::RookOpenFile) == 0);
+    }
+
+    SECTION("White rook on a file with only a black pawn")
+    {
+        static constexpr std::string_view fen { "6k1/4p3/8/8/8/8/8/4RK2 w - - 0 1" };
+
+        REQUIRE(count(fen, Term::RookHalfOpenFile) == 1);
+        REQUIRE(count(fen, Term::RookOpenFile) == 0);
+    }
+
+    SECTION("White rook on an open file")
+    {
+        static constexpr std::string_view fen { "6k1/8/8/8/8/8/8/4RK2 w - - 0 1" };
+
+        REQUIRE(count(fen, Term::RookHalfOpenFile) == 0);
+        REQUIRE(count(fen, Term::RookOpenFile) == 1);
+    }
+
+    SECTION("White rook on a file with pawns of both colours")
+    {
+        static constexpr std::string_view fen { "6k1/4p3/8/8/4P3/8/8/4RK2 w - - 0 1" };
+
+        REQUIRE(count(fen, Term::RookHalfOpenFile) == 0);
+        REQUIRE(count(fen, Term::RookOpenFile) == 0);
+    }
+
+    SECTION("Black rook behind its own pawn")
+    {
+        static constexpr std::string_view fen { "4r1k1/8/8/4p3/8/8/8/6K1 b - - 0 1" };
+
+        REQUIRE(count(fen, Term::RookHalfOpenFile) == 0);
+        REQUIRE(count(fen, Term::RookOpenFile) == 0);
+    }
+
+    SECTION("Black rook on a file with only a white pawn")
+    {
+        static constexpr std::string_view fen { "4r1k1/8/8/8/8/8/4P3/6K1 b - - 0 1" };
+
+        REQUIRE(count(fen, Term::RookHalfOpenFile) == -1);
+        REQUIRE(count(fen, Term::RookOpenFile) == 0);
+    }
+
+    SECTION("Kings on a file with only a white pawn")
+    {
+        // the white king is behind its own pawn, and the black king's file has only a white pawn
+        REQUIRE(count("4k3/8/8/8/8/8/4P3/4K3 w - - 0 1", Term::KingHalfOpenFile) == -1);
+    }
+
+    SECTION("Kings on a file with only a black pawn")
+    {
+        REQUIRE(count("4k3/4p3/8/8/8/8/8/4K3 w - - 0 1", Term::KingHalfOpenFile) == 1);
+    }
+
+    SECTION("Kings on a file with pawns of both colours")
+    {
+        REQUIRE(count("4k3/4p3/8/8/8/8/4P3/4K3 w - - 0 1", Term::KingHalfOpenFile) == 0);
+    }
+}
