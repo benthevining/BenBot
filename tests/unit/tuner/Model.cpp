@@ -71,20 +71,26 @@ void check_gradient(const Loss loss)
     REQUIRE(std::abs(baseLoss - compute_loss(dataset, params, K, loss, 1uz)) < 1e-15);
 
     // the finite difference step, in centipawns
-    static constexpr auto STEP = 0.01;
+    static constexpr auto STEP = 0.1;
 
+    // a five-point central difference: its truncation error is O(STEP^4), so the step can be
+    // large enough that the rounding error in the losses stays well below the tolerance
     const auto numeric_derivative = [&](double& param) {
         const auto original = param;
 
-        param            = original + STEP;
-        const auto above = compute_loss(dataset, params, K, loss, 1uz);
+        const auto loss_at = [&](const double offset) {
+            param = original + offset;
+            return compute_loss(dataset, params, K, loss, 1uz);
+        };
 
-        param            = original - STEP;
-        const auto below = compute_loss(dataset, params, K, loss, 1uz);
+        const auto above  = loss_at(STEP);
+        const auto below  = loss_at(-STEP);
+        const auto above2 = loss_at(2. * STEP);
+        const auto below2 = loss_at(-2. * STEP);
 
         param = original;
 
-        return (above - below) / (2. * STEP);
+        return ((8. * (above - below)) - (above2 - below2)) / (12. * STEP);
     };
 
     const auto matches = [](const double analytic, const double numeric) {

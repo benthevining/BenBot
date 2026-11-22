@@ -240,6 +240,22 @@ TEST_CASE("Trace - coefficients", "[eval][trace]")
         REQUIRE(coeffs_for(trace, offset_of(Term::KingEscortsPasser), Color::White) == 6);
     }
 
+    SECTION("Game phase")
+    {
+        auto phase_of = [](const char* fen) {
+            return evaluate_traced(chess::notation::from_fen(fen).value()).phase;
+        };
+
+        // the queens are traded: 24 - 2 * 4
+        REQUIRE(phase_of("rnb1kbnr/pppppppp/8/8/8/8/PPPPPPPP/RNB1KBNR w KQkq - 0 1") == 16);
+
+        // a rook & a knight each
+        REQUIRE(phase_of("4k2r/pppp4/2n5/8/8/2N5/PPPP4/R3K3 w - - 0 1") == 6);
+
+        // each side has promoted to a second queen, which doesn't push the phase past a pure middlegame
+        REQUIRE(phase_of("rnbqkbnQ/ppppppp1/8/8/8/8/PPPPPPP1/RNBQKBNq w Qq - 0 1") == ben_bot::eval::MAX_PHASE);
+    }
+
     SECTION("Mop-up & last piece terms go into the base")
     {
         // white is up a queen, so the mop-up & last piece terms apply
