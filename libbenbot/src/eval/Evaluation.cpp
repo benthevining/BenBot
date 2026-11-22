@@ -198,12 +198,9 @@ namespace {
                                    allPawns = position.whitePieces.pawns | position.blackPieces.pawns](
                                    const Pieces& pieces, const chess::game::CastlingRights& castlingRights,
                                    const Pieces& enemyPieces, const Color side) {
-            static constexpr auto STARTING_NON_PAWN_MATERIAL
-                = piece_values::QUEEN + (piece_values::ROOK * 2) + (piece_values::BISHOP * 2) + (piece_values::KNIGHT * 2);
-
-            // the score is weighted by the opponent's remaining material (with the fixed piece_values),
-            // so the tracer counts each term this many times
-            const auto materialFactor = detail::count_material<false>(enemyPieces) / STARTING_NON_PAWN_MATERIAL;
+            // These terms aren't scaled by the opponent's material: each one has its own middlegame &
+            // endgame weight, so the game phase blend already decides how much they count as pieces
+            // are traded off
 
             TaperedScore score;
 
@@ -212,12 +209,12 @@ namespace {
             // king on open file or diagonal
             if (position.is_file_half_open(location.file)) {
                 score += DEFAULT_WEIGHTS.get(Term::KingHalfOpenFile);
-                tracer.add(Term::KingHalfOpenFile, side, materialFactor);
+                tracer.add(Term::KingHalfOpenFile, side, 1);
             } else if (position.is_file_open(location.file)
                        or (masks::diagonal(location) & allPawns).none()
                        or (masks::antidiagonal(location) & allPawns).none()) {
                 score += DEFAULT_WEIGHTS.get(Term::KingOpenLine);
-                tracer.add(Term::KingOpenLine, side, materialFactor);
+                tracer.add(Term::KingOpenLine, side, 1);
             }
 
             using chess::board::File;
@@ -226,7 +223,7 @@ namespace {
             if (castlingRights.neither()
                 and (location.file == File::D or location.file == File::E)) {
                 score += DEFAULT_WEIGHTS.get(Term::KingStranded);
-                tracer.add(Term::KingStranded, side, materialFactor);
+                tracer.add(Term::KingStranded, side, 1);
             }
 
             // enemy knights & queens near king
@@ -238,7 +235,7 @@ namespace {
 
                 // penalty increases with smaller distance
                 score += DEFAULT_WEIGHTS.get(Term::KnightTropism) * distance;
-                tracer.add(Term::KnightTropism, side, distance * materialFactor);
+                tracer.add(Term::KnightTropism, side, distance);
             }
 
             for (const auto queenPos : enemyPieces.queens.squares()) {
@@ -248,11 +245,10 @@ namespace {
 
                 // penalty increases with smaller distance
                 score += DEFAULT_WEIGHTS.get(Term::QueenTropism) * distance;
-                tracer.add(Term::QueenTropism, side, distance * materialFactor);
+                tracer.add(Term::QueenTropism, side, distance);
             }
 
-            // weight score by opponent's remaining material
-            return score * materialFactor;
+            return score;
         };
 
         const bool isWhite = position.is_white_to_move();

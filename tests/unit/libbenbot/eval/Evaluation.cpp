@@ -465,3 +465,68 @@ TEST_CASE("Evaluation - threats raise the eval", "[eval][evaluation][threats]")
         }
     }
 }
+
+TEST_CASE("Evaluation - king safety", "[eval][evaluation][king-safety]")
+{
+    // The king safety terms used to be multiplied by the opponent's non-pawn material divided by
+    // its starting non-pawn material, with integer division, so they were 0 as soon as the opponent
+    // had traded anything. They now always apply, and the game phase blend (with each term's own
+    // middlegame & endgame weights) decides how much they count as pieces come off.
+
+    using ben_bot::eval::count_of;
+    using ben_bot::eval::DEFAULT_WEIGHTS;
+    using ben_bot::eval::evaluate_traced;
+    using ben_bot::eval::offset_of;
+    using ben_bot::eval::Term;
+
+    // checks that the term applies `expected` more times for White than for Black, and that
+    // it adds exactly its weight that many times to White's unblended score, whatever material
+    // the opponent has left
+    auto check = [](const std::string_view fen, const Term term, const int expected) {
+        INFO(fen);
+
+        const auto position = from_fen(fen).value();
+        const auto trace    = evaluate_traced(position);
+
+        REQUIRE(trace.score(DEFAULT_WEIGHTS) == evaluate(position));
+        REQUIRE(trace.coefficient(offset_of(term)) == expected);
+
+        auto withoutTerm = DEFAULT_WEIGHTS;
+
+        for (auto i = 0uz; i < count_of(term); ++i)
+            withoutTerm.values.at(offset_of(term) + i) = { };
+
+        REQUIRE(
+            trace.white_score(DEFAULT_WEIGHTS) - trace.white_score(withoutTerm)
+            == DEFAULT_WEIGHTS.get(term) * expected);
+    };
+
+    SECTION("Stranded king, opponent has all their pieces")
+    {
+        // only black can still castle, so only the white king is stranded
+        check("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w kq - 0 1", Term::KingStranded, 1);
+    }
+
+    SECTION("Stranded king, opponent has traded a knight")
+    {
+        check("r1bqkbnr/pppppppp/8/8/8/8/PPPPPPPP/R1BQKBNR w kq - 0 1", Term::KingStranded, 1);
+    }
+
+    SECTION("Stranded king, opponent has only a rook left")
+    {
+        // only white can still castle, so only the black king is stranded
+        check("4k3/pppppppp/8/8/8/8/PPPPPPPP/R3K3 b Q - 0 1", Term::KingStranded, -1);
+    }
+
+    SECTION("Queen next to a king with nothing else on the board")
+    {
+        // the black queen on d2 is 1 square from the white king, so it counts 7 - 1 = 6 times
+        check("4k3/8/8/8/8/8/3q4/4K3 w - - 0 1", Term::QueenTropism, 6);
+    }
+
+    SECTION("Knight near a king after a trade")
+    {
+        // the white knight on f6 is a knight's move from the black king on e8: 6 - 1 = 5
+        check("r1bqk2r/pppp1ppp/5N2/8/8/8/PPPP1PPP/R1BQK2R w KQkq - 0 1", Term::KnightTropism, -5);
+    }
+}
