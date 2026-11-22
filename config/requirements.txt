@@ -13,7 +13,7 @@
 --prefer-binary
 
 clang-tidy >= 23.1.4
-cmake >= 4.4.4
+cmake >= 4.4.5
 cppcheck >= 1.5.3
 cpplint >= 2.0.2
 hadolint-bin >= 2.15.1
