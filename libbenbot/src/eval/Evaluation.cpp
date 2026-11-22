@@ -363,7 +363,8 @@ namespace {
 
 auto evaluate(
     const Position&          position,
-    const PieceSquareTables& pst)
+    const PieceSquareTables& pst,
+    PawnTable*               pawnTable)
     -> Score
 {
     const auto materialScore = score_material(position);
@@ -382,7 +383,7 @@ auto evaluate(
                          + score_connected_rooks(position)
                          + score_squares_controlled_around_kings(position, attacks, control)
                          + detail::score_positional(position, control)
-                         + detail::score_pawn_structure(position);
+                         + detail::score_pawn_structure(position, pawnTable);
 
     const auto total = TaperedScore::both(untapered)
                      + pst.score_piece_placement(position)

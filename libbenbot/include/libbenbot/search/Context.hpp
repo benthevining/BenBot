@@ -22,6 +22,7 @@
 #include <atomic>
 #include <libbenbot/data-structures/HistoryTable.hpp>
 #include <libbenbot/data-structures/KillerMoves.hpp>
+#include <libbenbot/data-structures/PawnTable.hpp>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/PieceSquareTables.hpp>
 #include <libbenbot/search/Callbacks.hpp>
@@ -86,7 +87,7 @@ struct Context final {
      */
     void reset_abort() noexcept { exitFlag.store(false, std::memory_order::release); }
 
-    /** Clears the transposition table.
+    /** Clears the transposition table & the pawn hash table.
         If a search is in progress, this method aborts it and blocks until it returns.
      */
     void clear_transposition_table()
@@ -94,6 +95,7 @@ struct Context final {
         abort();
         wait();
         transTable.clear();
+        pawnTable.clear();
     }
 
     /** Clears the killer moves & the history heuristic table.
@@ -220,6 +222,8 @@ private:
     Callbacks callbacks;
 
     TranspositionTable transTable;
+
+    PawnTable pawnTable;
 
     KillerMoves killerMoves;
 

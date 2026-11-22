@@ -42,6 +42,7 @@
 #include <iterator>
 #include <libbenbot/data-structures/HistoryTable.hpp>
 #include <libbenbot/data-structures/KillerMoves.hpp>
+#include <libbenbot/data-structures/PawnTable.hpp>
 #include <libbenbot/data-structures/SearchStack.hpp>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
@@ -263,7 +264,7 @@ namespace {
             const size_t depthToSearch, const size_t ply,
             TranspositionTable& trans, Interrupter& inter, Stats& statsToUse,
             PvList& parentPV, KillerMoves& killers, HistoryTable& hist,
-            const eval::PieceSquareTables& pst, SearchStackEntry* stackEntry)
+            const eval::PieceSquareTables& pst, PawnTable& pawns, SearchStackEntry* stackEntry)
             : bounds { bnd }
             , position { pos }
             , depthLeft { depthToSearch }
@@ -273,8 +274,9 @@ namespace {
             , stats { statsToUse }
             , killerMoves { killers }
             , history { hist }
-            , pieceSquareTables { pst }
             , pv { parentPV }
+            , pieceSquareTables { pst }
+            , pawnTable { pawns }
             , ss { stackEntry }
         {
             assert(ss != nullptr);
@@ -336,7 +338,7 @@ namespace {
 
             if constexpr (not PVNode) {
                 if (not inCheck) {
-                    const auto staticEval = eval::evaluate(position, pieceSquareTables);
+                    const auto staticEval = eval::evaluate(position, pieceSquareTables, &pawnTable);
 
                     // this must be stored before any children are searched
                     ss->staticEval = staticEval;
@@ -607,7 +609,7 @@ namespace {
 
             const bool inCheck = position.is_check();
 
-            auto evaluation = eval::evaluate(position, pieceSquareTables);
+            auto evaluation = eval::evaluate(position, pieceSquareTables, &pawnTable);
 
             ++stats.staticEvals;
 
@@ -681,7 +683,7 @@ namespace {
                 childPos,
                 depth > reduction ? depth - 1uz - reduction : 0uz,
                 plyFromRoot + 1uz,
-                transTable, interrupter, stats, childPV, killerMoves, history, pieceSquareTables,
+                transTable, interrupter, stats, childPV, killerMoves, history, pieceSquareTables, pawnTable,
                 reset_child_stack_entry(move) };
         }
 
@@ -693,7 +695,7 @@ namespace {
                 after_null_move(position),
                 depthLeft > reduction ? depthLeft - reduction : 0uz,
                 plyFromRoot + 1uz,
-                transTable, interrupter, stats, childPV, killerMoves, history, pieceSquareTables,
+                transTable, interrupter, stats, childPV, killerMoves, history, pieceSquareTables, pawnTable,
                 reset_child_stack_entry(Move { })
             };
 
@@ -740,6 +742,8 @@ namespace {
         PvList& pv; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
         const eval::PieceSquareTables& pieceSquareTables; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
+
+        PawnTable& pawnTable; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
         // this node's entry in the search stack. The entries for the previous
         // plies, including the sentinels before the root, are std::prev(ss, n)
@@ -789,6 +793,7 @@ namespace {
         HistoryTable&                  history,
         SearchStack&                   stack,
         const eval::PieceSquareTables& pst,
+        PawnTable&                     pawnTable,
         const Callbacks&               callbacks,
         Stats&                         stats)
         -> Result::Line
@@ -807,14 +812,14 @@ namespace {
 
             PvList childPV;
 
-            auto create_context = [depth, move, &transTable, &interrupter, &stats, &childPV, &killerMoves, &history, &stack, &pst](const Bounds boundsToUse, const Position& pos) {
+            auto create_context = [depth, move, &transTable, &interrupter, &stats, &childPV, &killerMoves, &history, &stack, &pst, &pawnTable](const Bounds boundsToUse, const Position& pos) {
                 // reset each time, as in AlphaBetaContext::recurse()
                 auto* const stackEntry = stack.at(1uz);
 
                 *stackEntry = { .move = move, .staticEval = std::nullopt };
 
                 return AlphaBetaContext {
-                    boundsToUse, pos, depth, 1uz, transTable, interrupter, stats, childPV, killerMoves, history, pst, stackEntry
+                    boundsToUse, pos, depth, 1uz, transTable, interrupter, stats, childPV, killerMoves, history, pst, pawnTable, stackEntry
                 };
             };
 
@@ -873,6 +878,7 @@ namespace {
         HistoryTable&                  history,
         SearchStack&                   stack,
         const eval::PieceSquareTables& pst,
+        PawnTable&                     pawnTable,
         const Callbacks&               callbacks,
         const std::optional<Move>      prevBestMove)
         -> RootSearchResult
@@ -905,7 +911,7 @@ namespace {
 
         for (auto lineIdx = 0uz; lineIdx < numLines; ++lineIdx) {
             auto line = search_root_line(
-                depth, options, excludedMoves, position, transTable, interrupter, killerMoves, history, stack, pst, callbacks, result.stats);
+                depth, options, excludedMoves, position, transTable, interrupter, killerMoves, history, stack, pst, pawnTable, callbacks, result.stats);
 
             if (interrupter.was_aborted() or line.pv.empty())
                 break;
@@ -997,7 +1003,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
                                     : std::optional { result.pv.front() };
 
         const auto res = root_search(
-            depth, options, position, transTable, interrupter, killerMoves, *history, stack, pieceSquareTables, callbacks, prevBestMove);
+            depth, options, position, transTable, interrupter, killerMoves, *history, stack, pieceSquareTables, pawnTable, callbacks, prevBestMove);
 
         if (interrupter.was_aborted())
             break;
