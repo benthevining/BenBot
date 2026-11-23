@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <functional>
+#include <libchess/board/Bitboard.hpp>
 #include <libchess/board/BitboardIndex.hpp>
 #include <libchess/board/File.hpp>
 #include <libchess/board/Pieces.hpp>
@@ -24,6 +25,7 @@
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
+#include <libchess/moves/Patterns.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <magic_enum/magic_enum.hpp>
 #include <numeric>
@@ -32,6 +34,7 @@
 
 namespace chess::game::zobrist {
 
+using board::Bitboard;
 using board::File;
 using pieces::Color;
 
@@ -75,15 +78,28 @@ namespace {
             });
     }
 
-    [[nodiscard, gnu::const]] constexpr auto apply_en_passant(
-        const Hash prevValue, const std::optional<Square> epSquare)
+    // the EP target is only hashed if one of the capturer's pawns attacks it, so that
+    // positions that differ only by an EP square no pawn can capture onto get the same hash
+    // (FIDE's repetition rule treats them as the same position)
+    [[nodiscard, gnu::pure]] constexpr auto apply_en_passant(
+        const Hash prevValue, const std::optional<Square> epSquare,
+        const Position& pos, const Color capturer)
         -> Hash
     {
-        return epSquare
-            .transform([prevValue](const Square square) {
-                return prevValue ^ en_passant_key(square.file);
-            })
-            .value_or(prevValue);
+        if (not epSquare.has_value())
+            return prevValue;
+
+        const auto target = Bitboard::from_square(*epSquare);
+
+        // the squares a capturing pawn could be on are the ones an enemy pawn on the target attacks
+        const auto attackers = capturer == Color::White
+                                 ? moves::patterns::pawn_attacks<Color::Black>(target) & pos.whitePieces.pawns
+                                 : moves::patterns::pawn_attacks<Color::White>(target) & pos.blackPieces.pawns;
+
+        if (attackers.none())
+            return prevValue;
+
+        return prevValue ^ en_passant_key(epSquare->file);
     }
 
 } // namespace
@@ -132,7 +148,7 @@ auto calculate(const Position& pos) -> Hash
     if (pos.blackCastlingRights.queenside)
         value ^= keys::BLACK_QUEENSIDE_CASTLE;
 
-    value = apply_en_passant(value, pos.enPassantTargetSquare);
+    value = apply_en_passant(value, pos.enPassantTargetSquare, pos, pos.sideToMove);
 
     return value;
 }
@@ -148,10 +164,11 @@ auto update(
     value ^= keys::BLACK_TO_MOVE; // just toggle these bits in/out every other move
 
     // remove old EP target
-    value = apply_en_passant(value, pos.enPassantTargetSquare);
+    value = apply_en_passant(value, pos.enPassantTargetSquare, pos, pos.sideToMove);
 
-    // add new EP target
-    value = apply_en_passant(value, newEPTarget);
+    // add new EP target. A double push doesn't move any of the other side's pawns, so
+    // whether they can capture onto it is the same before & after the move
+    value = apply_en_passant(value, newEPTarget, pos, pos.is_white_to_move() ? Color::Black : Color::White);
 
     // remove moved-from square
     value ^= piece_key(move.piece(), pos.sideToMove, move.from());
@@ -237,7 +254,7 @@ auto after_null_move(const Position& pos) -> Hash
     value ^= keys::BLACK_TO_MOVE; // just toggle these bits in/out every other move
 
     // remove old EP target
-    value = apply_en_passant(value, pos.enPassantTargetSquare);
+    value = apply_en_passant(value, pos.enPassantTargetSquare, pos, pos.sideToMove);
 
     return value;
 }
