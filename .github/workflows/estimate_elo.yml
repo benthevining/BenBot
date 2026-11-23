@@ -26,7 +26,7 @@ on:
       levels:
         description: Stockfish UCI_Elo levels to play, separated by spaces (from 1320 to 3190)
         type: string
-        default: 1700 2000 2300 2600
+        default: 2200 2500 2800 3100
       games:
         description: Games against each level
         type: number
@@ -44,7 +44,7 @@ on:
       levels:
         description: Stockfish UCI_Elo levels to play, separated by spaces (from 1320 to 3190)
         type: string
-        default: 1700 2000 2300 2600
+        default: 2200 2500 2800 3100
       games:
         description: Games against each level
         type: number
