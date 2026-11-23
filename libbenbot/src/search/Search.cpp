@@ -840,6 +840,10 @@ namespace {
 
             ++stats.nodesSearched;
 
+            // an aborted search's score is meaningless, so it mustn't make this the best move
+            if (interrupter.was_aborted())
+                break;
+
             if (score > bounds.alpha) {
                 bounds.alpha = score;
 
@@ -852,9 +856,6 @@ namespace {
 
                 foundPV = true;
             }
-
-            if (interrupter.was_aborted())
-                break;
         }
 
         return {
@@ -907,7 +908,18 @@ namespace {
             auto line = search_root_line(
                 depth, options, excludedMoves, position, transTable, interrupter, killerMoves, history, stack, pawnTable, callbacks, result.stats);
 
-            if (interrupter.was_aborted() or line.pv.empty())
+            // if the search was aborted, the first line's best move so far was still fully searched,
+            // so it's kept (see Context::search())
+            if (interrupter.was_aborted()) {
+                if (lineIdx == 0uz and not line.pv.empty()) {
+                    result.pv        = std::move(line.pv);
+                    result.bestScore = line.score;
+                }
+
+                break;
+            }
+
+            if (line.pv.empty())
                 break;
 
             excludedMoves.emplace_back(line.pv.front());
@@ -1004,8 +1016,16 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         const auto res = root_search(
             depth, options, position, transTable, interrupter, killerMoves, *history, stack, pawnTable, callbacks, prevBestMove);
 
-        if (interrupter.was_aborted())
+        if (interrupter.was_aborted()) {
+            // The previous best move is searched first, so any move that the aborted iteration
+            // found was fully searched to this depth & either is that move or beat it. With
+            // MultiPV, the other lines would be lost, so the last complete iteration is kept.
+            // The reported depth is still the last one that was completed
+            if (not res.pv.empty() and options.multiPV == 1uz)
+                result = res;
+
             break;
+        }
 
         result         = res;
         completedDepth = depth;
