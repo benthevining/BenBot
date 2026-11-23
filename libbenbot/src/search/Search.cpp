@@ -46,6 +46,7 @@
 #include <libbenbot/data-structures/PawnTable.hpp>
 #include <libbenbot/data-structures/SearchStack.hpp>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
+#include <libbenbot/eval/DefaultWeights.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Material.hpp>
 #include <libbenbot/eval/SEE.hpp>
@@ -70,6 +71,7 @@ using std::size_t;
 namespace {
 
     using eval::Score;
+    using PieceType        = chess::pieces::Type;
     namespace piece_values = eval::piece_values;
 
     // null move pruning is only tried when at least this much depth is left
@@ -595,17 +597,24 @@ namespace {
             return std::min(reduction, depthLeft - 2uz);
         }
 
-        // returns the most material the given capture can win: the
-        // captured piece, plus the promotion gain for promotions
+        // returns the most material the given capture can win: the captured piece, plus the
+        // promotion gain for promotions. This uses the eval's own material weights (the larger
+        // of the middlegame & endgame value), since the stand pat score is on the eval's scale
         [[nodiscard]] auto max_capture_gain(const Move move) const noexcept -> int
         {
-            int gain = piece_values::PAWN; // en passant
+            const auto value = [](const PieceType type) {
+                const auto weight = eval::DEFAULT_WEIGHTS.material(type);
+
+                return std::max(weight.mg, weight.eg);
+            };
+
+            auto gain = value(PieceType::Pawn); // en passant
 
             if (const auto captured = position.their_pieces().get_piece_on(move.to()))
-                gain = piece_values::get(*captured);
+                gain = value(*captured);
 
             if (const auto promoted = move.promoted_type())
-                gain += piece_values::get(*promoted) - piece_values::PAWN;
+                gain += value(*promoted) - value(PieceType::Pawn);
 
             return gain;
         }
