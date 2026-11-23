@@ -364,9 +364,9 @@ namespace {
                         if (interrupter.was_aborted())
                             return { };
 
-                        // we return beta here instead of the score, so that we never return an unproven mate score
+                        // a mate score from the null move search is unproven, so we return beta instead
                         if (score >= bounds.beta)
-                            return bounds.beta;
+                            return score.is_mate() ? bounds.beta : score;
                     }
 
                     // futility pruning: near the horizon, if a quiet move would need to gain
@@ -399,6 +399,10 @@ namespace {
             auto evalType { EvalType::Alpha };
 
             std::optional<Move> bestMove;
+
+            // the best score of any move searched so far, which may be below alpha. The search is
+            // fail-soft, so this (rather than alpha or beta) is what the node returns
+            std::optional<Score> bestScore;
 
             const auto killers = killerMoves.get(plyFromRoot);
 
@@ -508,7 +512,7 @@ namespace {
 
                     transTable.store(
                         position, { .searchedDepth = depthLeft,
-                                      .eval        = bounds.beta.to_tt(plyFromRoot),
+                                      .eval        = eval.to_tt(plyFromRoot),
                                       .evalType    = EvalType::Beta,
                                       .bestMove    = move });
 
@@ -519,11 +523,14 @@ namespace {
                         update_history(move, quietsSearched);
                     }
 
-                    return bounds.beta;
+                    return eval;
                 }
 
                 if (position.is_quiet(move))
                     quietsSearched.emplace_back(move);
+
+                if (not bestScore.has_value() or eval > *bestScore)
+                    bestScore = eval;
 
                 if (eval > bounds.alpha) {
                     bestMove     = move;
@@ -536,13 +543,18 @@ namespace {
                 }
             }
 
+            // the first move is never pruned, so at least one move was searched
+            assert(bestScore.has_value());
+
+            const auto score = bestScore.value_or(bounds.alpha);
+
             transTable.store(
                 position, { .searchedDepth = depthLeft,
-                              .eval        = bounds.alpha.to_tt(plyFromRoot),
+                              .eval        = score.to_tt(plyFromRoot),
                               .evalType    = evalType,
                               .bestMove    = bestMove });
 
-            return bounds.alpha;
+            return score;
         }
 
     private:
@@ -620,8 +632,11 @@ namespace {
             // see if we can get a cutoff (we may not need to generate moves for this position)
             if (evaluation >= bounds.beta) {
                 ++stats.betaCutoffs;
-                return bounds.beta;
+                return evaluation;
             }
+
+            // the stand pat score is a lower bound, since we can always choose not to capture
+            auto bestScore = evaluation;
 
             bounds.alpha = std::max(bounds.alpha, evaluation);
 
@@ -655,8 +670,10 @@ namespace {
                     }
 
                     ++stats.betaCutoffs;
-                    return bounds.beta;
+                    return evaluation;
                 }
+
+                bestScore = std::max(bestScore, evaluation);
 
                 if (evaluation > bounds.alpha) {
                     bounds.alpha = evaluation;
@@ -667,7 +684,7 @@ namespace {
                 }
             }
 
-            return bounds.alpha;
+            return bestScore;
         }
 
         // move is the move that leads from this position to childPos
