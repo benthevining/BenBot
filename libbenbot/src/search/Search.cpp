@@ -199,6 +199,9 @@ namespace {
         size_t betaCutoffs { 0uz };
         size_t mdpCutoffs { 0uz }; // cutoffs due to mate distance pruning
         size_t qDepth { 0uz };     // max depth reached by any quiescence search
+
+        // nodes spent searching the best root move of the first line, used by the time management
+        size_t bestMoveNodes { 0uz };
     };
 
     // late move reductions table, indexed by [depth][move index]
@@ -805,6 +808,8 @@ namespace {
 
             callbacks.root_move(move, moveIdx++);
 
+            const auto nodesBefore = stats.nodesSearched;
+
             PvList childPV;
 
             auto create_context = [depth, move, &transTable, &interrupter, &stats, &childPV, &killerMoves, &history, &stack, &pawnTable](const Bounds boundsToUse, const Position& pos) {
@@ -849,6 +854,10 @@ namespace {
 
                 pv.clear();
                 pv.emplace_back(move);
+
+                // in MultiPV mode, only the first line's best move counts
+                if (excludedMoves.empty())
+                    stats.bestMoveNodes = stats.nodesSearched - nodesBefore;
 
                 childPV.to_movelist(pv);
 
@@ -937,6 +946,74 @@ namespace {
         return result;
     }
 
+    // the iteration depth from which the soft time limit is scaled by how the search is going.
+    // Below this, the iterations are too short for their statistics to mean much
+    constexpr auto TM_SCALING_MIN_DEPTH { 7uz };
+
+    // the most consecutive iterations that the best move or score staying the same counts for
+    constexpr auto MAX_STABILITY { 4uz };
+
+    // indexed by the number of consecutive iterations that had the same best move
+    constexpr std::array<double, MAX_STABILITY + 1uz> BEST_MOVE_STABILITY_SCALES {
+        2.43, 1.35, 1.09, 0.88, 0.68
+    };
+
+    // indexed by the number of consecutive iterations whose score was within
+    // EVAL_STABILITY_MARGIN of the one before
+    constexpr std::array<double, MAX_STABILITY + 1uz> EVAL_STABILITY_SCALES {
+        1.25, 1.15, 1.00, 0.94, 0.88
+    };
+
+    constexpr auto EVAL_STABILITY_MARGIN { 10 };
+
+    // how many iterations in a row the best move & score have stayed the same
+    struct Stability final {
+        size_t bestMove { 0uz };
+        size_t eval { 0uz };
+
+        std::optional<Score> prevScore;
+
+        void update(const std::optional<Move> prevBestMove, const RootSearchResult& result) noexcept
+        {
+            if (prevBestMove.has_value() and not result.pv.empty() and result.pv.front() == *prevBestMove)
+                bestMove = std::min(bestMove + 1uz, MAX_STABILITY);
+            else
+                bestMove = 0uz;
+
+            if (prevScore.has_value()
+                and std::abs(static_cast<int>(result.bestScore) - static_cast<int>(*prevScore)) <= EVAL_STABILITY_MARGIN)
+                eval = std::min(eval + 1uz, MAX_STABILITY);
+            else
+                eval = 0uz;
+
+            prevScore = result.bestScore;
+        }
+    };
+
+    // When most of the nodes went into searching the best move, the other moves were refuted
+    // quickly, so the best move probably won't change & we can stop sooner. When the best move
+    // took only a small share of the nodes, the other moves were hard to refute, so it's worth
+    // searching longer. The node scale goes from 0.675 (all the nodes) to 2.025 (none of them).
+    // We also stop sooner when the best move & score have stayed the same for a few iterations,
+    // & search longer when they've just changed
+    [[nodiscard]] auto scale_soft_time_limit(
+        const milliseconds softLimit, const size_t depth, const Stats& stats, const Stability& stability) noexcept -> milliseconds
+    {
+        if (depth < TM_SCALING_MIN_DEPTH or stats.nodesSearched == 0uz)
+            return softLimit;
+
+        const auto bestMoveFraction = static_cast<double>(stats.bestMoveNodes)
+                                    / static_cast<double>(stats.nodesSearched);
+
+        const auto scale = (1.5 - bestMoveFraction) * 1.35
+                         * BEST_MOVE_STABILITY_SCALES.at(stability.bestMove)
+                         * EVAL_STABILITY_SCALES.at(stability.eval);
+
+        return milliseconds {
+            static_cast<milliseconds::rep>(static_cast<double>(softLimit.count()) * scale)
+        };
+    }
+
     using std::memory_order;
 
     struct ActiveFlagSetter final {
@@ -1004,6 +1081,8 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
     // iteration only searches a handful of nodes, so we'd keep going far past MAX_PLY
     const auto maxDepth = std::min(options.depth, MAX_DEPTH);
 
+    Stability stability;
+
     while ((options.infinite or pondering.load(memory_order::acquire) or depth <= maxDepth)
            and depth <= MAX_DEPTH) {
         if (interrupter.should_abort(0uz))
@@ -1029,6 +1108,8 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
 
         result         = res;
         completedDepth = depth;
+
+        stability.update(prevBestMove, result);
 
         totalNodesSearched += result.stats.nodesSearched;
 
@@ -1059,7 +1140,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
 
             // once we've used up the soft time limit, don't start a deeper iteration
             if (options.softSearchTime.has_value()
-                and interrupter.get_search_duration() >= *options.softSearchTime)
+                and interrupter.get_search_duration() >= scale_soft_time_limit(*options.softSearchTime, depth, result.stats, stability))
                 break;
 
             // if the iteration we just completed took as much or more time than we
