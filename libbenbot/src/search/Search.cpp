@@ -27,6 +27,7 @@
 // Futility pruning
 // Check extensions
 // History heuristic
+// Continuation history (1 ply)
 // Late move pruning
 // SEE pruning
 // Internal iterative reductions
@@ -40,6 +41,7 @@
 #include <cmath>   // IWYU pragma: keep - for std::max(), std::log()
 #include <cstddef> // IWYU pragma: keep - for size_t
 #include <iterator>
+#include <libbenbot/data-structures/ContinuationHistory.hpp>
 #include <libbenbot/data-structures/HistoryTable.hpp>
 #include <libbenbot/data-structures/KillerMoves.hpp>
 #include <libbenbot/data-structures/PawnTable.hpp>
@@ -266,6 +268,7 @@ namespace {
             const size_t depthToSearch, const size_t ply,
             TranspositionTable& trans, Interrupter& inter, Stats& statsToUse,
             PvList& parentPV, KillerMoves& killers, HistoryTable& hist,
+            ContinuationHistory& contHist,
             PawnTable& pawns, SearchStackEntry* stackEntry)
             : bounds { bnd }
             , position { pos }
@@ -276,6 +279,7 @@ namespace {
             , stats { statsToUse }
             , killerMoves { killers }
             , history { hist }
+            , continuationHistory { contHist }
             , pv { parentPV }
             , pawnTable { pawns }
             , ss { stackEntry }
@@ -394,7 +398,8 @@ namespace {
             }
 
             detail::order_moves_for_search(
-                position, moves, transTable, killerMoves.get(plyFromRoot), history);
+                position, moves, transTable, killerMoves.get(plyFromRoot), history,
+                continuationHistory, ss->move);
 
             auto evalType { EvalType::Alpha };
 
@@ -555,10 +560,17 @@ namespace {
 
             const bool whiteToMove = position.is_white_to_move();
 
-            history.update(whiteToMove, cutoffMove, bonus);
+            // the opponent's move that led to this node. This is null after a null move,
+            // and then the continuation history isn't updated
+            const auto prevMove = ss->move;
 
-            for (const auto move : quietsSearched)
+            history.update(whiteToMove, cutoffMove, bonus);
+            continuationHistory.update(not whiteToMove, prevMove, whiteToMove, cutoffMove, bonus);
+
+            for (const auto move : quietsSearched) {
                 history.update(whiteToMove, move, -bonus);
+                continuationHistory.update(not whiteToMove, prevMove, whiteToMove, move, -bonus);
+            }
         }
 
         // returns the number of plies by which to reduce the search of the given move
@@ -684,7 +696,7 @@ namespace {
                 childPos,
                 depth > reduction ? depth - 1uz - reduction : 0uz,
                 plyFromRoot + 1uz,
-                transTable, interrupter, stats, childPV, killerMoves, history, pawnTable,
+                transTable, interrupter, stats, childPV, killerMoves, history, continuationHistory, pawnTable,
                 reset_child_stack_entry(move) };
         }
 
@@ -696,7 +708,7 @@ namespace {
                 after_null_move(position),
                 depthLeft > reduction ? depthLeft - reduction : 0uz,
                 plyFromRoot + 1uz,
-                transTable, interrupter, stats, childPV, killerMoves, history, pawnTable,
+                transTable, interrupter, stats, childPV, killerMoves, history, continuationHistory, pawnTable,
                 reset_child_stack_entry(Move { })
             };
 
@@ -740,6 +752,8 @@ namespace {
 
         HistoryTable& history; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
+        ContinuationHistory& continuationHistory; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
+
         PvList& pv; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
         PawnTable& pawnTable; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
@@ -782,18 +796,19 @@ namespace {
 
     // searches all the root moves, except for the excluded moves, to find the best line
     [[nodiscard]] auto search_root_line(
-        const size_t        depth,
-        const Options&      options,
-        const MoveList&     excludedMoves,
-        const Position&     position,
-        TranspositionTable& transTable,
-        Interrupter&        interrupter,
-        KillerMoves&        killerMoves,
-        HistoryTable&       history,
-        SearchStack&        stack,
-        PawnTable&          pawnTable,
-        const Callbacks&    callbacks,
-        Stats&              stats)
+        const size_t         depth,
+        const Options&       options,
+        const MoveList&      excludedMoves,
+        const Position&      position,
+        TranspositionTable&  transTable,
+        Interrupter&         interrupter,
+        KillerMoves&         killerMoves,
+        HistoryTable&        history,
+        ContinuationHistory& continuationHistory,
+        SearchStack&         stack,
+        PawnTable&           pawnTable,
+        const Callbacks&     callbacks,
+        Stats&               stats)
         -> Result::Line
     {
         Bounds   bounds;
@@ -812,14 +827,14 @@ namespace {
 
             PvList childPV;
 
-            auto create_context = [depth, move, &transTable, &interrupter, &stats, &childPV, &killerMoves, &history, &stack, &pawnTable](const Bounds boundsToUse, const Position& pos) {
+            auto create_context = [depth, move, &transTable, &interrupter, &stats, &childPV, &killerMoves, &history, &continuationHistory, &stack, &pawnTable](const Bounds boundsToUse, const Position& pos) {
                 // reset each time, as in AlphaBetaContext::recurse()
                 auto* const stackEntry = stack.at(1uz);
 
                 *stackEntry = { .move = move, .staticEval = std::nullopt };
 
                 return AlphaBetaContext {
-                    boundsToUse, pos, depth, 1uz, transTable, interrupter, stats, childPV, killerMoves, history, pawnTable, stackEntry
+                    boundsToUse, pos, depth, 1uz, transTable, interrupter, stats, childPV, killerMoves, history, continuationHistory, pawnTable, stackEntry
                 };
             };
 
@@ -881,6 +896,7 @@ namespace {
         Interrupter&              interrupter,
         KillerMoves&              killerMoves,
         HistoryTable&             history,
+        ContinuationHistory&      continuationHistory,
         SearchStack&              stack,
         PawnTable&                pawnTable,
         const Callbacks&          callbacks,
@@ -891,8 +907,10 @@ namespace {
 
         killerMoves.clear();
 
+        // the root has no previous move, so this doesn't use the continuation history
         detail::order_moves_for_search(
-            position, options.movesToSearch, transTable, killerMoves.get(0uz), history);
+            position, options.movesToSearch, transTable, killerMoves.get(0uz), history,
+            continuationHistory, stack.at(0uz)->move);
 
         // the root position is never stored in the transposition table, so the move ordering
         // can't know about the previous iteration's best move. Search it first explicitly
@@ -915,7 +933,7 @@ namespace {
 
         for (auto lineIdx = 0uz; lineIdx < numLines; ++lineIdx) {
             auto line = search_root_line(
-                depth, options, excludedMoves, position, transTable, interrupter, killerMoves, history, stack, pawnTable, callbacks, result.stats);
+                depth, options, excludedMoves, position, transTable, interrupter, killerMoves, history, continuationHistory, stack, pawnTable, callbacks, result.stats);
 
             // if the search was aborted, the first line's best move so far was still fully searched,
             // so it's kept (see Context::search())
@@ -1049,6 +1067,9 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
     transTable.new_search();
     history->age();
 
+    // the continuation history isn't aged: it has far more entries than the main history, so
+    // each one gets few updates in a search, & halving it every move would throw most of that away
+
     // the root's entry & the sentinels before it are never written to, so they keep the null
     // moves & missing static evals that they start with. The game's real previous moves aren't
     // known here, since Position doesn't store them.
@@ -1093,7 +1114,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
                                     : std::optional { result.pv.front() };
 
         const auto res = root_search(
-            depth, options, position, transTable, interrupter, killerMoves, *history, stack, pawnTable, callbacks, prevBestMove);
+            depth, options, position, transTable, interrupter, killerMoves, *history, *continuationHistory, stack, pawnTable, callbacks, prevBestMove);
 
         if (interrupter.was_aborted()) {
             // The previous best move is searched first, so any move that the aborted iteration
