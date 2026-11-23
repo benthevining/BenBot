@@ -464,6 +464,18 @@ class TestCommands(metaclass=OrderedClassMembers):
             engine.starts_with("bestmove")
 
     @staticmethod
+    def test_very_deep_search_when_being_mated():
+        # White is mated in 1, so each iteration searches only a few nodes, and the
+        # search quickly gets deep enough to reach the deepest ply it allows. That
+        # used to overflow the search thread's stack on macOS
+        with BenBot() as engine:
+            engine.send_command(
+                "position fen 8/K3q1p1/4k2p/7P/1p1n4/8/8/5q2 w - - 4 63"
+            )
+            engine.send_command("go depth 300 movetime 10000")
+            engine.starts_with("bestmove")
+
+    @staticmethod
     def test_perft_json():
         with BenBot() as engine:
             engine.send_command("perft 4 json")

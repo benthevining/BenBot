@@ -21,7 +21,6 @@
 #include <libgui/BoardEditor.hpp>
 #include <libgui/EnginePanel.hpp>
 #include <libgui/GameViewer.hpp>
-#include <libgui/PSTEditor.hpp>
 #include <libgui/Resources.hpp>
 #include <libutil/Console.hpp>
 #include <libutil/Files.hpp>
@@ -120,9 +119,6 @@ void render(AppState& state)
 
     // new windows take focus as they're created, so this order
     // determines which tabs are selected in the default layout
-    render_pst_editor(
-        state.pstEditor, state.enginePanel.engine, showTooltips);
-
     render_engine_panel(
         state.enginePanel, showTooltips);
 

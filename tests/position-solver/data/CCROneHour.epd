@@ -1,4 +1,2 @@
 rnbq1rk1/pppp1ppp/4pn2/8/1bPP4/P1N5/1PQ1PPPP/R1B1KBNR b KQ - bm Bxc3+; depth 3; id "CCR06";
-rnbqkb1r/pppp1ppp/3n4/8/2BQ4/5N2/PPP2PPP/RNB2RK1 b kq - bm Nxc4; depth 4; id "CCR14";
-r2qkbnr/2p2pp1/p1pp4/4p2p/4P1b1/5N1P/PPPP1PP1/RNBQ1RK1 w kq - bm hxg4; depth 3; id "CCR17";
-rn1qk2r/1b2bppp/p2ppn2/1p6/3NP3/1BN5/PPP2PPP/R1BQR1K1 w kq - bm Bxe6; depth 4; id "CCR19";
+rn1qk2r/1b2bppp/p2ppn2/1p6/3NP3/1BN5/PPP2PPP/R1BQR1K1 w kq - bm Bxe6; depth 10; id "CCR19";

@@ -14,6 +14,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include <libchess/game/Position.hpp>
+#include <libchess/game/ThreefoldChecker.hpp>
 #include <libchess/notation/Algebraic.hpp>
 #include <libchess/notation/FEN.hpp>
 
@@ -54,6 +55,33 @@ TEST_CASE("Position - threefold repetitions", TAGS)
     pos.make_move(from_alg(pos, "Nc6").value());
 
     REQUIRE(pos.is_threefold_repetition());
+}
+
+TEST_CASE("Threefold repetition whose first occurrence was more than 50 plies ago", TAGS)
+{
+    // the fifty-move rule allows up to 100 plies without a capture or pawn move, so a
+    // repetition can span that many plies
+    chess::game::ThreefoldChecker checker;
+
+    static constexpr auto REPEATED { 1000uz };
+
+    checker.reset(REPEATED);
+
+    for (auto hash = 1uz; hash <= 90uz; ++hash)
+        checker.push(hash);
+
+    checker.push(REPEATED);
+
+    REQUIRE_FALSE(checker.is_threefold());
+    REQUIRE(checker.repetition_count() == 2uz);
+
+    checker.push(91uz);
+    checker.push(92uz);
+    checker.push(93uz);
+    checker.push(REPEATED);
+
+    REQUIRE(checker.is_threefold());
+    REQUIRE(checker.repetition_count() == 3uz);
 }
 
 TEST_CASE("Threefold repetition from differing moves", TAGS)

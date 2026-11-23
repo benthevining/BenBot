@@ -42,6 +42,10 @@ updates:
   directory: /
   patterns: ["*"]
   multi-ecosystem-group: dependencies
+  ignore:
+  # its re-release tags (e.g. v0.11.0.1-1) look like prereleases to Dependabot, so it
+  # "updates" them to the older tag. pre-commit.ci's autoupdate keeps this one current
+  - dependency-name: https://github.com/shellcheck-py/shellcheck-py
 
 - package-ecosystem: pip
   directories: [config, tests/position-solver, .github/actions/bump_version]

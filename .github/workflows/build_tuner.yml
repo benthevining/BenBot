@@ -1,0 +1,73 @@
+# ======================================================================================
+#
+# ░▒▓███████▓▒░░▒▓████████▓▒░▒▓███████▓▒░       ░▒▓███████▓▒░ ░▒▓██████▓▒░▒▓████████▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓███████▓▒░░▒▓██████▓▒░ ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓███████▓▒░░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░ ░▒▓██████▓▒░  ░▒▓█▓▒░
+#
+# ======================================================================================
+
+# The eval tuner isn't part of the release, so the main CI doesn't build it. This builds it
+# (build only) so that it doesn't fall out of date with the eval.
+
+name: Build tuner
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+concurrency:
+  group: ${{ github.workflow }}.${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: read
+
+jobs:
+
+  build_tuner:
+    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-2025-vs2026, macos-15]
+        preset: [clang]
+        include:
+        - os: windows-2025-vs2026
+          preset: msvc
+        - os: ubuntu-latest
+          preset: gcc
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }}.${{ matrix.preset }}
+    timeout-minutes: 30
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+
+    - name: Install build dependencies
+      uses: ./.github/actions/install-build-deps
+      with:
+        cmake_preset: ${{ matrix.preset }}
+
+    - name: Configure CMake
+      env:
+        CMAKE_OSX_ARCHITECTURES: arm64
+      run: cmake --preset ${{ matrix.preset }} -D BENBOT_GUI=OFF -D BENBOT_TUNER=ON
+
+      # the tuner & its unit tests
+    - name: Build
+      env:
+        CMAKE_BUILD_PARALLEL_LEVEL: 8
+      run: cmake --build Builds/${{ matrix.preset }} --config Release --target benbot_tuner tuner_tests

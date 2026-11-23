@@ -28,6 +28,8 @@
 // Check extensions
 // History heuristic
 // Late move pruning
+// SEE pruning
+// Internal iterative reductions
 // Aspiration windows
 
 #include "search/MoveOrdering.hpp"
@@ -41,9 +43,11 @@
 #include <iterator>
 #include <libbenbot/data-structures/HistoryTable.hpp>
 #include <libbenbot/data-structures/KillerMoves.hpp>
+#include <libbenbot/data-structures/PawnTable.hpp>
+#include <libbenbot/data-structures/SearchStack.hpp>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
-#include <libbenbot/eval/PieceSquareTables.hpp>
+#include <libbenbot/eval/Material.hpp>
 #include <libbenbot/eval/SEE.hpp>
 #include <libbenbot/eval/Score.hpp>
 #include <libbenbot/search/Bounds.hpp>
@@ -66,6 +70,7 @@ using std::size_t;
 namespace {
 
     using eval::Score;
+    namespace piece_values = eval::piece_values;
 
     // null move pruning is only tried when at least this much depth is left
     inline constexpr auto NMP_MIN_DEPTH { 3uz };
@@ -95,6 +100,70 @@ namespace {
     static_assert(lmp_move_count(6uz) == 52uz);
     static_assert(lmp_move_count(LMP_MAX_DEPTH) == 67uz);
 
+    // SEE pruning is only done with at most this much depth left
+    inline constexpr auto SEE_PRUNING_MAX_DEPTH { 7uz };
+
+    // moves whose SEE is below this are skipped by SEE pruning. This uses depth as other
+    // engines count it, where a frontier node (depthLeft == 0) is depth 1. The thresholds are
+    // never positive and never go up with depth, so a move pruned at some depth would also be
+    // pruned at every lower depth (for captures, down to the quiescence search's SEE < 0 skip).
+    // Captures use a linear threshold: for example, a knight taking a pawn that's defended by
+    // a pawn (SEE -220) is pruned at depths 1 and 2. Quiet moves use a quadratic one, so that
+    // they're pruned more readily very close to the horizon, where a quiet move has little time
+    // to make up for the material it loses, but less readily further away: a quiet move that
+    // hangs a pawn (SEE -100) is pruned at depths 1 and 2, a minor piece at depths 1 to 4, and
+    // a rook at depths 1 to 5.
+    [[nodiscard]] constexpr auto see_pruning_threshold(
+        const size_t depthLeft, const bool quiet) noexcept -> int
+    {
+        const auto depth = static_cast<int>(depthLeft) + 1;
+
+        if (quiet)
+            return -15 * depth * depth;
+
+        return -100 * depth;
+    }
+
+    static_assert(see_pruning_threshold(0uz, false) == -100);
+    static_assert(see_pruning_threshold(1uz, false) == -200);
+    static_assert(see_pruning_threshold(2uz, false) == -300);
+    static_assert(see_pruning_threshold(3uz, false) == -400);
+    static_assert(see_pruning_threshold(4uz, false) == -500);
+    static_assert(see_pruning_threshold(5uz, false) == -600);
+    static_assert(see_pruning_threshold(6uz, false) == -700);
+    static_assert(see_pruning_threshold(SEE_PRUNING_MAX_DEPTH, false) == -800);
+
+    static_assert(see_pruning_threshold(0uz, true) == -15);
+    static_assert(see_pruning_threshold(1uz, true) == -60);
+    static_assert(see_pruning_threshold(2uz, true) == -135);
+    static_assert(see_pruning_threshold(3uz, true) == -240);
+    static_assert(see_pruning_threshold(4uz, true) == -375);
+    static_assert(see_pruning_threshold(5uz, true) == -540);
+    static_assert(see_pruning_threshold(6uz, true) == -735);
+    static_assert(see_pruning_threshold(SEE_PRUNING_MAX_DEPTH, true) == -960);
+
+    // a lower bound on the SEE of a capture or promotion, without playing out the exchange:
+    // the side making the move can always stop after the opponent's first recapture, so it
+    // can't do worse than winning what it takes and then losing the piece it moved there
+    [[nodiscard]] auto see_lower_bound(const Position& position, const Move move) noexcept -> int
+    {
+        const int captured = position.is_en_passant(move)
+                               ? piece_values::PAWN
+                               : position.their_pieces()
+                                     .get_piece_on(move.to())
+                                     .transform(piece_values::get)
+                                     .value_or(eval::Value { 0 });
+
+        // a promoted piece gains (promoted - pawn), then the promoted piece can be lost
+        if (move.is_promotion())
+            return captured - piece_values::PAWN;
+
+        return captured - piece_values::get(move.piece());
+    }
+
+    // internal iterative reductions are only done with at least this much depth left
+    inline constexpr auto IIR_MIN_DEPTH { 4uz };
+
     // moves that give check are only extended up to this ply. Reaching MAX_PLY aborts
     // the entire search, so this stops long sequences of checks from getting there.
     inline constexpr auto MAX_EXTENSION_PLY { MAX_PLY / 4uz };
@@ -111,11 +180,18 @@ namespace {
         return (pieces.knights | pieces.bishops | pieces.rooks | pieces.queens).count() >= 2uz;
     }
 
-    // aspiration windows are only used once this many iterations have been completed
-    constexpr auto ASPIRATION_MIN_DEPTH { 6uz };
+    // used for debug assertions: returns true if the given move could have been the last move
+    // played to reach this position, i.e. the piece it moved (or promoted to) is on its target
+    // square & belongs to the side that just moved. Null moves are always allowed.
+    [[nodiscard, maybe_unused]] auto could_be_last_move(const Position& position, const Move move) noexcept -> bool
+    {
+        if (move.is_null())
+            return true;
 
-    // the initial half-width of the aspiration window, in centipawns
-    constexpr auto ASPIRATION_INITIAL_DELTA { 50 };
+        const auto expected = move.promoted_type().value_or(move.piece());
+
+        return position.their_pieces().get_piece_on(move.to()) == expected;
+    }
 
     struct Stats final {
         size_t nodesSearched { 0uz };
@@ -124,7 +200,19 @@ namespace {
         size_t betaCutoffs { 0uz };
         size_t mdpCutoffs { 0uz }; // cutoffs due to mate distance pruning
         size_t qDepth { 0uz };     // max depth reached by any quiescence search
+
+        // nodes spent searching the best root move of the first line, & all the root moves of
+        // the first line, used by the time management. With an aspiration window, these only
+        // count the last search of the first line, not the ones that failed
+        size_t bestMoveNodes { 0uz };
+        size_t firstLineNodes { 0uz };
     };
+
+    // aspiration windows are only used once this many iterations have been completed
+    constexpr auto ASPIRATION_MIN_DEPTH { 6uz };
+
+    // the initial half-width of the aspiration window, in centipawns
+    constexpr auto ASPIRATION_INITIAL_DELTA { 50 };
 
     // late move reductions table, indexed by [depth][move index]
     // the formula is similar to Ethereal's: see https://www.chessprogramming.org/Late_Move_Reductions
@@ -188,7 +276,7 @@ namespace {
             const size_t depthToSearch, const size_t ply,
             TranspositionTable& trans, Interrupter& inter, Stats& statsToUse,
             PvList& parentPV, KillerMoves& killers, HistoryTable& hist,
-            const eval::PieceSquareTables& pst)
+            PawnTable& pawns, SearchStackEntry* stackEntry)
             : bounds { bnd }
             , position { pos }
             , depthLeft { depthToSearch }
@@ -198,9 +286,12 @@ namespace {
             , stats { statsToUse }
             , killerMoves { killers }
             , history { hist }
-            , pieceSquareTables { pst }
             , pv { parentPV }
+            , pawnTable { pawns }
+            , ss { stackEntry }
         {
+            assert(ss != nullptr);
+            assert(could_be_last_move(position, ss->move));
         }
 
         AlphaBetaContext(const AlphaBetaContext&)            = default;
@@ -246,12 +337,22 @@ namespace {
 
             const bool inCheck = position.is_check();
 
+            // internal iterative reductions: with no TT move our move ordering is probably poor,
+            // so search this node one ply shallower. The next visit should then have a TT move.
+            if (not inCheck
+                and depthLeft >= IIR_MIN_DEPTH
+                and not transTable.find(position).and_then(&TTData::bestMove).has_value())
+                --depthLeft;
+
             // set to true if quiet moves after the first one can't raise alpha
             bool futilityPruning = false;
 
             if constexpr (not PVNode) {
                 if (not inCheck) {
-                    const auto staticEval = eval::evaluate(position, pieceSquareTables);
+                    const auto staticEval = eval::evaluate(position, &pawnTable);
+
+                    // this must be stored before any children are searched
+                    ss->staticEval = staticEval;
 
                     // reverse futility pruning
                     const auto margin = 80 * static_cast<int>(depthLeft);
@@ -321,6 +422,11 @@ namespace {
             // always at least 4, so the first move is never pruned
             const auto lmpCount = lmp_move_count(depthLeft);
 
+            const bool seePruning = depthLeft <= SEE_PRUNING_MAX_DEPTH and not inCheck;
+
+            const auto captureSeeThreshold = see_pruning_threshold(depthLeft, false);
+            const auto quietSeeThreshold   = see_pruning_threshold(depthLeft, true);
+
             for (const auto move : moves) {
                 const auto moveIdx  = nextMoveIdx++;
                 const auto childPos = after_move(position, move);
@@ -338,6 +444,23 @@ namespace {
                     and not childPos.is_check())
                     continue;
 
+                // SEE pruning: near the horizon, skip moves that lose too much material once all
+                // recaptures are played out. For captures, we only call see() if the cheap lower
+                // bound can't rule this out, so captures of equal or more valuable pieces never pay
+                // for it. Killers aren't exempt (unlike in LMP): a move that loses material by SEE
+                // isn't saved by having caused a cutoff in a sibling position
+                if (seePruning and moveIdx > 0uz
+                    and not bounds.alpha.is_losing_mate()
+                    and not childPos.is_check()) {
+                    if (position.is_quiet(move)) {
+                        if (eval::see(position, move) < quietSeeThreshold)
+                            continue;
+                    } else if (see_lower_bound(position, move) < captureSeeThreshold
+                               and eval::see(position, move) < captureSeeThreshold) {
+                        continue;
+                    }
+                }
+
                 if constexpr (PVNode) {
                     childPV.reset();
                 }
@@ -350,13 +473,13 @@ namespace {
                                              : 0uz;
 
                     if (depthLeft + extension == 0uz)
-                        return -recurse(childPos).quiescence<PVNode>();
+                        return -recurse(childPos, move).quiescence<PVNode>();
 
                     // late move reductions: search moves late in the ordering at a reduced depth
                     // with a null window, and only re-search at full depth if they beat alpha
                     if (const size_t reduction = get_reduction<PVNode>(move, childPos, moveIdx, inCheck, killers);
                         reduction > 0uz) {
-                        const auto reducedScore = -recurse(childPos, true, reduction, extension).alpha_beta<false>();
+                        const auto reducedScore = -recurse(childPos, move, true, reduction, extension).alpha_beta<false>();
 
                         if (reducedScore <= bounds.alpha)
                             return reducedScore;
@@ -366,15 +489,15 @@ namespace {
                     // instead means that in a PV node where every move fails low, every move is
                     // searched as a PV node.
                     if (moveIdx == 0uz)
-                        return -recurse(childPos, false, 0uz, extension).alpha_beta<PVNode>();
+                        return -recurse(childPos, move, false, 0uz, extension).alpha_beta<PVNode>();
 
                     // principal variation search: first try searching with a null window
 
-                    const auto nullWinScore = -recurse(childPos, true, 0uz, extension).alpha_beta<false>();
+                    const auto nullWinScore = -recurse(childPos, move, true, 0uz, extension).alpha_beta<false>();
 
                     if constexpr (PVNode) {
                         if (nullWinScore > bounds.alpha)
-                            return -recurse(childPos, false, 0uz, extension).alpha_beta<true>();
+                            return -recurse(childPos, move, false, 0uz, extension).alpha_beta<true>();
                     }
 
                     return nullWinScore;
@@ -495,9 +618,14 @@ namespace {
             if (position.is_checkmate())
                 return Score::mate(plyFromRoot);
 
-            auto evaluation = eval::evaluate(position, pieceSquareTables);
+            const bool inCheck = position.is_check();
+
+            auto evaluation = eval::evaluate(position, &pawnTable);
 
             ++stats.staticEvals;
+
+            if (not inCheck)
+                ss->staticEval = evaluation;
 
             // see if we can get a cutoff (we may not need to generate moves for this position)
             if (evaluation >= bounds.beta) {
@@ -511,8 +639,6 @@ namespace {
 
             detail::order_moves_for_q_search(position, moves);
 
-            const bool inCheck = position.is_check();
-
             for (const auto move : moves) {
                 assert(position.is_capture(move));
 
@@ -524,7 +650,7 @@ namespace {
                     childPV.reset();
                 }
 
-                evaluation = -(recurse(after_move(position, move)).quiescence<PVNode>());
+                evaluation = -(recurse(after_move(position, move), move).quiescence<PVNode>());
 
                 ++stats.nodesSearched;
 
@@ -554,8 +680,9 @@ namespace {
             return bounds.alpha;
         }
 
+        // move is the move that leads from this position to childPos
         [[nodiscard]] auto recurse(
-            const Position& childPos, const bool useNullWindow = false,
+            const Position& childPos, const Move move, const bool useNullWindow = false,
             const size_t reduction = 0uz, const size_t extension = 0uz)
             -> AlphaBetaContext
         {
@@ -567,7 +694,8 @@ namespace {
                 childPos,
                 depth > reduction ? depth - 1uz - reduction : 0uz,
                 plyFromRoot + 1uz,
-                transTable, interrupter, stats, childPV, killerMoves, history, pieceSquareTables };
+                transTable, interrupter, stats, childPV, killerMoves, history, pawnTable,
+                reset_child_stack_entry(move) };
         }
 
         // the reduction includes the 1 ply for the null move itself
@@ -578,11 +706,26 @@ namespace {
                 after_null_move(position),
                 depthLeft > reduction ? depthLeft - reduction : 0uz,
                 plyFromRoot + 1uz,
-                transTable, interrupter, stats, childPV, killerMoves, history, pieceSquareTables
+                transTable, interrupter, stats, childPV, killerMoves, history, pawnTable,
+                reset_child_stack_entry(Move { })
             };
 
             // don't allow 2 null moves in a row
             child.nullMoveAllowed = false;
+
+            return child;
+        }
+
+        // resets the search stack entry for a child of this node, & returns it.
+        // This is called each time a child is searched, so that the child doesn't
+        // see anything left over from a node searched earlier at the same ply
+        [[nodiscard]] auto reset_child_stack_entry(const Move move) const noexcept -> SearchStackEntry*
+        {
+            assert(plyFromRoot < MAX_PLY);
+
+            auto* const child = std::next(ss);
+
+            *child = { .move = move, .staticEval = std::nullopt };
 
             return child;
         }
@@ -609,7 +752,11 @@ namespace {
 
         PvList& pv; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
-        const eval::PieceSquareTables& pieceSquareTables; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
+        PawnTable& pawnTable; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
+
+        // this node's entry in the search stack. The entries for the previous
+        // plies, including the sentinels before the root, are std::prev(ss, n)
+        SearchStackEntry* ss;
 
         PvList childPV;
     };
@@ -643,26 +790,33 @@ namespace {
         }
     };
 
-    // searches all the root moves, except for the excluded moves, to find the best line
-    // if the search fails low, the returned PV is empty; if the search fails high, the
-    // returned score is >= the initial beta and the PV holds the move that failed high
+    // searches all the root moves, except for the excluded moves, to find the best line.
+    // If the search fails low, the returned PV is empty; if it fails high, the returned score
+    // is at least the initial beta & the PV starts with the move that failed high
     [[nodiscard]] auto search_root_line(
-        const size_t                   depth,
-        const Options&                 options,
-        const MoveList&                excludedMoves,
-        const Position&                position,
-        TranspositionTable&            transTable,
-        Interrupter&                   interrupter,
-        KillerMoves&                   killerMoves,
-        HistoryTable&                  history,
-        const eval::PieceSquareTables& pst,
-        const Callbacks&               callbacks,
-        Stats&                         stats,
-        const Bounds                   initialBounds = { })
+        const size_t        depth,
+        const Options&      options,
+        const MoveList&     excludedMoves,
+        const Position&     position,
+        TranspositionTable& transTable,
+        Interrupter&        interrupter,
+        KillerMoves&        killerMoves,
+        HistoryTable&       history,
+        SearchStack&        stack,
+        PawnTable&          pawnTable,
+        const Callbacks&    callbacks,
+        Stats&              stats,
+        const Bounds        initialBounds = { })
         -> Result::Line
     {
         Bounds   bounds { initialBounds };
         MoveList pv;
+
+        const auto lineStartNodes = stats.nodesSearched;
+
+        // in MultiPV mode, only the first line counts for the time management
+        if (excludedMoves.empty())
+            stats.bestMoveNodes = 0uz;
 
         auto moveIdx = 0uz;
 
@@ -671,16 +825,23 @@ namespace {
                 continue;
 
             // with an aspiration window, the first move may fail low without raising alpha,
-            // but we still want to search the later moves with a null window
+            // but the later moves should still get a null window search first
             const bool isFirstMove = moveIdx == 0uz;
 
             callbacks.root_move(move, moveIdx++);
 
+            const auto nodesBefore = stats.nodesSearched;
+
             PvList childPV;
 
-            auto create_context = [depth, &transTable, &interrupter, &stats, &childPV, &killerMoves, &history, &pst](const Bounds boundsToUse, const Position& pos) {
+            auto create_context = [depth, move, &transTable, &interrupter, &stats, &childPV, &killerMoves, &history, &stack, &pawnTable](const Bounds boundsToUse, const Position& pos) {
+                // reset each time, as in AlphaBetaContext::recurse()
+                auto* const stackEntry = stack.at(1uz);
+
+                *stackEntry = { .move = move, .staticEval = std::nullopt };
+
                 return AlphaBetaContext {
-                    boundsToUse, pos, depth, 1uz, transTable, interrupter, stats, childPV, killerMoves, history, pst
+                    boundsToUse, pos, depth, 1uz, transTable, interrupter, stats, childPV, killerMoves, history, pawnTable, stackEntry
                 };
             };
 
@@ -706,24 +867,32 @@ namespace {
 
             ++stats.nodesSearched;
 
+            // an aborted search's score is meaningless, so it mustn't make this the best move
+            if (interrupter.was_aborted())
+                break;
+
             if (score > bounds.alpha) {
                 bounds.alpha = score;
 
                 pv.clear();
                 pv.emplace_back(move);
 
+                // in MultiPV mode, only the first line's best move counts
+                if (excludedMoves.empty())
+                    stats.bestMoveNodes = stats.nodesSearched - nodesBefore;
+
                 childPV.to_movelist(pv);
 
                 killerMoves.store(0uz, move);
             }
 
-            if (interrupter.was_aborted())
-                break;
-
             // fail high (only possible with an aspiration window)
             if (bounds.alpha >= bounds.beta)
                 break;
         }
+
+        if (excludedMoves.empty())
+            stats.firstLineNodes = stats.nodesSearched - lineStartNodes;
 
         return {
             .score = bounds.alpha,
@@ -731,29 +900,29 @@ namespace {
         };
     }
 
-    // aspiration windows: search the first line with a narrow window around
-    // the previous iteration's score, widening the window if the search fails
+    // aspiration windows: searches the first line with a narrow window around the previous
+    // iteration's score, & widens the window on the side that failed until the score is inside it
     [[nodiscard]] auto search_root_line_aspiration(
-        const size_t                   depth,
-        Options&                       options,
-        const Position&                position,
-        TranspositionTable&            transTable,
-        Interrupter&                   interrupter,
-        KillerMoves&                   killerMoves,
-        HistoryTable&                  history,
-        const eval::PieceSquareTables& pst,
-        const Callbacks&               callbacks,
-        Stats&                         stats,
-        const std::optional<Score>     prevScore)
+        const size_t               depth,
+        Options&                   options,
+        const Position&            position,
+        TranspositionTable&        transTable,
+        Interrupter&               interrupter,
+        KillerMoves&               killerMoves,
+        HistoryTable&              history,
+        SearchStack&               stack,
+        PawnTable&                 pawnTable,
+        const Callbacks&           callbacks,
+        Stats&                     stats,
+        const std::optional<Score> prevScore)
         -> Result::Line
     {
         const MoveList excludedMoves;
 
-        // don't use a window if we have no previous score to center it on,
-        // or if the previous score was mate
+        // don't use a window if there's no previous score to center it on, or if it was a mate
         if (not prevScore.has_value() or prevScore->is_mate()) {
             return search_root_line(
-                depth, options, excludedMoves, position, transTable, interrupter, killerMoves, history, pst, callbacks, stats);
+                depth, options, excludedMoves, position, transTable, interrupter, killerMoves, history, stack, pawnTable, callbacks, stats);
         }
 
         static constexpr int maxValue = eval::MAX;
@@ -770,13 +939,14 @@ namespace {
             };
 
             auto line = search_root_line(
-                depth, options, excludedMoves, position, transTable, interrupter, killerMoves, history, pst, callbacks, stats, bounds);
+                depth, options, excludedMoves, position, transTable, interrupter, killerMoves, history, stack, pawnTable, callbacks, stats, bounds);
 
+            // root_search() decides what to keep from an aborted search
             if (interrupter.was_aborted())
                 return line;
 
             if (line.pv.empty() or line.score <= bounds.alpha) {
-                // fail low
+                // fail low: beta moves to the middle of the old window
                 beta  = (alpha + beta) / 2;
                 alpha = std::max(alpha - delta, -maxValue);
             } else if (line.score >= bounds.beta) {
@@ -796,17 +966,18 @@ namespace {
     }
 
     [[nodiscard]] auto root_search(
-        const size_t                   depth,
-        Options&                       options,
-        const Position&                position,
-        TranspositionTable&            transTable,
-        Interrupter&                   interrupter,
-        KillerMoves&                   killerMoves,
-        HistoryTable&                  history,
-        const eval::PieceSquareTables& pst,
-        const Callbacks&               callbacks,
-        const std::optional<Move>      prevBestMove,
-        const std::optional<Score>     prevScore)
+        const size_t               depth,
+        Options&                   options,
+        const Position&            position,
+        TranspositionTable&        transTable,
+        Interrupter&               interrupter,
+        KillerMoves&               killerMoves,
+        HistoryTable&              history,
+        SearchStack&               stack,
+        PawnTable&                 pawnTable,
+        const Callbacks&           callbacks,
+        const std::optional<Move>  prevBestMove,
+        const std::optional<Score> prevScore)
         -> RootSearchResult
     {
         const Timer timer;
@@ -838,11 +1009,24 @@ namespace {
         for (auto lineIdx = 0uz; lineIdx < numLines; ++lineIdx) {
             auto line = lineIdx == 0uz
                           ? search_root_line_aspiration(
-                                depth, options, position, transTable, interrupter, killerMoves, history, pst, callbacks, result.stats, prevScore)
+                                depth, options, position, transTable, interrupter, killerMoves, history, stack, pawnTable, callbacks, result.stats, prevScore)
                           : search_root_line(
-                                depth, options, excludedMoves, position, transTable, interrupter, killerMoves, history, pst, callbacks, result.stats);
+                                depth, options, excludedMoves, position, transTable, interrupter, killerMoves, history, stack, pawnTable, callbacks, result.stats);
 
-            if (interrupter.was_aborted() or line.pv.empty())
+            // if the search was aborted, the first line's best move so far was still fully searched,
+            // so it's kept (see Context::search()). With an aspiration window, that's only from
+            // the search that was aborted, since a search that failed returns an empty PV or a
+            // move that failed high, & either way it's searched again
+            if (interrupter.was_aborted()) {
+                if (lineIdx == 0uz and not line.pv.empty()) {
+                    result.pv        = std::move(line.pv);
+                    result.bestScore = line.score;
+                }
+
+                break;
+            }
+
+            if (line.pv.empty())
                 break;
 
             excludedMoves.emplace_back(line.pv.front());
@@ -858,6 +1042,74 @@ namespace {
         result.duration = timer.get_duration();
 
         return result;
+    }
+
+    // the iteration depth from which the soft time limit is scaled by how the search is going.
+    // Below this, the iterations are too short for their statistics to mean much
+    constexpr auto TM_SCALING_MIN_DEPTH { 7uz };
+
+    // the most consecutive iterations that the best move or score staying the same counts for
+    constexpr auto MAX_STABILITY { 4uz };
+
+    // indexed by the number of consecutive iterations that had the same best move
+    constexpr std::array<double, MAX_STABILITY + 1uz> BEST_MOVE_STABILITY_SCALES {
+        2.43, 1.35, 1.09, 0.88, 0.68
+    };
+
+    // indexed by the number of consecutive iterations whose score was within
+    // EVAL_STABILITY_MARGIN of the one before
+    constexpr std::array<double, MAX_STABILITY + 1uz> EVAL_STABILITY_SCALES {
+        1.25, 1.15, 1.00, 0.94, 0.88
+    };
+
+    constexpr auto EVAL_STABILITY_MARGIN { 10 };
+
+    // how many iterations in a row the best move & score have stayed the same
+    struct Stability final {
+        size_t bestMove { 0uz };
+        size_t eval { 0uz };
+
+        std::optional<Score> prevScore;
+
+        void update(const std::optional<Move> prevBestMove, const RootSearchResult& result) noexcept
+        {
+            if (prevBestMove.has_value() and not result.pv.empty() and result.pv.front() == *prevBestMove)
+                bestMove = std::min(bestMove + 1uz, MAX_STABILITY);
+            else
+                bestMove = 0uz;
+
+            if (prevScore.has_value()
+                and std::abs(static_cast<int>(result.bestScore) - static_cast<int>(*prevScore)) <= EVAL_STABILITY_MARGIN)
+                eval = std::min(eval + 1uz, MAX_STABILITY);
+            else
+                eval = 0uz;
+
+            prevScore = result.bestScore;
+        }
+    };
+
+    // When most of the nodes went into searching the best move, the other moves were refuted
+    // quickly, so the best move probably won't change & we can stop sooner. When the best move
+    // took only a small share of the nodes, the other moves were hard to refute, so it's worth
+    // searching longer. The node scale goes from 0.675 (all the nodes) to 2.025 (none of them).
+    // We also stop sooner when the best move & score have stayed the same for a few iterations,
+    // & search longer when they've just changed
+    [[nodiscard]] auto scale_soft_time_limit(
+        const milliseconds softLimit, const size_t depth, const Stats& stats, const Stability& stability) noexcept -> milliseconds
+    {
+        if (depth < TM_SCALING_MIN_DEPTH or stats.firstLineNodes == 0uz)
+            return softLimit;
+
+        const auto bestMoveFraction = static_cast<double>(stats.bestMoveNodes)
+                                    / static_cast<double>(stats.firstLineNodes);
+
+        const auto scale = (1.5 - bestMoveFraction) * 1.35
+                         * BEST_MOVE_STABILITY_SCALES.at(stability.bestMove)
+                         * EVAL_STABILITY_SCALES.at(stability.eval);
+
+        return milliseconds {
+            static_cast<milliseconds::rep>(static_cast<double>(softLimit.count()) * scale)
+        };
     }
 
     using std::memory_order;
@@ -893,7 +1145,12 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
     Interrupter interrupter { exitFlag, pondering, options.searchTime, options.infinite };
 
     transTable.new_search();
-    history.age();
+    history->age();
+
+    // the root's entry & the sentinels before it are never written to, so they keep the null
+    // moves & missing static evals that they start with. The game's real previous moves aren't
+    // known here, since Position doesn't store them.
+    SearchStack stack;
     callbacks.search_start(options);
 
     // if the movesToSearch was empty, then we search all legal moves
@@ -918,7 +1175,14 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
     // the last depth that was fully searched, which is the depth we report
     auto completedDepth { 0uz };
 
-    while (options.infinite or pondering.load(memory_order::acquire) or depth <= options.depth) {
+    // the deepest iteration we'll search. Without this limit, when we're being mated each
+    // iteration only searches a handful of nodes, so we'd keep going far past MAX_PLY
+    const auto maxDepth = std::min(options.depth, MAX_DEPTH);
+
+    Stability stability;
+
+    while ((options.infinite or pondering.load(memory_order::acquire) or depth <= maxDepth)
+           and depth <= MAX_DEPTH) {
         if (interrupter.should_abort(0uz))
             break;
 
@@ -931,13 +1195,23 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
                                  : std::nullopt;
 
         const auto res = root_search(
-            depth, options, position, transTable, interrupter, killerMoves, history, pieceSquareTables, callbacks, prevBestMove, prevScore);
+            depth, options, position, transTable, interrupter, killerMoves, *history, stack, pawnTable, callbacks, prevBestMove, prevScore);
 
-        if (interrupter.was_aborted())
+        if (interrupter.was_aborted()) {
+            // The previous best move is searched first, so any move that the aborted iteration
+            // found was fully searched to this depth & either is that move or beat it. With
+            // MultiPV, the other lines would be lost, so the last complete iteration is kept.
+            // The reported depth is still the last one that was completed
+            if (not res.pv.empty() and options.multiPV == 1uz)
+                result = res;
+
             break;
+        }
 
         result         = res;
         completedDepth = depth;
+
+        stability.update(prevBestMove, result);
 
         totalNodesSearched += result.stats.nodesSearched;
 
@@ -968,7 +1242,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
 
             // once we've used up the soft time limit, don't start a deeper iteration
             if (options.softSearchTime.has_value()
-                and interrupter.get_search_duration() >= *options.softSearchTime)
+                and interrupter.get_search_duration() >= scale_soft_time_limit(*options.softSearchTime, depth, result.stats, stability))
                 break;
 
             // if the iteration we just completed took as much or more time than we
@@ -984,7 +1258,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         // in the infinite case, we do allow this repetition because we want to print the
         // final output before we're going to spin, then the stop command will print the
         // final info again and the bestmove
-        if (depth < options.depth or options.infinite or pondering.load(memory_order::acquire)) {
+        if (depth < maxDepth or options.infinite or pondering.load(memory_order::acquire)) {
             callbacks.iteration_complete(
                 result.to_cb_result(depth, transTable.hashfull()));
         }

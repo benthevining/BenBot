@@ -42,6 +42,15 @@ struct [[nodiscard]] CastlingRightsChanges final {
     CastlingRightsChanges rightsChanges)
     -> Position::Hash;
 
+// calculates the hash of only the pawns in the position, ignoring all other state
+[[nodiscard, gnu::pure]] auto calculate_pawns(const Position& pos) -> Position::Hash;
+
+// returns the new pawn hash after making the given move. This must be called before
+// the move is applied to the position
+[[nodiscard, gnu::pure]] auto update_pawns(
+    const Position& pos, Move move)
+    -> Position::Hash;
+
 [[nodiscard, gnu::pure]] auto after_null_move(
     const Position& pos)
     -> Position::Hash;
