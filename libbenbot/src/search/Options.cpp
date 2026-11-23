@@ -62,11 +62,12 @@ namespace {
             (available / movesToGo) + (inc * 3 / 4),
             available / 2);
 
-        // the hard limit lets an iteration that's already started run on for a while, but
-        // never past twice our share of the clock, or 3/4 of the clock (whichever is less)
+        // the hard limit lets an iteration that's already started run on for a while, & leaves
+        // room for the search to scale the soft limit up when the best move is unstable, but
+        // never past 4 times the soft limit, or a quarter of the clock (whichever is less)
         const auto hard = std::max(
             soft,
-            std::min({ soft * 3, available * 2 / movesToGo, available * 3 / 4 }));
+            std::min(soft * 4, available / 4));
 
         return { .soft = std::max(soft, milliseconds { 1 }), .hard = std::max(hard, milliseconds { 1 }) };
     }

@@ -178,6 +178,9 @@ namespace {
         size_t betaCutoffs { 0uz };
         size_t mdpCutoffs { 0uz }; // cutoffs due to mate distance pruning
         size_t qDepth { 0uz };     // max depth reached by any quiescence search
+
+        // nodes spent searching the best root move of the first line, used by the time management
+        size_t bestMoveNodes { 0uz };
     };
 
     // late move reductions table, indexed by [depth][move index]
@@ -788,6 +791,8 @@ namespace {
 
             callbacks.root_move(move, moveIdx++);
 
+            const auto nodesBefore = stats.nodesSearched;
+
             PvList childPV;
 
             auto create_context = [depth, move, &transTable, &interrupter, &stats, &childPV, &killerMoves, &history, &stack, &pawnTable](const Bounds boundsToUse, const Position& pos) {
@@ -823,11 +828,19 @@ namespace {
 
             ++stats.nodesSearched;
 
+            // an aborted search's score is meaningless, so it mustn't make this the best move
+            if (interrupter.was_aborted())
+                break;
+
             if (score > bounds.alpha) {
                 bounds.alpha = score;
 
                 pv.clear();
                 pv.emplace_back(move);
+
+                // in MultiPV mode, only the first line's best move counts
+                if (excludedMoves.empty())
+                    stats.bestMoveNodes = stats.nodesSearched - nodesBefore;
 
                 childPV.to_movelist(pv);
 
@@ -835,9 +848,6 @@ namespace {
 
                 foundPV = true;
             }
-
-            if (interrupter.was_aborted())
-                break;
         }
 
         return {
@@ -890,7 +900,18 @@ namespace {
             auto line = search_root_line(
                 depth, options, excludedMoves, position, transTable, interrupter, killerMoves, history, stack, pawnTable, callbacks, result.stats);
 
-            if (interrupter.was_aborted() or line.pv.empty())
+            // if the search was aborted, the first line's best move so far was still fully searched,
+            // so it's kept (see Context::search())
+            if (interrupter.was_aborted()) {
+                if (lineIdx == 0uz and not line.pv.empty()) {
+                    result.pv        = std::move(line.pv);
+                    result.bestScore = line.score;
+                }
+
+                break;
+            }
+
+            if (line.pv.empty())
                 break;
 
             excludedMoves.emplace_back(line.pv.front());
@@ -906,6 +927,74 @@ namespace {
         result.duration = timer.get_duration();
 
         return result;
+    }
+
+    // the iteration depth from which the soft time limit is scaled by how the search is going.
+    // Below this, the iterations are too short for their statistics to mean much
+    constexpr auto TM_SCALING_MIN_DEPTH { 7uz };
+
+    // the most consecutive iterations that the best move or score staying the same counts for
+    constexpr auto MAX_STABILITY { 4uz };
+
+    // indexed by the number of consecutive iterations that had the same best move
+    constexpr std::array<double, MAX_STABILITY + 1uz> BEST_MOVE_STABILITY_SCALES {
+        2.43, 1.35, 1.09, 0.88, 0.68
+    };
+
+    // indexed by the number of consecutive iterations whose score was within
+    // EVAL_STABILITY_MARGIN of the one before
+    constexpr std::array<double, MAX_STABILITY + 1uz> EVAL_STABILITY_SCALES {
+        1.25, 1.15, 1.00, 0.94, 0.88
+    };
+
+    constexpr auto EVAL_STABILITY_MARGIN { 10 };
+
+    // how many iterations in a row the best move & score have stayed the same
+    struct Stability final {
+        size_t bestMove { 0uz };
+        size_t eval { 0uz };
+
+        std::optional<Score> prevScore;
+
+        void update(const std::optional<Move> prevBestMove, const RootSearchResult& result) noexcept
+        {
+            if (prevBestMove.has_value() and not result.pv.empty() and result.pv.front() == *prevBestMove)
+                bestMove = std::min(bestMove + 1uz, MAX_STABILITY);
+            else
+                bestMove = 0uz;
+
+            if (prevScore.has_value()
+                and std::abs(static_cast<int>(result.bestScore) - static_cast<int>(*prevScore)) <= EVAL_STABILITY_MARGIN)
+                eval = std::min(eval + 1uz, MAX_STABILITY);
+            else
+                eval = 0uz;
+
+            prevScore = result.bestScore;
+        }
+    };
+
+    // When most of the nodes went into searching the best move, the other moves were refuted
+    // quickly, so the best move probably won't change & we can stop sooner. When the best move
+    // took only a small share of the nodes, the other moves were hard to refute, so it's worth
+    // searching longer. The node scale goes from 0.675 (all the nodes) to 2.025 (none of them).
+    // We also stop sooner when the best move & score have stayed the same for a few iterations,
+    // & search longer when they've just changed
+    [[nodiscard]] auto scale_soft_time_limit(
+        const milliseconds softLimit, const size_t depth, const Stats& stats, const Stability& stability) noexcept -> milliseconds
+    {
+        if (depth < TM_SCALING_MIN_DEPTH or stats.nodesSearched == 0uz)
+            return softLimit;
+
+        const auto bestMoveFraction = static_cast<double>(stats.bestMoveNodes)
+                                    / static_cast<double>(stats.nodesSearched);
+
+        const auto scale = (1.5 - bestMoveFraction) * 1.35
+                         * BEST_MOVE_STABILITY_SCALES.at(stability.bestMove)
+                         * EVAL_STABILITY_SCALES.at(stability.eval);
+
+        return milliseconds {
+            static_cast<milliseconds::rep>(static_cast<double>(softLimit.count()) * scale)
+        };
     }
 
     using std::memory_order;
@@ -976,7 +1065,14 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
     // the last depth that was fully searched, which is the depth we report
     auto completedDepth { 0uz };
 
-    while (options.infinite or pondering.load(memory_order::acquire) or depth <= options.depth) {
+    // the deepest iteration we'll search. Without this limit, when we're being mated each
+    // iteration only searches a handful of nodes, so we'd keep going far past MAX_PLY
+    const auto maxDepth = std::min(options.depth, MAX_DEPTH);
+
+    Stability stability;
+
+    while ((options.infinite or pondering.load(memory_order::acquire) or depth <= maxDepth)
+           and depth <= MAX_DEPTH) {
         if (interrupter.should_abort(0uz))
             break;
 
@@ -987,11 +1083,21 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         const auto res = root_search(
             depth, options, position, transTable, interrupter, killerMoves, *history, stack, pawnTable, callbacks, prevBestMove);
 
-        if (interrupter.was_aborted())
+        if (interrupter.was_aborted()) {
+            // The previous best move is searched first, so any move that the aborted iteration
+            // found was fully searched to this depth & either is that move or beat it. With
+            // MultiPV, the other lines would be lost, so the last complete iteration is kept.
+            // The reported depth is still the last one that was completed
+            if (not res.pv.empty() and options.multiPV == 1uz)
+                result = res;
+
             break;
+        }
 
         result         = res;
         completedDepth = depth;
+
+        stability.update(prevBestMove, result);
 
         totalNodesSearched += result.stats.nodesSearched;
 
@@ -1022,7 +1128,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
 
             // once we've used up the soft time limit, don't start a deeper iteration
             if (options.softSearchTime.has_value()
-                and interrupter.get_search_duration() >= *options.softSearchTime)
+                and interrupter.get_search_duration() >= scale_soft_time_limit(*options.softSearchTime, depth, result.stats, stability))
                 break;
 
             // if the iteration we just completed took as much or more time than we
@@ -1038,7 +1144,7 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         // in the infinite case, we do allow this repetition because we want to print the
         // final output before we're going to spin, then the stop command will print the
         // final info again and the bestmove
-        if (depth < options.depth or options.infinite or pondering.load(memory_order::acquire)) {
+        if (depth < maxDepth or options.infinite or pondering.load(memory_order::acquire)) {
             callbacks.iteration_complete(
                 result.to_cb_result(depth, transTable.hashfull()));
         }

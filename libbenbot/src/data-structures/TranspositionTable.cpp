@@ -28,9 +28,11 @@
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Score.hpp>
 #include <libbenbot/search/Bounds.hpp>
+#include <libbenbot/search/Constants.hpp>
 #include <libchess/game/Position.hpp>
 #include <libutil/Math.hpp>
 #include <libutil/Memory.hpp>
+#include <limits>
 #include <memory>
 #include <numeric>
 #include <optional>
@@ -41,6 +43,9 @@
 namespace ben_bot {
 
 using std::size_t;
+
+// entries store the searched depth + 1 in 8 bits
+static_assert(search::MAX_DEPTH + 1uz <= std::numeric_limits<std::uint8_t>::max());
 
 inline constexpr auto GENERATION_DELTA = 8uz;
 inline constexpr auto GENERATION_CYCLE = 255uz + GENERATION_DELTA;
@@ -104,6 +109,9 @@ struct TranspositionTable::Entry final {
         // the best move it has, since that's still our best guess for move ordering
         if (data.bestMove.has_value() or keyToUse != key)
             move = data.bestMove.value_or(Move { });
+
+        // a deeper search would wrap around in the 8 bits we store it in
+        assert(data.searchedDepth <= search::MAX_DEPTH);
 
         key        = keyToUse;
         depth      = static_cast<std::uint_least8_t>(data.searchedDepth + 1uz);

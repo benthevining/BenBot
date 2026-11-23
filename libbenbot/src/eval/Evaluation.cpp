@@ -21,6 +21,7 @@
 #include "eval/Threats.hpp"
 #include <algorithm>
 #include <cassert>
+#include <cstdint>
 #include <libbenbot/eval/DefaultWeights.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
 #include <libbenbot/eval/Material.hpp>
@@ -46,20 +47,22 @@ namespace ben_bot::eval {
 
 namespace {
 
-    // game phase is roughly determined based on the total amount of non-pawn material left on the board
-    // we say that the endgame has begun once the queens & two pairs of minor pieces have been traded
-    // (the phase uses the fixed piece_values, not the eval's material weights). MAX_PHASE is in Trace.hpp
-
-    // returns a [0..MAX_PHASE] value that is MAX_PHASE until the endgame starts, then falls
-    // linearly to 0 as the remaining non-pawn material is traded off
+    // the game phase is the sum of the phase weights of the non-pawn pieces left on the board
+    // (knights & bishops 1, rooks 2, queens 4, see Trace.hpp). Returns a [0..MAX_PHASE] value that
+    // is MAX_PHASE in the starting position, and falls to 0 as the pieces are traded off. It's capped
+    // at MAX_PHASE, for positions with promoted pieces
     [[nodiscard, gnu::pure]] constexpr auto middlegame_phase(
         const Position& position) noexcept
-        -> int
+        -> std::int32_t
     {
-        const auto nonPawnMaterialLeft = detail::count_material<false>(position.whitePieces)
-                                       + detail::count_material<false>(position.blackPieces);
+        const auto side_phase = [](const chess::board::Pieces& pieces) {
+            return (static_cast<std::int32_t>(pieces.knights.count()) * phase_weights::KNIGHT)
+                 + (static_cast<std::int32_t>(pieces.bishops.count()) * phase_weights::BISHOP)
+                 + (static_cast<std::int32_t>(pieces.rooks.count()) * phase_weights::ROOK)
+                 + (static_cast<std::int32_t>(pieces.queens.count()) * phase_weights::QUEEN);
+        };
 
-        return std::min(nonPawnMaterialLeft, MAX_PHASE);
+        return std::min(side_phase(position.whitePieces) + side_phase(position.blackPieces), MAX_PHASE);
     }
 
     using chess::board::Bitboard;
@@ -131,7 +134,8 @@ namespace {
              - score_side_pieces<true>(position.their_pieces(), tracer);
     }
 
-    // awards a bonus for rooks on open or half-open files
+    // awards a bonus for rooks on open or half-open files. A file is open if neither side has a
+    // pawn on it, and half-open for us if we have no pawn on it but they do
     template <typename Tracer>
     [[nodiscard]] auto score_rook_files(
         const Position& position, Tracer& tracer) noexcept
@@ -141,12 +145,12 @@ namespace {
             TaperedScore score;
 
             for (const auto square : pieces.rooks.squares()) {
-                if (position.is_file_half_open(square.file)) {
-                    score += DEFAULT_WEIGHTS.get(Term::RookHalfOpenFile);
-                    tracer.add(Term::RookHalfOpenFile, side, 1);
-                } else if (position.is_file_open(square.file)) {
+                if (position.is_file_open(square.file)) {
                     score += DEFAULT_WEIGHTS.get(Term::RookOpenFile);
                     tracer.add(Term::RookOpenFile, side, 1);
+                } else if (pieces.is_file_half_open(square.file)) {
+                    score += DEFAULT_WEIGHTS.get(Term::RookHalfOpenFile);
+                    tracer.add(Term::RookHalfOpenFile, side, 1);
                 }
             }
 
@@ -195,26 +199,26 @@ namespace {
                                    allPawns = position.whitePieces.pawns | position.blackPieces.pawns](
                                    const Pieces& pieces, const chess::game::CastlingRights& castlingRights,
                                    const Pieces& enemyPieces, const Color side) {
-            static constexpr auto STARTING_NON_PAWN_MATERIAL
-                = piece_values::QUEEN + (piece_values::ROOK * 2) + (piece_values::BISHOP * 2) + (piece_values::KNIGHT * 2);
-
-            // the score is weighted by the opponent's remaining material (with the fixed piece_values),
-            // so the tracer counts each term this many times
-            const auto materialFactor = detail::count_material<false>(enemyPieces) / STARTING_NON_PAWN_MATERIAL;
+            // These terms aren't scaled by the opponent's material: each one has its own middlegame &
+            // endgame weight, so the game phase blend already decides how much they count as pieces
+            // are traded off
 
             TaperedScore score;
 
             const auto location = pieces.get_king_location();
 
-            // king on open file or diagonal
-            if (position.is_file_half_open(location.file)) {
+            // king on a half-open file (we have no pawn on it, but they do), or on an open
+            // file or pawnless diagonal
+            const bool fileOpen = position.is_file_open(location.file);
+
+            if (not fileOpen and pieces.is_file_half_open(location.file)) {
                 score += DEFAULT_WEIGHTS.get(Term::KingHalfOpenFile);
-                tracer.add(Term::KingHalfOpenFile, side, materialFactor);
-            } else if (position.is_file_open(location.file)
+                tracer.add(Term::KingHalfOpenFile, side, 1);
+            } else if (fileOpen
                        or (masks::diagonal(location) & allPawns).none()
                        or (masks::antidiagonal(location) & allPawns).none()) {
                 score += DEFAULT_WEIGHTS.get(Term::KingOpenLine);
-                tracer.add(Term::KingOpenLine, side, materialFactor);
+                tracer.add(Term::KingOpenLine, side, 1);
             }
 
             using chess::board::File;
@@ -223,7 +227,7 @@ namespace {
             if (castlingRights.neither()
                 and (location.file == File::D or location.file == File::E)) {
                 score += DEFAULT_WEIGHTS.get(Term::KingStranded);
-                tracer.add(Term::KingStranded, side, materialFactor);
+                tracer.add(Term::KingStranded, side, 1);
             }
 
             // enemy knights & queens near king
@@ -235,7 +239,7 @@ namespace {
 
                 // penalty increases with smaller distance
                 score += DEFAULT_WEIGHTS.get(Term::KnightTropism) * distance;
-                tracer.add(Term::KnightTropism, side, distance * materialFactor);
+                tracer.add(Term::KnightTropism, side, distance);
             }
 
             for (const auto queenPos : enemyPieces.queens.squares()) {
@@ -245,11 +249,10 @@ namespace {
 
                 // penalty increases with smaller distance
                 score += DEFAULT_WEIGHTS.get(Term::QueenTropism) * distance;
-                tracer.add(Term::QueenTropism, side, distance * materialFactor);
+                tracer.add(Term::QueenTropism, side, distance);
             }
 
-            // weight score by opponent's remaining material
-            return score * materialFactor;
+            return score;
         };
 
         const bool isWhite = position.is_white_to_move();

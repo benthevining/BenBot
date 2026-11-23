@@ -25,7 +25,7 @@
 #include <libbenbot/search/Context.hpp>
 #include <libchess/game/Position.hpp>
 #include <libutil/Memory.hpp>
-#include <thread>
+#include <libutil/Threading.hpp>
 
 namespace chess::uci {
 struct GoCommandOptions;
@@ -85,9 +85,15 @@ private:
     alignas(util::memory::CacheLineSize) std::atomic_bool threadShouldExit { false };
     alignas(util::memory::CacheLineSize) std::atomic_bool startSearch { false };
 
+    // The search recurses once per ply, up to MAX_PLY plies deep, & each ply uses about 3 KiB
+    // of stack in a Release build (more in Debug & sanitizer builds), so it can need more than
+    // the default stack size for a new thread, which is only 512 KiB on macOS. The memory is
+    // only reserved, so a generous size costs nothing until the search actually goes that deep.
+    static constexpr auto STACK_SIZE { 64uz * 1024uz * 1024uz };
+
     // this must be declared after everything that thread_func() uses, since members are
     // initialized in declaration order and the thread starts running as soon as it's created
-    std::thread searcherThread { [this] { thread_func(); } };
+    util::LargeStackThread searcherThread { STACK_SIZE, [this] { thread_func(); } };
 };
 
 } // namespace ben_bot::search

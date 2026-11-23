@@ -61,6 +61,7 @@ Options:
   --save-every <n>      Also write the weights every n epochs (default 100, 0 = only at the end).
   --loss <mse|ce>       The loss: mean squared error or cross-entropy (default mse).
   --k <x>               Use this K instead of fitting it to the starting weights.
+  --l2 <x>              Pull each weight towards its starting value by x * (w - w0)^2 (default 0).
   --patience <n>        Stop if the validation loss hasn't improved for n epochs (default 200, 0 = never).
   --seed <n>            The seed used to choose the validation positions (default 1).
   --limit <n>           Only load the first n positions that pass the filters (default 0 = all).
@@ -87,6 +88,8 @@ struct Options final {
     Loss loss { Loss::MeanSquaredError };
 
     std::optional<double> k;
+
+    double l2 { 0. };
 
     size_t patience { 200uz };
 
@@ -182,6 +185,8 @@ struct Options final {
                 throw std::invalid_argument { std::format("--loss must be mse or ce, not '{}'", text) };
         } else if (name == "--k")
             options.k = parse_double(name, value());
+        else if (name == "--l2")
+            options.l2 = parse_double(name, value());
         else if (name == "--patience")
             options.patience = parse_size(name, value());
         else if (name == "--seed")
@@ -209,6 +214,9 @@ struct Options final {
 
     if (options.k.has_value() and not(*options.k > 0.))
         throw std::invalid_argument { "--k must be positive" };
+
+    if (not(options.l2 >= 0.))
+        throw std::invalid_argument { "--l2 can't be negative" };
 
     return options;
 }
@@ -281,7 +289,9 @@ void run(const Options& options)
         static_cast<double>(numTuples) / static_cast<double>(training.size() + validation.size()),
         seconds_since(start));
 
-    auto params = to_params(ben_bot::eval::DEFAULT_WEIGHTS);
+    const auto startParams = to_params(ben_bot::eval::DEFAULT_WEIGHTS);
+
+    auto params = startParams;
 
     const auto k = options.k.has_value() ? *options.k : fit_k(training, params, options.loss, options.threads);
 
@@ -291,6 +301,9 @@ void run(const Options& options)
     const auto validLoss = [&](const Params& p) { return compute_loss(validation, p, k, options.loss, options.threads); };
 
     std::println("Starting loss: training {:.8f}, validation {:.8f}", trainLoss(params), validLoss(params));
+
+    if (options.l2 > 0.)
+        std::println("Pulling the weights towards their starting values with an L2 penalty of {:g}", options.l2);
 
     Adam adam { tunable_mask() };
 
@@ -304,7 +317,11 @@ void run(const Options& options)
 
     for (auto epoch = 1uz; epoch <= options.epochs; ++epoch) {
         // the training & validation losses printed are both for the weights before this epoch's step
-        const auto [loss, gradient] = compute_loss_and_gradient(training, params, k, options.loss, options.threads);
+        auto [loss, gradient] = compute_loss_and_gradient(training, params, k, options.loss, options.threads);
+
+        // the losses printed are without the L2 penalty, so that they can be compared between runs
+        if (options.l2 > 0.)
+            add_l2_pull(gradient, params, startParams, options.l2);
 
         const auto validation_loss = validLoss(params);
 
@@ -322,7 +339,7 @@ void run(const Options& options)
             learningRate /= 2.;
 
         if (options.saveEvery > 0uz and epoch % options.saveEvery == 0uz)
-            write_weights(options.output, params);
+            write_weights(options.output, recentre(params));
 
         if (useValidation and options.patience > 0uz) {
             if (validation_loss < bestValidation) {
@@ -335,18 +352,26 @@ void run(const Options& options)
         }
     }
 
-    const auto rounded = to_params(round_params(params));
-
     std::println(
         "Final loss after {} epochs: training {:.8f}, validation {:.8f}", epochsRun, trainLoss(params), validLoss(params));
+
+    // the weights are written with each piece square & mobility table's average moved into the
+    // material, which doesn't change any eval (see recentre())
+    const auto recentred = recentre(params);
+
+    std::println(
+        "Final loss with the tables re-centred: training {:.8f}, validation {:.8f}",
+        trainLoss(recentred), validLoss(recentred));
+
+    const auto rounded = to_params(round_params(recentred));
 
     std::println(
         "Final loss with the weights rounded to integers: training {:.8f}, validation {:.8f}",
         trainLoss(rounded), validLoss(rounded));
 
-    print_material(params);
+    print_material(recentred);
 
-    write_weights(options.output, params);
+    write_weights(options.output, recentred);
 
     std::println("Wrote {} ({:.1f} s in total)", options.output.string(), seconds_since(start));
 }

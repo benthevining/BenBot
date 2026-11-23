@@ -138,8 +138,8 @@ TEST_CASE("Trace - changing one weight changes the eval by its coefficient", "[e
     static constexpr auto NUM_SQUARES = chess::board::NUM_SQUARES;
 
     // a few terms of different kinds: material, a piece square table entry, an indexed table,
-    // a king safety term (which is scaled by the enemy material), pawn structure, mobility,
-    // a term that counts our squares minus theirs, and a threat term
+    // a king safety term, pawn structure, mobility, a term that counts our squares minus theirs,
+    // and a threat term
     static constexpr std::array indices {
         offset_of(Term::Material) + static_cast<size_t>(Type::Pawn),
         offset_of(Term::Material) + static_cast<size_t>(Type::Rook),
@@ -238,6 +238,22 @@ TEST_CASE("Trace - coefficients", "[eval][trace]")
 
         // the white king on e1 is 1 square from the passer
         REQUIRE(coeffs_for(trace, offset_of(Term::KingEscortsPasser), Color::White) == 6);
+    }
+
+    SECTION("Game phase")
+    {
+        auto phase_of = [](const char* fen) {
+            return evaluate_traced(chess::notation::from_fen(fen).value()).phase;
+        };
+
+        // the queens are traded: 24 - 2 * 4
+        REQUIRE(phase_of("rnb1kbnr/pppppppp/8/8/8/8/PPPPPPPP/RNB1KBNR w KQkq - 0 1") == 16);
+
+        // a rook & a knight each
+        REQUIRE(phase_of("4k2r/pppp4/2n5/8/8/2N5/PPPP4/R3K3 w - - 0 1") == 6);
+
+        // each side has promoted to a second queen, which doesn't push the phase past a pure middlegame
+        REQUIRE(phase_of("rnbqkbnQ/ppppppp1/8/8/8/8/PPPPPPP1/RNBQKBNq w Qq - 0 1") == ben_bot::eval::MAX_PHASE);
     }
 
     SECTION("Mop-up & last piece terms go into the base")

@@ -18,6 +18,8 @@
 #include <cstdint>
 #include <libbenbot/eval/Trace.hpp>
 #include <libbenbot/eval/Weights.hpp>
+#include <libchess/board/BitboardIndex.hpp>
+#include <libchess/pieces/PieceTypes.hpp>
 #include <limits>
 #include <numeric>
 #include <string_view>
@@ -47,13 +49,18 @@ namespace {
         const auto scale = k / 400.;
 
         if (loss == Loss::CrossEntropy) {
-            // keep log() finite for positions that the model is certain about
-            static constexpr auto TINY = 1e-12;
+            // log(1 + exp(x)), without overflow or losing precision when the model is nearly certain
+            const auto softplus = [](const double x) {
+                return x > 0. ? x + std::log1p(std::exp(-x)) : std::log1p(std::exp(x));
+            };
 
-            const auto clamped = std::clamp(expected, TINY, 1. - TINY);
+            // -log(s) = softplus(-x) and -log(1 - s) = softplus(x), where s = sigmoid(x). Computing
+            // these directly, rather than taking the log of 1 - s, keeps the loss accurate for the
+            // positions that the model is nearly sure about
+            const auto x = scale * eval;
 
             return {
-                .loss       = -((result * std::log(clamped)) + ((1. - result) * std::log(1. - clamped))),
+                .loss       = (result * softplus(-x)) + ((1. - result) * softplus(x)),
                 .derivative = (expected - result) * scale
             };
         }
@@ -100,6 +107,64 @@ auto round_params(const Params& params) -> eval::Weights
         weights.values.at(i) = { .mg = round(params.at(i).mg), .eg = round(params.at(i).eg) };
 
     return weights;
+}
+
+auto recentre(Params params) -> Params
+{
+    using chess::board::NUM_SQUARES;
+    using eval::offset_of;
+    using eval::Term;
+    using PieceType = chess::pieces::Type;
+
+    // subtracts the average of the weights in [first, last) from each of them, and adds it to
+    // the material value of the given piece type (if it has one)
+    const auto move_mean_into_material = [&params](const size_t first, const size_t last, const PieceType type) {
+        FloatScore mean;
+
+        for (auto i = first; i < last; ++i) {
+            mean.mg += params.at(i).mg;
+            mean.eg += params.at(i).eg;
+        }
+
+        const auto count = static_cast<double>(last - first);
+
+        mean.mg /= count;
+        mean.eg /= count;
+
+        for (auto i = first; i < last; ++i) {
+            params.at(i).mg -= mean.mg;
+            params.at(i).eg -= mean.eg;
+        }
+
+        if (type != PieceType::King) {
+            auto& material = params.at(offset_of(Term::Material) + static_cast<size_t>(type));
+
+            material.mg += mean.mg;
+            material.eg += mean.eg;
+        }
+    };
+
+    static constexpr auto SQUARES_PER_RANK = 8uz;
+
+    for (const auto type : { PieceType::Pawn, PieceType::Knight, PieceType::Bishop,
+             PieceType::Rook, PieceType::Queen, PieceType::King }) {
+        const auto table = offset_of(Term::Pst) + (static_cast<size_t>(type) * NUM_SQUARES);
+
+        // pawns are never on the first or last rank
+        if (type == PieceType::Pawn)
+            move_mean_into_material(table + SQUARES_PER_RANK, table + NUM_SQUARES - SQUARES_PER_RANK, type);
+        else
+            move_mean_into_material(table, table + NUM_SQUARES, type);
+    }
+
+    for (const auto& [term, type] : { std::pair { Term::KnightMobility, PieceType::Knight },
+             std::pair { Term::BishopMobility, PieceType::Bishop },
+             std::pair { Term::RookMobility, PieceType::Rook },
+             std::pair { Term::QueenMobility, PieceType::Queen } }) {
+        move_mean_into_material(offset_of(term), offset_of(term) + eval::count_of(term), type);
+    }
+
+    return params;
 }
 
 auto tunable_mask() -> std::vector<bool>
@@ -243,6 +308,29 @@ auto compute_loss_and_gradient(
     }
 
     return result;
+}
+
+auto add_l2_pull(
+    Params& gradient, const Params& params, const Params& start, const double lambda) -> double
+{
+    const auto mask = tunable_mask();
+
+    auto penalty = 0.;
+
+    for (auto i = 0uz; i < std::min({ gradient.size(), params.size(), start.size(), mask.size() }); ++i) {
+        if (not mask.at(i))
+            continue;
+
+        const auto mg = params.at(i).mg - start.at(i).mg;
+        const auto eg = params.at(i).eg - start.at(i).eg;
+
+        penalty += lambda * ((mg * mg) + (eg * eg));
+
+        gradient.at(i).mg += 2. * lambda * mg;
+        gradient.at(i).eg += 2. * lambda * eg;
+    }
+
+    return penalty;
 }
 
 auto fit_k(

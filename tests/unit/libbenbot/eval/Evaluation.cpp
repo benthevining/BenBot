@@ -16,7 +16,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cstddef>
 #include <libbenbot/data-structures/PawnTable.hpp>
+#include <libbenbot/eval/DefaultWeights.hpp>
 #include <libbenbot/eval/Evaluation.hpp>
+#include <libbenbot/eval/Trace.hpp>
+#include <libbenbot/eval/Weights.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/MoveGen.hpp>
 #include <libchess/notation/FEN.hpp>
@@ -286,58 +289,60 @@ TEST_CASE("Evaluation - pawn table gives the same result", "[eval][evaluation][P
 
 TEST_CASE("Evaluation - threats", "[eval][evaluation][threats]")
 {
-    // The black knight is on e5 (attacked by the white pawn) or d5 (not attacked). These are
-    // mirrored squares, so the knight's placement & mobility score the same.
+    // Each pair of positions differs only in whether a black piece is attacked by a white one. The
+    // threat's weight is tuned, and so are the piece square tables (which aren't left-right
+    // symmetric), so this checks that the threat is found and counted for the right side, rather
+    // than the sign of the eval difference. The trace test checks that the counts are exactly what
+    // the eval uses.
+
+    using ben_bot::eval::evaluate_traced;
+    using ben_bot::eval::offset_of;
+    using ben_bot::eval::Term;
+
+    // white's count minus black's count of the given threat
+    auto count = [](const std::string_view fen, const Term term) {
+        return evaluate_traced(from_fen(fen).value()).coefficient(offset_of(term));
+    };
+
+    auto check = [&count](const std::string_view attacked, const std::string_view safe, const Term term) {
+        INFO(attacked);
+
+        REQUIRE(count(attacked, term) == 1);
+        REQUIRE(count(safe, term) == 0);
+    };
+
+    // the black knight is on e5 (attacked by the white pawn) or d5 (not attacked)
 
     SECTION("Pawn attacking a knight - white to move")
     {
-        const auto attacked = from_fen("6k1/8/8/4n3/3P4/8/8/6K1 w - - 0 1").value();
-        const auto safe     = from_fen("6k1/8/8/3n4/3P4/8/8/6K1 w - - 0 1").value();
-
-        REQUIRE(evaluate(attacked) > evaluate(safe));
+        check("6k1/8/8/4n3/3P4/8/8/6K1 w - - 0 1", "6k1/8/8/3n4/3P4/8/8/6K1 w - - 0 1", Term::PawnThreat);
     }
 
     SECTION("Pawn attacking a knight - black to move")
     {
-        const auto attacked = from_fen("6k1/8/8/4n3/3P4/8/8/6K1 b - - 0 1").value();
-        const auto safe     = from_fen("6k1/8/8/3n4/3P4/8/8/6K1 b - - 0 1").value();
-
-        REQUIRE(evaluate(attacked) < evaluate(safe));
+        check("6k1/8/8/4n3/3P4/8/8/6K1 b - - 0 1", "6k1/8/8/3n4/3P4/8/8/6K1 b - - 0 1", Term::PawnThreat);
     }
 
-    // In the rest of these, the black piece is on e6 (attacked) or d6 (not attacked), which are
-    // also mirrored squares.
+    // in the rest of these, the black piece is on e6 (attacked) or d6 (not attacked)
 
     SECTION("Knight attacking a rook")
     {
-        const auto attacked = from_fen("6k1/8/4r3/8/5N2/8/8/6K1 w - - 0 1").value();
-        const auto safe     = from_fen("6k1/8/3r4/8/5N2/8/8/6K1 w - - 0 1").value();
-
-        REQUIRE(evaluate(attacked) > evaluate(safe));
+        check("6k1/8/4r3/8/5N2/8/8/6K1 w - - 0 1", "6k1/8/3r4/8/5N2/8/8/6K1 w - - 0 1", Term::MinorOnRook);
     }
 
     SECTION("Bishop attacking a rook")
     {
-        const auto attacked = from_fen("6k1/8/4r3/8/2B5/8/8/6K1 b - - 0 1").value();
-        const auto safe     = from_fen("6k1/8/3r4/8/2B5/8/8/6K1 b - - 0 1").value();
-
-        REQUIRE(evaluate(attacked) < evaluate(safe));
+        check("6k1/8/4r3/8/2B5/8/8/6K1 b - - 0 1", "6k1/8/3r4/8/2B5/8/8/6K1 b - - 0 1", Term::MinorOnRook);
     }
 
     SECTION("Knight attacking a queen")
     {
-        const auto attacked = from_fen("6k1/8/4q3/6N1/8/8/PPP5/1K6 w - - 0 1").value();
-        const auto safe     = from_fen("6k1/8/3q4/6N1/8/8/PPP5/1K6 w - - 0 1").value();
-
-        REQUIRE(evaluate(attacked) > evaluate(safe));
+        check("6k1/8/4q3/6N1/8/8/PPP5/1K6 w - - 0 1", "6k1/8/3q4/6N1/8/8/PPP5/1K6 w - - 0 1", Term::MinorOnQueen);
     }
 
     SECTION("Rook attacking a queen")
     {
-        const auto attacked = from_fen("6k1/8/4q3/8/8/8/4R3/6K1 w - - 0 1").value();
-        const auto safe     = from_fen("6k1/8/3q4/8/8/8/4R3/6K1 w - - 0 1").value();
-
-        REQUIRE(evaluate(attacked) > evaluate(safe));
+        check("6k1/8/4q3/8/8/8/4R3/6K1 w - - 0 1", "6k1/8/3q4/8/8/8/4R3/6K1 w - - 0 1", Term::RookOnQueen);
     }
 }
 
@@ -391,5 +396,224 @@ TEST_CASE("Evaluation - hanging pieces", "[eval][evaluation][threats]")
         check_pair(
             "8/8/4k3/4n3/2N5/4NN2/6K1/8 w - - 0 1",
             "8/8/4k3/3n4/2N5/4NN2/6K1/8 w - - 0 1");
+    }
+}
+
+TEST_CASE("Evaluation - threats raise the eval", "[eval][evaluation][threats]")
+{
+    // The threat weights are tuned, and some of them are slightly negative in one phase: the minor
+    // & rook threats in the endgame, and the hanging bonus in the middlegame (a hanging piece is
+    // often attacked by a pawn too, which already scores). But in the phase where each one's
+    // weight is positive, a threat should be worth something to the side making it. Each of these
+    // positions has a threat by White, and its eval is compared with the eval of the same position
+    // with that threat's weight set to 0, so the check doesn't depend on any other eval terms.
+
+    using ben_bot::eval::count_of;
+    using ben_bot::eval::DEFAULT_WEIGHTS;
+    using ben_bot::eval::evaluate_traced;
+    using ben_bot::eval::offset_of;
+    using ben_bot::eval::Term;
+
+    auto check = [](const std::string_view fen, const Term term) {
+        INFO(fen);
+
+        const auto position = from_fen(fen).value();
+        const auto trace    = evaluate_traced(position);
+
+        REQUIRE(trace.score(DEFAULT_WEIGHTS) == evaluate(position));
+        REQUIRE(trace.coefficient(offset_of(term)) > 0);
+
+        auto withoutThreat = DEFAULT_WEIGHTS;
+
+        for (auto i = 0uz; i < count_of(term); ++i)
+            withoutThreat.values.at(offset_of(term) + i) = { };
+
+        // scores are from the side to move's point of view
+        if (position.is_white_to_move())
+            REQUIRE(trace.score(DEFAULT_WEIGHTS) > trace.score(withoutThreat));
+        else
+            REQUIRE(trace.score(DEFAULT_WEIGHTS) < trace.score(withoutThreat));
+    };
+
+    for (const auto* const toMove : { " w", " b" }) {
+        const std::string side { toMove };
+
+        SECTION("Pawn attacking a knight" + side)
+        {
+            check("r1bqkb1r/pppp1ppp/5n2/4p3/2n1P3/1P6/P1PP1PPP/RNBQKBNR" + side + " KQkq - 0 1", Term::PawnThreat);
+        }
+
+        SECTION("Knight attacking a rook" + side)
+        {
+            check("rnbqkbn1/ppppppp1/8/8/7r/5N2/PPPPPPPP/RNBQKB1R" + side + " KQq - 0 1", Term::MinorOnRook);
+        }
+
+        SECTION("Knight attacking a queen" + side)
+        {
+            check("rnb1kbnr/pppp1ppp/8/4p3/7q/5N2/PPPPPPPP/RNBQKB1R" + side + " KQkq - 0 1", Term::MinorOnQueen);
+        }
+
+        SECTION("Rook attacking a queen" + side)
+        {
+            check("rnb1kbnr/pppp1ppp/8/4q3/8/8/PPPP1PPP/RNBQR1K1" + side + " kq - 0 1", Term::RookOnQueen);
+        }
+
+        // an endgame, since the hanging bonus is the one that's positive in the endgame
+        SECTION("Hanging knight" + side)
+        {
+            check("6k1/8/8/4n3/8/8/4R3/6K1" + side + " - - 0 1", Term::Hanging);
+        }
+    }
+}
+
+TEST_CASE("Evaluation - king safety", "[eval][evaluation][king-safety]")
+{
+    // The king safety terms used to be multiplied by the opponent's non-pawn material divided by
+    // its starting non-pawn material, with integer division, so they were 0 as soon as the opponent
+    // had traded anything. They now always apply, and the game phase blend (with each term's own
+    // middlegame & endgame weights) decides how much they count as pieces come off.
+
+    using ben_bot::eval::count_of;
+    using ben_bot::eval::DEFAULT_WEIGHTS;
+    using ben_bot::eval::evaluate_traced;
+    using ben_bot::eval::offset_of;
+    using ben_bot::eval::Term;
+
+    // checks that the term applies `expected` more times for White than for Black, and that
+    // it adds exactly its weight that many times to White's unblended score, whatever material
+    // the opponent has left
+    auto check = [](const std::string_view fen, const Term term, const int expected) {
+        INFO(fen);
+
+        const auto position = from_fen(fen).value();
+        const auto trace    = evaluate_traced(position);
+
+        REQUIRE(trace.score(DEFAULT_WEIGHTS) == evaluate(position));
+        REQUIRE(trace.coefficient(offset_of(term)) == expected);
+
+        auto withoutTerm = DEFAULT_WEIGHTS;
+
+        for (auto i = 0uz; i < count_of(term); ++i)
+            withoutTerm.values.at(offset_of(term) + i) = { };
+
+        REQUIRE(
+            trace.white_score(DEFAULT_WEIGHTS) - trace.white_score(withoutTerm)
+            == DEFAULT_WEIGHTS.get(term) * expected);
+    };
+
+    SECTION("Stranded king, opponent has all their pieces")
+    {
+        // only black can still castle, so only the white king is stranded
+        check("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w kq - 0 1", Term::KingStranded, 1);
+    }
+
+    SECTION("Stranded king, opponent has traded a knight")
+    {
+        check("r1bqkbnr/pppppppp/8/8/8/8/PPPPPPPP/R1BQKBNR w kq - 0 1", Term::KingStranded, 1);
+    }
+
+    SECTION("Stranded king, opponent has only a rook left")
+    {
+        // only white can still castle, so only the black king is stranded
+        check("4k3/pppppppp/8/8/8/8/PPPPPPPP/R3K3 b Q - 0 1", Term::KingStranded, -1);
+    }
+
+    SECTION("Queen next to a king with nothing else on the board")
+    {
+        // the black queen on d2 is 1 square from the white king, so it counts 7 - 1 = 6 times
+        check("4k3/8/8/8/8/8/3q4/4K3 w - - 0 1", Term::QueenTropism, 6);
+    }
+
+    SECTION("Knight near a king after a trade")
+    {
+        // the white knight on f6 is a knight's move from the black king on e8: 6 - 1 = 5
+        check("r1bqk2r/pppp1ppp/5N2/8/8/8/PPPP1PPP/R1BQK2R w KQkq - 0 1", Term::KnightTropism, -5);
+    }
+}
+
+TEST_CASE("Evaluation - open & half-open files", "[eval][evaluation][files]")
+{
+    // A file is open if neither side has a pawn on it, and half-open for a side if that side has
+    // no pawn on it but the other side does. A rook or king behind its own pawn isn't on a
+    // half-open file, even if the opponent has no pawn there.
+
+    using ben_bot::eval::evaluate_traced;
+    using ben_bot::eval::offset_of;
+    using ben_bot::eval::Term;
+
+    // white's count minus black's count of the given term
+    auto count = [](const std::string_view fen, const Term term) {
+        INFO(fen);
+
+        const auto position = from_fen(fen).value();
+        const auto trace    = evaluate_traced(position);
+
+        REQUIRE(trace.score(ben_bot::eval::DEFAULT_WEIGHTS) == evaluate(position));
+
+        return trace.coefficient(offset_of(term));
+    };
+
+    SECTION("White rook behind its own pawn")
+    {
+        static constexpr std::string_view fen { "6k1/8/8/8/4P3/8/8/4RK2 w - - 0 1" };
+
+        REQUIRE(count(fen, Term::RookHalfOpenFile) == 0);
+        REQUIRE(count(fen, Term::RookOpenFile) == 0);
+    }
+
+    SECTION("White rook on a file with only a black pawn")
+    {
+        static constexpr std::string_view fen { "6k1/4p3/8/8/8/8/8/4RK2 w - - 0 1" };
+
+        REQUIRE(count(fen, Term::RookHalfOpenFile) == 1);
+        REQUIRE(count(fen, Term::RookOpenFile) == 0);
+    }
+
+    SECTION("White rook on an open file")
+    {
+        static constexpr std::string_view fen { "6k1/8/8/8/8/8/8/4RK2 w - - 0 1" };
+
+        REQUIRE(count(fen, Term::RookHalfOpenFile) == 0);
+        REQUIRE(count(fen, Term::RookOpenFile) == 1);
+    }
+
+    SECTION("White rook on a file with pawns of both colours")
+    {
+        static constexpr std::string_view fen { "6k1/4p3/8/8/4P3/8/8/4RK2 w - - 0 1" };
+
+        REQUIRE(count(fen, Term::RookHalfOpenFile) == 0);
+        REQUIRE(count(fen, Term::RookOpenFile) == 0);
+    }
+
+    SECTION("Black rook behind its own pawn")
+    {
+        static constexpr std::string_view fen { "4r1k1/8/8/4p3/8/8/8/6K1 b - - 0 1" };
+
+        REQUIRE(count(fen, Term::RookHalfOpenFile) == 0);
+        REQUIRE(count(fen, Term::RookOpenFile) == 0);
+    }
+
+    SECTION("Black rook on a file with only a white pawn")
+    {
+        static constexpr std::string_view fen { "4r1k1/8/8/8/8/8/4P3/6K1 b - - 0 1" };
+
+        REQUIRE(count(fen, Term::RookHalfOpenFile) == -1);
+        REQUIRE(count(fen, Term::RookOpenFile) == 0);
+    }
+
+    SECTION("Kings on a file with only a white pawn")
+    {
+        // the white king is behind its own pawn, and the black king's file has only a white pawn
+        REQUIRE(count("4k3/8/8/8/8/8/4P3/4K3 w - - 0 1", Term::KingHalfOpenFile) == -1);
+    }
+
+    SECTION("Kings on a file with only a black pawn")
+    {
+        REQUIRE(count("4k3/4p3/8/8/8/8/8/4K3 w - - 0 1", Term::KingHalfOpenFile) == 1);
+    }
+
+    SECTION("Kings on a file with pawns of both colours")
+    {
+        REQUIRE(count("4k3/4p3/8/8/8/8/4P3/4K3 w - - 0 1", Term::KingHalfOpenFile) == 0);
     }
 }
