@@ -21,7 +21,7 @@
 
 #include <algorithm>
 #include <array>
-#include <cstdlib>
+#include <libbenbot/data-structures/HistoryGravity.hpp>
 #include <libchess/moves/Move.hpp>
 
 namespace ben_bot {
@@ -59,11 +59,7 @@ struct HistoryTable final {
      */
     void update(const bool whiteToMove, const Move move, const int bonus) noexcept
     {
-        const auto clamped = std::clamp(bonus, -MAX_SCORE, MAX_SCORE);
-
-        auto& score = get_ref(whiteToMove, move);
-
-        score += clamped - (score * std::abs(clamped) / MAX_SCORE);
+        apply_history_gravity(get_ref(whiteToMove, move), bonus, MAX_SCORE);
     }
 
     /** Returns the score for the given move. */

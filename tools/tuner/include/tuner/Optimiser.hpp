@@ -13,55 +13,55 @@
  */
 
 /** @file
-    This file defines the piece square table editor state and rendering function.
-    @ingroup libgui
+    This file defines the tuner's optimiser.
+    @ingroup tuner
  */
 
 #pragma once
 
-#include <libbenbot/eval/PieceSquareTables.hpp>
-#include <libgui/ErrorPopup.hpp>
-#include <libgui/FileDialogContext.hpp>
+#include <cstddef>
+#include <tuner/Model.hpp>
+#include <vector>
 
-namespace ben_bot {
-class Engine;
-} // namespace ben_bot
+namespace ben_bot::tuner {
 
-namespace ben_bot::gui {
+/** Adam with bias correction, over the whole dataset at once.
 
-/** This struct encapsulates the state of the piece square table editor.
+    The step size of each parameter is about ``learningRate`` centipawns per epoch,
+    whatever the scale of its gradient. Parameters that the mask excludes never change.
 
-    @ingroup libgui
-
-    @todo Serialization
+    @ingroup tuner
  */
-struct PSTEditorState final {
-    using Tables = eval::PieceSquareTables;
+class Adam final {
+public:
+    /** The exponential decay rate of the first moment (the mean of the gradient). */
+    static constexpr double BETA1 { 0.9 };
 
-    /** The current table values. */
-    Tables tables { Tables::get_default() };
+    /** The exponential decay rate of the second moment (the mean of the squared gradient). */
+    static constexpr double BETA2 { 0.999 };
 
-    /** The current table type being edited. */
-    Tables::TableType selectedType { Tables::TableType::Pawn };
+    /** Added to the denominator so that a zero gradient doesn't divide by zero. */
+    static constexpr double EPSILON { 1e-8 };
 
-    /** File dialog context used for loading/saving the piece square tables to files. */
-    FileDialogContext loadSave {
-        "PieceSquareTables.json",
-        { { "JSON", "json" } }
-    };
-
-    /** Error popup context used for writing the default tables
-        to the source tree.
+    /** Creates an optimiser for ``mask.size()`` parameters.
+        Only the parameters whose mask entry is true are updated.
      */
-    [[maybe_unused]] ErrorPopup defaultStateSaveError { "Default PST save error" };
+    explicit Adam(std::vector<bool> mask);
+
+    /** Takes one step, moving ``params`` against ``gradient``. */
+    void step(Params& params, const Params& gradient, double learningRate);
+
+    /** Returns the number of steps taken so far. */
+    [[nodiscard]] auto num_steps() const noexcept -> size_t { return steps; }
+
+private:
+    std::vector<bool> mask;
+
+    Params firstMoment;
+
+    Params secondMoment;
+
+    size_t steps { 0uz };
 };
 
-/** Renders a piece square table editor.
-
-    @ingroup libgui
-    @relates PSTEditorState
- */
-void render_pst_editor(
-    PSTEditorState& state, Engine& engine, bool showTooltips);
-
-} // namespace ben_bot::gui
+} // namespace ben_bot::tuner
