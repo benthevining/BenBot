@@ -28,9 +28,11 @@
 #include <libbenbot/data-structures/TranspositionTable.hpp>
 #include <libbenbot/eval/Score.hpp>
 #include <libbenbot/search/Bounds.hpp>
+#include <libbenbot/search/Constants.hpp>
 #include <libchess/game/Position.hpp>
 #include <libutil/Math.hpp>
 #include <libutil/Memory.hpp>
+#include <limits>
 #include <memory>
 #include <numeric>
 #include <optional>
@@ -41,6 +43,9 @@
 namespace ben_bot {
 
 using std::size_t;
+
+// entries store the searched depth + 1 in 8 bits
+static_assert(search::MAX_DEPTH + 1uz <= std::numeric_limits<std::uint8_t>::max());
 
 inline constexpr auto GENERATION_DELTA = 8uz;
 inline constexpr auto GENERATION_CYCLE = 255uz + GENERATION_DELTA;
@@ -100,19 +105,29 @@ struct TranspositionTable::Entry final {
         const TTData&       data,
         const std::uint8_t  gen) noexcept
     {
+        // a fail-low has no best move. If this entry is already for the same position, keep
+        // the best move it has, since that's still our best guess for move ordering
+        if (data.bestMove.has_value() or keyToUse != key)
+            move = data.bestMove.value_or(Move { });
+
+        // a deeper search would wrap around in the 8 bits we store it in
+        assert(data.searchedDepth <= search::MAX_DEPTH);
+
         key        = keyToUse;
         depth      = static_cast<std::uint_least8_t>(data.searchedDepth + 1uz);
         generation = gen;
         eval       = static_cast<std::int16_t>(data.eval);
         evalType   = data.evalType;
-        move       = data.bestMove.value_or(Move { });
     }
 };
 
-using util::memory::CacheLineSize;
+// this isn't util::memory::CacheLineSize, because that's 128 bytes on Apple silicon & 64 on x86. The
+// number of entries per cluster changes which entries get replaced, so the search (& bench) would
+// be different on different platforms
+inline constexpr auto ClusterSize = 64uz;
 
-struct alignas(CacheLineSize) TranspositionTable::Cluster final {
-    static constexpr auto NumRecords = CacheLineSize / sizeof(Entry);
+struct alignas(ClusterSize) TranspositionTable::Cluster final {
+    static constexpr auto NumRecords = ClusterSize / sizeof(Entry);
 
     std::array<Entry, NumRecords> records { };
 };
@@ -129,8 +144,8 @@ TranspositionTable::TranspositionTable(TranspositionTable&& other) noexcept
         "TranspositionTable::Cluster size should be a power of 2!");
 
     static_assert(
-        sizeof(Cluster) <= CacheLineSize,
-        "TranspositionTable::Cluster should fit in a CPU cache line!");
+        sizeof(Cluster) == ClusterSize,
+        "TranspositionTable::Cluster should be exactly ClusterSize bytes!");
 }
 
 auto TranspositionTable::operator=(TranspositionTable&& other) noexcept -> TranspositionTable&

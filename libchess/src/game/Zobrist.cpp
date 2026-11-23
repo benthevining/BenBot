@@ -19,8 +19,8 @@
 #include <functional>
 #include <libchess/board/BitboardIndex.hpp>
 #include <libchess/board/File.hpp>
-#include <libchess/board/Masks.hpp>
 #include <libchess/board/Pieces.hpp>
+#include <libchess/board/Rank.hpp>
 #include <libchess/board/Square.hpp>
 #include <libchess/game/Position.hpp>
 #include <libchess/moves/Move.hpp>
@@ -178,13 +178,54 @@ auto update(
                 capturedType.value(), otherColor, move.to());
         }
     } else if (move.is_castling()) {
-        if (move.to().is_kingside())
-            value ^= board::masks::kingside_castle_rook_pos_mask(pos.sideToMove).to_int();
-        else
-            value ^= board::masks::queenside_castle_rook_pos_mask(pos.sideToMove).to_int();
+        // move the rook
+        const auto rank = board::back_rank_for(pos.sideToMove);
+
+        const bool isKingside = move.to().is_kingside();
+
+        const Square rookFrom { .file = isKingside ? File::H : File::A, .rank = rank };
+        const Square rookTo { .file = isKingside ? File::F : File::D, .rank = rank };
+
+        value ^= piece_key(PieceType::Rook, pos.sideToMove, rookFrom);
+        value ^= piece_key(PieceType::Rook, pos.sideToMove, rookTo);
     }
 
     value = rightsChanges.update_hash(value);
+
+    return value;
+}
+
+auto calculate_pawns(const Position& pos) -> Hash
+{
+    const auto value = add_piece_positions<Color::White>(keys::NO_PAWNS, PieceType::Pawn, pos);
+
+    return add_piece_positions<Color::Black>(value, PieceType::Pawn, pos);
+}
+
+auto update_pawns(const Position& pos, const Move move) -> Hash
+{
+    auto value = pos.pawnHash;
+
+    if (move.piece() == PieceType::Pawn) {
+        value ^= piece_key(PieceType::Pawn, pos.sideToMove, move.from());
+
+        // on a promotion, the pawn leaves the pawn structure
+        if (not move.is_promotion())
+            value ^= piece_key(PieceType::Pawn, pos.sideToMove, move.to());
+    }
+
+    // remove a captured pawn
+    const auto otherColor = pos.is_white_to_move() ? Color::Black : Color::White;
+
+    if (pos.is_en_passant(move)) {
+        value ^= piece_key(
+            PieceType::Pawn, otherColor,
+            get_en_passant_captured_square(
+                pos.enPassantTargetSquare.value(),
+                pos.is_white_to_move()));
+    } else if (pos.their_pieces().pawns.test(move.to())) {
+        value ^= piece_key(PieceType::Pawn, otherColor, move.to());
+    }
 
     return value;
 }

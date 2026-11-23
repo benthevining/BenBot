@@ -21,6 +21,7 @@ project (
 )
 
 option (BENBOT_GUI "Build the imgui app" "${PROJECT_IS_TOP_LEVEL}")
+option (BENBOT_TUNER "Build the eval tuner" OFF)
 
 # includes used throughout the various directories
 include (CPackComponent)
@@ -38,6 +39,10 @@ add_subdirectory (ben-bot)
 
 if (BENBOT_GUI)
     add_subdirectory (gui EXCLUDE_FROM_ALL)
+endif ()
+
+if (BENBOT_TUNER)
+    add_subdirectory (tools/tuner)
 endif ()
 
 if (PROJECT_IS_TOP_LEVEL)

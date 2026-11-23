@@ -120,6 +120,8 @@ void Position::make_move(const Move move)
 
     hash = update(*this, move, newEPSquare, rightsChanges);
 
+    pawnHash = zobrist::update_pawns(*this, move);
+
     update_bitboards(*this, move);
 
     if (isCapture or move.piece() == PieceType::Pawn) {
@@ -196,7 +198,8 @@ Position::Position()
 
 void Position::refresh_zobrist()
 {
-    hash = zobrist::calculate(*this);
+    hash     = zobrist::calculate(*this);
+    pawnHash = zobrist::calculate_pawns(*this);
 
     threefoldChecker.reset(hash);
 }
