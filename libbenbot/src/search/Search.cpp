@@ -425,7 +425,13 @@ namespace {
                 const auto moveIdx  = nextMoveIdx++;
                 const auto childPos = after_move(position, move);
 
+                // the search is fail-soft, so if every move searched so far gets mated, that mate
+                // score is what this node returns. If we pruned the other moves, that would claim
+                // a mate that hasn't been proven, so we don't prune until we've found a better move
+                const bool bestIsLosingMate = bestScore.has_value() and bestScore->is_losing_mate();
+
                 if (futilityPruning and moveIdx > 0uz
+                    and not bestIsLosingMate
                     and position.is_quiet(move) and not childPos.is_check())
                     continue;
 
@@ -433,6 +439,7 @@ namespace {
                 // remaining quiet moves are unlikely to raise alpha, so we skip them
                 if (lateMovePruning and moveIdx >= lmpCount
                     and not bounds.alpha.is_losing_mate()
+                    and not bestIsLosingMate
                     and position.is_quiet(move)
                     and not std::ranges::contains(killers, move)
                     and not childPos.is_check())
@@ -445,6 +452,7 @@ namespace {
                 // isn't saved by having caused a cutoff in a sibling position
                 if (seePruning and moveIdx > 0uz
                     and not bounds.alpha.is_losing_mate()
+                    and not bestIsLosingMate
                     and not childPos.is_check()) {
                     if (position.is_quiet(move)) {
                         if (eval::see(position, move) < quietSeeThreshold)
