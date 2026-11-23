@@ -36,7 +36,7 @@ The PR tests are sharded across 4 runners, in rounds of about 40 minutes. Each s
 
 ## Estimating the Elo
 
-`EstimateElo.py` plays a gauntlet against opponents of known strength & fits one rating to all the results (the maximum likelihood fit of the logistic Elo model). By default the opponents are Stockfish with `UCI_LimitStrength` at `UCI_Elo` 1700, 2000, 2300 & 2600, 200 games each at 60+0.6. Stockfish calibrated `UCI_Elo` against versions of the Stash engine that are rated on CCRL Blitz, so the estimate is roughly on the CCRL Blitz scale, but only to within about 100 Elo ([Stockfish PR #4341](https://github.com/official-stockfish/Stockfish/pull/4341)). Self-play SPRT gains don't add up to a rating like this, since they overstate how much stronger the engine is against other engines.
+`EstimateElo.py` plays a gauntlet against opponents of known strength & fits one rating to all the results (the maximum likelihood fit of the logistic Elo model). By default the opponents are Stockfish with `UCI_LimitStrength` at `UCI_Elo` 2200, 2500, 2800 & 3100, 200 games each at 60+0.6. The levels should be spread either side of the engine's rating, since a fit to opponents that are all weaker than the engine leans on how the calibration holds up far from 50%. Stockfish calibrated `UCI_Elo` against versions of the Stash engine that are rated on CCRL Blitz, so the estimate is roughly on the CCRL Blitz scale, but only to within about 100 Elo ([Stockfish PR #4341](https://github.com/official-stockfish/Stockfish/pull/4341)). Self-play SPRT gains don't add up to a rating like this, since they overstate how much stronger the engine is against other engines.
 
 ```shell
 python3 tests/fastchess/EstimateElo.py <path/to/ben_bot> --book <openings.pgn>

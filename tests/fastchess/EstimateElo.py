@@ -41,7 +41,7 @@ from typing import Optional
 
 ELO_PER_NAT = 400 / math.log(10)
 
-DEFAULT_LEVELS = [1700, 2000, 2300, 2600]
+DEFAULT_LEVELS = [2200, 2500, 2800, 3100]
 
 # scores further from 50% than this tell us little about the rating, so they get a warning
 LOPSIDED_SCORE = 0.9
