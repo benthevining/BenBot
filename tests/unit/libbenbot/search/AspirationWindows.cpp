@@ -33,7 +33,7 @@ using std::size_t;
 
 namespace notation = chess::notation;
 
-// Searches deep enough for the aspiration window to kick in (which happens after depth 6),
+// Searches deep enough for the aspiration window to kick in (which happens after depth 4),
 // including a position where the score swings between iterations. Every completed
 // iteration must report a legal, non-empty PV, and a score that isn't a window bound left over
 // from a failed search.

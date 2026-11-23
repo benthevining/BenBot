@@ -209,10 +209,32 @@ namespace {
     };
 
     // aspiration windows are only used once this many iterations have been completed
-    constexpr auto ASPIRATION_MIN_DEPTH { 6uz };
+    constexpr auto ASPIRATION_MIN_DEPTH { 4uz };
 
-    // the initial half-width of the aspiration window, in centipawns
-    constexpr auto ASPIRATION_INITIAL_DELTA { 50 };
+    // the window's initial half-width is this many centipawns, plus more for bigger scores (see
+    // aspiration_delta()). Each time the search fails, the window is widened on the side that
+    // failed by delta, & delta grows by half
+    constexpr auto ASPIRATION_BASE_DELTA { 10 };
+
+    // past this score (either way), the window is opened all the way on that side, since the
+    // score is big enough that it's probably winning or losing anyway, or heading for a mate
+    constexpr auto ASPIRATION_MAX_SCORE { 500 };
+
+    // each fail high reduces the depth of the re-search by 1, up to this many plies
+    constexpr auto ASPIRATION_MAX_FAIL_HIGH_REDUCTION { 3uz };
+
+    // scores far from 0 swing more between iterations, so they get a wider window: 10cp up to
+    // 127, 15 at 300 & 25 at 500. This uses integer maths only, so that bench is the same
+    // on every platform
+    [[nodiscard]] constexpr auto aspiration_delta(const int score) noexcept -> int
+    {
+        return ASPIRATION_BASE_DELTA + ((score * score) / 16384);
+    }
+
+    static_assert(aspiration_delta(0) == 10);
+    static_assert(aspiration_delta(100) == 10);
+    static_assert(aspiration_delta(-300) == 15);
+    static_assert(aspiration_delta(ASPIRATION_MAX_SCORE) == 25);
 
     // late move reductions table, indexed by [depth][move index]
     // the formula is similar to Ethereal's: see https://www.chessprogramming.org/Late_Move_Reductions
@@ -808,8 +830,9 @@ namespace {
     };
 
     // searches all the root moves, except for the excluded moves, to find the best line.
-    // If the search fails low, the returned PV is empty; if it fails high, the returned score
-    // is at least the initial beta & the PV starts with the move that failed high
+    // Like the rest of the search, this is fail-soft: if the search fails low, the returned PV
+    // is empty & the score is the best of the root moves' scores (an upper bound), & if it fails
+    // high, the PV starts with the move that failed high & the score is its score (a lower bound)
     [[nodiscard]] auto search_root_line(
         const size_t        depth,
         const Options&      options,
@@ -828,6 +851,9 @@ namespace {
     {
         Bounds   bounds { initialBounds };
         MoveList pv;
+
+        // the best score of any root move searched so far, which may be below alpha
+        std::optional<Score> bestScore;
 
         const auto lineStartNodes = stats.nodesSearched;
 
@@ -888,6 +914,9 @@ namespace {
             if (interrupter.was_aborted())
                 break;
 
+            if (not bestScore.has_value() or score > *bestScore)
+                bestScore = score;
+
             if (score > bounds.alpha) {
                 bounds.alpha = score;
 
@@ -912,13 +941,15 @@ namespace {
             stats.firstLineNodes = stats.nodesSearched - lineStartNodes;
 
         return {
-            .score = bounds.alpha,
+            .score = pv.empty() ? bestScore.value_or(bounds.alpha) : bounds.alpha,
             .pv    = pv
         };
     }
 
-    // aspiration windows: searches the first line with a narrow window around the previous
-    // iteration's score, & widens the window on the side that failed until the score is inside it
+    // aspiration windows: searches the first line with a narrow window around the average score
+    // of the previous iterations, & widens the window on the side that failed until the score is
+    // inside it. Each fail high searches 1 ply less, since we already know the score is at
+    // least as good as we expected, until a fail low resets the depth
     [[nodiscard]] auto search_root_line_aspiration(
         const size_t               depth,
         Options&                   options,
@@ -931,23 +962,29 @@ namespace {
         PawnTable&                 pawnTable,
         const Callbacks&           callbacks,
         Stats&                     stats,
-        const std::optional<Score> prevScore)
+        const std::optional<Score> avgScore)
         -> Result::Line
     {
         const MoveList excludedMoves;
 
-        // don't use a window if there's no previous score to center it on, or if it was a mate
-        if (not prevScore.has_value() or prevScore->is_mate()) {
+        // don't use a window if there's no score to center it on, or if it's a mate or so big
+        // that the window would be opened all the way anyway
+        if (not avgScore.has_value() or avgScore->is_mate()
+            or std::abs(static_cast<int>(avgScore->value)) >= ASPIRATION_MAX_SCORE) {
             return search_root_line(
                 depth, options, excludedMoves, position, transTable, interrupter, killerMoves, history, stack, pawnTable, callbacks, stats);
         }
 
         static constexpr int maxValue = eval::MAX;
 
-        auto delta = ASPIRATION_INITIAL_DELTA;
+        const int center = avgScore->value;
 
-        auto alpha = std::max(prevScore->value - delta, -maxValue);
-        auto beta  = std::min(prevScore->value + delta, maxValue);
+        auto delta = aspiration_delta(center);
+
+        auto alpha = center - delta;
+        auto beta  = center + delta;
+
+        auto failHighReduction = 0uz;
 
         while (true) {
             const Bounds bounds {
@@ -956,19 +993,32 @@ namespace {
             };
 
             auto line = search_root_line(
-                depth, options, excludedMoves, position, transTable, interrupter, killerMoves, history, stack, pawnTable, callbacks, stats, bounds);
+                depth - failHighReduction, options, excludedMoves, position, transTable, interrupter,
+                killerMoves, history, stack, pawnTable, callbacks, stats, bounds);
 
             // root_search() decides what to keep from an aborted search
             if (interrupter.was_aborted())
                 return line;
 
+            const int score = line.score.value;
+
             if (line.pv.empty() or line.score <= bounds.alpha) {
-                // fail low: beta moves to the middle of the old window
+                // fail low: beta moves to the middle of the old window, & alpha goes below
+                // the score that the search found
                 beta  = (alpha + beta) / 2;
-                alpha = std::max(alpha - delta, -maxValue);
+                alpha = score - delta;
+
+                failHighReduction = 0uz;
             } else if (line.score >= bounds.beta) {
-                // fail high: search the move that failed high first in the re-search
-                beta = std::min(beta + delta, maxValue);
+                // fail high: beta goes above the score that the search found, & the move that
+                // failed high is searched first in the re-search
+                beta = score + delta;
+
+                if (not line.score.is_mate()) {
+                    failHighReduction = std::min({ failHighReduction + 1uz,
+                        ASPIRATION_MAX_FAIL_HIGH_REDUCTION,
+                        depth - 1uz });
+                }
 
                 if (const auto it = std::ranges::find(options.movesToSearch, line.pv.front());
                     it != options.movesToSearch.end()) {
@@ -977,6 +1027,13 @@ namespace {
             } else {
                 return line;
             }
+
+            // this also opens the window all the way if the search found a mate score
+            if (alpha <= -ASPIRATION_MAX_SCORE)
+                alpha = -maxValue;
+
+            if (beta >= ASPIRATION_MAX_SCORE)
+                beta = maxValue;
 
             delta += delta / 2;
         }
@@ -994,7 +1051,7 @@ namespace {
         PawnTable&                 pawnTable,
         const Callbacks&           callbacks,
         const std::optional<Move>  prevBestMove,
-        const std::optional<Score> prevScore)
+        const std::optional<Score> windowCenter)
         -> RootSearchResult
     {
         const Timer timer;
@@ -1026,7 +1083,7 @@ namespace {
         for (auto lineIdx = 0uz; lineIdx < numLines; ++lineIdx) {
             auto line = lineIdx == 0uz
                           ? search_root_line_aspiration(
-                                depth, options, position, transTable, interrupter, killerMoves, history, stack, pawnTable, callbacks, result.stats, prevScore)
+                                depth, options, position, transTable, interrupter, killerMoves, history, stack, pawnTable, callbacks, result.stats, windowCenter)
                           : search_root_line(
                                 depth, options, excludedMoves, position, transTable, interrupter, killerMoves, history, stack, pawnTable, callbacks, result.stats);
 
@@ -1198,6 +1255,8 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
 
     Stability stability;
 
+    std::optional<Score> avgScore;
+
     while ((options.infinite or pondering.load(memory_order::acquire) or depth <= maxDepth)
            and depth <= MAX_DEPTH) {
         if (interrupter.should_abort(0uz))
@@ -1207,12 +1266,12 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
                                     ? std::nullopt
                                     : std::optional { result.pv.front() };
 
-        const auto prevScore = completedDepth >= ASPIRATION_MIN_DEPTH
-                                 ? std::optional { result.bestScore }
-                                 : std::nullopt;
+        const auto windowCenter = completedDepth >= ASPIRATION_MIN_DEPTH
+                                    ? avgScore
+                                    : std::nullopt;
 
         const auto res = root_search(
-            depth, options, position, transTable, interrupter, killerMoves, *history, stack, pawnTable, callbacks, prevBestMove, prevScore);
+            depth, options, position, transTable, interrupter, killerMoves, *history, stack, pawnTable, callbacks, prevBestMove, windowCenter);
 
         if (interrupter.was_aborted()) {
             // The previous best move is searched first, so any move that the aborted iteration
@@ -1229,6 +1288,16 @@ void Context::search() // NOLINT(readability-function-cognitive-complexity)
         completedDepth = depth;
 
         stability.update(prevBestMove, result);
+
+        // the aspiration window is centered on the average of the iterations' scores, weighted
+        // towards the latest ones, which swings less than the latest score on its own. A mate
+        // score resets it, since it doesn't average with anything
+        if (avgScore.has_value() and not avgScore->is_mate() and not result.bestScore.is_mate()) {
+            avgScore = Score { static_cast<eval::Value>(
+                (static_cast<int>(avgScore->value) + static_cast<int>(result.bestScore.value)) / 2) };
+        } else {
+            avgScore = result.bestScore;
+        }
 
         totalNodesSearched += result.stats.nodesSearched;
 
