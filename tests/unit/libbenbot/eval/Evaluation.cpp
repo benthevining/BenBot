@@ -499,6 +499,12 @@ TEST_CASE("Evaluation - threats raise the eval", "[eval][evaluation][threats]")
         {
             check("6k1/8/8/4n3/8/8/4R3/6K1" + side + " - - 0 1", Term::Hanging);
         }
+
+        // e4-e5 would attack the knight on f6
+        SECTION("Pawn push threatening a knight" + side)
+        {
+            check("rnbqkb1r/pppppppp/5n2/8/4P3/8/PPPP1PPP/RNBQKBNR" + side + " KQkq - 0 1", Term::PushThreat);
+        }
     }
 }
 
