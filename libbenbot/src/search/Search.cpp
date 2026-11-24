@@ -379,10 +379,8 @@ namespace {
                 if (not inCheck) {
                     const auto staticEval = ss->staticEval.value();
 
-                    // reverse futility pruning. This is 80 * (d - improving) with d = depthLeft + 1, so
-                    // nodes that aren't improving on their static eval from 2 plies ago need an extra
-                    // 80cp above beta before they're pruned
-                    const auto margin = 80 * (static_cast<int>(depthLeft) + (is_improving(ss) ? 0 : 1));
+                    // reverse futility pruning
+                    const auto margin = 80 * static_cast<int>(depthLeft);
 
                     if (std::cmp_greater_equal(staticEval.value, bounds.beta.value + margin))
                         return staticEval;
@@ -642,6 +640,11 @@ namespace {
                 if (reduction > 0uz)
                     --reduction;
             }
+
+            // reduce more if our static eval isn't better than it was at our previous turn,
+            // since the moves here are then less likely to raise alpha
+            if (not is_improving(ss))
+                ++reduction;
 
             // never reduce straight into the quiescence search
             return std::min(reduction, depthLeft - 2uz);
