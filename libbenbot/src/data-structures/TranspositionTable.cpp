@@ -281,14 +281,14 @@ auto TranspositionTable::probe_eval(
 
                 case EvalType::Alpha: {
                     if (eval < bounds.alpha)
-                        return std::make_pair(bounds.alpha, data.evalType);
+                        return std::make_pair(eval.value, data.evalType);
 
                     break;
                 }
 
                 case EvalType::Beta: {
                     if (eval >= bounds.beta)
-                        return std::make_pair(bounds.beta, data.evalType);
+                        return std::make_pair(eval.value, data.evalType);
 
                     break;
                 }
