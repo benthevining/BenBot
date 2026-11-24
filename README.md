@@ -6,7 +6,7 @@ This is a command-line chess playing program, designed to be used with a chess G
 
 ## Strength
 
-We are currently using a handcrafted evaluation, and our search function is still in its early days. The engine's ELO is approximately 1700-1800.
+We are currently using a handcrafted evaluation. The engine's Elo is estimated at 2688 ± 30 (v1.7.5-774-g95fe39b5), from a gauntlet against Stockfish's `UCI_Elo` levels (see `tests/fastchess/README.md`).
 
 ## Repository layout
 
@@ -49,6 +49,7 @@ Our automated CI & releases include the following builds:
 ### CMake options
 
 * `BENBOT_GUI`: if on, builds the ImGUI app (defaults to off unless this is the top-level project)
+* `BENBOT_TUNER`: if on, builds the eval tuner & its unit tests (defaults to off). See `tools/tuner/README.md` for details.
 
 > [!NOTE]
 > The GUI application has additional dependencies & requirements, which may vary by target platform. See `gui/README.md` for details.

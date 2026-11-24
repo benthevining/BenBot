@@ -14,6 +14,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include <libchess/game/Position.hpp>
+#include <libchess/game/ThreefoldChecker.hpp>
 #include <libchess/notation/Algebraic.hpp>
 #include <libchess/notation/FEN.hpp>
 
@@ -54,6 +55,33 @@ TEST_CASE("Position - threefold repetitions", TAGS)
     pos.make_move(from_alg(pos, "Nc6").value());
 
     REQUIRE(pos.is_threefold_repetition());
+}
+
+TEST_CASE("Threefold repetition whose first occurrence was more than 50 plies ago", TAGS)
+{
+    // the fifty-move rule allows up to 100 plies without a capture or pawn move, so a
+    // repetition can span that many plies
+    chess::game::ThreefoldChecker checker;
+
+    static constexpr auto REPEATED { 1000uz };
+
+    checker.reset(REPEATED);
+
+    for (auto hash = 1uz; hash <= 90uz; ++hash)
+        checker.push(hash);
+
+    checker.push(REPEATED);
+
+    REQUIRE_FALSE(checker.is_threefold());
+    REQUIRE(checker.repetition_count() == 2uz);
+
+    checker.push(91uz);
+    checker.push(92uz);
+    checker.push(93uz);
+    checker.push(REPEATED);
+
+    REQUIRE(checker.is_threefold());
+    REQUIRE(checker.repetition_count() == 3uz);
 }
 
 TEST_CASE("Threefold repetition from differing moves", TAGS)
@@ -105,4 +133,56 @@ TEST_CASE("Position - threefold reps - not threefold if EP possible in starting 
     pos.make_move(from_alg(pos, "Bd7").value());
 
     REQUIRE(pos.is_threefold_repetition());
+}
+
+TEST_CASE("Position - threefold reps - an EP square no pawn can capture onto is ignored", TAGS)
+{
+    // after 1. e4 the EP square is e3, but no black pawn can capture onto it, so the position
+    // after 1. e4 is the same one that's reached again after each knight shuffle
+    chess::game::Position pos { };
+
+    pos.make_move(from_alg(pos, "e4").value());
+
+    REQUIRE(pos.enPassantTargetSquare.has_value());
+
+    pos.make_move(from_alg(pos, "Nc6").value());
+    pos.make_move(from_alg(pos, "Nf3").value());
+    pos.make_move(from_alg(pos, "Nb8").value());
+    pos.make_move(from_alg(pos, "Ng1").value());
+
+    REQUIRE_FALSE(pos.is_threefold_repetition());
+
+    pos.make_move(from_alg(pos, "Nc6").value());
+    pos.make_move(from_alg(pos, "Nf3").value());
+    pos.make_move(from_alg(pos, "Nb8").value());
+    pos.make_move(from_alg(pos, "Ng1").value());
+
+    REQUIRE(pos.is_threefold_repetition());
+}
+
+TEST_CASE("Position - threefold reps - unusable EP square in the starting FEN is ignored", TAGS)
+{
+    auto pos = chess::notation::from_fen(
+        "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1")
+                   .value();
+
+    pos.make_move(from_alg(pos, "Nc6").value());
+    pos.make_move(from_alg(pos, "Nf3").value());
+    pos.make_move(from_alg(pos, "Nb8").value());
+    pos.make_move(from_alg(pos, "Ng1").value());
+
+    REQUIRE_FALSE(pos.is_threefold_repetition());
+
+    pos.make_move(from_alg(pos, "Nc6").value());
+    pos.make_move(from_alg(pos, "Nf3").value());
+    pos.make_move(from_alg(pos, "Nb8").value());
+    pos.make_move(from_alg(pos, "Ng1").value());
+
+    REQUIRE(pos.is_threefold_repetition());
+
+    // the FEN still has the EP square, since it's part of the standard notation
+    REQUIRE(chess::notation::to_fen(chess::notation::from_fen(
+                "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1")
+                    .value())
+            == "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1");
 }

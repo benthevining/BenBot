@@ -79,7 +79,7 @@ jobs:
         shard: [1, 2, 3, 4]
     steps:
     - name: Checkout code
-      uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         ref: ${{ env.HEAD_SHA }}
         persist-credentials: false
@@ -108,10 +108,12 @@ jobs:
     outputs:
       status: ${{ steps.combine.outputs.status }}
     steps:
-    - name: Checkout code
-      uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      # this job can write to the PR, so it runs the default branch's scripts, never the PR's
+    - name: Checkout scripts
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
-        ref: ${{ env.HEAD_SHA }}
+        ref: ${{ github.event.repository.default_branch }}
+        sparse-checkout: .github/actions/run_sprt
         persist-credentials: false
 
       # downloads the logs from all of this run's shards so far, including previous rounds
