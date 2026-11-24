@@ -74,6 +74,7 @@ enum class Term : std::uint8_t {
     MinorOnQueen,            ///< Bonus for each enemy queen attacked by one of our knights or bishops.
     RookOnQueen,             ///< Bonus for each enemy queen attacked by one of our rooks.
     Hanging,                 ///< Bonus for each hanging enemy piece or pawn.
+    PushThreat,              ///< Bonus for each enemy piece that one of our pawns could attack with a safe push.
     LastPiece,               ///< Bonus for having a non-pawn piece left when the opponent has none.
     MopUpEdge,               ///< Mop-up bonus per square that the enemy king is from the center.
     MopUpKingDistance        ///< Mop-up bonus per square that the kings are closer than 14.
@@ -146,6 +147,7 @@ inline constexpr std::array TERMS {
     TermInfo { .name = "MinorOnQueen", .term = Term::MinorOnQueen },
     TermInfo { .name = "RookOnQueen", .term = Term::RookOnQueen },
     TermInfo { .name = "Hanging", .term = Term::Hanging },
+    TermInfo { .name = "PushThreat", .term = Term::PushThreat },
     TermInfo { .name = "LastPiece", .term = Term::LastPiece, .tunable = false },
     TermInfo { .name = "MopUpEdge", .term = Term::MopUpEdge, .tunable = false },
     TermInfo { .name = "MopUpKingDistance", .term = Term::MopUpKingDistance, .tunable = false }

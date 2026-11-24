@@ -42,13 +42,11 @@ jobs:
     # the token can't edit PRs from forks
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
-    name: Update bench in PR description
+    name: Run bench
     timeout-minutes: 30
-    permissions:
-      contents: read
-      pull-requests: write
-    env:
-      PR_NUMBER: ${{ github.event.pull_request.number }}
+    outputs:
+      nodes: ${{ steps.bench.outputs.nodes }}
+      base_nodes: ${{ steps.bench.outputs.base_nodes }}
     steps:
     - name: Checkout code
       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -99,13 +97,38 @@ jobs:
         echo "nodes=$nodes" >> "$GITHUB_OUTPUT"
         echo "base_nodes=$base_nodes" >> "$GITHUB_OUTPUT"
 
-      # fetch the description now instead of using the event's, in case it's been edited since
+  # the bench job builds & runs the PR's code, so it only gets read access, & this job (which can
+  # write to the PR) only runs the default branch's scripts
+  update_description:
+    needs: bench
+    runs-on: ubuntu-latest
+    name: Update bench in PR description
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+    steps:
+    - name: Checkout scripts
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        ref: ${{ github.event.repository.default_branch }}
+        sparse-checkout: .github/actions
+        persist-credentials: false
+
+      # fetch the description now instead of using the event's, in case it's been edited since.
+      # The node counts come from a job that ran the PR's code, so check they're numbers first
     - name: Update PR description
       env:
         GH_TOKEN: ${{ github.token }}
-        NODES: ${{ steps.bench.outputs.nodes }}
-        BASE_NODES: ${{ steps.bench.outputs.base_nodes }}
+        NODES: ${{ needs.bench.outputs.nodes }}
+        BASE_NODES: ${{ needs.bench.outputs.base_nodes }}
       run: |
+        if ! [[ "$NODES" =~ ^[0-9]+$ && "$BASE_NODES" =~ ^[0-9]*$ ]]; then
+          echo "::error::The bench job's node counts aren't numbers"
+          exit 1
+        fi
         gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" --jq '.body // ""' > "$RUNNER_TEMP/body.md"
         python3 .github/actions/UpdateBenchLine.py "$RUNNER_TEMP/body.md" "$NODES" "$BASE_NODES"
         gh api --method PATCH "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" -F "body=@$RUNNER_TEMP/body.md" > /dev/null
