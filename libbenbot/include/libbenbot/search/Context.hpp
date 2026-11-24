@@ -20,6 +20,7 @@
 #pragma once
 
 #include <atomic>
+#include <libbenbot/data-structures/ContinuationHistory.hpp>
 #include <libbenbot/data-structures/HistoryTable.hpp>
 #include <libbenbot/data-structures/KillerMoves.hpp>
 #include <libbenbot/data-structures/PawnTable.hpp>
@@ -97,7 +98,7 @@ struct Context final {
         pawnTable.clear();
     }
 
-    /** Clears the killer moves & the history heuristic table.
+    /** Clears the killer moves & the history heuristic tables.
         This should be called at the start of each new game, along with
         ``clear_transposition_table()``, so that what was learnt in one game
         doesn't affect the next one.
@@ -109,10 +110,14 @@ struct Context final {
         wait();
         killerMoves.clear();
         history->clear();
+        continuationHistory->clear();
     }
 
     /** Returns the history heuristic table. */
     [[nodiscard]] auto get_history_table() const noexcept -> const HistoryTable& { return *history; }
+
+    /** Returns the continuation history table. */
+    [[nodiscard]] auto get_continuation_history() const noexcept -> const ContinuationHistory& { return *continuationHistory; }
 
     /** Resizes the transposition table.
         If a search is in progress, this method aborts it and blocks until it returns.
@@ -215,6 +220,9 @@ private:
     // on the heap, so that this context doesn't take up too much
     // space on the stack of whichever thread creates it
     std::unique_ptr<HistoryTable> history { std::make_unique<HistoryTable>() };
+
+    // about 1.1 MiB, so this one must never be on the stack
+    std::unique_ptr<ContinuationHistory> continuationHistory { std::make_unique<ContinuationHistory>() };
 
     // these flags are all on their own cache lines to prevent
     // false sharing between the searcher & main (input) threads
