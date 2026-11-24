@@ -657,7 +657,7 @@ namespace {
             // MAX_HISTORY_ADJUSTMENT plies either way. Most quiets that are searched get history
             // penalties, so about half of the moves we reduce have a combined score of -8192 or
             // less, and without a limit they'd be reduced far more than the table says
-            static constexpr auto HISTORY_DIVISOR { 8192 };
+            static constexpr auto HISTORY_DIVISOR { 16384 };
             static constexpr auto MAX_HISTORY_ADJUSTMENT { 2 };
 
             auto reduction = static_cast<int>(lmr_table_lookup(depthLeft, moveIdx));
