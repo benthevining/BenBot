@@ -152,7 +152,9 @@ TEST_CASE("Transposition table - probe_eval()", TAGS)
             const auto [eval, type] = probed.value();
 
             REQUIRE(type == EvalType::Alpha);
-            REQUIRE(eval == SEARCH_ALPHA);
+
+            // the search is fail-soft, so the stored upper bound is returned, not alpha
+            REQUIRE(eval == EVAL);
         }
 
         SECTION("Probing with alpha that causes cutoff")
@@ -186,7 +188,9 @@ TEST_CASE("Transposition table - probe_eval()", TAGS)
             const auto [eval, type] = probed.value();
 
             REQUIRE(type == EvalType::Beta);
-            REQUIRE(eval == SEARCH_BETA);
+
+            // the search is fail-soft, so the stored lower bound is returned, not beta
+            REQUIRE(eval == EVAL);
         }
 
         SECTION("Probing with beta that causes cutoff")
