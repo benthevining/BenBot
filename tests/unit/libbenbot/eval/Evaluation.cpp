@@ -178,6 +178,42 @@ TEST_CASE("Evaluation symmetry", TAGS)
             evaluate(position)
             == evaluate(flipped(position)));
     }
+
+    SECTION("Pawn push threatening a knight")
+    {
+        const auto position = from_fen("6k1/8/3n4/8/4P3/8/8/6K1 w - - 0 1").value();
+
+        REQUIRE(
+            evaluate(position)
+            == evaluate(flipped(position)));
+    }
+
+    SECTION("Pawn double push threatening a knight")
+    {
+        const auto position = from_fen("6k1/8/8/4n3/8/8/3P4/6K1 w - - 0 1").value();
+
+        REQUIRE(
+            evaluate(position)
+            == evaluate(flipped(position)));
+    }
+
+    SECTION("Black pawn double push threatening a rook")
+    {
+        const auto position = from_fen("6k1/2p5/8/8/3R4/8/8/6K1 b - - 0 1").value();
+
+        REQUIRE(
+            evaluate(position)
+            == evaluate(flipped(position)));
+    }
+
+    SECTION("Pawn push square attacked by an enemy pawn")
+    {
+        const auto position = from_fen("r5k1/pp4pp/3n1p2/8/4P3/8/PP3PPP/R5K1 w - - 0 1").value();
+
+        REQUIRE(
+            evaluate(position)
+            == evaluate(flipped(position)));
+    }
 }
 
 TEST_CASE("Evaluation - mobility", "[eval][evaluation][mobility]")
@@ -463,6 +499,12 @@ TEST_CASE("Evaluation - threats raise the eval", "[eval][evaluation][threats]")
         {
             check("6k1/8/8/4n3/8/8/4R3/6K1" + side + " - - 0 1", Term::Hanging);
         }
+
+        // e4-e5 would attack the knight on f6
+        SECTION("Pawn push threatening a knight" + side)
+        {
+            check("rnbqkb1r/pppppppp/5n2/8/4P3/8/PPPP1PPP/RNBQKBNR" + side + " KQkq - 0 1", Term::PushThreat);
+        }
     }
 }
 
@@ -615,5 +657,69 @@ TEST_CASE("Evaluation - open & half-open files", "[eval][evaluation][files]")
     SECTION("Kings on a file with pawns of both colours")
     {
         REQUIRE(count("4k3/4p3/8/8/8/8/4P3/4K3 w - - 0 1", Term::KingHalfOpenFile) == 0);
+    }
+}
+
+TEST_CASE("Evaluation - push threats", "[eval][evaluation][threats]")
+{
+    // Each pair of positions differs only in whether a pawn push would safely attack an enemy
+    // piece. Like the other threat tests, this checks the count rather than the eval.
+
+    using ben_bot::eval::evaluate_traced;
+    using ben_bot::eval::offset_of;
+    using ben_bot::eval::Term;
+
+    // white's count minus black's count of the given term
+    auto count = [](const std::string_view fen, const Term term = Term::PushThreat) {
+        INFO(fen);
+        return evaluate_traced(from_fen(fen).value()).coefficient(offset_of(term));
+    };
+
+    SECTION("Single push - push square attacked by an enemy pawn")
+    {
+        // e4-e5 would attack the knight on d6. The black pawn is on f7 (e5 is safe) or f6
+        REQUIRE(count("r5k1/pp3ppp/3n4/8/4P3/8/PP3PPP/R5K1 w - - 0 1") == 1);
+        REQUIRE(count("r5k1/pp4pp/3n1p2/8/4P3/8/PP3PPP/R5K1 w - - 0 1") == 0);
+    }
+
+    SECTION("Single push - black to move")
+    {
+        REQUIRE(count("r5k1/pp3ppp/3n4/8/4P3/8/PP3PPP/R5K1 b - - 0 1") == 1);
+        REQUIRE(count("r5k1/pp4pp/3n1p2/8/4P3/8/PP3PPP/R5K1 b - - 0 1") == 0);
+    }
+
+    SECTION("Single push - push blocked")
+    {
+        // the white knight is on d5, or on e5, where it blocks the push
+        REQUIRE(count("6k1/8/3n4/3N4/4P3/8/8/6K1 w - - 0 1") == 1);
+        REQUIRE(count("6k1/8/3n4/4N3/4P3/8/8/6K1 w - - 0 1") == 0);
+    }
+
+    SECTION("White double push")
+    {
+        // the black knight is on e5 or d5. On e5 it attacks d3, so only the double push is safe
+        REQUIRE(count("6k1/8/8/4n3/8/8/3P4/6K1 w - - 0 1") == 1);
+        REQUIRE(count("6k1/8/8/3n4/8/8/3P4/6K1 w - - 0 1") == 0);
+    }
+
+    SECTION("Black double push")
+    {
+        // the same as the last one, with the colours swapped
+        REQUIRE(count("6k1/3p4/8/8/4N3/8/8/6K1 b - - 0 1") == -1);
+        REQUIRE(count("6k1/3p4/8/8/3N4/8/8/6K1 b - - 0 1") == 0);
+    }
+
+    SECTION("No double push from past the starting rank")
+    {
+        // d3-d5 would attack the knight on c6, but a pawn that has already moved can't double push
+        REQUIRE(count("6k1/8/2n5/8/8/3P4/8/6K1 w - - 0 1") == 0);
+    }
+
+    SECTION("Pieces already attacked by a pawn")
+    {
+        // f3-f4 would attack the knight on e5, which the pawn on d4 already attacks
+        REQUIRE(count("6k1/8/8/4n3/8/5P2/P7/6K1 w - - 0 1") == 1);
+        REQUIRE(count("6k1/8/8/4n3/3P4/5P2/8/6K1 w - - 0 1") == 0);
+        REQUIRE(count("6k1/8/8/4n3/3P4/5P2/8/6K1 w - - 0 1", Term::PawnThreat) == 1);
     }
 }
