@@ -653,11 +653,16 @@ namespace {
                 or childPos.is_check())
                 return 0uz;
 
-            auto reduction = lmr_table_lookup(depthLeft, moveIdx);
+            // each this much combined history score changes the reduction by 1 ply. Each of the
+            // 3 tables goes up to 16384, so a move with a strong history in all of them is
+            // reduced up to 6 plies less
+            static constexpr auto HISTORY_DIVISOR { 8192 };
+
+            auto reduction = static_cast<int>(lmr_table_lookup(depthLeft, moveIdx));
 
             // reduce less in PV nodes
             if constexpr (PVNode) {
-                if (reduction > 0uz)
+                if (reduction > 0)
                     --reduction;
             }
 
@@ -666,8 +671,24 @@ namespace {
             if (not is_improving(ss))
                 ++reduction;
 
+            // reduce moves with a good history less, and moves with a bad history more
+            reduction -= history_score(move) / HISTORY_DIVISOR;
+
+            if (reduction <= 0)
+                return 0uz;
+
             // never reduce straight into the quiescence search
-            return std::min(reduction, depthLeft - 2uz);
+            return std::min(static_cast<size_t>(reduction), depthLeft - 2uz);
+        }
+
+        // the main & continuation histories of a quiet move, summed the same way as in move ordering
+        [[nodiscard]] auto history_score(const Move move) const -> int
+        {
+            const bool whiteToMove = position.is_white_to_move();
+
+            return history.get(whiteToMove, move)
+                 + continuationHistory.get(not whiteToMove, ss->move, whiteToMove, move)
+                 + continuationHistory.get(whiteToMove, std::prev(ss)->move, whiteToMove, move);
         }
 
         // searches only captures, with no depth limit, to try to
