@@ -35,7 +35,8 @@ namespace ben_bot::search::detail {
 using chess::game::Position;
 using chess::moves::Move;
 
-// prevMove is the move that led to currentPosition, or a null move if there isn't one
+// prevMove is the move that led to currentPosition, & ownPrevMove is the move 1 ply before that
+// (played by the side to move). Either is a null move if there isn't one
 void order_moves_for_search(
     const Position&            currentPosition,
     std::span<Move>            moves,
@@ -43,7 +44,8 @@ void order_moves_for_search(
     std::span<const Move>      killerMoves,
     const HistoryTable&        history,
     const ContinuationHistory& continuationHistory,
-    Move                       prevMove);
+    Move                       prevMove,
+    Move                       ownPrevMove);
 
 void order_moves_for_q_search(
     const Position& currentPosition,

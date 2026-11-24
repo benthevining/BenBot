@@ -63,7 +63,8 @@ namespace {
         const std::span<const Move> killerMoves,
         const HistoryTable&         history,
         const ContinuationHistory&  continuationHistory,
-        const Move                  prevMove)
+        const Move                  prevMove,
+        const Move                  ownPrevMove)
         -> int
     {
         static constexpr auto PV_NODE_BONUS { 15000 };       // cppcheck-suppress variableScope
@@ -75,9 +76,6 @@ namespace {
         static constexpr auto PAWN_CONTROLS_PENALTY { 350 }; // cppcheck-suppress variableScope
         static constexpr auto CHECK_BONUS { 1250 };          // cppcheck-suppress variableScope
         static constexpr auto HISTORY_DIVISOR { 8 };         // cppcheck-suppress variableScope
-        // the continuation history counts for half as much as the main history, so it
-        // adjusts the order of the quiets without taking over from the other bonuses
-        static constexpr auto CONT_HISTORY_DIVISOR { 16 }; // cppcheck-suppress variableScope
 
         // check if this move was recorded as the best move in this position
         if (bestMove.has_value() and *bestMove == move)
@@ -94,9 +92,13 @@ namespace {
         } else if (not move.promoted_type().has_value()) {
             const bool whiteToMove = currentPosition.is_white_to_move();
 
-            // prevMove was played by the opponent
-            score += history.get(whiteToMove, move) / HISTORY_DIVISOR;
-            score += continuationHistory.get(not whiteToMove, prevMove, whiteToMove, move) / CONT_HISTORY_DIVISOR;
+            // the main & continuation histories count equally. prevMove was played by the
+            // opponent, & ownPrevMove by the side to move
+            const auto historyScore = history.get(whiteToMove, move)
+                                    + continuationHistory.get(not whiteToMove, prevMove, whiteToMove, move)
+                                    + continuationHistory.get(whiteToMove, ownPrevMove, whiteToMove, move);
+
+            score += historyScore / HISTORY_DIVISOR;
         }
 
         if (const auto prom = move.promoted_type()) {
@@ -139,7 +141,8 @@ void order_moves_for_search(
     const std::span<const Move> killerMoves,
     const HistoryTable&         history,
     const ContinuationHistory&  continuationHistory,
-    const Move                  prevMove)
+    const Move                  prevMove,
+    const Move                  ownPrevMove)
 {
     const auto bestMove = transTable
                               .find(currentPosition)
@@ -159,9 +162,9 @@ void order_moves_for_search(
 
     std::ranges::transform(
         moves, scoredMoves.begin(),
-        [&currentPosition, &transTable, bestMove, killerMoves, &history, &continuationHistory, prevMove, opponentPawnAttacks](const Move move) {
+        [&currentPosition, &transTable, bestMove, killerMoves, &history, &continuationHistory, prevMove, ownPrevMove, opponentPawnAttacks](const Move move) {
             return ScoredMove {
-                move_ordering_score(currentPosition, move, transTable, opponentPawnAttacks, bestMove, killerMoves, history, continuationHistory, prevMove),
+                move_ordering_score(currentPosition, move, transTable, opponentPawnAttacks, bestMove, killerMoves, history, continuationHistory, prevMove, ownPrevMove),
                 move
             };
         });

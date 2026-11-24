@@ -55,7 +55,12 @@ struct ContinuationHistory final {
     static constexpr auto MAX_SCORE { 16384 };
 
     /** Clears all the stored scores. */
-    void clear() noexcept { scores = { }; }
+    void clear() noexcept
+    {
+        // row by row, since assigning an empty table would put a 1.1 MiB temporary on the stack
+        for (auto& row : scores)
+            row.fill(0);
+    }
 
     /** Halves all the stored scores.
         Unlike the main history, the search doesn't call this at the start of

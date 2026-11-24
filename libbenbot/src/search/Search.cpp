@@ -431,7 +431,7 @@ namespace {
 
             detail::order_moves_for_search(
                 position, moves, transTable, killerMoves.get(plyFromRoot), history,
-                continuationHistory, ss->move);
+                continuationHistory, ss->move, std::prev(ss)->move);
 
             auto evalType { EvalType::Alpha };
 
@@ -616,17 +616,21 @@ namespace {
 
             const bool whiteToMove = position.is_white_to_move();
 
-            // the opponent's move that led to this node. This is null after a null move,
-            // and then the continuation history isn't updated
-            const auto prevMove = ss->move;
+            // the opponent's move that led to this node, & our own move before that. Either is
+            // null after a null move (or before the root), & then its continuation isn't updated
+            const auto prevMove    = ss->move;
+            const auto ownPrevMove = std::prev(ss)->move;
 
-            history.update(whiteToMove, cutoffMove, bonus);
-            continuationHistory.update(not whiteToMove, prevMove, whiteToMove, cutoffMove, bonus);
+            const auto update = [this, whiteToMove, prevMove, ownPrevMove](const Move move, const int amount) {
+                history.update(whiteToMove, move, amount);
+                continuationHistory.update(not whiteToMove, prevMove, whiteToMove, move, amount);
+                continuationHistory.update(whiteToMove, ownPrevMove, whiteToMove, move, amount);
+            };
 
-            for (const auto move : quietsSearched) {
-                history.update(whiteToMove, move, -bonus);
-                continuationHistory.update(not whiteToMove, prevMove, whiteToMove, move, -bonus);
-            }
+            update(cutoffMove, bonus);
+
+            for (const auto move : quietsSearched)
+                update(move, -bonus);
         }
 
         // returns the number of plies by which to reduce the search of the given move
@@ -1087,10 +1091,10 @@ namespace {
 
         killerMoves.clear();
 
-        // the root has no previous move, so this doesn't use the continuation history
+        // the root has no previous moves, so this doesn't use the continuation history
         detail::order_moves_for_search(
             position, options.movesToSearch, transTable, killerMoves.get(0uz), history,
-            continuationHistory, stack.at(0uz)->move);
+            continuationHistory, Move { }, Move { });
 
         // the root position is never stored in the transposition table, so the move ordering
         // can't know about the previous iteration's best move. Search it first explicitly
