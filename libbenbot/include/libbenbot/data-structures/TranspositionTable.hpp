@@ -119,6 +119,11 @@ public:
         ``plyFromRoot`` is used to convert stored mate scores back to
         ply-from-root mate scores (see ``eval::Score::from_tt()``).
 
+        An exact entry always returns its stored evaluation. An upper bound only returns one
+        if it's below alpha, & a lower bound only if it's at or above beta. Either way, the
+        stored evaluation is returned, not the bound it's outside of, since the search is
+        fail-soft.
+
         Returns pair of the evaluation value and the value type.
      */
     [[nodiscard]] auto probe_eval(

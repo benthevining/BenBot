@@ -134,3 +134,55 @@ TEST_CASE("Position - threefold reps - not threefold if EP possible in starting 
 
     REQUIRE(pos.is_threefold_repetition());
 }
+
+TEST_CASE("Position - threefold reps - an EP square no pawn can capture onto is ignored", TAGS)
+{
+    // after 1. e4 the EP square is e3, but no black pawn can capture onto it, so the position
+    // after 1. e4 is the same one that's reached again after each knight shuffle
+    chess::game::Position pos { };
+
+    pos.make_move(from_alg(pos, "e4").value());
+
+    REQUIRE(pos.enPassantTargetSquare.has_value());
+
+    pos.make_move(from_alg(pos, "Nc6").value());
+    pos.make_move(from_alg(pos, "Nf3").value());
+    pos.make_move(from_alg(pos, "Nb8").value());
+    pos.make_move(from_alg(pos, "Ng1").value());
+
+    REQUIRE_FALSE(pos.is_threefold_repetition());
+
+    pos.make_move(from_alg(pos, "Nc6").value());
+    pos.make_move(from_alg(pos, "Nf3").value());
+    pos.make_move(from_alg(pos, "Nb8").value());
+    pos.make_move(from_alg(pos, "Ng1").value());
+
+    REQUIRE(pos.is_threefold_repetition());
+}
+
+TEST_CASE("Position - threefold reps - unusable EP square in the starting FEN is ignored", TAGS)
+{
+    auto pos = chess::notation::from_fen(
+        "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1")
+                   .value();
+
+    pos.make_move(from_alg(pos, "Nc6").value());
+    pos.make_move(from_alg(pos, "Nf3").value());
+    pos.make_move(from_alg(pos, "Nb8").value());
+    pos.make_move(from_alg(pos, "Ng1").value());
+
+    REQUIRE_FALSE(pos.is_threefold_repetition());
+
+    pos.make_move(from_alg(pos, "Nc6").value());
+    pos.make_move(from_alg(pos, "Nf3").value());
+    pos.make_move(from_alg(pos, "Nb8").value());
+    pos.make_move(from_alg(pos, "Ng1").value());
+
+    REQUIRE(pos.is_threefold_repetition());
+
+    // the FEN still has the EP square, since it's part of the standard notation
+    REQUIRE(chess::notation::to_fen(chess::notation::from_fen(
+                "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1")
+                    .value())
+            == "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1");
+}
