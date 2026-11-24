@@ -19,6 +19,7 @@
 #include <cstddef>
 #include <libbenbot/data-structures/HistoryTable.hpp>
 #include <libbenbot/data-structures/TranspositionTable.hpp>
+#include <libbenbot/eval/DefaultWeights.hpp>
 #include <libbenbot/eval/Material.hpp>
 #include <libbenbot/eval/SEE.hpp>
 #include <libchess/board/Bitboard.hpp>
@@ -126,14 +127,32 @@ namespace {
 namespace {
     struct ScoredMove final {
         int         score { 0 };
+        int         pstGain { 0 }; // how much the move improves the moving piece's square, used for ties
         std::size_t index { 0uz }; // where the move generator put this move
         Move        move;
     };
 
+    // returns how much the moving piece's piece square table score changes with this move, in
+    // the middlegame & endgame added together. This only breaks ties in the ordering, so it
+    // doesn't need the game phase.
+    [[nodiscard, gnu::pure]] auto pst_gain(const Position& position, const Move move) noexcept -> int
+    {
+        const auto pst = eval::DEFAULT_WEIGHTS.pst(move.piece());
+
+        // the tables are from White's point of view, so Black's squares are flipped vertically
+        const auto flip = position.is_white_to_move() ? 0uz : 56uz;
+
+        const auto& from = pst[static_cast<std::size_t>(move.from().index()) ^ flip];
+        const auto& to   = pst[static_cast<std::size_t>(move.to().index()) ^ flip];
+
+        return (to.mg + to.eg) - (from.mg + from.eg);
+    }
+
     // sorts the moves by score, highest first. std::sort doesn't keep equal elements in their
     // original order, and different standard libraries order them differently, so ties are broken
-    // by the order the move generator produced the moves in. That keeps the order (and bench) the
-    // same on every platform, without std::stable_sort's allocation.
+    // by how much the move improves the moving piece's square, then by the order the move generator
+    // produced the moves in. That keeps the order (and bench) the same on every platform, without
+    // std::stable_sort's allocation.
     void sort_scored_moves(const std::span<ScoredMove> scoredMoves, const std::span<Move> moves)
     {
         std::ranges::sort(
@@ -141,6 +160,9 @@ namespace {
             [](const ScoredMove& first, const ScoredMove& second) {
                 if (first.score != second.score)
                     return first.score > second.score;
+
+                if (first.pstGain != second.pstGain)
+                    return first.pstGain > second.pstGain;
 
                 return first.index < second.index;
             });
@@ -174,9 +196,10 @@ void order_moves_for_search(
         const auto move = moves[idx];
 
         scoredMoves[idx] = {
-            .score = move_ordering_score(currentPosition, move, transTable, opponentPawnAttacks, bestMove, killerMoves, history),
-            .index = idx,
-            .move  = move
+            .score   = move_ordering_score(currentPosition, move, transTable, opponentPawnAttacks, bestMove, killerMoves, history),
+            .pstGain = pst_gain(currentPosition, move),
+            .index   = idx,
+            .move    = move
         };
     }
 
@@ -211,9 +234,10 @@ void order_moves_for_q_search(
         const auto move = moves[idx];
 
         scoredMoves[idx] = {
-            .score = q_search_move_order_score(currentPosition, move),
-            .index = idx,
-            .move  = move
+            .score   = q_search_move_order_score(currentPosition, move),
+            .pstGain = pst_gain(currentPosition, move),
+            .index   = idx,
+            .move    = move
         };
     }
 
