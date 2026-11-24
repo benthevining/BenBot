@@ -602,8 +602,12 @@ namespace {
         // quiet moves that were searched before it a penalty
         void update_history(const Move cutoffMove, const MoveList& quietsSearched)
         {
+            // each update moves a score by up to about 10% of the table's maximum. A bonus of
+            // depth * depth was so small next to the maximum that the scores barely moved
+            static constexpr auto MAX_BONUS { 1600 };
+
             const auto depth = static_cast<int>(depthLeft) + 1;
-            const auto bonus = depth * depth;
+            const auto bonus = std::min((16 * depth * depth) + (128 * (depth - 1)), MAX_BONUS);
 
             const bool whiteToMove = position.is_white_to_move();
 
