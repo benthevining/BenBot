@@ -87,7 +87,7 @@ namespace {
     inline constexpr auto HISTORY_PRUNING_MAX_LMR_DEPTH { 3 };
 
     // ...and whose combined history is below this much per ply of depth, negated
-    inline constexpr auto HISTORY_PRUNING_MARGIN { 2048 };
+    inline constexpr auto HISTORY_PRUNING_MARGIN { 3072 };
 
     // the number of moves to search before late move pruning starts skipping quiet moves.
     // This uses depth as other engines count it, where a frontier node (depthLeft == 0) is
