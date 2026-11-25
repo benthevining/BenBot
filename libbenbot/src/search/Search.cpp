@@ -83,6 +83,12 @@ namespace {
     // late move pruning is only done with at most this much depth left
     inline constexpr auto LMP_MAX_DEPTH { 7uz };
 
+    // history pruning skips quiet moves that LMR would leave less than this much depth...
+    inline constexpr auto HISTORY_PRUNING_MAX_LMR_DEPTH { 3 };
+
+    // ...and whose combined history is below this much per ply of depth, negated
+    inline constexpr auto HISTORY_PRUNING_MARGIN { 1024 };
+
     // the number of moves to search before late move pruning starts skipping quiet moves.
     // This uses depth as other engines count it, where a frontier node (depthLeft == 0) is
     // depth 1. It uses integer maths only, so that bench is the same on every platform.
@@ -456,6 +462,8 @@ namespace {
             // always at least 4, so the first move is never pruned
             const auto lmpCount = lmp_move_count(depthLeft);
 
+            const bool historyPruning = not inCheck;
+
             const bool seePruning = depthLeft <= SEE_PRUNING_MAX_DEPTH and not inCheck;
 
             const auto captureSeeThreshold = see_pruning_threshold(depthLeft, false);
@@ -484,6 +492,23 @@ namespace {
                     and not std::ranges::contains(killers, move)
                     and not childPos.is_check())
                     continue;
+
+                // history pruning: if LMR would leave a quiet move very little depth, and its
+                // history says it's rarely been any good, we skip it. This uses depth as other
+                // engines count it, where a frontier node (depthLeft == 0) is depth 1
+                if (historyPruning and moveIdx > 0uz
+                    and not bounds.alpha.is_losing_mate()
+                    and not bestIsLosingMate
+                    and position.is_quiet(move)
+                    and not std::ranges::contains(killers, move)
+                    and not childPos.is_check()) {
+                    const auto depth    = static_cast<int>(depthLeft) + 1;
+                    const auto lmrDepth = depth - 1 - static_cast<int>(lmr_table_lookup(depthLeft, moveIdx));
+
+                    if (lmrDepth < HISTORY_PRUNING_MAX_LMR_DEPTH
+                        and history_score(move) < HISTORY_PRUNING_MARGIN * -depth)
+                        continue;
+                }
 
                 // SEE pruning: near the horizon, skip moves that lose too much material once all
                 // recaptures are played out. For captures, we only call see() if the cheap lower
