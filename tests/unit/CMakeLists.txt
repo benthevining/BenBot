@@ -45,8 +45,11 @@ function (add_catch_tests target prefix)
             --colour-mode none
             --reporter console::out=-
             TEST_PREFIX "${prefix}.unit."
+            # the search tests are slow in the sanitizer builds (e.g. the MatePV test takes 100-300
+            # seconds with gcc's ASAN in CI), which is too close to CI's default timeout of 300 seconds
             PROPERTIES
                 SKIP_REGULAR_EXPRESSION "SKIPPED:"
+                TIMEOUT 900
     )
     # cmake-format: on
 endfunction ()
@@ -54,3 +57,7 @@ endfunction ()
 add_subdirectory (libutil)
 add_subdirectory (libchess)
 add_subdirectory (libbenbot)
+
+if (BENBOT_TUNER)
+    add_subdirectory (tuner)
+endif ()

@@ -22,7 +22,6 @@
 #include <algorithm>
 #include <beman/inplace_vector/inplace_vector.hpp>
 #include <cstdint> // IWYU pragma: keep - for std::uint64_t
-#include <iterator>
 #include <utility>
 
 namespace chess::game {
@@ -47,8 +46,11 @@ struct ThreefoldChecker final {
 
 private:
     // stores a history of hash values
-    // the most recent value is at front() and the oldest is at back()
-    using History = beman::inplace_vector::inplace_vector<HashValue, 50uz>;
+    // the oldest value is at front() and the most recent is at back()
+    // The history is reset by every capture & pawn move, so it only needs to hold the positions
+    // since the last one. That's at most 101, since the fifty-move rule draws the game when the
+    // halfmove clock reaches 100, so the history never fills up in a real game.
+    using History = beman::inplace_vector::inplace_vector<HashValue, 101uz>;
 
     History history;
 };
@@ -78,18 +80,12 @@ constexpr void ThreefoldChecker::reset(const HashValue initialPositionHash)
 
 constexpr void ThreefoldChecker::push(const HashValue newHash)
 {
-    // make room for new element
-    if (std::cmp_less(history.size(), History::capacity()))
-        history.emplace_back(0uz);
+    // if the history is full, forget the oldest position. That can only happen if more than 100
+    // moves are played without a capture or pawn move, which the fifty-move rule doesn't allow
+    if (std::cmp_equal(history.size(), History::capacity()))
+        history.erase(history.begin());
 
-    // move the last element to the front,
-    // and move all other elements back 1
-    std::ranges::rotate(
-        history.begin(),
-        std::prev(history.end()),
-        history.end());
-
-    history.front() = newHash;
+    history.emplace_back(newHash);
 }
 
 constexpr auto ThreefoldChecker::is_threefold() const noexcept -> bool
@@ -101,7 +97,7 @@ constexpr auto ThreefoldChecker::is_threefold() const noexcept -> bool
 constexpr auto ThreefoldChecker::repetition_count() const noexcept -> size_t
 {
     return static_cast<size_t>(
-        std::ranges::count(history, history.front()));
+        std::ranges::count(history, history.back()));
 }
 
 } // namespace chess::game

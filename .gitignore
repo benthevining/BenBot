@@ -26,3 +26,7 @@ node_modules/
 .idea/
 .venv/
 __pycache__/
+
+# tuner datasets are kept out of the repo
+tools/**/*.epd
+tools/**/*.book

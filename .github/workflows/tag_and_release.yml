@@ -54,7 +54,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
 
@@ -99,7 +99,7 @@ jobs:
         p12-password: ${{ secrets.CODESIGN_CERT_PASSWORD }}
 
     - name: Checkout code
-      uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         ref: ${{ needs.bump_version.outputs.tag_name }}
 
@@ -140,13 +140,25 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         ref: ${{ needs.bump_version.outputs.tag_name }}
 
     - uses: ./.github/actions/create_release
       with:
         tag_name: ${{ needs.bump_version.outputs.tag_name }}
+
+  # measures the new release's Elo & opens a PR updating the README with it. Called from here,
+  # since the tag & release are created with the workflow's token, which doesn't trigger other
+  # workflows. Takes a few hours
+  estimate_elo:
+    needs: [bump_version, create_release]
+    permissions:
+      contents: write
+      pull-requests: write
+    uses: ./.github/workflows/estimate_elo.yml
+    with:
+      ref: ${{ needs.bump_version.outputs.tag_name }}
 
   # builds the lichess-bot Docker image from the latest git tag & uploads it to Dockerhub
   build_docker:
@@ -162,7 +174,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803   # v6
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
       with:
         ref: ${{ needs.bump_version.outputs.tag_name }}
 
