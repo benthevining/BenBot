@@ -77,3 +77,29 @@ runs:
       name: BenBot-${{ runner.os }}-${{ inputs.cmake_preset }}
       path: deploy   # using the full path here errors on Windows due to mixed forward/backslash usage in the path
       if-no-files-found: error
+
+    # the search should be exactly the same on every platform, so bench should be too. The
+    # check_bench job in build_and_test.yml compares the results from all the Release builds
+  - name: Run bench
+    shell: bash
+    if: inputs.build_config == 'Release'
+    env:
+      BENCH_FILE: bench-${{ runner.os }}-${{ inputs.cmake_preset }}.txt
+    run: |
+      ben_bot=deploy/bin/ben_bot
+      [[ -f "$ben_bot" ]] || ben_bot=deploy/bin/ben_bot.exe
+      nodes="$( (echo bench; echo quit) | "$ben_bot" | sed -n 's/^info string Total nodes: \([0-9][0-9]*\).*/\1/p' | tr -d '\r')"
+      if [[ -z "$nodes" ]]; then
+        echo "::error::Couldn't find the node count in the bench output"
+        exit 1
+      fi
+      echo "Bench: $nodes" >> "$GITHUB_STEP_SUMMARY"
+      echo "${{ runner.os }} ${{ inputs.cmake_preset }} $nodes" > "$BENCH_FILE"
+
+  - name: Upload bench result
+    uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f   # v7
+    if: inputs.build_config == 'Release'
+    with:
+      name: bench-${{ runner.os }}-${{ inputs.cmake_preset }}
+      path: bench-${{ runner.os }}-${{ inputs.cmake_preset }}.txt
+      if-no-files-found: error
