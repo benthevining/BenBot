@@ -28,6 +28,7 @@
 #include <libchess/moves/Patterns.hpp>
 #include <libchess/pieces/Colors.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
+#include <libutil/Sort.hpp>
 #include <limits>
 #include <optional>
 #include <span>
@@ -169,7 +170,9 @@ void order_moves_for_search(
             };
         });
 
-    std::ranges::sort(
+    // std::sort orders equal elements differently with each standard library, which
+    // made bench & the search itself differ between platforms
+    util::sort::portable_sort(
         scoredMoves,
         [](const ScoredMove& first, const ScoredMove& second) {
             return first.first > second.first;
@@ -196,7 +199,7 @@ void order_moves_for_q_search(
     const Position&       currentPosition,
     const std::span<Move> moves)
 {
-    std::ranges::sort(
+    util::sort::portable_sort(
         moves,
         [&currentPosition](const Move first, const Move second) {
             return q_search_move_order_score(currentPosition, first)
