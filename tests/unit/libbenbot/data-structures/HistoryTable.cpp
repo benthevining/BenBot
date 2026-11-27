@@ -183,6 +183,47 @@ TEST_CASE("History table - update(), age() & clear()", TAGS)
     REQUIRE(is_empty(table));
 }
 
+TEST_CASE("History table - capture scores", TAGS)
+{
+    HistoryTable table;
+
+    // a knight on f3 taking on e5
+    const Move nxe5 { Square::from_index(21), Square::from_index(36), PieceType::Knight };
+
+    // a bishop taking on e5
+    const Move bxe5 { Square::from_index(9), Square::from_index(36), PieceType::Bishop };
+
+    table.update_capture(true, nxe5, PieceType::Pawn, 400);
+
+    REQUIRE(table.get_capture(true, nxe5, PieceType::Pawn) > 0);
+
+    // the other side, the other victims & the other pieces aren't changed
+    REQUIRE(table.get_capture(false, nxe5, PieceType::Pawn) == 0);
+    REQUIRE(table.get_capture(true, nxe5, PieceType::Knight) == 0);
+    REQUIRE(table.get_capture(true, nxe5, PieceType::Queen) == 0);
+    REQUIRE(table.get_capture(true, bxe5, PieceType::Pawn) == 0);
+
+    // nor is the quiet move score for the same from & to squares
+    REQUIRE(table.get(true, nxe5) == 0);
+
+    table.update_capture(false, bxe5, PieceType::Queen, -400);
+
+    REQUIRE(table.get_capture(false, bxe5, PieceType::Queen) < 0);
+
+    const auto white = table.get_capture(true, nxe5, PieceType::Pawn);
+    const auto black = table.get_capture(false, bxe5, PieceType::Queen);
+
+    table.age();
+
+    REQUIRE(table.get_capture(true, nxe5, PieceType::Pawn) == white / 2);
+    REQUIRE(table.get_capture(false, bxe5, PieceType::Queen) == black / 2);
+
+    table.clear();
+
+    REQUIRE(table.get_capture(true, nxe5, PieceType::Pawn) == 0);
+    REQUIRE(table.get_capture(false, bxe5, PieceType::Queen) == 0);
+}
+
 TEST_CASE("Search context - clear_history() clears the history table", TAGS)
 {
     ben_bot::search::Context ctx;
