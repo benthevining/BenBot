@@ -1,1 +1,12 @@
-1k1r3r/pp2qpp1/3b1n1p/3pNQ2/2pP1P2/2N1P3/PP4PP/1K1RR3 b - - bm Bb4; id "LCTII.POS.02"; c0 "Lilienthal - Botvinnik, Moskau 1945"; depth 12;
+rn3rk1/pbppq1pp/1p2pb2/4N2Q/3PN3/3B4/PPP2PPP/R3K2R w KQ - bm Qxh7+; depth 10; id "LCTII.CMB.02"; c0 "Lasker,Ed - Thomas, London 1911";
+2k2b1r/1pq3p1/2p1pp2/p1n1PnNp/2P2B2/2N4P/PP2QPP1/3R2K1 w - - bm exf6; depth 16; id "LCTII.CMB.04"; c0 "Vanka - Jansa, Prag 1957";
+2r2r2/3qbpkp/p3n1p1/2ppP3/6Q1/1P1B3R/PBP3PP/5R1K w - - bm Rxh7+; depth 13; id "LCTII.CMB.05"; c0 "Boros - Szabo, Budapest 1937";
+2b1r1k1/r4ppp/p7/2pNP3/4Q3/q6P/2P2PP1/3RR1K1 w - - bm Nf6+; depth 14; id "LCTII.CMB.08"; c0 "Zarkov - Mephisto, Albuquerque 1991";
+8/1p3pp1/7p/5P1P/2k3P1/8/2K2P2/8 w - - bm f6; depth 12; id "LCTII.FIN.01"; c0 "NN - Lasker,Ed";
+8/pp2r1k1/2p1p3/3pP2p/1P1P1P1P/P5KR/8/8 w - - bm f5; depth 4; id "LCTII.FIN.02"; c0 "Capablanca - Eliskases, Moskau 1936";
+5k2/7R/4P2p/5K2/p1r2P1p/8/8/8 b - - bm h3; depth 16; id "LCTII.FIN.04"; c0 "Karpov - Deep Thought, Analyse 1990";
+1k1r3r/pp2qpp1/3b1n1p/3pNQ2/2pP1P2/2N1P3/PP4PP/1K1RR3 b - - bm Bb4; id "LCTII.POS.02"; c0 "Lilienthal - Botvinnik, Moskau 1945"; depth 9;
+3r1bk1/p4ppp/Qp2p3/8/1P1B4/Pq2P1P1/2r2P1P/R3R1K1 b - - bm e5; depth 10; id "LCTII.POS.06"; c0 "Nimzowitsch - Capablanca, New York 1927";
+r1b2r1k/pp2q1pp/2p2p2/2p1n2N/4P3/1PNP2QP/1PP2RP1/5RK1 w - - bm Nd1; depth 8; id "LCTII.POS.07"; c0 "Tartakower - Rubinstein, Moskau 1925";
+r2qrnk1/pp3ppb/3b1n1p/1Pp1p3/2P1P2N/P5P1/1B1NQPBP/R4RK1 w - - bm Bh3; depth 9; id "LCTII.POS.08"; c0 "Polugaevsky - Unzicker, Kislovodsk 1972";
+5nk1/Q4bpp/5p2/8/P1n1PN2/q4P2/6PP/1R4K1 w - - bm Qd4; depth 9; id "LCTII.POS.09"; c0 "Boissel - Del Gobbo, corr. 1994";
