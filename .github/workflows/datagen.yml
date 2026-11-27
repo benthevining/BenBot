@@ -1,0 +1,232 @@
+# ======================================================================================
+#
+# ░▒▓███████▓▒░░▒▓████████▓▒░▒▓███████▓▒░       ░▒▓███████▓▒░ ░▒▓██████▓▒░▒▓████████▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓███████▓▒░░▒▓██████▓▒░ ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░
+# ░▒▓███████▓▒░░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░      ░▒▓███████▓▒░ ░▒▓██████▓▒░  ░▒▓█▓▒░
+#
+# ======================================================================================
+
+
+#
+# Plays self-play games with the tuner_datagen target & turns them into a dataset for the eval
+# tuner (see tools/tuner/README.md). The games are sharded across several runners, since a useful
+# number of them takes longer than GitHub's 6 hour job limit. Each shard plays its games with its
+# own seed, & a final job extracts & resolves the positions from all of them. It builds the ref
+# chosen to run the workflow from, for the same reason as the Estimate Elo workflow.
+
+name: Tuner datagen
+
+on:
+  workflow_dispatch:
+    inputs:
+      shards:
+        description: Number of runners to play games on (at most 20)
+        type: number
+        default: 8
+      games:
+        description: Games each shard plays
+        type: number
+        default: 2000
+      limit:
+        description: Limit per move, such as tc=2+0.02 or nodes=20000
+        type: string
+        default: tc=2+0.02
+      per_game:
+        description: The most positions to take from each game (0 = all)
+        type: number
+        default: 10
+
+run-name: Tuner datagen (${{ github.ref_name }}, ${{ inputs.shards }} x ${{ inputs.games }} games)
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: read
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    name: Build tuner
+    timeout-minutes: 30
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+
+    - name: Parse shards
+      id: shards
+      env:
+        SHARDS: ${{ inputs.shards }}
+      run: |
+        if [[ "$SHARDS" -lt 1 || "$SHARDS" -gt 20 ]]; then
+          echo "::error::The number of shards must be from 1 to 20"
+          exit 1
+        fi
+        echo "shards=$(jq -c -n --argjson n "$SHARDS" '[range($n)]')" >> "$GITHUB_OUTPUT"
+
+    - name: Build
+      uses: ./.github/actions/run_build
+      id: run_build
+      with:
+        cmake_preset: gcc
+        extra_config_args: -D BUILD_TESTING=OFF -D BENBOT_TUNER=ON
+        build_target: benbot_tuner
+
+    - name: Find tuner
+      id: tuner
+      run: |
+        tuner="$(find "$BUILD_DIR" -name benbot_tuner -type f -perm -u+x | head -n 1)"
+        if [[ -z "$tuner" ]]; then
+          echo "::error::Couldn't find the benbot_tuner executable"
+          exit 1
+        fi
+        echo "path=$tuner" >> "$GITHUB_OUTPUT"
+      env:
+        BUILD_DIR: ${{ steps.run_build.outputs.build_dir }}
+
+    - name: Upload tuner
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+      with:
+        name: datagen-tuner
+        path: ${{ steps.tuner.outputs.path }}
+        if-no-files-found: error
+
+    outputs:
+      shards: ${{ steps.shards.outputs.shards }}
+
+  play:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(needs.build.outputs.shards) }}
+    runs-on: ubuntu-latest
+    name: Play games (shard ${{ matrix.shard }})
+    timeout-minutes: 360 # 6 hours (GitHub's limit); see the time limit on the games below
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+
+    - name: Download fastchess
+      id: download_fastchess
+      uses: ./.github/actions/download_github_release
+      with:
+        repository: Disservin/fastchess
+        file_filter: '*-linux-x86-64*'
+        artifact_xtn: tar
+        path_to_exec: fastchess
+
+      # every shard needs a different seed, or they'd all play the same openings
+    - name: Choose seed
+      id: seed
+      env:
+        SHARD: ${{ matrix.shard }}
+      run: echo "seed=$(( (GITHUB_RUN_ID % 1000000) * 100 + SHARD ))" >> "$GITHUB_OUTPUT"
+
+    - name: Build
+      uses: ./.github/actions/run_build
+      id: run_build
+      with:
+        cmake_preset: gcc
+        extra_config_args: >-
+          -D BENBOT_TUNER=ON
+          -D "FASTCHESS_PROGRAM=${{ steps.download_fastchess.outputs.executable }}"
+          -D "BENBOT_DATAGEN_GAMES=${{ inputs.games }}"
+          -D "BENBOT_DATAGEN_LIMIT=${{ inputs.limit }}"
+          -D "BENBOT_DATAGEN_SEED=${{ steps.seed.outputs.seed }}"
+
+      # if the time limit is hit, carry on so that the games played so far still get used. The last
+      # game may be cut off, but extract skips any game it can't parse
+    - name: Play games
+      run: |
+        status=0
+        timeout 345m cmake --build . --target tuner_datagen --config Release || status=$?
+        if [[ "$status" -eq 124 ]]; then
+          echo "::warning::Not all the games were played within the time limit"
+        elif [[ "$status" -ne 0 ]]; then
+          exit "$status"
+        fi
+        if [[ ! -s "$GITHUB_WORKSPACE/logs/datagen/games.pgn" ]]; then
+          echo "::error::No games were played, check the output above for details"
+          exit 1
+        fi
+        echo "Shard $SHARD played $(grep -c '^\[Result ' "$GITHUB_WORKSPACE/logs/datagen/games.pgn") games" >> "$GITHUB_STEP_SUMMARY"
+      env:
+        SHARD: ${{ matrix.shard }}
+      working-directory: ${{ steps.run_build.outputs.build_dir }}
+
+    - name: Upload games
+      if: ${{ !cancelled() }}
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+      with:
+        name: datagen-games-${{ matrix.shard }}
+        path: logs/datagen
+        if-no-files-found: error
+
+  # extracts & resolves the positions from every shard that played games
+  dataset:
+    needs: [build, play]
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
+    runs-on: ubuntu-latest
+    name: Make dataset
+    timeout-minutes: 60
+
+    steps:
+    - name: Download tuner
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+      with:
+        name: datagen-tuner
+        path: tuner
+
+      # artifacts don't keep the execute permission
+    - name: Make tuner executable
+      run: chmod +x tuner/benbot_tuner
+
+      # each shard's games are in their own directory, since every shard's PGN has the same name
+    - name: Download games
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+      with:
+        pattern: datagen-games-*
+        path: games
+
+    - name: Extract positions
+      env:
+        PER_GAME: ${{ inputs.per_game }}
+      run: |
+        pgn_args=()
+        for pgn in games/*/games.pgn; do
+          pgn_args+=(--pgn "$pgn")
+        done
+        if [[ "${#pgn_args[@]}" -eq 0 ]]; then
+          echo "::error::No shard uploaded any games"
+          exit 1
+        fi
+        mkdir dataset
+        tuner/benbot_tuner extract "${pgn_args[@]}" --output dataset/extracted.book \
+          --per-game "$PER_GAME" --seed "$GITHUB_RUN_ID" | tee -a "$GITHUB_STEP_SUMMARY"
+
+    - name: Resolve positions
+      run: |
+        tuner/benbot_tuner resolve --data dataset/extracted.book --output dataset/resolved.book \
+          | tee -a "$GITHUB_STEP_SUMMARY"
+
+      # resolved.book is what to tune on. extracted.book is kept so that resolving can be redone
+      # without playing the games again, & the PGNs are in each shard's artifact
+    - name: Upload dataset
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+      with:
+        name: datagen-dataset
+        path: dataset
+        if-no-files-found: error
