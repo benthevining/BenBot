@@ -194,7 +194,8 @@ jobs:
     - name: Make tuner executable
       run: chmod +x tuner/benbot_tuner
 
-      # each shard's games are in their own directory, since every shard's PGN has the same name
+      # with more than one shard, each shard's games are in their own directory, since every
+      # shard's PGN has the same name. With one shard, its PGN is directly in games/
     - name: Download games
       uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
       with:
@@ -206,9 +207,9 @@ jobs:
         PER_GAME: ${{ inputs.per_game }}
       run: |
         pgn_args=()
-        for pgn in games/*/games.pgn; do
+        while IFS= read -r -d '' pgn; do
           pgn_args+=(--pgn "$pgn")
-        done
+        done < <(find games -name games.pgn -print0 | sort -z)
         if [[ "${#pgn_args[@]}" -eq 0 ]]; then
           echo "::error::No shard uploaded any games"
           exit 1
