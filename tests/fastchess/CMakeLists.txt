@@ -136,6 +136,61 @@ add_sprt_test (sprt_non_regression -5 0 "non-regression")
 
 #
 
+# self-play games for the eval tuner's own data (see tools/tuner/README.md). There's no -repeat,
+# since colour-swapped pairs of games would add correlated positions
+if (BENBOT_TUNER)
+    set (BENBOT_DATAGEN_GAMES 10000 CACHE STRING "Number of games tuner_datagen plays")
+    set (BENBOT_DATAGEN_LIMIT "tc=2+0.02"
+         CACHE STRING "tuner_datagen's limit per move, such as tc=2+0.02 or nodes=20000"
+    )
+    set (BENBOT_DATAGEN_SEED "" CACHE STRING "Seed for tuner_datagen's random opening order")
+
+    mark_as_advanced (BENBOT_DATAGEN_GAMES BENBOT_DATAGEN_LIMIT BENBOT_DATAGEN_SEED)
+
+    set (datagen_dir "${BenBot_SOURCE_DIR}/logs/datagen")
+    set (datagen_pgn "${datagen_dir}/games.pgn")
+    set (datagen_log "${datagen_dir}/datagen.log")
+
+    if (BENBOT_DATAGEN_SEED STREQUAL "")
+        set (datagen_seed_args "")
+    else ()
+        set (datagen_seed_args -srand "${BENBOT_DATAGEN_SEED}")
+    endif ()
+
+    # the PGN's move comments have the book moves & each engine move's score, which benbot_tuner
+    # extract reads. fastchess adds to the PGN if it already exists
+    # cmake-format: off
+    add_custom_target (
+        tuner_datagen
+        COMMAND "${CMAKE_COMMAND}" -E make_directory "${datagen_dir}"
+        COMMAND "${FASTCHESS_PROGRAM}"
+            -engine "cmd=$<TARGET_FILE:ben_bot>" name=BenBot1
+            -engine "cmd=$<TARGET_FILE:ben_bot>" name=BenBot2
+            -each "${BENBOT_DATAGEN_LIMIT}" option.Hash=16
+            -rounds "${BENBOT_DATAGEN_GAMES}" -games 1
+            ${datagen_seed_args}
+            -ratinginterval 100
+            -maxmoves 400
+            -resign movecount=3 score=500 twosided=true
+            -draw movenumber=40 movecount=8 score=10
+            -concurrency "${num_cores}"
+            -recover
+            -openings "file=${openings_file}" format=pgn order=random
+            -pgnout "file=${datagen_pgn}" nodes=true
+            -log "file=${datagen_log}" level=warn
+        WORKING_DIRECTORY "$<TARGET_FILE_DIR:ben_bot>"
+        BYPRODUCTS "${datagen_pgn}" "${datagen_log}"
+        DEPENDS "${openings_file}" ben_bot::ben_bot
+        COMMENT "Playing self-play games for the eval tuner..."
+        VERBATIM USES_TERMINAL
+    )
+    # cmake-format: on
+
+    add_dependencies (tuner_datagen ben_bot)
+endif ()
+
+#
+
 if (NOT TARGET Python::Interpreter)
     return ()
 endif ()

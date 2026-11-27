@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <charconv>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -36,6 +37,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <tuner/Dataset.hpp>
 #include <tuner/Model.hpp>
 #include <tuner/Parallel.hpp>
@@ -435,6 +437,39 @@ auto parse_labelled_line(string_view line)
         return std::unexpected { std::format("invalid FEN '{}': {}", fen, position.error()) };
 
     return LabelledPosition { .position = std::move(*position), .result = result };
+}
+
+auto parse_line_score(const string_view line) -> std::optional<int>
+{
+    const auto close = line.find(']');
+
+    if (close == string_view::npos)
+        return std::nullopt;
+
+    const auto text = trim(line.substr(close + 1uz));
+
+    if (text.empty())
+        return std::nullopt;
+
+    int score { 0 };
+
+    const auto [end, error] = std::from_chars(text.data(), text.data() + text.size(), score);
+
+    if (error != std::errc { } or end != text.data() + text.size())
+        return std::nullopt;
+
+    return score;
+}
+
+auto format_labelled_line(const Position& position, const double result, const std::optional<int> score)
+    -> string
+{
+    auto line = std::format("{} [{:.1f}]", chess::notation::to_fen(position), result);
+
+    if (score.has_value())
+        line.append(std::format(" {}", *score));
+
+    return line;
 }
 
 void Dataset::append(const Dataset& other)
