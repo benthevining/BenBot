@@ -26,6 +26,7 @@
 #include <filesystem>
 #include <iosfwd>
 #include <libchess/game/Position.hpp>
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
@@ -68,6 +69,25 @@ struct LabelledPosition final {
  */
 [[nodiscard]] auto parse_labelled_line(std::string_view line)
     -> std::expected<LabelledPosition, std::string>;
+
+/** Returns the search score written after a line's bracketed result, as in ``<FEN> [1.0] 34``,
+    or ``nullopt`` if there isn't one. The score is in centipawns from White's point of view.
+    ``parse_labelled_line()`` ignores it.
+
+    @ingroup tuner
+    @see format_labelled_line()
+ */
+[[nodiscard]] auto parse_line_score(std::string_view line) -> std::optional<int>;
+
+/** Writes a position as a dataset line: its FEN, then the result in brackets (``[1.0]``,
+    ``[0.5]`` or ``[0.0]``), then the search score if there is one.
+
+    @ingroup tuner
+    @see parse_labelled_line(), parse_line_score()
+ */
+[[nodiscard]] auto format_labelled_line(
+    const Position& position, double result, std::optional<int> score = std::nullopt)
+    -> std::string;
 
 /** One coefficient of a position's eval trace.
     @ingroup tuner

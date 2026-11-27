@@ -33,6 +33,7 @@ The PR tests are sharded across 4 runners, in rounds of about 40 minutes. Each s
 * `sprt_gain_big`: runs SPRT testing with wider gainer bounds
 * `sprt_non_regression`: runs SPRT testing with non-regression bounds
 * `estimate_elo`: estimates the engine's Elo (see below). Needs Python & Stockfish
+* `tuner_datagen`: plays `ben_bot` against itself to make data for the eval tuner (only if `BENBOT_TUNER` is on; see `tools/tuner/README.md`)
 
 ## Estimating the Elo
 

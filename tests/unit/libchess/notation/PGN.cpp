@@ -39,6 +39,17 @@ TEST_CASE("PGN - don't crash with empty input", TAGS)
     REQUIRE(result.has_value());
 }
 
+TEST_CASE("PGN - unfinished game", TAGS)
+{
+    const auto game = from_pgn(R"([Result "*"]
+
+1. e4 {book} e5 2. Nf3 *)");
+
+    REQUIRE(game.has_value());
+    REQUIRE(game->moves.moves.size() == 3uz);
+    REQUIRE(not game->result.has_value());
+}
+
 TEST_CASE("PGN - block comments", TAGS)
 {
     static constexpr std::string_view pgn {

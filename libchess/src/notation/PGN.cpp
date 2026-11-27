@@ -218,8 +218,9 @@ namespace {
                     }
 
                     if constexpr (not IsVariation) {
-                        if (firstMove.contains('-') and trim(rest).empty()) {
+                        if ((firstMove.contains('-') or firstMove == "*") and trim(rest).empty()) {
                             // we're parsing the end of the move list, this token is the game result
+                            // (* for a game that hasn't finished)
                             return firstMove;
                         }
                     }

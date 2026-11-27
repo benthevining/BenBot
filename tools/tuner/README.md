@@ -30,6 +30,8 @@ r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - c9 "1/2-1/2";
   EPD opcodes like `c9`) is ignored.
 * The result is a number in `[0, 1]` in brackets (`[1.0]`, `[0.5]`, `[0.0]`), a quoted `"1-0"`, `"1/2-1/2"` or `"0-1"`,
   or one of those unquoted as the last word on the line.
+* A bracketed result can be followed by a search score in centipawns from White's point of view, as in
+  `<FEN> [1.0] 34`. `extract` writes these (see below), and tuning ignores them for now.
 * Empty lines and lines starting with `#` are skipped. Lines that can't be parsed are counted, the first few are
   printed, and they're skipped.
 * Positions where the side to move is in check are dropped, and so are repeats of a position seen earlier (in any of
@@ -45,6 +47,58 @@ position.
 
 About 10% of the positions (`--validation`) are held out from training at random, and the loss on them is printed
 alongside the training loss.
+
+## Making a dataset from self-play
+
+The tuner can also make its own dataset from BenBot's games against itself, in three steps.
+
+**1. Play the games.** With `BENBOT_TUNER` on and fastchess installed, the `tuner_datagen` target plays `ben_bot`
+against itself with fastchess, using the same opening book & adjudication as the SPRT tests:
+
+```sh
+cmake --build Builds/clang --config Release --target tuner_datagen
+```
+
+The games are written to `logs/datagen/games.pgn` (fastchess adds to it if it's already there). Each game starts
+from a random opening, and there's no `-repeat`, since colour-swapped pairs of games would add correlated positions.
+These cache variables change it:
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `BENBOT_DATAGEN_GAMES` | 10000 | The number of games. |
+| `BENBOT_DATAGEN_LIMIT` | `tc=2+0.02` | The limit per move, passed to fastchess's `-each`, such as `tc=2+0.02` or `nodes=20000`. |
+| `BENBOT_DATAGEN_SEED` | (random) | The seed for the opening order. |
+
+**2. Sample positions from the games.** `benbot_tuner extract` reads the PGNs and writes a dataset file:
+
+```sh
+Builds/clang/tools/tuner/Release/benbot_tuner extract --pgn logs/datagen/games.pgn --output ~/chess-data/selfplay.book
+```
+
+* The book moves (the moves with a `{book}` comment) and the next `--skip-plies` plies are skipped.
+* Positions where the side to move is in check are dropped, and so are positions where the move played has a mate
+  score.
+* Of the positions left in each game, `--per-game` are chosen at random, since many positions from the same game are
+  correlated. The choice only depends on `--seed` and the PGNs, so the same input always gives the same dataset.
+* Each position is labelled with its game's result, and followed by the score of the move played from it (from its
+  fastchess comment, such as `{+0.36/14 0.244s, n=123456}`), as in `<FEN> [1.0] 34`. The score isn't used yet, but
+  keeping it means a blend of the result & the score can be tried later without playing the games again.
+* Unfinished games (result `*`) and games that can't be parsed are skipped.
+
+**3. Make the positions quiet.** `benbot_tuner resolve` runs a small quiescence search on each position, and replaces
+it with the position at the end of the search's principal variation, keeping its label & score:
+
+```sh
+Builds/clang/tools/tuner/Release/benbot_tuner resolve --data ~/chess-data/selfplay.book --output ~/chess-data/selfplay-resolved.book
+```
+
+The search is the tuner's own, not the engine's: it only looks at captures & queen promotions, skips the ones that
+lose material by SEE, and stands pat on the current eval (when in check, it searches every move instead). It has no
+transposition table, history or time limit, so it always gives the same result. Positions whose PV ends in checkmate
+are dropped. Public datasets such as `lichess-big3-resolved` are already quiet, so this is only needed for our own
+data.
+
+The resolved file can then be tuned on with `--data` as usual.
 
 ## How it tunes
 
@@ -71,6 +125,8 @@ alongside the training loss.
 
 ## Options
 
+`benbot_tuner [tune] --data <file> [options]` tunes (`tune` is the default command, so it can be left out):
+
 | Option | Default | Description |
 | --- | --- | --- |
 | `--data <file>` | (required) | A dataset file. Can be given more than once. |
@@ -93,6 +149,24 @@ Options can also be written as `--name=value`. For example:
 ```sh
 Builds/clang/tools/tuner/Release/benbot_tuner --data ~/chess-data/quiet-labeled.epd --epochs 2000 --output tuned.hpp
 ```
+
+`benbot_tuner extract --pgn <file> [options]` samples positions from games:
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `--pgn <file>` | (required) | A PGN file. Can be given more than once. |
+| `--output <file>` | `extracted.book` | Where to write the positions. |
+| `--per-game <n>` | 10 | The most positions to take from each game (0 = all of them). |
+| `--skip-plies <n>` | 8 | The number of plies to skip after the book moves. |
+| `--seed <n>` | 1 | The seed used to choose the positions. |
+
+`benbot_tuner resolve --data <file> [options]` makes a dataset's positions quiet:
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `--data <file>` | (required) | A dataset file. Can be given more than once; all of them are written to one output. |
+| `--output <file>` | `resolved.book` | Where to write the resolved positions. |
+| `--threads <n>` | hardware threads | The number of threads. |
 
 ## Using the output
 

@@ -20,20 +20,25 @@
 #include <exception>
 #include <filesystem>
 #include <format>
+#include <fstream>
+#include <ios>
 #include <libbenbot/eval/DefaultWeights.hpp>
 #include <libbenbot/eval/Weights.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
 #include <limits>
 #include <optional>
 #include <print>
+#include <random>
 #include <span>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 #include <tuner/Dataset.hpp>
+#include <tuner/Extract.hpp>
 #include <tuner/Model.hpp>
 #include <tuner/Optimiser.hpp>
 #include <tuner/Parallel.hpp>
+#include <tuner/Resolve.hpp>
 #include <tuner/Writer.hpp>
 #include <utility>
 #include <vector>
@@ -45,10 +50,12 @@ using std::string_view;
 
 using namespace ben_bot::tuner; // NOLINT
 
-constexpr string_view USAGE = R"(Usage: benbot_tuner --data <file> [options]
+constexpr string_view USAGE = R"(Usage: benbot_tuner [tune] --data <file> [options]
+       benbot_tuner extract --pgn <file> [options]
+       benbot_tuner resolve --data <file> [options]
 
-Tunes BenBot's eval weights on a dataset of labelled positions, starting from the
-current default weights, and writes the tuned weights as a new DefaultWeights.hpp.
+tune (the default): tunes BenBot's eval weights on a dataset of labelled positions, starting
+from the current default weights, and writes the tuned weights as a new DefaultWeights.hpp.
 
 Options:
   --data <file>         A dataset file (one labelled position per line). Can be repeated.
@@ -66,6 +73,23 @@ Options:
   --seed <n>            The seed used to choose the validation positions (default 1).
   --limit <n>           Only load the first n positions that pass the filters (default 0 = all).
   --help                Print this message.
+
+extract: samples positions from PGNs of self-play games (such as the tuner_datagen target's)
+and writes them as a dataset, labelled with each game's result.
+
+Options:
+  --pgn <file>          A PGN file. Can be repeated.
+  --output <file>       Where to write the positions (default extracted.book).
+  --per-game <n>        The most positions to take from each game (default 10, 0 = all).
+  --skip-plies <n>      The number of plies to skip after the book moves (default 8).
+  --seed <n>            The seed used to choose the positions (default 1).
+
+resolve: makes each position in a dataset quiet, by following a quiescence search's PV to its end.
+
+Options:
+  --data <file>         A dataset file. Can be repeated.
+  --output <file>       Where to write the resolved positions (default resolved.book).
+  --threads <n>         The number of threads (default: the number of hardware threads).
 )";
 
 struct Options final {
@@ -134,9 +158,12 @@ struct Options final {
     throw std::invalid_argument { std::format("{} needs a number, not '{}'", name, text) };
 }
 
-[[nodiscard]] auto parse_options(const std::span<const char* const> args) -> Options
+// calls handle(name, value) for each option, where value() returns the option's value.
+// Returns true if --help was given
+template <typename Handler>
+[[nodiscard]] auto parse_args(const std::span<const char* const> args, const Handler& handle) -> bool
 {
-    Options options;
+    auto help = false;
 
     for (auto i = 0uz; i < args.size(); ++i) {
         string_view name { args[i] };
@@ -150,7 +177,7 @@ struct Options final {
         }
 
         if (name == "--help" or name == "-h") {
-            options.help = true;
+            help = true;
             continue;
         }
 
@@ -164,6 +191,22 @@ struct Options final {
             return args[++i];
         };
 
+        handle(name, value);
+    }
+
+    return help;
+}
+
+[[noreturn]] void unknown_option(const string_view name)
+{
+    throw std::invalid_argument { std::format("Unknown option '{}'", name) };
+}
+
+[[nodiscard]] auto parse_options(const std::span<const char* const> args) -> Options
+{
+    Options options;
+
+    options.help = parse_args(args, [&options](const string_view name, const auto& value) {
         if (name == "--data")
             options.dataFiles.emplace_back(value());
         else if (name == "--epochs")
@@ -194,8 +237,8 @@ struct Options final {
         else if (name == "--limit")
             options.limit = parse_size(name, value());
         else
-            throw std::invalid_argument { std::format("Unknown option '{}'", name) };
-    }
+            unknown_option(name);
+    });
 
     if (options.help)
         return options;
@@ -219,6 +262,80 @@ struct Options final {
         throw std::invalid_argument { "--l2 can't be negative" };
 
     return options;
+}
+
+struct ExtractCommand final {
+    std::vector<std::filesystem::path> pgnFiles;
+
+    std::filesystem::path output { "extracted.book" };
+
+    ExtractOptions options;
+
+    std::uint64_t seed { 1 };
+
+    bool help { false };
+};
+
+[[nodiscard]] auto parse_extract_options(const std::span<const char* const> args) -> ExtractCommand
+{
+    ExtractCommand command;
+
+    command.help = parse_args(args, [&command](const string_view name, const auto& value) {
+        if (name == "--pgn")
+            command.pgnFiles.emplace_back(value());
+        else if (name == "--output")
+            command.output = value();
+        else if (name == "--per-game")
+            command.options.positionsPerGame = parse_size(name, value());
+        else if (name == "--skip-plies")
+            command.options.skipPlies = parse_size(name, value());
+        else if (name == "--seed")
+            command.seed = parse_size(name, value());
+        else
+            unknown_option(name);
+    });
+
+    if (not command.help and command.pgnFiles.empty())
+        throw std::invalid_argument { "At least one --pgn file is needed" };
+
+    return command;
+}
+
+struct ResolveCommand final {
+    std::vector<std::filesystem::path> dataFiles;
+
+    std::filesystem::path output { "resolved.book" };
+
+    size_t threads { default_num_threads() };
+
+    bool help { false };
+};
+
+[[nodiscard]] auto parse_resolve_options(const std::span<const char* const> args) -> ResolveCommand
+{
+    ResolveCommand command;
+
+    command.help = parse_args(args, [&command](const string_view name, const auto& value) {
+        if (name == "--data")
+            command.dataFiles.emplace_back(value());
+        else if (name == "--output")
+            command.output = value();
+        else if (name == "--threads")
+            command.threads = parse_size(name, value());
+        else
+            unknown_option(name);
+    });
+
+    if (command.help)
+        return command;
+
+    if (command.dataFiles.empty())
+        throw std::invalid_argument { "At least one --data file is needed" };
+
+    if (command.threads == 0uz)
+        throw std::invalid_argument { "--threads must be at least 1" };
+
+    return command;
 }
 
 [[nodiscard]] auto seconds_since(const std::chrono::steady_clock::time_point start) -> double
@@ -376,15 +493,134 @@ void run(const Options& options)
     std::println("Wrote {} ({:.1f} s in total)", options.output.string(), seconds_since(start));
 }
 
+[[nodiscard]] auto open_input(const std::filesystem::path& path) -> std::ifstream
+{
+    std::ifstream input { path };
+
+    if (not input.is_open())
+        throw std::runtime_error { std::format("Can't open '{}'", path.string()) };
+
+    return input;
+}
+
+[[nodiscard]] auto open_output(const std::filesystem::path& path) -> std::ofstream
+{
+    std::ofstream output { path, std::ios::binary | std::ios::trunc };
+
+    if (not output.is_open())
+        throw std::runtime_error { std::format("Can't write to '{}'", path.string()) };
+
+    return output;
+}
+
+void close_output(std::ofstream& output, const std::filesystem::path& path)
+{
+    output.close();
+
+    if (output.fail())
+        throw std::runtime_error { std::format("Couldn't write all of '{}'", path.string()) };
+}
+
+void run_extract(const ExtractCommand& command)
+{
+    const auto start = std::chrono::steady_clock::now();
+
+    auto output = open_output(command.output);
+
+    std::mt19937_64 rng { command.seed };
+
+    ExtractStats stats;
+
+    for (const auto& path : command.pgnFiles) {
+        auto input = open_input(path);
+
+        extract(input, output, command.options, rng, stats);
+    }
+
+    close_output(output, command.output);
+
+    std::println(
+        "Read {} games ({} skipped with no result or unparsable). Of their positions, skipped {} in the "
+        "opening, {} in check & {} with mate scores, leaving {}",
+        stats.games, stats.skippedGames, stats.openingPositions, stats.inCheck, stats.mateScores,
+        stats.candidates);
+
+    std::println(
+        "Wrote {} positions to {} ({:.1f} s)", stats.extracted, command.output.string(), seconds_since(start));
+}
+
+void run_resolve(const ResolveCommand& command)
+{
+    const auto start = std::chrono::steady_clock::now();
+
+    auto output = open_output(command.output);
+
+    ResolveStats stats;
+
+    for (const auto& path : command.dataFiles) {
+        auto input = open_input(path);
+
+        resolve_dataset(input, output, command.threads, stats);
+    }
+
+    close_output(output, command.output);
+
+    std::println(
+        "Read {} lines: skipped {} blank or comment lines, {} unparsable",
+        stats.lines, stats.skipped, stats.parseErrors);
+
+    for (const auto& error : stats.firstErrors)
+        std::println("  {}", error);
+
+    std::println(
+        "{} positions were already quiet, {} were resolved, and {} were dropped because their PV ended in mate",
+        stats.unchanged, stats.changed, stats.inCheck);
+
+    std::println(
+        "Wrote {} positions to {} ({:.1f} s)", stats.unchanged + stats.changed, command.output.string(),
+        seconds_since(start));
+}
+
 } // namespace
 
 int main(const int argc, const char** argv)
 try {
-    const auto options = parse_options(
-        std::span { argv, static_cast<size_t>(argc) }.subspan(1uz));
+    auto args = std::span { argv, static_cast<size_t>(argc) }.subspan(1uz);
+
+    // the command is optional, and defaults to tune
+    const auto command = args.empty() ? string_view { } : string_view { args.front() };
+
+    if (command == "tune" or command == "extract" or command == "resolve")
+        args = args.subspan(1uz);
+
+    const auto print_usage = [] { std::print("{}", USAGE); };
+
+    if (command == "extract") {
+        const auto options = parse_extract_options(args);
+
+        if (options.help)
+            print_usage();
+        else
+            run_extract(options);
+
+        return 0;
+    }
+
+    if (command == "resolve") {
+        const auto options = parse_resolve_options(args);
+
+        if (options.help)
+            print_usage();
+        else
+            run_resolve(options);
+
+        return 0;
+    }
+
+    const auto options = parse_options(args);
 
     if (options.help) {
-        std::print("{}", USAGE);
+        print_usage();
         return 0;
     }
 
