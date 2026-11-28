@@ -175,13 +175,13 @@ namespace {
     // singular extensions are only tried with at least this much depth left. At 8+0.08 we
     // reach about depth 9 in the middlegame, so with 5 they fired in nearly every node in the
     // top few plies, & extended so often that we lost about a ply
-    inline constexpr auto SE_MIN_DEPTH { 7uz };
+    inline constexpr auto SE_MIN_DEPTH { 6uz };
 
     // the TT entry must have been searched to at least depthLeft minus this
     inline constexpr auto SE_TT_DEPTH_MARGIN { 3uz };
 
     // the singular beta is the TT score minus this many centipawns per ply of depth
-    inline constexpr auto SE_MARGIN { 3 };
+    inline constexpr auto SE_MARGIN { 2 };
 
     // used as a zugzwang guard for null move pruning: returns true if the side to move has at
     // least 2 non-pawn pieces. Allowing a single minor piece misses zugzwang mates (see the
@@ -537,8 +537,11 @@ namespace {
                 // TT move's score in a reduced search, the TT move is the only good one here, so
                 // we search it a ply deeper. If they don't fail low & even that margin is above
                 // beta, more than one move beats beta, so this node is almost certainly a cutoff
-                // (multi-cut)
+                // (multi-cut). If they don't fail low but the TT score is still above beta, the TT
+                // move probably isn't the only move that would cut off here, so we search it a ply
+                // shallower instead, which pays for some of the singular search (a negative extension)
                 auto singularExtension = 0uz;
+                auto singularReduction = 0uz;
 
                 if (moveIdx == 0uz and move == ttMove and should_try_singular_extension(*ttEntry)) {
                     const auto ttScore = Score::from_tt(ttEntry->eval, plyFromRoot);
@@ -555,13 +558,15 @@ namespace {
                         singularExtension = 1uz;
                     else if (singularBeta >= bounds.beta)
                         return singularBeta;
+                    else if (ttScore >= bounds.beta)
+                        singularReduction = 1uz;
                 }
 
                 if constexpr (PVNode) {
                     childPV.reset();
                 }
 
-                const auto eval = [this, move, &childPos, inCheck, killers, moveIdx, singularExtension] {
+                const auto eval = [this, move, &childPos, inCheck, killers, moveIdx, singularExtension, singularReduction] {
                     // check extensions: search moves that give check one ply deeper, so that
                     // we don't drop into the quiescence search in the middle of a forcing line
                     const auto checkExtension = childPos.is_check() and plyFromRoot < MAX_EXTENSION_PLY
@@ -586,8 +591,11 @@ namespace {
                     // only the first move gets a full window. Waiting for a move to raise alpha
                     // instead means that in a PV node where every move fails low, every move is
                     // searched as a PV node.
-                    if (moveIdx == 0uz)
-                        return -recurse(childPos, move, false, 0uz, extension).alpha_beta<PVNode>();
+                    if (moveIdx == 0uz) {
+                        const auto reduction = extension > 0uz ? 0uz : singularReduction;
+
+                        return -recurse(childPos, move, false, reduction, extension).alpha_beta<PVNode>();
+                    }
 
                     // principal variation search: first try searching with a null window
 
