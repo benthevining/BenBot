@@ -13,6 +13,8 @@
 # Runs an SPRT test for any PR with one of these tags in its title:
 # - [sprt-gain] or [sprt]: gainer bounds
 # - [sprt-big]: wider gainer bounds, for changes expected to gain a lot of Elo (takes precedence over [sprt-gain] & [sprt])
+# - [sprt-ltc]: gainer bounds at a long time control (40+0.4 instead of 8+0.08), for changes whose gains grow with
+#   depth (takes precedence over [sprt-big], [sprt-gain] & [sprt])
 # - [sprt-nonreg]: non-regression bounds (takes precedence if multiple tags are present)
 # The PR's head is tested against the PR's base commit, and the results are posted as a PR comment.
 #
@@ -52,6 +54,7 @@ concurrency:
     ${{ github.workflow }}.${{ github.event.pull_request.number }}.${{
       (
         (contains(github.event.pull_request.title, '[sprt-nonreg]') && 'nonreg')
+        || (contains(github.event.pull_request.title, '[sprt-ltc]') && 'ltc')
         || (contains(github.event.pull_request.title, '[sprt-big]') && 'big')
         || ((contains(github.event.pull_request.title, '[sprt-gain]') || contains(github.event.pull_request.title, '[sprt]')) && 'gain')
         || ''
@@ -60,12 +63,14 @@ concurrency:
         github.event.action != 'edited'
         || format('{0}.{1}',
           (contains(github.event.pull_request.title, '[sprt-nonreg]') && 'nonreg')
+          || (contains(github.event.pull_request.title, '[sprt-ltc]') && 'ltc')
           || (contains(github.event.pull_request.title, '[sprt-big]') && 'big')
           || ((contains(github.event.pull_request.title, '[sprt-gain]') || contains(github.event.pull_request.title, '[sprt]')) && 'gain')
           || '',
           contains(github.event.pull_request.title, '[macos]') && 'macos' || 'linux'
         ) != format('{0}.{1}',
           (contains(github.event.changes.title.from || github.event.pull_request.title, '[sprt-nonreg]') && 'nonreg')
+          || (contains(github.event.changes.title.from || github.event.pull_request.title, '[sprt-ltc]') && 'ltc')
           || (contains(github.event.changes.title.from || github.event.pull_request.title, '[sprt-big]') && 'big')
           || ((contains(github.event.changes.title.from || github.event.pull_request.title, '[sprt-gain]') || contains(github.event.changes.title.from || github.event.pull_request.title, '[sprt]')) && 'gain')
           || '',
@@ -101,6 +106,8 @@ jobs:
         get_target() {
           if [[ "$1" == *"[sprt-nonreg]"* ]]; then
             echo sprt_non_regression
+          elif [[ "$1" == *"[sprt-ltc]"* ]]; then
+            echo sprt_gain_ltc
           elif [[ "$1" == *"[sprt-big]"* ]]; then
             echo sprt_gain_big
           elif [[ "$1" == *"[sprt-gain]"* || "$1" == *"[sprt]"* ]]; then
@@ -138,6 +145,7 @@ jobs:
         case "$target" in
           sprt_gain) description=gainer elo0=0 elo1=5 ;;
           sprt_gain_big) description="big gainer" elo0=0 elo1=10 ;;
+          sprt_gain_ltc) description="LTC gainer" elo0=0 elo1=5 ;;
           sprt_non_regression) description=non-regression elo0=-5 elo1=0 ;;
           *) description="" elo0="" elo1="" ;;
         esac
@@ -186,7 +194,8 @@ jobs:
         .github/actions/run_sprt/UpdatePRComment.sh "$RUNNER_TEMP/comment.md"
 
   # each round only runs if the previous one didn't reach a bound. With 4 shards, each round plays
-  # about 1900 games on Linux, so 16 rounds is about 30000 games (fewer on macOS, see above)
+  # about 1900 games on Linux, so 16 rounds is about 30000 games (fewer on macOS, see above). LTC
+  # games take about 5 times as long, so an LTC test only gets through about 6000 games
 
   round1:
     needs: [parse_title, start]

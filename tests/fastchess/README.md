@@ -11,13 +11,14 @@ None of these targets are run by CTest; SPRT testing should be invoked manually.
 In CI, tagging a PR's title runs an SPRT test of the PR's head against its base commit, and the results are posted as a PR comment:
 * `[sprt-gain]` or `[sprt]`: gainer bounds ([0, 5])
 * `[sprt-big]`: wider gainer bounds ([0, 10]), for changes expected to gain a lot of Elo; these finish much sooner (wins over `[sprt-gain]` and `[sprt]`)
+* `[sprt-ltc]`: gainer bounds ([0, 5]) at a long time control (40+0.4 instead of 8+0.08), for changes whose gains grow with search depth, such as extensions (wins over `[sprt-big]`, `[sprt-gain]` and `[sprt]`)
 * `[sprt-nonreg]`: non-regression bounds ([-5, 0]) (wins if the title has more than one tag)
 
 Adding a tag to the title of an existing PR (or switching to a different test type) starts the test; each new push restarts it.
 
 By default the games are played on Linux (x86) runners. Adding `[macos]` to the title as well as one of the tags above (e.g. `fix: ... [sprt-nonreg] [macos]`) plays them on macOS (Apple silicon) runners instead, for changes that only affect behaviour on some platforms (for example, ones that depend on the cache line size, which is 128 bytes on Apple silicon but 64 on x86). `[macos]` on its own does nothing. Adding or removing `[macos]` while a test is running restarts it on the other platform. Public repos only get 5 concurrent macOS jobs, which CI's macOS jobs share, so a macOS test's shards may have to queue. The macOS runners also have 3 cores instead of 4, so each shard plays fewer games at once, and the test gets through fewer games per round.
 
-The PR tests are sharded across 4 runners, in rounds of about 40 minutes. Each shard plays games with a different opening order, without stopping at the SPRT bounds. After each round, the shards' pentanomial results from all the rounds so far are combined (by `.github/actions/run_sprt/CombineSPRTResults.py`), and the test stops if a bound has been reached. The test stops after 16 rounds (about 30000 games, or about 11.5 hours) even if it hasn't reached a bound.
+The PR tests are sharded across 4 runners, in rounds of about 40 minutes. Each shard plays games with a different opening order, without stopping at the SPRT bounds. After each round, the shards' pentanomial results from all the rounds so far are combined (by `.github/actions/run_sprt/CombineSPRTResults.py`), and the test stops if a bound has been reached. The test stops after 16 rounds (about 30000 games, or about 11.5 hours) even if it hasn't reached a bound. LTC games take about 5 times as long, so an `[sprt-ltc]` test only gets through about 6000 games in 16 rounds. The PR's head has to have the `sprt_gain_ltc` target, so a branch from before it was added needs main merged in first.
 
 ## CMake
 
@@ -32,6 +33,7 @@ The PR tests are sharded across 4 runners, in rounds of about 40 minutes. Each s
 * `sprt_gain`: runs SPRT testing with gainer bounds
 * `sprt_gain_big`: runs SPRT testing with wider gainer bounds
 * `sprt_non_regression`: runs SPRT testing with non-regression bounds
+* `sprt_gain_ltc`: runs SPRT testing with gainer bounds at a long time control (40+0.4)
 * `estimate_elo`: estimates the engine's Elo (see below). Needs Python & Stockfish
 * `tuner_datagen`: plays `ben_bot` against itself to make data for the eval tuner (only if `BENBOT_TUNER` is on; see `tools/tuner/README.md`)
 
