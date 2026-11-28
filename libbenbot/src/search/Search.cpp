@@ -216,7 +216,7 @@ namespace {
     // the window's initial half-width is this many centipawns, plus more for bigger scores (see
     // aspiration_delta()). Each time the search fails, the window is widened on the side that
     // failed by delta, & delta grows by half
-    constexpr auto ASPIRATION_BASE_DELTA { 10 };
+    constexpr auto ASPIRATION_BASE_DELTA { 6 };
 
     // past this score (either way), the window is opened all the way on that side, since the
     // score is big enough that it's probably winning or losing anyway, or heading for a mate
@@ -225,18 +225,18 @@ namespace {
     // each fail high reduces the depth of the re-search by 1, up to this many plies
     constexpr auto ASPIRATION_MAX_FAIL_HIGH_REDUCTION { 3uz };
 
-    // scores far from 0 swing more between iterations, so they get a wider window: 10cp up to
-    // 127, 15 at 300 & 25 at 500. This uses integer maths only, so that bench is the same
+    // scores far from 0 swing more between iterations, so they get a wider window: 6cp up to
+    // 127, 11 at 300 & 21 at 500. This uses integer maths only, so that bench is the same
     // on every platform
     [[nodiscard]] constexpr auto aspiration_delta(const int score) noexcept -> int
     {
         return ASPIRATION_BASE_DELTA + ((score * score) / 16384);
     }
 
-    static_assert(aspiration_delta(0) == 10);
-    static_assert(aspiration_delta(100) == 10);
-    static_assert(aspiration_delta(-300) == 15);
-    static_assert(aspiration_delta(ASPIRATION_MAX_SCORE) == 25);
+    static_assert(aspiration_delta(0) == 6);
+    static_assert(aspiration_delta(100) == 6);
+    static_assert(aspiration_delta(-300) == 11);
+    static_assert(aspiration_delta(ASPIRATION_MAX_SCORE) == 21);
 
     // late move reductions table, indexed by [depth][move index]
     // the formula is similar to Ethereal's: see https://www.chessprogramming.org/Late_Move_Reductions
