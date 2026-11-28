@@ -172,14 +172,16 @@ namespace {
     // search, so this stops long sequences of extensions from getting there.
     inline constexpr auto MAX_EXTENSION_PLY { MAX_PLY / 4uz };
 
-    // singular extensions are only tried with at least this much depth left
-    inline constexpr auto SE_MIN_DEPTH { 5uz };
+    // singular extensions are only tried with at least this much depth left. At 8+0.08 we
+    // reach about depth 9 in the middlegame, so with 5 they fired in nearly every node in the
+    // top few plies, & extended so often that we lost about a ply
+    inline constexpr auto SE_MIN_DEPTH { 7uz };
 
     // the TT entry must have been searched to at least depthLeft minus this
     inline constexpr auto SE_TT_DEPTH_MARGIN { 3uz };
 
     // the singular beta is the TT score minus this many centipawns per ply of depth
-    inline constexpr auto SE_MARGIN { 2 };
+    inline constexpr auto SE_MARGIN { 3 };
 
     // used as a zugzwang guard for null move pruning: returns true if the side to move has at
     // least 2 non-pawn pieces. Allowing a single minor piece misses zugzwang mates (see the
