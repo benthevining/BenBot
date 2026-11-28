@@ -83,7 +83,14 @@ add_custom_command (
     VERBATIM USES_TERMINAL
 )
 
+# the time control defaults to 8+0.08 (short TC). Pass TC for a different one, such as 40+0.4
 function (add_sprt_test name elo0 elo1 description)
+    cmake_parse_arguments (PARSE_ARGV 4 ARG "" "TC" "")
+
+    if (NOT ARG_TC)
+        set (ARG_TC 8+0.08)
+    endif ()
+
     set (pgn_out "${logs_dir}/${name}-games.pgn")
     set (epd_out "${logs_dir}/${name}-final-positions.epd")
     set (logfile "${logs_dir}/${name}-sprt.log")
@@ -106,7 +113,7 @@ function (add_sprt_test name elo0 elo1 description)
         COMMAND "${FASTCHESS_PROGRAM}"
             -engine "cmd=$<TARGET_FILE:ben_bot>" name=Refactor
             -engine "cmd=${baseline_binary}" name=Baseline
-            -each tc=8+0.08 option.Hash=32
+            -each "tc=${ARG_TC}" option.Hash=32
             -rounds 100000 -repeat
             ${sprt_args} ${seed_args}
             -ratinginterval 10
@@ -133,6 +140,7 @@ endfunction ()
 add_sprt_test (sprt_gain 0 5 "gainer")
 add_sprt_test (sprt_gain_big 0 10 "big gainer")
 add_sprt_test (sprt_non_regression -5 0 "non-regression")
+add_sprt_test (sprt_gain_ltc 0 5 "LTC gainer" TC 40+0.4)
 
 #
 
