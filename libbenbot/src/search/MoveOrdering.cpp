@@ -55,6 +55,19 @@ namespace {
         return pawn_attacks<Color::White>(position.their_pieces().pawns);
     }
 
+    // the most valuable victim first, then the capture history
+    [[nodiscard, gnu::pure]] auto capture_order_score(
+        const Position& currentPosition, const Move move, const HistoryTable& history) noexcept -> int
+    {
+        static constexpr auto VICTIM_MULTIPLIER { 16 }; // cppcheck-suppress variableScope
+        static constexpr auto HISTORY_DIVISOR { 8 };    // cppcheck-suppress variableScope
+
+        const auto captured = captured_type(currentPosition, move);
+
+        return (VICTIM_MULTIPLIER * piece_values::get(captured))
+             + (history.get_capture(currentPosition.is_white_to_move(), move, captured) / HISTORY_DIVISOR);
+    }
+
     // higher scored moves will be searched first
     [[nodiscard, gnu::pure]] auto move_ordering_score(
         const Position& currentPosition, const Move move,
@@ -70,7 +83,7 @@ namespace {
     {
         static constexpr auto PV_NODE_BONUS { 15000 };       // cppcheck-suppress variableScope
         static constexpr auto CUT_NODE_PENALTY { 15000 };    // cppcheck-suppress variableScope
-        static constexpr auto CAPTURE_MULTIPLIER { 10000 };  // cppcheck-suppress variableScope
+        static constexpr auto GOOD_CAPTURE_BASE { 100000 };  // cppcheck-suppress variableScope
         static constexpr auto KILLER_MOVE_BONUS { 10000 };   // cppcheck-suppress variableScope
         static constexpr auto PROMOTION_MULTIPLIER { 15 };   // cppcheck-suppress variableScope
         static constexpr auto CASTLING_BONUS { 30 };         // cppcheck-suppress variableScope
@@ -85,12 +98,12 @@ namespace {
         auto score { 0 };
 
         if (currentPosition.is_capture(move)) {
-            // we want to prioritize searching captures that win the most material once
-            // all recaptures on the square have been played out. The capture history only
-            // breaks ties between captures with the same SEE
-            score += CAPTURE_MULTIPLIER * eval::see(currentPosition, move)
-                   + history.get_capture(currentPosition.is_white_to_move(), move, captured_type(currentPosition, move))
-                         / HISTORY_DIVISOR;
+            // captures that don't lose material once all recaptures on the square have
+            // been played out go before the killers & quiets, & losing ones go last. Within
+            // each class they're ordered by victim value, then capture history
+            const auto base = eval::see(currentPosition, move) >= 0 ? GOOD_CAPTURE_BASE : -GOOD_CAPTURE_BASE;
+
+            score += base + capture_order_score(currentPosition, move, history);
         } else if (std::ranges::contains(killerMoves, move)) {
             score += KILLER_MOVE_BONUS;
         } else if (not move.promoted_type().has_value()) {
@@ -189,21 +202,6 @@ auto captured_type(const Position& currentPosition, const Move move) noexcept ->
     return currentPosition.their_pieces().get_piece_on(move.to()).value_or(PieceType::Pawn);
 }
 
-namespace {
-    // the most valuable victim first, then the capture history
-    [[nodiscard, gnu::pure]] auto q_search_move_order_score(
-        const Position& currentPosition, const Move move, const HistoryTable& history) noexcept -> int
-    {
-        static constexpr auto VICTIM_MULTIPLIER { 16 }; // cppcheck-suppress variableScope
-        static constexpr auto HISTORY_DIVISOR { 8 };    // cppcheck-suppress variableScope
-
-        const auto captured = captured_type(currentPosition, move);
-
-        return (VICTIM_MULTIPLIER * piece_values::get(captured))
-             + (history.get_capture(currentPosition.is_white_to_move(), move, captured) / HISTORY_DIVISOR);
-    }
-} // namespace
-
 void order_moves_for_q_search(
     const Position&       currentPosition,
     const std::span<Move> moves,
@@ -220,7 +218,7 @@ void order_moves_for_q_search(
     std::ranges::transform(
         moves, scoredMoves.begin(),
         [&currentPosition, &history](const Move move) {
-            return ScoredMove { q_search_move_order_score(currentPosition, move, history), move };
+            return ScoredMove { capture_order_score(currentPosition, move, history), move };
         });
 
     util::sort::portable_sort(
