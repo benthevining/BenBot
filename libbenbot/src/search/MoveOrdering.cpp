@@ -86,8 +86,11 @@ namespace {
 
         if (currentPosition.is_capture(move)) {
             // we want to prioritize searching captures that win the most material once
-            // all recaptures on the square have been played out
-            score += CAPTURE_MULTIPLIER * eval::see(currentPosition, move);
+            // all recaptures on the square have been played out. The capture history only
+            // breaks ties between captures with the same SEE
+            score += CAPTURE_MULTIPLIER * eval::see(currentPosition, move)
+                   + history.get_capture(currentPosition.is_white_to_move(), move, captured_type(currentPosition, move))
+                         / HISTORY_DIVISOR;
         } else if (std::ranges::contains(killerMoves, move)) {
             score += KILLER_MOVE_BONUS;
         } else if (not move.promoted_type().has_value()) {
@@ -181,30 +184,52 @@ void order_moves_for_search(
     std::ranges::transform(scoredMoves, moves.begin(), &ScoredMove::second);
 }
 
+auto captured_type(const Position& currentPosition, const Move move) noexcept -> PieceType
+{
+    return currentPosition.their_pieces().get_piece_on(move.to()).value_or(PieceType::Pawn);
+}
+
 namespace {
-    // MVV-LVA scoring
+    // the most valuable victim first, then the capture history
     [[nodiscard, gnu::pure]] auto q_search_move_order_score(
-        const Position& currentPosition, const Move move) noexcept -> int
+        const Position& currentPosition, const Move move, const HistoryTable& history) noexcept -> int
     {
-        return currentPosition.their_pieces()
-            .get_piece_on(move.to())
-            .transform([move](const PieceType capturedType) {
-                return piece_values::get(capturedType) - std::to_underlying(move.piece());
-            })
-            .value_or(0);
+        static constexpr auto VICTIM_MULTIPLIER { 16 }; // cppcheck-suppress variableScope
+        static constexpr auto HISTORY_DIVISOR { 8 };    // cppcheck-suppress variableScope
+
+        const auto captured = captured_type(currentPosition, move);
+
+        return (VICTIM_MULTIPLIER * piece_values::get(captured))
+             + (history.get_capture(currentPosition.is_white_to_move(), move, captured) / HISTORY_DIVISOR);
     }
 } // namespace
 
 void order_moves_for_q_search(
     const Position&       currentPosition,
-    const std::span<Move> moves)
+    const std::span<Move> moves,
+    const HistoryTable&   history)
 {
-    util::sort::portable_sort(
-        moves,
-        [&currentPosition](const Move first, const Move second) {
-            return q_search_move_order_score(currentPosition, first)
-                 > q_search_move_order_score(currentPosition, second);
+    using ScoredMove = std::pair<int, Move>;
+
+    assert(moves.size() <= chess::moves::MAX_MOVES);
+
+    std::array<ScoredMove, chess::moves::MAX_MOVES> scored { };
+
+    const auto scoredMoves = std::span { scored }.first(moves.size());
+
+    std::ranges::transform(
+        moves, scoredMoves.begin(),
+        [&currentPosition, &history](const Move move) {
+            return ScoredMove { q_search_move_order_score(currentPosition, move, history), move };
         });
+
+    util::sort::portable_sort(
+        scoredMoves,
+        [](const ScoredMove& first, const ScoredMove& second) {
+            return first.first > second.first;
+        });
+
+    std::ranges::transform(scoredMoves, moves.begin(), &ScoredMove::second);
 }
 
 } // namespace ben_bot::search::detail

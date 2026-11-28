@@ -448,8 +448,9 @@ namespace {
 
             auto nextMoveIdx { 0uz };
 
-            // quiet moves that were searched without causing a cutoff
+            // quiet moves & captures that were searched without causing a cutoff
             MoveList quietsSearched;
+            MoveList capturesSearched;
 
             const bool lateMovePruning = depthLeft <= LMP_MAX_DEPTH and not inCheck;
 
@@ -571,11 +572,17 @@ namespace {
                         update_history(move, quietsSearched);
                     }
 
+                    // the captures searched before the cutoff are penalised even if a
+                    // quiet move caused it
+                    update_capture_history(move, capturesSearched);
+
                     return eval;
                 }
 
                 if (position.is_quiet(move))
                     quietsSearched.emplace_back(move);
+                else if (position.is_capture(move))
+                    capturesSearched.emplace_back(move);
 
                 if (not bestScore.has_value() or eval > *bestScore)
                     bestScore = eval;
@@ -606,16 +613,23 @@ namespace {
         }
 
     private:
-        // gives the move that caused a cutoff a history bonus, and the
-        // quiet moves that were searched before it a penalty
-        void update_history(const Move cutoffMove, const MoveList& quietsSearched)
+        // the history bonus for a move that caused a cutoff at this depth
+        [[nodiscard]] auto history_bonus() const noexcept -> int
         {
             // each update moves a score by up to about 10% of the table's maximum. A bonus of
             // depth * depth was so small next to the maximum that the scores barely moved
             static constexpr auto MAX_BONUS { 1600 };
 
             const auto depth = static_cast<int>(depthLeft) + 1;
-            const auto bonus = std::min((16 * depth * depth) + (128 * (depth - 1)), MAX_BONUS);
+
+            return std::min((16 * depth * depth) + (128 * (depth - 1)), MAX_BONUS);
+        }
+
+        // gives the move that caused a cutoff a history bonus, and the
+        // quiet moves that were searched before it a penalty
+        void update_history(const Move cutoffMove, const MoveList& quietsSearched)
+        {
+            const auto bonus = history_bonus();
 
             const bool whiteToMove = position.is_white_to_move();
 
@@ -633,6 +647,25 @@ namespace {
             update(cutoffMove, bonus);
 
             for (const auto move : quietsSearched)
+                update(move, -bonus);
+        }
+
+        // gives the move that caused a cutoff a capture history bonus if it's a capture,
+        // and the captures that were searched before it a penalty
+        void update_capture_history(const Move cutoffMove, const MoveList& capturesSearched)
+        {
+            const auto bonus = history_bonus();
+
+            const bool whiteToMove = position.is_white_to_move();
+
+            const auto update = [this, whiteToMove](const Move move, const int amount) {
+                history.update_capture(whiteToMove, move, detail::captured_type(position, move), amount);
+            };
+
+            if (position.is_capture(cutoffMove))
+                update(cutoffMove, bonus);
+
+            for (const auto move : capturesSearched)
                 update(move, -bonus);
         }
 
@@ -735,7 +768,7 @@ namespace {
 
             auto moves = chess::moves::generate<true>(position); // captures only
 
-            detail::order_moves_for_q_search(position, moves);
+            detail::order_moves_for_q_search(position, moves, history);
 
             for (const auto move : moves) {
                 assert(position.is_capture(move));

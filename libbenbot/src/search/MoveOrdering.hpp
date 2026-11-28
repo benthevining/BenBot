@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <libchess/pieces/PieceTypes.hpp>
 #include <span>
 
 namespace chess::game {
@@ -48,7 +49,12 @@ void order_moves_for_search(
     Move                       ownPrevMove);
 
 void order_moves_for_q_search(
-    const Position& currentPosition,
-    std::span<Move> moves);
+    const Position&     currentPosition,
+    std::span<Move>     moves,
+    const HistoryTable& history);
+
+// returns the type of piece the given capture takes, which is a pawn for en passant
+[[nodiscard]] auto captured_type(const Position& currentPosition, Move move) noexcept
+    -> chess::pieces::Type;
 
 } // namespace ben_bot::search::detail
