@@ -26,6 +26,8 @@
 // Late move reductions
 // Futility pruning
 // Check extensions
+// Singular extensions
+// Multi-cut
 // History heuristic
 // Continuation history (1 ply)
 // Late move pruning
@@ -166,9 +168,20 @@ namespace {
     // internal iterative reductions are only done with at least this much depth left
     inline constexpr auto IIR_MIN_DEPTH { 4uz };
 
-    // moves that give check are only extended up to this ply. Reaching MAX_PLY aborts
-    // the entire search, so this stops long sequences of checks from getting there.
+    // moves are only extended up to this ply. Reaching MAX_PLY aborts the entire
+    // search, so this stops long sequences of extensions from getting there.
     inline constexpr auto MAX_EXTENSION_PLY { MAX_PLY / 4uz };
+
+    // singular extensions are only tried with at least this much depth left. At 8+0.08 we
+    // reach about depth 9 in the middlegame, so with 5 they fired in nearly every node in the
+    // top few plies, & extended so often that we lost about a ply
+    inline constexpr auto SE_MIN_DEPTH { 6uz };
+
+    // the TT entry must have been searched to at least depthLeft minus this
+    inline constexpr auto SE_TT_DEPTH_MARGIN { 3uz };
+
+    // the singular beta is the TT score minus this many centipawns per ply of depth
+    inline constexpr auto SE_MARGIN { 2 };
 
     // used as a zugzwang guard for null move pruning: returns true if the side to move has at
     // least 2 non-pawn pieces. Allowing a single minor piece misses zugzwang mates (see the
@@ -347,10 +360,11 @@ namespace {
 
             const auto ttMove = ttEntry.and_then(&TTData::bestMove);
 
-            // check if this position has been searched before to at
-            // least this depth and within these bounds for non-PV nodes
+            // check if this position has been searched before to at least this depth and
+            // within these bounds for non-PV nodes. A singular extension search can't use the
+            // entry, since it was found with the move that's now excluded
             if constexpr (not PVNode) {
-                if (ttEntry.has_value()) {
+                if (ttEntry.has_value() and not excluding()) {
                     if (const auto value = TranspositionTable::probe_eval(*ttEntry, depthLeft, bounds, plyFromRoot)) {
                         ++stats.transTableHits;
                         return { value->first };
@@ -359,11 +373,11 @@ namespace {
             }
 
             if (position.is_draw()) {
-                transTable.store(
-                    position, { .searchedDepth = depthLeft,
-                                  .eval        = eval::DRAW,
-                                  .evalType    = EvalType::Exact,
-                                  .bestMove    = std::nullopt });
+                store_tt(
+                    { .searchedDepth = depthLeft,
+                        .eval        = eval::DRAW,
+                        .evalType    = EvalType::Exact,
+                        .bestMove    = std::nullopt });
 
                 return { };
             }
@@ -390,14 +404,17 @@ namespace {
                 if (not inCheck) {
                     const auto staticEval = ss->staticEval.value();
 
-                    // reverse futility pruning
+                    // reverse futility pruning. A singular extension search skips this, since
+                    // it's asking how good the other moves are, not whether this node is good
                     const auto margin = 80 * static_cast<int>(depthLeft);
 
-                    if (std::cmp_greater_equal(staticEval.value, bounds.beta.value + margin))
+                    if (not excluding()
+                        and std::cmp_greater_equal(staticEval.value, bounds.beta.value + margin))
                         return staticEval;
 
                     // null move pruning: if we can pass our turn and still fail high in a
-                    // reduced-depth search, this node is almost certainly a cutoff
+                    // reduced-depth search, this node is almost certainly a cutoff. This is
+                    // never allowed in a singular extension search
                     if (nullMoveAllowed
                         and depthLeft >= NMP_MIN_DEPTH
                         and staticEval >= bounds.beta
@@ -430,11 +447,11 @@ namespace {
             if (moves.empty() and inCheck) {
                 const auto score = Score::mate(plyFromRoot);
 
-                transTable.store(
-                    position, { .searchedDepth = depthLeft,
-                                  .eval        = score.to_tt(plyFromRoot),
-                                  .evalType    = EvalType::Exact,
-                                  .bestMove    = std::nullopt });
+                store_tt(
+                    { .searchedDepth = depthLeft,
+                        .eval        = score.to_tt(plyFromRoot),
+                        .evalType    = EvalType::Exact,
+                        .bestMove    = std::nullopt });
 
                 return score;
             }
@@ -470,6 +487,11 @@ namespace {
             const auto quietSeeThreshold   = see_pruning_threshold(depthLeft, true);
 
             for (const auto move : moves) {
+                // skipped before it takes a move index, so that the first move searched is
+                // still move 0 for LMR & the pruning below
+                if (excludedMove == move)
+                    continue;
+
                 const auto moveIdx  = nextMoveIdx++;
                 const auto childPos = after_move(position, move);
 
@@ -511,16 +533,47 @@ namespace {
                     }
                 }
 
+                // singular extensions: if every other move fails low against a margin below the
+                // TT move's score in a reduced search, the TT move is the only good one here, so
+                // we search it a ply deeper. If they don't fail low & even that margin is above
+                // beta, more than one move beats beta, so this node is almost certainly a cutoff
+                // (multi-cut). If they don't fail low but the TT score is still above beta, the TT
+                // move probably isn't the only move that would cut off here, so we search it a ply
+                // shallower instead, which pays for some of the singular search (a negative extension)
+                auto singularExtension = 0uz;
+                auto singularReduction = 0uz;
+
+                if (moveIdx == 0uz and move == ttMove and should_try_singular_extension(*ttEntry)) {
+                    const auto ttScore = Score::from_tt(ttEntry->eval, plyFromRoot);
+
+                    const auto singularBeta = Score { static_cast<eval::Value>(
+                        ttScore.value - (SE_MARGIN * static_cast<int>(depthLeft + 1uz))) };
+
+                    const auto score = recurse_excluding(move, singularBeta).alpha_beta<false>();
+
+                    if (interrupter.was_aborted())
+                        return { };
+
+                    if (score < singularBeta)
+                        singularExtension = 1uz;
+                    else if (singularBeta >= bounds.beta)
+                        return singularBeta;
+                    else if (ttScore >= bounds.beta)
+                        singularReduction = 1uz;
+                }
+
                 if constexpr (PVNode) {
                     childPV.reset();
                 }
 
-                const auto eval = [this, move, &childPos, inCheck, killers, moveIdx] {
+                const auto eval = [this, move, &childPos, inCheck, killers, moveIdx, singularExtension, singularReduction] {
                     // check extensions: search moves that give check one ply deeper, so that
                     // we don't drop into the quiescence search in the middle of a forcing line
-                    const auto extension = childPos.is_check() and plyFromRoot < MAX_EXTENSION_PLY
-                                             ? 1uz
-                                             : 0uz;
+                    const auto checkExtension = childPos.is_check() and plyFromRoot < MAX_EXTENSION_PLY
+                                                  ? 1uz
+                                                  : 0uz;
+
+                    const auto extension = std::max(checkExtension, singularExtension);
 
                     if (depthLeft + extension == 0uz)
                         return -recurse(childPos, move).quiescence<PVNode>();
@@ -538,8 +591,11 @@ namespace {
                     // only the first move gets a full window. Waiting for a move to raise alpha
                     // instead means that in a PV node where every move fails low, every move is
                     // searched as a PV node.
-                    if (moveIdx == 0uz)
-                        return -recurse(childPos, move, false, 0uz, extension).alpha_beta<PVNode>();
+                    if (moveIdx == 0uz) {
+                        const auto reduction = extension > 0uz ? 0uz : singularReduction;
+
+                        return -recurse(childPos, move, false, reduction, extension).alpha_beta<PVNode>();
+                    }
 
                     // principal variation search: first try searching with a null window
 
@@ -566,11 +622,11 @@ namespace {
                         pv.update(move, childPV);
                     }
 
-                    transTable.store(
-                        position, { .searchedDepth = depthLeft,
-                                      .eval        = eval.to_tt(plyFromRoot),
-                                      .evalType    = EvalType::Beta,
-                                      .bestMove    = move });
+                    store_tt(
+                        { .searchedDepth = depthLeft,
+                            .eval        = eval.to_tt(plyFromRoot),
+                            .evalType    = EvalType::Beta,
+                            .bestMove    = move });
 
                     ++stats.betaCutoffs;
 
@@ -605,21 +661,66 @@ namespace {
                 }
             }
 
-            // the first move is never pruned, so at least one move was searched
-            assert(bestScore.has_value());
+            // the first move is never pruned, so at least one move was searched, unless the
+            // only legal move was excluded. Then the excluded move is singular, & this fails low
+            assert(bestScore.has_value() or excluding());
 
             const auto score = bestScore.value_or(bounds.alpha);
 
-            transTable.store(
-                position, { .searchedDepth = depthLeft,
-                              .eval        = score.to_tt(plyFromRoot),
-                              .evalType    = evalType,
-                              .bestMove    = bestMove });
+            store_tt(
+                { .searchedDepth = depthLeft,
+                    .eval        = score.to_tt(plyFromRoot),
+                    .evalType    = evalType,
+                    .bestMove    = bestMove });
 
             return score;
         }
 
     private:
+        // true in a singular extension search, which searches the same position as its parent
+        // without the parent's TT move
+        [[nodiscard]] auto excluding() const noexcept -> bool { return excludedMove.has_value(); }
+
+        // singular extension searches don't store anything, since they're missing a move
+        void store_tt(const TTData& data)
+        {
+            if (not excluding())
+                transTable.store(position, data);
+        }
+
+        // ttEntry is this position's TT entry, whose best move is the first move searched
+        [[nodiscard]] auto should_try_singular_extension(const TTData& ttEntry) const noexcept -> bool
+        {
+            // the TT score needs to be a lower bound (or exact) & searched nearly as deep as
+            // this node, so that the TT move is likely to really be that good
+            return not excluding()
+               and depthLeft >= SE_MIN_DEPTH
+               and plyFromRoot < MAX_EXTENSION_PLY
+               and ttEntry.evalType != EvalType::Alpha
+               and ttEntry.searchedDepth + SE_TT_DEPTH_MARGIN >= depthLeft
+               and not Score::from_tt(ttEntry.eval, plyFromRoot).is_mate();
+        }
+
+        // searches this same position at a reduced depth without the given move, with a null
+        // window at singularBeta
+        [[nodiscard]] auto recurse_excluding(const Move move, const Score singularBeta) -> AlphaBetaContext
+        {
+            AlphaBetaContext child {
+                { .alpha  = Score { static_cast<eval::Value>(singularBeta.value - 1) },
+                    .beta = singularBeta },
+                position,
+                (depthLeft - 1uz) / 2uz,
+                plyFromRoot,
+                transTable, interrupter, stats, childPV, killerMoves, history, continuationHistory, pawnTable,
+                ss
+            };
+
+            child.excludedMove    = move;
+            child.nullMoveAllowed = false;
+
+            return child;
+        }
+
         // the history bonus for a move that caused a cutoff at this depth
         [[nodiscard]] auto history_bonus() const noexcept -> int
         {
@@ -879,6 +980,8 @@ namespace {
         size_t plyFromRoot { 0uz }; // increases each iteration
 
         bool nullMoveAllowed { true }; // false for the child of a null move
+
+        std::optional<Move> excludedMove; // set only for singular extension searches
 
         TranspositionTable& transTable; // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members)
 
