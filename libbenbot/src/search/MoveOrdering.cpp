@@ -155,16 +155,13 @@ void order_moves_for_search(
     const Position&             currentPosition,
     const std::span<Move>       moves,
     const TranspositionTable&   transTable,
+    const std::optional<Move>   ttMove,
     const std::span<const Move> killerMoves,
     const HistoryTable&         history,
     const ContinuationHistory&  continuationHistory,
     const Move                  prevMove,
     const Move                  ownPrevMove)
 {
-    const auto bestMove = transTable
-                              .find(currentPosition)
-                              .and_then(&TTData::bestMove);
-
     const auto opponentPawnAttacks = get_opponent_pawn_attacks(currentPosition);
 
     // scoring a move is expensive (it makes the move & probes the TT), so we
@@ -179,9 +176,9 @@ void order_moves_for_search(
 
     std::ranges::transform(
         moves, scoredMoves.begin(),
-        [&currentPosition, &transTable, bestMove, killerMoves, &history, &continuationHistory, prevMove, ownPrevMove, opponentPawnAttacks](const Move move) {
+        [&currentPosition, &transTable, ttMove, killerMoves, &history, &continuationHistory, prevMove, ownPrevMove, opponentPawnAttacks](const Move move) {
             return ScoredMove {
-                move_ordering_score(currentPosition, move, transTable, opponentPawnAttacks, bestMove, killerMoves, history, continuationHistory, prevMove, ownPrevMove),
+                move_ordering_score(currentPosition, move, transTable, opponentPawnAttacks, ttMove, killerMoves, history, continuationHistory, prevMove, ownPrevMove),
                 move
             };
         });
