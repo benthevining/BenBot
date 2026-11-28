@@ -131,6 +131,14 @@ public:
         size_t plyFromRoot) const
         -> std::optional<ProbedEval>;
 
+    /** The same as the other overload, but for a record that's already been retrieved with
+        ``find()``. This lets the search look up a position only once per node.
+     */
+    [[nodiscard]] static auto probe_eval(
+        const TTData& data, size_t depth, const search::Bounds& bounds,
+        size_t plyFromRoot)
+        -> std::optional<ProbedEval>;
+
     /** Returns the opponent's best response to the given move, if one
         is recorded.
      */

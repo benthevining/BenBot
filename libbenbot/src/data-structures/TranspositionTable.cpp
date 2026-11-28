@@ -265,37 +265,42 @@ auto TranspositionTable::probe_eval(
     -> std::optional<ProbedEval>
 {
     return find(pos)
-        .and_then([depth](const TTData& data) -> std::optional<TTData> {
-            if (data.searchedDepth < depth)
-                return std::nullopt;
-
-            return data;
-        })
-        .and_then([bounds, plyFromRoot](const TTData& data) -> std::optional<ProbedEval> {
-            const auto eval = eval::Score::from_tt(data.eval, plyFromRoot);
-
-            switch (data.evalType) {
-                default: [[fallthrough]];
-                case EvalType::Exact:
-                    return std::make_pair(eval.value, data.evalType);
-
-                case EvalType::Alpha: {
-                    if (eval < bounds.alpha)
-                        return std::make_pair(eval.value, data.evalType);
-
-                    break;
-                }
-
-                case EvalType::Beta: {
-                    if (eval >= bounds.beta)
-                        return std::make_pair(eval.value, data.evalType);
-
-                    break;
-                }
-            }
-
-            return std::nullopt;
+        .and_then([depth, &bounds, plyFromRoot](const TTData& data) {
+            return probe_eval(data, depth, bounds, plyFromRoot);
         });
+}
+
+auto TranspositionTable::probe_eval(
+    const TTData& data, const size_t depth,
+    const search::Bounds& bounds, const size_t plyFromRoot)
+    -> std::optional<ProbedEval>
+{
+    if (data.searchedDepth < depth)
+        return std::nullopt;
+
+    const auto eval = eval::Score::from_tt(data.eval, plyFromRoot);
+
+    switch (data.evalType) {
+        default: [[fallthrough]];
+        case EvalType::Exact:
+            return std::make_pair(eval.value, data.evalType);
+
+        case EvalType::Alpha: {
+            if (eval < bounds.alpha)
+                return std::make_pair(eval.value, data.evalType);
+
+            break;
+        }
+
+        case EvalType::Beta: {
+            if (eval >= bounds.beta)
+                return std::make_pair(eval.value, data.evalType);
+
+            break;
+        }
+    }
+
+    return std::nullopt;
 }
 
 auto TranspositionTable::get_best_response(

@@ -14,16 +14,14 @@
 
 #pragma once
 
+#include <libchess/moves/Move.hpp>
 #include <libchess/pieces/PieceTypes.hpp>
+#include <optional>
 #include <span>
 
 namespace chess::game {
 struct Position;
 } // namespace chess::game
-
-namespace chess::moves {
-struct Move;
-} // namespace chess::moves
 
 namespace ben_bot {
 class TranspositionTable;
@@ -36,12 +34,14 @@ namespace ben_bot::search::detail {
 using chess::game::Position;
 using chess::moves::Move;
 
-// prevMove is the move that led to currentPosition, & ownPrevMove is the move 1 ply before that
-// (played by the side to move). Either is a null move if there isn't one
+// ttMove is the best move stored in the transposition table for currentPosition, if any, & is
+// ordered first. prevMove is the move that led to currentPosition, & ownPrevMove is the move 1
+// ply before that (played by the side to move). Either is a null move if there isn't one
 void order_moves_for_search(
     const Position&            currentPosition,
     std::span<Move>            moves,
     const TranspositionTable&  transTable,
+    std::optional<Move>        ttMove,
     std::span<const Move>      killerMoves,
     const HistoryTable&        history,
     const ContinuationHistory& continuationHistory,

@@ -342,12 +342,19 @@ namespace {
                 return cutoff.value();
             }
 
+            // looked up once, & used for the cutoff below, IIR & move ordering
+            const auto ttEntry = transTable.find(position);
+
+            const auto ttMove = ttEntry.and_then(&TTData::bestMove);
+
             // check if this position has been searched before to at
             // least this depth and within these bounds for non-PV nodes
             if constexpr (not PVNode) {
-                if (const auto value = transTable.probe_eval(position, depthLeft, bounds, plyFromRoot)) {
-                    ++stats.transTableHits;
-                    return { value->first };
+                if (ttEntry.has_value()) {
+                    if (const auto value = TranspositionTable::probe_eval(*ttEntry, depthLeft, bounds, plyFromRoot)) {
+                        ++stats.transTableHits;
+                        return { value->first };
+                    }
                 }
             }
 
@@ -367,7 +374,7 @@ namespace {
             // so search this node one ply shallower. The next visit should then have a TT move.
             if (not inCheck
                 and depthLeft >= IIR_MIN_DEPTH
-                and not transTable.find(position).and_then(&TTData::bestMove).has_value())
+                and not ttMove.has_value())
                 --depthLeft;
 
             // set to true if quiet moves after the first one can't raise alpha
@@ -433,7 +440,7 @@ namespace {
             }
 
             detail::order_moves_for_search(
-                position, moves, transTable, killerMoves.get(plyFromRoot), history,
+                position, moves, transTable, ttMove, killerMoves.get(plyFromRoot), history,
                 continuationHistory, ss->move, std::prev(ss)->move);
 
             auto evalType { EvalType::Alpha };
@@ -1159,7 +1166,8 @@ namespace {
 
         // the root has no previous moves, so this doesn't use the continuation history
         detail::order_moves_for_search(
-            position, options.movesToSearch, transTable, killerMoves.get(0uz), history,
+            position, options.movesToSearch, transTable,
+            transTable.find(position).and_then(&TTData::bestMove), killerMoves.get(0uz), history,
             continuationHistory, Move { }, Move { });
 
         // the root position is never stored in the transposition table, so the move ordering
