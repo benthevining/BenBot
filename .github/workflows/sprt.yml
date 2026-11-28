@@ -22,6 +22,7 @@ on:
         - sprt_gain
         - sprt_gain_big
         - sprt_non_regression
+        - sprt_gain_ltc
         required: true
       use_main:
         description: If true, runs SPRT against the latest main; if false, runs against the latest release
